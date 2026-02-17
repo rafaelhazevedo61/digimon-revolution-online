@@ -1,5 +1,6 @@
-package com.dro.modules.auth.domain;
+package com.dro.modules.player.domain;
 
+import com.dro.modules.digitama.domain.DigitamaType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,4 +30,8 @@ public class Player {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    @Enumerated(EnumType.STRING)
+    private DigitamaType selectedDigitama;
+
 }

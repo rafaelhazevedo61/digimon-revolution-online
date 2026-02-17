@@ -1,6 +1,6 @@
 package com.dro.modules.player.infra;
 
-import com.dro.modules.auth.domain.Player;
+import com.dro.modules.player.domain.Player;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
