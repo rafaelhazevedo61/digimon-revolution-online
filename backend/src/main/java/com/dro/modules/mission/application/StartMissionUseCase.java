@@ -33,6 +33,8 @@ public class StartMissionUseCase {
         repository.save(digimon);
 
         addItemUseCase.execute(playerId, ItemType.TRAINING_STONE, 1);
+        addItemUseCase.execute(playerId, ItemType.DIGITAMA_FIRE, 1);
+        addItemUseCase.execute(playerId, ItemType.INCUBATOR_COMMON, 1);
 
         return new MissionResultResponse(
                 xpReward,
