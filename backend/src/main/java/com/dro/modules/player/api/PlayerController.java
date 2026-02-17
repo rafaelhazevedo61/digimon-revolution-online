@@ -1,0 +1,21 @@
+package com.dro.modules.player.api;
+
+import com.dro.modules.player.application.GetPlayerUseCase;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/players")
+@RequiredArgsConstructor
+public class PlayerController {
+
+    private final GetPlayerUseCase useCase;
+
+    @GetMapping("/me")
+    public ResponseEntity<PlayerResponse> me(
+            @RequestHeader("Authorization") String authorization
+    ) {
+        return ResponseEntity.ok(useCase.execute(authorization));
+    }
+}
