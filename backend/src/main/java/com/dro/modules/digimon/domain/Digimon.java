@@ -46,4 +46,25 @@ public class Digimon {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    public void gainExperience(int amount) {
+
+        this.experience += amount;
+
+        while (this.experience >= xpToNextLevel()) {
+            this.experience -= xpToNextLevel();
+            levelUp();
+        }
+    }
+
+    private int xpToNextLevel() {
+        return this.level * 100;
+    }
+
+    private void levelUp() {
+        this.level++;
+        this.hp += 2;
+        this.attack += 1;
+        this.defense += 1;
+    }
 }
