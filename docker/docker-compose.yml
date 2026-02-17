@@ -1,0 +1,18 @@
+version: '3.9'
+
+services:
+  dro-postgres:
+    image: postgres:16
+    container_name: dro-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: dro_db
+      POSTGRES_USER: dro_user
+      POSTGRES_PASSWORD: dro_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - dro_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  dro_postgres_data:
