@@ -1,4 +1,4 @@
-package com.dro.modules.auth.infra;
+package com.dro.modules.player.infra;
 
 import com.dro.modules.auth.domain.Player;
 import org.springframework.data.jpa.repository.JpaRepository;

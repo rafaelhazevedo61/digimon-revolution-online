@@ -2,7 +2,7 @@ package com.dro.modules.auth.application;
 
 import com.dro.modules.auth.api.RegisterRequest;
 import com.dro.modules.auth.domain.Player;
-import com.dro.modules.auth.infra.PlayerRepository;
+import com.dro.modules.player.infra.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
