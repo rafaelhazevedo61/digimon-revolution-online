@@ -2,6 +2,8 @@ package com.dro.modules.mission.application;
 
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.mission.api.MissionResultResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,7 @@ import java.util.UUID;
 public class StartMissionUseCase {
 
     private final DigimonRepository repository;
+    private final AddItemUseCase addItemUseCase;
 
     public MissionResultResponse execute(String token) {
 
@@ -28,6 +31,8 @@ public class StartMissionUseCase {
         digimon.gainExperience(xpReward);
 
         repository.save(digimon);
+
+        addItemUseCase.execute(playerId, ItemType.TRAINING_STONE, 1);
 
         return new MissionResultResponse(
                 xpReward,
