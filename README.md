@@ -79,6 +79,8 @@ Exemplo de requisição:
   "password": "123456"
 }
 
+```
+
 ▶ Como Rodar o Projeto
 1️⃣ Criar banco PostgreSQL
 
