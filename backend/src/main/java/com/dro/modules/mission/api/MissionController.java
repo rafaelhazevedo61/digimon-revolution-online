@@ -13,9 +13,12 @@ public class MissionController {
     private final StartMissionUseCase useCase;
 
     @PostMapping("/start")
-    public ResponseEntity<MissionResultResponse> start (
-            @RequestHeader("Authorization") String authorization
+    public ResponseEntity<MissionResultResponse> start(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody StartMissionRequest request
     ) {
-        return ResponseEntity.ok(useCase.execute(authorization));
+        return ResponseEntity.ok(
+                useCase.execute(authorization, request.type())
+        );
     }
 }

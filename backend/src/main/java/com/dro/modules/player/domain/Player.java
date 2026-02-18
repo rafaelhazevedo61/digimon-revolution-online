@@ -37,4 +37,7 @@ public class Player {
     @Column(name = "active_digimon_id")
     private UUID activeDigimonId;
 
+    @Column(name = "last_mission_at")
+    private LocalDateTime lastMissionAt;
+
 }
