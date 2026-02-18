@@ -1,16 +1,20 @@
 package com.dro.modules.mission.api;
 
+import com.dro.modules.mission.application.GetAvailableMissionsUseCase;
 import com.dro.modules.mission.application.StartMissionUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/missions")
 @RequiredArgsConstructor
 public class MissionController {
 
-    private final StartMissionUseCase useCase;
+    private final StartMissionUseCase startMissionUseCase;
+    private final GetAvailableMissionsUseCase getAvailableMissionsUseCase;
 
     @PostMapping("/start")
     public ResponseEntity<MissionResultResponse> start(
@@ -18,7 +22,14 @@ public class MissionController {
             @RequestBody StartMissionRequest request
     ) {
         return ResponseEntity.ok(
-                useCase.execute(authorization, request.type())
+                startMissionUseCase.execute(authorization, request.missionId())
         );
+    }
+
+    @GetMapping
+    public ResponseEntity<List<MissionResponse>> list(
+            @RequestHeader("Authorization") String authorization
+    ) {
+        return ResponseEntity.ok(getAvailableMissionsUseCase.execute(authorization));
     }
 }
