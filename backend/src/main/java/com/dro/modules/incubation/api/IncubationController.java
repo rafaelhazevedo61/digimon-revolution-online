@@ -40,7 +40,7 @@ public class IncubationController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> me(
+    public ResponseEntity<?> me (
             @RequestHeader("Authorization") String authorization
     ) {
         var response = getUseCase.execute(authorization);

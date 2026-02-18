@@ -1,6 +1,9 @@
 package com.dro.modules.mission.api;
 
+import com.dro.modules.inventory.domain.ItemType;
+
 public record MissionResultResponse(
         int xpGained,
-        int newLevel
+        boolean levelUp,
+        ItemType droppedItem
 ) {}
