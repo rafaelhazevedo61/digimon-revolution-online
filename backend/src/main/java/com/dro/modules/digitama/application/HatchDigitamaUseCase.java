@@ -30,10 +30,6 @@ public class HatchDigitamaUseCase {
             throw new RuntimeException("No digitama selected");
         }
 
-        if (digimonRepository.findByPlayerId(playerId).isPresent()) {
-            throw new RuntimeException("Player already has a Digimon");
-        }
-
         Random random = new Random();
 
         int ivHp = random.nextInt(32);
@@ -58,5 +54,10 @@ public class HatchDigitamaUseCase {
                 .build();
 
         digimonRepository.save(digimon);
+
+        if (player.getActiveDigimonId() == null) {
+            player.setActiveDigimonId(digimon.getId());
+            playerRepository.save(player);
+        }
     }
 }

@@ -18,5 +18,6 @@ public record DigimonResponse(
         int ivHp,
         int ivAttack,
         int ivDefense,
+        boolean active,
         LocalDateTime createdAt
 ) {}

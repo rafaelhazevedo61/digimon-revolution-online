@@ -1,6 +1,7 @@
 package com.dro.modules.incubation.api;
 
 import com.dro.modules.incubation.application.ClaimIncubationUseCase;
+import com.dro.modules.incubation.application.GetIncubationUseCase;
 import com.dro.modules.incubation.application.StartIncubationUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ public class IncubationController {
 
     private final StartIncubationUseCase startUseCase;
     private final ClaimIncubationUseCase claimUseCase;
+    private final GetIncubationUseCase getUseCase;
 
     @PostMapping("/start")
     public ResponseEntity<Void> start (
@@ -35,5 +37,18 @@ public class IncubationController {
     ) {
         claimUseCase.execute(authorization);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> me(
+            @RequestHeader("Authorization") String authorization
+    ) {
+        var response = getUseCase.execute(authorization);
+
+        if (response == null) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(response);
     }
 }

@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/digimon")
 @RequiredArgsConstructor
@@ -18,7 +20,7 @@ public class DigimonController {
     private final SelectActiveDigimonUseCase selectUseCase;
 
     @GetMapping("/me")
-    public ResponseEntity<DigimonResponse> me(
+    public ResponseEntity<List<DigimonResponse>> me(
             @RequestHeader("Authorization") String authorization
     ) {
         return ResponseEntity.ok(useCase.execute(authorization));
