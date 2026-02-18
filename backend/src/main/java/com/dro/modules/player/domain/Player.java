@@ -34,4 +34,7 @@ public class Player {
     @Enumerated(EnumType.STRING)
     private DigitamaType selectedDigitama;
 
+    @Column(name = "active_digimon_id")
+    private UUID activeDigimonId;
+
 }

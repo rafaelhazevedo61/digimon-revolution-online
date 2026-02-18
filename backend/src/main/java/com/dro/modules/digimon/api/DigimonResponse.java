@@ -1,5 +1,7 @@
 package com.dro.modules.digimon.api;
 
+import com.dro.modules.digimon.domain.Stage;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -7,7 +9,7 @@ public record DigimonResponse(
         UUID id,
         String name,
         String type,
-        String stage,
+        Stage stage,
         int level,
         int experience,
         int hp,

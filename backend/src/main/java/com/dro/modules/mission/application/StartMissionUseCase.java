@@ -5,6 +5,7 @@ import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.mission.api.MissionResultResponse;
+import com.dro.modules.player.infra.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,15 +15,24 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class StartMissionUseCase {
 
-    private final DigimonRepository repository;
+    private final DigimonRepository digimonRepository;
+    private final PlayerRepository playerRepository;
     private final AddItemUseCase addItemUseCase;
 
     public MissionResultResponse execute(String token) {
 
         UUID playerId = UUID.fromString(token.split(":")[1]);
 
-        Digimon digimon = repository.findByPlayerId(playerId)
-                .orElseThrow(() -> new RuntimeException("Digimon not found"));
+        var player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new RuntimeException("Player not found"));
+
+        if (player.getActiveDigimonId() == null) {
+            throw new RuntimeException("No active digimon selected");
+        }
+
+        Digimon digimon = digimonRepository
+                .findById(player.getActiveDigimonId())
+                .orElseThrow(() -> new RuntimeException("Active digimon not found"));
 
         int previousLevel = digimon.getLevel();
 
@@ -30,11 +40,9 @@ public class StartMissionUseCase {
 
         digimon.gainExperience(xpReward);
 
-        repository.save(digimon);
+        digimonRepository.save(digimon);
 
         addItemUseCase.execute(playerId, ItemType.TRAINING_STONE, 1);
-        addItemUseCase.execute(playerId, ItemType.DIGITAMA_FIRE, 1);
-        addItemUseCase.execute(playerId, ItemType.INCUBATOR_COMMON, 1);
 
         return new MissionResultResponse(
                 xpReward,

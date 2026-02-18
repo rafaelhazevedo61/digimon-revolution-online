@@ -2,6 +2,8 @@ package com.dro.modules.digimon.api;
 
 import com.dro.modules.digimon.application.AddExperienceUseCase;
 import com.dro.modules.digimon.application.GetDigimonUseCase;
+import com.dro.modules.digimon.application.SelectActiveDigimonUseCase;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +15,7 @@ public class DigimonController {
 
     private final GetDigimonUseCase useCase;
     private final AddExperienceUseCase addExperienceUseCase;
+    private final SelectActiveDigimonUseCase selectUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<DigimonResponse> me(
@@ -27,6 +30,15 @@ public class DigimonController {
             @RequestParam int amount
     ) {
         addExperienceUseCase.execute(authorization, amount);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/select")
+    public ResponseEntity<Void> select(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody @Valid SelectDigimonRequest request
+    ) {
+        selectUseCase.execute(authorization, request.digimonId());
         return ResponseEntity.ok().build();
     }
 }

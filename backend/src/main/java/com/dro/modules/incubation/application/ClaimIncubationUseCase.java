@@ -1,9 +1,11 @@
-package com.dro.modules.digitama.application;
+package com.dro.modules.incubation.application;
 
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.Stage;
 import com.dro.modules.digimon.infra.DigimonRepository;
-import com.dro.modules.player.domain.Player;
+import com.dro.modules.incubation.domain.Incubation;
+import com.dro.modules.incubation.domain.IncubationStatus;
+import com.dro.modules.incubation.infra.IncubationRepository;
 import com.dro.modules.player.infra.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,26 +16,24 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class HatchDigitamaUseCase {
+public class ClaimIncubationUseCase {
 
-    private final PlayerRepository playerRepository;
+    private final IncubationRepository incubationRepository;
     private final DigimonRepository digimonRepository;
+    private final PlayerRepository playerRepository;
 
     public void execute(String token) {
 
         UUID playerId = UUID.fromString(token.split(":")[1]);
 
-        Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new RuntimeException("Player not found"));
+        Incubation incubation = incubationRepository
+                .findByPlayerIdAndStatus(playerId, IncubationStatus.IN_PROGRESS)
+                .orElseThrow(() -> new RuntimeException("No active incubation"));
 
-        if (player.getSelectedDigitama() == null) {
-            throw new RuntimeException("No digitama selected");
-        }
+        // 1️⃣ Verificar tempo
+        incubation.markReadyIfFinished();
 
-        if (digimonRepository.findByPlayerId(playerId).isPresent()) {
-            throw new RuntimeException("Player already has a Digimon");
-        }
-
+        // 2️⃣ Criar Digimon
         Random random = new Random();
 
         int ivHp = random.nextInt(32);
@@ -43,8 +43,8 @@ public class HatchDigitamaUseCase {
         Digimon digimon = Digimon.builder()
                 .id(UUID.randomUUID())
                 .playerId(playerId)
-                .name("Baby " + player.getSelectedDigitama().name())
-                .type(player.getSelectedDigitama().name())
+                .name("Baby " + incubation.getDigitamaType().name())
+                .type(incubation.getDigitamaType().name())
                 .stage(Stage.BABY)
                 .level(1)
                 .experience(0)
@@ -58,5 +58,17 @@ public class HatchDigitamaUseCase {
                 .build();
 
         digimonRepository.save(digimon);
+
+        var player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new RuntimeException("Player not found"));
+
+        if (player.getActiveDigimonId() == null) {
+            player.setActiveDigimonId(digimon.getId());
+            playerRepository.save(player);
+        }
+
+        // 3️⃣ Marcar como CLAIMED
+        incubation.claim();
+        incubationRepository.save(incubation);
     }
 }

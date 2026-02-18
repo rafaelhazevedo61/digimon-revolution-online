@@ -27,8 +27,9 @@ public class Digimon {
     @Column(nullable = false)
     private String type;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String stage;
+    private Stage stage;
 
     @Column(nullable = false)
     private int level;
@@ -46,6 +47,9 @@ public class Digimon {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+//    @Column(nullable = false)
+//    private boolean active;
 
     public void gainExperience(int amount) {
 
