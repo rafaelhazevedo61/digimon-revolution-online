@@ -48,16 +48,23 @@ public class Digimon {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Rarity rarity;
+
 //    @Column(nullable = false)
 //    private boolean active;
 
-    public void gainExperience(int amount) {
+    public void gainExperience(int baseXp) {
 
-        this.experience += amount;
+        double multiplier = RarityRules.getXpMultiplier(this.rarity);
+        int finalXp = (int) Math.floor(baseXp * multiplier);
+
+        this.experience += finalXp;
 
         while (this.experience >= xpToNextLevel()) {
             this.experience -= xpToNextLevel();
-            levelUp();
+            this.level++;
         }
     }
 

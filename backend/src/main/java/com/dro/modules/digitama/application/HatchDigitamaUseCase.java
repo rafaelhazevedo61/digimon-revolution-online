@@ -1,7 +1,6 @@
 package com.dro.modules.digitama.application;
 
-import com.dro.modules.digimon.domain.Digimon;
-import com.dro.modules.digimon.domain.Stage;
+import com.dro.modules.digimon.domain.*;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
@@ -19,45 +18,85 @@ public class HatchDigitamaUseCase {
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
 
+    private final Random random = new Random();
+
     public void execute(String token) {
 
-        UUID playerId = UUID.fromString(token.split(":")[1]);
+        UUID playerId = extractPlayerId(token);
 
-        Player player = playerRepository.findById(playerId)
+        Player player = findPlayer(playerId);
+
+        validateDigitamaSelection(player);
+
+        Digimon digimon = createDigimon(playerId, player);
+
+        digimonRepository.save(digimon);
+
+        setActiveIfFirstDigimon(player, digimon);
+
+        clearSelectedDigitama(player);
+    }
+
+    private UUID extractPlayerId(String token) {
+        return UUID.fromString(token.split(":")[1]);
+    }
+
+    private Player findPlayer(UUID playerId) {
+        return playerRepository.findById(playerId)
                 .orElseThrow(() -> new RuntimeException("Player not found"));
+    }
 
+    private void validateDigitamaSelection(Player player) {
         if (player.getSelectedDigitama() == null) {
-            throw new RuntimeException("No digitama selected");
+            throw new RuntimeException("Digitama already hatched or not selected");
         }
+    }
 
-        Random random = new Random();
+    private Digimon createDigimon(UUID playerId, Player player) {
 
-        int ivHp = random.nextInt(32);
-        int ivAttack = random.nextInt(32);
-        int ivDefense = random.nextInt(32);
+        Rarity rarity = RarityRoller.roll();
 
-        Digimon digimon = Digimon.builder()
+        int minIv = RarityRules.getMinimumIv(rarity);
+
+        int ivHp = minIv + random.nextInt(32 - minIv);
+        int ivAttack = minIv + random.nextInt(32 - minIv);
+        int ivDefense = minIv + random.nextInt(32 - minIv);
+
+        double statMultiplier = RarityRules.getStatMultiplier(rarity);
+
+        int hp = (int) Math.floor((10 + ivHp) * statMultiplier);
+        int attack = (int) Math.floor((5 + ivAttack) * statMultiplier);
+        int defense = (int) Math.floor((5 + ivDefense) * statMultiplier);
+
+        return Digimon.builder()
                 .id(UUID.randomUUID())
                 .playerId(playerId)
                 .name("Baby " + player.getSelectedDigitama().name())
                 .type(player.getSelectedDigitama().name())
                 .stage(Stage.BABY)
+                .rarity(rarity)
                 .level(1)
                 .experience(0)
                 .ivHp(ivHp)
                 .ivAttack(ivAttack)
                 .ivDefense(ivDefense)
-                .hp(10 + ivHp)
-                .attack(5 + ivAttack)
-                .defense(5 + ivDefense)
+                .hp(hp)
+                .attack(attack)
+                .defense(defense)
                 .createdAt(LocalDateTime.now())
                 .build();
+    }
 
-        digimonRepository.save(digimon);
+    private void setActiveIfFirstDigimon(Player player, Digimon digimon) {
 
         if (player.getActiveDigimonId() == null) {
             player.setActiveDigimonId(digimon.getId());
             playerRepository.save(player);
         }
+    }
+
+    private void clearSelectedDigitama(Player player) {
+        player.setSelectedDigitama(null);
+        playerRepository.save(player);
     }
 }

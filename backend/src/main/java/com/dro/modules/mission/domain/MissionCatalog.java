@@ -16,7 +16,9 @@ public class MissionCatalog {
                     1,
                     30,
                     List.of(
-                            new MissionReward(ItemType.TRAINING_STONE, 1)
+                            new MissionReward(ItemType.TRAINING_STONE, 1),
+                            new MissionReward(ItemType.DIGITAMA_FIRE, 1),
+                            new MissionReward(ItemType.INCUBATOR_EPIC, 1)
                     )
             ),
 
