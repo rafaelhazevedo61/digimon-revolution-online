@@ -15,7 +15,9 @@ public class MissionCatalog {
                     "Uma missão básica para novos Digimons.",
                     1,
                     30,
-                    ItemType.TRAINING_STONE
+                    List.of(
+                            new MissionReward(ItemType.TRAINING_STONE, 1)
+                    )
             ),
 
             new MissionDefinition(
@@ -24,7 +26,9 @@ public class MissionCatalog {
                     "Derrote inimigos selvagens na floresta.",
                     5,
                     60,
-                    ItemType.DIGITAMA_FIRE
+                    List.of(
+                            new MissionReward(ItemType.TRAINING_STONE, 1)
+                    )
             ),
 
             new MissionDefinition(
@@ -33,7 +37,9 @@ public class MissionCatalog {
                     "Enfrente perigos nas ruínas antigas.",
                     10,
                     120,
-                    ItemType.INCUBATOR_COMMON
+                    List.of(
+                            new MissionReward(ItemType.TRAINING_STONE, 1)
+                    )
             )
     );
 

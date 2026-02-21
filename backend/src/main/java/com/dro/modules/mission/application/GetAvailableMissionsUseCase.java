@@ -40,7 +40,7 @@ public class GetAvailableMissionsUseCase {
                         m.getName(),
                         m.getDescription(),
                         m.getRequiredLevel(),
-                        m.getXpReward()
+                        m.getBaseXp()
                 ))
                 .toList();
     }
