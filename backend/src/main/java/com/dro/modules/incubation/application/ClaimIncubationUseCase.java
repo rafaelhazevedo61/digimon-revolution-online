@@ -66,19 +66,42 @@ public class ClaimIncubationUseCase {
             Incubation incubation
     ) {
 
+        // 1️⃣ Rolar raridade
         Rarity rarity = RarityRoller.roll();
 
+        // 2️⃣ Rolar personalidade
+        Personality personality = PersonalityRoller.roll();
+
+        // 3️⃣ Definir IV mínimo baseado na raridade
         int minIv = RarityRules.getMinimumIv(rarity);
 
         int ivHp = minIv + random.nextInt(32 - minIv);
         int ivAttack = minIv + random.nextInt(32 - minIv);
         int ivDefense = minIv + random.nextInt(32 - minIv);
 
-        double statMultiplier = RarityRules.getStatMultiplier(rarity);
+        // 4️⃣ Multiplicadores
+        double rarityMultiplier = RarityRules.getStatMultiplier(rarity);
+        double stageMultiplier = EvolutionRules.stageStatMultiplier(Stage.BABY);
 
-        int hp = (int) Math.floor((10 + ivHp) * statMultiplier);
-        int attack = (int) Math.floor((5 + ivAttack) * statMultiplier);
-        int defense = (int) Math.floor((5 + ivDefense) * statMultiplier);
+        double hpMultiplier =
+                rarityMultiplier
+                        * stageMultiplier
+                        * PersonalityRules.getHpMultiplier(personality);
+
+        double attackMultiplier =
+                rarityMultiplier
+                        * stageMultiplier
+                        * PersonalityRules.getAttackMultiplier(personality);
+
+        double defenseMultiplier =
+                rarityMultiplier
+                        * stageMultiplier
+                        * PersonalityRules.getDefenseMultiplier(personality);
+
+        // 5️⃣ Cálculo final de stats
+        int hp = (int) Math.floor((10 + ivHp) * hpMultiplier);
+        int attack = (int) Math.floor((5 + ivAttack) * attackMultiplier);
+        int defense = (int) Math.floor((5 + ivDefense) * defenseMultiplier);
 
         return Digimon.builder()
                 .id(UUID.randomUUID())
@@ -87,6 +110,7 @@ public class ClaimIncubationUseCase {
                 .type(incubation.getDigitamaType().name())
                 .stage(Stage.BABY)
                 .rarity(rarity)
+                .personality(personality)
                 .level(1)
                 .experience(0)
                 .ivHp(ivHp)
