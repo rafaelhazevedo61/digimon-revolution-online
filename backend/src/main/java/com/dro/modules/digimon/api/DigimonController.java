@@ -1,10 +1,15 @@
 package com.dro.modules.digimon.api;
 
 import com.dro.modules.digimon.application.AddExperienceUseCase;
+import com.dro.modules.digimon.application.EvolveDigimonUseCase;
 import com.dro.modules.digimon.application.GetDigimonUseCase;
+import com.dro.modules.digimon.application.SelectActiveDigimonUseCase;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/digimon")
@@ -13,9 +18,11 @@ public class DigimonController {
 
     private final GetDigimonUseCase useCase;
     private final AddExperienceUseCase addExperienceUseCase;
+    private final SelectActiveDigimonUseCase selectUseCase;
+    private final EvolveDigimonUseCase evolveDigimonUseCase;
 
     @GetMapping("/me")
-    public ResponseEntity<DigimonResponse> me(
+    public ResponseEntity<List<DigimonResponse>> me(
             @RequestHeader("Authorization") String authorization
     ) {
         return ResponseEntity.ok(useCase.execute(authorization));
@@ -28,5 +35,22 @@ public class DigimonController {
     ) {
         addExperienceUseCase.execute(authorization, amount);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/select")
+    public ResponseEntity<Void> select(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody @Valid SelectDigimonRequest request
+    ) {
+        selectUseCase.execute(authorization, request.digimonId());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/evolve")
+    public ResponseEntity<String> evolve(
+            @RequestHeader("Authorization") String authorization
+    ) {
+        evolveDigimonUseCase.execute(authorization);
+        return ResponseEntity.ok("Digimon evolved successfully");
     }
 }

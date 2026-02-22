@@ -1,0 +1,15 @@
+package com.dro.modules.incubation.api;
+
+import com.dro.modules.incubation.domain.IncubationStatus;
+import com.dro.modules.inventory.domain.ItemType;
+
+import java.time.LocalDateTime;
+
+public record IncubationResponse(
+        ItemType digitamaType,
+        ItemType incubatorType,
+        IncubationStatus status,
+        LocalDateTime startedAt,
+        LocalDateTime finishAt,
+        long remainingSeconds
+) {}

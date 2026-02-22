@@ -27,8 +27,9 @@ public class Digimon {
     @Column(nullable = false)
     private String type;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String stage;
+    private Stage stage;
 
     @Column(nullable = false)
     private int level;
@@ -47,13 +48,23 @@ public class Digimon {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    public void gainExperience(int amount) {
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Rarity rarity;
 
-        this.experience += amount;
+//    @Column(nullable = false)
+//    private boolean active;
+
+    public void gainExperience(int baseXp) {
+
+        double multiplier = RarityRules.getXpMultiplier(this.rarity);
+        int finalXp = (int) Math.floor(baseXp * multiplier);
+
+        this.experience += finalXp;
 
         while (this.experience >= xpToNextLevel()) {
             this.experience -= xpToNextLevel();
-            levelUp();
+            this.level++;
         }
     }
 

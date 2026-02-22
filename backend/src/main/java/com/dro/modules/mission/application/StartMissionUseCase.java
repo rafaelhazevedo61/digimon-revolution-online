@@ -5,38 +5,128 @@ import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.mission.api.MissionResultResponse;
+import com.dro.modules.mission.api.RewardResponse;
+import com.dro.modules.mission.domain.*;
+import com.dro.modules.mission.infra.PlayerMissionProgressRepository;
+import com.dro.modules.player.domain.Player;
+import com.dro.modules.player.infra.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class StartMissionUseCase {
 
-    private final DigimonRepository repository;
+    private final PlayerRepository playerRepository;
+    private final DigimonRepository digimonRepository;
+    private final PlayerMissionProgressRepository progressRepository;
     private final AddItemUseCase addItemUseCase;
 
-    public MissionResultResponse execute(String token) {
+    private static final long COOLDOWN_SECONDS = 10;
+
+    public MissionResultResponse execute (String token, String missionId) {
 
         UUID playerId = UUID.fromString(token.split(":")[1]);
 
-        Digimon digimon = repository.findByPlayerId(playerId)
-                .orElseThrow(() -> new RuntimeException("Digimon not found"));
+        Player player = playerRepository.findById(playerId).orElseThrow(() -> new RuntimeException("Player not found"));
+
+        validateCooldown(player);
+
+        Digimon digimon = getActiveDigimon(player);
+
+        MissionDefinition mission = MissionCatalog.findById(missionId).orElseThrow(() -> new RuntimeException("Mission not found"));
+
+        validateRequirement(digimon, mission);
+
+        PlayerMissionProgress progress = getOrCreateProgress(playerId, missionId);
+
+        int completionCount = progress.getCompletionCount();
 
         int previousLevel = digimon.getLevel();
 
-        int xpReward = 120;
+        int xpGained = calculateScaledXp(mission.getBaseXp(), completionCount);
 
-        digimon.gainExperience(xpReward);
+        digimon.gainExperience(xpGained);
+        digimonRepository.save(digimon);
 
-        repository.save(digimon);
+        boolean levelUp = digimon.getLevel() > previousLevel;
 
-        addItemUseCase.execute(playerId, ItemType.TRAINING_STONE, 1);
+        List<RewardResponse> rewards = applyScaledRewards(playerId, mission, completionCount);
 
-        return new MissionResultResponse(
-                xpReward,
-                digimon.getLevel()
-        );
+        incrementProgress(progress);
+
+        player.setLastMissionAt(LocalDateTime.now());
+        playerRepository.save(player);
+
+        return new MissionResultResponse(missionId, xpGained, levelUp, rewards);
+    }
+
+    private void validateCooldown (Player player) {
+
+        if (player.getLastMissionAt() == null) return;
+
+        long seconds = Duration.between(player.getLastMissionAt(), LocalDateTime.now()).getSeconds();
+
+        if (seconds < COOLDOWN_SECONDS) {
+            throw new RuntimeException("Mission on cooldown. Try again in " + (COOLDOWN_SECONDS - seconds) + " seconds.");
+        }
+    }
+
+    private Digimon getActiveDigimon (Player player) {
+
+        if (player.getActiveDigimonId() == null) {
+            throw new RuntimeException("No active digimon selected");
+        }
+
+        return digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new RuntimeException("Active digimon not found"));
+    }
+
+    private void validateRequirement (Digimon digimon, MissionDefinition mission) {
+        if (digimon.getLevel() < mission.getRequiredLevel()) {
+            throw new RuntimeException("Mission locked: level too low");
+        }
+    }
+
+    private PlayerMissionProgress getOrCreateProgress (UUID playerId, String missionId) {
+        return progressRepository.findByPlayerIdAndMissionId(playerId, missionId).orElseGet(() -> {
+            PlayerMissionProgress progress = PlayerMissionProgress.builder().id(UUID.randomUUID()).playerId(playerId).missionId(missionId).completionCount(0).build();
+            return progressRepository.save(progress);
+        });
+    }
+
+    private int calculateScaledXp (int baseXp, int completionCount) {
+        double multiplier = 1 + (completionCount * 0.05);
+
+        return (int) Math.floor(baseXp * multiplier);
+    }
+
+    private List<RewardResponse> applyScaledRewards (UUID playerId, MissionDefinition mission, int completionCount) {
+
+        double multiplier = 1 + (completionCount * 0.05);
+
+        List<RewardResponse> rewards = new ArrayList<>();
+
+        for (MissionReward reward : mission.getRewards()) {
+
+            int quantity = (int) Math.floor(reward.getBaseQuantity() * multiplier);
+
+            if (quantity > 0) {
+
+                addItemUseCase.execute(playerId, reward.getItemType(), quantity);
+
+                rewards.add(new RewardResponse(reward.getItemType(), quantity));
+            }
+        }
+
+        return rewards;
+    }
+
+    private void incrementProgress (PlayerMissionProgress progress) {
+        progress.setCompletionCount(progress.getCompletionCount() + 1);
+        progressRepository.save(progress);
     }
 }

@@ -1,7 +1,10 @@
-package com.dro.modules.digitama.application;
+package com.dro.modules.incubation.application;
 
 import com.dro.modules.digimon.domain.*;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.incubation.domain.Incubation;
+import com.dro.modules.incubation.domain.IncubationStatus;
+import com.dro.modules.incubation.infra.IncubationRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,10 +16,11 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class HatchDigitamaUseCase {
+public class ClaimIncubationUseCase {
 
-    private final PlayerRepository playerRepository;
+    private final IncubationRepository incubationRepository;
     private final DigimonRepository digimonRepository;
+    private final PlayerRepository playerRepository;
 
     private final Random random = new Random();
 
@@ -24,35 +28,43 @@ public class HatchDigitamaUseCase {
 
         UUID playerId = extractPlayerId(token);
 
-        Player player = findPlayer(playerId);
+        Incubation incubation = findActiveIncubation(playerId);
 
-        validateDigitamaSelection(player);
+        validateIncubationFinished(incubation);
 
-        Digimon digimon = createDigimon(playerId, player);
+        Digimon digimon = createDigimonFromIncubation(playerId, incubation);
 
         digimonRepository.save(digimon);
 
-        setActiveIfFirstDigimon(player, digimon);
+        setActiveIfFirstDigimon(playerId, digimon);
 
-        clearSelectedDigitama(player);
+        finalizeIncubation(incubation);
     }
 
     private UUID extractPlayerId(String token) {
         return UUID.fromString(token.split(":")[1]);
     }
 
-    private Player findPlayer(UUID playerId) {
-        return playerRepository.findById(playerId)
-                .orElseThrow(() -> new RuntimeException("Player not found"));
+    private Incubation findActiveIncubation(UUID playerId) {
+
+        return incubationRepository
+                .findByPlayerIdAndStatus(playerId, IncubationStatus.IN_PROGRESS)
+                .orElseThrow(() -> new RuntimeException("No active incubation"));
     }
 
-    private void validateDigitamaSelection(Player player) {
-        if (player.getSelectedDigitama() == null) {
-            throw new RuntimeException("Digitama already hatched or not selected");
+    private void validateIncubationFinished(Incubation incubation) {
+
+        if (incubation.getFinishAt().isAfter(LocalDateTime.now())) {
+            throw new RuntimeException("Incubation not finished yet");
         }
+
+        incubation.markReadyIfFinished();
     }
 
-    private Digimon createDigimon(UUID playerId, Player player) {
+    private Digimon createDigimonFromIncubation(
+            UUID playerId,
+            Incubation incubation
+    ) {
 
         Rarity rarity = RarityRoller.roll();
 
@@ -71,8 +83,8 @@ public class HatchDigitamaUseCase {
         return Digimon.builder()
                 .id(UUID.randomUUID())
                 .playerId(playerId)
-                .name("Baby " + player.getSelectedDigitama().name())
-                .type(player.getSelectedDigitama().name())
+                .name("Baby " + incubation.getDigitamaType().name())
+                .type(incubation.getDigitamaType().name())
                 .stage(Stage.BABY)
                 .rarity(rarity)
                 .level(1)
@@ -87,7 +99,10 @@ public class HatchDigitamaUseCase {
                 .build();
     }
 
-    private void setActiveIfFirstDigimon(Player player, Digimon digimon) {
+    private void setActiveIfFirstDigimon(UUID playerId, Digimon digimon) {
+
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new RuntimeException("Player not found"));
 
         if (player.getActiveDigimonId() == null) {
             player.setActiveDigimonId(digimon.getId());
@@ -95,8 +110,9 @@ public class HatchDigitamaUseCase {
         }
     }
 
-    private void clearSelectedDigitama(Player player) {
-        player.setSelectedDigitama(null);
-        playerRepository.save(player);
+    private void finalizeIncubation(Incubation incubation) {
+
+        incubation.claim();
+        incubationRepository.save(incubation);
     }
 }

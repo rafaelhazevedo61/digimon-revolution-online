@@ -1,6 +1,12 @@
 package com.dro.modules.mission.api;
 
+import com.dro.modules.inventory.domain.ItemType;
+
+import java.util.List;
+
 public record MissionResultResponse(
+        String missionId,
         int xpGained,
-        int newLevel
+        boolean levelUp,
+        List<RewardResponse> rewards
 ) {}
