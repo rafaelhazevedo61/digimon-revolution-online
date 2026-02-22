@@ -1,6 +1,7 @@
 package com.dro.modules.digimon.api;
 
 import com.dro.modules.digimon.application.AddExperienceUseCase;
+import com.dro.modules.digimon.application.EvolveDigimonUseCase;
 import com.dro.modules.digimon.application.GetDigimonUseCase;
 import com.dro.modules.digimon.application.SelectActiveDigimonUseCase;
 import jakarta.validation.Valid;
@@ -18,6 +19,7 @@ public class DigimonController {
     private final GetDigimonUseCase useCase;
     private final AddExperienceUseCase addExperienceUseCase;
     private final SelectActiveDigimonUseCase selectUseCase;
+    private final EvolveDigimonUseCase evolveDigimonUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<List<DigimonResponse>> me(
@@ -42,5 +44,13 @@ public class DigimonController {
     ) {
         selectUseCase.execute(authorization, request.digimonId());
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/evolve")
+    public ResponseEntity<String> evolve(
+            @RequestHeader("Authorization") String authorization
+    ) {
+        evolveDigimonUseCase.execute(authorization);
+        return ResponseEntity.ok("Digimon evolved successfully");
     }
 }

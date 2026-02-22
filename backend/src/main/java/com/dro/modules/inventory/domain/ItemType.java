@@ -13,5 +13,11 @@ public enum ItemType {
     // Incubadoras
     INCUBATOR_COMMON,
     INCUBATOR_RARE,
-    INCUBATOR_EPIC
+    INCUBATOR_EPIC,
+
+    // Fragmentos
+    FRAGMENT_CHAMPION,
+    FRAGMENT_ULTIMATE,
+    FRAGMENT_MEGA
+
 }
