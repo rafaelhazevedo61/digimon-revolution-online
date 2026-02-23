@@ -47,6 +47,14 @@ public class StartMissionUseCase {
 
         validateRequirement(digimon, mission);
 
+        digimon.regenerateEnergy();
+
+        if (digimon.getEnergy() < mission.getEnergyCost()) {
+            throw new RuntimeException("Energia insuficiente");
+        }
+
+        digimon.consumeEnergy(mission.getEnergyCost());
+
         PlayerMissionProgress progress = getOrCreateProgress(playerId, missionId);
 
         int completionCount = progress.getCompletionCount();

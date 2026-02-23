@@ -10,6 +10,7 @@ import com.dro.modules.player.infra.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.UUID;
@@ -120,6 +121,9 @@ public class ClaimIncubationUseCase {
                 .attack(attack)
                 .defense(defense)
                 .createdAt(LocalDateTime.now())
+                .energy(20)
+                .maxEnergy(20)
+                .lastEnergyUpdate(Instant.now())
                 .build();
     }
 

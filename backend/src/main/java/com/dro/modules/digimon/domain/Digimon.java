@@ -3,6 +3,8 @@ package com.dro.modules.digimon.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -56,6 +58,13 @@ public class Digimon {
     @Column(nullable = false)
     private Personality personality;
 
+    @Column(nullable = false)
+    private int energy;
+    @Column(name = "max_energy", nullable = false)
+    private int maxEnergy;
+    @Column(name = "last_energy_update", nullable = false)
+    private Instant lastEnergyUpdate;
+
     public void gainExperience(int baseXp) {
 
         double rarityMultiplier = RarityRules.getXpMultiplier(this.rarity);
@@ -94,5 +103,32 @@ public class Digimon {
         this.hp += 2;
         this.attack += 1;
         this.defense += 1;
+    }
+
+    public void regenerateEnergy() {
+
+        if (energy >= maxEnergy) return;
+
+        Instant now = Instant.now();
+
+        long minutesPassed = Duration.between(lastEnergyUpdate, now).toMinutes();
+
+        long energyRecovered = minutesPassed / 5; // 1 energia a cada 5 minutos
+
+        if (energyRecovered > 0) {
+
+            energy = (int) Math.min(maxEnergy, energy + energyRecovered);
+
+            lastEnergyUpdate = lastEnergyUpdate.plus(Duration.ofMinutes(energyRecovered * 5));
+        }
+    }
+
+    public void consumeEnergy(int amount) {
+
+        if (energy < amount) {
+            throw new RuntimeException("Energia insuficiente");
+        }
+
+        energy -= amount;
     }
 }
