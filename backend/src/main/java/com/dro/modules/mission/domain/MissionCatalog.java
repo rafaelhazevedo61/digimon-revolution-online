@@ -16,6 +16,7 @@ public class MissionCatalog {
                     Area.DIGITAL_FOREST,
                     1,
                     30,
+                    5,
                     List.of(
                             new MissionReward(ItemType.TRAINING_STONE, 1),
                             new MissionReward(ItemType.DIGITAMA_FIRE, 1),
@@ -33,6 +34,7 @@ public class MissionCatalog {
                     Area.DIGITAL_FOREST,
                     5,
                     60,
+                    6,
                     List.of(
                             new MissionReward(ItemType.TRAINING_STONE, 1)
                     )
@@ -45,6 +47,7 @@ public class MissionCatalog {
                     Area.DIGITAL_FOREST,
                     10,
                     120,
+                    7,
                     List.of(
                             new MissionReward(ItemType.TRAINING_STONE, 1)
                     )
@@ -57,6 +60,7 @@ public class MissionCatalog {
                     Area.OCEAN_DEPTHS,
                     10,
                     120,
+                    8,
                     List.of(
                             new MissionReward(ItemType.TRAINING_STONE, 1)
                     )
@@ -69,6 +73,7 @@ public class MissionCatalog {
                     Area.ANCIENT_RUINS,
                     10,
                     120,
+                    9,
                     List.of(
                             new MissionReward(ItemType.TRAINING_STONE, 1)
                     )
@@ -81,6 +86,7 @@ public class MissionCatalog {
                     Area.VOLCANIC_ZONE,
                     10,
                     120,
+                    10,
                     List.of(
                             new MissionReward(ItemType.TRAINING_STONE, 1)
                     )

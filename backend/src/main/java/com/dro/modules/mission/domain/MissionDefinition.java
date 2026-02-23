@@ -10,6 +10,7 @@ public class MissionDefinition {
     private final Area area;
     private final int requiredLevel;
     private final int baseXp;
+    private final int energyCost;
     private List<MissionReward> rewards;
 
     public MissionDefinition (
@@ -17,7 +18,7 @@ public class MissionDefinition {
             String name,
             String description, Area area,
             int requiredLevel,
-            int baseXp,
+            int baseXp, int energyCost,
             List<MissionReward> rewards
     ) {
         this.id = id;
@@ -26,6 +27,7 @@ public class MissionDefinition {
         this.area = area;
         this.requiredLevel = requiredLevel;
         this.baseXp = baseXp;
+        this.energyCost = energyCost;
         this.rewards = rewards;
     }
 
@@ -59,5 +61,9 @@ public class MissionDefinition {
 
     public Area getArea () {
         return area;
+    }
+
+    public int getEnergyCost () {
+        return energyCost;
     }
 }

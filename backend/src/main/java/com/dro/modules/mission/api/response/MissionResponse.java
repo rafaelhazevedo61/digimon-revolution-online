@@ -5,5 +5,6 @@ public record MissionResponse(
         String name,
         String description,
         int requiredLevel,
-        int xpReward
+        int xpReward,
+        int energyCost
 ) {}
