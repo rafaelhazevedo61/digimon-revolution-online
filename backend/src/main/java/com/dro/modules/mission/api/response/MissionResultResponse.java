@@ -1,6 +1,4 @@
-package com.dro.modules.mission.api;
-
-import com.dro.modules.inventory.domain.ItemType;
+package com.dro.modules.mission.api.response;
 
 import java.util.List;
 

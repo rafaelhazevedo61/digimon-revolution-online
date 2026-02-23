@@ -13,6 +13,7 @@ public class MissionCatalog {
                     "MISSION_1",
                     "Treinamento Inicial",
                     "Uma missão básica para novos Digimons.",
+                    Area.DIGITAL_FOREST,
                     1,
                     30,
                     List.of(
@@ -29,6 +30,7 @@ public class MissionCatalog {
                     "MISSION_2",
                     "Caça na Floresta",
                     "Derrote inimigos selvagens na floresta.",
+                    Area.DIGITAL_FOREST,
                     5,
                     60,
                     List.of(
@@ -40,6 +42,43 @@ public class MissionCatalog {
                     "MISSION_3",
                     "Desafio das Ruínas",
                     "Enfrente perigos nas ruínas antigas.",
+                    Area.DIGITAL_FOREST,
+                    10,
+                    120,
+                    List.of(
+                            new MissionReward(ItemType.TRAINING_STONE, 1)
+                    )
+            ),
+
+            new MissionDefinition(
+                    "MISSION_4",
+                    "Missao 4 - name",
+                    "Missao 4 - description",
+                    Area.OCEAN_DEPTHS,
+                    10,
+                    120,
+                    List.of(
+                            new MissionReward(ItemType.TRAINING_STONE, 1)
+                    )
+            ),
+
+            new MissionDefinition(
+                    "MISSION_5",
+                    "Missao 5 - name",
+                    "Missao 5 - description",
+                    Area.ANCIENT_RUINS,
+                    10,
+                    120,
+                    List.of(
+                            new MissionReward(ItemType.TRAINING_STONE, 1)
+                    )
+            ),
+
+            new MissionDefinition(
+                    "MISSION_6",
+                    "Missao 6 - name",
+                    "Missao 6 - description",
+                    Area.VOLCANIC_ZONE,
                     10,
                     120,
                     List.of(
@@ -48,7 +87,7 @@ public class MissionCatalog {
             )
     );
 
-    public static Optional<MissionDefinition> findById(String id) {
+    public static Optional<MissionDefinition> findById (String id) {
         return MISSIONS.stream()
                 .filter(m -> m.getId().equals(id))
                 .findFirst();

@@ -1,4 +1,4 @@
-package com.dro.modules.mission.api;
+package com.dro.modules.mission.api.response;
 
 import com.dro.modules.inventory.domain.ItemType;
 
