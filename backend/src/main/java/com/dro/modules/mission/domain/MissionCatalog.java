@@ -17,6 +17,7 @@ public class MissionCatalog {
                     1,
                     30,
                     5,
+                    10,
                     List.of(
                             new MissionReward(ItemType.TRAINING_STONE, 1),
                             new MissionReward(ItemType.DIGITAMA_FIRE, 1),
@@ -35,6 +36,7 @@ public class MissionCatalog {
                     5,
                     60,
                     6,
+                    10,
                     List.of(
                             new MissionReward(ItemType.TRAINING_STONE, 1)
                     )
@@ -48,6 +50,7 @@ public class MissionCatalog {
                     10,
                     120,
                     7,
+                    10,
                     List.of(
                             new MissionReward(ItemType.TRAINING_STONE, 1)
                     )
@@ -61,6 +64,7 @@ public class MissionCatalog {
                     10,
                     120,
                     8,
+                    10,
                     List.of(
                             new MissionReward(ItemType.TRAINING_STONE, 1)
                     )
@@ -74,6 +78,7 @@ public class MissionCatalog {
                     10,
                     120,
                     9,
+                    10,
                     List.of(
                             new MissionReward(ItemType.TRAINING_STONE, 1)
                     )
@@ -86,6 +91,7 @@ public class MissionCatalog {
                     Area.VOLCANIC_ZONE,
                     10,
                     120,
+                    10,
                     10,
                     List.of(
                             new MissionReward(ItemType.TRAINING_STONE, 1)

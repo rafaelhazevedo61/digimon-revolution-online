@@ -11,6 +11,7 @@ public class MissionDefinition {
     private final int requiredLevel;
     private final int baseXp;
     private final int energyCost;
+    private final int durationSeconds;
     private List<MissionReward> rewards;
 
     public MissionDefinition (
@@ -18,7 +19,7 @@ public class MissionDefinition {
             String name,
             String description, Area area,
             int requiredLevel,
-            int baseXp, int energyCost,
+            int baseXp, int energyCost, int durationSeconds,
             List<MissionReward> rewards
     ) {
         this.id = id;
@@ -28,6 +29,7 @@ public class MissionDefinition {
         this.requiredLevel = requiredLevel;
         this.baseXp = baseXp;
         this.energyCost = energyCost;
+        this.durationSeconds = durationSeconds;
         this.rewards = rewards;
     }
 
@@ -65,5 +67,9 @@ public class MissionDefinition {
 
     public int getEnergyCost () {
         return energyCost;
+    }
+
+    public int getDurationSeconds () {
+        return durationSeconds;
     }
 }
