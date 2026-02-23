@@ -20,7 +20,7 @@ public class HatchDigitamaUseCase {
 
     private final Random random = new Random();
 
-    public void execute(String token) {
+    public void execute (String token) {
 
         UUID playerId = extractPlayerId(token);
 
@@ -37,36 +37,60 @@ public class HatchDigitamaUseCase {
         clearSelectedDigitama(player);
     }
 
-    private UUID extractPlayerId(String token) {
+    private UUID extractPlayerId (String token) {
         return UUID.fromString(token.split(":")[1]);
     }
 
-    private Player findPlayer(UUID playerId) {
+    private Player findPlayer (UUID playerId) {
         return playerRepository.findById(playerId)
                 .orElseThrow(() -> new RuntimeException("Player not found"));
     }
 
-    private void validateDigitamaSelection(Player player) {
+    private void validateDigitamaSelection (Player player) {
         if (player.getSelectedDigitama() == null) {
             throw new RuntimeException("Digitama already hatched or not selected");
         }
     }
 
-    private Digimon createDigimon(UUID playerId, Player player) {
+    private Digimon createDigimon (UUID playerId, Player player) {
 
+        // 1️⃣ Rolar raridade
         Rarity rarity = RarityRoller.roll();
 
+        // 2️⃣ Rolar personalidade
+        Personality personality = PersonalityRoller.roll();
+
+        // 3️⃣ Definir IV mínimo baseado na raridade
         int minIv = RarityRules.getMinimumIv(rarity);
 
         int ivHp = minIv + random.nextInt(32 - minIv);
         int ivAttack = minIv + random.nextInt(32 - minIv);
         int ivDefense = minIv + random.nextInt(32 - minIv);
 
-        double statMultiplier = RarityRules.getStatMultiplier(rarity);
+        // 4️⃣ Multiplicadores
+        double rarityMultiplier = RarityRules.getStatMultiplier(rarity);
+        double stageMultiplier = EvolutionRules.stageStatMultiplier(Stage.BABY);
 
-        int hp = (int) Math.floor((10 + ivHp) * statMultiplier);
-        int attack = (int) Math.floor((5 + ivAttack) * statMultiplier);
-        int defense = (int) Math.floor((5 + ivDefense) * statMultiplier);
+        double hpMultiplier =
+                rarityMultiplier
+                        * stageMultiplier
+                        * PersonalityRules.getHpMultiplier(personality);
+
+        double attackMultiplier =
+                rarityMultiplier
+                        * stageMultiplier
+                        * PersonalityRules.getAttackMultiplier(personality);
+
+        double defenseMultiplier =
+                rarityMultiplier
+                        * stageMultiplier
+                        * PersonalityRules.getDefenseMultiplier(personality);
+
+        // 5️⃣ Cálculo final de stats
+        int hp = (int) Math.floor((10 + ivHp) * hpMultiplier);
+        int attack = (int) Math.floor((5 + ivAttack) * attackMultiplier);
+        int defense = (int) Math.floor((5 + ivDefense) * defenseMultiplier);
+
 
         return Digimon.builder()
                 .id(UUID.randomUUID())
@@ -75,6 +99,7 @@ public class HatchDigitamaUseCase {
                 .type(player.getSelectedDigitama().name())
                 .stage(Stage.BABY)
                 .rarity(rarity)
+                .personality(personality)
                 .level(1)
                 .experience(0)
                 .ivHp(ivHp)
@@ -87,7 +112,7 @@ public class HatchDigitamaUseCase {
                 .build();
     }
 
-    private void setActiveIfFirstDigimon(Player player, Digimon digimon) {
+    private void setActiveIfFirstDigimon (Player player, Digimon digimon) {
 
         if (player.getActiveDigimonId() == null) {
             player.setActiveDigimonId(digimon.getId());
@@ -95,7 +120,7 @@ public class HatchDigitamaUseCase {
         }
     }
 
-    private void clearSelectedDigitama(Player player) {
+    private void clearSelectedDigitama (Player player) {
         player.setSelectedDigitama(null);
         playerRepository.save(player);
     }

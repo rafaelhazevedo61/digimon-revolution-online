@@ -1,11 +1,11 @@
 package com.dro.modules.mission.application;
 
 import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.domain.Stage;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
-import com.dro.modules.inventory.domain.ItemType;
-import com.dro.modules.mission.api.MissionResultResponse;
-import com.dro.modules.mission.api.RewardResponse;
+import com.dro.modules.mission.api.response.MissionResultResponse;
+import com.dro.modules.mission.api.response.RewardResponse;
 import com.dro.modules.mission.domain.*;
 import com.dro.modules.mission.infra.PlayerMissionProgressRepository;
 import com.dro.modules.player.domain.Player;
@@ -40,6 +40,11 @@ public class StartMissionUseCase {
 
         MissionDefinition mission = MissionCatalog.findById(missionId).orElseThrow(() -> new RuntimeException("Mission not found"));
 
+        Stage highestStage = getHighestStage(playerId);
+        if(!AreaRules.isUnlocked(highestStage, mission.getArea())) {
+            throw new RuntimeException("Area locked: " + mission.getArea());
+        }
+
         validateRequirement(digimon, mission);
 
         PlayerMissionProgress progress = getOrCreateProgress(playerId, missionId);
@@ -63,6 +68,15 @@ public class StartMissionUseCase {
         playerRepository.save(player);
 
         return new MissionResultResponse(missionId, xpGained, levelUp, rewards);
+    }
+
+    private Stage getHighestStage(UUID playerId) {
+
+        return digimonRepository.findByPlayerId(playerId)
+                .stream()
+                .map(Digimon::getStage)
+                .max(Enum::compareTo)
+                .orElse(Stage.BABY);
     }
 
     private void validateCooldown (Player player) {

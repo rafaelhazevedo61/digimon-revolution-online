@@ -52,18 +52,35 @@ public class Digimon {
     @Column(nullable = false)
     private Rarity rarity;
 
-//    @Column(nullable = false)
-//    private boolean active;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Personality personality;
 
     public void gainExperience(int baseXp) {
 
-        double multiplier = RarityRules.getXpMultiplier(this.rarity);
-        int finalXp = (int) Math.floor(baseXp * multiplier);
+        double rarityMultiplier = RarityRules.getXpMultiplier(this.rarity);
+        double personalityMultiplier =
+                PersonalityRules.getXpMultiplier(this.personality);
+
+        int finalXp = (int) Math.floor(
+                baseXp
+                        * rarityMultiplier
+                        * personalityMultiplier
+        );
+
 
         this.experience += finalXp;
 
-        while (this.experience >= xpToNextLevel()) {
-            this.experience -= xpToNextLevel();
+        // Permite múltiplos level-ups
+        while (true) {
+
+            int xpRequired = xpToNextLevel();
+
+            if (this.experience < xpRequired) {
+                break;
+            }
+
+            this.experience -= xpRequired;
             this.level++;
         }
     }

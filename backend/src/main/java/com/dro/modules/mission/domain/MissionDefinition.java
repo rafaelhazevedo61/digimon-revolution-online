@@ -1,7 +1,5 @@
 package com.dro.modules.mission.domain;
 
-import com.dro.modules.inventory.domain.ItemType;
-
 import java.util.List;
 
 public class MissionDefinition {
@@ -9,14 +7,15 @@ public class MissionDefinition {
     private final String id;
     private final String name;
     private final String description;
+    private final Area area;
     private final int requiredLevel;
     private final int baseXp;
-    List<MissionReward> rewards;
+    private List<MissionReward> rewards;
 
-    public MissionDefinition(
+    public MissionDefinition (
             String id,
             String name,
-            String description,
+            String description, Area area,
             int requiredLevel,
             int baseXp,
             List<MissionReward> rewards
@@ -24,6 +23,7 @@ public class MissionDefinition {
         this.id = id;
         this.name = name;
         this.description = description;
+        this.area = area;
         this.requiredLevel = requiredLevel;
         this.baseXp = baseXp;
         this.rewards = rewards;
@@ -55,5 +55,9 @@ public class MissionDefinition {
 
     public void setRewards (List<MissionReward> rewards) {
         this.rewards = rewards;
+    }
+
+    public Area getArea () {
+        return area;
     }
 }

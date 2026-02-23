@@ -19,7 +19,7 @@ public class EvolveDigimonUseCase {
     private final DigimonRepository digimonRepository;
     private final ConsumeItemUseCase consumeItemUseCase;
 
-    public void execute(String token) {
+    public void execute (String token) {
 
         UUID playerId = UUID.fromString(token.split(":")[1]);
 
@@ -51,7 +51,7 @@ public class EvolveDigimonUseCase {
         digimonRepository.save(digimon);
     }
 
-    private void validateLevelRequirement(
+    private void validateLevelRequirement (
             Digimon digimon,
             Stage currentStage
     ) {
@@ -64,7 +64,7 @@ public class EvolveDigimonUseCase {
         }
     }
 
-    private void consumeRequiredFragments(
+    private void consumeRequiredFragments (
             UUID playerId,
             Stage currentStage
     ) {
@@ -78,7 +78,9 @@ public class EvolveDigimonUseCase {
         consumeItemUseCase.execute(playerId, fragment, quantity);
     }
 
-    private void recalculateStats(Digimon digimon) {
+    private void recalculateStats (Digimon digimon) {
+
+        System.out.println("Digimon status anteriores: HP=" + digimon.getHp() + ", ATK=" + digimon.getAttack() + ", DEF=" + digimon.getDefense());
 
         double rarityMultiplier =
                 RarityRules.getStatMultiplier(digimon.getRarity());
@@ -86,24 +88,31 @@ public class EvolveDigimonUseCase {
         double stageMultiplier =
                 EvolutionRules.stageStatMultiplier(digimon.getStage());
 
-        System.out.println("Digimon status anteriores: HP=" + digimon.getHp() + ", ATK=" + digimon.getAttack() + ", DEF=" + digimon.getDefense());
+        double hpMultiplier =
+                rarityMultiplier
+                        * stageMultiplier
+                        * PersonalityRules.getHpMultiplier(digimon.getPersonality());
+
+        double attackMultiplier =
+                rarityMultiplier
+                        * stageMultiplier
+                        * PersonalityRules.getAttackMultiplier(digimon.getPersonality());
+
+        double defenseMultiplier =
+                rarityMultiplier
+                        * stageMultiplier
+                        * PersonalityRules.getDefenseMultiplier(digimon.getPersonality());
 
         int newHp = (int) Math.floor(
-                (10 + digimon.getIvHp())
-                        * rarityMultiplier
-                        * stageMultiplier
+                (10 + digimon.getIvHp()) * hpMultiplier
         );
 
         int newAttack = (int) Math.floor(
-                (5 + digimon.getIvAttack())
-                        * rarityMultiplier
-                        * stageMultiplier
+                (5 + digimon.getIvAttack()) * attackMultiplier
         );
 
         int newDefense = (int) Math.floor(
-                (5 + digimon.getIvDefense())
-                        * rarityMultiplier
-                        * stageMultiplier
+                (5 + digimon.getIvDefense()) * defenseMultiplier
         );
 
         System.out.println("Digimon status recalculados: HP=" + newHp + ", ATK=" + newAttack + ", DEF=" + newDefense);

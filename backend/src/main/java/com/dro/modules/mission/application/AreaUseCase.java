@@ -1,0 +1,44 @@
+package com.dro.modules.mission.application;
+
+import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.domain.Stage;
+import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.mission.api.response.AreaResponse;
+import com.dro.modules.mission.domain.Area;
+import com.dro.modules.mission.domain.AreaRules;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class AreaUseCase {
+
+    private final DigimonRepository digimonRepository;
+
+    public List<AreaResponse> execute(String token) {
+
+        UUID playerId = UUID.fromString(token.split(":")[1]);
+
+        Stage highestStage = getHighestStage(playerId);
+
+        return Arrays.stream(Area.values())
+                .map(area -> new AreaResponse(
+                        area,
+                        AreaRules.isUnlocked(highestStage, area)
+                ))
+                .toList();
+    }
+
+    private Stage getHighestStage(UUID playerId) {
+
+        return digimonRepository.findByPlayerId(playerId)
+                .stream()
+                .map(Digimon::getStage)
+                .max(Enum::compareTo)
+                .orElse(Stage.BABY);
+    }
+}
