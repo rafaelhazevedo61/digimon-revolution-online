@@ -92,7 +92,6 @@ public class HatchDigitamaUseCase {
         int attack = (int) Math.floor((5 + ivAttack) * attackMultiplier);
         int defense = (int) Math.floor((5 + ivDefense) * defenseMultiplier);
 
-
         return Digimon.builder()
                 .id(UUID.randomUUID())
                 .playerId(playerId)

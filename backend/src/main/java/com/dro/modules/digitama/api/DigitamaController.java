@@ -1,5 +1,6 @@
 package com.dro.modules.digitama.api;
 
+import com.dro.modules.digitama.api.dto.SelectDigitamaRequest;
 import com.dro.modules.digitama.application.HatchDigitamaUseCase;
 import com.dro.modules.digitama.application.SelectDigitamaUseCase;
 import jakarta.validation.Valid;

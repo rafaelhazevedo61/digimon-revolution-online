@@ -1,12 +1,9 @@
-package com.dro.modules.auth.api;
+package com.dro.modules.auth.api.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
-public record RegisterRequest(
-
-        @NotBlank
-        String username,
+public record LoginRequest(
 
         @Email
         String email,

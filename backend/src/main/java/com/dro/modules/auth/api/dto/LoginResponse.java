@@ -1,4 +1,4 @@
-package com.dro.modules.auth.api;
+package com.dro.modules.auth.api.dto;
 
 import java.util.UUID;
 
