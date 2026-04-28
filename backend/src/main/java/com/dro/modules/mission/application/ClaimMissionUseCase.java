@@ -103,7 +103,7 @@ public class ClaimMissionUseCase {
     }
 
     private int calculateScaledXp (int baseXp, int completionCount) {
-        double multiplier = 1 + (completionCount * 0.05);
+        double multiplier = 1 + (completionCount * 0.01);
 
         return (int) Math.floor(baseXp * multiplier);
     }
