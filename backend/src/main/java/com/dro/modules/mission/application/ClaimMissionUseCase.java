@@ -3,9 +3,15 @@ package com.dro.modules.mission.application;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.loot.domain.LootItem;
+import com.dro.modules.loot.domain.LootRoller;
 import com.dro.modules.mission.api.response.MissionResultResponse;
 import com.dro.modules.mission.api.response.RewardResponse;
-import com.dro.modules.mission.domain.*;
+import com.dro.modules.mission.domain.MissionCatalog;
+import com.dro.modules.mission.domain.MissionDefinition;
+import com.dro.modules.mission.domain.MissionInstance;
+import com.dro.modules.mission.domain.MissionReward;
+import com.dro.modules.mission.domain.PlayerMissionProgress;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.mission.infra.PlayerMissionProgressRepository;
 import org.springframework.stereotype.Service;
@@ -22,8 +28,12 @@ public class ClaimMissionUseCase {
     private final PlayerMissionProgressRepository progressRepository;
     private final AddItemUseCase addItemUseCase;
 
-    public ClaimMissionUseCase(MissionInstanceRepository missionInstanceRepository,
-                               DigimonRepository digimonRepository, PlayerMissionProgressRepository progressRepository, AddItemUseCase addItemUseCase) {
+    public ClaimMissionUseCase(
+            MissionInstanceRepository missionInstanceRepository,
+            DigimonRepository digimonRepository,
+            PlayerMissionProgressRepository progressRepository,
+            AddItemUseCase addItemUseCase
+    ) {
         this.missionInstanceRepository = missionInstanceRepository;
         this.digimonRepository = digimonRepository;
         this.progressRepository = progressRepository;
@@ -38,7 +48,6 @@ public class ClaimMissionUseCase {
                 .findByIdAndPlayerId(missionInstanceId, playerId)
                 .orElseThrow(() -> new RuntimeException("Missão não encontrada"));
 
-        // 🔄 Atualiza status caso tempo tenha terminado
         instance.updateStatusIfFinished();
 
         if (instance.isAlreadyClaimed()) {
@@ -56,7 +65,6 @@ public class ClaimMissionUseCase {
                 .findById(instance.getMissionId())
                 .orElseThrow(() -> new RuntimeException("Mission not found"));
 
-        // 🔹 Recuperar progresso
         PlayerMissionProgress progress =
                 getOrCreateProgress(playerId, mission.getId());
 
@@ -64,7 +72,6 @@ public class ClaimMissionUseCase {
 
         int previousLevel = digimon.getLevel();
 
-        // 🔹 Calcular XP escalado
         int xpGained = calculateScaledXp(
                 mission.getBaseXp(),
                 completionCount
@@ -74,14 +81,16 @@ public class ClaimMissionUseCase {
 
         boolean levelUp = digimon.getLevel() > previousLevel;
 
-        // 🔹 Aplicar rewards escalados
-        List<RewardResponse> rewards =
-                applyScaledRewards(playerId, mission, completionCount);
+        List<RewardResponse> rewards = new ArrayList<>();
 
-        // 🔹 Incrementar progresso
+        rewards.addAll(
+                applyFixedRewards(playerId, mission, completionCount)
+        );
+
+        applyRandomLoot(playerId, mission, rewards);
+
         incrementProgress(progress);
 
-        // 🔹 Finalizar missão
         instance.markClaimed();
 
         missionInstanceRepository.save(instance);
@@ -95,41 +104,89 @@ public class ClaimMissionUseCase {
         );
     }
 
-    private PlayerMissionProgress getOrCreateProgress (UUID playerId, String missionId) {
-        return progressRepository.findByPlayerIdAndMissionId(playerId, missionId).orElseGet(() -> {
-            PlayerMissionProgress progress = PlayerMissionProgress.builder().id(UUID.randomUUID()).playerId(playerId).missionId(missionId).completionCount(0).build();
-            return progressRepository.save(progress);
-        });
+    private PlayerMissionProgress getOrCreateProgress(UUID playerId, String missionId) {
+        return progressRepository
+                .findByPlayerIdAndMissionId(playerId, missionId)
+                .orElseGet(() -> {
+                    PlayerMissionProgress progress = PlayerMissionProgress.builder()
+                            .id(UUID.randomUUID())
+                            .playerId(playerId)
+                            .missionId(missionId)
+                            .completionCount(0)
+                            .build();
+
+                    return progressRepository.save(progress);
+                });
     }
 
-    private int calculateScaledXp (int baseXp, int completionCount) {
-        double multiplier = 1 + (completionCount * 0.01);
+    private int calculateScaledXp(int baseXp, int completionCount) {
+        double multiplier = calculateProgressMultiplier(completionCount);
 
         return (int) Math.floor(baseXp * multiplier);
     }
 
-    private List<RewardResponse> applyScaledRewards (UUID playerId, MissionDefinition mission, int completionCount) {
-
-        double multiplier = 1 + (completionCount * 0.05);
+    private List<RewardResponse> applyFixedRewards(
+            UUID playerId,
+            MissionDefinition mission,
+            int completionCount
+    ) {
+        double multiplier = calculateProgressMultiplier(completionCount);
 
         List<RewardResponse> rewards = new ArrayList<>();
 
-        for (MissionReward reward : mission.getRewards()) {
+        for (MissionReward reward : mission.getFixedRewards()) {
 
             int quantity = (int) Math.floor(reward.getBaseQuantity() * multiplier);
 
             if (quantity > 0) {
+                addItemUseCase.execute(
+                        playerId,
+                        reward.getItemType(),
+                        quantity
+                );
 
-                addItemUseCase.execute(playerId, reward.getItemType(), quantity);
-
-                rewards.add(new RewardResponse(reward.getItemType(), quantity));
+                rewards.add(
+                        new RewardResponse(
+                                reward.getItemType(),
+                                quantity
+                        )
+                );
             }
         }
 
         return rewards;
     }
 
-    private void incrementProgress (PlayerMissionProgress progress) {
+    private void applyRandomLoot(
+            UUID playerId,
+            MissionDefinition mission,
+            List<RewardResponse> rewards
+    ) {
+        if (mission.getLootTable() == null) {
+            return;
+        }
+
+        LootItem lootItem = LootRoller.roll(mission.getLootTable());
+
+        addItemUseCase.execute(
+                playerId,
+                lootItem.getItemType(),
+                lootItem.getQuantity()
+        );
+
+        rewards.add(
+                new RewardResponse(
+                        lootItem.getItemType(),
+                        lootItem.getQuantity()
+                )
+        );
+    }
+
+    private double calculateProgressMultiplier(int completionCount) {
+        return 1 + (completionCount * 0.01);
+    }
+
+    private void incrementProgress(PlayerMissionProgress progress) {
         progress.setCompletionCount(progress.getCompletionCount() + 1);
         progressRepository.save(progress);
     }
