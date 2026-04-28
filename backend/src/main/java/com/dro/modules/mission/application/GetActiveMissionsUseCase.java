@@ -33,11 +33,9 @@ public class GetActiveMissionsUseCase {
 
         for (MissionInstance mission : missions) {
 
-            MissionStatus previousStatus = mission.getStatus();
+            boolean statusChanged = mission.updateStatusIfFinished();
 
-            mission.updateStatusIfFinished();
-
-            if (mission.updateStatusIfFinished()) {
+            if (statusChanged) {
                 missionInstanceRepository.save(mission);
             }
 
