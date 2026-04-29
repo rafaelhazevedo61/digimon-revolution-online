@@ -1,5 +1,7 @@
 package com.dro.modules.digimon.domain;
 
+import com.dro.modules.digimon.domain.enums.Personality;
+
 import java.util.Random;
 
 public class PersonalityRoller {

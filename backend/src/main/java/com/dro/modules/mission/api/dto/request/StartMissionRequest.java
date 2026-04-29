@@ -1,4 +1,4 @@
-package com.dro.modules.mission.api.request;
+package com.dro.modules.mission.api.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

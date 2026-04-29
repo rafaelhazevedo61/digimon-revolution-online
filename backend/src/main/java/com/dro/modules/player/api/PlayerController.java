@@ -1,5 +1,6 @@
 package com.dro.modules.player.api;
 
+import com.dro.modules.player.api.dto.PlayerResponse;
 import com.dro.modules.player.application.GetPlayerUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

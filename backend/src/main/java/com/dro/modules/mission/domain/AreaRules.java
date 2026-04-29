@@ -1,6 +1,6 @@
 package com.dro.modules.mission.domain;
 
-import com.dro.modules.digimon.domain.Stage;
+import com.dro.modules.digimon.domain.enums.Stage;
 
 public class AreaRules {
 

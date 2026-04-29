@@ -1,4 +1,4 @@
-package com.dro.modules.player.api;
+package com.dro.modules.player.api.dto;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

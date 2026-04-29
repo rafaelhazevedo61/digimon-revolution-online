@@ -1,5 +1,7 @@
 package com.dro.modules.digimon.domain;
 
+import com.dro.modules.digimon.domain.enums.Rarity;
+
 public class RarityRules {
 
     public static double getStatMultiplier(Rarity rarity) {

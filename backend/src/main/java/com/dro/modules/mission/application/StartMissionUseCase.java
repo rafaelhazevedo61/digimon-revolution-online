@@ -1,15 +1,11 @@
 package com.dro.modules.mission.application;
 
 import com.dro.modules.digimon.domain.Digimon;
-import com.dro.modules.digimon.domain.Stage;
+import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.digimon.infra.DigimonRepository;
-import com.dro.modules.inventory.application.AddItemUseCase;
-import com.dro.modules.mission.api.response.MissionResultResponse;
-import com.dro.modules.mission.api.response.MissionStartResponse;
-import com.dro.modules.mission.api.response.RewardResponse;
+import com.dro.modules.mission.api.dto.response.MissionStartResponse;
 import com.dro.modules.mission.domain.*;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
-import com.dro.modules.mission.infra.PlayerMissionProgressRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import lombok.RequiredArgsConstructor;

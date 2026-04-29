@@ -1,7 +1,7 @@
 package com.dro.modules.digimon.application;
 
-import com.dro.modules.digimon.api.DigimonResponse;
-import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.api.dto.response.DigimonResponse;
+import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.player.infra.PlayerRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,18 +15,15 @@ import java.util.UUID;
 public class GetDigimonUseCase {
 
     private final DigimonRepository digimonRepository;
-    private final PlayerRepository playerRepository;
 
     public List<DigimonResponse> execute(String token) {
 
         UUID playerId = UUID.fromString(token.split(":")[1]);
 
-        var player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new RuntimeException("Player not found"));
-
         var digimons = digimonRepository.findByPlayerId(playerId);
 
         return digimons.stream()
+                .filter(d -> d.getStatus() == DigimonStatus.ACTIVE)
                 .map(d -> new DigimonResponse(
                         d.getId(),
                         d.getName(),
@@ -40,8 +37,13 @@ public class GetDigimonUseCase {
                         d.getIvHp(),
                         d.getIvAttack(),
                         d.getIvDefense(),
-                        d.getId().equals(player.getActiveDigimonId()),
-                        d.getCreatedAt()
+                        d.getRarity(),
+                        d.getPersonality(),
+                        d.getEnergy(),
+                        d.getMaxEnergy(),
+                        d.getBits(),
+                        d.getRebirthCount(),
+                        d.getStatus()
                 ))
                 .toList();
     }

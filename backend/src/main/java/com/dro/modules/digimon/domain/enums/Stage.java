@@ -1,4 +1,4 @@
-package com.dro.modules.digimon.domain;
+package com.dro.modules.digimon.domain.enums;
 
 public enum Stage {
     BABY,

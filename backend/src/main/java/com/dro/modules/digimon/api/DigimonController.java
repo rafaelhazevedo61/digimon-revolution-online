@@ -1,9 +1,9 @@
 package com.dro.modules.digimon.api;
 
-import com.dro.modules.digimon.application.AddExperienceUseCase;
-import com.dro.modules.digimon.application.EvolveDigimonUseCase;
-import com.dro.modules.digimon.application.GetDigimonUseCase;
-import com.dro.modules.digimon.application.SelectActiveDigimonUseCase;
+import com.dro.modules.digimon.api.dto.request.RebirthDigimonRequest;
+import com.dro.modules.digimon.api.dto.response.DigimonResponse;
+import com.dro.modules.digimon.api.dto.request.SelectDigimonRequest;
+import com.dro.modules.digimon.application.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +20,7 @@ public class DigimonController {
     private final AddExperienceUseCase addExperienceUseCase;
     private final SelectActiveDigimonUseCase selectUseCase;
     private final EvolveDigimonUseCase evolveDigimonUseCase;
+    private final RebirthUseCase rebirthUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<List<DigimonResponse>> me(
@@ -52,5 +53,14 @@ public class DigimonController {
     ) {
         evolveDigimonUseCase.execute(authorization);
         return ResponseEntity.ok("Digimon evolved successfully");
+    }
+
+    @PostMapping("/rebirth")
+    public ResponseEntity<String> rebirth(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody @Valid RebirthDigimonRequest request
+    ) {
+        rebirthUseCase.execute(authorization, request.digimonId());
+        return ResponseEntity.ok("Digimon reborn successfully");
     }
 }

@@ -1,6 +1,6 @@
 package com.dro.modules.mission.application;
 
-import com.dro.modules.mission.api.response.MissionInstanceResponse;
+import com.dro.modules.mission.api.dto.response.MissionInstanceResponse;
 import com.dro.modules.mission.domain.MissionInstance;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;

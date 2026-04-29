@@ -1,5 +1,9 @@
 package com.dro.modules.digimon.domain;
 
+import com.dro.modules.digimon.domain.enums.DigimonStatus;
+import com.dro.modules.digimon.domain.enums.Personality;
+import com.dro.modules.digimon.domain.enums.Rarity;
+import com.dro.modules.digimon.domain.enums.Stage;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -64,6 +68,16 @@ public class Digimon {
     private int maxEnergy;
     @Column(name = "last_energy_update", nullable = false)
     private Instant lastEnergyUpdate;
+
+    @Column(nullable = false)
+    private int bits;
+
+    @Column(name = "rebirth_count", nullable = false)
+    private int rebirthCount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private DigimonStatus status;
 
     public void gainExperience(int baseXp) {
 

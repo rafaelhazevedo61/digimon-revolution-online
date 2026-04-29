@@ -1,6 +1,6 @@
 package com.dro.modules.mission.api;
 
-import com.dro.modules.mission.api.response.AreaResponse;
+import com.dro.modules.mission.api.dto.response.AreaResponse;
 import com.dro.modules.mission.application.AreaUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

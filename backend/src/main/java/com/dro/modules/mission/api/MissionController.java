@@ -1,10 +1,10 @@
 package com.dro.modules.mission.api;
 
-import com.dro.modules.mission.api.response.MissionInstanceResponse;
-import com.dro.modules.mission.api.response.MissionResponse;
-import com.dro.modules.mission.api.response.MissionResultResponse;
-import com.dro.modules.mission.api.request.StartMissionRequest;
-import com.dro.modules.mission.api.response.MissionStartResponse;
+import com.dro.modules.mission.api.dto.response.MissionInstanceResponse;
+import com.dro.modules.mission.api.dto.response.MissionResponse;
+import com.dro.modules.mission.api.dto.response.MissionResultResponse;
+import com.dro.modules.mission.api.dto.request.StartMissionRequest;
+import com.dro.modules.mission.api.dto.response.MissionStartResponse;
 import com.dro.modules.mission.application.ClaimMissionUseCase;
 import com.dro.modules.mission.application.GetActiveMissionsUseCase;
 import com.dro.modules.mission.application.GetAvailableMissionsUseCase;

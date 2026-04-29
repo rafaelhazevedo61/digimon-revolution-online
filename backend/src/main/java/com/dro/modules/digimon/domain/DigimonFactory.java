@@ -1,5 +1,9 @@
 package com.dro.modules.digimon.domain;
 
+import com.dro.modules.digimon.domain.enums.Personality;
+import com.dro.modules.digimon.domain.enums.Rarity;
+import com.dro.modules.digimon.domain.enums.Stage;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Random;

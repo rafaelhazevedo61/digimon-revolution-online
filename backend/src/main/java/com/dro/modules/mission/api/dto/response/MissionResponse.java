@@ -1,4 +1,4 @@
-package com.dro.modules.mission.api.response;
+package com.dro.modules.mission.api.dto.response;
 
 public record MissionResponse(
         String id,

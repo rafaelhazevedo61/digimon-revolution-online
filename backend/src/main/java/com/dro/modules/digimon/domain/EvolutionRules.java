@@ -1,5 +1,6 @@
 package com.dro.modules.digimon.domain;
 
+import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.inventory.domain.ItemType;
 
 public class EvolutionRules {
