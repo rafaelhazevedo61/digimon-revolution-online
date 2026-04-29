@@ -24,7 +24,8 @@ public class MissionCatalog {
                     10,
                     //RECOMPENSA FIXA
                     List.of(
-                            new MissionReward(ItemType.TRAINING_STONE, 1)
+                            new MissionReward(ItemType.TRAINING_STONE, 1),
+                            new MissionReward(ItemType.DATA_CORE, 1)
                     ),
                     new LootTable(
                             List.of(
