@@ -4,6 +4,7 @@ import com.dro.modules.digimon.api.dto.request.RebirthDigimonRequest;
 import com.dro.modules.digimon.api.dto.response.DigimonLineageResponse;
 import com.dro.modules.digimon.api.dto.response.DigimonResponse;
 import com.dro.modules.digimon.api.dto.request.SelectDigimonRequest;
+import com.dro.modules.digimon.api.dto.response.RebirthPreviewResponse;
 import com.dro.modules.digimon.application.*;
 import com.dro.modules.digimon.domain.DigimonLevelRules;
 import jakarta.validation.Valid;
@@ -25,6 +26,7 @@ public class DigimonController {
     private final EvolveDigimonUseCase evolveDigimonUseCase;
     private final RebirthUseCase rebirthUseCase;
     private final GetDigimonLineageUseCase getDigimonLineageUseCase;
+    private final RebirthPreviewUseCase rebirthPreviewUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<List<DigimonResponse>> me(
@@ -80,6 +82,16 @@ public class DigimonController {
     ) {
         return ResponseEntity.ok(
                 getDigimonLineageUseCase.execute(authorization, digimonId)
+        );
+    }
+
+    @GetMapping("/{digimonId}/rebirth-preview")
+    public ResponseEntity<RebirthPreviewResponse> rebirthPreview(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable UUID digimonId
+    ) {
+        return ResponseEntity.ok(
+                rebirthPreviewUseCase.execute(authorization, digimonId)
         );
     }
 }
