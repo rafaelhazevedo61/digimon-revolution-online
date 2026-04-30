@@ -59,119 +59,16 @@ Migration atual:
 
 ## 🔥 Funcionalidades Implementadas (MVP 1 – Fase Inicial)
 
-✔ Estrutura base do projeto  
-✔ Integração com PostgreSQL  
-✔ Flyway configurado  
-✔ Arquitetura modular definida  
-✔ Módulo `auth` implementado  
-✔ Endpoint de cadastro de jogador  
+✔ Cadastro simples de usuário
+✔ Login de usuário
+✔ Selecionar e chocar digitama
+✔ Adicionar experiência a um digimon manualmente
+✔ Digievolução
+✔ Renascimento
+✔ Missões
+✔ Inventário
+✔ Incubação
 
-### Endpoint disponível:
 
-POST /auth/register
 
-Exemplo de requisição:
-
-```json
-{
-  "username": "rafa",
-  "email": "rafa@email.com",
-  "password": "123456"
-}
-
-```
-
-▶ Como Rodar o Projeto
-1️⃣ Criar banco PostgreSQL
-
-Criar banco:
-
-CREATE DATABASE dro_db;
-
-2️⃣ Configurar application.yml
-
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/dro_db
-    username: postgres
-    password: SUA_SENHA_AQUI
-
-3️⃣ Rodar aplicação
-
-Via Maven:
-
-mvn spring-boot:run
-
-ou via IDE.
-
-🛣 Roadmap
-MVP 1 (Fundação)
-
- Cadastro de jogador
-
- Login
-
- Digitama inicial
-
- Criação de Digimon
-
- Sistema simples de missão
-
- Progressão de level
-
- Inventário básico
-
-MVP 2
-
-Expedição offline
-
-Sistema completo de evolução
-
-EV treinável
-
-Múltiplos Digimons
-
-MVP 3
-
-PvP manual estratégico
-
-Sistema de habilidades
-
-Ranking individual
-
-Equipamentos completos
-
-MVP 4
-
-Clãs
-
-Guerra de clã
-
-Ranking global
-
-Sistema social robusto
-
-🎯 Objetivo do Projeto
-
-Construir um jogo browser-based inspirado no universo Digimon, com foco em:
-
-Progressão estratégica
-
-Colecionismo
-
-Competição
-
-Sistemas sociais avançados
-
-Arquitetura escalável e bem estruturada
-
-📌 Status Atual
-
-Projeto em desenvolvimento ativo – nova base arquitetural criada.
-
----
-
-# ✅ Próximo passo recomendado
-
-Faça commit com algo como:
 
