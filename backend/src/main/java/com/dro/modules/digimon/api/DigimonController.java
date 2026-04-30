@@ -1,6 +1,7 @@
 package com.dro.modules.digimon.api;
 
 import com.dro.modules.digimon.api.dto.request.RebirthDigimonRequest;
+import com.dro.modules.digimon.api.dto.response.DigimonLineageResponse;
 import com.dro.modules.digimon.api.dto.response.DigimonResponse;
 import com.dro.modules.digimon.api.dto.request.SelectDigimonRequest;
 import com.dro.modules.digimon.application.*;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/digimon")
@@ -22,6 +24,7 @@ public class DigimonController {
     private final SelectActiveDigimonUseCase selectUseCase;
     private final EvolveDigimonUseCase evolveDigimonUseCase;
     private final RebirthUseCase rebirthUseCase;
+    private final GetDigimonLineageUseCase getDigimonLineageUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<List<DigimonResponse>> me(
@@ -68,5 +71,15 @@ public class DigimonController {
     @GetMapping("/level-table")
     public ResponseEntity<List<DigimonLevelRules.LevelExperienceData>> levelTable() {
         return ResponseEntity.ok(DigimonLevelRules.getExperienceTable());
+    }
+
+    @GetMapping("/{digimonId}/lineage")
+    public ResponseEntity<DigimonLineageResponse> lineage(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable UUID digimonId
+    ) {
+        return ResponseEntity.ok(
+                getDigimonLineageUseCase.execute(authorization, digimonId)
+        );
     }
 }
