@@ -26,6 +26,9 @@ public record DigimonResponse(
         int bits,
         int rebirthCount,
         UUID rebornedFrom,
-        DigimonStatus status
+        DigimonStatus status,
+        int equipBonusHp,
+        int equipBonusAttack,
+        int equipBonusDefense
 ) {
 }

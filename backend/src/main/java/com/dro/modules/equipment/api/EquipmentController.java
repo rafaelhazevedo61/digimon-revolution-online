@@ -24,6 +24,7 @@ public class EquipmentController {
     private final GetDigimonEquipmentUseCase getDigimonEquipmentUseCase;
     private final EquipUseCase equipUseCase;
     private final UnequipUseCase unequipUseCase;
+    private final UnequipAllUseCase unequipAllUseCase;
     private final GrantEquipmentUseCase grantEquipmentUseCase;
 
     @GetMapping("/digimon/{digimonId}/inventory")
@@ -58,6 +59,14 @@ public class EquipmentController {
     ) {
         unequipUseCase.execute(authorization, request.equipmentId());
         return ResponseEntity.ok("Equipment unequipped successfully");
+    }
+
+    @PostMapping("/unequip-all")
+    public ResponseEntity<String> unequipAll(
+            @RequestHeader("Authorization") String authorization
+    ) {
+        int count = unequipAllUseCase.execute(authorization);
+        return ResponseEntity.ok(count + " equipment(s) unequipped successfully");
     }
 
     @PostMapping("/grant")
