@@ -35,9 +35,15 @@ public class EquipUseCase {
             throw new RuntimeException("Digimon does not belong to this player");
         }
 
+        EquipmentRules.validateEquip(equipment);
+
         List<Equipment> equippedItems = equipmentRepository.findByDigimonId(digimonId);
 
-        EquipmentRules.validateEquip(equipment, equippedItems);
+        EquipmentRules.findCurrentInSlot(equippedItems, equipment.getSlot())
+                .ifPresent(existing -> {
+                    existing.unequip();
+                    equipmentRepository.save(existing);
+                });
 
         equipment.equip(digimonId);
 

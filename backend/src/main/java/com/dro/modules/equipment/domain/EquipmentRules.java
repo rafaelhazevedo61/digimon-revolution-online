@@ -1,21 +1,21 @@
 package com.dro.modules.equipment.domain;
 
 import java.util.List;
+import java.util.Optional;
 
 public class EquipmentRules {
 
-    public static void validateEquip(Equipment equipment, List<Equipment> equippedItems) {
+    public static void validateEquip(Equipment equipment) {
 
         if (equipment.isEquipped()) {
             throw new RuntimeException("Equipment is already equipped on a Digimon");
         }
+    }
 
-        boolean slotOccupied = equippedItems.stream()
-                .anyMatch(e -> e.getSlot() == equipment.getSlot());
-
-        if (slotOccupied) {
-            throw new RuntimeException("Slot " + equipment.getSlot() + " is already occupied");
-        }
+    public static Optional<Equipment> findCurrentInSlot(List<Equipment> equippedItems, EquipmentSlot slot) {
+        return equippedItems.stream()
+                .filter(e -> e.getSlot() == slot)
+                .findFirst();
     }
 
     public static int totalBonusHp(List<Equipment> equippedItems) {
