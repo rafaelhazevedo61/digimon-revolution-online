@@ -21,6 +21,8 @@ import java.util.UUID;
 @Builder
 public class Digimon {
 
+    private static final int MAX_LEVEL = DigimonLevelRules.MAX_LEVEL;
+
     @Id
     private UUID id;
 
@@ -64,8 +66,10 @@ public class Digimon {
 
     @Column(nullable = false)
     private int energy;
+
     @Column(name = "max_energy", nullable = false)
     private int maxEnergy;
+
     @Column(name = "last_energy_update", nullable = false)
     private Instant lastEnergyUpdate;
 
@@ -79,6 +83,9 @@ public class Digimon {
     @Column(nullable = false)
     private DigimonStatus status;
 
+    @Column(name = "reborned_from")
+    private UUID rebornedFrom;
+
     public void gainExperience(int baseXp) {
 
         double rarityMultiplier = RarityRules.getXpMultiplier(this.rarity);
@@ -91,11 +98,9 @@ public class Digimon {
                         * personalityMultiplier
         );
 
-
         this.experience += finalXp;
 
-        // Permite múltiplos level-ups
-        while (true) {
+        while (this.level < MAX_LEVEL) {
 
             int xpRequired = xpToNextLevel();
 
@@ -104,15 +109,24 @@ public class Digimon {
             }
 
             this.experience -= xpRequired;
-            this.level++;
+            levelUp();
+        }
+
+        if (this.level > MAX_LEVEL) {
+            this.level = MAX_LEVEL;
         }
     }
 
     private int xpToNextLevel() {
-        return this.level * 100;
+        return DigimonLevelRules.xpToNextLevel(this.level);
     }
-
     private void levelUp() {
+
+        if (this.level >= MAX_LEVEL) {
+            this.level = MAX_LEVEL;
+            return;
+        }
+
         this.level++;
         this.hp += 2;
         this.attack += 1;
@@ -127,13 +141,15 @@ public class Digimon {
 
         long minutesPassed = Duration.between(lastEnergyUpdate, now).toMinutes();
 
-        long energyRecovered = minutesPassed / 5; // 1 energia a cada 5 minutos
+        long energyRecovered = minutesPassed / 5;
 
         if (energyRecovered > 0) {
 
             energy = (int) Math.min(maxEnergy, energy + energyRecovered);
 
-            lastEnergyUpdate = lastEnergyUpdate.plus(Duration.ofMinutes(energyRecovered * 5));
+            lastEnergyUpdate = lastEnergyUpdate.plus(
+                    Duration.ofMinutes(energyRecovered * 5)
+            );
         }
     }
 

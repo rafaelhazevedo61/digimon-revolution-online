@@ -4,6 +4,7 @@ import com.dro.modules.digimon.api.dto.request.RebirthDigimonRequest;
 import com.dro.modules.digimon.api.dto.response.DigimonResponse;
 import com.dro.modules.digimon.api.dto.request.SelectDigimonRequest;
 import com.dro.modules.digimon.application.*;
+import com.dro.modules.digimon.domain.DigimonLevelRules;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -62,5 +63,10 @@ public class DigimonController {
     ) {
         rebirthUseCase.execute(authorization, request.digimonId());
         return ResponseEntity.ok("Digimon reborn successfully");
+    }
+
+    @GetMapping("/level-table")
+    public ResponseEntity<List<DigimonLevelRules.LevelExperienceData>> levelTable() {
+        return ResponseEntity.ok(DigimonLevelRules.getExperienceTable());
     }
 }

@@ -43,6 +43,7 @@ public class GetDigimonUseCase {
                         d.getMaxEnergy(),
                         d.getBits(),
                         d.getRebirthCount(),
+                        d.getRebornedFrom(),
                         d.getStatus()
                 ))
                 .toList();

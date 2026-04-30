@@ -67,6 +67,7 @@ public class RebirthUseCase {
         Digimon newDigimon = createRebornDigimon(playerId, oldDigimon, newRebirthCount);
 
         oldDigimon.setStatus(DigimonStatus.REBORN);
+        oldDigimon.setBits(0);
 
         digimonRepository.save(oldDigimon);
         digimonRepository.save(newDigimon);
@@ -228,8 +229,9 @@ public class RebirthUseCase {
                 .maxEnergy(20)
                 .lastEnergyUpdate(Instant.now())
                 .createdAt(LocalDateTime.now())
-                .bits(0)
+                .bits(oldDigimon.getBits())
                 .rebirthCount(newRebirthCount)
+                .rebornedFrom(oldDigimon.getId())
                 .status(DigimonStatus.ACTIVE)
                 .build();
     }
