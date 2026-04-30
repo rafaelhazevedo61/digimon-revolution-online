@@ -47,7 +47,7 @@ public class EquipmentController {
             @RequestHeader("Authorization") String authorization,
             @RequestBody @Valid EquipRequest request
     ) {
-        equipUseCase.execute(authorization, request.equipmentId(), request.digimonId());
+        equipUseCase.execute(authorization, request.equipmentId());
         return ResponseEntity.ok("Equipment equipped successfully");
     }
 

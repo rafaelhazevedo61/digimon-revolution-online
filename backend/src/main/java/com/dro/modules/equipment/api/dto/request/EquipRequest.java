@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record EquipRequest(
-        @NotNull UUID equipmentId,
-        @NotNull UUID digimonId
+        @NotNull UUID equipmentId
 ) {
 }
