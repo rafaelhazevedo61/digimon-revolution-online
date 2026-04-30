@@ -20,17 +20,18 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class EquipmentController {
 
-    private final GetPlayerEquipmentUseCase getPlayerEquipmentUseCase;
+    private final GetDigimonInventoryUseCase getDigimonInventoryUseCase;
     private final GetDigimonEquipmentUseCase getDigimonEquipmentUseCase;
     private final EquipUseCase equipUseCase;
     private final UnequipUseCase unequipUseCase;
     private final GrantEquipmentUseCase grantEquipmentUseCase;
 
-    @GetMapping("/player")
-    public ResponseEntity<List<EquipmentResponse>> getPlayerEquipment(
-            @RequestHeader("Authorization") String authorization
+    @GetMapping("/digimon/{digimonId}/inventory")
+    public ResponseEntity<List<EquipmentResponse>> getDigimonInventory(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable UUID digimonId
     ) {
-        return ResponseEntity.ok(getPlayerEquipmentUseCase.execute(authorization));
+        return ResponseEntity.ok(getDigimonInventoryUseCase.execute(authorization, digimonId));
     }
 
     @GetMapping("/digimon/{digimonId}")
@@ -64,7 +65,7 @@ public class EquipmentController {
             @RequestBody @Valid GrantEquipmentRequest request
     ) {
         UUID equipmentId = grantEquipmentUseCase.execute(
-                request.playerId(), request.templateName()
+                request.digimonId(), request.templateName()
         );
         return ResponseEntity.ok(new GrantEquipmentResponse(
                 equipmentId, "Equipment granted successfully"

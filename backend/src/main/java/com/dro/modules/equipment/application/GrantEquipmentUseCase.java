@@ -15,13 +15,13 @@ public class GrantEquipmentUseCase {
 
     private final EquipmentRepository equipmentRepository;
 
-    public UUID execute(UUID playerId, String templateName) {
+    public UUID execute(UUID digimonId, String templateName) {
 
         EquipmentTemplate template = EquipmentTemplate.findByName(templateName);
 
         Equipment equipment = Equipment.builder()
                 .id(UUID.randomUUID())
-                .playerId(playerId)
+                .digimonId(digimonId)
                 .name(template.getName())
                 .slot(template.getSlot())
                 .rarity(template.getRarity())

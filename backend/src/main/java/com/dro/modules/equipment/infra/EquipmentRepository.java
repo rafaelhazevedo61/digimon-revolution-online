@@ -8,5 +8,5 @@ import java.util.UUID;
 
 public interface EquipmentRepository extends JpaRepository<Equipment, UUID> {
 
-    List<Equipment> findByPlayerId(UUID playerId);
+    List<Equipment> findByDigimonId(UUID digimonId);
 }

@@ -23,18 +23,16 @@ public class UnequipUseCase {
         Equipment equipment = equipmentRepository.findById(equipmentId)
                 .orElseThrow(() -> new RuntimeException("Equipment not found"));
 
-        if (!equipment.getPlayerId().equals(playerId)) {
-            throw new RuntimeException("Equipment does not belong to this player");
-        }
-
         if (!equipment.isEquipped()) {
             throw new RuntimeException("Equipment is not equipped");
         }
 
-        Digimon digimon = digimonRepository.findByPlayerId(playerId).stream()
-                .filter(d -> equipment.getId().equals(d.getEquipmentIdBySlot(equipment.getSlot())))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Digimon with this equipment not found"));
+        Digimon digimon = digimonRepository.findById(equipment.getDigimonId())
+                .orElseThrow(() -> new RuntimeException("Digimon not found"));
+
+        if (!digimon.getPlayerId().equals(playerId)) {
+            throw new RuntimeException("Digimon does not belong to this player");
+        }
 
         digimon.clearSlot(equipment.getSlot());
         equipment.unequip();

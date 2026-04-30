@@ -24,15 +24,15 @@ public class EquipUseCase {
         Equipment equipment = equipmentRepository.findById(equipmentId)
                 .orElseThrow(() -> new RuntimeException("Equipment not found"));
 
-        if (!equipment.getPlayerId().equals(playerId)) {
-            throw new RuntimeException("Equipment does not belong to this player");
-        }
-
         Digimon digimon = digimonRepository.findById(digimonId)
                 .orElseThrow(() -> new RuntimeException("Digimon not found"));
 
         if (!digimon.getPlayerId().equals(playerId)) {
             throw new RuntimeException("Digimon does not belong to this player");
+        }
+
+        if (!equipment.getDigimonId().equals(digimonId)) {
+            throw new RuntimeException("Equipment does not belong to this Digimon");
         }
 
         EquipmentRules.validateEquip(equipment);

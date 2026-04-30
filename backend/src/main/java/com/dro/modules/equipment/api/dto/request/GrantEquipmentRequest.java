@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record GrantEquipmentRequest(
-        @NotNull UUID playerId,
+        @NotNull UUID digimonId,
         @NotBlank String templateName
 ) {
 }

@@ -19,7 +19,7 @@ public class Equipment {
     private UUID id;
 
     @Column(nullable = false)
-    private UUID playerId;
+    private UUID digimonId;
 
     @Column(nullable = false)
     private String name;
