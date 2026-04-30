@@ -39,6 +39,7 @@ public class GetDigimonUseCase {
                         d.getIvDefense(),
                         d.getRarity(),
                         d.getPersonality(),
+                        d.getTrait(),
                         d.getEnergy(),
                         d.getMaxEnergy(),
                         d.getBits(),

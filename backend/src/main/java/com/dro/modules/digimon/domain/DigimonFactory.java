@@ -1,8 +1,6 @@
 package com.dro.modules.digimon.domain;
 
-import com.dro.modules.digimon.domain.enums.Personality;
-import com.dro.modules.digimon.domain.enums.Rarity;
-import com.dro.modules.digimon.domain.enums.Stage;
+import com.dro.modules.digimon.domain.enums.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -26,6 +24,8 @@ public class DigimonFactory {
 
         Personality personality = PersonalityRoller.roll();
 
+        Trait trait = TraitRoller.rollForNormalHatch();
+
         int minIv = RarityRules.getMinimumIv(rarity);
 
         int ivHp = rollIv(minIv);
@@ -38,21 +38,25 @@ public class DigimonFactory {
         double hpMultiplier =
                 rarityMultiplier
                         * stageMultiplier
-                        * PersonalityRules.getHpMultiplier(personality);
+                        * PersonalityRules.getHpMultiplier(personality)
+                        * TraitRules.getHpMultiplier(trait);
 
         double attackMultiplier =
                 rarityMultiplier
                         * stageMultiplier
-                        * PersonalityRules.getAttackMultiplier(personality);
+                        * PersonalityRules.getAttackMultiplier(personality)
+                        * TraitRules.getAttackMultiplier(trait);
 
         double defenseMultiplier =
                 rarityMultiplier
                         * stageMultiplier
-                        * PersonalityRules.getDefenseMultiplier(personality);
+                        * PersonalityRules.getDefenseMultiplier(personality)
+                        * TraitRules.getDefenseMultiplier(trait);
 
         int hp = (int) Math.floor((10 + ivHp) * hpMultiplier);
         int attack = (int) Math.floor((5 + ivAttack) * attackMultiplier);
         int defense = (int) Math.floor((5 + ivDefense) * defenseMultiplier);
+        int maxEnergy = 20 + TraitRules.getMaxEnergyBonus(trait);
 
         return Digimon.builder()
                 .id(UUID.randomUUID())
@@ -71,9 +75,11 @@ public class DigimonFactory {
                 .attack(attack)
                 .defense(defense)
                 .createdAt(LocalDateTime.now())
-                .energy(20)
-                .maxEnergy(20)
+                .energy(maxEnergy)
+                .maxEnergy(maxEnergy)
+                .trait(trait)
                 .lastEnergyUpdate(Instant.now())
+                .status(DigimonStatus.ACTIVE)
                 .build();
     }
 

@@ -75,6 +75,7 @@ public class GetDigimonLineageUseCase {
                 digimon.getIvDefense(),
                 digimon.getRarity(),
                 digimon.getPersonality(),
+                digimon.getTrait(),
                 digimon.getRebirthCount(),
                 digimon.getStatus(),
                 digimon.getRebornedFrom(),

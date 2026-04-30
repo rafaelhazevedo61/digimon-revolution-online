@@ -5,6 +5,7 @@ import com.dro.modules.digimon.api.dto.response.DigimonLineageResponse;
 import com.dro.modules.digimon.api.dto.response.DigimonResponse;
 import com.dro.modules.digimon.api.dto.request.SelectDigimonRequest;
 import com.dro.modules.digimon.api.dto.response.RebirthPreviewResponse;
+import com.dro.modules.digimon.api.dto.response.TraitHatchSimulationResponse;
 import com.dro.modules.digimon.application.*;
 import com.dro.modules.digimon.domain.DigimonLevelRules;
 import jakarta.validation.Valid;
@@ -27,6 +28,7 @@ public class DigimonController {
     private final RebirthUseCase rebirthUseCase;
     private final GetDigimonLineageUseCase getDigimonLineageUseCase;
     private final RebirthPreviewUseCase rebirthPreviewUseCase;
+    private final SimulateTraitHatchUseCase simulateTraitHatchUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<List<DigimonResponse>> me(
@@ -92,6 +94,15 @@ public class DigimonController {
     ) {
         return ResponseEntity.ok(
                 rebirthPreviewUseCase.execute(authorization, digimonId)
+        );
+    }
+
+    @GetMapping("/simulator/trait-hatch")
+    public ResponseEntity<TraitHatchSimulationResponse> simulateTraitHatch(
+            @RequestParam(defaultValue = "1000") int attempts
+    ) {
+        return ResponseEntity.ok(
+                simulateTraitHatchUseCase.execute(attempts)
         );
     }
 }

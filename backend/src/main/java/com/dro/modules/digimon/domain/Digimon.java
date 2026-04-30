@@ -1,9 +1,6 @@
 package com.dro.modules.digimon.domain;
 
-import com.dro.modules.digimon.domain.enums.DigimonStatus;
-import com.dro.modules.digimon.domain.enums.Personality;
-import com.dro.modules.digimon.domain.enums.Rarity;
-import com.dro.modules.digimon.domain.enums.Stage;
+import com.dro.modules.digimon.domain.enums.*;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -86,16 +83,22 @@ public class Digimon {
     @Column(name = "reborned_from")
     private UUID rebornedFrom;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "trait")
+    private Trait trait;
+
     public void gainExperience(int baseXp) {
 
         double rarityMultiplier = RarityRules.getXpMultiplier(this.rarity);
         double personalityMultiplier =
                 PersonalityRules.getXpMultiplier(this.personality);
+        double traitMultiplier = TraitRules.getXpMultiplier(this.trait);
 
         int finalXp = (int) Math.floor(
                 baseXp
                         * rarityMultiplier
                         * personalityMultiplier
+                        * traitMultiplier
         );
 
         this.experience += finalXp;

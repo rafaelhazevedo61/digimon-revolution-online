@@ -1,10 +1,7 @@
 package com.dro.modules.digimon.application;
 
 import com.dro.modules.digimon.domain.*;
-import com.dro.modules.digimon.domain.enums.DigimonStatus;
-import com.dro.modules.digimon.domain.enums.Personality;
-import com.dro.modules.digimon.domain.enums.Rarity;
-import com.dro.modules.digimon.domain.enums.Stage;
+import com.dro.modules.digimon.domain.enums.*;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
@@ -162,7 +159,10 @@ public class RebirthUseCase {
                 oldDigimon.getRarity(),
                 newRebirthCount
         );
+
         Personality personality = PersonalityRoller.roll();
+
+        Trait trait = TraitRoller.rollForRebirth(newRebirthCount);
 
         int rarityMinimumIv = RarityRules.getMinimumIv(rarity);
 
@@ -193,6 +193,7 @@ public class RebirthUseCase {
                         * rarityMultiplier
                         * stageMultiplier
                         * PersonalityRules.getHpMultiplier(personality)
+                        * TraitRules.getHpMultiplier(trait)
                         * rebirthMultiplier
         );
 
@@ -201,6 +202,7 @@ public class RebirthUseCase {
                         * rarityMultiplier
                         * stageMultiplier
                         * PersonalityRules.getAttackMultiplier(personality)
+                        * TraitRules.getAttackMultiplier(trait)
                         * rebirthMultiplier
         );
 
@@ -209,8 +211,11 @@ public class RebirthUseCase {
                         * rarityMultiplier
                         * stageMultiplier
                         * PersonalityRules.getDefenseMultiplier(personality)
+                        * TraitRules.getDefenseMultiplier(trait)
                         * rebirthMultiplier
         );
+
+        int maxEnergy = 20 + TraitRules.getMaxEnergyBonus(trait);
 
         return Digimon.builder()
                 .id(UUID.randomUUID())
@@ -228,8 +233,9 @@ public class RebirthUseCase {
                 .ivDefense(ivDefense)
                 .rarity(rarity)
                 .personality(personality)
-                .energy(20)
-                .maxEnergy(20)
+                .energy(maxEnergy)
+                .maxEnergy(maxEnergy)
+                .trait(trait)
                 .lastEnergyUpdate(Instant.now())
                 .createdAt(LocalDateTime.now())
                 .bits(oldDigimon.getBits())

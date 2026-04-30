@@ -1,0 +1,2 @@
+ALTER TABLE digimons
+ADD COLUMN trait VARCHAR(50);
