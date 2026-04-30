@@ -1,5 +1,6 @@
 package com.dro.modules.incubation.application;
 
+import com.dro.modules.digitama.domain.DigitamaHatchRules;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.DigimonFactory;
 import com.dro.modules.digimon.infra.DigimonRepository;
@@ -65,7 +66,7 @@ public class ClaimIncubationUseCase {
     ) {
         return DigimonFactory.createBaby(
                 playerId,
-                incubation.getDigitamaType()
+                DigitamaHatchRules.toDigitamaType(incubation.getDigitamaType())
         );
     }
 
