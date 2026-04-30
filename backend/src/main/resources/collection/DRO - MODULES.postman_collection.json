@@ -894,6 +894,32 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "desequipar todos equipamentos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "1115825a-d4bf-4d26-bf2a-963609b5557a:c8690ce7-3225-4cd8-92d3-2e6fbdf48112",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/equipment/unequip-all",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "equipment",
+                "unequip-all"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     }
