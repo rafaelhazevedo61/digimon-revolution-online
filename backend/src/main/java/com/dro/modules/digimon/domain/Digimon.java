@@ -87,6 +87,44 @@ public class Digimon {
     @Column(name = "trait")
     private Trait trait;
 
+    @Column(name = "weapon_id")
+    private UUID weaponId;
+
+    @Column(name = "armor_id")
+    private UUID armorId;
+
+    @Column(name = "accessory_id")
+    private UUID accessoryId;
+
+    public void equipWeapon(UUID equipmentId) { this.weaponId = equipmentId; }
+    public void unequipWeapon() { this.weaponId = null; }
+
+    public void equipArmor(UUID equipmentId) { this.armorId = equipmentId; }
+    public void unequipArmor() { this.armorId = null; }
+
+    public void equipAccessory(UUID equipmentId) { this.accessoryId = equipmentId; }
+    public void unequipAccessory() { this.accessoryId = null; }
+
+    public UUID getEquipmentIdBySlot(com.dro.modules.equipment.domain.EquipmentSlot slot) {
+        return switch (slot) {
+            case WEAPON -> weaponId;
+            case ARMOR -> armorId;
+            case ACCESSORY -> accessoryId;
+        };
+    }
+
+    public void setEquipmentBySlot(com.dro.modules.equipment.domain.EquipmentSlot slot, UUID equipmentId) {
+        switch (slot) {
+            case WEAPON -> this.weaponId = equipmentId;
+            case ARMOR -> this.armorId = equipmentId;
+            case ACCESSORY -> this.accessoryId = equipmentId;
+        }
+    }
+
+    public void clearSlot(com.dro.modules.equipment.domain.EquipmentSlot slot) {
+        setEquipmentBySlot(slot, null);
+    }
+
     public void gainExperience(int baseXp) {
 
         double rarityMultiplier = RarityRules.getXpMultiplier(this.rarity);
