@@ -1,0 +1,901 @@
+{
+  "info": {
+    "_postman_id": "5e8e17b8-fee5-49bb-8f44-e7634ef6fe39",
+    "name": "DRO - MODULES",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "20065981"
+  },
+  "item": [
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"username\": \"rafael101\",\r\n  \"email\": \"rafael101@email.com\",\r\n  \"password\": \"123456\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/auth/register",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"rafael101@email.com\",\r\n  \"password\": \"123456\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "player",
+      "item": [
+        {
+          "name": "me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "f3a38972-2ed6-416e-95c7-7cb3f2ed4eaa:a9dba7d0-9ff0-47bb-b2cd-fef0dc1751ac",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/players/me",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "players",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "digitama",
+      "item": [
+        {
+          "name": "selectDigitama",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "1115825a-d4bf-4d26-bf2a-963609b5557a:c8690ce7-3225-4cd8-92d3-2e6fbdf48112",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"type\": \"FIRE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/digitama/select",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "digitama",
+                "select"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "hatchDigitama",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "1115825a-d4bf-4d26-bf2a-963609b5557a:c8690ce7-3225-4cd8-92d3-2e6fbdf48112",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"type\": \"FIRE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/digitama/hatch",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "digitama",
+                "hatch"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "digimon",
+      "item": [
+        {
+          "name": "me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "1115825a-d4bf-4d26-bf2a-963609b5557a:c8690ce7-3225-4cd8-92d3-2e6fbdf48112",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/digimon/me",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "digimon",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "add-exp",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "f3a38972-2ed6-416e-95c7-7cb3f2ed4eaa:a9dba7d0-9ff0-47bb-b2cd-fef0dc1751ac",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/digimon/add-xp?amount=100000",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "digimon",
+                "add-xp"
+              ],
+              "query": [
+                {
+                  "key": "amount",
+                  "value": "100000"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "selectActiveDigimon",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "1115825a-d4bf-4d26-bf2a-963609b5557a:c8690ce7-3225-4cd8-92d3-2e6fbdf48112",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"digimonId\":\"43aad14b-d031-47f9-9e8a-36e1cd7266b3\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/digimon/select",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "digimon",
+                "select"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "evolve",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "0ee90517-b047-4ba5-8d73-2f0ad5d1baf8:a9dba7d0-9ff0-47bb-b2cd-fef0dc1751ac",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/digimon/evolve",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "digimon",
+                "evolve"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "rebirth",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "0ee90517-b047-4ba5-8d73-2f0ad5d1baf8:a9dba7d0-9ff0-47bb-b2cd-fef0dc1751ac",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"digimonId\":\"e15e5d3a-57e6-4f0b-8e01-8205062d25c1\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/digimon/rebirth",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "digimon",
+                "rebirth"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "level table",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "666bfc92-6d82-4997-b32c-06513a11e12a:d013568e-f34c-41c0-9850-771d76b9bd9b",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/digimon/level-table",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "digimon",
+                "level-table"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "lineage",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "f3a38972-2ed6-416e-95c7-7cb3f2ed4eaa:a9dba7d0-9ff0-47bb-b2cd-fef0dc1751ac",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/digimon/5dc0699b-9a7e-4cc0-851b-2ef638a00c8d/lineage",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "digimon",
+                "5dc0699b-9a7e-4cc0-851b-2ef638a00c8d",
+                "lineage"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "rebirth preview",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "f3a38972-2ed6-416e-95c7-7cb3f2ed4eaa:a9dba7d0-9ff0-47bb-b2cd-fef0dc1751ac",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/digimon/5dc0699b-9a7e-4cc0-851b-2ef638a00c8d/rebirth-preview",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "digimon",
+                "5dc0699b-9a7e-4cc0-851b-2ef638a00c8d",
+                "rebirth-preview"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "simulate trait hatch",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "f3a38972-2ed6-416e-95c7-7cb3f2ed4eaa:a9dba7d0-9ff0-47bb-b2cd-fef0dc1751ac",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/digimon/simulator/trait-hatch?attempts=1000",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "digimon",
+                "simulator",
+                "trait-hatch"
+              ],
+              "query": [
+                {
+                  "key": "attempts",
+                  "value": "1000"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "mission",
+      "item": [
+        {
+          "name": "startMission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "0ee90517-b047-4ba5-8d73-2f0ad5d1baf8:a9dba7d0-9ff0-47bb-b2cd-fef0dc1751ac",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"missionId\": \"MISSION_1\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/missions/start",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "missions",
+                "start"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "claimMission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "0ee90517-b047-4ba5-8d73-2f0ad5d1baf8:a9dba7d0-9ff0-47bb-b2cd-fef0dc1751ac",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"missionId\": \"MISSION_6\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/missions/68cc98e9-51e3-4f45-b317-f9f5614e7d35/claim",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "missions",
+                "68cc98e9-51e3-4f45-b317-f9f5614e7d35",
+                "claim"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "inventory",
+      "item": [
+        {
+          "name": "getInventory",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "97db4499-bc14-468b-a5e4-335c62a86465:a9dba7d0-9ff0-47bb-b2cd-fef0dc1751ac",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/inventory",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "inventory"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "incubation",
+      "item": [
+        {
+          "name": "startIncubation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "97db4499-bc14-468b-a5e4-335c62a86465:a9dba7d0-9ff0-47bb-b2cd-fef0dc1751ac",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"digitamaType\": \"DIGITAMA_FIRE\",\r\n  \"incubatorType\": \"INCUBATOR_EPIC\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/incubation/start",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "incubation",
+                "start"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "claimIncubation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "97db4499-bc14-468b-a5e4-335c62a86465:a9dba7d0-9ff0-47bb-b2cd-fef0dc1751ac",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/incubation/claim",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "incubation",
+                "claim"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "97db4499-bc14-468b-a5e4-335c62a86465:a9dba7d0-9ff0-47bb-b2cd-fef0dc1751ac",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/incubation/me",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "incubation",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "areas",
+      "item": [
+        {
+          "name": "getAreas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "666bfc92-6d82-4997-b32c-06513a11e12a:d013568e-f34c-41c0-9850-771d76b9bd9b",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/areas",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "areas"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "equipment",
+      "item": [
+        {
+          "name": "listar equipamentos digimon",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "1115825a-d4bf-4d26-bf2a-963609b5557a:c8690ce7-3225-4cd8-92d3-2e6fbdf48112",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/equipment/digimon/43aad14b-d031-47f9-9e8a-36e1cd7266b3/inventory",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "equipment",
+                "digimon",
+                "43aad14b-d031-47f9-9e8a-36e1cd7266b3",
+                "inventory"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "listar equipamentos equipados",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "1115825a-d4bf-4d26-bf2a-963609b5557a:c8690ce7-3225-4cd8-92d3-2e6fbdf48112",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/equipment/digimon/43aad14b-d031-47f9-9e8a-36e1cd7266b3",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "equipment",
+                "digimon",
+                "43aad14b-d031-47f9-9e8a-36e1cd7266b3"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "conceder equipamento a um digimon",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "1115825a-d4bf-4d26-bf2a-963609b5557a:c8690ce7-3225-4cd8-92d3-2e6fbdf48112",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"digimonId\":\"43aad14b-d031-47f9-9e8a-36e1cd7266b3\",\r\n    \"templateName\":\"Iron Claw\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/equipment/grant",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "equipment",
+                "grant"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "equipar item no digimon",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "1115825a-d4bf-4d26-bf2a-963609b5557a:c8690ce7-3225-4cd8-92d3-2e6fbdf48112",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"equipmentId\":\"fe2376e4-d7fd-48f5-b6f1-6a0e3cabc16e\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/equipment/equip",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "equipment",
+                "equip"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "desequipar item no digimon",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "1115825a-d4bf-4d26-bf2a-963609b5557a:c8690ce7-3225-4cd8-92d3-2e6fbdf48112",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"equipmentId\":\"fe2376e4-d7fd-48f5-b6f1-6a0e3cabc16e\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/equipment/unequip",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "equipment",
+                "unequip"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
