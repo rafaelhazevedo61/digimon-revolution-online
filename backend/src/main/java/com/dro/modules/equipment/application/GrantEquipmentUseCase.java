@@ -22,7 +22,6 @@ public class GrantEquipmentUseCase {
         Equipment equipment = Equipment.builder()
                 .id(UUID.randomUUID())
                 .playerId(playerId)
-                .digimonId(null)
                 .name(template.getName())
                 .slot(template.getSlot())
                 .rarity(template.getRarity())

@@ -35,14 +35,23 @@ modules/equipment/
 |----------------|------------------|----------------------------------|
 | id             | UUID             | PK                               |
 | playerId       | UUID             | FK para jogador dono             |
-| digimonId      | UUID (nullable)  | FK para digimon equipado (null = no inventário) |
 | name           | String           | Nome do equipamento              |
 | slot           | EquipmentSlot    | WEAPON, ARMOR, ACCESSORY         |
 | rarity         | EquipmentRarity  | COMMON, RARE, EPIC, LEGENDARY    |
 | bonusHp        | int              | Bônus de HP                      |
 | bonusAttack    | int              | Bônus de Attack                  |
 | bonusDefense   | int              | Bônus de Defense                 |
+| equipped       | boolean          | Se está equipado (default false) |
 | createdAt      | LocalDateTime    | Data de criação                  |
+
+## Vínculo com Digimon
+
+A tabela `digimons` possui colunas para cada slot de equipamento:
+- `weapon_id` (UUID nullable) → referencia o equipamento do tipo WEAPON
+- `armor_id` (UUID nullable) → referencia o equipamento do tipo ARMOR
+- `accessory_id` (UUID nullable) → referencia o equipamento do tipo ACCESSORY
+
+Isso garante no nível do banco que cada digimon só pode ter 1 item por slot.
 
 ## Slots por Digimon
 - 1x WEAPON (bônus principal: attack)
@@ -63,7 +72,7 @@ modules/equipment/
 1. Cada digimon pode ter no máximo **1 equipamento por slot**
 2. Só pode equipar em digimon **do próprio jogador**
 3. Ao equipar, se já houver item no slot, o item antigo é **automaticamente desequipado** (volta ao inventário) e o novo é equipado (auto-swap)
-4. Ao desequipar, o item volta para o inventário do jogador (digimonId = null)
+4. Ao desequipar, o item volta para o inventário do jogador (equipped = false, slot do digimon = null)
 5. Equipamentos concedem bônus fixos de stats
 
 ## Catálogo Inicial (EquipmentTemplate)
@@ -83,5 +92,6 @@ modules/equipment/
 | Crest of Courage      | ACCESSORY  | EPIC       | 10  | 10  | 10  |
 | Digi-Egg of Miracles  | ACCESSORY  | LEGENDARY  | 20  | 20  | 20  |
 
-## Migration (V16)
-- Criar tabela `equipments` com todos os campos acima
+## Migrations
+- **V16** – Criar tabela `equipments` com campos: id, player_id, name, slot, rarity, bonus_hp, bonus_attack, bonus_defense, created_at
+- **V17** – Remover digimon_id de equipments, adicionar coluna `equipped` (boolean), adicionar `weapon_id`, `armor_id`, `accessory_id` na tabela digimons

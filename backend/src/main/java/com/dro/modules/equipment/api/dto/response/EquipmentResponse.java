@@ -15,7 +15,7 @@ public record EquipmentResponse(
         int bonusHp,
         int bonusAttack,
         int bonusDefense,
-        UUID digimonId,
+        boolean equipped,
         LocalDateTime createdAt
 ) {
     public static EquipmentResponse from(Equipment equipment) {
@@ -27,7 +27,7 @@ public record EquipmentResponse(
                 equipment.getBonusHp(),
                 equipment.getBonusAttack(),
                 equipment.getBonusDefense(),
-                equipment.getDigimonId(),
+                equipment.isEquipped(),
                 equipment.getCreatedAt()
         );
     }

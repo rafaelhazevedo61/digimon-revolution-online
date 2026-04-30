@@ -1,5 +1,6 @@
 package com.dro.modules.equipment.application;
 
+import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.domain.EquipmentRules;
@@ -7,7 +8,6 @@ import com.dro.modules.equipment.infra.EquipmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,7 +28,7 @@ public class EquipUseCase {
             throw new RuntimeException("Equipment does not belong to this player");
         }
 
-        var digimon = digimonRepository.findById(digimonId)
+        Digimon digimon = digimonRepository.findById(digimonId)
                 .orElseThrow(() -> new RuntimeException("Digimon not found"));
 
         if (!digimon.getPlayerId().equals(playerId)) {
@@ -37,16 +37,20 @@ public class EquipUseCase {
 
         EquipmentRules.validateEquip(equipment);
 
-        List<Equipment> equippedItems = equipmentRepository.findByDigimonId(digimonId);
+        UUID currentEquipmentId = digimon.getEquipmentIdBySlot(equipment.getSlot());
+        if (currentEquipmentId != null) {
+            Equipment currentEquipment = equipmentRepository.findById(currentEquipmentId)
+                    .orElse(null);
+            if (currentEquipment != null) {
+                currentEquipment.unequip();
+                equipmentRepository.save(currentEquipment);
+            }
+        }
 
-        EquipmentRules.findCurrentInSlot(equippedItems, equipment.getSlot())
-                .ifPresent(existing -> {
-                    existing.unequip();
-                    equipmentRepository.save(existing);
-                });
-
-        equipment.equip(digimonId);
+        equipment.equip();
+        digimon.setEquipmentBySlot(equipment.getSlot(), equipment.getId());
 
         equipmentRepository.save(equipment);
+        digimonRepository.save(digimon);
     }
 }

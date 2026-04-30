@@ -21,8 +21,6 @@ public class Equipment {
     @Column(nullable = false)
     private UUID playerId;
 
-    private UUID digimonId;
-
     @Column(nullable = false)
     private String name;
 
@@ -46,15 +44,15 @@ public class Equipment {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    public boolean isEquipped() {
-        return digimonId != null;
-    }
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean equipped = false;
 
-    public void equip(UUID digimonId) {
-        this.digimonId = digimonId;
+    public void equip() {
+        this.equipped = true;
     }
 
     public void unequip() {
-        this.digimonId = null;
+        this.equipped = false;
     }
 }
