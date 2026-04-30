@@ -158,7 +158,10 @@ public class RebirthUseCase {
             int newRebirthCount
     ) {
 
-        Rarity rarity = RarityRoller.roll();
+        Rarity rarity = RarityRoller.rollForRebirth(
+                oldDigimon.getRarity(),
+                newRebirthCount
+        );
         Personality personality = PersonalityRoller.roll();
 
         int rarityMinimumIv = RarityRules.getMinimumIv(rarity);
