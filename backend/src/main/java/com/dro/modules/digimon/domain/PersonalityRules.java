@@ -1,5 +1,7 @@
 package com.dro.modules.digimon.domain;
 
+import com.dro.modules.digimon.domain.enums.Personality;
+
 public class PersonalityRules {
 
     public static double getHpMultiplier(Personality personality) {

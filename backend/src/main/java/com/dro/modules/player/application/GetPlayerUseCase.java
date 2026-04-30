@@ -2,7 +2,7 @@ package com.dro.modules.player.application;
 
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
-import com.dro.modules.player.api.PlayerResponse;
+import com.dro.modules.player.api.dto.PlayerResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -1,5 +1,7 @@
 package com.dro.modules.digimon.domain;
 
+import com.dro.modules.digimon.domain.enums.Rarity;
+
 public class RarityRules {
 
     public static double getStatMultiplier(Rarity rarity) {
@@ -23,9 +25,9 @@ public class RarityRules {
     public static int getMinimumIv(Rarity rarity) {
         return switch (rarity) {
             case COMMON -> 0;
-            case RARE -> 8;
-            case EPIC -> 16;
-            case LEGENDARY -> 24;
+            case RARE -> 25;
+            case EPIC -> 50;
+            case LEGENDARY -> 75;
         };
     }
 }

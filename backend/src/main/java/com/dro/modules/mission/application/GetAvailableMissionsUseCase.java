@@ -1,7 +1,7 @@
 package com.dro.modules.mission.application;
 
 import com.dro.modules.digimon.infra.DigimonRepository;
-import com.dro.modules.mission.api.response.MissionResponse;
+import com.dro.modules.mission.api.dto.response.MissionResponse;
 import com.dro.modules.mission.domain.MissionCatalog;
 import com.dro.modules.player.infra.PlayerRepository;
 import lombok.RequiredArgsConstructor;

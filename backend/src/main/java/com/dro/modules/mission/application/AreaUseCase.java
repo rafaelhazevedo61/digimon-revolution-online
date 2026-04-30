@@ -1,9 +1,9 @@
 package com.dro.modules.mission.application;
 
 import com.dro.modules.digimon.domain.Digimon;
-import com.dro.modules.digimon.domain.Stage;
+import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.digimon.infra.DigimonRepository;
-import com.dro.modules.mission.api.response.AreaResponse;
+import com.dro.modules.mission.api.dto.response.AreaResponse;
 import com.dro.modules.mission.domain.Area;
 import com.dro.modules.mission.domain.AreaRules;
 import lombok.RequiredArgsConstructor;

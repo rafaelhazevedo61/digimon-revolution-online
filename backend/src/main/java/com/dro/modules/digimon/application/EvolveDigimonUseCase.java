@@ -1,6 +1,7 @@
 package com.dro.modules.digimon.application;
 
 import com.dro.modules.digimon.domain.*;
+import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.ConsumeItemUseCase;
 import com.dro.modules.inventory.domain.ItemType;

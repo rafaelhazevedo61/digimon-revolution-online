@@ -4,6 +4,7 @@ public enum ItemType {
 
     // Recursos
     TRAINING_STONE,
+    DATA_CORE,
 
     // Digitamas
     DIGITAMA_FIRE,

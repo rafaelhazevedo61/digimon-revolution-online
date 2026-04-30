@@ -1,7 +1,11 @@
 package com.dro.modules.mission.domain;
 
+import com.dro.modules.loot.domain.LootTable;
+import lombok.Data;
+
 import java.util.List;
 
+@Data
 public class MissionDefinition {
 
     private final String id;
@@ -11,59 +15,8 @@ public class MissionDefinition {
     private final int requiredLevel;
     private final int baseXp;
     private final int energyCost;
-    private List<MissionReward> rewards;
+    private final int durationSeconds;
+    private final List<MissionReward> fixedRewards;
+    private final LootTable lootTable;
 
-    public MissionDefinition (
-            String id,
-            String name,
-            String description, Area area,
-            int requiredLevel,
-            int baseXp, int energyCost,
-            List<MissionReward> rewards
-    ) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.area = area;
-        this.requiredLevel = requiredLevel;
-        this.baseXp = baseXp;
-        this.energyCost = energyCost;
-        this.rewards = rewards;
-    }
-
-    public String getId () {
-        return id;
-    }
-
-    public String getName () {
-        return name;
-    }
-
-    public String getDescription () {
-        return description;
-    }
-
-    public int getRequiredLevel () {
-        return requiredLevel;
-    }
-
-    public int getBaseXp () {
-        return baseXp;
-    }
-
-    public List<MissionReward> getRewards () {
-        return rewards;
-    }
-
-    public void setRewards (List<MissionReward> rewards) {
-        this.rewards = rewards;
-    }
-
-    public Area getArea () {
-        return area;
-    }
-
-    public int getEnergyCost () {
-        return energyCost;
-    }
 }
