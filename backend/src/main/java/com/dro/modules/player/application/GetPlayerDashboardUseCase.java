@@ -207,7 +207,7 @@ public class GetPlayerDashboardUseCase {
                 incubation.getFinishAt()
         ).getSeconds();
 
-        if (remaining <= 0) {
+        if (remaining < 0) {
             remaining = 0;
             incubation.markReadyIfFinished();
             incubationRepository.save(incubation);
