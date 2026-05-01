@@ -1,5 +1,6 @@
 package com.dro.modules.inventory.api;
 
+import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.application.UseItemUseCase;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import jakarta.validation.Valid;
@@ -16,6 +17,7 @@ public class InventoryController {
 
     private final InventoryRepository repository;
     private final UseItemUseCase useItemUseCase;
+    private final AddItemUseCase addItemUseCase;
 
     @GetMapping
     public ResponseEntity<?> getInventory(
@@ -32,5 +34,18 @@ public class InventoryController {
     ) {
         useItemUseCase.execute(authorization, request.itemType());
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/grant")
+    public ResponseEntity<GrantItemResponse> grantItem(
+            @RequestBody @Valid GrantItemRequest request
+    ) {
+        addItemUseCase.execute(request.playerId(), request.itemType(), request.quantity());
+        return ResponseEntity.ok(new GrantItemResponse(
+                request.playerId(),
+                request.itemType(),
+                request.quantity(),
+                "Item granted successfully"
+        ));
     }
 }
