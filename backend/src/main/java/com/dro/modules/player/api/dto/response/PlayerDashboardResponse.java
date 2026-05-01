@@ -1,4 +1,4 @@
-package com.dro.modules.player.api.dto;
+package com.dro.modules.player.api.dto.response;
 
 import com.dro.modules.digimon.api.dto.response.DigimonResponse;
 import com.dro.modules.equipment.api.dto.response.EquipmentResponse;

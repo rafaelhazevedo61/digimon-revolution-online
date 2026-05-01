@@ -1,7 +1,7 @@
 package com.dro.modules.player.api;
 
-import com.dro.modules.player.api.dto.PlayerDashboardResponse;
-import com.dro.modules.player.api.dto.PlayerResponse;
+import com.dro.modules.player.api.dto.response.PlayerDashboardResponse;
+import com.dro.modules.player.api.dto.response.PlayerResponse;
 import com.dro.modules.player.application.GetPlayerDashboardUseCase;
 import com.dro.modules.player.application.GetPlayerUseCase;
 import lombok.RequiredArgsConstructor;
