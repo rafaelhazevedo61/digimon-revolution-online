@@ -1,5 +1,7 @@
 package com.dro.modules.incubation.api;
 
+import com.dro.modules.digitama.api.dto.HatchDigitamaResponse;
+import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.incubation.application.ClaimIncubationUseCase;
 import com.dro.modules.incubation.application.GetIncubationUseCase;
 import com.dro.modules.incubation.application.StartIncubationUseCase;
@@ -32,11 +34,11 @@ public class IncubationController {
     }
 
     @PostMapping("/claim")
-    public ResponseEntity<Void> claim (
+    public ResponseEntity<HatchDigitamaResponse> claim (
             @RequestHeader("Authorization") String authorization
     ) {
-        claimUseCase.execute(authorization);
-        return ResponseEntity.ok().build();
+        Digimon digimon = claimUseCase.execute(authorization);
+        return ResponseEntity.ok(HatchDigitamaResponse.from(digimon));
     }
 
     @GetMapping("/me")

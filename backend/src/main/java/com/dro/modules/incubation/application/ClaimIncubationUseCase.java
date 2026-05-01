@@ -23,7 +23,7 @@ public class ClaimIncubationUseCase {
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
 
-    public void execute(String token) {
+    public Digimon execute(String token) {
 
         UUID playerId = extractPlayerId(token);
 
@@ -38,6 +38,8 @@ public class ClaimIncubationUseCase {
         setActiveIfFirstDigimon(playerId, digimon);
 
         finalizeIncubation(incubation);
+
+        return digimon;
     }
 
     private UUID extractPlayerId(String token) {
