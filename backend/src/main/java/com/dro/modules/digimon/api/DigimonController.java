@@ -22,6 +22,7 @@ import java.util.UUID;
 public class DigimonController {
 
     private final GetDigimonUseCase useCase;
+    private final GetDigimonByIdUseCase getDigimonByIdUseCase;
     private final AddExperienceUseCase addExperienceUseCase;
     private final SelectActiveDigimonUseCase selectUseCase;
     private final EvolveDigimonUseCase evolveDigimonUseCase;
@@ -70,6 +71,13 @@ public class DigimonController {
     ) {
         rebirthUseCase.execute(authorization, request.digimonId());
         return ResponseEntity.ok("Digimon reborn successfully");
+    }
+
+    @GetMapping("/{digimonId}")
+    public ResponseEntity<DigimonResponse> getById(
+            @PathVariable UUID digimonId
+    ) {
+        return ResponseEntity.ok(getDigimonByIdUseCase.execute(digimonId));
     }
 
     @GetMapping("/level-table")
