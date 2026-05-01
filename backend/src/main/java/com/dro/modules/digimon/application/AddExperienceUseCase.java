@@ -3,6 +3,8 @@ package com.dro.modules.digimon.application;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,14 +22,14 @@ public class AddExperienceUseCase {
         UUID playerId = UUID.fromString(token.split(":")[1]);
 
         var player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new RuntimeException("Player not found"));
+                .orElseThrow(() -> new NotFoundException("Player not found"));
 
         if (player.getActiveDigimonId() == null) {
-            throw new RuntimeException("No active digimon selected");
+            throw new BadRequestException("No active digimon selected");
         }
 
         Digimon digimon = repository.findById(player.getActiveDigimonId())
-                .orElseThrow(() -> new RuntimeException("Active digimon not found"));
+                .orElseThrow(() -> new NotFoundException("Active digimon not found"));
 
         digimon.gainExperience(xp);
 

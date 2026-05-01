@@ -4,6 +4,8 @@ import com.dro.modules.digimon.api.dto.response.DigimonLineageItemResponse;
 import com.dro.modules.digimon.api.dto.response.DigimonLineageResponse;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.shared.exception.ForbiddenException;
+import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +24,7 @@ public class GetDigimonLineageUseCase {
         UUID playerId = extractPlayerId(token);
 
         Digimon currentDigimon = digimonRepository.findById(digimonId)
-                .orElseThrow(() -> new RuntimeException("Digimon not found"));
+                .orElseThrow(() -> new NotFoundException("Digimon not found"));
 
         validateOwner(currentDigimon, playerId);
 
@@ -59,7 +61,7 @@ public class GetDigimonLineageUseCase {
 
     private void validateOwner(Digimon digimon, UUID playerId) {
         if (!digimon.getPlayerId().equals(playerId)) {
-            throw new RuntimeException("This Digimon does not belong to the player");
+            throw new ForbiddenException("This Digimon does not belong to the player");
         }
     }
 

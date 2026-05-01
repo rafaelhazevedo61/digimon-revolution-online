@@ -10,6 +10,11 @@ import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.ConflictException;
+import com.dro.shared.exception.ForbiddenException;
+import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.exception.UnprocessableException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -79,35 +84,35 @@ public class RebirthUseCase {
 
     private Player findPlayer(UUID playerId) {
         return playerRepository.findById(playerId)
-                .orElseThrow(() -> new RuntimeException("Player not found"));
+                .orElseThrow(() -> new NotFoundException("Player not found"));
     }
 
     private Digimon findDigimon(UUID digimonId) {
         return digimonRepository.findById(digimonId)
-                .orElseThrow(() -> new RuntimeException("Digimon not found"));
+                .orElseThrow(() -> new NotFoundException("Digimon not found"));
     }
 
     private void validateOwner(Digimon digimon, UUID playerId) {
         if (!digimon.getPlayerId().equals(playerId)) {
-            throw new RuntimeException("This Digimon does not belong to the player");
+            throw new ForbiddenException("This Digimon does not belong to the player");
         }
     }
 
     private void validateStatus(Digimon digimon) {
         if (digimon.getStatus() != DigimonStatus.ACTIVE) {
-            throw new RuntimeException("Only active Digimons can perform Rebirth");
+            throw new BadRequestException("Only active Digimons can perform Rebirth");
         }
     }
 
     private void validateLevel(Digimon digimon) {
         if (digimon.getLevel() < REQUIRED_LEVEL) {
-            throw new RuntimeException("Digimon must be level 100 to perform Rebirth");
+            throw new BadRequestException("Digimon must be level 100 to perform Rebirth");
         }
     }
 
     private void validateStage(Digimon digimon) {
         if (!RebirthRules.isEligibleStage(digimon.getStage())) {
-            throw new RuntimeException("Digimon must be Champion or higher to perform Rebirth");
+            throw new BadRequestException("Digimon must be Champion or higher to perform Rebirth");
         }
     }
 
@@ -118,24 +123,24 @@ public class RebirthUseCase {
         );
 
         if (hasRunningMission) {
-            throw new RuntimeException("Digimon cannot perform Rebirth while in a running mission");
+            throw new ConflictException("Digimon cannot perform Rebirth while in a running mission");
         }
     }
 
     private void validateBits(Digimon digimon, int bitsCost) {
         if (digimon.getBits() < bitsCost) {
-            throw new RuntimeException("Not enough Bits to perform Rebirth");
+            throw new UnprocessableException("Not enough Bits to perform Rebirth");
         }
     }
 
     private InventoryItem findDataCore(UUID digimonId) {
         return inventoryRepository.findByDigimonIdAndItemType(digimonId, ItemType.DATA_CORE)
-                .orElseThrow(() -> new RuntimeException("Data Core not found in inventory"));
+                .orElseThrow(() -> new NotFoundException("Data Core not found in inventory"));
     }
 
     private void validateDataCore(InventoryItem dataCore, int dataCoreCost) {
         if (dataCore.getQuantity() < dataCoreCost) {
-            throw new RuntimeException("Not enough Data Core to perform Rebirth");
+            throw new UnprocessableException("Not enough Data Core to perform Rebirth");
         }
     }
 

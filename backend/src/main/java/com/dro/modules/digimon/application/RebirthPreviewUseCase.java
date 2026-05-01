@@ -10,6 +10,8 @@ import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
+import com.dro.shared.exception.ForbiddenException;
+import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +33,7 @@ public class RebirthPreviewUseCase {
         UUID playerId = extractPlayerId(token);
 
         Digimon digimon = digimonRepository.findById(digimonId)
-                .orElseThrow(() -> new RuntimeException("Digimon not found"));
+                .orElseThrow(() -> new NotFoundException("Digimon not found"));
 
         validateOwner(digimon, playerId);
 
@@ -96,7 +98,7 @@ public class RebirthPreviewUseCase {
 
     private void validateOwner(Digimon digimon, UUID playerId) {
         if (!digimon.getPlayerId().equals(playerId)) {
-            throw new RuntimeException("This Digimon does not belong to the player");
+            throw new ForbiddenException("This Digimon does not belong to the player");
         }
     }
 

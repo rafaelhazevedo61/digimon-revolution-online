@@ -5,6 +5,8 @@ import com.dro.modules.digimon.domain.DigimonFactory;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -42,12 +44,12 @@ public class HatchDigitamaUseCase {
 
     private Player findPlayer(UUID playerId) {
         return playerRepository.findById(playerId)
-                .orElseThrow(() -> new RuntimeException("Player not found"));
+                .orElseThrow(() -> new NotFoundException("Player not found"));
     }
 
     private void validateDigitamaSelection(Player player) {
         if (player.getSelectedDigitama() == null) {
-            throw new RuntimeException("Digitama already hatched or not selected");
+            throw new BadRequestException("Digitama already hatched or not selected");
         }
     }
 

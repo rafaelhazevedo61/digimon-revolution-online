@@ -2,6 +2,8 @@ package com.dro.modules.digimon.application;
 
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.exception.ForbiddenException;
+import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,14 +21,14 @@ public class SelectActiveDigimonUseCase {
         UUID playerId = UUID.fromString(token.split(":")[1]);
 
         var digimon = digimonRepository.findById(digimonId)
-                .orElseThrow(() -> new RuntimeException("Digimon not found"));
+                .orElseThrow(() -> new NotFoundException("Digimon not found"));
 
         if (!digimon.getPlayerId().equals(playerId)) {
-            throw new RuntimeException("Digimon does not belong to player");
+            throw new ForbiddenException("Digimon does not belong to player");
         }
 
         var player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new RuntimeException("Player not found"));
+                .orElseThrow(() -> new NotFoundException("Player not found"));
 
         player.setActiveDigimonId(digimonId);
         playerRepository.save(player);

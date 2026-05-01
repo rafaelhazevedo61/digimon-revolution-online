@@ -1,6 +1,7 @@
 package com.dro.modules.incubation.domain;
 
 import com.dro.modules.inventory.domain.ItemType;
+import com.dro.shared.exception.BadRequestException;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -43,11 +44,11 @@ public class Incubation {
     public void markReadyIfFinished () {
 
         if (this.status != IncubationStatus.IN_PROGRESS) {
-            throw new RuntimeException("Invalid incubation state");
+            throw new BadRequestException("Invalid incubation state");
         }
 
         if (this.finishAt.isAfter(LocalDateTime.now())) {
-            throw new RuntimeException("Incubation not finished yet");
+            throw new BadRequestException("Incubation not finished yet");
         }
 
         this.status = IncubationStatus.READY;
@@ -56,7 +57,7 @@ public class Incubation {
     public void claim () {
 
         if (this.status != IncubationStatus.READY) {
-            throw new RuntimeException("Incubation not ready");
+            throw new BadRequestException("Incubation not ready");
         }
 
         this.status = IncubationStatus.CLAIMED;

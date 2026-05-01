@@ -1,6 +1,7 @@
 package com.dro.modules.digimon.domain;
 
 import com.dro.modules.digimon.domain.enums.*;
+import com.dro.shared.exception.UnprocessableException;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -197,7 +198,7 @@ public class Digimon {
     public void consumeEnergy(int amount) {
 
         if (energy < amount) {
-            throw new RuntimeException("Energia insuficiente");
+            throw new UnprocessableException("Energia insuficiente");
         }
 
         energy -= amount;

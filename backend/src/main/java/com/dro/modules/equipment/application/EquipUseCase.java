@@ -6,6 +6,9 @@ import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.ForbiddenException;
+import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,20 +27,20 @@ public class EquipUseCase {
         UUID playerId = UUID.fromString(token.split(":")[1]);
 
         var player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new RuntimeException("Player not found"));
+                .orElseThrow(() -> new NotFoundException("Player not found"));
 
         if (player.getActiveDigimonId() == null) {
-            throw new RuntimeException("No active digimon selected");
+            throw new BadRequestException("No active digimon selected");
         }
 
         Digimon digimon = digimonRepository.findById(player.getActiveDigimonId())
-                .orElseThrow(() -> new RuntimeException("Active digimon not found"));
+                .orElseThrow(() -> new NotFoundException("Active digimon not found"));
 
         Equipment equipment = equipmentRepository.findById(equipmentId)
-                .orElseThrow(() -> new RuntimeException("Equipment not found"));
+                .orElseThrow(() -> new NotFoundException("Equipment not found"));
 
         if (!equipment.getDigimonId().equals(digimon.getId())) {
-            throw new RuntimeException("Equipment does not belong to this Digimon");
+            throw new ForbiddenException("Equipment does not belong to this Digimon");
         }
 
         EquipmentRules.validateEquip(equipment);

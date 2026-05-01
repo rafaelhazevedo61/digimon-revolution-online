@@ -6,6 +6,10 @@ import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.ConflictException;
+import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.exception.UnprocessableException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,20 +31,20 @@ public class StartIncubationUseCase {
         // 1️⃣ Verificar incubação ativa
         incubationRepository.findByPlayerIdAndStatus(playerId, IncubationStatus.IN_PROGRESS)
                 .ifPresent(i -> {
-                    throw new RuntimeException("Incubation already in progress");
+                    throw new ConflictException("Incubation already in progress");
                 });
 
         // 2️⃣ Validar tipos
         if (!DigitamaRules.isDigitama(digitamaType)) {
-            throw new RuntimeException("Invalid digitama");
+            throw new BadRequestException("Invalid digitama");
         }
 
         // 3️⃣ Buscar digimon ativo
         var player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new RuntimeException("Player not found"));
+                .orElseThrow(() -> new NotFoundException("Player not found"));
 
         if (player.getActiveDigimonId() == null) {
-            throw new RuntimeException("No active digimon selected");
+            throw new BadRequestException("No active digimon selected");
         }
 
         UUID digimonId = player.getActiveDigimonId();
@@ -48,19 +52,19 @@ public class StartIncubationUseCase {
         // 4️⃣ Validar inventário - Digitama
         InventoryItem digitamaItem = inventoryRepository
                 .findByDigimonIdAndItemType(digimonId, digitamaType)
-                .orElseThrow(() -> new RuntimeException("Digitama not found"));
+                .orElseThrow(() -> new NotFoundException("Digitama not found"));
 
         if (digitamaItem.getQuantity() <= 0) {
-            throw new RuntimeException("No digitama available");
+            throw new UnprocessableException("No digitama available");
         }
 
         // 5️⃣ Validar inventário - Incubadora
         InventoryItem incubatorItem = inventoryRepository
                 .findByDigimonIdAndItemType(digimonId, incubatorType)
-                .orElseThrow(() -> new RuntimeException("Incubator not found"));
+                .orElseThrow(() -> new NotFoundException("Incubator not found"));
 
         if (incubatorItem.getQuantity() <= 0) {
-            throw new RuntimeException("No incubator available");
+            throw new UnprocessableException("No incubator available");
         }
 
         // 6️⃣ Consumir itens
