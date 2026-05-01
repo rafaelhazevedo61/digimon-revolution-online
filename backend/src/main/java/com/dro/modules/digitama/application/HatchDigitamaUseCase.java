@@ -17,7 +17,7 @@ public class HatchDigitamaUseCase {
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
 
-    public void execute(String token) {
+    public Digimon execute(String token) {
 
         UUID playerId = extractPlayerId(token);
 
@@ -32,6 +32,8 @@ public class HatchDigitamaUseCase {
         setActiveIfFirstDigimon(player, digimon);
 
         clearSelectedDigitama(player);
+
+        return digimon;
     }
 
     private UUID extractPlayerId(String token) {

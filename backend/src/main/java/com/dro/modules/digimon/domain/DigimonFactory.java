@@ -1,5 +1,7 @@
 package com.dro.modules.digimon.domain;
 
+import com.dro.modules.digitama.domain.DigitamaHatchRules;
+import com.dro.modules.digitama.domain.DigitamaType;
 import com.dro.modules.digimon.domain.enums.*;
 
 import java.time.Instant;
@@ -14,11 +16,10 @@ public class DigimonFactory {
     private DigimonFactory() {
     }
 
-    public static Digimon createBaby(UUID playerId, Enum<?> digitamaType) {
-        return createBaby(playerId, digitamaType.name());
-    }
+    public static Digimon createBaby(UUID playerId, DigitamaType digitamaType) {
 
-    public static Digimon createBaby(UUID playerId, String digitamaType) {
+        String babyName = DigitamaHatchRules.rollBabyName(digitamaType);
+        String type = digitamaType.name();
 
         Rarity rarity = RarityRoller.roll();
 
@@ -61,8 +62,8 @@ public class DigimonFactory {
         return Digimon.builder()
                 .id(UUID.randomUUID())
                 .playerId(playerId)
-                .name("Baby " + digitamaType)
-                .type(digitamaType)
+                .name(babyName)
+                .type(type)
                 .stage(Stage.BABY)
                 .rarity(rarity)
                 .personality(personality)
