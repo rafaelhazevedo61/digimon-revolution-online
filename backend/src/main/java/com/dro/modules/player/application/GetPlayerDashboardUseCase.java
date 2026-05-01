@@ -168,7 +168,9 @@ public class GetPlayerDashboardUseCase {
 
         return missions.stream()
                 .map(instance -> {
-                    instance.updateStatusIfFinished();
+                    if (instance.updateStatusIfFinished()) {
+                        missionInstanceRepository.save(instance);
+                    }
 
                     String missionName = MissionCatalog.findById(instance.getMissionId())
                             .map(m -> m.getName())
