@@ -51,11 +51,16 @@ public class ClaimIncubationUseCase {
     private Incubation findActiveIncubation(UUID playerId) {
 
         return incubationRepository
-                .findByPlayerIdAndStatus(playerId, IncubationStatus.IN_PROGRESS)
+                .findByPlayerIdAndStatus(playerId, IncubationStatus.READY)
+                .or(() -> incubationRepository.findByPlayerIdAndStatus(playerId, IncubationStatus.IN_PROGRESS))
                 .orElseThrow(() -> new NotFoundException("No active incubation"));
     }
 
     private void validateIncubationFinished(Incubation incubation) {
+
+        if (incubation.getStatus() == IncubationStatus.READY) {
+            return;
+        }
 
         if (incubation.getFinishAt().isAfter(LocalDateTime.now())) {
             throw new BadRequestException("Incubation not finished yet");

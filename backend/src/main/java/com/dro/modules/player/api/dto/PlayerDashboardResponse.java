@@ -1,0 +1,21 @@
+package com.dro.modules.player.api.dto;
+
+import com.dro.modules.digimon.api.dto.response.DigimonResponse;
+import com.dro.modules.equipment.api.dto.response.EquipmentResponse;
+import com.dro.modules.incubation.api.IncubationResponse;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+public record PlayerDashboardResponse(
+        UUID id,
+        String username,
+        String email,
+        LocalDateTime createdAt,
+        DigimonResponse activeDigimon,
+        List<EquipmentResponse> equippedItems,
+        List<InventorySummaryResponse> inventory,
+        List<ActiveMissionResponse> activeMissions,
+        IncubationResponse incubation
+) {}
