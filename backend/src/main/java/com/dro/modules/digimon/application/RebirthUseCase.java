@@ -56,7 +56,7 @@ public class RebirthUseCase {
 
         validateBits(oldDigimon, bitsCost);
 
-        InventoryItem dataCore = findDataCore(playerId);
+        InventoryItem dataCore = findDataCore(digimonId);
         validateDataCore(dataCore, dataCoreCost);
 
         consumeCosts(oldDigimon, dataCore, bitsCost, dataCoreCost);
@@ -128,8 +128,8 @@ public class RebirthUseCase {
         }
     }
 
-    private InventoryItem findDataCore(UUID playerId) {
-        return inventoryRepository.findByPlayerIdAndItemType(playerId, ItemType.DATA_CORE)
+    private InventoryItem findDataCore(UUID digimonId) {
+        return inventoryRepository.findByDigimonIdAndItemType(digimonId, ItemType.DATA_CORE)
                 .orElseThrow(() -> new RuntimeException("Data Core not found in inventory"));
     }
 

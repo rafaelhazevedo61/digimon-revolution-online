@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public interface InventoryRepository extends JpaRepository<InventoryItem, UUID> {
 
-    List<InventoryItem> findByPlayerId(UUID playerId);
+    List<InventoryItem> findByDigimonId(UUID digimonId);
 
-    Optional<InventoryItem> findByPlayerIdAndItemType(UUID playerId, ItemType itemType);
+    Optional<InventoryItem> findByDigimonIdAndItemType(UUID digimonId, ItemType itemType);
 }

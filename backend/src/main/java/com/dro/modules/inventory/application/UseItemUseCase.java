@@ -23,14 +23,6 @@ public class UseItemUseCase {
 
         UUID playerId = UUID.fromString(token.split(":")[1]);
 
-        InventoryItem item = inventoryRepository
-                .findByPlayerIdAndItemType(playerId, type)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
-
-        if (item.getQuantity() <= 0) {
-            throw new RuntimeException("No item available");
-        }
-
         var player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new RuntimeException("Player not found"));
 
@@ -41,6 +33,14 @@ public class UseItemUseCase {
         Digimon digimon = digimonRepository
                 .findById(player.getActiveDigimonId())
                 .orElseThrow(() -> new RuntimeException("Active digimon not found"));
+
+        InventoryItem item = inventoryRepository
+                .findByDigimonIdAndItemType(digimon.getId(), type)
+                .orElseThrow(() -> new RuntimeException("Item not found"));
+
+        if (item.getQuantity() <= 0) {
+            throw new RuntimeException("No item available");
+        }
 
         // Remove 1 item
         item.setQuantity(item.getQuantity() - 1);
