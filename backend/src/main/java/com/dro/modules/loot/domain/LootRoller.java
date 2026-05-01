@@ -1,7 +1,5 @@
 package com.dro.modules.loot.domain;
 
-import com.dro.shared.exception.BadRequestException;
-
 import java.util.List;
 import java.util.Random;
 
@@ -22,7 +20,7 @@ public class LootRoller {
                 .toList();
 
         if (possibleItems.isEmpty()) {
-            throw new BadRequestException("No loot items configured for rarity: " + rarity);
+            throw new RuntimeException("No loot items configured for rarity: " + rarity);
         }
 
         return possibleItems.get(random.nextInt(possibleItems.size()));
@@ -46,6 +44,6 @@ public class LootRoller {
             }
         }
 
-        throw new BadRequestException("Invalid loot rarity chance configuration");
+        throw new RuntimeException("Invalid loot rarity chance configuration");
     }
 }
