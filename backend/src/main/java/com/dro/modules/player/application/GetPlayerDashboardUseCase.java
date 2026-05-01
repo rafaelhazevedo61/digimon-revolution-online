@@ -32,6 +32,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -194,8 +195,16 @@ public class GetPlayerDashboardUseCase {
 
     private IncubationResponse buildIncubation(UUID playerId) {
 
-        Incubation incubation = incubationRepository
-                .findByPlayerIdAndStatus(playerId, IncubationStatus.IN_PROGRESS)
+        List<Incubation> incubations = incubationRepository
+                .findByPlayerIdAndStatusNot(playerId, IncubationStatus.CLAIMED);
+
+        if (incubations == null || incubations.isEmpty()) {
+            return null;
+        }
+
+        // Seleciona a incubação mais próxima de terminar
+        Incubation incubation = incubations.stream()
+                .min(Comparator.comparing(Incubation::getFinishAt))
                 .orElse(null);
 
         if (incubation == null) {
@@ -209,8 +218,11 @@ public class GetPlayerDashboardUseCase {
 
         if (remaining < 0) {
             remaining = 0;
-            incubation.markReadyIfFinished();
-            incubationRepository.save(incubation);
+            // Só chama markReadyIfFinished se o status for IN_PROGRESS
+            if (incubation.getStatus() == IncubationStatus.IN_PROGRESS) {
+                incubation.markReadyIfFinished();
+                incubationRepository.save(incubation);
+            }
         }
 
         return new IncubationResponse(
