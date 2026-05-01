@@ -1,8 +1,10 @@
 package com.dro.modules.digitama.api;
 
+import com.dro.modules.digitama.api.dto.HatchDigitamaResponse;
 import com.dro.modules.digitama.api.dto.SelectDigitamaRequest;
 import com.dro.modules.digitama.application.HatchDigitamaUseCase;
 import com.dro.modules.digitama.application.SelectDigitamaUseCase;
+import com.dro.modules.digimon.domain.Digimon;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,11 +28,11 @@ public class DigitamaController {
     }
 
     @PostMapping("/hatch")
-    public ResponseEntity<Void> hatch(
+    public ResponseEntity<HatchDigitamaResponse> hatch(
             @RequestHeader("Authorization") String authorization
     ) {
-        hatchDigitamaUseCase.execute(authorization);
-        return ResponseEntity.ok().build();
+        Digimon digimon = hatchDigitamaUseCase.execute(authorization);
+        return ResponseEntity.ok(HatchDigitamaResponse.from(digimon));
     }
 
 }
