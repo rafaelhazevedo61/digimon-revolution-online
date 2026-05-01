@@ -1,5 +1,7 @@
 package com.dro.modules.equipment.domain;
 
+import com.dro.shared.exception.NotFoundException;
+
 import java.util.List;
 
 public class EquipmentTemplate {
@@ -56,6 +58,6 @@ public class EquipmentTemplate {
         return CATALOG.stream()
                 .filter(t -> t.getName().equalsIgnoreCase(name))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Equipment template not found: " + name));
+                .orElseThrow(() -> new NotFoundException("Equipment template not found: " + name));
     }
 }

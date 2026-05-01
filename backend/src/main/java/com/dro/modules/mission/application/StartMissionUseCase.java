@@ -8,6 +8,10 @@ import com.dro.modules.mission.domain.*;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.ConflictException;
+import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.exception.UnprocessableException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,17 +34,17 @@ public class StartMissionUseCase {
         UUID playerId = UUID.fromString(token.split(":")[1]);
 
         Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new RuntimeException("Player not found"));
+                .orElseThrow(() -> new NotFoundException("Player not found"));
 
         Digimon digimon = getActiveDigimon(player);
 
         MissionDefinition mission = MissionCatalog.findById(missionId)
-                .orElseThrow(() -> new RuntimeException("Mission not found"));
+                .orElseThrow(() -> new NotFoundException("Mission not found"));
 
         Stage highestStage = getHighestStage(playerId);
 
         if (!AreaRules.isUnlocked(highestStage, mission.getArea())) {
-            throw new RuntimeException("Area locked: " + mission.getArea());
+            throw new BadRequestException("Area locked: " + mission.getArea());
         }
 
         validateRequirement(digimon, mission);
@@ -49,7 +53,7 @@ public class StartMissionUseCase {
         digimon.regenerateEnergy();
 
         if (digimon.getEnergy() < mission.getEnergyCost()) {
-            throw new RuntimeException("Energia insuficiente");
+            throw new UnprocessableException("Energia insuficiente");
         }
 
         // 🔒 Verificar se já está em missão
@@ -57,7 +61,7 @@ public class StartMissionUseCase {
                 .existsByDigimonIdAndStatus(digimon.getId(), MissionStatus.RUNNING);
 
         if (alreadyRunning) {
-            throw new RuntimeException("Digimon já está em missão");
+            throw new ConflictException("Digimon já está em missão");
         }
 
         digimon.consumeEnergy(mission.getEnergyCost());
@@ -95,22 +99,22 @@ public class StartMissionUseCase {
         long seconds = Duration.between(player.getLastMissionAt(), LocalDateTime.now()).getSeconds();
 
         if (seconds < COOLDOWN_SECONDS) {
-            throw new RuntimeException("Mission on cooldown. Try again in " + (COOLDOWN_SECONDS - seconds) + " seconds.");
+            throw new ConflictException("Mission on cooldown. Try again in " + (COOLDOWN_SECONDS - seconds) + " seconds.");
         }
     }
 
     private Digimon getActiveDigimon (Player player) {
 
         if (player.getActiveDigimonId() == null) {
-            throw new RuntimeException("No active digimon selected");
+            throw new BadRequestException("No active digimon selected");
         }
 
-        return digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new RuntimeException("Active digimon not found"));
+        return digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Active digimon not found"));
     }
 
     private void validateRequirement (Digimon digimon, MissionDefinition mission) {
         if (digimon.getLevel() < mission.getRequiredLevel()) {
-            throw new RuntimeException("Mission locked: level too low");
+            throw new BadRequestException("Mission locked: level too low");
         }
     }
 

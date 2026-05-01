@@ -14,6 +14,9 @@ import com.dro.modules.mission.domain.MissionReward;
 import com.dro.modules.mission.domain.PlayerMissionProgress;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.mission.infra.PlayerMissionProgressRepository;
+import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.ConflictException;
+import com.dro.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -46,24 +49,24 @@ public class ClaimMissionUseCase {
 
         MissionInstance instance = missionInstanceRepository
                 .findByIdAndPlayerId(missionInstanceId, playerId)
-                .orElseThrow(() -> new RuntimeException("Missão não encontrada"));
+                .orElseThrow(() -> new NotFoundException("Missão não encontrada"));
 
         instance.updateStatusIfFinished();
 
         if (instance.isAlreadyClaimed()) {
-            throw new RuntimeException("Missão já foi resgatada");
+            throw new ConflictException("Missão já foi resgatada");
         }
 
         if (!instance.canBeClaimed()) {
-            throw new RuntimeException("Missão ainda não foi concluída");
+            throw new BadRequestException("Missão ainda não foi concluída");
         }
 
         Digimon digimon = digimonRepository.findById(instance.getDigimonId())
-                .orElseThrow(() -> new RuntimeException("Digimon não encontrado"));
+                .orElseThrow(() -> new NotFoundException("Digimon não encontrado"));
 
         MissionDefinition mission = MissionCatalog
                 .findById(instance.getMissionId())
-                .orElseThrow(() -> new RuntimeException("Mission not found"));
+                .orElseThrow(() -> new NotFoundException("Mission not found"));
 
         PlayerMissionProgress progress =
                 getOrCreateProgress(playerId, mission.getId());

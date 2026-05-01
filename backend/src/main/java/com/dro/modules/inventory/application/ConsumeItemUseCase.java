@@ -3,6 +3,8 @@ package com.dro.modules.inventory.application;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
+import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.exception.UnprocessableException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +21,10 @@ public class ConsumeItemUseCase {
         InventoryItem item = inventoryRepository
                 .findByDigimonIdAndItemType(digimonId, itemType)
                 .orElseThrow(() ->
-                        new RuntimeException("Item not found in inventory"));
+                        new NotFoundException("Item not found in inventory"));
 
         if (item.getQuantity() < quantity) {
-            throw new RuntimeException("Not enough items");
+            throw new UnprocessableException("Not enough items");
         }
 
         item.setQuantity(item.getQuantity() - quantity);

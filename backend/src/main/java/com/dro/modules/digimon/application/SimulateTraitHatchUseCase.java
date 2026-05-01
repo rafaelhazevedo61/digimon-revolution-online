@@ -3,6 +3,7 @@ package com.dro.modules.digimon.application;
 import com.dro.modules.digimon.api.dto.response.TraitHatchSimulationResponse;
 import com.dro.modules.digimon.domain.TraitRoller;
 import com.dro.modules.digimon.domain.enums.Trait;
+import com.dro.shared.exception.BadRequestException;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -14,7 +15,7 @@ public class SimulateTraitHatchUseCase {
     public TraitHatchSimulationResponse execute(int attempts) {
 
         if (attempts <= 0) {
-            throw new RuntimeException("Attempts must be greater than zero");
+            throw new BadRequestException("Attempts must be greater than zero");
         }
 
         Map<String, Integer> distribution = new HashMap<>();

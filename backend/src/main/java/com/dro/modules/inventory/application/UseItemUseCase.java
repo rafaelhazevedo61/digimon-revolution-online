@@ -6,6 +6,9 @@ import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.exception.UnprocessableException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,28 +27,26 @@ public class UseItemUseCase {
         UUID playerId = UUID.fromString(token.split(":")[1]);
 
         var player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new RuntimeException("Player not found"));
+                .orElseThrow(() -> new NotFoundException("Player not found"));
 
         if (player.getActiveDigimonId() == null) {
-            throw new RuntimeException("No active digimon selected");
+            throw new BadRequestException("No active digimon selected");
         }
 
         Digimon digimon = digimonRepository
                 .findById(player.getActiveDigimonId())
-                .orElseThrow(() -> new RuntimeException("Active digimon not found"));
+                .orElseThrow(() -> new NotFoundException("Active digimon not found"));
 
         InventoryItem item = inventoryRepository
                 .findByDigimonIdAndItemType(digimon.getId(), type)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new NotFoundException("Item not found"));
 
         if (item.getQuantity() <= 0) {
-            throw new RuntimeException("No item available");
+            throw new UnprocessableException("No item available");
         }
 
-        // Remove 1 item
         item.setQuantity(item.getQuantity() - 1);
 
-        // Concede XP
         digimon.gainExperience(50);
 
         inventoryRepository.save(item);

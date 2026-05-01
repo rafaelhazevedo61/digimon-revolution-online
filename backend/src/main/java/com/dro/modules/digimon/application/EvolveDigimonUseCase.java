@@ -7,6 +7,8 @@ import com.dro.modules.inventory.application.ConsumeItemUseCase;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,21 +27,21 @@ public class EvolveDigimonUseCase {
         UUID playerId = UUID.fromString(token.split(":")[1]);
 
         Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new RuntimeException("Player not found"));
+                .orElseThrow(() -> new NotFoundException("Player not found"));
 
         if (player.getActiveDigimonId() == null) {
-            throw new RuntimeException("No active digimon selected");
+            throw new BadRequestException("No active digimon selected");
         }
 
         Digimon digimon = digimonRepository
                 .findById(player.getActiveDigimonId())
-                .orElseThrow(() -> new RuntimeException("Digimon not found"));
+                .orElseThrow(() -> new NotFoundException("Digimon not found"));
 
         Stage currentStage = digimon.getStage();
         Stage nextStage = EvolutionRules.nextStage(currentStage);
 
         if (nextStage == null) {
-            throw new RuntimeException("Digimon cannot evolve further");
+            throw new BadRequestException("Digimon cannot evolve further");
         }
 
         validateLevelRequirement(digimon, currentStage);
@@ -59,7 +61,7 @@ public class EvolveDigimonUseCase {
         int requiredLevel = EvolutionRules.requiredLevel(currentStage);
 
         if (digimon.getLevel() < requiredLevel) {
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Level too low. Required: " + requiredLevel
             );
         }

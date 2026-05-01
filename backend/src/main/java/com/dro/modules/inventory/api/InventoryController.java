@@ -7,6 +7,8 @@ import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.application.UseItemUseCase;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.NotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -31,10 +33,10 @@ public class InventoryController {
         UUID playerId = UUID.fromString(authorization.split(":")[1]);
 
         var player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new RuntimeException("Player not found"));
+                .orElseThrow(() -> new NotFoundException("Player not found"));
 
         if (player.getActiveDigimonId() == null) {
-            throw new RuntimeException("No active digimon selected");
+            throw new BadRequestException("No active digimon selected");
         }
 
         return ResponseEntity.ok(repository.findByDigimonId(player.getActiveDigimonId()));

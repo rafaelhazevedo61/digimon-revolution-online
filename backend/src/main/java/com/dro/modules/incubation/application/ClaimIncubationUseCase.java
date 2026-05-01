@@ -9,6 +9,8 @@ import com.dro.modules.incubation.domain.IncubationStatus;
 import com.dro.modules.incubation.infra.IncubationRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -50,13 +52,13 @@ public class ClaimIncubationUseCase {
 
         return incubationRepository
                 .findByPlayerIdAndStatus(playerId, IncubationStatus.IN_PROGRESS)
-                .orElseThrow(() -> new RuntimeException("No active incubation"));
+                .orElseThrow(() -> new NotFoundException("No active incubation"));
     }
 
     private void validateIncubationFinished(Incubation incubation) {
 
         if (incubation.getFinishAt().isAfter(LocalDateTime.now())) {
-            throw new RuntimeException("Incubation not finished yet");
+            throw new BadRequestException("Incubation not finished yet");
         }
 
         incubation.markReadyIfFinished();
@@ -75,7 +77,7 @@ public class ClaimIncubationUseCase {
     private void setActiveIfFirstDigimon(UUID playerId, Digimon digimon) {
 
         Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new RuntimeException("Player not found"));
+                .orElseThrow(() -> new NotFoundException("Player not found"));
 
         if (player.getActiveDigimonId() == null) {
             player.setActiveDigimonId(digimon.getId());

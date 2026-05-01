@@ -8,6 +8,8 @@ import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.equipment.domain.EquipmentSlot;
 import com.dro.modules.equipment.infra.EquipmentRepository;
+import com.dro.shared.exception.ForbiddenException;
+import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,10 +29,10 @@ public class GetDigimonEquipmentUseCase {
         UUID playerId = UUID.fromString(token.split(":")[1]);
 
         Digimon digimon = digimonRepository.findById(digimonId)
-                .orElseThrow(() -> new RuntimeException("Digimon not found"));
+                .orElseThrow(() -> new NotFoundException("Digimon not found"));
 
         if (!digimon.getPlayerId().equals(playerId)) {
-            throw new RuntimeException("Digimon does not belong to this player");
+            throw new ForbiddenException("Digimon does not belong to this player");
         }
 
         List<Equipment> equipped = new ArrayList<>();
