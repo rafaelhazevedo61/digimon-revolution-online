@@ -5,7 +5,7 @@ import com.dro.modules.inventory.domain.ItemType;
 import java.util.UUID;
 
 public record GrantItemResponse(
-        UUID playerId,
+        UUID digimonId,
         ItemType itemType,
         int quantity,
         String message

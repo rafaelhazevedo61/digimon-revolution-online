@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record GrantItemRequest(
-        @NotNull UUID playerId,
+        @NotNull UUID digimonId,
         @NotNull ItemType itemType,
         @Min(1) int quantity
 ) {

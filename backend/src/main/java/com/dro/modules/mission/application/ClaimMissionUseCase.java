@@ -83,11 +83,13 @@ public class ClaimMissionUseCase {
 
         List<RewardResponse> rewards = new ArrayList<>();
 
+        UUID digimonId = instance.getDigimonId();
+
         rewards.addAll(
-                applyFixedRewards(playerId, mission, completionCount)
+                applyFixedRewards(digimonId, mission, completionCount)
         );
 
-        applyRandomLoot(playerId, mission, rewards);
+        applyRandomLoot(digimonId, mission, rewards);
 
         incrementProgress(progress);
 
@@ -126,7 +128,7 @@ public class ClaimMissionUseCase {
     }
 
     private List<RewardResponse> applyFixedRewards(
-            UUID playerId,
+            UUID digimonId,
             MissionDefinition mission,
             int completionCount
     ) {
@@ -140,7 +142,7 @@ public class ClaimMissionUseCase {
 
             if (quantity > 0) {
                 addItemUseCase.execute(
-                        playerId,
+                        digimonId,
                         reward.getItemType(),
                         quantity
                 );
@@ -158,7 +160,7 @@ public class ClaimMissionUseCase {
     }
 
     private void applyRandomLoot(
-            UUID playerId,
+            UUID digimonId,
             MissionDefinition mission,
             List<RewardResponse> rewards
     ) {
@@ -169,7 +171,7 @@ public class ClaimMissionUseCase {
         LootItem lootItem = LootRoller.roll(mission.getLootTable());
 
         addItemUseCase.execute(
-                playerId,
+                digimonId,
                 lootItem.getItemType(),
                 lootItem.getQuantity()
         );

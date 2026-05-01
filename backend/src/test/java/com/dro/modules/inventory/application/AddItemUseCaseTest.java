@@ -27,18 +27,18 @@ class AddItemUseCaseTest {
 
     @Test
     void execute_createsNewItem_whenNotExists() {
-        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
 
-        when(repository.findByPlayerIdAndItemType(playerId, ItemType.TRAINING_STONE))
+        when(repository.findByDigimonIdAndItemType(digimonId, ItemType.TRAINING_STONE))
                 .thenReturn(Optional.empty());
 
-        addItemUseCase.execute(playerId, ItemType.TRAINING_STONE, 5);
+        addItemUseCase.execute(digimonId, ItemType.TRAINING_STONE, 5);
 
         ArgumentCaptor<InventoryItem> captor = ArgumentCaptor.forClass(InventoryItem.class);
         verify(repository).save(captor.capture());
 
         InventoryItem saved = captor.getValue();
-        assertEquals(playerId, saved.getPlayerId());
+        assertEquals(digimonId, saved.getDigimonId());
         assertEquals(ItemType.TRAINING_STONE, saved.getItemType());
         assertEquals(5, saved.getQuantity());
         assertNotNull(saved.getId());
@@ -46,19 +46,19 @@ class AddItemUseCaseTest {
 
     @Test
     void execute_incrementsQuantity_whenExists() {
-        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
 
         InventoryItem existing = InventoryItem.builder()
                 .id(UUID.randomUUID())
-                .playerId(playerId)
+                .digimonId(digimonId)
                 .itemType(ItemType.DATA_CORE)
                 .quantity(3)
                 .build();
 
-        when(repository.findByPlayerIdAndItemType(playerId, ItemType.DATA_CORE))
+        when(repository.findByDigimonIdAndItemType(digimonId, ItemType.DATA_CORE))
                 .thenReturn(Optional.of(existing));
 
-        addItemUseCase.execute(playerId, ItemType.DATA_CORE, 7);
+        addItemUseCase.execute(digimonId, ItemType.DATA_CORE, 7);
 
         assertEquals(10, existing.getQuantity());
         verify(repository).save(existing);
@@ -66,12 +66,12 @@ class AddItemUseCaseTest {
 
     @Test
     void execute_grantsDigitama() {
-        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
 
-        when(repository.findByPlayerIdAndItemType(playerId, ItemType.DIGITAMA_FIRE))
+        when(repository.findByDigimonIdAndItemType(digimonId, ItemType.DIGITAMA_FIRE))
                 .thenReturn(Optional.empty());
 
-        addItemUseCase.execute(playerId, ItemType.DIGITAMA_FIRE, 1);
+        addItemUseCase.execute(digimonId, ItemType.DIGITAMA_FIRE, 1);
 
         ArgumentCaptor<InventoryItem> captor = ArgumentCaptor.forClass(InventoryItem.class);
         verify(repository).save(captor.capture());
@@ -82,12 +82,12 @@ class AddItemUseCaseTest {
 
     @Test
     void execute_grantsFragment() {
-        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
 
-        when(repository.findByPlayerIdAndItemType(playerId, ItemType.FRAGMENT_MEGA))
+        when(repository.findByDigimonIdAndItemType(digimonId, ItemType.FRAGMENT_MEGA))
                 .thenReturn(Optional.empty());
 
-        addItemUseCase.execute(playerId, ItemType.FRAGMENT_MEGA, 10);
+        addItemUseCase.execute(digimonId, ItemType.FRAGMENT_MEGA, 10);
 
         ArgumentCaptor<InventoryItem> captor = ArgumentCaptor.forClass(InventoryItem.class);
         verify(repository).save(captor.capture());

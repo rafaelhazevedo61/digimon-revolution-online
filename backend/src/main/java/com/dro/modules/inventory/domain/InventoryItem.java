@@ -18,7 +18,7 @@ public class InventoryItem {
     private UUID id;
 
     @Column(nullable = false)
-    private UUID playerId;
+    private UUID digimonId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -43,7 +43,7 @@ public class EvolveDigimonUseCase {
         }
 
         validateLevelRequirement(digimon, currentStage);
-        consumeRequiredFragments(playerId, currentStage);
+        consumeRequiredFragments(digimon.getId(), currentStage);
 
         digimon.setStage(nextStage);
 
@@ -66,7 +66,7 @@ public class EvolveDigimonUseCase {
     }
 
     private void consumeRequiredFragments (
-            UUID playerId,
+            UUID digimonId,
             Stage currentStage
     ) {
         ItemType fragment = EvolutionRules.requiredFragment(currentStage);
@@ -76,7 +76,7 @@ public class EvolveDigimonUseCase {
             return; // BABY → ROOKIE não precisa fragmento
         }
 
-        consumeItemUseCase.execute(playerId, fragment, quantity);
+        consumeItemUseCase.execute(digimonId, fragment, quantity);
     }
 
     private void recalculateStats (Digimon digimon) {

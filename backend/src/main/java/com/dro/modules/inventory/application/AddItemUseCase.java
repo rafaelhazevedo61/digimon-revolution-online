@@ -14,9 +14,9 @@ public class AddItemUseCase {
 
     private final InventoryRepository repository;
 
-    public void execute(UUID playerId, ItemType type, int quantity) {
+    public void execute(UUID digimonId, ItemType type, int quantity) {
 
-        var existing = repository.findByPlayerIdAndItemType(playerId, type);
+        var existing = repository.findByDigimonIdAndItemType(digimonId, type);
 
         if (existing.isPresent()) {
             InventoryItem item = existing.get();
@@ -25,7 +25,7 @@ public class AddItemUseCase {
         } else {
             InventoryItem item = InventoryItem.builder()
                     .id(UUID.randomUUID())
-                    .playerId(playerId)
+                    .digimonId(digimonId)
                     .itemType(type)
                     .quantity(quantity)
                     .build();

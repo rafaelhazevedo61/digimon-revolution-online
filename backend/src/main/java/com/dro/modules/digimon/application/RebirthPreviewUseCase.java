@@ -146,7 +146,7 @@ public class RebirthPreviewUseCase {
         }
 
         int dataCoreQuantity = inventoryRepository
-                .findByPlayerIdAndItemType(digimon.getPlayerId(), ItemType.DATA_CORE)
+                .findByDigimonIdAndItemType(digimon.getId(), ItemType.DATA_CORE)
                 .map(InventoryItem::getQuantity)
                 .orElse(0);
 

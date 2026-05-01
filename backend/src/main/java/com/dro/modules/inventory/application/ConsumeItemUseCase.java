@@ -14,10 +14,10 @@ public class ConsumeItemUseCase {
 
     private final InventoryRepository inventoryRepository;
 
-    public void execute(UUID playerId, ItemType itemType, int quantity) {
+    public void execute(UUID digimonId, ItemType itemType, int quantity) {
 
         InventoryItem item = inventoryRepository
-                .findByPlayerIdAndItemType(playerId, itemType)
+                .findByDigimonIdAndItemType(digimonId, itemType)
                 .orElseThrow(() ->
                         new RuntimeException("Item not found in inventory"));
 

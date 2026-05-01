@@ -5,6 +5,7 @@ import com.dro.modules.incubation.infra.IncubationRepository;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
+import com.dro.modules.player.infra.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ public class StartIncubationUseCase {
 
     private final IncubationRepository incubationRepository;
     private final InventoryRepository inventoryRepository;
+    private final PlayerRepository playerRepository;
 
     public void execute(String token, ItemType digitamaType, ItemType incubatorType) {
 
@@ -33,36 +35,46 @@ public class StartIncubationUseCase {
             throw new RuntimeException("Invalid digitama");
         }
 
-        // 3️⃣ Validar inventário - Digitama
+        // 3️⃣ Buscar digimon ativo
+        var player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new RuntimeException("Player not found"));
+
+        if (player.getActiveDigimonId() == null) {
+            throw new RuntimeException("No active digimon selected");
+        }
+
+        UUID digimonId = player.getActiveDigimonId();
+
+        // 4️⃣ Validar inventário - Digitama
         InventoryItem digitamaItem = inventoryRepository
-                .findByPlayerIdAndItemType(playerId, digitamaType)
+                .findByDigimonIdAndItemType(digimonId, digitamaType)
                 .orElseThrow(() -> new RuntimeException("Digitama not found"));
 
         if (digitamaItem.getQuantity() <= 0) {
             throw new RuntimeException("No digitama available");
         }
 
-        // 4️⃣ Validar inventário - Incubadora
+        // 5️⃣ Validar inventário - Incubadora
         InventoryItem incubatorItem = inventoryRepository
-                .findByPlayerIdAndItemType(playerId, incubatorType)
+                .findByDigimonIdAndItemType(digimonId, incubatorType)
                 .orElseThrow(() -> new RuntimeException("Incubator not found"));
 
         if (incubatorItem.getQuantity() <= 0) {
             throw new RuntimeException("No incubator available");
         }
 
-        // 5️⃣ Consumir itens
+        // 6️⃣ Consumir itens
         digitamaItem.setQuantity(digitamaItem.getQuantity() - 1);
         incubatorItem.setQuantity(incubatorItem.getQuantity() - 1);
 
         inventoryRepository.save(digitamaItem);
         inventoryRepository.save(incubatorItem);
 
-        // 6️⃣ Calcular tempo
+        // 7️⃣ Calcular tempo
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime finishAt = now.plus(IncubatorRules.getIncubationTime(incubatorType));
 
-        // 7️⃣ Criar incubação
+        // 8️⃣ Criar incubação
         Incubation incubation = Incubation.builder()
                 .id(UUID.randomUUID())
                 .playerId(playerId)
