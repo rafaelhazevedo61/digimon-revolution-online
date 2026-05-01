@@ -1,5 +1,8 @@
 package com.dro.modules.inventory.api;
 
+import com.dro.modules.inventory.api.dto.request.GrantItemRequest;
+import com.dro.modules.inventory.api.dto.request.UseItemRequest;
+import com.dro.modules.inventory.api.dto.response.GrantItemResponse;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.application.UseItemUseCase;
 import com.dro.modules.inventory.infra.InventoryRepository;

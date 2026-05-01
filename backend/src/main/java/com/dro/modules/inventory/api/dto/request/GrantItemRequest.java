@@ -1,4 +1,4 @@
-package com.dro.modules.inventory.api;
+package com.dro.modules.inventory.api.dto.request;
 
 import com.dro.modules.inventory.domain.ItemType;
 import jakarta.validation.constraints.Min;
