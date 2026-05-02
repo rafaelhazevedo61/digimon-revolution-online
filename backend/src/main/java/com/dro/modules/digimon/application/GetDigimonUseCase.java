@@ -46,6 +46,7 @@ public class GetDigimonUseCase {
                             d.getIvHp(),
                             d.getIvAttack(),
                             d.getIvDefense(),
+                            d.getGrade(),
                             d.getRarity(),
                             d.getPersonality(),
                             d.getTrait(),

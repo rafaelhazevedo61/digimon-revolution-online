@@ -51,6 +51,10 @@ public class Digimon {
     private int ivAttack;
     private int ivDefense;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private DigimonGrade grade;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 

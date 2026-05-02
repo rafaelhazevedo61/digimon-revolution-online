@@ -33,6 +33,8 @@ public class DigimonFactory {
         int ivAttack = rollIv(minIv);
         int ivDefense = rollIv(minIv);
 
+        DigimonGrade grade = DigimonGradeRules.calculate(ivHp, ivAttack, ivDefense);
+
         double rarityMultiplier = RarityRules.getStatMultiplier(rarity);
         double stageMultiplier = EvolutionRules.stageStatMultiplier(Stage.BABY);
 
@@ -72,6 +74,7 @@ public class DigimonFactory {
                 .ivHp(ivHp)
                 .ivAttack(ivAttack)
                 .ivDefense(ivDefense)
+                .grade(grade)
                 .hp(hp)
                 .attack(attack)
                 .defense(defense)
