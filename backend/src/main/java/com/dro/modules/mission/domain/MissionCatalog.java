@@ -1,5 +1,6 @@
 package com.dro.modules.mission.domain;
 
+import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.loot.domain.LootItem;
 import com.dro.modules.loot.domain.LootRarity;
@@ -18,6 +19,7 @@ public class MissionCatalog {
                     "Missão de Teste",
                     "Missão administrativa para testes e debug.",
                     Area.NATIVE_FOREST,
+                    Stage.BABY,
                     1,
                     999,
                     1,
@@ -49,6 +51,7 @@ public class MissionCatalog {
                     "Patrulha na Floresta Nativa",
                     "Explore a floresta onde os Digimons recém-nascidos dão seus primeiros passos.",
                     Area.NATIVE_FOREST,
+                    Stage.BABY,
                     1,
                     30,
                     5,
@@ -77,6 +80,7 @@ public class MissionCatalog {
                     "Caçada em Gear Savanna",
                     "Enfrente Digimons selvagens nas vastas planícies mecânicas de Gear Savanna.",
                     Area.GEAR_SAVANNA,
+                    Stage.ROOKIE,
                     8,
                     60,
                     6,
@@ -106,6 +110,7 @@ public class MissionCatalog {
                     "Investigação em Factorial Town",
                     "Infiltre-se na cidade-fábrica e colete dados das máquinas descontroladas.",
                     Area.FACTORIAL_TOWN,
+                    Stage.ROOKIE,
                     15,
                     100,
                     7,
@@ -135,6 +140,7 @@ public class MissionCatalog {
                     "Expedição em Freezeland",
                     "Sobreviva ao frio extremo de Freezeland e derrote os Digimons de gelo.",
                     Area.FREEZELAND,
+                    Stage.CHAMPION,
                     25,
                     180,
                     8,
@@ -164,6 +170,7 @@ public class MissionCatalog {
                     "Travessia do Deserto do Server",
                     "Cruze o vasto deserto do Server Continent enfrentando Digimons poderosos.",
                     Area.SERVER_DESERT,
+                    Stage.ULTIMATE,
                     40,
                     300,
                     9,
@@ -193,6 +200,7 @@ public class MissionCatalog {
                     "Ascensão à Infinity Mountain",
                     "Escale a lendária Infinity Mountain e enfrente os Digimons mais poderosos do Mundo Digital.",
                     Area.INFINITY_MOUNTAIN,
+                    Stage.MEGA,
                     60,
                     500,
                     10,

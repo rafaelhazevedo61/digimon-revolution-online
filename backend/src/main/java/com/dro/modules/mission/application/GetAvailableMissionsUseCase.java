@@ -35,9 +35,11 @@ public class GetAvailableMissionsUseCase {
                 .orElseThrow(() -> new NotFoundException("Active digimon not found"));
 
         int level = digimon.getLevel();
+        var stage = digimon.getStage();
 
         return MissionCatalog.MISSIONS.stream()
                 .filter(m -> level >= m.getRequiredLevel())
+                .filter(m -> stage.ordinal() >= m.getRequiredStage().ordinal())
                 .map(m -> new MissionResponse(
                         m.getId(),
                         m.getName(),
