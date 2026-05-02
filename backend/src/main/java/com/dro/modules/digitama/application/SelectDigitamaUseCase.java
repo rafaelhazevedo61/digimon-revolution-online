@@ -25,9 +25,9 @@ public class SelectDigitamaUseCase {
         Player player = repository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));
 
-        if (player.hasSelectedStarter()) {
-            throw new ConflictException("Starter already selected");
-        }
+//        if (player.hasSelectedStarter()) {
+//            throw new ConflictException("Starter already selected");
+//        }
 
         if (player.getSelectedDigitama() != null) {
             throw new ConflictException("Digitama already selected");

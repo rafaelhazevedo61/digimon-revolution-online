@@ -101,6 +101,9 @@ public class Digimon {
     @Column(name = "accessory_id")
     private UUID accessoryId;
 
+    @Column(name = "digimon_info_id")
+    private Long digimonInfoId;
+
     public void equipWeapon(UUID equipmentId) { this.weaponId = equipmentId; }
     public void unequipWeapon() { this.weaponId = null; }
 
