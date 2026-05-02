@@ -1,6 +1,7 @@
 package com.dro.modules.shop.domain;
 
 import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.shop.domain.enums.ShopProductCategory;
 
 public class ShopProduct {
 
@@ -8,10 +9,10 @@ public class ShopProduct {
     private final String name;
     private final String description;
     private final ShopProductType productType;
+    private final ShopProductCategory category;
     private final ItemType itemType;
     private final String equipmentTemplateName;
     private final int price;
-    private final boolean sellable;
     private final int sellPrice;
 
     public ShopProduct(
@@ -19,20 +20,20 @@ public class ShopProduct {
             String name,
             String description,
             ShopProductType productType,
+            ShopProductCategory category,
             ItemType itemType,
             String equipmentTemplateName,
             int price,
-            boolean sellable,
             int sellPrice
     ) {
         this.code = code;
         this.name = name;
         this.description = description;
         this.productType = productType;
+        this.category = category;
         this.itemType = itemType;
         this.equipmentTemplateName = equipmentTemplateName;
         this.price = price;
-        this.sellable = sellable;
         this.sellPrice = sellPrice;
     }
 
@@ -52,6 +53,10 @@ public class ShopProduct {
         return productType;
     }
 
+    public ShopProductCategory getCategory() {
+        return category;
+    }
+
     public ItemType getItemType() {
         return itemType;
     }
@@ -64,11 +69,15 @@ public class ShopProduct {
         return price;
     }
 
-    public boolean isSellable() {
-        return sellable;
-    }
-
     public int getSellPrice() {
         return sellPrice;
+    }
+
+    public boolean isItem() {
+        return productType == ShopProductType.ITEM;
+    }
+
+    public boolean isEquipment() {
+        return productType == ShopProductType.EQUIPMENT;
     }
 }
