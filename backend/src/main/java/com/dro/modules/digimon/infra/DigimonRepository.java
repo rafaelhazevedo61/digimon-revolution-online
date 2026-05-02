@@ -23,6 +23,6 @@ public interface DigimonRepository extends JpaRepository<Digimon, UUID> {
             "d.level DESC")
     Page<Digimon> findByStatusOrderByGradeQualityAscLevelDesc(@Param("status") DigimonStatus status, Pageable pageable);
 
-    Page<Digimon> findByStatusOrderByRebirthCountDescLevelDesc(DigimonStatus status, Pageable pageable);
+    Page<Digimon> findByStatusAndRebirthCountGreaterThanOrderByRebirthCountDescLevelDesc(DigimonStatus status, int rebirthCount, Pageable pageable);
 
 }

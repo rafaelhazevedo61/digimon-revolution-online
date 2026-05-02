@@ -46,7 +46,7 @@ public class GetRankingUseCase {
         int safePage = Math.max(page, 0);
         int safeSize = sanitizeSize(size);
         Page<Digimon> result = digimonRepository
-                .findByStatusOrderByRebirthCountDescLevelDesc(DigimonStatus.ACTIVE, PageRequest.of(safePage, safeSize));
+                .findByStatusAndRebirthCountGreaterThanOrderByRebirthCountDescLevelDesc(DigimonStatus.ACTIVE, 0, PageRequest.of(safePage, safeSize));
         return toResponse(result, safePage, safeSize);
     }
 

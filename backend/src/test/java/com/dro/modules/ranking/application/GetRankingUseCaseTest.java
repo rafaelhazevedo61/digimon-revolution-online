@@ -89,8 +89,8 @@ class GetRankingUseCaseTest {
 
         Player player = Player.builder().id(playerId).username("rafael").build();
 
-        when(digimonRepository.findByStatusOrderByRebirthCountDescLevelDesc(
-                eq(DigimonStatus.ACTIVE), any(PageRequest.class)))
+        when(digimonRepository.findByStatusAndRebirthCountGreaterThanOrderByRebirthCountDescLevelDesc(
+                eq(DigimonStatus.ACTIVE), eq(0), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(List.of(d1, d2)));
 
         when(playerRepository.findAllById(any())).thenReturn(List.of(player));
