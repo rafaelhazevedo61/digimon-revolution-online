@@ -40,4 +40,15 @@ public class Player {
     @Column(name = "last_mission_at")
     private LocalDateTime lastMissionAt;
 
+    @Column(name = "has_selected_starter", nullable = false)
+    private boolean starterSelected;
+
+    public boolean hasSelectedStarter() {
+        return starterSelected;
+    }
+
+    public void markStarterAsSelected() {
+        this.starterSelected = true;
+    }
+
 }
