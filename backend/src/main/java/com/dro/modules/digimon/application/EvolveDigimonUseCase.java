@@ -90,23 +90,29 @@ public class EvolveDigimonUseCase {
         double stageMultiplier =
                 EvolutionRules.stageStatMultiplier(digimon.getStage());
 
+        double rebirthMultiplier =
+                RebirthRules.calculateStatMultiplier(digimon.getRebirthCount());
+
         double hpMultiplier =
                 rarityMultiplier
                         * stageMultiplier
                         * PersonalityRules.getHpMultiplier(digimon.getPersonality())
-                        * TraitRules.getHpMultiplier(digimon.getTrait());
+                        * TraitRules.getHpMultiplier(digimon.getTrait())
+                        * rebirthMultiplier;
 
         double attackMultiplier =
                 rarityMultiplier
                         * stageMultiplier
                         * PersonalityRules.getAttackMultiplier(digimon.getPersonality())
-                        * TraitRules.getAttackMultiplier(digimon.getTrait());
+                        * TraitRules.getAttackMultiplier(digimon.getTrait())
+                        * rebirthMultiplier;
 
         double defenseMultiplier =
                 rarityMultiplier
                         * stageMultiplier
                         * PersonalityRules.getDefenseMultiplier(digimon.getPersonality())
-                        * TraitRules.getDefenseMultiplier(digimon.getTrait());
+                        * TraitRules.getDefenseMultiplier(digimon.getTrait())
+                        * rebirthMultiplier;
 
         digimon.setHp((int) Math.floor(
                 (10 + digimon.getIvHp()) * hpMultiplier
