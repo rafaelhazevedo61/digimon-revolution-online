@@ -114,6 +114,9 @@ public class StartMissionUseCase {
     }
 
     private void validateRequirement (Digimon digimon, MissionDefinition mission) {
+        if (digimon.getStage().ordinal() < mission.getRequiredStage().ordinal()) {
+            throw new BadRequestException("Mission locked: stage too low");
+        }
         if (digimon.getLevel() < mission.getRequiredLevel()) {
             throw new BadRequestException("Mission locked: level too low");
         }
