@@ -1,6 +1,7 @@
 package com.dro.modules.digimon.api;
 
 import com.dro.modules.digimon.api.dto.request.RebirthDigimonRequest;
+import com.dro.modules.digimon.api.dto.request.RenameDigimonRequest;
 import com.dro.modules.digimon.api.dto.response.DigimonLineageResponse;
 import com.dro.modules.digimon.api.dto.response.DigimonResponse;
 import com.dro.modules.digimon.api.dto.request.SelectDigimonRequest;
@@ -30,6 +31,7 @@ public class DigimonController {
     private final GetDigimonLineageUseCase getDigimonLineageUseCase;
     private final RebirthPreviewUseCase rebirthPreviewUseCase;
     private final SimulateTraitHatchUseCase simulateTraitHatchUseCase;
+    private final RenameDigimonUseCase renameDigimonUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<List<DigimonResponse>> me(
@@ -112,5 +114,14 @@ public class DigimonController {
         return ResponseEntity.ok(
                 simulateTraitHatchUseCase.execute(attempts)
         );
+    }
+
+    @PutMapping("/rename")
+    public ResponseEntity<String> rename(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody @Valid RenameDigimonRequest request
+    ) {
+        renameDigimonUseCase.execute(authorization, request.digimonId(), request.newName());
+        return ResponseEntity.ok("Digimon renamed successfully");
     }
 }
