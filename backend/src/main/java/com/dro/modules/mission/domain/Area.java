@@ -1,8 +1,10 @@
 package com.dro.modules.mission.domain;
 
 public enum Area {
-    DIGITAL_FOREST,
-    VOLCANIC_ZONE,
-    OCEAN_DEPTHS,
-    ANCIENT_RUINS
+    NATIVE_FOREST,
+    GEAR_SAVANNA,
+    FACTORIAL_TOWN,
+    FREEZELAND,
+    SERVER_DESERT,
+    INFINITY_MOUNTAIN
 }
