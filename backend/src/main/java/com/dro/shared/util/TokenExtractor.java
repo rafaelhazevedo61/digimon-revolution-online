@@ -13,6 +13,10 @@ public class TokenExtractor {
         if (token == null || !token.contains(":")) {
             throw new BadRequestException("Invalid token");
         }
-        return UUID.fromString(token.split(":")[1]);
+        String[] parts = token.split(":");
+        if (parts.length < 2 || parts[1].isEmpty()) {
+            throw new BadRequestException("Invalid token");
+        }
+        return UUID.fromString(parts[1]);
     }
 }
