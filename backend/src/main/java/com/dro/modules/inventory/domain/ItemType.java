@@ -2,6 +2,9 @@ package com.dro.modules.inventory.domain;
 
 public enum ItemType {
 
+    // Pocoes
+    POTION_SMALL,
+
     // Recursos
     TRAINING_STONE,
     DATA_CORE,

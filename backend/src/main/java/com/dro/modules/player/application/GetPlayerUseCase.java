@@ -2,7 +2,7 @@ package com.dro.modules.player.application;
 
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
-import com.dro.modules.player.api.dto.PlayerResponse;
+import com.dro.modules.player.api.dto.response.PlayerResponse;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
