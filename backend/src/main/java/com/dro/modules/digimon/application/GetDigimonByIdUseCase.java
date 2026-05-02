@@ -42,6 +42,7 @@ public class GetDigimonByIdUseCase {
                 digimon.getIvHp(),
                 digimon.getIvAttack(),
                 digimon.getIvDefense(),
+                digimon.getGrade(),
                 digimon.getRarity(),
                 digimon.getPersonality(),
                 digimon.getTrait(),

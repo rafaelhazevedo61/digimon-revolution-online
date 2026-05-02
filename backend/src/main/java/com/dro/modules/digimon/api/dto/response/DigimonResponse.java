@@ -18,6 +18,7 @@ public record DigimonResponse(
         int ivHp,
         int ivAttack,
         int ivDefense,
+        DigimonGrade grade,
         Rarity rarity,
         Personality personality,
         Trait trait,

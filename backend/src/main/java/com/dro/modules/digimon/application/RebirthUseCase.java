@@ -189,6 +189,8 @@ public class RebirthUseCase {
                 newRebirthCount
         );
 
+        DigimonGrade grade = DigimonGradeRules.calculate(ivHp, ivAttack, ivDefense);
+
         double rarityMultiplier = RarityRules.getStatMultiplier(rarity);
         double stageMultiplier = EvolutionRules.stageStatMultiplier(Stage.BABY);
         double rebirthMultiplier = RebirthRules.calculateStatMultiplier(newRebirthCount);
@@ -236,6 +238,7 @@ public class RebirthUseCase {
                 .ivHp(ivHp)
                 .ivAttack(ivAttack)
                 .ivDefense(ivDefense)
+                .grade(grade)
                 .rarity(rarity)
                 .personality(personality)
                 .energy(maxEnergy)
