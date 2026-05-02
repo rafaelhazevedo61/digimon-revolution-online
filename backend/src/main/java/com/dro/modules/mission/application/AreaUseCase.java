@@ -6,6 +6,7 @@ import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.mission.api.dto.response.AreaResponse;
 import com.dro.modules.mission.domain.Area;
 import com.dro.modules.mission.domain.AreaRules;
+import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +22,7 @@ public class AreaUseCase {
 
     public List<AreaResponse> execute(String token) {
 
-        UUID playerId = UUID.fromString(token.split(":")[1]);
+        UUID playerId = TokenExtractor.extractPlayerId(token);
 
         Stage highestStage = getHighestStage(playerId);
 

@@ -8,6 +8,7 @@ import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.equipment.domain.EquipmentSlot;
 import com.dro.modules.equipment.infra.EquipmentRepository;
+import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,7 @@ public class GetDigimonUseCase {
 
     public List<DigimonResponse> execute(String token) {
 
-        UUID playerId = UUID.fromString(token.split(":")[1]);
+        UUID playerId = TokenExtractor.extractPlayerId(token);
 
         var digimons = digimonRepository.findByPlayerId(playerId);
 

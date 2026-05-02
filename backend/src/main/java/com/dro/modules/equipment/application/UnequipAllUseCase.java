@@ -8,6 +8,7 @@ import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,7 @@ public class UnequipAllUseCase {
 
     public int execute(String token) {
 
-        UUID playerId = UUID.fromString(token.split(":")[1]);
+        UUID playerId = TokenExtractor.extractPlayerId(token);
 
         var player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));

@@ -23,8 +23,8 @@ import com.dro.modules.player.api.dto.response.InventorySummaryResponse;
 import com.dro.modules.player.api.dto.response.PlayerDashboardResponse;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
-import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -49,11 +49,7 @@ public class GetPlayerDashboardUseCase {
 
     public PlayerDashboardResponse execute(String token) {
 
-        if (token == null || !token.contains(":")) {
-            throw new BadRequestException("Invalid token");
-        }
-
-        UUID playerId = UUID.fromString(token.split(":")[1]);
+        UUID playerId = TokenExtractor.extractPlayerId(token);
 
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));

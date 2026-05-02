@@ -3,8 +3,8 @@ package com.dro.modules.player.application;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.player.api.dto.response.PlayerResponse;
-import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,13 +18,7 @@ public class GetPlayerUseCase {
 
     public PlayerResponse execute(String token) {
 
-        if (token == null || !token.contains(":")) {
-            throw new BadRequestException("Invalid token");
-        }
-
-        String playerIdPart = token.split(":")[1];
-
-        UUID playerId = UUID.fromString(playerIdPart);
+        UUID playerId = TokenExtractor.extractPlayerId(token);
 
         Player player = repository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));

@@ -12,6 +12,7 @@ import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.shared.exception.ForbiddenException;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -93,7 +94,7 @@ public class RebirthPreviewUseCase {
     }
 
     private UUID extractPlayerId(String token) {
-        return UUID.fromString(token.split(":")[1]);
+        return TokenExtractor.extractPlayerId(token);
     }
 
     private void validateOwner(Digimon digimon, UUID playerId) {

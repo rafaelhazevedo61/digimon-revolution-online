@@ -6,6 +6,7 @@ import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.shared.exception.ForbiddenException;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -56,7 +57,7 @@ public class GetDigimonLineageUseCase {
     }
 
     private UUID extractPlayerId(String token) {
-        return UUID.fromString(token.split(":")[1]);
+        return TokenExtractor.extractPlayerId(token);
     }
 
     private void validateOwner(Digimon digimon, UUID playerId) {

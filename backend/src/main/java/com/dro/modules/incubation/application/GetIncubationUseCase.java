@@ -4,6 +4,7 @@ import com.dro.modules.incubation.api.IncubationResponse;
 import com.dro.modules.incubation.domain.Incubation;
 import com.dro.modules.incubation.domain.IncubationStatus;
 import com.dro.modules.incubation.infra.IncubationRepository;
+import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ public class GetIncubationUseCase {
 
     public IncubationResponse execute(String token) {
 
-        UUID playerId = UUID.fromString(token.split(":")[1]);
+        UUID playerId = TokenExtractor.extractPlayerId(token);
 
         Incubation incubation = incubationRepository
                 .findByPlayerIdAndStatus(playerId, IncubationStatus.IN_PROGRESS)

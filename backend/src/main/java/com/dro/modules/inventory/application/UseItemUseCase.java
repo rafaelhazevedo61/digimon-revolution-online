@@ -9,6 +9,7 @@ import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnprocessableException;
+import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,7 @@ public class UseItemUseCase {
 
     public void execute(String token, ItemType type) {
 
-        UUID playerId = UUID.fromString(token.split(":")[1]);
+        UUID playerId = TokenExtractor.extractPlayerId(token);
 
         var player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));

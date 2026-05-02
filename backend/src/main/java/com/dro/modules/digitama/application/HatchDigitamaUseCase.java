@@ -7,6 +7,7 @@ import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -39,7 +40,7 @@ public class HatchDigitamaUseCase {
     }
 
     private UUID extractPlayerId(String token) {
-        return UUID.fromString(token.split(":")[1]);
+        return TokenExtractor.extractPlayerId(token);
     }
 
     private Player findPlayer(UUID playerId) {
