@@ -12,6 +12,7 @@ import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnprocessableException;
+import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +32,7 @@ public class StartMissionUseCase {
 
     public MissionStartResponse execute(String token, String missionId) {
 
-        UUID playerId = UUID.fromString(token.split(":")[1]);
+        UUID playerId = TokenExtractor.extractPlayerId(token);
 
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));

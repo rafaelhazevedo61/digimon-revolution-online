@@ -6,6 +6,7 @@ import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BusinessException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,8 +20,7 @@ public class SelectDigitamaUseCase {
 
     public void execute(String token, DigitamaType type) {
 
-        String playerIdPart = token.split(":")[1];
-        UUID playerId = UUID.fromString(playerIdPart);
+        UUID playerId = TokenExtractor.extractPlayerId(token);
 
         Player player = repository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));

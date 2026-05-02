@@ -15,6 +15,7 @@ import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.ForbiddenException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnprocessableException;
+import com.dro.shared.util.TokenExtractor;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -79,7 +80,7 @@ public class RebirthUseCase {
     }
 
     private UUID extractPlayerId(String token) {
-        return UUID.fromString(token.split(":")[1]);
+        return TokenExtractor.extractPlayerId(token);
     }
 
     private Player findPlayer(UUID playerId) {

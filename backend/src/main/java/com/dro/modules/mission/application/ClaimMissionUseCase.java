@@ -17,6 +17,7 @@ import com.dro.modules.mission.infra.PlayerMissionProgressRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ public class ClaimMissionUseCase {
 
     public MissionResultResponse execute(String token, UUID missionInstanceId) {
 
-        UUID playerId = UUID.fromString(token.split(":")[1]);
+        UUID playerId = TokenExtractor.extractPlayerId(token);
 
         MissionInstance instance = missionInstanceRepository
                 .findByIdAndPlayerId(missionInstanceId, playerId)

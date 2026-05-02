@@ -4,6 +4,7 @@ import com.dro.modules.mission.api.dto.response.MissionInstanceResponse;
 import com.dro.modules.mission.domain.MissionInstance;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
+import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ public class GetActiveMissionsUseCase {
 
     public List<MissionInstanceResponse> execute(String token) {
 
-        UUID playerId = UUID.fromString(token.split(":")[1]);
+        UUID playerId = TokenExtractor.extractPlayerId(token);
 
         List<MissionInstance> missions =
                 missionInstanceRepository.findByPlayerIdAndStatusIn(

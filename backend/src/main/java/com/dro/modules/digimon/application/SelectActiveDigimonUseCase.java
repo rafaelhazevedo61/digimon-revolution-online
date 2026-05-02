@@ -4,6 +4,7 @@ import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.ForbiddenException;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,7 @@ public class SelectActiveDigimonUseCase {
 
     public void execute(String token, UUID digimonId) {
 
-        UUID playerId = UUID.fromString(token.split(":")[1]);
+        UUID playerId = TokenExtractor.extractPlayerId(token);
 
         var digimon = digimonRepository.findById(digimonId)
                 .orElseThrow(() -> new NotFoundException("Digimon not found"));

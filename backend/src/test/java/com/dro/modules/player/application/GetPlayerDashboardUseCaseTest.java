@@ -109,8 +109,8 @@ class GetPlayerDashboardUseCaseTest {
         ));
         when(missionInstanceRepository.findByPlayerIdAndStatusIn(eq(playerId), any()))
                 .thenReturn(List.of());
-        when(incubationRepository.findByPlayerIdAndStatus(playerId, IncubationStatus.IN_PROGRESS))
-                .thenReturn(Optional.empty());
+        when(incubationRepository.findByPlayerIdAndStatusNot(playerId, IncubationStatus.CLAIMED))
+                .thenReturn(List.of());
 
         PlayerDashboardResponse response = useCase.execute(token);
 
@@ -136,8 +136,8 @@ class GetPlayerDashboardUseCaseTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
         when(missionInstanceRepository.findByPlayerIdAndStatusIn(eq(playerId), any()))
                 .thenReturn(List.of());
-        when(incubationRepository.findByPlayerIdAndStatus(playerId, IncubationStatus.IN_PROGRESS))
-                .thenReturn(Optional.empty());
+        when(incubationRepository.findByPlayerIdAndStatusNot(playerId, IncubationStatus.CLAIMED))
+                .thenReturn(List.of());
 
         PlayerDashboardResponse response = useCase.execute(token);
 
@@ -167,8 +167,8 @@ class GetPlayerDashboardUseCaseTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
         when(missionInstanceRepository.findByPlayerIdAndStatusIn(eq(playerId), any()))
                 .thenReturn(List.of());
-        when(incubationRepository.findByPlayerIdAndStatus(playerId, IncubationStatus.IN_PROGRESS))
-                .thenReturn(Optional.of(incubation));
+        when(incubationRepository.findByPlayerIdAndStatusNot(playerId, IncubationStatus.CLAIMED))
+                .thenReturn(List.of(incubation));
 
         PlayerDashboardResponse response = useCase.execute(token);
 
@@ -207,8 +207,8 @@ class GetPlayerDashboardUseCaseTest {
         when(inventoryRepository.findByDigimonId(digimonId)).thenReturn(List.of());
         when(missionInstanceRepository.findByPlayerIdAndStatusIn(eq(playerId), any()))
                 .thenReturn(List.of());
-        when(incubationRepository.findByPlayerIdAndStatus(playerId, IncubationStatus.IN_PROGRESS))
-                .thenReturn(Optional.empty());
+        when(incubationRepository.findByPlayerIdAndStatusNot(playerId, IncubationStatus.CLAIMED))
+                .thenReturn(List.of());
 
         PlayerDashboardResponse response = useCase.execute(token);
 

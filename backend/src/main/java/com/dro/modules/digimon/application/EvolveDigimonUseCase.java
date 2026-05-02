@@ -9,6 +9,7 @@ import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,7 @@ public class EvolveDigimonUseCase {
 
     public void execute (String token) {
 
-        UUID playerId = UUID.fromString(token.split(":")[1]);
+        UUID playerId = TokenExtractor.extractPlayerId(token);
 
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));
@@ -83,45 +84,46 @@ public class EvolveDigimonUseCase {
 
     private void recalculateStats (Digimon digimon) {
 
-        System.out.println("Digimon status anteriores: HP=" + digimon.getHp() + ", ATK=" + digimon.getAttack() + ", DEF=" + digimon.getDefense());
-
         double rarityMultiplier =
                 RarityRules.getStatMultiplier(digimon.getRarity());
 
         double stageMultiplier =
                 EvolutionRules.stageStatMultiplier(digimon.getStage());
 
+        double rebirthMultiplier =
+                RebirthRules.calculateStatMultiplier(digimon.getRebirthCount());
+
         double hpMultiplier =
                 rarityMultiplier
                         * stageMultiplier
-                        * PersonalityRules.getHpMultiplier(digimon.getPersonality());
+                        * PersonalityRules.getHpMultiplier(digimon.getPersonality())
+                        * TraitRules.getHpMultiplier(digimon.getTrait())
+                        * rebirthMultiplier;
 
         double attackMultiplier =
                 rarityMultiplier
                         * stageMultiplier
-                        * PersonalityRules.getAttackMultiplier(digimon.getPersonality());
+                        * PersonalityRules.getAttackMultiplier(digimon.getPersonality())
+                        * TraitRules.getAttackMultiplier(digimon.getTrait())
+                        * rebirthMultiplier;
 
         double defenseMultiplier =
                 rarityMultiplier
                         * stageMultiplier
-                        * PersonalityRules.getDefenseMultiplier(digimon.getPersonality());
+                        * PersonalityRules.getDefenseMultiplier(digimon.getPersonality())
+                        * TraitRules.getDefenseMultiplier(digimon.getTrait())
+                        * rebirthMultiplier;
 
-        int newHp = (int) Math.floor(
+        digimon.setHp((int) Math.floor(
                 (10 + digimon.getIvHp()) * hpMultiplier
-        );
+        ));
 
-        int newAttack = (int) Math.floor(
+        digimon.setAttack((int) Math.floor(
                 (5 + digimon.getIvAttack()) * attackMultiplier
-        );
+        ));
 
-        int newDefense = (int) Math.floor(
+        digimon.setDefense((int) Math.floor(
                 (5 + digimon.getIvDefense()) * defenseMultiplier
-        );
-
-        System.out.println("Digimon status recalculados: HP=" + newHp + ", ATK=" + newAttack + ", DEF=" + newDefense);
-
-        digimon.setHp(newHp);
-        digimon.setAttack(newAttack);
-        digimon.setDefense(newDefense);
+        ));
     }
 }
