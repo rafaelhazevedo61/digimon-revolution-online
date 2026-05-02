@@ -68,7 +68,7 @@ class GetRankingUseCaseTest {
 
         Player player = Player.builder().id(playerId).username("rafael").build();
 
-        when(digimonRepository.findByStatusOrderByGradeAscLevelDesc(
+        when(digimonRepository.findByStatusOrderByGradeQualityAscLevelDesc(
                 eq(DigimonStatus.ACTIVE), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(List.of(d1)));
 

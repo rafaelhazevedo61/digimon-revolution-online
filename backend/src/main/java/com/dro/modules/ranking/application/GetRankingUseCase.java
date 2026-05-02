@@ -9,7 +9,6 @@ import com.dro.modules.ranking.api.dto.response.RankingEntryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,28 +27,27 @@ public class GetRankingUseCase {
     private static final int MAX_SIZE = 50;
 
     public List<RankingEntryResponse> byLevel(int page, int size) {
-        Pageable pageable = buildPageable(page, size);
+        int safePage = Math.max(page, 0);
+        int safeSize = sanitizeSize(size);
         Page<Digimon> result = digimonRepository
-                .findByStatusOrderByLevelDescExperienceDesc(DigimonStatus.ACTIVE, pageable);
-        return toResponse(result, page, sanitizeSize(size));
+                .findByStatusOrderByLevelDescExperienceDesc(DigimonStatus.ACTIVE, PageRequest.of(safePage, safeSize));
+        return toResponse(result, safePage, safeSize);
     }
 
     public List<RankingEntryResponse> byGrade(int page, int size) {
-        Pageable pageable = buildPageable(page, size);
+        int safePage = Math.max(page, 0);
+        int safeSize = sanitizeSize(size);
         Page<Digimon> result = digimonRepository
-                .findByStatusOrderByGradeAscLevelDesc(DigimonStatus.ACTIVE, pageable);
-        return toResponse(result, page, sanitizeSize(size));
+                .findByStatusOrderByGradeQualityAscLevelDesc(DigimonStatus.ACTIVE, PageRequest.of(safePage, safeSize));
+        return toResponse(result, safePage, safeSize);
     }
 
     public List<RankingEntryResponse> byRebirth(int page, int size) {
-        Pageable pageable = buildPageable(page, size);
+        int safePage = Math.max(page, 0);
+        int safeSize = sanitizeSize(size);
         Page<Digimon> result = digimonRepository
-                .findByStatusOrderByRebirthCountDescLevelDesc(DigimonStatus.ACTIVE, pageable);
-        return toResponse(result, page, sanitizeSize(size));
-    }
-
-    private Pageable buildPageable(int page, int size) {
-        return PageRequest.of(Math.max(page, 0), sanitizeSize(size));
+                .findByStatusOrderByRebirthCountDescLevelDesc(DigimonStatus.ACTIVE, PageRequest.of(safePage, safeSize));
+        return toResponse(result, safePage, safeSize);
     }
 
     private int sanitizeSize(int size) {
