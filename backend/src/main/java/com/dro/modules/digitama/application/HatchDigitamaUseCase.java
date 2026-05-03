@@ -45,6 +45,9 @@ public class HatchDigitamaUseCase {
                     .orElseThrow(() -> new NotFoundException("Species not found: " + babyName));
 
             Digimon digimon = DigimonFactory.createBaby(playerId, player.getSelectedDigitama(), infos);
+            if(digimon == null){
+                throw new BadRequestException("Failed create digimon from digitama");
+            }
 
             digimonRepository.save(digimon);
 
