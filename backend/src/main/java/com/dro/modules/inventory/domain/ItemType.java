@@ -10,6 +10,7 @@ public enum ItemType {
     DATA_CORE,
 
     // Digitamas
+    DIGITAMA_STARTER,
     DIGITAMA_FIRE,
     DIGITAMA_WATER,
     DIGITAMA_NATURE,

@@ -32,37 +32,43 @@ public class HatchDigitamaUseCase {
 
     public Digimon execute (String token) {
 
-        UUID playerId = TokenExtractor.extractPlayerId(token);
+        try {
 
-        Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
+            UUID playerId = TokenExtractor.extractPlayerId(token);
 
-        String babyName = DigitamaHatchRules.rollBabyName(player.getSelectedDigitama());
+            Player player = playerRepository.findById(playerId)
+                    .orElseThrow(() -> new NotFoundException("Player not found"));
 
-        DigimonInfos infos = digimonInfosRepository.findByName(babyName)
-                .orElseThrow(() -> new NotFoundException("Species not found: " + babyName));
+            String babyName = DigitamaHatchRules.rollBabyName(player.getSelectedDigitama());
 
-        Digimon digimon = DigimonFactory.createBaby(playerId, player.getSelectedDigitama(), infos);
+            DigimonInfos infos = digimonInfosRepository.findByName(babyName)
+                    .orElseThrow(() -> new NotFoundException("Species not found: " + babyName));
 
-        digimonRepository.save(digimon);
+            Digimon digimon = DigimonFactory.createBaby(playerId, player.getSelectedDigitama(), infos);
 
-        historyRepository.save(DigitamaHistory.builder()
-                .id(UUID.randomUUID())
-                .playerId(playerId)
-                .digitamaType(player.getSelectedDigitama())
-                .digimonName(infos.getName())
-                .digimonId(digimon.getId())
-                .hatchedAt(LocalDateTime.now())
-                .source(HatchSource.DIRECT_HATCH)
-                .build());
+            digimonRepository.save(digimon);
 
-        if (player.getActiveDigimonId() == null) {
-            player.setActiveDigimonId(digimon.getId());
+            historyRepository.save(DigitamaHistory.builder()
+                    .id(UUID.randomUUID())
+                    .playerId(playerId)
+                    .digitamaType(player.getSelectedDigitama())
+                    .digimonName(infos.getName())
+                    .digimonId(digimon.getId())
+                    .hatchedAt(LocalDateTime.now())
+                    .source(HatchSource.DIRECT_HATCH)
+                    .build());
+
+            if (player.getActiveDigimonId() == null) {
+                player.setActiveDigimonId(digimon.getId());
+            }
+
+            player.setSelectedDigitama(null);
+            playerRepository.save(player);
+            return digimon;
+
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException(e.getMessage());
         }
-
-        player.setSelectedDigitama(null);
-        playerRepository.save(player);
-        return digimon;
     }
 
 }
