@@ -46,9 +46,11 @@ public class HatchDigitamaUseCase {
                 throw new BadRequestException("No digitama selected");
             }
 
+            String selectedDigitamaCode = player.getSelectedDigitama().getPoolCode();
+
             DigitamaPool pool = digitamaPoolRepository
-                    .findByCodeAndActiveTrueAndContentActiveTrue(STARTER_DIGITAMA_POOL_CODE)
-                    .orElseThrow(() -> new NotFoundException("Digitama pool not found or inactive: " + STARTER_DIGITAMA_POOL_CODE));
+                    .findByCodeAndActiveTrueAndContentActiveTrue(selectedDigitamaCode)
+                    .orElseThrow(() -> new NotFoundException("Digitama pool not found or inactive: " + selectedDigitamaCode));
 
             DigitamaPoolEntry selectedEntry = DigitamaPoolRoller.roll(pool.getEntries());
 
