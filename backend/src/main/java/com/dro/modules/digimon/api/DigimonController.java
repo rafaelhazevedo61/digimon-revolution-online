@@ -77,7 +77,7 @@ public class DigimonController {
             @RequestHeader("Authorization") String authorization,
             @PathVariable UUID digimonId
     ) {
-        return ResponseEntity.ok(getEvolutionOptionsUseCase.execute(digimonId));
+        return ResponseEntity.ok(getEvolutionOptionsUseCase.execute(authorization, digimonId));
     }
 
     @PostMapping("/rebirth")

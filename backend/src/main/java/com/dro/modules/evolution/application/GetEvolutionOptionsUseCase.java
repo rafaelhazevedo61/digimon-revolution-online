@@ -12,8 +12,12 @@ import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.inventory.infra.ItemDefinitionRepository;
+import com.dro.modules.player.domain.Player;
+import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.ForbiddenException;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,11 +31,18 @@ public class GetEvolutionOptionsUseCase {
     private final EvolutionLineRepository evolutionLineRepository;
     private final InventoryRepository inventoryRepository;
     private final ItemDefinitionRepository itemDefinitionRepository;
+    private final PlayerRepository playerRepository;
 
-    public EvolutionOptionsResponse execute(UUID digimonId) {
+    public EvolutionOptionsResponse execute(String token, UUID digimonId) {
+
+        UUID playerId = TokenExtractor.extractPlayerId(token);
 
         Digimon digimon = digimonRepository.findById(digimonId)
                 .orElseThrow(() -> new NotFoundException("Digimon not found"));
+
+        if (!digimon.getPlayerId().equals(playerId)) {
+            throw new ForbiddenException("This Digimon does not belong to the player");
+        }
 
         if (digimon.getDigimonInfoId() == null) {
             throw new BadRequestException("Digimon has no linked DigimonInfo. Cannot determine evolution options.");
