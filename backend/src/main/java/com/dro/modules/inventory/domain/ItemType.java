@@ -20,10 +20,13 @@ public enum ItemType {
     INCUBATOR_RARE,
     INCUBATOR_EPIC,
 
-    // Fragmentos
+    // Fragmentos (legado — mantidos para compatibilidade)
     FRAGMENT_ROOKIE,
     FRAGMENT_CHAMPION,
     FRAGMENT_ULTIMATE,
-    FRAGMENT_MEGA
+    FRAGMENT_MEGA,
+
+    // Materiais de evolução (diferenciados por material_code)
+    EVOLUTION_MATERIAL
 
 }

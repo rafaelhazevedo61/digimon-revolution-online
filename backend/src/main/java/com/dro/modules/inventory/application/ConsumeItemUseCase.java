@@ -35,4 +35,25 @@ public class ConsumeItemUseCase {
             inventoryRepository.save(item);
         }
     }
+
+    public void consumeMaterial(UUID digimonId, Long itemDefinitionId, int quantity) {
+
+        InventoryItem item = inventoryRepository
+                .findByDigimonIdAndItemDefinitionId(digimonId, itemDefinitionId)
+                .orElseThrow(() ->
+                        new NotFoundException("Material not found in inventory"));
+
+        if (item.getQuantity() < quantity) {
+            throw new UnprocessableException(
+                    "Not enough material. Required: " + quantity + ", has: " + item.getQuantity());
+        }
+
+        item.setQuantity(item.getQuantity() - quantity);
+
+        if (item.getQuantity() == 0) {
+            inventoryRepository.delete(item);
+        } else {
+            inventoryRepository.save(item);
+        }
+    }
 }

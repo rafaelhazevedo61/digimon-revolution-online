@@ -4,6 +4,9 @@ import com.dro.modules.digimon.domain.*;
 import com.dro.modules.digimon.domain.enums.*;
 import com.dro.modules.digimon.infra.DigimonInfosRepository;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.evolution.domain.EvolutionLine;
+import com.dro.modules.evolution.domain.EvolutionLineStep;
+import com.dro.modules.evolution.infra.EvolutionLineRepository;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
@@ -23,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -41,6 +45,7 @@ public class RebirthUseCase {
     private final InventoryRepository inventoryRepository;
     private final MissionInstanceRepository missionInstanceRepository;
     private final DigimonInfosRepository digimonInfosRepository;
+    private final EvolutionLineRepository evolutionLineRepository;
 
     private final Random random = new Random();
 
@@ -197,13 +202,24 @@ public class RebirthUseCase {
 
         DigimonGrade grade = DigimonGradeRules.calculate(ivHp, ivAttack, ivDefense);
 
-        double rarityMultiplier = RarityRules.getStatMultiplier(rarity);
-        double stageMultiplier = EvolutionRules.stageStatMultiplier(Stage.BABY);
-        double rebirthMultiplier = RebirthRules.calculateStatMultiplier(newRebirthCount);
+        Long babyInfoId = resolveBabyDigimonInfoId(oldDigimon);
+        DigimonInfos babyInfo = babyInfoId != null
+                ? digimonInfosRepository.findById(babyInfoId).orElse(null)
+                : null;
 
         int baseHp = 10;
         int baseAtk = 5;
         int baseDef = 3;
+
+        if (babyInfo != null) {
+            baseHp = babyInfo.getBaseHp();
+            baseAtk = babyInfo.getBaseAtk();
+            baseDef = babyInfo.getBaseDef();
+        }
+
+        double rarityMultiplier = RarityRules.getStatMultiplier(rarity);
+        double stageMultiplier = EvolutionRules.stageStatMultiplier(Stage.BABY);
+        double rebirthMultiplier = RebirthRules.calculateStatMultiplier(newRebirthCount);
 
         int hp = (int) Math.floor(
                 (baseHp + (ivHp * HP_IV_WEIGHT))
@@ -234,12 +250,17 @@ public class RebirthUseCase {
 
         int maxEnergy = 20 + TraitRules.getMaxEnergyBonus(trait);
 
+        String rebornName = babyInfo != null
+                ? babyInfo.getName()
+                : "Reborn " + oldDigimon.getType();
+
         return Digimon.builder()
                 .id(UUID.randomUUID())
                 .playerId(playerId)
-                .name("Reborn " + oldDigimon.getType())
+                .name(rebornName)
                 .type(oldDigimon.getType())
                 .stage(Stage.BABY)
+                .digimonInfoId(babyInfoId)
                 .level(1)
                 .experience(0)
                 .hp(hp)
@@ -261,6 +282,34 @@ public class RebirthUseCase {
                 .rebornedFrom(oldDigimon.getId())
                 .status(DigimonStatus.ACTIVE)
                 .build();
+    }
+
+    private Long resolveBabyDigimonInfoId(Digimon oldDigimon) {
+        Long infoId = oldDigimon.getDigimonInfoId();
+
+        // Fallback for legacy digimon: resolve infoId from current name
+        if (infoId == null) {
+            infoId = digimonInfosRepository.findByName(oldDigimon.getName())
+                    .map(DigimonInfos::getId)
+                    .orElse(null);
+        }
+
+        if (infoId == null) {
+            return null;
+        }
+
+        // Find the evolution line and return the first (baby) step's DigimonInfos ID
+        List<EvolutionLine> lines = evolutionLineRepository
+                .findByActiveTrueAndSteps_DigimonInfo_Id(infoId);
+
+        if (!lines.isEmpty()) {
+            return lines.get(0).getSteps().stream()
+                    .min(java.util.Comparator.comparingInt(EvolutionLineStep::getStepOrder))
+                    .map(step -> step.getDigimonInfo().getId())
+                    .orElse(null);
+        }
+
+        return null;
     }
 
     private int rollInheritedIv(

@@ -24,6 +24,10 @@ public class InventoryItem {
     @Column(nullable = false)
     private ItemType itemType;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "item_definition_id")
+    private ItemDefinition itemDefinition;
+
     @Column(nullable = false)
     private int quantity;
 }
