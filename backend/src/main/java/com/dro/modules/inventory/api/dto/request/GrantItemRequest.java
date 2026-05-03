@@ -8,7 +8,8 @@ import java.util.UUID;
 
 public record GrantItemRequest(
         @NotNull UUID digimonId,
-        @NotNull ItemType itemType,
+        ItemType itemType,
+        String itemCode,
         @Min(1) int quantity
 ) {
 }

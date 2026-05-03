@@ -5,7 +5,9 @@ import com.dro.modules.inventory.api.dto.request.UseItemRequest;
 import com.dro.modules.inventory.api.dto.response.GrantItemResponse;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.application.UseItemUseCase;
+import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.infra.InventoryRepository;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
@@ -25,6 +27,7 @@ public class InventoryController {
     private final UseItemUseCase useItemUseCase;
     private final AddItemUseCase addItemUseCase;
     private final PlayerRepository playerRepository;
+    private final ItemDefinitionRepository itemDefinitionRepository;
 
     @GetMapping
     public ResponseEntity<?> getInventory(
@@ -55,10 +58,28 @@ public class InventoryController {
     public ResponseEntity<GrantItemResponse> grantItem(
             @RequestBody @Valid GrantItemRequest request
     ) {
+        if (request.itemCode() != null && !request.itemCode().isBlank()) {
+            ItemDefinition itemDef = itemDefinitionRepository.findByCode(request.itemCode())
+                    .orElseThrow(() -> new NotFoundException("Item not found: " + request.itemCode()));
+
+            addItemUseCase.addMaterial(request.digimonId(), itemDef, request.quantity());
+
+            return ResponseEntity.ok(new GrantItemResponse(
+                    request.digimonId(),
+                    itemDef.getCode(),
+                    request.quantity(),
+                    "Item granted successfully"
+            ));
+        }
+
+        if (request.itemType() == null) {
+            throw new BadRequestException("Either itemCode or itemType must be provided");
+        }
+
         addItemUseCase.execute(request.digimonId(), request.itemType(), request.quantity());
         return ResponseEntity.ok(new GrantItemResponse(
                 request.digimonId(),
-                request.itemType(),
+                request.itemType().name(),
                 request.quantity(),
                 "Item granted successfully"
         ));

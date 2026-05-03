@@ -202,13 +202,24 @@ public class RebirthUseCase {
 
         DigimonGrade grade = DigimonGradeRules.calculate(ivHp, ivAttack, ivDefense);
 
-        double rarityMultiplier = RarityRules.getStatMultiplier(rarity);
-        double stageMultiplier = EvolutionRules.stageStatMultiplier(Stage.BABY);
-        double rebirthMultiplier = RebirthRules.calculateStatMultiplier(newRebirthCount);
+        Long babyInfoId = resolveBabyDigimonInfoId(oldDigimon);
 
         int baseHp = 10;
         int baseAtk = 5;
         int baseDef = 3;
+
+        if (babyInfoId != null) {
+            DigimonInfos babyInfo = digimonInfosRepository.findById(babyInfoId).orElse(null);
+            if (babyInfo != null) {
+                baseHp = babyInfo.getBaseHp();
+                baseAtk = babyInfo.getBaseAtk();
+                baseDef = babyInfo.getBaseDef();
+            }
+        }
+
+        double rarityMultiplier = RarityRules.getStatMultiplier(rarity);
+        double stageMultiplier = EvolutionRules.stageStatMultiplier(Stage.BABY);
+        double rebirthMultiplier = RebirthRules.calculateStatMultiplier(newRebirthCount);
 
         int hp = (int) Math.floor(
                 (baseHp + (ivHp * HP_IV_WEIGHT))
@@ -238,8 +249,6 @@ public class RebirthUseCase {
         );
 
         int maxEnergy = 20 + TraitRules.getMaxEnergyBonus(trait);
-
-        Long babyInfoId = resolveBabyDigimonInfoId(oldDigimon);
 
         return Digimon.builder()
                 .id(UUID.randomUUID())
@@ -284,7 +293,9 @@ public class RebirthUseCase {
             }
         }
 
-        return digimonInfosRepository.findByName(oldDigimon.getType())
+        // Fallback for legacy digimon: try matching by current name (species name)
+        // Note: type stores digitama origin (STARTER, FIRE, etc.), not species name
+        return digimonInfosRepository.findByName(oldDigimon.getName())
                 .map(DigimonInfos::getId)
                 .orElse(null);
     }
