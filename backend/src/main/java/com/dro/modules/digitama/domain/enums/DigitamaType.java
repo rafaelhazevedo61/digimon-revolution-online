@@ -1,4 +1,4 @@
-package com.dro.modules.digitama.domain;
+package com.dro.modules.digitama.domain.enums;
 
 public enum DigitamaType {
     STARTER,

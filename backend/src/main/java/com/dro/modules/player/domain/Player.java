@@ -1,6 +1,6 @@
 package com.dro.modules.player.domain;
 
-import com.dro.modules.digitama.domain.DigitamaType;
+import com.dro.modules.digitama.domain.enums.DigitamaType;
 import jakarta.persistence.*;
 import lombok.*;
 

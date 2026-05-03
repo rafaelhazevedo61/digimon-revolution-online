@@ -1,13 +1,10 @@
 package com.dro.modules.digimon.domain;
 
-import com.dro.modules.digimon.infra.DigimonInfosRepository;
-import com.dro.modules.digitama.domain.DigitamaHatchRules;
-import com.dro.modules.digitama.domain.DigitamaType;
+import com.dro.modules.digitama.domain.enums.DigitamaType;
 import com.dro.modules.digimon.domain.enums.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 

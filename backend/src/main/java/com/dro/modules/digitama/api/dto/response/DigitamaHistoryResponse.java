@@ -1,7 +1,7 @@
 package com.dro.modules.digitama.api.dto.response;
 
 
-import com.dro.modules.digitama.domain.DigitamaType;
+import com.dro.modules.digitama.domain.enums.DigitamaType;
 import com.dro.modules.digitama.domain.enums.HatchSource;
 
 import java.time.LocalDateTime;
