@@ -28,6 +28,7 @@ public record DigimonResponse(
         int rebirthCount,
         UUID rebornedFrom,
         DigimonStatus status,
+        Long digimonInfoId,
         int equipBonusHp,
         int equipBonusAttack,
         int equipBonusDefense

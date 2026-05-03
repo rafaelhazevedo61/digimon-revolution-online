@@ -52,6 +52,7 @@ public class GetDigimonByIdUseCase {
                 digimon.getRebirthCount(),
                 digimon.getRebornedFrom(),
                 digimon.getStatus(),
+                digimon.getDigimonInfoId(),
                 EquipmentRules.totalBonusHp(equipped),
                 EquipmentRules.totalBonusAttack(equipped),
                 EquipmentRules.totalBonusDefense(equipped)

@@ -21,7 +21,8 @@ public record HatchDigitamaResponse(
         Personality personality,
         Trait trait,
         int energy,
-        int maxEnergy
+        int maxEnergy,
+        Long digimonInfoId
 ) {
     public static HatchDigitamaResponse from(Digimon digimon) {
         return new HatchDigitamaResponse(
@@ -40,7 +41,8 @@ public record HatchDigitamaResponse(
                 digimon.getPersonality(),
                 digimon.getTrait(),
                 digimon.getEnergy(),
-                digimon.getMaxEnergy()
+                digimon.getMaxEnergy(),
+                digimon.getDigimonInfoId()
         );
     }
 }

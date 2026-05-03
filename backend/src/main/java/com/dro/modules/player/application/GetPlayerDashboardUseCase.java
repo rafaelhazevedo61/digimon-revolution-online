@@ -118,6 +118,7 @@ public class GetPlayerDashboardUseCase {
                 d.getRebirthCount(),
                 d.getRebornedFrom(),
                 d.getStatus(),
+                d.getDigimonInfoId(),
                 EquipmentRules.totalBonusHp(equipped),
                 EquipmentRules.totalBonusAttack(equipped),
                 EquipmentRules.totalBonusDefense(equipped)
