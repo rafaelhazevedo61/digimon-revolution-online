@@ -5,8 +5,8 @@ import com.dro.modules.digimon.domain.enums.Stage;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "evolution_line_steps")
@@ -41,5 +41,5 @@ public class EvolutionLineStep {
 
     @Builder.Default
     @OneToMany(mappedBy = "evolutionLineStep", fetch = FetchType.LAZY)
-    private List<EvolutionStepMaterial> materials = new ArrayList<>();
+    private Set<EvolutionStepMaterial> materials = new HashSet<>();
 }
