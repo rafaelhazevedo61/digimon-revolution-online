@@ -203,18 +203,18 @@ public class RebirthUseCase {
         DigimonGrade grade = DigimonGradeRules.calculate(ivHp, ivAttack, ivDefense);
 
         Long babyInfoId = resolveBabyDigimonInfoId(oldDigimon);
+        DigimonInfos babyInfo = babyInfoId != null
+                ? digimonInfosRepository.findById(babyInfoId).orElse(null)
+                : null;
 
         int baseHp = 10;
         int baseAtk = 5;
         int baseDef = 3;
 
-        if (babyInfoId != null) {
-            DigimonInfos babyInfo = digimonInfosRepository.findById(babyInfoId).orElse(null);
-            if (babyInfo != null) {
-                baseHp = babyInfo.getBaseHp();
-                baseAtk = babyInfo.getBaseAtk();
-                baseDef = babyInfo.getBaseDef();
-            }
+        if (babyInfo != null) {
+            baseHp = babyInfo.getBaseHp();
+            baseAtk = babyInfo.getBaseAtk();
+            baseDef = babyInfo.getBaseDef();
         }
 
         double rarityMultiplier = RarityRules.getStatMultiplier(rarity);
@@ -250,10 +250,14 @@ public class RebirthUseCase {
 
         int maxEnergy = 20 + TraitRules.getMaxEnergyBonus(trait);
 
+        String rebornName = babyInfo != null
+                ? babyInfo.getName()
+                : "Reborn " + oldDigimon.getType();
+
         return Digimon.builder()
                 .id(UUID.randomUUID())
                 .playerId(playerId)
-                .name("Reborn " + oldDigimon.getType())
+                .name(rebornName)
                 .type(oldDigimon.getType())
                 .stage(Stage.BABY)
                 .digimonInfoId(babyInfoId)
@@ -281,23 +285,31 @@ public class RebirthUseCase {
     }
 
     private Long resolveBabyDigimonInfoId(Digimon oldDigimon) {
-        if (oldDigimon.getDigimonInfoId() != null) {
-            List<EvolutionLine> lines = evolutionLineRepository
-                    .findByActiveTrueAndSteps_DigimonInfo_Id(oldDigimon.getDigimonInfoId());
+        Long infoId = oldDigimon.getDigimonInfoId();
 
-            if (!lines.isEmpty()) {
-                return lines.get(0).getSteps().stream()
-                        .min(java.util.Comparator.comparingInt(EvolutionLineStep::getStepOrder))
-                        .map(step -> step.getDigimonInfo().getId())
-                        .orElse(null);
-            }
+        // Fallback for legacy digimon: resolve infoId from current name
+        if (infoId == null) {
+            infoId = digimonInfosRepository.findByName(oldDigimon.getName())
+                    .map(DigimonInfos::getId)
+                    .orElse(null);
         }
 
-        // Fallback for legacy digimon: try matching by current name (species name)
-        // Note: type stores digitama origin (STARTER, FIRE, etc.), not species name
-        return digimonInfosRepository.findByName(oldDigimon.getName())
-                .map(DigimonInfos::getId)
-                .orElse(null);
+        if (infoId == null) {
+            return null;
+        }
+
+        // Find the evolution line and return the first (baby) step's DigimonInfos ID
+        List<EvolutionLine> lines = evolutionLineRepository
+                .findByActiveTrueAndSteps_DigimonInfo_Id(infoId);
+
+        if (!lines.isEmpty()) {
+            return lines.get(0).getSteps().stream()
+                    .min(java.util.Comparator.comparingInt(EvolutionLineStep::getStepOrder))
+                    .map(step -> step.getDigimonInfo().getId())
+                    .orElse(null);
+        }
+
+        return null;
     }
 
     private int rollInheritedIv(
