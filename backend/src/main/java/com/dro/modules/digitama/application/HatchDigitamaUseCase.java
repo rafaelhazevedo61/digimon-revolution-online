@@ -2,7 +2,13 @@ package com.dro.modules.digitama.application;
 
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.DigimonFactory;
+import com.dro.modules.digimon.domain.DigimonInfos;
+import com.dro.modules.digimon.infra.DigimonInfosRepository;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.digitama.domain.DigitamaHatchRules;
+import com.dro.modules.digitama.domain.DigitamaHistory;
+import com.dro.modules.digitama.domain.enums.HatchSource;
+import com.dro.modules.digitama.infra.DigitamaHistoryRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
@@ -11,6 +17,8 @@ import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -19,58 +27,51 @@ public class HatchDigitamaUseCase {
 
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
+    private final DigimonInfosRepository digimonInfosRepository;
+    private final DigitamaHistoryRepository historyRepository;
 
-    public Digimon execute(String token) {
+    public Digimon execute (String token) {
 
-        UUID playerId = extractPlayerId(token);
+        try {
 
-        Player player = findPlayer(playerId);
+            UUID playerId = TokenExtractor.extractPlayerId(token);
 
-        validateDigitamaSelection(player);
+            Player player = playerRepository.findById(playerId)
+                    .orElseThrow(() -> new NotFoundException("Player not found"));
 
-        Digimon digimon = createDigimon(playerId, player);
+            String babyName = DigitamaHatchRules.rollBabyName(player.getSelectedDigitama());
 
-        digimonRepository.save(digimon);
+            DigimonInfos infos = digimonInfosRepository.findByName(babyName)
+                    .orElseThrow(() -> new NotFoundException("Species not found: " + babyName));
 
-        setActiveIfFirstDigimon(player, digimon);
+            Digimon digimon = DigimonFactory.createBaby(playerId, player.getSelectedDigitama(), infos);
+            if(digimon == null){
+                throw new BadRequestException("Failed create digimon from digitama");
+            }
 
-        clearSelectedDigitama(player);
+            digimonRepository.save(digimon);
 
-        return digimon;
-    }
+            historyRepository.save(DigitamaHistory.builder()
+                    .id(UUID.randomUUID())
+                    .playerId(playerId)
+                    .digitamaType(player.getSelectedDigitama())
+                    .digimonName(infos.getName())
+                    .digimonId(digimon.getId())
+                    .hatchedAt(LocalDateTime.now())
+                    .source(HatchSource.DIRECT_HATCH)
+                    .build());
 
-    private UUID extractPlayerId(String token) {
-        return TokenExtractor.extractPlayerId(token);
-    }
+            if (player.getActiveDigimonId() == null) {
+                player.setActiveDigimonId(digimon.getId());
+            }
 
-    private Player findPlayer(UUID playerId) {
-        return playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
-    }
-
-    private void validateDigitamaSelection(Player player) {
-        if (player.getSelectedDigitama() == null) {
-            throw new BadRequestException("Digitama already hatched or not selected");
-        }
-    }
-
-    private Digimon createDigimon(UUID playerId, Player player) {
-        return DigimonFactory.createBaby(
-                playerId,
-                player.getSelectedDigitama()
-        );
-    }
-
-    private void setActiveIfFirstDigimon(Player player, Digimon digimon) {
-
-        if (player.getActiveDigimonId() == null) {
-            player.setActiveDigimonId(digimon.getId());
+            player.setSelectedDigitama(null);
             playerRepository.save(player);
+            return digimon;
+
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException(e.getMessage());
         }
     }
 
-    private void clearSelectedDigitama(Player player) {
-        player.setSelectedDigitama(null);
-        playerRepository.save(player);
-    }
 }

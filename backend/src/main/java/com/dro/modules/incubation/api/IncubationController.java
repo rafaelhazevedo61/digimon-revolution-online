@@ -1,6 +1,6 @@
 package com.dro.modules.incubation.api;
 
-import com.dro.modules.digitama.api.dto.HatchDigitamaResponse;
+import com.dro.modules.digitama.api.dto.response.HatchDigitamaResponse;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.incubation.application.ClaimIncubationUseCase;
 import com.dro.modules.incubation.application.GetIncubationUseCase;

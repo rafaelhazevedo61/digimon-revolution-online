@@ -76,7 +76,8 @@ public class ClaimIncubationUseCase {
     ) {
         return DigimonFactory.createBaby(
                 playerId,
-                DigitamaHatchRules.toDigitamaType(incubation.getDigitamaType())
+                DigitamaHatchRules.toDigitamaType(incubation.getDigitamaType()),
+                null //TODO: ajustar
         );
     }
 

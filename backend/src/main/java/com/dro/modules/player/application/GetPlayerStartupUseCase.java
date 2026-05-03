@@ -24,11 +24,21 @@ public class GetPlayerStartupUseCase {
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));
 
-        boolean hasSelectedStarter = player.isStarterSelected();
+        boolean hasSelectedStarter = player.isStarterSelected() && player.getSelectedDigitama() == null;
 
-        StartupDestination redirectTo = hasSelectedStarter
-                ? StartupDestination.DIGIMON_SELECTION
-                : StartupDestination.DIGITAMA_SELECTION;
+        StartupDestination redirectTo = null;
+
+        if(player.isStarterSelected() && player.getSelectedDigitama() != null) {
+            redirectTo = StartupDestination.DIGITAMA_HATCHING;
+        }
+
+        if(player.isStarterSelected() && player.getSelectedDigitama() == null) {
+            redirectTo = StartupDestination.DIGIMON_SELECTION;
+        }
+
+        if(!player.isStarterSelected()) {
+            redirectTo = StartupDestination.DIGITAMA_SELECTION;
+        }
 
         return new PlayerStartupResponse(
                 hasSelectedStarter,

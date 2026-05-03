@@ -7,12 +7,14 @@ import java.util.*;
 public class DigitamaHatchRules {
 
     private static final Map<ItemType, DigitamaType> ITEM_TO_DIGITAMA = Map.of(
+            ItemType.DIGITAMA_STARTER, DigitamaType.STARTER,
             ItemType.DIGITAMA_FIRE, DigitamaType.FIRE,
             ItemType.DIGITAMA_WATER, DigitamaType.WATER,
             ItemType.DIGITAMA_NATURE, DigitamaType.NATURE
     );
 
     private static final Map<DigitamaType, List<String>> HATCH_TABLE = Map.of(
+            DigitamaType.STARTER, List.of("Botamon", "Pichimon", "Pabumon", "Punimon", "Poyomon", "Yuramon"),
             DigitamaType.FIRE, List.of("Botamon", "Punimon"),
             DigitamaType.WATER, List.of("Pichimon", "Poyomon"),
             DigitamaType.NATURE, List.of("Pabumon", "Yuramon")
