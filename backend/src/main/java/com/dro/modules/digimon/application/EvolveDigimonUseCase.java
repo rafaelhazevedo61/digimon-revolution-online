@@ -24,6 +24,10 @@ import java.util.*;
 @RequiredArgsConstructor
 public class EvolveDigimonUseCase {
 
+    private static final double HP_IV_WEIGHT = 0.30;
+    private static final double ATTACK_IV_WEIGHT = 0.20;
+    private static final double DEFENSE_IV_WEIGHT = 0.20;
+
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final DigimonInfosRepository digimonInfosRepository;
@@ -183,15 +187,15 @@ public class EvolveDigimonUseCase {
                         * rebirthMultiplier;
 
         digimon.setHp((int) Math.floor(
-                (digimonInfo.getBaseHp() + digimon.getIvHp()) * hpMultiplier
+                (digimonInfo.getBaseHp() + digimon.getIvHp() * HP_IV_WEIGHT) * hpMultiplier
         ));
 
         digimon.setAttack((int) Math.floor(
-                (digimonInfo.getBaseAtk() + digimon.getIvAttack()) * attackMultiplier
+                (digimonInfo.getBaseAtk() + digimon.getIvAttack() * ATTACK_IV_WEIGHT) * attackMultiplier
         ));
 
         digimon.setDefense((int) Math.floor(
-                (digimonInfo.getBaseDef() + digimon.getIvDefense()) * defenseMultiplier
+                (digimonInfo.getBaseDef() + digimon.getIvDefense() * DEFENSE_IV_WEIGHT) * defenseMultiplier
         ));
     }
 }

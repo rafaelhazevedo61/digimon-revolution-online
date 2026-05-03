@@ -48,7 +48,23 @@ FROM (
         -- GOMAMON_LINE_1: Bukamon → Gomamon (step 3)
         ('GOMAMON_LINE_1', 3, 'FRAGMENT_GOMAMON', 10, 'Fragmento do Gomamon'),
         -- GOMAMON_LINE_1: Gomamon → Ikkakumon (step 4)
-        ('GOMAMON_LINE_1', 4, 'FRAGMENT_IKKAKUMON', 20, 'Fragmento do Ikkakumon')
+        ('GOMAMON_LINE_1', 4, 'FRAGMENT_IKKAKUMON', 20, 'Fragmento do Ikkakumon'),
+
+        -- ULTIMATE (step 5) — 30 fragmentos
+        ('AGUMON_LINE_1',   5, 'FRAGMENT_METALGREYMON',      30, 'Fragmento do MetalGreymon'),
+        ('GABUMON_LINE_1',  5, 'FRAGMENT_WEREGARURUMON',     30, 'Fragmento do WereGarurumon'),
+        ('PATAMON_LINE_1',  5, 'FRAGMENT_MAGNAANGEMON',      30, 'Fragmento do MagnaAngemon'),
+        ('BIYOMON_LINE_1',  5, 'FRAGMENT_GARUDAMON',         30, 'Fragmento do Garudamon'),
+        ('TENTOMON_LINE_1', 5, 'FRAGMENT_MEGAKABUTERIMON',   30, 'Fragmento do MegaKabuterimon'),
+        ('GOMAMON_LINE_1',  5, 'FRAGMENT_ZUDOMON',           30, 'Fragmento do Zudomon'),
+
+        -- MEGA (step 6) — 50 fragmentos
+        ('AGUMON_LINE_1',   6, 'FRAGMENT_WARGREYMON',          50, 'Fragmento do WarGreymon'),
+        ('GABUMON_LINE_1',  6, 'FRAGMENT_METALGARURUMON',      50, 'Fragmento do MetalGarurumon'),
+        ('PATAMON_LINE_1',  6, 'FRAGMENT_SERAPHIMON',          50, 'Fragmento do Seraphimon'),
+        ('BIYOMON_LINE_1',  6, 'FRAGMENT_PHOENIXMON',          50, 'Fragmento do Phoenixmon'),
+        ('TENTOMON_LINE_1', 6, 'FRAGMENT_HERCULESKABUTERIMON', 50, 'Fragmento do HerculesKabuterimon'),
+        ('GOMAMON_LINE_1',  6, 'FRAGMENT_VIKEMON',             50, 'Fragmento do Vikemon')
 ) AS data(line_code, step_order, material_code, quantity, description)
 JOIN evolution_lines el ON el.code = data.line_code
 JOIN evolution_line_steps els ON els.evolution_line_id = el.id AND els.step_order = data.step_order
