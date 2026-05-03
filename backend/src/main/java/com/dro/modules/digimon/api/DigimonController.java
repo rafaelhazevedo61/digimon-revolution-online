@@ -1,5 +1,6 @@
 package com.dro.modules.digimon.api;
 
+import com.dro.modules.digimon.api.dto.request.EvolveDigimonRequest;
 import com.dro.modules.digimon.api.dto.request.RebirthDigimonRequest;
 import com.dro.modules.digimon.api.dto.request.RenameDigimonRequest;
 import com.dro.modules.digimon.api.dto.response.DigimonLineageResponse;
@@ -9,6 +10,8 @@ import com.dro.modules.digimon.api.dto.response.RebirthPreviewResponse;
 import com.dro.modules.digimon.api.dto.response.TraitHatchSimulationResponse;
 import com.dro.modules.digimon.application.*;
 import com.dro.modules.digimon.domain.DigimonLevelRules;
+import com.dro.modules.evolution.api.dto.response.EvolutionOptionsResponse;
+import com.dro.modules.evolution.application.GetEvolutionOptionsUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +35,7 @@ public class DigimonController {
     private final RebirthPreviewUseCase rebirthPreviewUseCase;
     private final SimulateTraitHatchUseCase simulateTraitHatchUseCase;
     private final RenameDigimonUseCase renameDigimonUseCase;
+    private final GetEvolutionOptionsUseCase getEvolutionOptionsUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<List<DigimonResponse>> me(
@@ -60,10 +64,19 @@ public class DigimonController {
 
     @PostMapping("/evolve")
     public ResponseEntity<String> evolve(
-            @RequestHeader("Authorization") String authorization
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody(required = false) EvolveDigimonRequest request
     ) {
-        evolveDigimonUseCase.execute(authorization);
+        Long evolutionLineId = request != null ? request.evolutionLineId() : null;
+        evolveDigimonUseCase.execute(authorization, evolutionLineId);
         return ResponseEntity.ok("Digimon evolved successfully");
+    }
+
+    @GetMapping("/{digimonId}/evolution-options")
+    public ResponseEntity<EvolutionOptionsResponse> evolutionOptions(
+            @PathVariable UUID digimonId
+    ) {
+        return ResponseEntity.ok(getEvolutionOptionsUseCase.execute(digimonId));
     }
 
     @PostMapping("/rebirth")

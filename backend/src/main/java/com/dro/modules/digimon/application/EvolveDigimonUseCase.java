@@ -2,18 +2,23 @@ package com.dro.modules.digimon.application;
 
 import com.dro.modules.digimon.domain.*;
 import com.dro.modules.digimon.domain.enums.Stage;
+import com.dro.modules.digimon.infra.DigimonInfosRepository;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.evolution.domain.EvolutionLine;
+import com.dro.modules.evolution.domain.EvolutionLineStep;
+import com.dro.modules.evolution.domain.EvolutionStepMaterial;
+import com.dro.modules.evolution.infra.EvolutionLineRepository;
 import com.dro.modules.inventory.application.ConsumeItemUseCase;
-import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -21,9 +26,12 @@ public class EvolveDigimonUseCase {
 
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
+    private final DigimonInfosRepository digimonInfosRepository;
+    private final EvolutionLineRepository evolutionLineRepository;
     private final ConsumeItemUseCase consumeItemUseCase;
 
-    public void execute (String token) {
+    @Transactional
+    public void execute(String token, Long evolutionLineId) {
 
         UUID playerId = TokenExtractor.extractPlayerId(token);
 
@@ -38,51 +46,111 @@ public class EvolveDigimonUseCase {
                 .findById(player.getActiveDigimonId())
                 .orElseThrow(() -> new NotFoundException("Digimon not found"));
 
-        Stage currentStage = digimon.getStage();
-        Stage nextStage = EvolutionRules.nextStage(currentStage);
-
-        if (nextStage == null) {
-            throw new BadRequestException("Digimon cannot evolve further");
+        if (digimon.getDigimonInfoId() == null) {
+            throw new BadRequestException("Digimon has no linked DigimonInfo. Cannot evolve.");
         }
 
-        validateLevelRequirement(digimon, currentStage);
-        consumeRequiredFragments(digimon.getId(), currentStage);
+        EvolutionLine line = resolveEvolutionLine(digimon, evolutionLineId);
+        EvolutionLineStep nextStep = findNextStep(line, digimon);
 
-        digimon.setStage(nextStage);
+        validateLevel(digimon, nextStep);
+        consumeRequiredMaterials(digimon.getId(), nextStep);
 
-        recalculateStats(digimon);
+        DigimonInfos nextInfo = nextStep.getDigimonInfo();
+
+        digimon.setName(nextInfo.getName());
+        digimon.setStage(nextStep.getStage());
+        digimon.setDigimonInfoId(nextInfo.getId());
+
+        recalculateStats(digimon, nextInfo);
 
         digimonRepository.save(digimon);
     }
 
-    private void validateLevelRequirement (
-            Digimon digimon,
-            Stage currentStage
-    ) {
-        int requiredLevel = EvolutionRules.requiredLevel(currentStage);
+    private EvolutionLine resolveEvolutionLine(Digimon digimon, Long evolutionLineId) {
 
-        if (digimon.getLevel() < requiredLevel) {
+        if (evolutionLineId != null) {
+            EvolutionLine line = evolutionLineRepository.findByIdAndActiveTrue(evolutionLineId)
+                    .orElseThrow(() -> new NotFoundException("Evolution line not found or inactive"));
+
+            boolean digimonInLine = line.getSteps().stream()
+                    .anyMatch(step -> step.getDigimonInfo().getId().equals(digimon.getDigimonInfoId()));
+
+            if (!digimonInLine) {
+                throw new BadRequestException("Digimon does not belong to the specified evolution line");
+            }
+
+            return line;
+        }
+
+        List<EvolutionLine> lines = evolutionLineRepository
+                .findByActiveTrueAndSteps_DigimonInfo_Id(digimon.getDigimonInfoId());
+
+        List<EvolutionLine> linesWithNextStep = lines.stream()
+                .filter(line -> hasNextStep(line, digimon))
+                .toList();
+
+        if (linesWithNextStep.isEmpty()) {
+            throw new BadRequestException("No evolution line found for this Digimon");
+        }
+
+        if (linesWithNextStep.size() > 1) {
             throw new BadRequestException(
-                    "Level too low. Required: " + requiredLevel
+                    "Multiple evolution lines available. Please specify evolutionLineId. Options: "
+                            + linesWithNextStep.stream()
+                            .map(l -> l.getId() + " (" + l.getCode() + ")")
+                            .reduce((a, b) -> a + ", " + b)
+                            .orElse(""));
+        }
+
+        return linesWithNextStep.get(0);
+    }
+
+    private boolean hasNextStep(EvolutionLine line, Digimon digimon) {
+        List<EvolutionLineStep> steps = line.getSteps().stream()
+                .sorted(Comparator.comparingInt(EvolutionLineStep::getStepOrder))
+                .toList();
+
+        for (int i = 0; i < steps.size() - 1; i++) {
+            if (steps.get(i).getDigimonInfo().getId().equals(digimon.getDigimonInfoId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private EvolutionLineStep findNextStep(EvolutionLine line, Digimon digimon) {
+        List<EvolutionLineStep> steps = line.getSteps().stream()
+                .sorted(Comparator.comparingInt(EvolutionLineStep::getStepOrder))
+                .toList();
+
+        for (int i = 0; i < steps.size() - 1; i++) {
+            if (steps.get(i).getDigimonInfo().getId().equals(digimon.getDigimonInfoId())) {
+                return steps.get(i + 1);
+            }
+        }
+
+        throw new BadRequestException("Digimon cannot evolve further in this line");
+    }
+
+    private void validateLevel(Digimon digimon, EvolutionLineStep nextStep) {
+        if (digimon.getLevel() < nextStep.getRequiredLevel()) {
+            throw new BadRequestException(
+                    "Level too low. Required: " + nextStep.getRequiredLevel());
+        }
+    }
+
+    private void consumeRequiredMaterials(UUID digimonId, EvolutionLineStep nextStep) {
+        for (EvolutionStepMaterial material : nextStep.getMaterials()) {
+            consumeItemUseCase.consumeMaterial(
+                    digimonId,
+                    material.getMaterialCode(),
+                    material.getQuantity()
             );
         }
     }
 
-    private void consumeRequiredFragments (
-            UUID digimonId,
-            Stage currentStage
-    ) {
-        ItemType fragment = EvolutionRules.requiredFragment(currentStage);
-        int quantity = EvolutionRules.requiredFragmentQuantity(currentStage);
-
-        if (fragment == null || quantity == 0) {
-            return; // BABY → ROOKIE não precisa fragmento
-        }
-
-        consumeItemUseCase.execute(digimonId, fragment, quantity);
-    }
-
-    private void recalculateStats (Digimon digimon) {
+    private void recalculateStats(Digimon digimon, DigimonInfos digimonInfo) {
 
         double rarityMultiplier =
                 RarityRules.getStatMultiplier(digimon.getRarity());
@@ -115,15 +183,15 @@ public class EvolveDigimonUseCase {
                         * rebirthMultiplier;
 
         digimon.setHp((int) Math.floor(
-                (10 + digimon.getIvHp()) * hpMultiplier
+                (digimonInfo.getBaseHp() + digimon.getIvHp()) * hpMultiplier
         ));
 
         digimon.setAttack((int) Math.floor(
-                (5 + digimon.getIvAttack()) * attackMultiplier
+                (digimonInfo.getBaseAtk() + digimon.getIvAttack()) * attackMultiplier
         ));
 
         digimon.setDefense((int) Math.floor(
-                (5 + digimon.getIvDefense()) * defenseMultiplier
+                (digimonInfo.getBaseDef() + digimon.getIvDefense()) * defenseMultiplier
         ));
     }
 }

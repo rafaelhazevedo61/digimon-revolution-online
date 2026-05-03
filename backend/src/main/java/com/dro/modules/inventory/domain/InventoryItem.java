@@ -24,6 +24,9 @@ public class InventoryItem {
     @Column(nullable = false)
     private ItemType itemType;
 
+    @Column(name = "material_code", length = 80)
+    private String materialCode;
+
     @Column(nullable = false)
     private int quantity;
 }
