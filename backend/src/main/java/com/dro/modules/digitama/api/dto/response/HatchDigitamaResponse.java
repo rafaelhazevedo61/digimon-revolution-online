@@ -1,4 +1,4 @@
-package com.dro.modules.digitama.api.dto;
+package com.dro.modules.digitama.api.dto.response;
 
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.*;

@@ -2,6 +2,7 @@ package com.dro.modules.digimon.application;
 
 import com.dro.modules.digimon.domain.*;
 import com.dro.modules.digimon.domain.enums.*;
+import com.dro.modules.digimon.infra.DigimonInfosRepository;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
@@ -31,11 +32,15 @@ public class RebirthUseCase {
 
     private static final int MAX_IV = 100;
     private static final int REQUIRED_LEVEL = 100;
+    private static final double HP_IV_WEIGHT = 0.30;
+    private static final double ATTACK_IV_WEIGHT = 0.20;
+    private static final double DEFENSE_IV_WEIGHT = 0.20;
 
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
     private final InventoryRepository inventoryRepository;
     private final MissionInstanceRepository missionInstanceRepository;
+    private final DigimonInfosRepository digimonInfosRepository;
 
     private final Random random = new Random();
 
@@ -196,8 +201,12 @@ public class RebirthUseCase {
         double stageMultiplier = EvolutionRules.stageStatMultiplier(Stage.BABY);
         double rebirthMultiplier = RebirthRules.calculateStatMultiplier(newRebirthCount);
 
+        int baseHp = 10;
+        int baseAtk = 5;
+        int baseDef = 3;
+
         int hp = (int) Math.floor(
-                (10 + ivHp)
+                (baseHp + (ivHp * HP_IV_WEIGHT))
                         * rarityMultiplier
                         * stageMultiplier
                         * PersonalityRules.getHpMultiplier(personality)
@@ -206,7 +215,7 @@ public class RebirthUseCase {
         );
 
         int attack = (int) Math.floor(
-                (5 + ivAttack)
+                (baseAtk + (ivAttack * ATTACK_IV_WEIGHT))
                         * rarityMultiplier
                         * stageMultiplier
                         * PersonalityRules.getAttackMultiplier(personality)
@@ -215,7 +224,7 @@ public class RebirthUseCase {
         );
 
         int defense = (int) Math.floor(
-                (5 + ivDefense)
+                (baseDef + (ivDefense * DEFENSE_IV_WEIGHT))
                         * rarityMultiplier
                         * stageMultiplier
                         * PersonalityRules.getDefenseMultiplier(personality)
