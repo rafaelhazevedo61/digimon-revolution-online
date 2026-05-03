@@ -65,7 +65,15 @@ public class EvolveDigimonUseCase {
 
         DigimonInfos nextInfo = nextStep.getDigimonInfo();
 
-        digimon.setName(nextInfo.getName());
+        DigimonInfos currentInfo = digimonInfosRepository.findById(digimon.getDigimonInfoId())
+                .orElse(null);
+        boolean hasCustomName = currentInfo == null
+                || !digimon.getName().equals(currentInfo.getName());
+
+        if (!hasCustomName) {
+            digimon.setName(nextInfo.getName());
+        }
+
         digimon.setStage(nextStep.getStage());
         digimon.setDigimonInfoId(nextInfo.getId());
 

@@ -74,6 +74,7 @@ public class DigimonController {
 
     @GetMapping("/{digimonId}/evolution-options")
     public ResponseEntity<EvolutionOptionsResponse> evolutionOptions(
+            @RequestHeader("Authorization") String authorization,
             @PathVariable UUID digimonId
     ) {
         return ResponseEntity.ok(getEvolutionOptionsUseCase.execute(digimonId));

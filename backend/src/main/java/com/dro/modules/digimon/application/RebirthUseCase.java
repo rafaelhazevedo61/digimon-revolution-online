@@ -4,6 +4,9 @@ import com.dro.modules.digimon.domain.*;
 import com.dro.modules.digimon.domain.enums.*;
 import com.dro.modules.digimon.infra.DigimonInfosRepository;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.evolution.domain.EvolutionLine;
+import com.dro.modules.evolution.domain.EvolutionLineStep;
+import com.dro.modules.evolution.infra.EvolutionLineRepository;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
@@ -23,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -41,6 +45,7 @@ public class RebirthUseCase {
     private final InventoryRepository inventoryRepository;
     private final MissionInstanceRepository missionInstanceRepository;
     private final DigimonInfosRepository digimonInfosRepository;
+    private final EvolutionLineRepository evolutionLineRepository;
 
     private final Random random = new Random();
 
@@ -234,12 +239,15 @@ public class RebirthUseCase {
 
         int maxEnergy = 20 + TraitRules.getMaxEnergyBonus(trait);
 
+        Long babyInfoId = resolveBabyDigimonInfoId(oldDigimon);
+
         return Digimon.builder()
                 .id(UUID.randomUUID())
                 .playerId(playerId)
                 .name("Reborn " + oldDigimon.getType())
                 .type(oldDigimon.getType())
                 .stage(Stage.BABY)
+                .digimonInfoId(babyInfoId)
                 .level(1)
                 .experience(0)
                 .hp(hp)
@@ -261,6 +269,24 @@ public class RebirthUseCase {
                 .rebornedFrom(oldDigimon.getId())
                 .status(DigimonStatus.ACTIVE)
                 .build();
+    }
+
+    private Long resolveBabyDigimonInfoId(Digimon oldDigimon) {
+        if (oldDigimon.getDigimonInfoId() != null) {
+            List<EvolutionLine> lines = evolutionLineRepository
+                    .findByActiveTrueAndSteps_DigimonInfo_Id(oldDigimon.getDigimonInfoId());
+
+            if (!lines.isEmpty()) {
+                return lines.get(0).getSteps().stream()
+                        .min(java.util.Comparator.comparingInt(EvolutionLineStep::getStepOrder))
+                        .map(step -> step.getDigimonInfo().getId())
+                        .orElse(null);
+            }
+        }
+
+        return digimonInfosRepository.findByName(oldDigimon.getType())
+                .map(DigimonInfos::getId)
+                .orElse(null);
     }
 
     private int rollInheritedIv(
