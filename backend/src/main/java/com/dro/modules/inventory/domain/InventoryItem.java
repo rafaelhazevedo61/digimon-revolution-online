@@ -24,8 +24,9 @@ public class InventoryItem {
     @Column(nullable = false)
     private ItemType itemType;
 
-    @Column(name = "material_code", length = 80)
-    private String materialCode;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "item_definition_id")
+    private ItemDefinition itemDefinition;
 
     @Column(nullable = false)
     private int quantity;

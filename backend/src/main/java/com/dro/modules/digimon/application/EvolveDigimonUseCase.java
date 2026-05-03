@@ -9,6 +9,8 @@ import com.dro.modules.evolution.domain.EvolutionLineStep;
 import com.dro.modules.evolution.domain.EvolutionStepMaterial;
 import com.dro.modules.evolution.infra.EvolutionLineRepository;
 import com.dro.modules.inventory.application.ConsumeItemUseCase;
+import com.dro.modules.inventory.domain.ItemDefinition;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
@@ -33,6 +35,7 @@ public class EvolveDigimonUseCase {
     private final DigimonInfosRepository digimonInfosRepository;
     private final EvolutionLineRepository evolutionLineRepository;
     private final ConsumeItemUseCase consumeItemUseCase;
+    private final ItemDefinitionRepository itemDefinitionRepository;
 
     @Transactional
     public void execute(String token, Long evolutionLineId) {
@@ -146,9 +149,14 @@ public class EvolveDigimonUseCase {
 
     private void consumeRequiredMaterials(UUID digimonId, EvolutionLineStep nextStep) {
         for (EvolutionStepMaterial material : nextStep.getMaterials()) {
+            ItemDefinition itemDef = itemDefinitionRepository
+                    .findByCode(material.getMaterialCode())
+                    .orElseThrow(() -> new NotFoundException(
+                            "Item definition not found for material: " + material.getMaterialCode()));
+
             consumeItemUseCase.consumeMaterial(
                     digimonId,
-                    material.getMaterialCode(),
+                    itemDef.getId(),
                     material.getQuantity()
             );
         }

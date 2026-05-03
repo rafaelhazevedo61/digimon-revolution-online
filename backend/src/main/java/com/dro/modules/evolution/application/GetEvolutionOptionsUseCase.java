@@ -8,9 +8,10 @@ import com.dro.modules.evolution.domain.EvolutionLine;
 import com.dro.modules.evolution.domain.EvolutionLineStep;
 import com.dro.modules.evolution.domain.EvolutionStepMaterial;
 import com.dro.modules.evolution.infra.EvolutionLineRepository;
+import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.InventoryItem;
-import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class GetEvolutionOptionsUseCase {
     private final DigimonRepository digimonRepository;
     private final EvolutionLineRepository evolutionLineRepository;
     private final InventoryRepository inventoryRepository;
+    private final ItemDefinitionRepository itemDefinitionRepository;
 
     public EvolutionOptionsResponse execute(UUID digimonId) {
 
@@ -93,9 +95,9 @@ public class GetEvolutionOptionsUseCase {
         boolean hasMaterials = true;
 
         for (EvolutionStepMaterial material : nextStep.getMaterials()) {
-            int playerHas = inventoryRepository
-                    .findByDigimonIdAndItemTypeAndMaterialCode(
-                            digimon.getId(), ItemType.EVOLUTION_MATERIAL, material.getMaterialCode())
+            int playerHas = itemDefinitionRepository.findByCode(material.getMaterialCode())
+                    .flatMap(itemDef -> inventoryRepository
+                            .findByDigimonIdAndItemDefinitionId(digimon.getId(), itemDef.getId()))
                     .map(InventoryItem::getQuantity)
                     .orElse(0);
 

@@ -14,6 +14,6 @@ public interface InventoryRepository extends JpaRepository<InventoryItem, UUID> 
 
     Optional<InventoryItem> findByDigimonIdAndItemType(UUID digimonId, ItemType itemType);
 
-    Optional<InventoryItem> findByDigimonIdAndItemTypeAndMaterialCode(
-            UUID digimonId, ItemType itemType, String materialCode);
+    Optional<InventoryItem> findByDigimonIdAndItemDefinitionId(
+            UUID digimonId, Long itemDefinitionId);
 }

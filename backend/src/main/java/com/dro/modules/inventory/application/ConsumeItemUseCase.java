@@ -36,17 +36,16 @@ public class ConsumeItemUseCase {
         }
     }
 
-    public void consumeMaterial(UUID digimonId, String materialCode, int quantity) {
+    public void consumeMaterial(UUID digimonId, Long itemDefinitionId, int quantity) {
 
         InventoryItem item = inventoryRepository
-                .findByDigimonIdAndItemTypeAndMaterialCode(
-                        digimonId, ItemType.EVOLUTION_MATERIAL, materialCode)
+                .findByDigimonIdAndItemDefinitionId(digimonId, itemDefinitionId)
                 .orElseThrow(() ->
-                        new NotFoundException("Material not found in inventory: " + materialCode));
+                        new NotFoundException("Material not found in inventory"));
 
         if (item.getQuantity() < quantity) {
             throw new UnprocessableException(
-                    "Not enough " + materialCode + ". Required: " + quantity + ", has: " + item.getQuantity());
+                    "Not enough material. Required: " + quantity + ", has: " + item.getQuantity());
         }
 
         item.setQuantity(item.getQuantity() - quantity);
