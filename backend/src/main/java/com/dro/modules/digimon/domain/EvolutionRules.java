@@ -7,7 +7,8 @@ public class EvolutionRules {
 
     public static Stage nextStage(Stage current) {
         return switch (current) {
-            case BABY -> Stage.ROOKIE;
+            case BABY -> Stage.BABY_II;
+            case BABY_II -> Stage.ROOKIE;
             case ROOKIE -> Stage.CHAMPION;
             case CHAMPION -> Stage.ULTIMATE;
             case ULTIMATE -> Stage.MEGA;
@@ -18,6 +19,7 @@ public class EvolutionRules {
     public static int requiredLevel(Stage current) {
         return switch (current) {
             case BABY -> 10;
+            case BABY_II -> 15;
             case ROOKIE -> 25;
             case CHAMPION -> 50;
             case ULTIMATE -> 75;
@@ -27,6 +29,7 @@ public class EvolutionRules {
 
     public static ItemType requiredFragment(Stage current) {
         return switch (current) {
+            case BABY_II -> ItemType.FRAGMENT_ROOKIE;
             case ROOKIE -> ItemType.FRAGMENT_CHAMPION;
             case CHAMPION -> ItemType.FRAGMENT_ULTIMATE;
             case ULTIMATE -> ItemType.FRAGMENT_MEGA;
@@ -36,9 +39,10 @@ public class EvolutionRules {
 
     public static int requiredFragmentQuantity(Stage current) {
         return switch (current) {
-            case ROOKIE -> 5;
-            case CHAMPION -> 10;
-            case ULTIMATE -> 20;
+            case BABY_II -> 5;
+            case ROOKIE -> 10;
+            case CHAMPION -> 20;
+            case ULTIMATE -> 50;
             default -> 0;
         };
     }
@@ -46,6 +50,7 @@ public class EvolutionRules {
     public static double stageStatMultiplier(Stage stage) {
         return switch (stage) {
             case BABY -> 1.0;
+            case BABY_II -> 1.1;
             case ROOKIE -> 1.2;
             case CHAMPION -> 1.5;
             case ULTIMATE -> 2.0;

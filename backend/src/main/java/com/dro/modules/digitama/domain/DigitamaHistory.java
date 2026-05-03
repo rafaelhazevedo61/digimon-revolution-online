@@ -1,5 +1,6 @@
 package com.dro.modules.digitama.domain;
 
+import com.dro.modules.digitama.domain.enums.DigitamaType;
 import com.dro.modules.digitama.domain.enums.HatchSource;
 import jakarta.persistence.*;
 import lombok.*;

@@ -21,6 +21,7 @@ public enum ItemType {
     INCUBATOR_EPIC,
 
     // Fragmentos
+    FRAGMENT_ROOKIE,
     FRAGMENT_CHAMPION,
     FRAGMENT_ULTIMATE,
     FRAGMENT_MEGA

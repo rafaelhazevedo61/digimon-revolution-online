@@ -1,9 +1,8 @@
 package com.dro.modules.digitama.application;
 
-import com.dro.modules.digitama.domain.DigitamaType;
+import com.dro.modules.digitama.domain.enums.DigitamaType;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
-import com.dro.shared.exception.BusinessException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
