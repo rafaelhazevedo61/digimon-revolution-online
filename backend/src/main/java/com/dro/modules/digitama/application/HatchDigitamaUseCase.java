@@ -58,9 +58,10 @@ public class HatchDigitamaUseCase {
 
         if (player.getActiveDigimonId() == null) {
             player.setActiveDigimonId(digimon.getId());
-            playerRepository.save(player);
         }
 
+        player.setSelectedDigitama(null);
+        playerRepository.save(player);
         return digimon;
     }
 

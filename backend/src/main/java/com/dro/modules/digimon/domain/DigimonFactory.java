@@ -14,6 +14,9 @@ import java.util.UUID;
 public class DigimonFactory {
 
     private static final Random random = new Random();
+    private static final double HP_IV_WEIGHT = 0.30;
+    private static final double ATTACK_IV_WEIGHT = 0.20;
+    private static final double DEFENSE_IV_WEIGHT = 0.20;
 
     public static Digimon createBaby(UUID playerId, DigitamaType digitamaType,
                                      DigimonInfos digimon) {
@@ -56,9 +59,9 @@ public class DigimonFactory {
                         * PersonalityRules.getDefenseMultiplier(personality)
                         * TraitRules.getDefenseMultiplier(trait);
 
-        int hp = (int) Math.floor((digimon.getBaseHp() + ivHp) * hpMultiplier);
-        int attack = (int) Math.floor((digimon.getBaseAtk() + ivAttack) * attackMultiplier);
-        int defense = (int) Math.floor((digimon.getBaseDef() + ivDefense) * defenseMultiplier);
+        int hp = (int) Math.floor((digimon.getBaseHp() + (ivHp * HP_IV_WEIGHT)) * hpMultiplier);
+        int attack = (int) Math.floor((digimon.getBaseAtk() + (ivAttack * ATTACK_IV_WEIGHT)) * attackMultiplier);
+        int defense = (int) Math.floor((digimon.getBaseDef() + (ivDefense * DEFENSE_IV_WEIGHT)) * defenseMultiplier);
         int maxEnergy = 20 + TraitRules.getMaxEnergyBonus(trait);
 
         return Digimon.builder()
