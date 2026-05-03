@@ -30,4 +30,28 @@ public class ItemDefinition {
 
     @Column(nullable = false)
     private boolean stackable;
+
+    @Column(name = "buy_price")
+    private Integer buyPrice;
+
+    @Column(name = "sell_price")
+    private Integer sellPrice;
+
+    @Column(nullable = false)
+    private boolean tradable;
+
+    @Column(nullable = false)
+    private boolean sellable;
+
+    @Column(nullable = false)
+    private boolean usable;
+
+    @Column(name = "max_stack")
+    private Integer maxStack;
+
+    @Column(nullable = false, length = 20)
+    private String rarity;
+
+    @Column(length = 120)
+    private String icon;
 }
