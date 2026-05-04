@@ -7,16 +7,16 @@ const itemState = {
     sellable: "",
     tradable: "",
     lastResult: null
-  };
-  
-  function renderItemsPage() {
+};
+
+function renderItemsPage() {
     setPageHeader(
-      "Catálogo de Itens",
-      "Consulte os itens cadastrados em item_definitions"
+        "Catálogo de Itens",
+        "Consulte os itens cadastrados em item_definitions"
     );
-  
+
     const app = document.getElementById("app");
-  
+
     app.innerHTML = `
       <div class="card mb-6">
         <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
@@ -27,9 +27,11 @@ const itemState = {
           </div>
   
           <div>
-            <label class="text-sm text-slate-400">Raridade</label>
-            <input id="filter-rarity" class="input mt-1" placeholder="Ex: RARE" value="${itemState.rarity}" />
-          </div>
+          <label class="text-sm text-slate-400">Raridade</label>
+          <select id="filter-rarity" class="input mt-1">
+            ${rarityOptions(itemState.rarity)}
+          </select>
+        </div>
   
           <div>
             <label class="text-sm text-slate-400">Usável</label>
@@ -74,34 +76,34 @@ const itemState = {
   
       <div id="items-result"></div>
     `;
-  
+
     loadItems();
-  }
-  
-  async function loadItems() {
+}
+
+async function loadItems() {
     const container = document.getElementById("items-result");
-  
+
     container.innerHTML = `
       <div class="card">
         <p class="text-slate-400">Carregando itens...</p>
       </div>
     `;
-  
+
     try {
-      const result = await apiGet("/items", {
-        page: itemState.page,
-        size: itemState.size,
-        category: itemState.category,
-        rarity: itemState.rarity,
-        usable: itemState.usable,
-        sellable: itemState.sellable,
-        tradable: itemState.tradable
-      });
-  
-      itemState.lastResult = result;
-      renderItemsResult(result);
+        const result = await apiGet("/items", {
+            page: itemState.page,
+            size: itemState.size,
+            category: itemState.category,
+            rarity: itemState.rarity,
+            usable: itemState.usable,
+            sellable: itemState.sellable,
+            tradable: itemState.tradable
+        });
+
+        itemState.lastResult = result;
+        renderItemsResult(result);
     } catch (error) {
-      container.innerHTML = `
+        container.innerHTML = `
         <div class="card border-red-900 bg-red-950/30">
           <h3 class="font-bold text-red-300 mb-2">Erro ao carregar itens</h3>
           <p class="text-red-200">${error.message}</p>
@@ -111,13 +113,13 @@ const itemState = {
         </div>
       `;
     }
-  }
-  
-  function renderItemsResult(result) {
+}
+
+function renderItemsResult(result) {
     const container = document.getElementById("items-result");
-  
+
     const items = result.items || [];
-  
+
     container.innerHTML = `
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
         <div>
@@ -160,9 +162,9 @@ const itemState = {
   
       ${items.length === 0 ? renderEmptyItems() : ""}
     `;
-  }
-  
-  function renderItemRow(item) {
+}
+
+function renderItemRow(item) {
     return `
       <tr>
         <td>
@@ -199,17 +201,17 @@ const itemState = {
         </td>
       </tr>
     `;
-  }
-  
-  function renderEmptyItems() {
+}
+
+function renderEmptyItems() {
     return `
       <div class="card mt-4">
         <p class="text-slate-400">Nenhum item encontrado com os filtros atuais.</p>
       </div>
     `;
-  }
-  
-  function applyItemFilters() {
+}
+
+function applyItemFilters() {
     itemState.category = document.getElementById("filter-category").value;
     itemState.rarity = document.getElementById("filter-rarity").value;
     itemState.usable = document.getElementById("filter-usable").value;
@@ -217,11 +219,11 @@ const itemState = {
     itemState.tradable = document.getElementById("filter-tradable").value;
     itemState.size = Number(document.getElementById("filter-size").value);
     itemState.page = 0;
-  
+
     loadItems();
-  }
-  
-  function clearItemFilters() {
+}
+
+function clearItemFilters() {
     itemState.page = 0;
     itemState.size = 20;
     itemState.category = "";
@@ -229,29 +231,63 @@ const itemState = {
     itemState.usable = "";
     itemState.sellable = "";
     itemState.tradable = "";
-  
+
     renderItemsPage();
-  }
-  
-  function previousItemsPage() {
+}
+
+function previousItemsPage() {
     if (itemState.page > 0) {
-      itemState.page--;
-      loadItems();
+        itemState.page--;
+        loadItems();
     }
-  }
-  
-  function nextItemsPage() {
+}
+
+function nextItemsPage() {
     if (itemState.lastResult?.hasNext) {
-      itemState.page++;
-      loadItems();
+        itemState.page++;
+        loadItems();
     }
-  }
-  
-  function booleanOptions(selectedValue) {
+}
+
+function booleanOptions(selectedValue) {
     const options = [
-      { label: "Todos", value: "" },
-      { label: "Sim", value: "true" },
-      { label: "Não", value: "false" }
+        { label: "Todos", value: "" },
+        { label: "Sim", value: "true" },
+        { label: "Não", value: "false" }
+    ];
+
+    return options.map(option => `
+      <option value="${option.value}" ${String(selectedValue) === option.value ? "selected" : ""}>
+        ${option.label}
+      </option>
+    `).join("");
+}
+
+function sizeOptions(selectedValue) {
+    const options = [10, 20, 50, 100];
+
+    return options.map(size => `
+      <option value="${size}" ${Number(selectedValue) === size ? "selected" : ""}>
+        ${size}
+      </option>
+    `).join("");
+}
+
+function formatPrice(value) {
+    if (value === null || value === undefined) {
+        return "-";
+    }
+
+    return `${value} bits`;
+}
+
+function rarityOptions(selectedValue) {
+    const options = [
+      { label: "Todas", value: "" },
+      { label: "Comum", value: "COMMON" },
+      { label: "Raro", value: "RARE" },
+      { label: "Épico", value: "EPIC" },
+      { label: "Lendário", value: "LEGENDARY" }
     ];
   
     return options.map(option => `
@@ -259,22 +295,4 @@ const itemState = {
         ${option.label}
       </option>
     `).join("");
-  }
-  
-  function sizeOptions(selectedValue) {
-    const options = [10, 20, 50, 100];
-  
-    return options.map(size => `
-      <option value="${size}" ${Number(selectedValue) === size ? "selected" : ""}>
-        ${size}
-      </option>
-    `).join("");
-  }
-  
-  function formatPrice(value) {
-    if (value === null || value === undefined) {
-      return "-";
-    }
-  
-    return `${value} bits`;
   }
