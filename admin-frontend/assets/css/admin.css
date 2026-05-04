@@ -1,0 +1,120 @@
+.nav-link {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    color: #cbd5e1;
+    background: transparent;
+    text-align: left;
+    transition: all 0.2s ease;
+  }
+  
+  .nav-link:hover {
+    background: #1e293b;
+    color: #ffffff;
+  }
+  
+  .nav-link.active {
+    background: linear-gradient(135deg, #0891b2, #2563eb);
+    color: #ffffff;
+    font-weight: 600;
+  }
+  
+  .nav-link.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  
+  .input {
+    width: 100%;
+    border-radius: 0.75rem;
+    background: #020617;
+    border: 1px solid #334155;
+    padding: 0.65rem 0.85rem;
+    color: #f8fafc;
+    outline: none;
+  }
+  
+  .input:focus {
+    border-color: #06b6d4;
+    box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+  }
+  
+  .btn-primary {
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, #0891b2, #2563eb);
+    color: white;
+    padding: 0.65rem 1rem;
+    font-weight: 600;
+    transition: opacity 0.2s ease;
+  }
+  
+  .btn-primary:hover {
+    opacity: 0.9;
+  }
+  
+  .btn-secondary {
+    border-radius: 0.75rem;
+    background: #1e293b;
+    color: #cbd5e1;
+    padding: 0.65rem 1rem;
+    font-weight: 600;
+  }
+  
+  .btn-secondary:hover {
+    background: #334155;
+    color: white;
+  }
+  
+  .card {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 1rem;
+    padding: 1.25rem;
+  }
+  
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: #1e293b;
+    color: #cbd5e1;
+  }
+  
+  .table-wrapper {
+    overflow-x: auto;
+    border-radius: 1rem;
+    border: 1px solid #1e293b;
+  }
+  
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+  }
+  
+  .table th {
+    background: #020617;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: left;
+    padding: 0.9rem;
+    border-bottom: 1px solid #1e293b;
+  }
+  
+  .table td {
+    padding: 0.9rem;
+    border-bottom: 1px solid #1e293b;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+  }
+  
+  .table tr:hover td {
+    background: rgba(30, 41, 59, 0.45);
+  }
