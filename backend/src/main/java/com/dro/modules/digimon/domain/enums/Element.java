@@ -13,5 +13,6 @@ public enum Element {
     THUNDER,
     WATER,
     WIND,
-    WOOD
+    WOOD,
+    DARK
 }

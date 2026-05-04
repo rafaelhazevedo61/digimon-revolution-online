@@ -1,88 +1,82 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Digimon Revolution Online - Admin</title>
+    <title>Digimon Revolution Online - Admin</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="./assets/css/admin.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./assets/css/admin.css" />
 </head>
+
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
-  <div class="flex min-h-screen">
+    <div class="flex min-h-screen">
 
-    <aside class="w-72 bg-slate-900 border-r border-slate-800 hidden md:flex md:flex-col">
-      <div class="p-6 border-b border-slate-800">
-        <h1 class="text-xl font-bold text-cyan-400">DRO Admin</h1>
-        <p class="text-sm text-slate-400 mt-1">Digimon Revolution Online</p>
-      </div>
+        <aside class="w-72 bg-slate-900 border-r border-slate-800 hidden md:flex md:flex-col">
+            <div class="p-6 border-b border-slate-800">
+                <h1 class="text-xl font-bold text-cyan-400">DRO Admin</h1>
+                <p class="text-sm text-slate-400 mt-1">Digimon Revolution Online</p>
+            </div>
 
-      <nav class="flex-1 p-4 space-y-2">
-        <button 
-          class="nav-link active"
-          data-route="dashboard">
-          Dashboard
-        </button>
+            <nav class="flex-1 p-4 space-y-2">
+                <button class="nav-link active" data-route="dashboard">
+                    Dashboard
+                </button>
 
-        <button 
-          class="nav-link"
-          data-route="items">
-          Catálogo de Itens
-        </button>
+                <button class="nav-link" data-route="items">
+                    Catálogo de Itens
+                </button>
 
-        <button 
-          class="nav-link disabled"
-          disabled>
-          Digimon Infos
-        </button>
+                <button class="nav-link" data-route="digimon-infos">
+                    Digimon Infos
+                </button>
 
-        <button 
-          class="nav-link disabled"
-          disabled>
-          Linhas Evolutivas
-        </button>
+                <button class="nav-link disabled" disabled>
+                    Linhas Evolutivas
+                </button>
 
-        <button 
-          class="nav-link disabled"
-          disabled>
-          Players
-        </button>
-      </nav>
+                <button class="nav-link disabled" disabled>
+                    Players
+                </button>
+            </nav>
 
-      <div class="p-4 border-t border-slate-800 text-xs text-slate-500">
-        Admin MVP v0.1
-      </div>
-    </aside>
+            <div class="p-4 border-t border-slate-800 text-xs text-slate-500">
+                Admin MVP v0.1
+            </div>
+        </aside>
 
-    <main class="flex-1 min-w-0">
+        <main class="flex-1 min-w-0">
 
-      <header class="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 md:px-8">
-        <div>
-          <h2 id="page-title" class="font-semibold text-lg">Dashboard</h2>
-          <p id="page-subtitle" class="text-sm text-slate-400">Visão geral administrativa</p>
-        </div>
+            <header class="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 md:px-8">
+                <div>
+                    <h2 id="page-title" class="font-semibold text-lg">Dashboard</h2>
+                    <p id="page-subtitle" class="text-sm text-slate-400">Visão geral administrativa</p>
+                </div>
 
-        <div class="text-right">
-          <p class="text-xs text-slate-500">API</p>
-          <p id="api-status" class="text-sm text-slate-300">http://localhost:8080</p>
-        </div>
-      </header>
+                <div class="text-right">
+                    <p class="text-xs text-slate-500">API</p>
+                    <p id="api-status" class="text-sm text-slate-300">http://localhost:8080</p>
+                </div>
+            </header>
 
-      <section id="app" class="p-4 md:p-8">
-        <!-- Conteúdo renderizado via JS -->
-      </section>
+            <section id="app" class="p-4 md:p-8">
+                <!-- Conteúdo renderizado via JS -->
+            </section>
 
-    </main>
+        </main>
 
-  </div>
+    </div>
 
-  <script src="./assets/js/config.js"></script>
-  <script src="./assets/js/api.js"></script>
-  <script src="./assets/js/dashboard.js"></script>
-  <script src="./assets/js/items.js"></script>
-  <script src="./assets/js/router.js"></script>
-  <script src="./assets/js/main.js"></script>
+    <script src="./assets/js/config.js"></script>
+    <script src="./assets/js/api.js"></script>
+    <script src="./assets/js/dashboard.js"></script>
+    <script src="./assets/js/items.js"></script>
+    <script src="./assets/js/digimon-infos.js"></script>
+    <script src="./assets/js/router.js"></script>
+    <script src="./assets/js/main.js"></script>
 </body>
+
 </html>

@@ -1,6 +1,7 @@
 const routes = {
     dashboard: renderDashboard,
-    items: renderItemsPage
+    items: renderItemsPage,
+    "digimon-infos": renderDigimonInfosPage
   };
   
   function navigateTo(route) {
