@@ -4,6 +4,7 @@ import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
+import com.dro.shared.exception.UnprocessableException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -40,9 +41,19 @@ public class AddItemUseCase {
         var existing = repository.findByDigimonIdAndItemDefinitionId(
                 digimonId, itemDefinition.getId());
 
+        int currentQuantity = existing.map(InventoryItem::getQuantity).orElse(0);
+        int newQuantity = currentQuantity + quantity;
+
+        if (itemDefinition.getMaxStack() != null && newQuantity > itemDefinition.getMaxStack()) {
+            throw new UnprocessableException(
+                    "Cannot exceed max stack of " + itemDefinition.getMaxStack()
+                            + " for item " + itemDefinition.getCode()
+                            + ". Current: " + currentQuantity + ", adding: " + quantity);
+        }
+
         if (existing.isPresent()) {
             InventoryItem item = existing.get();
-            item.setQuantity(item.getQuantity() + quantity);
+            item.setQuantity(newQuantity);
             repository.save(item);
         } else {
             InventoryItem item = InventoryItem.builder()
@@ -50,7 +61,7 @@ public class AddItemUseCase {
                     .digimonId(digimonId)
                     .itemType(ItemType.EVOLUTION_MATERIAL)
                     .itemDefinition(itemDefinition)
-                    .quantity(quantity)
+                    .quantity(newQuantity)
                     .build();
 
             repository.save(item);
