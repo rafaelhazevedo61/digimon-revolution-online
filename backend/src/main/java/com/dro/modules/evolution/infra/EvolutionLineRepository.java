@@ -3,11 +3,12 @@ package com.dro.modules.evolution.infra;
 import com.dro.modules.evolution.domain.EvolutionLine;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface EvolutionLineRepository extends JpaRepository<EvolutionLine, Long> {
+public interface EvolutionLineRepository extends JpaRepository<EvolutionLine, Long>, JpaSpecificationExecutor<EvolutionLine> {
 
     @EntityGraph(attributePaths = {
             "content",
@@ -29,4 +30,7 @@ public interface EvolutionLineRepository extends JpaRepository<EvolutionLine, Lo
             "steps.materials"
     })
     Optional<EvolutionLine> findByIdAndActiveTrue(Long id);
+
+    Optional<EvolutionLine> findByCode(String code);
+
 }
