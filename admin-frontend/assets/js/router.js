@@ -2,7 +2,8 @@ const routes = {
     dashboard: renderDashboard,
     items: renderItemsPage,
     "digimon-infos": renderDigimonInfosPage,
-    "evolution-lines": renderEvolutionLinesPage
+    "evolution-lines": renderEvolutionLinesPage,
+    players: renderPlayersPage
   };
   
   function navigateTo(route) {
