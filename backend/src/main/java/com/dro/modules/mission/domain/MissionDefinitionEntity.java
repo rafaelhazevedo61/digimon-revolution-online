@@ -48,15 +48,15 @@ public class MissionDefinitionEntity {
     @Builder.Default
     private boolean active = true;
 
-    @OneToMany(mappedBy = "missionId", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "mission", fetch = FetchType.LAZY)
     @Builder.Default
     private List<MissionRewardEntity> rewards = new ArrayList<>();
 
-    @OneToMany(mappedBy = "missionId", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "mission", fetch = FetchType.LAZY)
     @Builder.Default
     private List<MissionLootChanceEntity> lootChances = new ArrayList<>();
 
-    @OneToMany(mappedBy = "missionId", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "mission", fetch = FetchType.LAZY)
     @Builder.Default
     private List<MissionLootItemEntity> lootItems = new ArrayList<>();
 }

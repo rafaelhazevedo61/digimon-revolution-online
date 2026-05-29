@@ -3,6 +3,7 @@ package com.dro.modules.mission.domain;
 import com.dro.modules.inventory.domain.ItemType;
 import jakarta.persistence.*;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "mission_rewards")
@@ -17,8 +18,10 @@ public class MissionRewardEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "mission_id", nullable = false)
-    private String missionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mission_id", nullable = false)
+    @JsonIgnore
+    private MissionDefinitionEntity mission;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "item_type", nullable = false)
