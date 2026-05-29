@@ -14,8 +14,9 @@ import com.dro.modules.incubation.domain.IncubationStatus;
 import com.dro.modules.incubation.infra.IncubationRepository;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.infra.InventoryRepository;
-import com.dro.modules.mission.domain.MissionCatalog;
+import com.dro.modules.mission.domain.MissionDefinitionEntity;
 import com.dro.modules.mission.domain.MissionInstance;
+import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.player.api.dto.response.ActiveMissionResponse;
@@ -46,6 +47,7 @@ public class GetPlayerDashboardUseCase {
     private final InventoryRepository inventoryRepository;
     private final MissionInstanceRepository missionInstanceRepository;
     private final IncubationRepository incubationRepository;
+    private final MissionDefinitionRepository missionDefinitionRepository;
 
     public PlayerDashboardResponse execute(String token) {
 
@@ -171,8 +173,8 @@ public class GetPlayerDashboardUseCase {
                         missionInstanceRepository.save(instance);
                     }
 
-                    String missionName = MissionCatalog.findById(instance.getMissionId())
-                            .map(m -> m.getName())
+                    String missionName = missionDefinitionRepository.findById(instance.getMissionId())
+                            .map(MissionDefinitionEntity::getName)
                             .orElse(instance.getMissionId());
 
                     long remaining = Duration.between(Instant.now(), instance.getEndsAt()).getSeconds();

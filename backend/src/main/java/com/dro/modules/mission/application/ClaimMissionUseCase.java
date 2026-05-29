@@ -7,11 +7,12 @@ import com.dro.modules.loot.domain.LootItem;
 import com.dro.modules.loot.domain.LootRoller;
 import com.dro.modules.mission.api.dto.response.MissionResultResponse;
 import com.dro.modules.mission.api.dto.response.RewardResponse;
-import com.dro.modules.mission.domain.MissionCatalog;
 import com.dro.modules.mission.domain.MissionDefinition;
+import com.dro.modules.mission.domain.MissionDefinitionMapper;
 import com.dro.modules.mission.domain.MissionInstance;
 import com.dro.modules.mission.domain.MissionReward;
 import com.dro.modules.mission.domain.PlayerMissionProgress;
+import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.mission.infra.PlayerMissionProgressRepository;
 import com.dro.shared.exception.BadRequestException;
@@ -31,17 +32,20 @@ public class ClaimMissionUseCase {
     private final DigimonRepository digimonRepository;
     private final PlayerMissionProgressRepository progressRepository;
     private final AddItemUseCase addItemUseCase;
+    private final MissionDefinitionRepository missionDefinitionRepository;
 
     public ClaimMissionUseCase(
             MissionInstanceRepository missionInstanceRepository,
             DigimonRepository digimonRepository,
             PlayerMissionProgressRepository progressRepository,
-            AddItemUseCase addItemUseCase
+            AddItemUseCase addItemUseCase,
+            MissionDefinitionRepository missionDefinitionRepository
     ) {
         this.missionInstanceRepository = missionInstanceRepository;
         this.digimonRepository = digimonRepository;
         this.progressRepository = progressRepository;
         this.addItemUseCase = addItemUseCase;
+        this.missionDefinitionRepository = missionDefinitionRepository;
     }
 
     public MissionResultResponse execute(String token, UUID missionInstanceId) {
@@ -65,9 +69,10 @@ public class ClaimMissionUseCase {
         Digimon digimon = digimonRepository.findById(instance.getDigimonId())
                 .orElseThrow(() -> new NotFoundException("Digimon não encontrado"));
 
-        MissionDefinition mission = MissionCatalog
-                .findById(instance.getMissionId())
-                .orElseThrow(() -> new NotFoundException("Mission not found"));
+        MissionDefinition mission = MissionDefinitionMapper.toDefinition(
+                missionDefinitionRepository.findById(instance.getMissionId())
+                        .orElseThrow(() -> new NotFoundException("Mission not found"))
+        );
 
         PlayerMissionProgress progress =
                 getOrCreateProgress(playerId, mission.getId());

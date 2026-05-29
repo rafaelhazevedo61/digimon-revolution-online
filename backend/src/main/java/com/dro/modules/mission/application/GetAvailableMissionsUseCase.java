@@ -2,7 +2,7 @@ package com.dro.modules.mission.application;
 
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.mission.api.dto.response.MissionResponse;
-import com.dro.modules.mission.domain.MissionCatalog;
+import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
@@ -19,6 +19,7 @@ public class GetAvailableMissionsUseCase {
 
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
+    private final MissionDefinitionRepository missionDefinitionRepository;
 
     public List<MissionResponse> execute(String token) {
 
@@ -37,7 +38,7 @@ public class GetAvailableMissionsUseCase {
         int level = digimon.getLevel();
         var stage = digimon.getStage();
 
-        return MissionCatalog.MISSIONS.stream()
+        return missionDefinitionRepository.findByActiveTrue().stream()
                 .filter(m -> level >= m.getRequiredLevel())
                 .filter(m -> stage.ordinal() >= m.getRequiredStage().ordinal())
                 .map(m -> new MissionResponse(
