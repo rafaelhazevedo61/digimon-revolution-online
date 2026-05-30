@@ -109,13 +109,14 @@ function renderShopProductsTable(products) {
 
     ${products.length === 0 ? '<div class="card mt-4"><p class="text-slate-400">Nenhum produto encontrado.</p></div>' : ""}
   `;
+
+  shopBindTableActions();
 }
 
 function renderShopRow(p) {
   const statusClass = p.active ? "badge-success" : "badge-danger";
   const statusText = p.active ? "Ativo" : "Inativo";
   const ref = p.productType === "EQUIPMENT" ? p.equipmentTemplateName : (p.itemType || "-");
-  const codeArg = shopJsString(p.code);
 
   return `
     <tr>
@@ -136,17 +137,27 @@ function renderShopRow(p) {
       </td>
       <td>
         <div class="flex gap-2">
-          <button class="btn-sm btn-secondary" onclick="shopShowEditModal(${codeArg})">
+          <button type="button" class="btn-sm btn-secondary js-shop-edit" data-shop-code="${shopEscapeAttr(p.code)}">
             Editar
           </button>
-          <button class="btn-sm ${p.active ? 'btn-warning' : 'btn-success-outline'}"
-            onclick="shopToggleActive(${codeArg})">
+          <button type="button" class="btn-sm ${p.active ? 'btn-warning' : 'btn-success-outline'} js-shop-toggle" data-shop-code="${shopEscapeAttr(p.code)}">
             ${p.active ? "Desativar" : "Ativar"}
           </button>
         </div>
       </td>
     </tr>
   `;
+}
+
+
+function shopBindTableActions() {
+  document.querySelectorAll(".js-shop-edit").forEach(button => {
+    button.addEventListener("click", () => shopShowEditModal(button.dataset.shopCode));
+  });
+
+  document.querySelectorAll(".js-shop-toggle").forEach(button => {
+    button.addEventListener("click", () => shopToggleActive(button.dataset.shopCode));
+  });
 }
 
 function shopToggleActiveFilter() {
