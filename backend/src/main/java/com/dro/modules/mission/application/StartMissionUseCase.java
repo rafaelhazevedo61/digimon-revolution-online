@@ -5,6 +5,7 @@ import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.mission.api.dto.response.MissionStartResponse;
 import com.dro.modules.mission.domain.*;
+import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
@@ -27,6 +28,7 @@ public class StartMissionUseCase {
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final MissionInstanceRepository missionInstanceRepository;
+    private final MissionDefinitionRepository missionDefinitionRepository;
 
     private static final long COOLDOWN_SECONDS = 10;
 
@@ -39,8 +41,10 @@ public class StartMissionUseCase {
 
         Digimon digimon = getActiveDigimon(player);
 
-        MissionDefinition mission = MissionCatalog.findById(missionId)
+        MissionDefinitionEntity entity = missionDefinitionRepository.findById(missionId)
                 .orElseThrow(() -> new NotFoundException("Mission not found"));
+
+        MissionDefinition mission = MissionDefinitionMapper.toDefinition(entity);
 
         Stage highestStage = getHighestStage(playerId);
 
