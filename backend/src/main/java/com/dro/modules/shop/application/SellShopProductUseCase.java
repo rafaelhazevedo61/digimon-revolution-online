@@ -9,8 +9,9 @@ import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.shop.api.dto.request.SellShopProductRequest;
 import com.dro.modules.shop.api.dto.response.SellShopProductResponse;
-import com.dro.modules.shop.domain.ShopCatalog;
 import com.dro.modules.shop.domain.ShopProduct;
+import com.dro.modules.shop.domain.ShopProductMapper;
+import com.dro.modules.shop.infra.ShopProductRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.ForbiddenException;
@@ -31,6 +32,7 @@ public class SellShopProductUseCase {
     private final DigimonRepository digimonRepository;
     private final ConsumeItemUseCase consumeItemUseCase;
     private final EquipmentRepository equipmentRepository;
+    private final ShopProductRepository shopProductRepository;
 
     @Transactional
     public SellShopProductResponse execute(String token, SellShopProductRequest request) {
@@ -68,7 +70,9 @@ public class SellShopProductUseCase {
             throw new BadRequestException("Quantity must be greater than zero");
         }
 
-        ShopProduct product = ShopCatalog.findByCode(request.productCode());
+        ShopProduct product = shopProductRepository.findById(request.productCode())
+                .map(ShopProductMapper::toProduct)
+                .orElseThrow(() -> new NotFoundException("Shop product not found: " + request.productCode()));
 
         if (!product.isItem()) {
             throw new BadRequestException("Product is not an inventory item");
@@ -113,7 +117,9 @@ public class SellShopProductUseCase {
             throw new ConflictException("Equipped equipment cannot be sold");
         }
 
-        ShopProduct product = ShopCatalog.findByEquipmentTemplateName(equipment.getName());
+        ShopProduct product = shopProductRepository.findByEquipmentTemplateNameIgnoreCase(equipment.getName())
+                .map(ShopProductMapper::toProduct)
+                .orElseThrow(() -> new NotFoundException("Shop equipment product not found: " + equipment.getName()));
 
         if (product.getSellPrice() <= 0) {
             throw new UnprocessableException("This equipment cannot be sold");
