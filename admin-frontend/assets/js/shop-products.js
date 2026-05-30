@@ -214,7 +214,7 @@ function shopRenderModal(title, data, isEdit) {
 
             <div id="shop-item-type-group" class="${data.productType === 'EQUIPMENT' ? 'hidden' : ''}">
               <label class="text-sm text-slate-400">Item Type</label>
-              <select id="shop-item-type" class="input mt-1">
+              <select id="shop-item-type" class="input mt-1" onchange="shopOnItemTypeChange()">
                 <option value="">-- Selecione --</option>
                 ${shopSelectOptions(ITEM_TYPES, data.itemType)}
               </select>
@@ -222,7 +222,7 @@ function shopRenderModal(title, data, isEdit) {
 
             <div id="shop-eqt-name-group" class="${data.productType === 'ITEM' ? 'hidden' : ''}">
               <label class="text-sm text-slate-400">Equipment Template</label>
-              <select id="shop-eqt-name" class="input mt-1">
+              <select id="shop-eqt-name" class="input mt-1" onchange="shopOnEquipmentTemplateChange()">
                 <option value="">-- Selecione --</option>
                 ${shopState.equipmentTemplates.map(t => `<option value="${t.name}" ${t.name === data.equipmentTemplateName ? 'selected' : ''}>${t.name} (${t.slot} | ${t.rarity})</option>`).join('')}
               </select>
@@ -255,6 +255,37 @@ function shopToggleTypeFields() {
   const type = document.getElementById("shop-product-type").value;
   document.getElementById("shop-item-type-group").classList.toggle("hidden", type === "EQUIPMENT");
   document.getElementById("shop-eqt-name-group").classList.toggle("hidden", type === "ITEM");
+
+  if (!shopState.editing) {
+    if (type === "EQUIPMENT") {
+      document.getElementById("shop-category").value = "EQUIPMENT";
+    } else {
+      document.getElementById("shop-category").value = "CONSUMABLE";
+    }
+  }
+}
+
+function shopOnEquipmentTemplateChange() {
+  if (shopState.editing) return;
+  const select = document.getElementById("shop-eqt-name");
+  const templateName = select.value;
+  if (!templateName) return;
+
+  const code = templateName.toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/_+$/, "");
+  document.getElementById("shop-code").value = code;
+  document.getElementById("shop-name").value = templateName;
+  document.getElementById("shop-category").value = "EQUIPMENT";
+}
+
+function shopOnItemTypeChange() {
+  if (shopState.editing) return;
+  const select = document.getElementById("shop-item-type");
+  const itemType = select.value;
+  if (!itemType) return;
+
+  const name = itemType.split("_").map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(" ");
+  document.getElementById("shop-code").value = itemType;
+  document.getElementById("shop-name").value = name;
 }
 
 async function shopSubmitForm(event) {
