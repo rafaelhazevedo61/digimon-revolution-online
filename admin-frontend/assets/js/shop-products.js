@@ -357,6 +357,8 @@ function shopRenderCatalogBrowser() {
       </div>
     </div>
   `;
+
+  shopBindCatalogActions();
 }
 
 function shopRenderCatalogPagination(totalItems, totalPages) {
@@ -502,9 +504,9 @@ function shopRenderItemCatalog(items) {
             </div>
           </div>
           <div class="flex gap-2 md:flex-col md:items-stretch">
-            <button class="btn-sm btn-secondary whitespace-nowrap" onclick="shopShowItemDetails(${itemArg})">Detalhes</button>
-            <button class="btn-sm btn-primary whitespace-nowrap ${alreadyInShop ? 'opacity-50 cursor-not-allowed' : ''}"
-              ${alreadyInShop ? 'disabled' : ''} onclick="shopAddFromItem(${itemArg})">
+            <button type="button" class="btn-sm btn-secondary whitespace-nowrap js-shop-item-details" data-item-code="${shopEscapeAttr(item.code)}">Detalhes</button>
+            <button type="button" class="btn-sm btn-primary whitespace-nowrap js-shop-item-add ${alreadyInShop ? 'opacity-50 cursor-not-allowed' : ''}"
+              ${alreadyInShop ? 'disabled' : ''} data-item-code="${shopEscapeAttr(item.code)}">
               + Adicionar
             </button>
           </div>
@@ -542,9 +544,9 @@ function shopRenderEquipmentCatalog(templates) {
             </div>
           </div>
           <div class="flex gap-2 md:flex-col md:items-stretch">
-            <button class="btn-sm btn-secondary whitespace-nowrap" onclick="shopShowTemplateDetails(${templateArg})">Detalhes</button>
-            <button class="btn-sm btn-primary whitespace-nowrap ${alreadyInShop ? 'opacity-50 cursor-not-allowed' : ''}"
-              ${alreadyInShop ? 'disabled' : ''} onclick="shopAddFromTemplate(${templateArg})">
+            <button type="button" class="btn-sm btn-secondary whitespace-nowrap js-shop-template-details" data-template-name="${shopEscapeAttr(t.name)}">Detalhes</button>
+            <button type="button" class="btn-sm btn-primary whitespace-nowrap js-shop-template-add ${alreadyInShop ? 'opacity-50 cursor-not-allowed' : ''}"
+              ${alreadyInShop ? 'disabled' : ''} data-template-name="${shopEscapeAttr(t.name)}">
               + Adicionar
             </button>
           </div>
@@ -552,6 +554,24 @@ function shopRenderEquipmentCatalog(templates) {
       </div>
     `;
   }).join('');
+}
+
+function shopBindCatalogActions() {
+  document.querySelectorAll(".js-shop-item-details").forEach(button => {
+    button.addEventListener("click", () => shopShowItemDetails(button.dataset.itemCode));
+  });
+
+  document.querySelectorAll(".js-shop-item-add").forEach(button => {
+    button.addEventListener("click", () => shopAddFromItem(button.dataset.itemCode));
+  });
+
+  document.querySelectorAll(".js-shop-template-details").forEach(button => {
+    button.addEventListener("click", () => shopShowTemplateDetails(button.dataset.templateName));
+  });
+
+  document.querySelectorAll(".js-shop-template-add").forEach(button => {
+    button.addEventListener("click", () => shopAddFromTemplate(button.dataset.templateName));
+  });
 }
 
 function shopShowItemDetails(itemCode) {
