@@ -1,7 +1,8 @@
 const shopState = {
   products: [],
   activeOnly: false,
-  editing: null
+  editing: null,
+  equipmentTemplates: []
 };
 
 const PRODUCT_TYPES = ["ITEM", "EQUIPMENT"];
@@ -144,8 +145,9 @@ function shopToggleActiveFilter() {
   loadShopProducts();
 }
 
-function shopShowCreateModal() {
+async function shopShowCreateModal() {
   shopState.editing = null;
+  await shopLoadEquipmentTemplates();
   shopRenderModal("Novo Produto", {
     code: "",
     name: "",
@@ -159,10 +161,11 @@ function shopShowCreateModal() {
   }, false);
 }
 
-function shopShowEditModal(code) {
+async function shopShowEditModal(code) {
   const product = shopState.products.find(p => p.code === code);
   if (!product) return;
   shopState.editing = code;
+  await shopLoadEquipmentTemplates();
   shopRenderModal("Editar Produto", product, true);
 }
 
@@ -218,9 +221,11 @@ function shopRenderModal(title, data, isEdit) {
             </div>
 
             <div id="shop-eqt-name-group" class="${data.productType === 'ITEM' ? 'hidden' : ''}">
-              <label class="text-sm text-slate-400">Equipment Template Name</label>
-              <input id="shop-eqt-name" class="input mt-1" value="${data.equipmentTemplateName || ""}"
-                placeholder="Ex: Iron Claw" />
+              <label class="text-sm text-slate-400">Equipment Template</label>
+              <select id="shop-eqt-name" class="input mt-1">
+                <option value="">-- Selecione --</option>
+                ${shopState.equipmentTemplates.map(t => `<option value="${t.name}" ${t.name === data.equipmentTemplateName ? 'selected' : ''}>${t.name} (${t.slot} | ${t.rarity})</option>`).join('')}
+              </select>
             </div>
 
             <div>
@@ -309,4 +314,13 @@ function shopFormatDate(dateStr) {
   if (!dateStr) return "-";
   const d = new Date(dateStr);
   return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+
+async function shopLoadEquipmentTemplates() {
+  try {
+    shopState.equipmentTemplates = await apiGet("/admin/equipment-templates", { activeOnly: "true" });
+  } catch (error) {
+    console.error("Erro ao carregar equipment templates:", error);
+    shopState.equipmentTemplates = [];
+  }
 }
