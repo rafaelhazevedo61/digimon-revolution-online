@@ -4,6 +4,8 @@ import com.dro.modules.equipment.domain.EquipmentRarity;
 import com.dro.modules.equipment.domain.EquipmentSlot;
 import com.dro.modules.equipment.domain.EquipmentTemplateEntity;
 
+import java.time.LocalDateTime;
+
 public record EquipmentTemplateResponse(
         String name,
         EquipmentSlot slot,
@@ -11,7 +13,11 @@ public record EquipmentTemplateResponse(
         int bonusHp,
         int bonusAttack,
         int bonusDefense,
-        boolean active
+        boolean active,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        String createdBy,
+        String updatedBy
 ) {
     public static EquipmentTemplateResponse from(EquipmentTemplateEntity entity) {
         return new EquipmentTemplateResponse(
@@ -21,7 +27,11 @@ public record EquipmentTemplateResponse(
                 entity.getBonusHp(),
                 entity.getBonusAttack(),
                 entity.getBonusDefense(),
-                entity.isActive()
+                entity.isActive(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt(),
+                entity.getCreatedBy(),
+                entity.getUpdatedBy()
         );
     }
 }

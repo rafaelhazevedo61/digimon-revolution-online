@@ -7,6 +7,8 @@ import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class ToggleEquipmentTemplateUseCase {
@@ -19,6 +21,8 @@ public class ToggleEquipmentTemplateUseCase {
                 .orElseThrow(() -> new NotFoundException("Equipment template not found: " + name));
 
         entity.setActive(!entity.isActive());
+        entity.setUpdatedAt(LocalDateTime.now());
+        entity.setUpdatedBy("admin");
 
         equipmentTemplateRepository.save(entity);
 

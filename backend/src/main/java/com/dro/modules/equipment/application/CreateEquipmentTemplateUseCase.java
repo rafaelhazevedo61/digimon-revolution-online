@@ -10,6 +10,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class CreateEquipmentTemplateUseCase {
@@ -23,6 +25,8 @@ public class CreateEquipmentTemplateUseCase {
             throw new ConflictException("Equipment template already exists: " + request.name());
         }
 
+        LocalDateTime now = LocalDateTime.now();
+
         EquipmentTemplateEntity entity = EquipmentTemplateEntity.builder()
                 .name(request.name())
                 .slot(request.slot())
@@ -30,6 +34,10 @@ public class CreateEquipmentTemplateUseCase {
                 .bonusHp(request.bonusHp())
                 .bonusAttack(request.bonusAttack())
                 .bonusDefense(request.bonusDefense())
+                .createdAt(now)
+                .updatedAt(now)
+                .createdBy("admin")
+                .updatedBy("admin")
                 .newEntity(true)
                 .build();
 

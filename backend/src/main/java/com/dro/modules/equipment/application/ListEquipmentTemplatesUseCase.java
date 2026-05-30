@@ -16,13 +16,13 @@ public class ListEquipmentTemplatesUseCase {
     public List<EquipmentTemplateResponse> execute(Boolean activeOnly) {
 
         if (Boolean.TRUE.equals(activeOnly)) {
-            return equipmentTemplateRepository.findByActiveTrue()
+            return equipmentTemplateRepository.findByActiveTrueOrderByNameAsc()
                     .stream()
                     .map(EquipmentTemplateResponse::from)
                     .toList();
         }
 
-        return equipmentTemplateRepository.findAll()
+        return equipmentTemplateRepository.findAllByOrderByNameAsc()
                 .stream()
                 .map(EquipmentTemplateResponse::from)
                 .toList();

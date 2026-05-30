@@ -9,5 +9,7 @@ import java.util.List;
 @Repository
 public interface EquipmentTemplateRepository extends JpaRepository<EquipmentTemplateEntity, String> {
 
-    List<EquipmentTemplateEntity> findByActiveTrue();
+    List<EquipmentTemplateEntity> findByActiveTrueOrderByNameAsc();
+
+    List<EquipmentTemplateEntity> findAllByOrderByNameAsc();
 }

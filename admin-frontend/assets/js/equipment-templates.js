@@ -77,6 +77,7 @@ function renderEquipmentTemplatesTable(templates) {
             <th>ATK</th>
             <th>DEF</th>
             <th>Status</th>
+            <th>Atualizado</th>
             <th>Ações</th>
           </tr>
         </thead>
@@ -103,6 +104,10 @@ function renderEqtRow(t) {
       <td>${t.bonusAttack > 0 ? `+${t.bonusAttack}` : "-"}</td>
       <td>${t.bonusDefense > 0 ? `+${t.bonusDefense}` : "-"}</td>
       <td><span class="badge ${statusClass}">${statusText}</span></td>
+      <td>
+        <div class="text-xs text-slate-400">${eqtFormatDate(t.updatedAt)}</div>
+        <div class="text-xs text-slate-500">por ${t.updatedBy || "-"}</div>
+      </td>
       <td>
         <div class="flex gap-2">
           <button class="btn-sm btn-secondary" onclick="eqtShowEditModal('${t.name.replace(/'/g, "\\'")}')">
@@ -255,4 +260,10 @@ function eqtSlotOptions(selected) {
 function eqtRarityOptions(selected) {
   const rarities = ["COMMON", "RARE", "EPIC", "LEGENDARY"];
   return rarities.map(r => `<option value="${r}" ${r === selected ? "selected" : ""}>${r}</option>`).join("");
+}
+
+function eqtFormatDate(dateStr) {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }

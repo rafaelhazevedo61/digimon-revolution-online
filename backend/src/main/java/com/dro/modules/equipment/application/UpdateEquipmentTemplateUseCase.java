@@ -8,6 +8,8 @@ import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class UpdateEquipmentTemplateUseCase {
@@ -24,6 +26,8 @@ public class UpdateEquipmentTemplateUseCase {
         entity.setBonusHp(request.bonusHp());
         entity.setBonusAttack(request.bonusAttack());
         entity.setBonusDefense(request.bonusDefense());
+        entity.setUpdatedAt(LocalDateTime.now());
+        entity.setUpdatedBy("admin");
 
         equipmentTemplateRepository.save(entity);
 
