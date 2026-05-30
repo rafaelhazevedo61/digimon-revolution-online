@@ -2,7 +2,9 @@ const shopState = {
   products: [],
   activeOnly: false,
   editing: null,
-  equipmentTemplates: []
+  equipmentTemplates: [],
+  itemDefinitions: [],
+  catalogTab: "items"
 };
 
 const PRODUCT_TYPES = ["ITEM", "EQUIPMENT"];
@@ -147,18 +149,9 @@ function shopToggleActiveFilter() {
 
 async function shopShowCreateModal() {
   shopState.editing = null;
-  await shopLoadEquipmentTemplates();
-  shopRenderModal("Novo Produto", {
-    code: "",
-    name: "",
-    description: "",
-    productType: "ITEM",
-    category: "CONSUMABLE",
-    itemType: "POTION_SMALL",
-    equipmentTemplateName: "",
-    price: 0,
-    sellPrice: 0
-  }, false);
+  shopState.catalogTab = "items";
+  await Promise.all([shopLoadEquipmentTemplates(), shopLoadItemDefinitions()]);
+  shopRenderCatalogBrowser();
 }
 
 async function shopShowEditModal(code) {
@@ -214,7 +207,7 @@ function shopRenderModal(title, data, isEdit) {
 
             <div id="shop-item-type-group" class="${data.productType === 'EQUIPMENT' ? 'hidden' : ''}">
               <label class="text-sm text-slate-400">Item Type</label>
-              <select id="shop-item-type" class="input mt-1" onchange="shopOnItemTypeChange()">
+              <select id="shop-item-type" class="input mt-1">
                 <option value="">-- Selecione --</option>
                 ${shopSelectOptions(ITEM_TYPES, data.itemType)}
               </select>
@@ -222,7 +215,7 @@ function shopRenderModal(title, data, isEdit) {
 
             <div id="shop-eqt-name-group" class="${data.productType === 'ITEM' ? 'hidden' : ''}">
               <label class="text-sm text-slate-400">Equipment Template</label>
-              <select id="shop-eqt-name" class="input mt-1" onchange="shopOnEquipmentTemplateChange()">
+              <select id="shop-eqt-name" class="input mt-1">
                 <option value="">-- Selecione --</option>
                 ${shopState.equipmentTemplates.map(t => `<option value="${t.name}" ${t.name === data.equipmentTemplateName ? 'selected' : ''}>${t.name} (${t.slot} | ${t.rarity})</option>`).join('')}
               </select>
@@ -255,37 +248,161 @@ function shopToggleTypeFields() {
   const type = document.getElementById("shop-product-type").value;
   document.getElementById("shop-item-type-group").classList.toggle("hidden", type === "EQUIPMENT");
   document.getElementById("shop-eqt-name-group").classList.toggle("hidden", type === "ITEM");
+}
 
-  if (!shopState.editing) {
-    if (type === "EQUIPMENT") {
-      document.getElementById("shop-category").value = "EQUIPMENT";
-    } else {
-      document.getElementById("shop-category").value = "CONSUMABLE";
-    }
+// --- Catalog Browser ---
+
+function shopRenderCatalogBrowser() {
+  const modal = document.getElementById("shop-modal");
+  const isItems = shopState.catalogTab === "items";
+
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="shopCloseModal()">
+      <div class="modal-content modal-catalog" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold">Selecionar Produto</h3>
+          <button class="text-slate-400 hover:text-white text-2xl" onclick="shopCloseModal()">&times;</button>
+        </div>
+
+        <p class="text-sm text-slate-400 mb-4">Escolha um item ou equipamento para adicionar à loja</p>
+
+        <div class="flex gap-2 mb-4">
+          <button class="catalog-tab ${isItems ? 'catalog-tab-active' : ''}" onclick="shopState.catalogTab='items'; shopRenderCatalogBrowser()">
+            Itens (${shopState.itemDefinitions.length})
+          </button>
+          <button class="catalog-tab ${!isItems ? 'catalog-tab-active' : ''}" onclick="shopState.catalogTab='equipments'; shopRenderCatalogBrowser()">
+            Equipamentos (${shopState.equipmentTemplates.length})
+          </button>
+        </div>
+
+        <div class="catalog-list">
+          ${isItems ? shopRenderItemCatalog() : shopRenderEquipmentCatalog()}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function shopRenderItemCatalog() {
+  if (shopState.itemDefinitions.length === 0) {
+    return '<p class="text-slate-500 text-sm">Nenhum item encontrado.</p>';
   }
+
+  const existingCodes = new Set(shopState.products.map(p => p.code));
+
+  return shopState.itemDefinitions.map(item => {
+    const alreadyInShop = existingCodes.has(item.code);
+    return `
+      <div class="catalog-card group">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-slate-100">${item.name}</span>
+              <span class="badge badge-${(item.rarity || 'common').toLowerCase()}">${item.rarity || 'COMMON'}</span>
+              ${alreadyInShop ? '<span class="badge badge-success text-xs">Na loja</span>' : ''}
+            </div>
+            <div class="text-xs text-slate-500 mt-1">${item.description || 'Sem descrição'}</div>
+            <div class="flex gap-3 mt-2 text-xs text-slate-400">
+              <span>Código: <span class="font-mono text-cyan-400">${item.code}</span></span>
+              <span>Categoria: ${item.category || '-'}</span>
+              ${item.buyPrice ? '<span>Compra: ' + item.buyPrice + ' bits</span>' : ''}
+              ${item.sellPrice ? '<span>Venda: ' + item.sellPrice + ' bits</span>' : ''}
+            </div>
+          </div>
+          <button class="btn-sm btn-primary whitespace-nowrap ${alreadyInShop ? 'opacity-50' : ''}"
+            onclick="shopAddFromItem(${item.id}, '${item.code.replace(/'/g, "\\'")}')">
+            + Adicionar
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
-function shopOnEquipmentTemplateChange() {
-  if (shopState.editing) return;
-  const select = document.getElementById("shop-eqt-name");
-  const templateName = select.value;
-  if (!templateName) return;
+function shopRenderEquipmentCatalog() {
+  if (shopState.equipmentTemplates.length === 0) {
+    return '<p class="text-slate-500 text-sm">Nenhum equipment template encontrado.</p>';
+  }
 
-  const code = templateName.toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/_+$/, "");
-  document.getElementById("shop-code").value = code;
-  document.getElementById("shop-name").value = templateName;
-  document.getElementById("shop-category").value = "EQUIPMENT";
+  const existingTemplates = new Set(shopState.products.filter(p => p.equipmentTemplateName).map(p => p.equipmentTemplateName));
+
+  return shopState.equipmentTemplates.map(t => {
+    const alreadyInShop = existingTemplates.has(t.name);
+    return `
+      <div class="catalog-card group">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-slate-100">${t.name}</span>
+              <span class="badge badge-${t.rarity.toLowerCase()}">${t.rarity}</span>
+              <span class="badge">${t.slot}</span>
+              ${alreadyInShop ? '<span class="badge badge-success text-xs">Na loja</span>' : ''}
+            </div>
+            <div class="flex gap-3 mt-2 text-xs text-slate-400">
+              ${t.bonusHp ? '<span>HP +' + t.bonusHp + '</span>' : ''}
+              ${t.bonusAttack ? '<span>ATK +' + t.bonusAttack + '</span>' : ''}
+              ${t.bonusDefense ? '<span>DEF +' + t.bonusDefense + '</span>' : ''}
+            </div>
+          </div>
+          <button class="btn-sm btn-primary whitespace-nowrap ${alreadyInShop ? 'opacity-50' : ''}"
+            onclick="shopAddFromTemplate('${t.name.replace(/'/g, "\\'")}')">
+            + Adicionar
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
-function shopOnItemTypeChange() {
-  if (shopState.editing) return;
-  const select = document.getElementById("shop-item-type");
-  const itemType = select.value;
-  if (!itemType) return;
+function shopAddFromItem(itemId, itemCode) {
+  const item = shopState.itemDefinitions.find(i => i.code === itemCode);
+  if (!item) return;
 
-  const name = itemType.split("_").map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(" ");
-  document.getElementById("shop-code").value = itemType;
-  document.getElementById("shop-name").value = name;
+  shopCloseModal();
+  shopState.editing = null;
+
+  const categoryMap = {
+    POTION: 'POTION', MATERIAL: 'MATERIAL', FRAGMENT: 'FRAGMENT',
+    CONSUMABLE: 'CONSUMABLE', EQUIPMENT: 'EQUIPMENT',
+    DIGITAMA: 'CONSUMABLE', INCUBATOR: 'CONSUMABLE', EVOLUTION_MATERIAL: 'MATERIAL'
+  };
+  const category = categoryMap[item.category] || 'CONSUMABLE';
+
+  const itemType = ITEM_TYPES.includes(item.code) ? item.code : 'EVOLUTION_MATERIAL';
+
+  shopRenderModal("Adicionar Item à Loja", {
+    code: item.code,
+    name: item.name,
+    description: item.description || '',
+    productType: 'ITEM',
+    category: category,
+    itemType: itemType,
+    equipmentTemplateName: '',
+    price: item.buyPrice || 0,
+    sellPrice: item.sellPrice || 0
+  }, false);
+}
+
+function shopAddFromTemplate(templateName) {
+  const template = shopState.equipmentTemplates.find(t => t.name === templateName);
+  if (!template) return;
+
+  shopCloseModal();
+  shopState.editing = null;
+
+  const code = templateName.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/_+$/, '');
+
+  shopRenderModal("Adicionar Equipamento à Loja", {
+    code: code,
+    name: templateName,
+    description: '',
+    productType: 'EQUIPMENT',
+    category: 'EQUIPMENT',
+    itemType: '',
+    equipmentTemplateName: templateName,
+    price: 0,
+    sellPrice: 0
+  }, false);
 }
 
 async function shopSubmitForm(event) {
@@ -353,5 +470,15 @@ async function shopLoadEquipmentTemplates() {
   } catch (error) {
     console.error("Erro ao carregar equipment templates:", error);
     shopState.equipmentTemplates = [];
+  }
+}
+
+async function shopLoadItemDefinitions() {
+  try {
+    const result = await apiGet("/items", { size: "100" });
+    shopState.itemDefinitions = result.items || [];
+  } catch (error) {
+    console.error("Erro ao carregar item definitions:", error);
+    shopState.itemDefinitions = [];
   }
 }
