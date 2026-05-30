@@ -1,3 +1,11 @@
+-- Produtos iniciais da loja
+-- product_type: ITEM (usa item_type) | EQUIPMENT (usa equipment_template_name)
+-- category:     POTION | MATERIAL | FRAGMENT | CONSUMABLE | EQUIPMENT
+-- item_type:    POTION_SMALL, TRAINING_STONE, DATA_CORE, DIGITAMA_STARTER, DIGITAMA_FIRE,
+--               DIGITAMA_WATER, DIGITAMA_NATURE, INCUBATOR_COMMON, INCUBATOR_RARE,
+--               INCUBATOR_EPIC, FRAGMENT_ROOKIE, FRAGMENT_CHAMPION, FRAGMENT_ULTIMATE,
+--               FRAGMENT_MEGA, EVOLUTION_MATERIAL
+
 INSERT INTO shop_products (code, name, description, product_type, category, item_type, equipment_template_name, price, sell_price) VALUES
 ('TRAINING_STONE',   'Training Stone',    'A basic item used to improve Digimon growth.',              'ITEM',      'CONSUMABLE', 'TRAINING_STONE',    NULL,            100,  25),
 ('DATA_CORE',        'Data Core',         'A material used in digital upgrades.',                      'ITEM',      'MATERIAL',   'DATA_CORE',         NULL,            150,  40),
