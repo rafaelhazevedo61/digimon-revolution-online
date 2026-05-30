@@ -2,7 +2,10 @@ package com.dro.modules.equipment.application;
 
 import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.domain.EquipmentTemplate;
+import com.dro.modules.equipment.domain.EquipmentTemplateMapper;
 import com.dro.modules.equipment.infra.EquipmentRepository;
+import com.dro.modules.equipment.infra.EquipmentTemplateRepository;
+import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +17,13 @@ import java.util.UUID;
 public class GrantEquipmentUseCase {
 
     private final EquipmentRepository equipmentRepository;
+    private final EquipmentTemplateRepository equipmentTemplateRepository;
 
     public UUID execute(UUID digimonId, String templateName) {
 
-        EquipmentTemplate template = EquipmentTemplate.findByName(templateName);
+        EquipmentTemplate template = equipmentTemplateRepository.findById(templateName)
+                .map(EquipmentTemplateMapper::toTemplate)
+                .orElseThrow(() -> new NotFoundException("Equipment template not found: " + templateName));
 
         Equipment equipment = Equipment.builder()
                 .id(UUID.randomUUID())
