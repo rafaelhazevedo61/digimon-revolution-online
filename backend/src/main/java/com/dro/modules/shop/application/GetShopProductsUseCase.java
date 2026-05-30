@@ -2,18 +2,24 @@ package com.dro.modules.shop.application;
 
 import com.dro.modules.shop.api.dto.response.ShopCatalogResponse;
 import com.dro.modules.shop.api.dto.response.ShopProductResponse;
-import com.dro.modules.shop.domain.ShopCatalog;
+import com.dro.modules.shop.domain.ShopProductMapper;
 import com.dro.modules.shop.domain.enums.ShopProductCategory;
+import com.dro.modules.shop.infra.ShopProductRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class GetShopProductsUseCase {
 
+    private final ShopProductRepository shopProductRepository;
+
     public ShopCatalogResponse execute() {
-        List<ShopProductResponse> products = ShopCatalog.getProducts()
+        List<ShopProductResponse> products = shopProductRepository.findByActiveTrue()
                 .stream()
+                .map(ShopProductMapper::toProduct)
                 .map(ShopProductResponse::from)
                 .toList();
 

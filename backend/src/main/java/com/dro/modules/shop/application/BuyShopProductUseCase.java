@@ -8,9 +8,10 @@ import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.shop.api.dto.BuyShopProductResponse;
 import com.dro.modules.shop.api.dto.request.BuyShopProductRequest;
-import com.dro.modules.shop.domain.ShopCatalog;
 import com.dro.modules.shop.domain.ShopProduct;
+import com.dro.modules.shop.domain.ShopProductMapper;
 import com.dro.modules.shop.domain.ShopProductType;
+import com.dro.modules.shop.infra.ShopProductRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnprocessableException;
@@ -29,6 +30,7 @@ public class BuyShopProductUseCase {
     private final DigimonRepository digimonRepository;
     private final AddItemUseCase addItemUseCase;
     private final GrantEquipmentUseCase grantEquipmentUseCase;
+    private final ShopProductRepository shopProductRepository;
 
     @Transactional
     public BuyShopProductResponse execute(String token, BuyShopProductRequest request) {
@@ -49,7 +51,9 @@ public class BuyShopProductUseCase {
             throw new BadRequestException("Active digimon does not belong to this player");
         }
 
-        ShopProduct product = ShopCatalog.findByCode(request.productCode());
+        ShopProduct product = shopProductRepository.findById(request.productCode())
+                .map(ShopProductMapper::toProduct)
+                .orElseThrow(() -> new NotFoundException("Shop product not found: " + request.productCode()));
 
         int quantity = request.quantity();
 
