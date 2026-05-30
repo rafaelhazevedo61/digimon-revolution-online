@@ -4,7 +4,11 @@ const shopState = {
   editing: null,
   equipmentTemplates: [],
   itemDefinitions: [],
-  catalogTab: "items"
+  catalogTab: "items",
+  catalogSearch: "",
+  catalogCategory: "",
+  catalogRarity: "",
+  catalogSelected: null
 };
 
 const PRODUCT_TYPES = ["ITEM", "EQUIPMENT"];
@@ -64,7 +68,7 @@ async function loadShopProducts() {
     container.innerHTML = `
       <div class="card border-red-900 bg-red-950/30">
         <h3 class="font-bold text-red-300 mb-2">Erro ao carregar produtos</h3>
-        <p class="text-red-200">${error.message}</p>
+        <p class="text-red-200">${shopEscapeHtml(error.message)}</p>
       </div>
     `;
   }
@@ -109,31 +113,32 @@ function renderShopRow(p) {
   const statusClass = p.active ? "badge-success" : "badge-danger";
   const statusText = p.active ? "Ativo" : "Inativo";
   const ref = p.productType === "EQUIPMENT" ? p.equipmentTemplateName : (p.itemType || "-");
+  const codeArg = shopJsString(p.code);
 
   return `
     <tr>
-      <td><span class="font-mono text-cyan-300">${p.code}</span></td>
+      <td><span class="font-mono text-cyan-300">${shopEscapeHtml(p.code)}</span></td>
       <td>
-        <div class="font-semibold">${p.name}</div>
-        ${p.description ? `<div class="text-xs text-slate-500 line-clamp-1">${p.description}</div>` : ""}
+        <div class="font-semibold">${shopEscapeHtml(p.name)}</div>
+        ${p.description ? `<div class="text-xs text-slate-500 line-clamp-1">${shopEscapeHtml(p.description)}</div>` : ""}
       </td>
-      <td><span class="badge">${p.productType}</span></td>
-      <td><span class="badge">${p.category}</span></td>
-      <td><span class="text-sm text-slate-300">${ref}</span></td>
-      <td>${p.price} bits</td>
-      <td>${p.sellPrice} bits</td>
+      <td><span class="badge">${shopEscapeHtml(p.productType)}</span></td>
+      <td><span class="badge">${shopEscapeHtml(p.category)}</span></td>
+      <td><span class="text-sm text-slate-300">${shopEscapeHtml(ref)}</span></td>
+      <td>${shopFormatBits(p.price)}</td>
+      <td>${shopFormatBits(p.sellPrice)}</td>
       <td><span class="badge ${statusClass}">${statusText}</span></td>
       <td>
         <div class="text-xs text-slate-400">${shopFormatDate(p.updatedAt)}</div>
-        <div class="text-xs text-slate-500">por ${p.updatedBy || "-"}</div>
+        <div class="text-xs text-slate-500">por ${shopEscapeHtml(p.updatedBy || "-")}</div>
       </td>
       <td>
         <div class="flex gap-2">
-          <button class="btn-sm btn-secondary" onclick="shopShowEditModal('${p.code.replace(/'/g, "\\'")}')">
+          <button class="btn-sm btn-secondary" onclick="shopShowEditModal(${codeArg})">
             Editar
           </button>
           <button class="btn-sm ${p.active ? 'btn-warning' : 'btn-success-outline'}"
-            onclick="shopToggleActive('${p.code.replace(/'/g, "\\'")}')">
+            onclick="shopToggleActive(${codeArg})">
             ${p.active ? "Desativar" : "Ativar"}
           </button>
         </div>
@@ -150,6 +155,12 @@ function shopToggleActiveFilter() {
 async function shopShowCreateModal() {
   shopState.editing = null;
   shopState.catalogTab = "items";
+  shopState.catalogSearch = "";
+  shopState.catalogCategory = "";
+  shopState.catalogRarity = "";
+  shopState.catalogSelected = null;
+
+  shopRenderCatalogLoading();
   await Promise.all([shopLoadEquipmentTemplates(), shopLoadItemDefinitions()]);
   shopRenderCatalogBrowser();
 }
@@ -162,80 +173,104 @@ async function shopShowEditModal(code) {
   shopRenderModal("Editar Produto", product, true);
 }
 
+function shopRenderCatalogLoading() {
+  const modal = document.getElementById("shop-modal");
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="shopCloseModal()">
+      <div class="modal-content modal-catalog" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold">Selecionar Produto</h3>
+          <button class="text-slate-400 hover:text-white text-2xl" onclick="shopCloseModal()">&times;</button>
+        </div>
+        <p class="text-slate-400">Carregando catálogo...</p>
+      </div>
+    </div>
+  `;
+}
+
 function shopRenderModal(title, data, isEdit) {
   const modal = document.getElementById("shop-modal");
+  const readonlyCatalogFields = !isEdit;
+  const selectedDetails = data._catalogSource ? shopRenderSelectedCatalogSummary(data._catalogSource) : "";
 
   modal.innerHTML = `
     <div class="modal-overlay" onclick="shopCloseModal()">
       <div class="modal-content" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between mb-6">
-          <h3 class="text-xl font-bold">${title}</h3>
+          <div>
+            <h3 class="text-xl font-bold">${shopEscapeHtml(title)}</h3>
+            ${!isEdit ? '<p class="text-sm text-slate-400 mt-1">Confira os dados preenchidos e informe apenas os preços da loja.</p>' : ''}
+          </div>
           <button class="text-slate-400 hover:text-white text-2xl" onclick="shopCloseModal()">&times;</button>
         </div>
+
+        ${selectedDetails}
 
         <form id="shop-form" onsubmit="shopSubmitForm(event)">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="text-sm text-slate-400">Código</label>
-              <input id="shop-code" class="input mt-1" value="${data.code}"
-                ${isEdit ? "disabled" : ""} required />
+              <input id="shop-code" class="input mt-1" value="${shopEscapeAttr(data.code)}"
+                ${isEdit ? "disabled" : "readonly"} required />
             </div>
 
             <div>
               <label class="text-sm text-slate-400">Nome</label>
-              <input id="shop-name" class="input mt-1" value="${data.name}" required />
+              <input id="shop-name" class="input mt-1" value="${shopEscapeAttr(data.name)}" ${readonlyCatalogFields ? "readonly" : ""} required />
             </div>
 
             <div class="md:col-span-2">
               <label class="text-sm text-slate-400">Descrição</label>
-              <input id="shop-description" class="input mt-1" value="${data.description || ""}" />
+              <input id="shop-description" class="input mt-1" value="${shopEscapeAttr(data.description || "")}" ${readonlyCatalogFields ? "readonly" : ""} />
             </div>
 
             <div>
               <label class="text-sm text-slate-400">Tipo do Produto</label>
-              <select id="shop-product-type" class="input mt-1" onchange="shopToggleTypeFields()">
+              <select id="shop-product-type" class="input mt-1" onchange="shopToggleTypeFields()" ${readonlyCatalogFields ? "disabled" : ""}>
                 ${shopSelectOptions(PRODUCT_TYPES, data.productType)}
               </select>
             </div>
 
             <div>
               <label class="text-sm text-slate-400">Categoria</label>
-              <select id="shop-category" class="input mt-1">
+              <select id="shop-category" class="input mt-1" ${readonlyCatalogFields ? "disabled" : ""}>
                 ${shopSelectOptions(PRODUCT_CATEGORIES, data.category)}
               </select>
             </div>
 
             <div id="shop-item-type-group" class="${data.productType === 'EQUIPMENT' ? 'hidden' : ''}">
               <label class="text-sm text-slate-400">Item Type</label>
-              <select id="shop-item-type" class="input mt-1">
+              <select id="shop-item-type" class="input mt-1" ${readonlyCatalogFields ? "disabled" : ""}>
                 <option value="">-- Selecione --</option>
                 ${shopSelectOptions(ITEM_TYPES, data.itemType)}
               </select>
+              ${data._materialCode ? `<p class="text-xs text-amber-300 mt-1">Material específico detectado: ${shopEscapeHtml(data._materialCode)}. A compra ainda usa itemType EVOLUTION_MATERIAL no backend atual.</p>` : ""}
             </div>
 
             <div id="shop-eqt-name-group" class="${data.productType === 'ITEM' ? 'hidden' : ''}">
               <label class="text-sm text-slate-400">Equipment Template</label>
-              <select id="shop-eqt-name" class="input mt-1">
+              <select id="shop-eqt-name" class="input mt-1" ${readonlyCatalogFields ? "disabled" : ""}>
                 <option value="">-- Selecione --</option>
-                ${shopState.equipmentTemplates.map(t => `<option value="${t.name}" ${t.name === data.equipmentTemplateName ? 'selected' : ''}>${t.name} (${t.slot} | ${t.rarity})</option>`).join('')}
+                ${shopState.equipmentTemplates.map(t => `<option value="${shopEscapeAttr(t.name)}" ${t.name === data.equipmentTemplateName ? 'selected' : ''}>${shopEscapeHtml(t.name)} (${shopEscapeHtml(t.slot)} | ${shopEscapeHtml(t.rarity)})</option>`).join('')}
               </select>
             </div>
 
             <div>
               <label class="text-sm text-slate-400">Preço de Compra (bits)</label>
-              <input id="shop-price" type="number" min="0" class="input mt-1" value="${data.price}" required />
+              <input id="shop-price" type="number" min="0" class="input mt-1" value="${Number(data.price || 0)}" required autofocus />
             </div>
 
             <div>
               <label class="text-sm text-slate-400">Preço de Venda (bits)</label>
-              <input id="shop-sell-price" type="number" min="0" class="input mt-1" value="${data.sellPrice}" required />
+              <input id="shop-sell-price" type="number" min="0" class="input mt-1" value="${Number(data.sellPrice || 0)}" required />
             </div>
           </div>
 
           <div id="shop-form-error" class="hidden mt-4 p-3 rounded-lg bg-red-950/30 border border-red-900 text-red-200 text-sm"></div>
 
           <div class="flex gap-3 mt-6">
-            <button type="submit" class="btn-primary flex-1">${isEdit ? "Salvar" : "Criar"}</button>
+            ${!isEdit ? '<button type="button" class="btn-secondary" onclick="shopRenderCatalogBrowser()">Voltar ao catálogo</button>' : ''}
+            <button type="submit" class="btn-primary flex-1">${isEdit ? "Salvar" : "Adicionar à Loja"}</button>
             <button type="button" class="btn-secondary flex-1" onclick="shopCloseModal()">Cancelar</button>
           </div>
         </form>
@@ -255,131 +290,297 @@ function shopToggleTypeFields() {
 function shopRenderCatalogBrowser() {
   const modal = document.getElementById("shop-modal");
   const isItems = shopState.catalogTab === "items";
+  const catalog = isItems ? shopFilteredItems() : shopFilteredEquipmentTemplates();
+  const categories = isItems ? shopUniqueValues(shopState.itemDefinitions, "category") : shopUniqueValues(shopState.equipmentTemplates, "slot");
+  const rarities = isItems ? shopUniqueValues(shopState.itemDefinitions, "rarity") : shopUniqueValues(shopState.equipmentTemplates, "rarity");
 
   modal.innerHTML = `
     <div class="modal-overlay" onclick="shopCloseModal()">
       <div class="modal-content modal-catalog" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-bold">Selecionar Produto</h3>
+          <div>
+            <h3 class="text-xl font-bold">Selecionar Produto</h3>
+            <p class="text-sm text-slate-400 mt-1">Escolha um item ou equipamento já cadastrado para adicionar à loja.</p>
+          </div>
           <button class="text-slate-400 hover:text-white text-2xl" onclick="shopCloseModal()">&times;</button>
         </div>
 
-        <p class="text-sm text-slate-400 mb-4">Escolha um item ou equipamento para adicionar à loja</p>
-
         <div class="flex gap-2 mb-4">
-          <button class="catalog-tab ${isItems ? 'catalog-tab-active' : ''}" onclick="shopState.catalogTab='items'; shopRenderCatalogBrowser()">
+          <button class="catalog-tab ${isItems ? 'catalog-tab-active' : ''}" onclick="shopSetCatalogTab('items')">
             Itens (${shopState.itemDefinitions.length})
           </button>
-          <button class="catalog-tab ${!isItems ? 'catalog-tab-active' : ''}" onclick="shopState.catalogTab='equipments'; shopRenderCatalogBrowser()">
+          <button class="catalog-tab ${!isItems ? 'catalog-tab-active' : ''}" onclick="shopSetCatalogTab('equipments')">
             Equipamentos (${shopState.equipmentTemplates.length})
           </button>
         </div>
 
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <div class="md:col-span-1">
+            <label class="text-xs text-slate-500">Buscar</label>
+            <input id="shop-catalog-search" class="input mt-1" value="${shopEscapeAttr(shopState.catalogSearch)}"
+              placeholder="Nome, código ou descrição" oninput="shopUpdateCatalogFilters()" />
+          </div>
+          <div>
+            <label class="text-xs text-slate-500">${isItems ? 'Categoria' : 'Slot'}</label>
+            <select id="shop-catalog-category" class="input mt-1" onchange="shopUpdateCatalogFilters()">
+              <option value="">Todos</option>
+              ${categories.map(v => `<option value="${shopEscapeAttr(v)}" ${shopState.catalogCategory === v ? 'selected' : ''}>${shopEscapeHtml(v)}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-500">Raridade</label>
+            <select id="shop-catalog-rarity" class="input mt-1" onchange="shopUpdateCatalogFilters()">
+              <option value="">Todas</option>
+              ${rarities.map(v => `<option value="${shopEscapeAttr(v)}" ${shopState.catalogRarity === v ? 'selected' : ''}>${shopEscapeHtml(v)}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-sm text-slate-400">Exibindo ${catalog.length} resultado(s)</p>
+          <button class="btn-sm btn-secondary" onclick="shopClearCatalogFilters()">Limpar filtros</button>
+        </div>
+
         <div class="catalog-list">
-          ${isItems ? shopRenderItemCatalog() : shopRenderEquipmentCatalog()}
+          ${catalog.length === 0 ? '<p class="text-slate-500 text-sm">Nenhum resultado encontrado.</p>' : (isItems ? shopRenderItemCatalog(catalog) : shopRenderEquipmentCatalog(catalog))}
         </div>
       </div>
     </div>
   `;
 }
 
-function shopRenderItemCatalog() {
-  if (shopState.itemDefinitions.length === 0) {
-    return '<p class="text-slate-500 text-sm">Nenhum item encontrado.</p>';
-  }
+function shopSetCatalogTab(tab) {
+  shopState.catalogTab = tab;
+  shopState.catalogSearch = "";
+  shopState.catalogCategory = "";
+  shopState.catalogRarity = "";
+  shopState.catalogSelected = null;
+  shopRenderCatalogBrowser();
+}
 
-  const existingCodes = new Set(shopState.products.map(p => p.code));
+function shopUpdateCatalogFilters() {
+  shopState.catalogSearch = document.getElementById("shop-catalog-search").value;
+  shopState.catalogCategory = document.getElementById("shop-catalog-category").value;
+  shopState.catalogRarity = document.getElementById("shop-catalog-rarity").value;
+  shopRenderCatalogBrowser();
+}
 
-  return shopState.itemDefinitions.map(item => {
-    const alreadyInShop = existingCodes.has(item.code);
+function shopClearCatalogFilters() {
+  shopState.catalogSearch = "";
+  shopState.catalogCategory = "";
+  shopState.catalogRarity = "";
+  shopRenderCatalogBrowser();
+}
+
+function shopFilteredItems() {
+  const term = shopNormalize(shopState.catalogSearch);
+  return shopState.itemDefinitions.filter(item => {
+    const matchesTerm = !term || [item.name, item.code, item.description, item.category, item.rarity]
+      .some(value => shopNormalize(value).includes(term));
+    const matchesCategory = !shopState.catalogCategory || item.category === shopState.catalogCategory;
+    const matchesRarity = !shopState.catalogRarity || item.rarity === shopState.catalogRarity;
+    return matchesTerm && matchesCategory && matchesRarity;
+  });
+}
+
+function shopFilteredEquipmentTemplates() {
+  const term = shopNormalize(shopState.catalogSearch);
+  return shopState.equipmentTemplates.filter(t => {
+    const matchesTerm = !term || [t.name, t.slot, t.rarity, `HP ${t.bonusHp}`, `ATK ${t.bonusAttack}`, `DEF ${t.bonusDefense}`]
+      .some(value => shopNormalize(value).includes(term));
+    const matchesCategory = !shopState.catalogCategory || t.slot === shopState.catalogCategory;
+    const matchesRarity = !shopState.catalogRarity || t.rarity === shopState.catalogRarity;
+    return matchesTerm && matchesCategory && matchesRarity;
+  });
+}
+
+function shopRenderItemCatalog(items) {
+  const existingRefs = new Set();
+  shopState.products
+    .filter(p => p.productType === "ITEM")
+    .forEach(p => {
+      existingRefs.add(p.code);
+      if (p.code && p.code.startsWith("SHOP_")) {
+        existingRefs.add(p.code.substring(5));
+      }
+      if (p.itemType && p.itemType !== "EVOLUTION_MATERIAL") {
+        existingRefs.add(p.itemType);
+      }
+    });
+
+  return items.map(item => {
+    const alreadyInShop = existingRefs.has(item.code);
+    const itemArg = shopJsString(item.code);
+    const buy = item.buyPrice ?? 0;
+    const sell = item.sellPrice ?? 0;
+
     return `
       <div class="catalog-card group">
-        <div class="flex items-start justify-between gap-3">
+        <div class="flex flex-col md:flex-row md:items-start justify-between gap-3">
           <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2">
-              <span class="font-semibold text-slate-100">${item.name}</span>
-              <span class="badge badge-${(item.rarity || 'common').toLowerCase()}">${item.rarity || 'COMMON'}</span>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-semibold text-slate-100">${shopEscapeHtml(item.name)}</span>
+              <span class="badge badge-${shopBadgeSuffix(item.rarity || 'common')}">${shopEscapeHtml(item.rarity || 'COMMON')}</span>
+              <span class="badge">${shopEscapeHtml(item.category || '-')}</span>
               ${alreadyInShop ? '<span class="badge badge-success text-xs">Na loja</span>' : ''}
             </div>
-            <div class="text-xs text-slate-500 mt-1">${item.description || 'Sem descrição'}</div>
-            <div class="flex gap-3 mt-2 text-xs text-slate-400">
-              <span>Código: <span class="font-mono text-cyan-400">${item.code}</span></span>
-              <span>Categoria: ${item.category || '-'}</span>
-              ${item.buyPrice ? '<span>Compra: ' + item.buyPrice + ' bits</span>' : ''}
-              ${item.sellPrice ? '<span>Venda: ' + item.sellPrice + ' bits</span>' : ''}
+            <div class="text-xs text-slate-500 mt-1 line-clamp-2">${shopEscapeHtml(item.description || 'Sem descrição')}</div>
+            <div class="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-slate-400">
+              <span>Código: <span class="font-mono text-cyan-400">${shopEscapeHtml(item.code)}</span></span>
+              <span>Compra sugerida: ${shopFormatBits(buy)}</span>
+              <span>Venda sugerida: ${shopFormatBits(sell)}</span>
+              ${item.stackable ? `<span>Stack: ${shopEscapeHtml(item.maxStack ?? '-')}</span>` : '<span>Não stacka</span>'}
             </div>
           </div>
-          <button class="btn-sm btn-primary whitespace-nowrap ${alreadyInShop ? 'opacity-50' : ''}"
-            onclick="shopAddFromItem(${item.id}, '${item.code.replace(/'/g, "\\'")}')">
-            + Adicionar
-          </button>
+          <div class="flex gap-2 md:flex-col md:items-stretch">
+            <button class="btn-sm btn-secondary whitespace-nowrap" onclick="shopShowItemDetails(${itemArg})">Detalhes</button>
+            <button class="btn-sm btn-primary whitespace-nowrap ${alreadyInShop ? 'opacity-50 cursor-not-allowed' : ''}"
+              ${alreadyInShop ? 'disabled' : ''} onclick="shopAddFromItem(${itemArg})">
+              + Adicionar
+            </button>
+          </div>
         </div>
       </div>
     `;
   }).join('');
 }
 
-function shopRenderEquipmentCatalog() {
-  if (shopState.equipmentTemplates.length === 0) {
-    return '<p class="text-slate-500 text-sm">Nenhum equipment template encontrado.</p>';
-  }
-
+function shopRenderEquipmentCatalog(templates) {
   const existingTemplates = new Set(shopState.products.filter(p => p.equipmentTemplateName).map(p => p.equipmentTemplateName));
 
-  return shopState.equipmentTemplates.map(t => {
+  return templates.map(t => {
     const alreadyInShop = existingTemplates.has(t.name);
+    const templateArg = shopJsString(t.name);
+    const suggestedPrice = shopSuggestedEquipmentPrice(t);
+    const suggestedSellPrice = Math.floor(suggestedPrice * 0.25);
+
     return `
       <div class="catalog-card group">
-        <div class="flex items-start justify-between gap-3">
+        <div class="flex flex-col md:flex-row md:items-start justify-between gap-3">
           <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2">
-              <span class="font-semibold text-slate-100">${t.name}</span>
-              <span class="badge badge-${t.rarity.toLowerCase()}">${t.rarity}</span>
-              <span class="badge">${t.slot}</span>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-semibold text-slate-100">${shopEscapeHtml(t.name)}</span>
+              <span class="badge badge-${shopBadgeSuffix(t.rarity)}">${shopEscapeHtml(t.rarity)}</span>
+              <span class="badge">${shopEscapeHtml(t.slot)}</span>
               ${alreadyInShop ? '<span class="badge badge-success text-xs">Na loja</span>' : ''}
             </div>
-            <div class="flex gap-3 mt-2 text-xs text-slate-400">
-              ${t.bonusHp ? '<span>HP +' + t.bonusHp + '</span>' : ''}
-              ${t.bonusAttack ? '<span>ATK +' + t.bonusAttack + '</span>' : ''}
-              ${t.bonusDefense ? '<span>DEF +' + t.bonusDefense + '</span>' : ''}
+            <div class="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-slate-400">
+              ${shopStatBadge('HP', t.bonusHp)}
+              ${shopStatBadge('ATK', t.bonusAttack)}
+              ${shopStatBadge('DEF', t.bonusDefense)}
+              <span>Compra sugerida: ${shopFormatBits(suggestedPrice)}</span>
+              <span>Venda sugerida: ${shopFormatBits(suggestedSellPrice)}</span>
             </div>
           </div>
-          <button class="btn-sm btn-primary whitespace-nowrap ${alreadyInShop ? 'opacity-50' : ''}"
-            onclick="shopAddFromTemplate('${t.name.replace(/'/g, "\\'")}')">
-            + Adicionar
-          </button>
+          <div class="flex gap-2 md:flex-col md:items-stretch">
+            <button class="btn-sm btn-secondary whitespace-nowrap" onclick="shopShowTemplateDetails(${templateArg})">Detalhes</button>
+            <button class="btn-sm btn-primary whitespace-nowrap ${alreadyInShop ? 'opacity-50 cursor-not-allowed' : ''}"
+              ${alreadyInShop ? 'disabled' : ''} onclick="shopAddFromTemplate(${templateArg})">
+              + Adicionar
+            </button>
+          </div>
         </div>
       </div>
     `;
   }).join('');
 }
 
-function shopAddFromItem(itemId, itemCode) {
+function shopShowItemDetails(itemCode) {
   const item = shopState.itemDefinitions.find(i => i.code === itemCode);
   if (!item) return;
 
-  shopCloseModal();
+  const content = `
+    <div class="catalog-card border-cyan-900 bg-cyan-950/20 mb-4">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h4 class="font-bold text-cyan-200">${shopEscapeHtml(item.name)}</h4>
+          <p class="text-sm text-slate-400 mt-1">${shopEscapeHtml(item.description || 'Sem descrição')}</p>
+        </div>
+        <button class="text-slate-400 hover:text-white" onclick="shopRenderCatalogBrowser()">&times;</button>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4 text-xs">
+        ${shopDetailCell('Código', item.code)}
+        ${shopDetailCell('Categoria', item.category || '-')}
+        ${shopDetailCell('Raridade', item.rarity || '-')}
+        ${shopDetailCell('Stack', item.stackable ? `Sim (${item.maxStack ?? '-'})` : 'Não')}
+        ${shopDetailCell('Usável', item.usable ? 'Sim' : 'Não')}
+        ${shopDetailCell('Vendável', item.sellable ? 'Sim' : 'Não')}
+        ${shopDetailCell('Trocável', item.tradable ? 'Sim' : 'Não')}
+        ${shopDetailCell('Ícone', item.icon || '-')}
+      </div>
+    </div>
+  `;
+
+  shopInsertCatalogDetails(content);
+}
+
+function shopShowTemplateDetails(templateName) {
+  const t = shopState.equipmentTemplates.find(e => e.name === templateName);
+  if (!t) return;
+
+  const content = `
+    <div class="catalog-card border-cyan-900 bg-cyan-950/20 mb-4">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h4 class="font-bold text-cyan-200">${shopEscapeHtml(t.name)}</h4>
+          <p class="text-sm text-slate-400 mt-1">Template de equipamento ${shopEscapeHtml(t.slot)} ${shopEscapeHtml(t.rarity)}.</p>
+        </div>
+        <button class="text-slate-400 hover:text-white" onclick="shopRenderCatalogBrowser()">&times;</button>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4 text-xs">
+        ${shopDetailCell('Slot', t.slot)}
+        ${shopDetailCell('Raridade', t.rarity)}
+        ${shopDetailCell('HP', shopSignedStat(t.bonusHp))}
+        ${shopDetailCell('ATK', shopSignedStat(t.bonusAttack))}
+        ${shopDetailCell('DEF', shopSignedStat(t.bonusDefense))}
+        ${shopDetailCell('Status', t.active ? 'Ativo' : 'Inativo')}
+        ${shopDetailCell('Atualizado', shopFormatDate(t.updatedAt))}
+        ${shopDetailCell('Por', t.updatedBy || '-')}
+      </div>
+    </div>
+  `;
+
+  shopInsertCatalogDetails(content);
+}
+
+function shopInsertCatalogDetails(content) {
+  const list = document.querySelector(".catalog-list");
+  if (!list) return;
+  const current = document.getElementById("shop-catalog-details");
+  if (current) current.remove();
+  const wrapper = document.createElement("div");
+  wrapper.id = "shop-catalog-details";
+  wrapper.innerHTML = content;
+  list.prepend(wrapper);
+}
+
+function shopAddFromItem(itemCode) {
+  const item = shopState.itemDefinitions.find(i => i.code === itemCode);
+  if (!item) return;
+
   shopState.editing = null;
 
-  const categoryMap = {
-    POTION: 'POTION', MATERIAL: 'MATERIAL', FRAGMENT: 'FRAGMENT',
-    CONSUMABLE: 'CONSUMABLE', EQUIPMENT: 'EQUIPMENT',
-    DIGITAMA: 'CONSUMABLE', INCUBATOR: 'CONSUMABLE', EVOLUTION_MATERIAL: 'MATERIAL'
-  };
-  const category = categoryMap[item.category] || 'CONSUMABLE';
-
+  const category = shopMapItemCategoryToShopCategory(item.category);
   const itemType = ITEM_TYPES.includes(item.code) ? item.code : 'EVOLUTION_MATERIAL';
+  const materialCode = itemType === 'EVOLUTION_MATERIAL' && item.code !== 'EVOLUTION_MATERIAL' ? item.code : null;
 
   shopRenderModal("Adicionar Item à Loja", {
-    code: item.code,
+    code: shopBuildProductCode(item.code),
     name: item.name,
     description: item.description || '',
     productType: 'ITEM',
     category: category,
     itemType: itemType,
     equipmentTemplateName: '',
-    price: item.buyPrice || 0,
-    sellPrice: item.sellPrice || 0
+    price: item.buyPrice ?? 0,
+    sellPrice: item.sellPrice ?? 0,
+    _materialCode: materialCode,
+    _catalogSource: {
+      type: 'ITEM',
+      title: item.name,
+      subtitle: item.code,
+      badges: [item.category, item.rarity, item.stackable ? `Stack ${item.maxStack ?? '-'}` : 'Não stacka'].filter(Boolean)
+    }
   }, false);
 }
 
@@ -387,21 +588,25 @@ function shopAddFromTemplate(templateName) {
   const template = shopState.equipmentTemplates.find(t => t.name === templateName);
   if (!template) return;
 
-  shopCloseModal();
   shopState.editing = null;
-
-  const code = templateName.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/_+$/, '');
+  const suggestedPrice = shopSuggestedEquipmentPrice(template);
 
   shopRenderModal("Adicionar Equipamento à Loja", {
-    code: code,
-    name: templateName,
-    description: '',
+    code: shopBuildProductCode(template.name),
+    name: template.name,
+    description: shopBuildEquipmentDescription(template),
     productType: 'EQUIPMENT',
     category: 'EQUIPMENT',
     itemType: '',
-    equipmentTemplateName: templateName,
-    price: 0,
-    sellPrice: 0
+    equipmentTemplateName: template.name,
+    price: suggestedPrice,
+    sellPrice: Math.floor(suggestedPrice * 0.25),
+    _catalogSource: {
+      type: 'EQUIPMENT',
+      title: template.name,
+      subtitle: `${template.slot} | ${template.rarity}`,
+      badges: [shopSignedStat(template.bonusHp, 'HP'), shopSignedStat(template.bonusAttack, 'ATK'), shopSignedStat(template.bonusDefense, 'DEF')].filter(Boolean)
+    }
   }, false);
 }
 
@@ -424,6 +629,16 @@ async function shopSubmitForm(event) {
     sellPrice: Number(document.getElementById("shop-sell-price").value)
   };
 
+  if (Number.isNaN(body.price) || body.price < 0) {
+    shopShowFormError(errorDiv, "Preço de compra deve ser maior ou igual a zero.");
+    return;
+  }
+
+  if (Number.isNaN(body.sellPrice) || body.sellPrice < 0) {
+    shopShowFormError(errorDiv, "Preço de venda deve ser maior ou igual a zero.");
+    return;
+  }
+
   try {
     if (shopState.editing) {
       await apiPut(`/admin/shop-products/${encodeURIComponent(shopState.editing)}`, body);
@@ -436,8 +651,7 @@ async function shopSubmitForm(event) {
     shopCloseModal();
     loadShopProducts();
   } catch (error) {
-    errorDiv.textContent = error.message;
-    errorDiv.classList.remove("hidden");
+    shopShowFormError(errorDiv, error.message);
   }
 }
 
@@ -455,7 +669,7 @@ function shopCloseModal() {
 }
 
 function shopSelectOptions(options, selected) {
-  return options.map(o => `<option value="${o}" ${o === selected ? "selected" : ""}>${o}</option>`).join("");
+  return options.map(o => `<option value="${shopEscapeAttr(o)}" ${o === selected ? "selected" : ""}>${shopEscapeHtml(o)}</option>`).join("");
 }
 
 function shopFormatDate(dateStr) {
@@ -475,10 +689,145 @@ async function shopLoadEquipmentTemplates() {
 
 async function shopLoadItemDefinitions() {
   try {
-    const result = await apiGet("/items", { size: "100" });
-    shopState.itemDefinitions = result.items || [];
+    const firstPage = await apiGet("/items", { size: "100", page: "0" });
+    const allItems = [...(firstPage.items || [])];
+    const totalPages = firstPage.totalPages || 1;
+
+    for (let page = 1; page < totalPages; page++) {
+      const result = await apiGet("/items", { size: "100", page: String(page) });
+      allItems.push(...(result.items || []));
+    }
+
+    shopState.itemDefinitions = allItems;
   } catch (error) {
     console.error("Erro ao carregar item definitions:", error);
     shopState.itemDefinitions = [];
   }
+}
+
+function shopMapItemCategoryToShopCategory(category) {
+  const normalized = String(category || '').toUpperCase();
+  const categoryMap = {
+    POTION: 'POTION',
+    MATERIAL: 'MATERIAL',
+    FRAGMENT: 'FRAGMENT',
+    CONSUMABLE: 'CONSUMABLE',
+    EQUIPMENT: 'EQUIPMENT',
+    DIGITAMA: 'CONSUMABLE',
+    INCUBATOR: 'CONSUMABLE',
+    EVOLUTION_MATERIAL: 'MATERIAL'
+  };
+  return categoryMap[normalized] || 'CONSUMABLE';
+}
+
+function shopBuildProductCode(source) {
+  const normalized = String(source || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  if (!normalized) return 'SHOP_PRODUCT';
+  return normalized.startsWith('SHOP_') ? normalized : `SHOP_${normalized}`;
+}
+
+function shopSuggestedEquipmentPrice(template) {
+  const rarityMultiplier = {
+    COMMON: 1,
+    RARE: 2,
+    EPIC: 4,
+    LEGENDARY: 8
+  }[template.rarity] || 1;
+
+  const statTotal = Number(template.bonusHp || 0) + Number(template.bonusAttack || 0) + Number(template.bonusDefense || 0);
+  return Math.max(100, statTotal * 20 * rarityMultiplier);
+}
+
+function shopBuildEquipmentDescription(template) {
+  const stats = [
+    shopSignedStat(template.bonusHp, 'HP'),
+    shopSignedStat(template.bonusAttack, 'ATK'),
+    shopSignedStat(template.bonusDefense, 'DEF')
+  ].filter(Boolean).join(', ');
+  return `${template.rarity} ${template.slot}${stats ? ` (${stats})` : ''}`;
+}
+
+function shopRenderSelectedCatalogSummary(source) {
+  return `
+    <div class="catalog-card border-cyan-900 bg-cyan-950/20 mb-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <div class="text-xs text-cyan-300 uppercase tracking-wide">Origem: ${shopEscapeHtml(source.type)}</div>
+          <div class="font-bold text-slate-100 mt-1">${shopEscapeHtml(source.title)}</div>
+          <div class="text-xs text-slate-500 mt-1">${shopEscapeHtml(source.subtitle || '')}</div>
+        </div>
+        <div class="flex flex-wrap justify-end gap-1">
+          ${(source.badges || []).map(b => `<span class="badge">${shopEscapeHtml(b)}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function shopUniqueValues(items, key) {
+  return [...new Set(items.map(item => item[key]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
+}
+
+function shopDetailCell(label, value) {
+  return `
+    <div class="bg-slate-950/60 rounded-lg p-2 border border-slate-800">
+      <div class="text-slate-500">${shopEscapeHtml(label)}</div>
+      <div class="text-slate-200 font-semibold mt-1 break-words">${shopEscapeHtml(value)}</div>
+    </div>
+  `;
+}
+
+function shopStatBadge(label, value) {
+  const number = Number(value || 0);
+  return number > 0 ? `<span>${label} +${number}</span>` : '';
+}
+
+function shopSignedStat(value, label = '') {
+  const number = Number(value || 0);
+  if (number === 0) return '';
+  return `${label ? label + ' ' : ''}${number > 0 ? '+' : ''}${number}`;
+}
+
+function shopFormatBits(value) {
+  const number = Number(value || 0);
+  return `${number.toLocaleString('pt-BR')} bits`;
+}
+
+function shopShowFormError(errorDiv, message) {
+  errorDiv.textContent = message;
+  errorDiv.classList.remove("hidden");
+}
+
+function shopBadgeSuffix(value) {
+  return String(value || 'common').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+}
+
+function shopNormalize(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function shopEscapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function shopEscapeAttr(value) {
+  return shopEscapeHtml(value);
+}
+
+function shopJsString(value) {
+  return JSON.stringify(String(value ?? ''));
 }
