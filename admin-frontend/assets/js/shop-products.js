@@ -8,7 +8,9 @@ const shopState = {
   catalogSearch: "",
   catalogCategory: "",
   catalogRarity: "",
-  catalogSelected: null
+  catalogSelected: null,
+  catalogPage: 1,
+  catalogPageSize: 10
 };
 
 const PRODUCT_TYPES = ["ITEM", "EQUIPMENT"];
@@ -291,6 +293,12 @@ function shopRenderCatalogBrowser() {
   const modal = document.getElementById("shop-modal");
   const isItems = shopState.catalogTab === "items";
   const catalog = isItems ? shopFilteredItems() : shopFilteredEquipmentTemplates();
+  const totalCatalogItems = catalog.length;
+  const totalCatalogPages = Math.max(1, Math.ceil(totalCatalogItems / shopState.catalogPageSize));
+  if (shopState.catalogPage > totalCatalogPages) shopState.catalogPage = totalCatalogPages;
+  if (shopState.catalogPage < 1) shopState.catalogPage = 1;
+  const pageStart = (shopState.catalogPage - 1) * shopState.catalogPageSize;
+  const pagedCatalog = catalog.slice(pageStart, pageStart + shopState.catalogPageSize);
   const categories = isItems ? shopUniqueValues(shopState.itemDefinitions, "category") : shopUniqueValues(shopState.equipmentTemplates, "slot");
   const rarities = isItems ? shopUniqueValues(shopState.itemDefinitions, "rarity") : shopUniqueValues(shopState.equipmentTemplates, "rarity");
 
@@ -337,24 +345,83 @@ function shopRenderCatalogBrowser() {
         </div>
 
         <div class="flex items-center justify-between mb-3">
-          <p class="text-sm text-slate-400">Exibindo ${catalog.length} resultado(s)</p>
+          <p class="text-sm text-slate-400">Exibindo ${totalCatalogItems === 0 ? 0 : pageStart + 1}-${Math.min(pageStart + shopState.catalogPageSize, totalCatalogItems)} de ${totalCatalogItems} resultado(s)</p>
           <button class="btn-sm btn-secondary" onclick="shopClearCatalogFilters()">Limpar filtros</button>
         </div>
 
         <div class="catalog-list">
-          ${catalog.length === 0 ? '<p class="text-slate-500 text-sm">Nenhum resultado encontrado.</p>' : (isItems ? shopRenderItemCatalog(catalog) : shopRenderEquipmentCatalog(catalog))}
+          ${totalCatalogItems === 0 ? '<p class="text-slate-500 text-sm">Nenhum resultado encontrado.</p>' : (isItems ? shopRenderItemCatalog(pagedCatalog) : shopRenderEquipmentCatalog(pagedCatalog))}
         </div>
+
+        ${shopRenderCatalogPagination(totalCatalogItems, totalCatalogPages)}
       </div>
     </div>
   `;
 }
 
+function shopRenderCatalogPagination(totalItems, totalPages) {
+  if (totalItems <= shopState.catalogPageSize) return '';
+
+  const pages = shopCatalogPageWindow(totalPages);
+
+  return `
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mt-4 pt-4 border-t border-slate-800">
+      <div class="flex items-center gap-2 text-sm text-slate-400">
+        <span>Por página</span>
+        <select class="input !w-24" onchange="shopSetCatalogPageSize(this.value)">
+          ${[5, 10, 20, 50].map(size => `<option value="${size}" ${shopState.catalogPageSize === size ? 'selected' : ''}>${size}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button class="btn-sm btn-secondary" ${shopState.catalogPage === 1 ? 'disabled' : ''} onclick="shopSetCatalogPage(${shopState.catalogPage - 1})">Anterior</button>
+        ${pages.map(page => page === '...'
+          ? `<span class="px-2 text-slate-500">...</span>`
+          : `<button class="btn-sm ${page === shopState.catalogPage ? 'btn-primary' : 'btn-secondary'}" onclick="shopSetCatalogPage(${page})">${page}</button>`
+        ).join('')}
+        <button class="btn-sm btn-secondary" ${shopState.catalogPage === totalPages ? 'disabled' : ''} onclick="shopSetCatalogPage(${shopState.catalogPage + 1})">Próxima</button>
+      </div>
+    </div>
+  `;
+}
+
+function shopCatalogPageWindow(totalPages) {
+  const current = shopState.catalogPage;
+  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  const pages = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(totalPages - 1, current + 1);
+
+  if (start > 2) pages.push('...');
+  for (let page = start; page <= end; page++) pages.push(page);
+  if (end < totalPages - 1) pages.push('...');
+  pages.push(totalPages);
+
+  return pages;
+}
+
+function shopSetCatalogPage(page) {
+  shopState.catalogPage = Number(page) || 1;
+  shopRenderCatalogBrowser();
+}
+
+function shopSetCatalogPageSize(size) {
+  shopState.catalogPageSize = Number(size) || 10;
+  shopState.catalogPage = 1;
+  shopRenderCatalogBrowser();
+}
+
+function shopResetCatalogPage() {
+  shopState.catalogPage = 1;
+}
 function shopSetCatalogTab(tab) {
   shopState.catalogTab = tab;
   shopState.catalogSearch = "";
   shopState.catalogCategory = "";
   shopState.catalogRarity = "";
   shopState.catalogSelected = null;
+  shopResetCatalogPage();
   shopRenderCatalogBrowser();
 }
 
@@ -362,6 +429,7 @@ function shopUpdateCatalogFilters() {
   shopState.catalogSearch = document.getElementById("shop-catalog-search").value;
   shopState.catalogCategory = document.getElementById("shop-catalog-category").value;
   shopState.catalogRarity = document.getElementById("shop-catalog-rarity").value;
+  shopResetCatalogPage();
   shopRenderCatalogBrowser();
 }
 
@@ -369,6 +437,7 @@ function shopClearCatalogFilters() {
   shopState.catalogSearch = "";
   shopState.catalogCategory = "";
   shopState.catalogRarity = "";
+  shopResetCatalogPage();
   shopRenderCatalogBrowser();
 }
 
@@ -831,3 +900,26 @@ function shopEscapeAttr(value) {
 function shopJsString(value) {
   return JSON.stringify(String(value ?? ''));
 }
+
+// Explicita as funções usadas por onclick para evitar falhas quando o arquivo é carregado em ambientes que não expõem function declarations no window.
+Object.assign(window, {
+  renderShopProductsPage,
+  loadShopProducts,
+  shopToggleActiveFilter,
+  shopShowCreateModal,
+  shopShowEditModal,
+  shopToggleTypeFields,
+  shopSetCatalogTab,
+  shopUpdateCatalogFilters,
+  shopClearCatalogFilters,
+  shopSetCatalogPage,
+  shopSetCatalogPageSize,
+  shopShowItemDetails,
+  shopShowTemplateDetails,
+  shopAddFromItem,
+  shopAddFromTemplate,
+  shopSubmitForm,
+  shopToggleActive,
+  shopCloseModal,
+  shopRenderCatalogBrowser
+});
