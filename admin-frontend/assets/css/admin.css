@@ -205,3 +205,50 @@
     max-height: 90vh;
     overflow-y: auto;
   }
+
+  .modal-catalog {
+    max-width: 48rem;
+  }
+
+  /* --- Catalog Browser --- */
+
+  .catalog-tab {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    background: #1e293b;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .catalog-tab:hover {
+    background: #334155;
+    color: #e2e8f0;
+  }
+
+  .catalog-tab-active {
+    background: linear-gradient(135deg, #0891b2, #2563eb);
+    color: #ffffff;
+  }
+
+  .catalog-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 55vh;
+    overflow-y: auto;
+  }
+
+  .catalog-card {
+    background: #020617;
+    border: 1px solid #1e293b;
+    border-radius: 0.75rem;
+    padding: 0.85rem 1rem;
+    transition: border-color 0.2s;
+  }
+
+  .catalog-card:hover {
+    border-color: #0891b2;
+  }

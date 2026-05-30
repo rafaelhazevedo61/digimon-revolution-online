@@ -4,7 +4,8 @@ const routes = {
     "digimon-infos": renderDigimonInfosPage,
     "evolution-lines": renderEvolutionLinesPage,
     players: renderPlayersPage,
-    "equipment-templates": renderEquipmentTemplatesPage
+    "equipment-templates": renderEquipmentTemplatesPage,
+    "shop-products": renderShopProductsPage
   };
   
   function navigateTo(route) {

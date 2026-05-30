@@ -12,5 +12,9 @@ public interface ShopProductRepository extends JpaRepository<ShopProductEntity, 
 
     List<ShopProductEntity> findByActiveTrue();
 
+    List<ShopProductEntity> findByActiveTrueOrderByNameAsc();
+
+    List<ShopProductEntity> findAllByOrderByNameAsc();
+
     Optional<ShopProductEntity> findByEquipmentTemplateNameIgnoreCase(String equipmentTemplateName);
 }
