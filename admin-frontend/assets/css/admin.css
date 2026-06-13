@@ -148,6 +148,15 @@
     background: rgba(34, 197, 94, 0.1);
   }
 
+  .btn-danger {
+    background: #7f1d1d;
+    color: #fca5a5;
+  }
+
+  .btn-danger:hover {
+    background: #991b1b;
+  }
+
   /* --- Status badges --- */
 
   .badge-success {
@@ -182,6 +191,11 @@
     color: #facc15;
   }
 
+  .badge-area {
+    background: rgba(16, 185, 129, 0.15);
+    color: #6ee7b7;
+  }
+
   /* --- Modal --- */
 
   .modal-overlay {
@@ -204,6 +218,10 @@
     max-width: 36rem;
     max-height: 90vh;
     overflow-y: auto;
+  }
+
+  .modal-wide {
+    max-width: 56rem;
   }
 
   .modal-catalog {

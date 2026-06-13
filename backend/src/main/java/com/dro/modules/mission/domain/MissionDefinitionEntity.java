@@ -3,7 +3,9 @@ package com.dro.modules.mission.domain;
 import com.dro.modules.digimon.domain.enums.Stage;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.domain.Persistable;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MissionDefinitionEntity {
+public class MissionDefinitionEntity implements Persistable<String> {
 
     @Id
     private String id;
@@ -48,15 +50,36 @@ public class MissionDefinitionEntity {
     @Builder.Default
     private boolean active = true;
 
-    @OneToMany(mappedBy = "mission", fetch = FetchType.LAZY)
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Column(name = "created_by", nullable = false, updatable = false)
+    private String createdBy;
+
+    @Column(name = "updated_by", nullable = false)
+    private String updatedBy;
+
+    @OneToMany(mappedBy = "mission", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<MissionRewardEntity> rewards = new ArrayList<>();
 
-    @OneToMany(mappedBy = "mission", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "mission", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<MissionLootChanceEntity> lootChances = new ArrayList<>();
 
-    @OneToMany(mappedBy = "mission", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "mission", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<MissionLootItemEntity> lootItems = new ArrayList<>();
+
+    @Transient
+    @Builder.Default
+    private boolean newEntity = false;
+
+    @Override
+    public boolean isNew() {
+        return newEntity;
+    }
 }

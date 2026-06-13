@@ -5,7 +5,8 @@ const routes = {
     "evolution-lines": renderEvolutionLinesPage,
     players: renderPlayersPage,
     "equipment-templates": renderEquipmentTemplatesPage,
-    "shop-products": renderShopProductsPage
+    "shop-products": renderShopProductsPage,
+    missions: renderMissionsPage
   };
   
   function navigateTo(route) {

@@ -8,4 +8,8 @@ import java.util.List;
 public interface MissionDefinitionRepository extends JpaRepository<MissionDefinitionEntity, String> {
 
     List<MissionDefinitionEntity> findByActiveTrue();
+
+    List<MissionDefinitionEntity> findAllByOrderByNameAsc();
+
+    List<MissionDefinitionEntity> findByActiveTrueOrderByNameAsc();
 }
