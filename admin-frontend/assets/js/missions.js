@@ -1,7 +1,10 @@
 const missionState = {
   missions: [],
   activeOnly: false,
-  editing: null
+  editing: null,
+  filterArea: "",
+  filterStage: "",
+  filterLoot: ""
 };
 
 const AREAS = ["NATIVE_FOREST", "GEAR_SAVANNA", "FACTORIAL_TOWN", "FREEZELAND", "SERVER_DESERT", "INFINITY_MOUNTAIN"];
@@ -22,18 +25,42 @@ function renderMissionsPage() {
 
   app.innerHTML = `
     <div class="card mb-6">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
-          <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
-            <input type="checkbox" id="mission-active-only" ${missionState.activeOnly ? "checked" : ""}
-              onchange="missionToggleActiveFilter()" class="accent-cyan-500" />
-            Apenas ativas
-          </label>
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-wrap items-center gap-4">
+          <div>
+            <label class="text-xs text-slate-500 block mb-1">Área</label>
+            <select id="mission-filter-area" class="input input-sm" onchange="missionApplyFilters()">
+              <option value="">Todas</option>
+              ${AREAS.map(a => `<option value="${a}" ${missionState.filterArea === a ? "selected" : ""}>${a.replace(/_/g, " ")}</option>`).join("")}
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-500 block mb-1">Stage</label>
+            <select id="mission-filter-stage" class="input input-sm" onchange="missionApplyFilters()">
+              <option value="">Todos</option>
+              ${STAGES.map(s => `<option value="${s}" ${missionState.filterStage === s ? "selected" : ""}>${s}</option>`).join("")}
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-500 block mb-1">Loot / Reward</label>
+            <select id="mission-filter-loot" class="input input-sm" onchange="missionApplyFilters()">
+              <option value="">Todos</option>
+              ${MISSION_ITEM_TYPES.map(t => `<option value="${t}" ${missionState.filterLoot === t ? "selected" : ""}>${t}</option>`).join("")}
+            </select>
+          </div>
+          <div class="flex items-end h-full">
+            <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer mt-5">
+              <input type="checkbox" id="mission-active-only" ${missionState.activeOnly ? "checked" : ""}
+                onchange="missionApplyFilters()" class="accent-cyan-500" />
+              Apenas ativas
+            </label>
+          </div>
         </div>
-
-        <button class="btn-primary" onclick="missionShowCreateModal()">
-          + Nova Missão
-        </button>
+        <div class="flex justify-end">
+          <button class="btn-primary" onclick="missionShowCreateModal()">
+            + Nova Missão
+          </button>
+        </div>
       </div>
     </div>
 
@@ -51,6 +78,9 @@ async function loadMissions() {
   try {
     const params = {};
     if (missionState.activeOnly) params.activeOnly = "true";
+    if (missionState.filterArea) params.area = missionState.filterArea;
+    if (missionState.filterStage) params.stage = missionState.filterStage;
+    if (missionState.filterLoot) params.lootItemType = missionState.filterLoot;
 
     const missions = await apiGet("/admin/missions", params);
     missionState.missions = missions;
@@ -140,8 +170,11 @@ function renderMissionRow(m) {
   `;
 }
 
-function missionToggleActiveFilter() {
+function missionApplyFilters() {
   missionState.activeOnly = document.getElementById("mission-active-only").checked;
+  missionState.filterArea = document.getElementById("mission-filter-area").value;
+  missionState.filterStage = document.getElementById("mission-filter-stage").value;
+  missionState.filterLoot = document.getElementById("mission-filter-loot").value;
   loadMissions();
 }
 

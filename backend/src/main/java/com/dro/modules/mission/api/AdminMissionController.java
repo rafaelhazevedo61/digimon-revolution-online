@@ -34,9 +34,12 @@ public class AdminMissionController {
 
     @GetMapping
     public ResponseEntity<List<AdminMissionResponse>> list(
-            @RequestParam(required = false) Boolean activeOnly
+            @RequestParam(required = false) Boolean activeOnly,
+            @RequestParam(required = false) String area,
+            @RequestParam(required = false) String stage,
+            @RequestParam(required = false) String lootItemType
     ) {
-        return ResponseEntity.ok(listMissionsUseCase.execute(activeOnly));
+        return ResponseEntity.ok(listMissionsUseCase.execute(activeOnly, area, stage, lootItemType));
     }
 
     @GetMapping("/{id}")
