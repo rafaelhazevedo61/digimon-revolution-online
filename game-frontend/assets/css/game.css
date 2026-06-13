@@ -1,0 +1,245 @@
+/* ===================== Base ===================== */
+* { box-sizing: border-box; }
+
+body {
+  background: #0a0e1a;
+  color: #e2e8f0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ===================== Layout ===================== */
+.page-container {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 5rem;
+}
+
+/* ===================== Cards ===================== */
+.card {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid #1e293b;
+  border-radius: 1rem;
+  padding: 1rem;
+  backdrop-filter: blur(8px);
+}
+
+.card-sm {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid #1e293b;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+}
+
+/* ===================== Inputs ===================== */
+.input {
+  width: 100%;
+  background: #020617;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  color: #f8fafc;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+}
+
+.label {
+  display: block;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 0.25rem;
+}
+
+/* ===================== Buttons ===================== */
+.btn-primary {
+  background: linear-gradient(135deg, #0891b2, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-sm {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-sm.btn-primary {
+  background: linear-gradient(135deg, #0891b2, #2563eb);
+  color: white;
+}
+
+/* ===================== Tabs ===================== */
+.tab-btn {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #334155;
+  background: transparent;
+  color: #94a3b8;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: #06b6d4;
+  color: #06b6d4;
+}
+
+/* ===================== Badges ===================== */
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(100, 116, 139, 0.2);
+  color: #94a3b8;
+}
+
+.badge-baby { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
+.badge-baby_ii { background: rgba(52, 211, 153, 0.15); color: #6ee7b7; }
+.badge-rookie { background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
+.badge-champion { background: rgba(168, 85, 247, 0.15); color: #c4b5fd; }
+.badge-ultimate { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+.badge-mega { background: rgba(234, 179, 8, 0.15); color: #fde047; }
+
+.badge-common { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
+.badge-rare { background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
+.badge-epic { background: rgba(168, 85, 247, 0.15); color: #c4b5fd; }
+.badge-legendary { background: rgba(234, 179, 8, 0.15); color: #fde047; }
+
+.badge-xs {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  background: rgba(100, 116, 139, 0.15);
+  color: #64748b;
+}
+
+.badge-trait {
+  background: rgba(6, 182, 212, 0.15);
+  color: #67e8f9;
+}
+
+.badge-rebirth {
+  background: rgba(234, 179, 8, 0.15);
+  color: #fde047;
+}
+
+.badge-success { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
+
+/* ===================== XP Bar ===================== */
+.xp-bar {
+  height: 0.4rem;
+  background: #1e293b;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #06b6d4, #2563eb);
+  border-radius: 9999px;
+  transition: width 0.5s ease;
+}
+
+/* ===================== Bottom Navigation ===================== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(15, 23, 42, 0.95);
+  border-top: 1px solid #1e293b;
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  z-index: 40;
+}
+
+.bottom-nav-inner {
+  display: flex;
+  width: 100%;
+  max-width: 30rem;
+  justify-content: space-around;
+}
+
+.nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.4rem 0.75rem;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: color 0.2s;
+  border-radius: 0.5rem;
+}
+
+.nav-btn .nav-icon { font-size: 1.25rem; }
+.nav-btn:hover { color: #94a3b8; }
+.nav-btn.active { color: #06b6d4; }
+
+/* ===================== Animations ===================== */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-0.5rem); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.animate-fade-in { animation: fade-in 0.3s ease; }
+.animate-fade-out { animation: fade-out 0.3s ease forwards; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse { animation: pulse 2s infinite; }
+
+/* ===================== Utilities ===================== */
+.hidden { display: none !important; }
+.w-full { width: 100%; }
+.text-center { text-align: center; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ===================== PWA Standalone ===================== */
+@media (display-mode: standalone) {
+  body { padding-top: env(safe-area-inset-top); }
+}

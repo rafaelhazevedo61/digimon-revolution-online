@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0891b2" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <title>DRO — Digimon Revolution Online</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="assets/img/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/img/icon-192.png" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="assets/css/game.css" />
+</head>
+
+<body>
+  <!-- Main content area -->
+  <div id="app"></div>
+
+  <!-- Bottom navigation (hidden on login/starter) -->
+  <nav id="bottom-nav" class="bottom-nav hidden">
+    <div class="bottom-nav-inner">
+      <button class="nav-btn" data-route="dashboard" onclick="navigateTo('dashboard')">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </button>
+      <button class="nav-btn" data-route="missions" onclick="navigateTo('missions')">
+        <span class="nav-icon">🗺️</span>
+        <span>Missões</span>
+      </button>
+      <button class="nav-btn" data-route="digimons" onclick="navigateTo('dashboard')">
+        <span class="nav-icon">🐉</span>
+        <span>Digimon</span>
+      </button>
+      <button class="nav-btn" data-route="shop" onclick="navigateTo('dashboard')">
+        <span class="nav-icon">🛒</span>
+        <span>Loja</span>
+      </button>
+      <button class="nav-btn" data-route="more" onclick="navigateTo('dashboard')">
+        <span class="nav-icon">⋯</span>
+        <span>Mais</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Scripts (order matters) -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/starter.js"></script>
+  <script src="assets/js/dashboard.js"></script>
+  <script src="assets/js/missions.js"></script>
+  <script src="assets/js/router.js"></script>
+
+  <script>
+    // Register service worker for PWA
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js").catch(() => {});
+    }
+
+    // Initialize
+    document.addEventListener("DOMContentLoaded", setupRouter);
+  </script>
+</body>
+</html>
