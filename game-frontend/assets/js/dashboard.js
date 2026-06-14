@@ -16,7 +16,7 @@ async function renderDashboardPage() {
   } catch (err) {
     document.getElementById("dash-content").innerHTML = `
       <div class="card border-red-900">
-        <p class="text-red-300">${err.message}</p>
+        <p class="text-red-300">${escapeHtml(err.message)}</p>
       </div>
     `;
   }
@@ -30,7 +30,7 @@ function renderDashContent(data) {
     <!-- Player header -->
     <div class="flex items-center justify-between mb-4 px-1">
       <div>
-        <h2 class="text-lg font-bold">${data.username}</h2>
+        <h2 class="text-lg font-bold">${escapeHtml(data.username)}</h2>
         <p class="text-xs text-slate-400">Tamer</p>
       </div>
       <button class="text-xs text-slate-500 hover:text-red-400" onclick="authLogout()">Sair</button>
@@ -100,8 +100,8 @@ function renderDigimonCard(d) {
     <div class="card ${borderClass} mb-4">
       <div class="flex items-center justify-between mb-3">
         <div>
-          <h3 class="font-bold text-lg">${d.name}</h3>
-          <p class="text-xs text-slate-400">${d.type || "Desconhecido"}</p>
+          <h3 class="font-bold text-lg">${escapeHtml(d.name)}</h3>
+          <p class="text-xs text-slate-400">${escapeHtml(d.type) || "Desconhecido"}</p>
         </div>
         <div class="text-right">
           <span class="badge badge-${d.stage.toLowerCase()}">${formatStage(d.stage)}</span>
@@ -157,7 +157,7 @@ function renderEquipSlots(items) {
       return `
         <div class="card-sm text-center">
           <p class="text-lg">${slotEmoji[slot]}</p>
-          <p class="text-xs font-bold truncate">${item.name}</p>
+          <p class="text-xs font-bold truncate">${escapeHtml(item.name)}</p>
           <p class="text-xs text-slate-500">${item.rarity}</p>
         </div>
       `;
@@ -180,7 +180,7 @@ function renderActiveMission(m) {
   return `
     <div class="card-sm mb-2 flex items-center justify-between" data-mission-instance="${m.instanceId}" data-ends-at="${m.endsAt}">
       <div>
-        <p class="font-bold text-sm">${m.missionName}</p>
+        <p class="font-bold text-sm">${escapeHtml(m.missionName)}</p>
         <p class="text-xs text-slate-500 mission-timer">${done ? "Concluída!" : formatTime(remaining)}</p>
       </div>
       ${done ? `

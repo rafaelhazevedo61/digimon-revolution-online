@@ -1,4 +1,4 @@
-const CACHE_NAME = "dro-game-v1";
+const CACHE_NAME = "dro-game-v2";
 const STATIC_ASSETS = [
   "/",
   "/index.html",
@@ -32,8 +32,8 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
 
-  // API calls: network only (don't cache API responses)
-  if (url.pathname.startsWith("/api") || url.origin !== self.location.origin) {
+  // API calls and cross-origin: network only (don't cache)
+  if (url.origin !== self.location.origin || url.pathname.startsWith("/assets") === false) {
     return;
   }
 
@@ -41,8 +41,10 @@ self.addEventListener("fetch", event => {
   event.respondWith(
     caches.match(event.request).then(cached => {
       return cached || fetch(event.request).then(response => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
         return response;
       });
     })

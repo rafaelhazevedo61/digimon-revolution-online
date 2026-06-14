@@ -28,7 +28,7 @@ async function renderMissionsPage() {
     renderAreaCards(areas);
   } catch (err) {
     document.getElementById("areas-list").innerHTML = `
-      <div class="card border-red-900"><p class="text-red-300">${err.message}</p></div>
+      <div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>
     `;
   }
 }
@@ -110,7 +110,7 @@ async function renderMissionAreaPage(params) {
     renderMissionCards(areaMissions, area);
   } catch (err) {
     document.getElementById("mission-list").innerHTML = `
-      <div class="card border-red-900"><p class="text-red-300">${err.message}</p></div>
+      <div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>
     `;
   }
 }
@@ -136,8 +136,8 @@ function renderMissionCards(missions, area) {
     <div class="card mb-3">
       <div class="flex justify-between items-start mb-2">
         <div class="flex-1">
-          <h3 class="font-bold text-sm">${m.name}</h3>
-          <p class="text-xs text-slate-400 mt-1">${m.description || ""}</p>
+          <h3 class="font-bold text-sm">${escapeHtml(m.name)}</h3>
+          <p class="text-xs text-slate-400 mt-1">${escapeHtml(m.description) || ""}</p>
         </div>
       </div>
 

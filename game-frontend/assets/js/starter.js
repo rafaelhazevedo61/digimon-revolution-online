@@ -48,7 +48,7 @@ function renderStarterCards(pool) {
         <div class="text-4xl mb-3">${t.emoji}</div>
         <h3 class="font-bold text-sm mb-1">${t.label}</h3>
         <p class="text-xs text-slate-400">Digitama ${t.label}</p>
-        ${entries.length > 0 ? `<p class="text-xs text-slate-500 mt-2">${entries.map(e => e.digimonName).join(", ")}</p>` : ""}
+        ${entries.length > 0 ? `<p class="text-xs text-slate-500 mt-2">${entries.map(e => escapeHtml(e.digimonName)).join(", ")}</p>` : ""}
       </button>
     `;
   }).join("");
