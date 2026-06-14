@@ -136,7 +136,9 @@ async function authRegister(e) {
 async function authCheckStartup() {
   try {
     const startup = await apiGet("/players/me/startup");
-    if (!startup.hasSelectedStarter) {
+    if (startup.redirectTo === "DIGITAMA_SELECTION") {
+      navigateTo("starter");
+    } else if (startup.redirectTo === "DIGITAMA_HATCHING") {
       navigateTo("starter");
     } else {
       navigateTo("dashboard");

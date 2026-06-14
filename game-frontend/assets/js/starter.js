@@ -59,7 +59,9 @@ async function starterSelect(type) {
   errorDiv.classList.add("hidden");
 
   try {
-    await apiPost("/digitama/select", { type: type });
+    await apiPost("/digitama/select", { type: "DIGITAMA_STARTER" });
+    const hatched = await apiPost("/digitama/hatch");
+    await apiPost("/digimon/select", { digimonId: hatched.id });
     navigateTo("dashboard");
   } catch (err) {
     errorDiv.textContent = err.message;
