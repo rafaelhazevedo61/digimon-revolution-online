@@ -44,7 +44,7 @@ function renderDashContent(data) {
 
     <!-- Resources -->
     ${d ? `
-    <div class="grid grid-cols-3 gap-3 mb-4">
+    <div class="grid grid-cols-2 gap-3 mb-4">
       <div class="card-sm text-center">
         <p class="text-xs text-slate-500">Bits</p>
         <p class="text-lg font-bold text-yellow-400">${d.bits}</p>
@@ -52,10 +52,6 @@ function renderDashContent(data) {
       <div class="card-sm text-center">
         <p class="text-xs text-slate-500">Energia</p>
         <p class="text-lg font-bold text-green-400">${d.energy}/${d.maxEnergy}</p>
-      </div>
-      <div class="card-sm text-center">
-        <p class="text-xs text-slate-500">Nível</p>
-        <p class="text-lg font-bold text-cyan-400">${d.level}</p>
       </div>
     </div>
     ` : ""}
