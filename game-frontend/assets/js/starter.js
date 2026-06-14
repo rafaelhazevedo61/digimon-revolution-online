@@ -60,7 +60,7 @@ async function starterSelect(type) {
 
   try {
     await apiPost("/digitama/select", { type: "STARTER" });
-    const hatched = await apiPost("/digitama/hatch");
+    const hatched = await apiGet("/digitama/hatch");
     renderHatchingAnimation(hatched);
   } catch (err) {
     errorDiv.textContent = err.message;
