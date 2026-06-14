@@ -200,39 +200,22 @@ function renderDigimonSelectCards(digimons) {
   }
 
   container.innerHTML = digimons.map(d => `
-    <div class="card text-left">
-      <div class="flex items-center gap-4 mb-3">
-        <div class="digimon-select-avatar">
-          <span class="text-4xl">🐉</span>
+    <div class="card flex items-center gap-4 text-left">
+      <div class="text-4xl">🐉</div>
+      <div class="flex-1 min-w-0">
+        <h3 class="font-bold text-sm truncate">${escapeHtml(d.name)}</h3>
+        <div class="flex gap-2 mt-1">
+          <span class="badge badge-${d.stage ? d.stage.toLowerCase() : 'baby'}">${escapeHtml(d.stage)}</span>
+          <span class="badge badge-${d.rarity ? d.rarity.toLowerCase() : 'common'}">${escapeHtml(d.rarity)}</span>
+          <span class="badge-xs">Lv.${d.level}</span>
         </div>
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2">
-            <h3 class="font-bold text-base truncate">${escapeHtml(d.name)}</h3>
-            <span class="text-sm font-bold text-cyan-400">Lv.${d.level}</span>
-          </div>
-          <p class="text-xs text-slate-400 mt-0.5">${escapeHtml(d.type) || ""}</p>
-          <div class="flex gap-2 mt-1">
-            <span class="badge badge-${d.stage ? d.stage.toLowerCase() : 'baby'}">${escapeHtml(d.stage)}</span>
-            <span class="badge badge-${d.rarity ? d.rarity.toLowerCase() : 'common'}">${escapeHtml(d.rarity)}</span>
-            ${d.rebirthCount > 0 ? `<span class="badge-xs badge-rebirth">Rebirth ×${d.rebirthCount}</span>` : ""}
-          </div>
+        <div class="flex gap-3 mt-2 text-xs text-slate-400">
+          <span class="text-green-400">HP ${d.hp}</span>
+          <span class="text-red-400">ATK ${d.attack}</span>
+          <span class="text-blue-400">DEF ${d.defense}</span>
         </div>
       </div>
-      <div class="grid grid-cols-3 gap-2 text-center text-sm mb-3">
-        <div class="card-sm">
-          <p class="text-xs text-slate-500">HP</p>
-          <p class="font-bold text-green-400">${d.hp}</p>
-        </div>
-        <div class="card-sm">
-          <p class="text-xs text-slate-500">ATK</p>
-          <p class="font-bold text-red-400">${d.attack}</p>
-        </div>
-        <div class="card-sm">
-          <p class="text-xs text-slate-500">DEF</p>
-          <p class="font-bold text-blue-400">${d.defense}</p>
-        </div>
-      </div>
-      <button class="btn-primary w-full" onclick="selectDigimon('${d.id}')">Selecionar</button>
+      <button class="btn-primary btn-sm" onclick="selectDigimon('${d.id}')">Selecionar</button>
     </div>
   `).join("");
 }

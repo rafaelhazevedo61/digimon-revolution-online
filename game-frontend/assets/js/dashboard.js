@@ -94,18 +94,23 @@ function renderDigimonCard(d) {
   };
   const borderClass = rarityColors[d.rarity] || "border-slate-700";
 
-  const xpPercent = d.level >= 100 ? 100 : Math.min(100, Math.round((d.experience / getXpForLevel(d.level + 1)) * 100));
+  const xpNeeded = getXpForLevel(d.level);
+  const xpPercent = d.level >= 100 ? 100 : Math.min(100, Math.round((d.experience / xpNeeded) * 100));
 
   return `
     <div class="card ${borderClass} mb-4">
-      <div class="flex items-center justify-between mb-3">
-        <div>
-          <h3 class="font-bold text-lg">${escapeHtml(d.name)}</h3>
+      <div class="flex items-center gap-3 mb-3">
+        <div class="text-5xl">🐉</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <h3 class="font-bold text-lg truncate">${escapeHtml(d.name)}</h3>
+            <span class="text-sm font-bold text-cyan-400">Lv.${d.level}</span>
+          </div>
           <p class="text-xs text-slate-400">${escapeHtml(d.type) || "Desconhecido"}</p>
-        </div>
-        <div class="text-right">
-          <span class="badge badge-${d.stage.toLowerCase()}">${formatStage(d.stage)}</span>
-          <span class="badge badge-${d.rarity.toLowerCase()} ml-1">${d.rarity}</span>
+          <div class="flex gap-2 mt-1">
+            <span class="badge badge-${d.stage.toLowerCase()}">${formatStage(d.stage)}</span>
+            <span class="badge badge-${d.rarity.toLowerCase()}">${d.rarity}</span>
+          </div>
         </div>
       </div>
 
@@ -113,7 +118,7 @@ function renderDigimonCard(d) {
       <div class="mb-3">
         <div class="flex justify-between text-xs text-slate-500 mb-1">
           <span>XP</span>
-          <span>${d.experience} / ${getXpForLevel(d.level + 1)}</span>
+          <span>${d.experience} / ${xpNeeded}</span>
         </div>
         <div class="xp-bar">
           <div class="xp-bar-fill" style="width: ${xpPercent}%"></div>
