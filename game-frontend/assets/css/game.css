@@ -233,6 +233,148 @@ body {
 
 .animate-pulse { animation: pulse 2s infinite; }
 
+/* ===================== Hatching Animation ===================== */
+.hatch-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 16rem;
+  justify-content: center;
+}
+
+.hatch-egg {
+  position: relative;
+  z-index: 2;
+}
+
+.egg-body {
+  font-size: 6rem;
+  filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.3));
+  transition: transform 0.3s;
+}
+
+.hatch-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10rem;
+  height: 10rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
+  z-index: 1;
+}
+
+.hatch-glow-intense {
+  width: 14rem;
+  height: 14rem;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, rgba(234, 179, 8, 0.1) 50%, transparent 70%);
+  animation: glow-pulse 0.5s ease infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+/* Wobble — gentle */
+@keyframes hatch-wobble {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(5deg); }
+  30% { transform: rotate(-5deg); }
+  45% { transform: rotate(4deg); }
+  60% { transform: rotate(-4deg); }
+  75% { transform: rotate(2deg); }
+  90% { transform: rotate(-2deg); }
+}
+
+.hatch-wobble {
+  animation: hatch-wobble 0.8s ease-in-out infinite;
+}
+
+/* Wobble — intense */
+@keyframes hatch-wobble-intense {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  10% { transform: rotate(10deg) scale(1.02); }
+  20% { transform: rotate(-12deg) scale(1.04); }
+  30% { transform: rotate(14deg) scale(1.06); }
+  40% { transform: rotate(-14deg) scale(1.08); }
+  50% { transform: rotate(16deg) scale(1.1); }
+  60% { transform: rotate(-16deg) scale(1.08); }
+  70% { transform: rotate(12deg) scale(1.06); }
+  80% { transform: rotate(-10deg) scale(1.04); }
+  90% { transform: rotate(8deg) scale(1.02); }
+}
+
+.hatch-wobble-intense {
+  animation: hatch-wobble-intense 0.6s ease-in-out infinite;
+}
+
+/* Crack stage */
+.hatch-egg-crack {
+  animation: hatch-wobble-intense 0.4s ease-in-out infinite;
+}
+
+.hatch-egg-crack .egg-body {
+  filter: drop-shadow(0 0 30px rgba(234, 179, 8, 0.5));
+}
+
+.crack-lines {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3rem;
+  animation: sparkle 0.3s ease infinite alternate;
+}
+
+@keyframes sparkle {
+  from { opacity: 0.5; transform: translate(-50%, -50%) scale(0.8); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+}
+
+/* Burst effect on reveal */
+.hatch-burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.4) 0%, rgba(234, 179, 8, 0.2) 40%, transparent 70%);
+  animation: burst 0.8s ease-out forwards;
+  z-index: 0;
+}
+
+@keyframes burst {
+  0% { width: 0; height: 0; opacity: 1; }
+  60% { width: 20rem; height: 20rem; opacity: 0.6; }
+  100% { width: 24rem; height: 24rem; opacity: 0; }
+}
+
+/* Reveal digimon */
+.hatch-reveal-digimon {
+  position: relative;
+  z-index: 2;
+}
+
+.digimon-sprite {
+  font-size: 5rem;
+  filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.5));
+}
+
+.hatch-reveal-animate {
+  animation: reveal-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes reveal-pop {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
 /* ===================== Utilities ===================== */
 .hidden { display: none !important; }
 .w-full { width: 100%; }

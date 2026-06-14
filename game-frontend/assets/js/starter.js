@@ -61,10 +61,105 @@ async function starterSelect(type) {
   try {
     await apiPost("/digitama/select", { type: "DIGITAMA_STARTER" });
     const hatched = await apiPost("/digitama/hatch");
-    await apiPost("/digimon/select", { digimonId: hatched.id });
-    navigateTo("dashboard");
+    renderHatchingAnimation(hatched);
   } catch (err) {
     errorDiv.textContent = err.message;
     errorDiv.classList.remove("hidden");
+  }
+}
+
+function renderHatchingAnimation(digimon) {
+  const app = document.getElementById("app");
+  const nav = document.getElementById("bottom-nav");
+  if (nav) nav.classList.add("hidden");
+
+  app.innerHTML = `
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="w-full max-w-sm text-center">
+        <div id="hatch-stage-egg" class="hatch-container">
+          <div class="hatch-glow"></div>
+          <div id="hatch-egg" class="hatch-egg">
+            <div class="egg-body">🥚</div>
+          </div>
+          <p class="text-slate-400 text-sm mt-6 animate-pulse">Chocando...</p>
+          <div class="hatch-particles" id="hatch-particles"></div>
+        </div>
+
+        <div id="hatch-stage-crack" class="hatch-container hidden">
+          <div class="hatch-glow hatch-glow-intense"></div>
+          <div class="hatch-egg hatch-egg-crack">
+            <div class="egg-body">🥚</div>
+            <div class="crack-lines">✨</div>
+          </div>
+          <p class="text-cyan-400 text-sm mt-6 font-bold animate-pulse">Está nascendo!</p>
+        </div>
+
+        <div id="hatch-stage-reveal" class="hatch-container hidden">
+          <div class="hatch-burst"></div>
+          <div class="hatch-reveal-digimon">
+            <div class="digimon-sprite">🐉</div>
+          </div>
+          <h2 class="text-2xl font-bold text-cyan-400 mt-6">${escapeHtml(digimon.name)}</h2>
+          <p class="text-slate-400 text-sm mt-1">${escapeHtml(digimon.type)}</p>
+          <div class="flex justify-center gap-2 mt-3">
+            <span class="badge badge-${digimon.stage ? digimon.stage.toLowerCase() : 'baby'}">${escapeHtml(digimon.stage)}</span>
+            <span class="badge badge-${digimon.rarity ? digimon.rarity.toLowerCase() : 'common'}">${escapeHtml(digimon.rarity)}</span>
+          </div>
+          <div class="grid grid-cols-3 gap-3 mt-4">
+            <div class="card-sm text-center">
+              <p class="text-xs text-slate-400">HP</p>
+              <p class="text-sm font-bold text-green-400">${digimon.hp}</p>
+            </div>
+            <div class="card-sm text-center">
+              <p class="text-xs text-slate-400">ATK</p>
+              <p class="text-sm font-bold text-red-400">${digimon.attack}</p>
+            </div>
+            <div class="card-sm text-center">
+              <p class="text-xs text-slate-400">DEF</p>
+              <p class="text-sm font-bold text-blue-400">${digimon.defense}</p>
+            </div>
+          </div>
+          <button class="btn-primary w-full mt-6" onclick="hatchConfirm('${digimon.id}')">
+            Começar Jornada!
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  runHatchSequence();
+}
+
+function runHatchSequence() {
+  const egg = document.getElementById("hatch-egg");
+  const stageEgg = document.getElementById("hatch-stage-egg");
+  const stageCrack = document.getElementById("hatch-stage-crack");
+  const stageReveal = document.getElementById("hatch-stage-reveal");
+
+  egg.classList.add("hatch-wobble");
+
+  setTimeout(() => {
+    egg.classList.remove("hatch-wobble");
+    egg.classList.add("hatch-wobble-intense");
+  }, 2000);
+
+  setTimeout(() => {
+    stageEgg.classList.add("hidden");
+    stageCrack.classList.remove("hidden");
+  }, 3500);
+
+  setTimeout(() => {
+    stageCrack.classList.add("hidden");
+    stageReveal.classList.remove("hidden");
+    stageReveal.classList.add("hatch-reveal-animate");
+  }, 5000);
+}
+
+async function hatchConfirm(digimonId) {
+  try {
+    await apiPost("/digimon/select", { digimonId: digimonId });
+    navigateTo("dashboard");
+  } catch (err) {
+    showToast(err.message, "error");
   }
 }
