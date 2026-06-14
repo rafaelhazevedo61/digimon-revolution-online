@@ -282,6 +282,6 @@ function formatTime(seconds) {
 }
 
 function getXpForLevel(level) {
-  if (level <= 1) return 100;
-  return Math.floor(100 * Math.pow(1.15, level - 1));
+  if (level >= 100) return 0;
+  return level * 100;
 }
