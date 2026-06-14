@@ -59,7 +59,7 @@ async function starterSelect(type) {
   errorDiv.classList.add("hidden");
 
   try {
-    await apiPost("/digitama/select", { type: "DIGITAMA_STARTER" });
+    await apiPost("/digitama/select", { type: "STARTER" });
     const hatched = await apiPost("/digitama/hatch");
     renderHatchingAnimation(hatched);
   } catch (err) {
