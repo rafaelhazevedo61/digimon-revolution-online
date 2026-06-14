@@ -166,14 +166,13 @@ async function hatchConfirm(digimonId) {
 
 async function renderDigimonSelectPage() {
   const app = document.getElementById("app");
-  const nav = document.getElementById("bottom-nav");
-  if (nav) nav.classList.add("hidden");
+  showBottomNav("digimons");
 
   app.innerHTML = `
-    <div class="flex items-center justify-center min-h-screen p-4">
-      <div class="w-full max-w-lg text-center">
-        <h2 class="text-2xl font-bold text-cyan-400 mb-2">Selecione seu Digimon</h2>
-        <p class="text-slate-400 text-sm mb-6">Escolha qual Digimon será seu parceiro ativo.</p>
+    <div class="page-container">
+      <div class="w-full max-w-lg mx-auto">
+        <h2 class="text-2xl font-bold text-cyan-400 mb-2 text-center">Selecione seu Digimon</h2>
+        <p class="text-slate-400 text-sm mb-6 text-center">Escolha qual Digimon será seu parceiro ativo.</p>
         <div id="digimon-select-list" class="flex flex-col gap-3">
           <div class="card animate-pulse"><div class="h-20"></div></div>
         </div>
