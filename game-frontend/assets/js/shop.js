@@ -174,7 +174,11 @@ function shopQtyChange(delta) {
   let val = parseInt(input.value) || 1;
   val = Math.max(1, Math.min(max, val + delta));
   input.value = val;
-  shopQtyUpdate();
+  if (shopMode === "sell") {
+    shopSellQtyUpdate(shopModalUnitPrice);
+  } else {
+    shopQtyUpdate();
+  }
 }
 
 function shopQtyUpdate() {
@@ -350,7 +354,9 @@ function shopSellQtyUpdate(sellPrice) {
   const input = document.getElementById("shop-qty");
   const totalEl = document.getElementById("shop-total");
   if (!input || !totalEl) return;
-  const qty = parseInt(input.value) || 1;
+  let qty = parseInt(input.value) || 0;
+  qty = Math.max(1, qty);
+  input.value = qty;
   totalEl.textContent = `+${qty * sellPrice} Bits`;
 }
 
