@@ -144,8 +144,8 @@ function evoRenderOption(opt, digimon) {
           <p class="font-bold truncate">${escapeHtml(next.name)}</p>
           <div class="flex gap-2 mt-1 flex-wrap">
             <span class="badge ${stageBadge}">${evoFormatStage(next.stage)}</span>
-            ${next.attribute ? `<span class="text-xs text-slate-500">${escapeHtml(next.attribute)}</span>` : ""}
-            ${next.element ? `<span class="text-xs text-slate-500">${escapeHtml(next.element)}</span>` : ""}
+            ${next.attribute ? `<span class="badge badge-common">${escapeHtml(next.attribute)}</span>` : ""}
+            ${next.element ? `<span class="badge badge-common">${escapeHtml(next.element)}</span>` : ""}
           </div>
           ${statsHtml}
         </div>
