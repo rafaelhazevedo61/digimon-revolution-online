@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -44,29 +45,29 @@ public class EquipmentController {
     }
 
     @PostMapping("/equip")
-    public ResponseEntity<String> equip(
+    public ResponseEntity<Map<String, String>> equip(
             @RequestHeader("Authorization") String authorization,
             @RequestBody @Valid EquipRequest request
     ) {
         equipUseCase.execute(authorization, request.equipmentId());
-        return ResponseEntity.ok("Equipment equipped successfully");
+        return ResponseEntity.ok(Map.of("message", "Equipment equipped successfully"));
     }
 
     @PostMapping("/unequip")
-    public ResponseEntity<String> unequip(
+    public ResponseEntity<Map<String, String>> unequip(
             @RequestHeader("Authorization") String authorization,
             @RequestBody @Valid UnequipRequest request
     ) {
         unequipUseCase.execute(authorization, request.equipmentId());
-        return ResponseEntity.ok("Equipment unequipped successfully");
+        return ResponseEntity.ok(Map.of("message", "Equipment unequipped successfully"));
     }
 
     @PostMapping("/unequip-all")
-    public ResponseEntity<String> unequipAll(
+    public ResponseEntity<Map<String, Object>> unequipAll(
             @RequestHeader("Authorization") String authorization
     ) {
         int count = unequipAllUseCase.execute(authorization);
-        return ResponseEntity.ok(count + " equipment(s) unequipped successfully");
+        return ResponseEntity.ok(Map.of("message", count + " equipment(s) unequipped successfully", "count", count));
     }
 
     @PostMapping("/grant")

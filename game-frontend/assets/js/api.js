@@ -44,7 +44,8 @@ async function apiGet(path, params = {}) {
   }
 
   const text = await response.text();
-  return text ? JSON.parse(text) : null;
+  if (!text) return null;
+  try { return JSON.parse(text); } catch { return text; }
 }
 
 async function apiPost(path, body = null) {
@@ -59,7 +60,8 @@ async function apiPost(path, body = null) {
   }
 
   const text = await response.text();
-  return text ? JSON.parse(text) : null;
+  if (!text) return null;
+  try { return JSON.parse(text); } catch { return text; }
 }
 
 async function apiPut(path, body) {
@@ -75,7 +77,8 @@ async function apiPut(path, body) {
   }
 
   const text = await response.text();
-  return text ? JSON.parse(text) : null;
+  if (!text) return null;
+  try { return JSON.parse(text); } catch { return text; }
 }
 
 async function safeReadError(response) {

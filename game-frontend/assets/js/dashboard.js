@@ -57,11 +57,11 @@ function renderDashContent(data) {
     ` : ""}
 
     <!-- Equipped items -->
-    ${data.equippedItems && data.equippedItems.length > 0 ? `
+    ${d ? `
     <div class="mb-4">
       <h3 class="text-sm font-bold text-slate-300 mb-2 px-1">Equipamentos</h3>
       <div class="grid grid-cols-3 gap-2">
-        ${renderEquipSlots(data.equippedItems)}
+        ${renderEquipSlots(data.equippedItems || [])}
       </div>
     </div>
     ` : ""}
@@ -151,22 +151,30 @@ function renderDigimonCard(d) {
 function renderEquipSlots(items) {
   const slots = ["WEAPON", "ARMOR", "ACCESSORY"];
   const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
+  const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
+  const rarityBorder = {
+    COMMON: "border-slate-600",
+    RARE: "border-blue-500",
+    EPIC: "border-purple-500",
+    LEGENDARY: "border-yellow-500"
+  };
 
   return slots.map(slot => {
     const item = items.find(i => i.slot === slot);
     if (item) {
+      const border = rarityBorder[item.rarity] || "border-slate-600";
       return `
-        <div class="card-sm text-center">
+        <div class="card-sm text-center ${border}">
           <p class="text-lg">${slotEmoji[slot]}</p>
           <p class="text-xs font-bold truncate">${escapeHtml(item.name)}</p>
-          <p class="text-xs text-slate-500">${item.rarity}</p>
+          <span class="badge badge-${item.rarity ? item.rarity.toLowerCase() : 'common'}" style="font-size:0.6rem">${item.rarity}</span>
         </div>
       `;
     }
     return `
       <div class="card-sm text-center opacity-40">
         <p class="text-lg">${slotEmoji[slot]}</p>
-        <p class="text-xs text-slate-500">Vazio</p>
+        <p class="text-xs text-slate-500">${slotName[slot]}</p>
       </div>
     `;
   }).join("");

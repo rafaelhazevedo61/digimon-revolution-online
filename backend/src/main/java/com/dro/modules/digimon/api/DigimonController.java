@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -63,13 +64,13 @@ public class DigimonController {
     }
 
     @PostMapping("/evolve")
-    public ResponseEntity<String> evolve(
+    public ResponseEntity<Map<String, String>> evolve(
             @RequestHeader("Authorization") String authorization,
             @RequestBody(required = false) EvolveDigimonRequest request
     ) {
         Long evolutionLineId = request != null ? request.evolutionLineId() : null;
         evolveDigimonUseCase.execute(authorization, evolutionLineId);
-        return ResponseEntity.ok("Digimon evolved successfully");
+        return ResponseEntity.ok(Map.of("message", "Digimon evolved successfully"));
     }
 
     @GetMapping("/{digimonId}/evolution-options")
@@ -81,12 +82,12 @@ public class DigimonController {
     }
 
     @PostMapping("/rebirth")
-    public ResponseEntity<String> rebirth(
+    public ResponseEntity<Map<String, String>> rebirth(
             @RequestHeader("Authorization") String authorization,
             @RequestBody @Valid RebirthDigimonRequest request
     ) {
         rebirthUseCase.execute(authorization, request.digimonId());
-        return ResponseEntity.ok("Digimon reborn successfully");
+        return ResponseEntity.ok(Map.of("message", "Digimon reborn successfully"));
     }
 
     @GetMapping("/{digimonId}")
@@ -131,11 +132,11 @@ public class DigimonController {
     }
 
     @PutMapping("/rename")
-    public ResponseEntity<String> rename(
+    public ResponseEntity<Map<String, String>> rename(
             @RequestHeader("Authorization") String authorization,
             @RequestBody @Valid RenameDigimonRequest request
     ) {
         renameDigimonUseCase.execute(authorization, request.digimonId(), request.newName());
-        return ResponseEntity.ok("Digimon renamed successfully");
+        return ResponseEntity.ok(Map.of("message", "Digimon renamed successfully"));
     }
 }
