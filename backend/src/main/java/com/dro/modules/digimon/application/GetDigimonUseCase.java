@@ -2,7 +2,9 @@ package com.dro.modules.digimon.application;
 
 import com.dro.modules.digimon.api.dto.response.DigimonResponse;
 import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.domain.DigimonInfos;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
+import com.dro.modules.digimon.infra.DigimonInfosRepository;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.domain.EquipmentRules;
@@ -21,6 +23,7 @@ import java.util.UUID;
 public class GetDigimonUseCase {
 
     private final DigimonRepository digimonRepository;
+    private final DigimonInfosRepository digimonInfosRepository;
     private final EquipmentRepository equipmentRepository;
 
     public List<DigimonResponse> execute(String token) {
@@ -33,6 +36,9 @@ public class GetDigimonUseCase {
                 .filter(d -> d.getStatus() == DigimonStatus.ACTIVE)
                 .map(d -> {
                     List<Equipment> equipped = getEquippedItems(d);
+                    DigimonInfos info = d.getDigimonInfoId() != null
+                            ? digimonInfosRepository.findById(d.getDigimonInfoId()).orElse(null)
+                            : null;
 
                     return new DigimonResponse(
                             d.getId(),
@@ -58,6 +64,8 @@ public class GetDigimonUseCase {
                             d.getRebornedFrom(),
                             d.getStatus(),
                             d.getDigimonInfoId(),
+                            info != null ? info.getAttribute().name() : null,
+                            info != null ? info.getElement().name() : null,
                             EquipmentRules.totalBonusHp(equipped),
                             EquipmentRules.totalBonusAttack(equipped),
                             EquipmentRules.totalBonusDefense(equipped)

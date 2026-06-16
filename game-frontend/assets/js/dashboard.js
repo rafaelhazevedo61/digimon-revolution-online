@@ -109,9 +109,11 @@ function renderDigimonCard(d) {
             <span class="text-sm font-bold text-cyan-400">Lv.${d.level}</span>
           </div>
           <p class="text-xs text-slate-400">${escapeHtml(d.type) || "Desconhecido"}</p>
-          <div class="flex gap-2 mt-1">
+          <div class="flex gap-2 mt-1 flex-wrap">
             <span class="badge badge-${d.stage.toLowerCase()}">${formatStage(d.stage)}</span>
             <span class="badge badge-${d.rarity.toLowerCase()}">${d.rarity}</span>
+            ${d.attribute ? `<span class="badge badge-common">${escapeHtml(d.attribute)}</span>` : ""}
+            ${d.element ? `<span class="badge badge-common">${escapeHtml(d.element)}</span>` : ""}
           </div>
         </div>
       </div>
