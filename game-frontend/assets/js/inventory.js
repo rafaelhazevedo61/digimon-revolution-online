@@ -35,7 +35,7 @@ async function renderInventoryPage() {
     invDigimonId = dashboard.activeDigimon ? dashboard.activeDigimon.id : null;
 
     if (invDigimonId) {
-      invEquipments = await apiGet(`/equipment/digimon/${invDigimonId}/inventory`);
+      invEquipments = await apiGet(`/equipment/digimon/${invDigimonId}/inventory`) || [];
     } else {
       invEquipments = [];
     }
@@ -245,7 +245,7 @@ async function invUnequip(equipmentId) {
 async function invReloadEquipment() {
   if (!invDigimonId) return;
   try {
-    invEquipments = await apiGet(`/equipment/digimon/${invDigimonId}/inventory`);
+    invEquipments = await apiGet(`/equipment/digimon/${invDigimonId}/inventory`) || [];
     invRenderEquipment();
   } catch (err) {
     showToast(err.message, "error");
