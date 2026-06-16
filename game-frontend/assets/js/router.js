@@ -5,7 +5,8 @@ const routes = {
   missions: renderMissionsPage,
   "mission-area": renderMissionAreaPage,
   "digimon-select": renderDigimonSelectPage,
-  shop: renderShopPage
+  shop: renderShopPage,
+  inventory: renderInventoryPage
 };
 
 function navigateTo(route, params = {}) {
