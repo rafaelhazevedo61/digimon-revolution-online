@@ -215,7 +215,10 @@ function renderDigimonSelectCards(digimons) {
           <span class="text-blue-400">DEF ${d.defense}</span>
         </div>
       </div>
-      <button class="btn-primary btn-sm" onclick="selectDigimon('${d.id}')">Selecionar</button>
+      <div class="flex flex-col gap-2">
+        <button class="btn-primary btn-sm" onclick="selectDigimon('${d.id}')">Selecionar</button>
+        <button class="btn-sm" style="background:#164e63;color:#67e8f9" onclick="selectAndEvolve('${d.id}')">Evoluir</button>
+      </div>
     </div>
   `).join("");
 }
@@ -224,6 +227,15 @@ async function selectDigimon(digimonId) {
   try {
     await apiPost("/digimon/select", { digimonId: digimonId });
     navigateTo("dashboard");
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function selectAndEvolve(digimonId) {
+  try {
+    await apiPost("/digimon/select", { digimonId: digimonId });
+    navigateTo("evolution");
   } catch (err) {
     showToast(err.message, "error");
   }
