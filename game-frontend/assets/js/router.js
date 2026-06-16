@@ -7,7 +7,8 @@ const routes = {
   "digimon-select": renderDigimonSelectPage,
   shop: renderShopPage,
   inventory: renderInventoryPage,
-  evolution: renderEvolutionPage
+  evolution: renderEvolutionPage,
+  more: renderMorePage
 };
 
 function navigateTo(route, params = {}) {

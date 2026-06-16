@@ -5,7 +5,7 @@ let invTab = "items"; // "items" or "equipment"
 
 async function renderInventoryPage() {
   const app = document.getElementById("app");
-  showBottomNav("inventory");
+  showBottomNav("more");
 
   app.innerHTML = `
     <div class="page-container">
