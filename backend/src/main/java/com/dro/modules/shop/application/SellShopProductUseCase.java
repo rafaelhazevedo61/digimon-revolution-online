@@ -5,12 +5,18 @@ import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.inventory.application.ConsumeItemUseCase;
+import com.dro.modules.inventory.domain.ItemDefinition;
+import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.inventory.domain.InventoryItem;
+import com.dro.modules.inventory.infra.InventoryRepository;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.shop.api.dto.request.SellShopProductRequest;
 import com.dro.modules.shop.api.dto.response.SellShopProductResponse;
 import com.dro.modules.shop.domain.ShopProduct;
 import com.dro.modules.shop.domain.ShopProductMapper;
+import com.dro.modules.shop.domain.ShopProductType;
 import com.dro.modules.shop.infra.ShopProductRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
@@ -33,6 +39,8 @@ public class SellShopProductUseCase {
     private final ConsumeItemUseCase consumeItemUseCase;
     private final EquipmentRepository equipmentRepository;
     private final ShopProductRepository shopProductRepository;
+    private final ItemDefinitionRepository itemDefinitionRepository;
+    private final InventoryRepository inventoryRepository;
 
     @Transactional
     public SellShopProductResponse execute(String token, SellShopProductRequest request) {
@@ -61,7 +69,11 @@ public class SellShopProductUseCase {
             return sellItem(digimon, request);
         }
 
-        throw new BadRequestException("productCode or equipmentId is required");
+        if (request.itemType() != null && !request.itemType().isBlank()) {
+            return sellByItemDefinition(digimon, request);
+        }
+
+        throw new BadRequestException("productCode, equipmentId or itemType is required");
     }
 
     private SellShopProductResponse sellItem(Digimon digimon, SellShopProductRequest request) {
@@ -138,6 +150,53 @@ public class SellShopProductUseCase {
                 product.getSellPrice(),
                 digimon.getBits(),
                 "Equipment sold successfully"
+        );
+    }
+
+    private SellShopProductResponse sellByItemDefinition(Digimon digimon, SellShopProductRequest request) {
+
+        if (request.quantity() <= 0) {
+            throw new BadRequestException("Quantity must be greater than zero");
+        }
+
+        ItemDefinition itemDef = itemDefinitionRepository.findByCode(request.itemType())
+                .orElseThrow(() -> new NotFoundException("Item definition not found: " + request.itemType()));
+
+        if (!itemDef.isSellable()) {
+            throw new UnprocessableException("This item cannot be sold");
+        }
+
+        if (itemDef.getSellPrice() == null || itemDef.getSellPrice() <= 0) {
+            throw new UnprocessableException("This item has no sell price");
+        }
+
+        InventoryItem inventoryItem = inventoryRepository.findByDigimonIdAndItemDefinitionId(
+                digimon.getId(), itemDef.getId()
+        ).orElseThrow(() -> new NotFoundException("Item not found in inventory"));
+
+        if (inventoryItem.getQuantity() < request.quantity()) {
+            throw new BadRequestException("Not enough items. You have " + inventoryItem.getQuantity());
+        }
+
+        int totalSellPrice = itemDef.getSellPrice() * request.quantity();
+
+        consumeItemUseCase.consumeMaterial(
+                digimon.getId(),
+                itemDef.getId(),
+                request.quantity()
+        );
+
+        digimon.setBits(digimon.getBits() + totalSellPrice);
+        digimonRepository.save(digimon);
+
+        return new SellShopProductResponse(
+                itemDef.getCode(),
+                itemDef.getName(),
+                ShopProductType.ITEM,
+                request.quantity(),
+                totalSellPrice,
+                digimon.getBits(),
+                "Item sold successfully"
         );
     }
 }

@@ -64,6 +64,12 @@ function renderDashContent(data) {
         ${renderEquipSlots(data.equippedItems || [])}
       </div>
     </div>
+
+    <!-- Actions -->
+    <div class="grid grid-cols-2 gap-2 mb-4">
+      <button class="btn-primary w-full" onclick="navigateTo('evolution')">⚡ Evoluir</button>
+      <button class="w-full py-2 rounded-lg font-bold text-sm" style="background:#164e63;color:#67e8f9" onclick="navigateTo('inventory')">🎒 Inventário</button>
+    </div>
     ` : ""}
 
     <!-- Active missions -->

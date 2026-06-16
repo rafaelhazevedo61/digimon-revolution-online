@@ -243,10 +243,21 @@ async function shopRenderSellMode() {
   }
 }
 
+function shopSellItemEmoji(category) {
+  const map = {
+    CONSUMABLE: "🧪", MATERIAL: "🔮", FRAGMENT: "🧩",
+    EVOLUTION_MATERIAL: "⭐", DIGITAMA: "🥚", INCUBATOR: "📦"
+  };
+  return map[category] || "📦";
+}
+
 function shopRenderSellList() {
   const content = document.getElementById("shop-content");
 
-  // Build sell price map from shop catalog
+  const sellableItems = shopInventoryItems
+    .filter(item => item.quantity > 0 && item.itemDefinition && item.itemDefinition.sellable && item.itemDefinition.sellPrice > 0);
+
+  // For equipment sell, still use shop catalog to find sell price
   const allShopProducts = [
     ...(shopData.potions || []),
     ...(shopData.materials || []),
@@ -254,14 +265,6 @@ function shopRenderSellList() {
     ...(shopData.fragments || []),
     ...(shopData.consumables || [])
   ];
-
-  const sellableItems = shopInventoryItems
-    .filter(item => item.quantity > 0)
-    .map(item => {
-      const shopProduct = allShopProducts.find(p => p.itemType === item.itemType);
-      return { ...item, shopProduct };
-    })
-    .filter(item => item.shopProduct && item.shopProduct.sellPrice > 0);
 
   const sellableEquipments = shopInventoryEquipments
     .filter(eq => !eq.equipped)
@@ -280,19 +283,21 @@ function shopRenderSellList() {
 
   if (sellableItems.length > 0) {
     html += `<h3 class="text-sm font-bold text-slate-300 mb-2 px-1">Itens</h3>`;
-    html += sellableItems.map(item => `
+    html += sellableItems.map(item => {
+      const def = item.itemDefinition;
+      return `
       <div class="card-sm mb-2 flex items-center gap-3">
-        <div class="text-2xl">${shopItemEmoji(item.shopProduct)}</div>
+        <div class="text-2xl">${shopSellItemEmoji(def.category)}</div>
         <div class="flex-1 min-w-0">
-          <p class="font-bold text-sm truncate">${escapeHtml(item.shopProduct.name)}</p>
+          <p class="font-bold text-sm truncate">${escapeHtml(def.name)}</p>
           <div class="flex gap-2 mt-1">
             <span class="text-xs text-slate-400">Qtd: ${item.quantity}</span>
-            <span class="text-xs text-green-400 font-bold">+${item.shopProduct.sellPrice} Bits/un</span>
+            <span class="text-xs text-green-400 font-bold">+${def.sellPrice} Bits/un</span>
           </div>
         </div>
-        <button class="btn-sm" style="background:#166534;color:#86efac" onclick="shopOpenSell('${escapeHtml(item.shopProduct.code)}', ${item.quantity}, ${item.shopProduct.sellPrice})">Vender</button>
+        <button class="btn-sm" style="background:#166534;color:#86efac" onclick="shopOpenSell('${escapeHtml(def.code)}', ${item.quantity}, ${def.sellPrice})">Vender</button>
       </div>
-    `).join("");
+    `;}).join("");
   }
 
   if (sellableEquipments.length > 0) {
@@ -315,7 +320,7 @@ function shopRenderSellList() {
   content.innerHTML = html;
 }
 
-function shopOpenSell(productCode, maxQty, sellPrice) {
+function shopOpenSell(itemDefCode, maxQty, sellPrice) {
   shopModalUnitPrice = sellPrice;
 
   const overlay = document.createElement("div");
@@ -341,7 +346,7 @@ function shopOpenSell(productCode, maxQty, sellPrice) {
         <span class="text-green-400 font-bold" id="shop-total">+${sellPrice} Bits</span>
       </div>
       <div class="flex gap-2">
-        <button class="flex-1 btn-sm" style="background:#166534;color:#86efac;padding:0.6rem" onclick="shopConfirmSellItem('${escapeHtml(productCode)}')" id="shop-sell-btn">Confirmar Venda</button>
+        <button class="flex-1 btn-sm" style="background:#166534;color:#86efac;padding:0.6rem" onclick="shopConfirmSellItem('${escapeHtml(itemDefCode)}')" id="shop-sell-btn">Confirmar Venda</button>
         <button class="btn-sm flex-1" style="background:#334155;color:#94a3b8;padding:0.6rem" onclick="shopCloseModal()">Cancelar</button>
       </div>
     </div>
@@ -360,14 +365,14 @@ function shopSellQtyUpdate(sellPrice) {
   totalEl.textContent = `+${qty * sellPrice} Bits`;
 }
 
-async function shopConfirmSellItem(productCode) {
+async function shopConfirmSellItem(itemDefCode) {
   const qtyInput = document.getElementById("shop-qty");
   const qty = qtyInput ? parseInt(qtyInput.value) || 1 : 1;
   const btn = document.getElementById("shop-sell-btn");
   if (btn) { btn.disabled = true; btn.textContent = "Vendendo..."; }
 
   try {
-    const result = await apiPost("/shop/sell", { productCode: productCode, quantity: qty });
+    const result = await apiPost("/shop/sell", { itemType: itemDefCode, quantity: qty });
     shopPlayerBits = result.remainingBits;
     document.getElementById("shop-bits").textContent = shopPlayerBits;
     shopCloseModal();
