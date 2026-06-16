@@ -53,9 +53,11 @@ function evoRender(digimon) {
             <h3 class="font-bold text-lg truncate">${escapeHtml(digimon.name)}</h3>
             <span class="text-sm font-bold text-cyan-400">Lv.${digimon.level}</span>
           </div>
-          <div class="flex gap-2 mt-1">
+          <div class="flex gap-2 mt-1 flex-wrap">
             <span class="badge badge-${digimon.stage.toLowerCase()}">${evoFormatStage(digimon.stage)}</span>
             <span class="badge badge-${digimon.rarity.toLowerCase()}">${digimon.rarity}</span>
+            ${evoData.currentAttribute ? `<span class="badge badge-common">${escapeHtml(evoData.currentAttribute)}</span>` : ""}
+            ${evoData.currentElement ? `<span class="badge badge-common">${escapeHtml(evoData.currentElement)}</span>` : ""}
           </div>
         </div>
       </div>
