@@ -8,7 +8,8 @@ public class DigitamaRules {
         return switch (type) {
             case DIGITAMA_FIRE,
                  DIGITAMA_WATER,
-                 DIGITAMA_NATURE -> true;
+                 DIGITAMA_NATURE,
+                 DIGITAMA_STARTER -> true;
             default -> false;
         };
     }
