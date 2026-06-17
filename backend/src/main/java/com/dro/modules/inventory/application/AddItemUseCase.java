@@ -59,12 +59,20 @@ public class AddItemUseCase {
             InventoryItem item = InventoryItem.builder()
                     .id(UUID.randomUUID())
                     .digimonId(digimonId)
-                    .itemType(ItemType.EVOLUTION_MATERIAL)
+                    .itemType(resolveItemType(itemDefinition.getCode()))
                     .itemDefinition(itemDefinition)
                     .quantity(newQuantity)
                     .build();
 
             repository.save(item);
+        }
+    }
+
+    private ItemType resolveItemType(String code) {
+        try {
+            return ItemType.valueOf(code);
+        } catch (IllegalArgumentException e) {
+            return ItemType.EVOLUTION_MATERIAL;
         }
     }
 }
