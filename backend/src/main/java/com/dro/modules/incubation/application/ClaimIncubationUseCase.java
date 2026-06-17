@@ -1,8 +1,14 @@
 package com.dro.modules.incubation.application;
 
 import com.dro.modules.digitama.domain.DigitamaHatchRules;
+import com.dro.modules.digitama.domain.DigitamaPool;
+import com.dro.modules.digitama.domain.DigitamaPoolEntry;
+import com.dro.modules.digitama.domain.DigitamaPoolRoller;
+import com.dro.modules.digitama.domain.enums.DigitamaType;
+import com.dro.modules.digitama.infra.DigitamaPoolRepository;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.DigimonFactory;
+import com.dro.modules.digimon.domain.DigimonInfos;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.incubation.domain.Incubation;
 import com.dro.modules.incubation.domain.IncubationStatus;
@@ -25,6 +31,7 @@ public class ClaimIncubationUseCase {
     private final IncubationRepository incubationRepository;
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
+    private final DigitamaPoolRepository digitamaPoolRepository;
 
     public Digimon execute(String token) {
 
@@ -74,11 +81,17 @@ public class ClaimIncubationUseCase {
             UUID playerId,
             Incubation incubation
     ) {
-        return DigimonFactory.createBaby(
-                playerId,
-                DigitamaHatchRules.toDigitamaType(incubation.getDigitamaType()),
-                null //TODO: ajustar
-        );
+        DigitamaType digitamaType = DigitamaHatchRules.toDigitamaType(incubation.getDigitamaType());
+        String poolCode = digitamaType.getPoolCode();
+
+        DigitamaPool pool = digitamaPoolRepository
+                .findByCodeAndActiveTrueAndContentActiveTrue(poolCode)
+                .orElseThrow(() -> new NotFoundException("Digitama pool not found: " + poolCode));
+
+        DigitamaPoolEntry entry = DigitamaPoolRoller.roll(pool.getEntries());
+        DigimonInfos infos = entry.getDigimonInfo();
+
+        return DigimonFactory.createBaby(playerId, digitamaType, infos);
     }
 
     private void setActiveIfFirstDigimon(UUID playerId, Digimon digimon) {

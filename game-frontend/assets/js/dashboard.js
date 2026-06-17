@@ -86,6 +86,7 @@ function renderDashContent(data) {
   `;
 
   startMissionTimers();
+  startIncubationTimer();
 }
 
 function renderDigimonCard(d) {
@@ -216,16 +217,16 @@ function renderIncubation(inc) {
   const done = remaining <= 0;
 
   return `
-    <div class="mb-4">
+    <div class="mb-4" id="dash-incubation" data-finish-at="${inc.finishAt}">
       <h3 class="text-sm font-bold text-slate-300 mb-2 px-1">Incubação</h3>
-      <div class="card-sm flex items-center justify-between">
+      <div class="card-sm flex items-center justify-between cursor-pointer" onclick="navigateTo('incubation')">
         <div>
           <p class="font-bold text-sm">${formatItemType(inc.digitamaType)}</p>
           <p class="text-xs text-slate-500">${formatItemType(inc.incubatorType)}</p>
         </div>
         <div class="text-right">
-          <p class="text-xs text-slate-400">${done ? "Pronta!" : formatTime(remaining)}</p>
-          <span class="badge badge-${inc.status.toLowerCase()}">${inc.status}</span>
+          <p class="text-xs ${done ? 'text-green-400 font-bold' : 'text-amber-400'}" id="incub-dash-timer">${done ? "Pronta! 🐣" : formatTime(remaining)}</p>
+          ${done ? `<button class="btn-sm btn-primary mt-1" onclick="event.stopPropagation(); navigateTo('incubation')">Chocar</button>` : ""}
         </div>
       </div>
     </div>
@@ -242,7 +243,37 @@ async function claimMission(instanceId) {
   }
 }
 
-// Timer logic
+// Incubation timer
+let incubTimerDashInterval = null;
+
+function startIncubationTimer() {
+  if (incubTimerDashInterval) clearInterval(incubTimerDashInterval);
+  const el = document.getElementById("dash-incubation");
+  if (!el) return;
+
+  const finishAt = new Date(el.dataset.finishAt).getTime();
+
+  incubTimerDashInterval = setInterval(() => {
+    const timerEl = document.getElementById("incub-dash-timer");
+    if (!timerEl) { clearInterval(incubTimerDashInterval); return; }
+
+    const remaining = Math.max(0, Math.floor((finishAt - Date.now()) / 1000));
+
+    if (remaining <= 0) {
+      clearInterval(incubTimerDashInterval);
+      timerEl.textContent = "Pronta! 🐣";
+      timerEl.className = "text-xs text-green-400 font-bold";
+      const parent = timerEl.parentElement;
+      if (parent && !parent.querySelector("button")) {
+        parent.insertAdjacentHTML("beforeend", `<button class="btn-sm btn-primary mt-1" onclick="event.stopPropagation(); navigateTo('incubation')">Chocar</button>`);
+      }
+    } else {
+      timerEl.textContent = formatTime(remaining);
+    }
+  }, 1000);
+}
+
+// Mission timer logic
 let missionTimerInterval = null;
 
 function startMissionTimers() {

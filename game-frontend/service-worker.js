@@ -1,4 +1,4 @@
-const CACHE_NAME = "dro-game-v2";
+const CACHE_NAME = "dro-game-v3";
 const STATIC_ASSETS = [
   "/",
   "/index.html",
@@ -37,16 +37,14 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Static assets: cache first, network fallback
+  // Static assets: network first, cache fallback (ensures fresh code)
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      return cached || fetch(event.request).then(response => {
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-        }
-        return response;
-      });
-    })
+    fetch(event.request).then(response => {
+      if (response.ok) {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+      }
+      return response;
+    }).catch(() => caches.match(event.request))
   );
 });
