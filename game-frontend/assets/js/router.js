@@ -10,6 +10,7 @@ const routes = {
   evolution: renderEvolutionPage,
   rebirth: renderRebirthPage,
   ranking: renderRankingPage,
+  incubation: renderIncubationPage,
   more: renderMorePage
 };
 
