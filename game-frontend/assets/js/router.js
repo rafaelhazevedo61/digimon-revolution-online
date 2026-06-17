@@ -9,6 +9,7 @@ const routes = {
   inventory: renderInventoryPage,
   evolution: renderEvolutionPage,
   rebirth: renderRebirthPage,
+  ranking: renderRankingPage,
   more: renderMorePage
 };
 
