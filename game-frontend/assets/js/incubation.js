@@ -135,13 +135,17 @@ async function incubRenderStart() {
     return;
   }
 
-  const digitamas = inventory.filter(i =>
-    ["DIGITAMA_FIRE", "DIGITAMA_WATER", "DIGITAMA_NATURE"].includes(i.itemType) && i.quantity > 0
-  );
+  const digitamas = inventory.filter(i => {
+    const def = i.itemDefinition;
+    if (def && def.category === "DIGITAMA" && i.quantity > 0) return true;
+    return ["DIGITAMA_FIRE", "DIGITAMA_WATER", "DIGITAMA_NATURE", "DIGITAMA_STARTER"].includes(i.itemType) && i.quantity > 0;
+  });
 
-  const incubators = inventory.filter(i =>
-    ["INCUBATOR_COMMON", "INCUBATOR_RARE", "INCUBATOR_EPIC"].includes(i.itemType) && i.quantity > 0
-  );
+  const incubators = inventory.filter(i => {
+    const def = i.itemDefinition;
+    if (def && def.category === "INCUBATOR" && i.quantity > 0) return true;
+    return ["INCUBATOR_COMMON", "INCUBATOR_RARE", "INCUBATOR_EPIC"].includes(i.itemType) && i.quantity > 0;
+  });
 
   if (digitamas.length === 0 && incubators.length === 0) {
     content.innerHTML = `
@@ -184,28 +188,38 @@ async function incubRenderStart() {
 
     <h3 class="text-sm font-bold text-slate-300 mb-2 px-1">Digitamas</h3>
     <div class="flex flex-col gap-2 mb-4" id="incub-digitamas">
-      ${digitamas.map(d => `
+      ${digitamas.map(d => {
+        const def = d.itemDefinition;
+        const name = def ? def.name : incubItemName(d.itemType);
+        const emoji = incubDigitamaEmoji(d.itemType);
+        return `
         <button class="card-sm flex items-center gap-3 text-left w-full incub-select-btn" data-type="digitama" data-value="${d.itemType}" onclick="incubSelect(this, 'digitama')">
-          <span class="text-2xl">${incubDigitamaEmoji(d.itemType)}</span>
+          <span class="text-2xl">${emoji}</span>
           <div class="flex-1">
-            <p class="font-bold text-sm">${escapeHtml(incubItemName(d.itemType))}</p>
+            <p class="font-bold text-sm">${escapeHtml(name)}</p>
             <p class="text-xs text-slate-500">Qtd: ${d.quantity}</p>
           </div>
         </button>
-      `).join("")}
+      `;
+      }).join("")}
     </div>
 
     <h3 class="text-sm font-bold text-slate-300 mb-2 px-1">Incubadoras</h3>
     <div class="flex flex-col gap-2 mb-4" id="incub-incubators">
-      ${incubators.map(i => `
+      ${incubators.map(i => {
+        const def = i.itemDefinition;
+        const name = def ? def.name : incubItemName(i.itemType);
+        const emoji = incubIncubatorEmoji(i.itemType);
+        return `
         <button class="card-sm flex items-center gap-3 text-left w-full incub-select-btn" data-type="incubator" data-value="${i.itemType}" onclick="incubSelect(this, 'incubator')">
-          <span class="text-2xl">${incubIncubatorEmoji(i.itemType)}</span>
+          <span class="text-2xl">${emoji}</span>
           <div class="flex-1">
-            <p class="font-bold text-sm">${escapeHtml(incubItemName(i.itemType))}</p>
+            <p class="font-bold text-sm">${escapeHtml(name)}</p>
             <p class="text-xs text-slate-500">Qtd: ${i.quantity} · ${incubDuration(i.itemType)}</p>
           </div>
         </button>
-      `).join("")}
+      `;
+      }).join("")}
     </div>
 
     <button class="btn-primary w-full py-3 opacity-50 cursor-not-allowed" id="incub-start-btn" disabled onclick="incubStart()">
@@ -267,7 +281,7 @@ function incubItemName(type) {
 }
 
 function incubDigitamaEmoji(type) {
-  const map = { DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿" };
+  const map = { DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿", DIGITAMA_STARTER: "⭐" };
   return map[type] || "🥚";
 }
 
