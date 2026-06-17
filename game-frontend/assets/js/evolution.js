@@ -70,6 +70,7 @@ function evoRender(digimon) {
         <p class="text-2xl mb-2">🏆</p>
         <p class="text-slate-400">Este Digimon já atingiu o estágio máximo!</p>
         <p class="text-xs text-slate-500 mt-1">Considere fazer Rebirth para continuar evoluindo.</p>
+        <button class="btn-primary mt-3" style="background:#854d0e;color:#fbbf24" onclick="navigateTo('rebirth')">🔄 Ir para Rebirth</button>
       </div>
     `;
   } else {

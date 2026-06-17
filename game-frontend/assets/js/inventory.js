@@ -75,9 +75,12 @@ function invRenderItems() {
   }
 
   content.innerHTML = items.map(item => {
-    const name = invItemName(item.itemType);
-    const emoji = invItemEmoji(item.itemType);
-    const usable = invIsUsable(item.itemType);
+    const def = item.itemDefinition;
+    const name = def ? def.name : invItemName(item.itemType);
+    const emoji = def ? invCategoryEmoji(def.category) : invItemEmoji(item.itemType);
+    const catName = def ? invCategoryLabel(def.category) : invItemCategoryName(item.itemType);
+    const catBadge = def ? invCategoryBadge(def.category) : invItemCategory(item.itemType);
+    const usable = def ? def.usable : invIsUsable(item.itemType);
 
     return `
       <div class="card-sm mb-2 flex items-center gap-3">
@@ -86,7 +89,7 @@ function invRenderItems() {
           <p class="font-bold text-sm truncate">${escapeHtml(name)}</p>
           <div class="flex gap-2 mt-1">
             <span class="text-xs text-slate-400">Qtd: ${item.quantity}</span>
-            <span class="badge badge-${invItemCategory(item.itemType)}">${invItemCategoryName(item.itemType)}</span>
+            <span class="badge badge-${catBadge}">${escapeHtml(catName)}</span>
           </div>
         </div>
         ${usable ? `
@@ -95,6 +98,30 @@ function invRenderItems() {
       </div>
     `;
   }).join("");
+}
+
+function invCategoryEmoji(category) {
+  const map = {
+    CONSUMABLE: "🧪", MATERIAL: "🔮", FRAGMENT: "🧩",
+    EVOLUTION_MATERIAL: "⭐", DIGITAMA: "🥚", INCUBATOR: "📦"
+  };
+  return map[category] || "📦";
+}
+
+function invCategoryLabel(category) {
+  const map = {
+    CONSUMABLE: "Consumível", MATERIAL: "Material", FRAGMENT: "Fragmento",
+    EVOLUTION_MATERIAL: "Evolução", DIGITAMA: "Digitama", INCUBATOR: "Incubadora"
+  };
+  return map[category] || "Item";
+}
+
+function invCategoryBadge(category) {
+  const map = {
+    CONSUMABLE: "common", MATERIAL: "common", FRAGMENT: "champion",
+    EVOLUTION_MATERIAL: "legendary", DIGITAMA: "rare", INCUBATOR: "epic"
+  };
+  return map[category] || "common";
 }
 
 async function invUseItem(itemType) {

@@ -8,6 +8,7 @@ const routes = {
   shop: renderShopPage,
   inventory: renderInventoryPage,
   evolution: renderEvolutionPage,
+  rebirth: renderRebirthPage,
   more: renderMorePage
 };
 

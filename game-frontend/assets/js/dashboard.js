@@ -66,8 +66,9 @@ function renderDashContent(data) {
     </div>
 
     <!-- Actions -->
-    <div class="grid grid-cols-2 gap-2 mb-4">
+    <div class="grid grid-cols-3 gap-2 mb-4">
       <button class="btn-primary w-full" onclick="navigateTo('evolution')">⚡ Evoluir</button>
+      <button class="w-full py-2 rounded-lg font-bold text-sm" style="background:#854d0e;color:#fbbf24" onclick="navigateTo('rebirth')">🔄 Rebirth</button>
       <button class="w-full py-2 rounded-lg font-bold text-sm" style="background:#164e63;color:#67e8f9" onclick="navigateTo('inventory')">🎒 Inventário</button>
     </div>
     ` : ""}
