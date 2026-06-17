@@ -7,13 +7,6 @@ async function renderMorePage() {
       <h2 class="text-lg font-bold mb-4 px-1">Mais</h2>
 
       <div class="flex flex-col gap-2">
-        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('inventory')">
-          <span class="text-2xl">🎒</span>
-          <div>
-            <p class="font-bold text-sm">Inventário</p>
-            <p class="text-xs text-slate-400">Itens e materiais</p>
-          </div>
-        </button>
         <button class="card-sm flex items-center gap-3 text-left w-full opacity-50" disabled>
           <span class="text-2xl">🏆</span>
           <div>
