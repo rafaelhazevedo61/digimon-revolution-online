@@ -14,6 +14,27 @@ async function renderMorePage() {
             <p class="text-xs text-slate-400">Itens e materiais</p>
           </div>
         </button>
+        <button class="card-sm flex items-center gap-3 text-left w-full opacity-50" disabled>
+          <span class="text-2xl">🏆</span>
+          <div>
+            <p class="font-bold text-sm">Ranking</p>
+            <p class="text-xs text-slate-400">Top jogadores — em breve</p>
+          </div>
+        </button>
+        <button class="card-sm flex items-center gap-3 text-left w-full opacity-50" disabled>
+          <span class="text-2xl">🥚</span>
+          <div>
+            <p class="font-bold text-sm">Incubação</p>
+            <p class="text-xs text-slate-400">Chocar novas digitamas — em breve</p>
+          </div>
+        </button>
+        <button class="card-sm flex items-center gap-3 text-left w-full opacity-50" disabled>
+          <span class="text-2xl">⚙️</span>
+          <div>
+            <p class="font-bold text-sm">Configurações</p>
+            <p class="text-xs text-slate-400">Conta e preferências — em breve</p>
+          </div>
+        </button>
       </div>
     </div>
   `;
