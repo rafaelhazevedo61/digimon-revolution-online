@@ -21,6 +21,13 @@ async function renderMorePage() {
             <p class="text-xs text-slate-400">Chocar novas digitamas</p>
           </div>
         </button>
+        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('pokedex')">
+          <span class="text-2xl">📖</span>
+          <div>
+            <p class="font-bold text-sm">Digimon Info</p>
+            <p class="text-xs text-slate-400">Catálogo de todos os Digimons</p>
+          </div>
+        </button>
         <button class="card-sm flex items-center gap-3 text-left w-full opacity-50" disabled>
           <span class="text-2xl">⚙️</span>
           <div>
