@@ -2,6 +2,8 @@ package com.dro.modules.player.application;
 
 import com.dro.modules.digimon.api.dto.response.DigimonResponse;
 import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.domain.DigimonInfos;
+import com.dro.modules.digimon.infra.DigimonInfosRepository;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.equipment.api.dto.response.EquipmentResponse;
 import com.dro.modules.equipment.domain.Equipment;
@@ -43,6 +45,7 @@ public class GetPlayerDashboardUseCase {
 
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
+    private final DigimonInfosRepository digimonInfosRepository;
     private final EquipmentRepository equipmentRepository;
     private final InventoryRepository inventoryRepository;
     private final MissionInstanceRepository missionInstanceRepository;
@@ -97,6 +100,10 @@ public class GetPlayerDashboardUseCase {
 
         List<Equipment> equipped = getEquippedItems(d);
 
+        DigimonInfos info = d.getDigimonInfoId() != null
+                ? digimonInfosRepository.findById(d.getDigimonInfoId()).orElse(null)
+                : null;
+
         return new DigimonResponse(
                 d.getId(),
                 d.getName(),
@@ -121,6 +128,8 @@ public class GetPlayerDashboardUseCase {
                 d.getRebornedFrom(),
                 d.getStatus(),
                 d.getDigimonInfoId(),
+                info != null ? info.getAttribute().name() : null,
+                info != null ? info.getElement().name() : null,
                 EquipmentRules.totalBonusHp(equipped),
                 EquipmentRules.totalBonusAttack(equipped),
                 EquipmentRules.totalBonusDefense(equipped)

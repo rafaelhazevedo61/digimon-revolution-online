@@ -29,6 +29,8 @@ public record DigimonResponse(
         UUID rebornedFrom,
         DigimonStatus status,
         Long digimonInfoId,
+        String attribute,
+        String element,
         int equipBonusHp,
         int equipBonusAttack,
         int equipBonusDefense

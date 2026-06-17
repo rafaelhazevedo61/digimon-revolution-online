@@ -7,6 +7,8 @@ public record EvolutionOptionsResponse(
         String currentName,
         String currentStage,
         int currentLevel,
+        String currentAttribute,
+        String currentElement,
         List<EvolutionOptionResponse> options
 ) {
 }

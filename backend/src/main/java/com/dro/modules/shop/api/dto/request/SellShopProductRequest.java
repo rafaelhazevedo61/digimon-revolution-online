@@ -7,6 +7,7 @@ import java.util.UUID;
 public record SellShopProductRequest(
         String productCode,
         UUID equipmentId,
+        String itemType,
         @Min(1) int quantity
 ) {
 }

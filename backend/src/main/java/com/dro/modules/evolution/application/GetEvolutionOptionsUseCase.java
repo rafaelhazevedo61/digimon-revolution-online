@@ -2,6 +2,7 @@ package com.dro.modules.evolution.application;
 
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.DigimonInfos;
+import com.dro.modules.digimon.infra.DigimonInfosRepository;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.evolution.api.dto.response.*;
 import com.dro.modules.evolution.domain.EvolutionLine;
@@ -28,6 +29,7 @@ import java.util.*;
 public class GetEvolutionOptionsUseCase {
 
     private final DigimonRepository digimonRepository;
+    private final DigimonInfosRepository digimonInfosRepository;
     private final EvolutionLineRepository evolutionLineRepository;
     private final InventoryRepository inventoryRepository;
     private final ItemDefinitionRepository itemDefinitionRepository;
@@ -60,11 +62,16 @@ public class GetEvolutionOptionsUseCase {
             });
         }
 
+        DigimonInfos currentInfo = digimonInfosRepository.findById(digimon.getDigimonInfoId())
+                .orElse(null);
+
         return new EvolutionOptionsResponse(
                 digimon.getDigimonInfoId(),
                 digimon.getName(),
                 digimon.getStage().name(),
                 digimon.getLevel(),
+                currentInfo != null ? currentInfo.getAttribute().name() : null,
+                currentInfo != null ? currentInfo.getElement().name() : null,
                 options
         );
     }

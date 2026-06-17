@@ -228,3 +228,5 @@ async function selectDigimon(digimonId) {
     showToast(err.message, "error");
   }
 }
+
+
