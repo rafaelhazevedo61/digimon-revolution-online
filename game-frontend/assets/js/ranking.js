@@ -3,6 +3,7 @@ let rankPage = 0;
 let rankEntries = [];
 let rankLoading = false;
 let rankHasMore = true;
+let rankGeneration = 0;
 
 async function renderRankingPage() {
   const app = document.getElementById("app");
@@ -37,6 +38,8 @@ function rankSwitchTab(tab) {
   rankPage = 0;
   rankEntries = [];
   rankHasMore = true;
+  rankGeneration++;
+  rankLoading = false;
 
   document.querySelectorAll("#rank-tabs .tab-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.tab === tab);
@@ -48,6 +51,7 @@ function rankSwitchTab(tab) {
 async function rankLoadPage() {
   if (rankLoading) return;
   rankLoading = true;
+  const gen = rankGeneration;
 
   const content = document.getElementById("rank-content");
   if (rankPage === 0) {
@@ -56,10 +60,12 @@ async function rankLoadPage() {
 
   try {
     const data = await apiGet(`/ranking/${rankTab}?page=${rankPage}&size=20`);
+    if (gen !== rankGeneration) return;
     rankEntries = rankPage === 0 ? data : [...rankEntries, ...data];
     rankHasMore = data.length === 20;
     rankRender();
   } catch (err) {
+    if (gen !== rankGeneration) return;
     content.innerHTML = `
       <div class="card border-red-900">
         <p class="text-red-300">${escapeHtml(err.message)}</p>
