@@ -11,6 +11,7 @@ const routes = {
   rebirth: renderRebirthPage,
   ranking: renderRankingPage,
   incubation: renderIncubationPage,
+  pokedex: renderPokedexPage,
   more: renderMorePage
 };
 
