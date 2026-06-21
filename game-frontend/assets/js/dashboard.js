@@ -66,6 +66,7 @@ function renderDashContent(data) {
       <div class="grid grid-cols-3 gap-2">
         ${renderEquipSlots(data.equippedItems || [])}
       </div>
+      ${renderSetBonus(data.setBonus)}
     </div>
 
     <!-- Actions -->
@@ -194,6 +195,22 @@ function renderEquipSlots(items) {
       </div>
     `;
   }).join("");
+}
+
+function renderSetBonus(sb) {
+  if (!sb || !sb.setCode || sb.pieceCount < 2) return "";
+  const setLabels = { BERSERKER: "Berserker", GUARDIAN: "Guardiao", VITALITY: "Vitalidade", BALANCED: "Equilibrado" };
+  const label = setLabels[sb.setCode] || sb.setCode;
+  const bonuses = [];
+  if (sb.bonusHpPercent > 0) bonuses.push(`<span class="text-red-400">HP +${sb.bonusHpPercent}%</span>`);
+  if (sb.bonusAtkPercent > 0) bonuses.push(`<span class="text-orange-400">ATK +${sb.bonusAtkPercent}%</span>`);
+  if (sb.bonusDefPercent > 0) bonuses.push(`<span class="text-blue-400">DEF +${sb.bonusDefPercent}%</span>`);
+  if (bonuses.length === 0) return "";
+  return `
+    <div class="mt-2 px-2 py-1.5 rounded-lg bg-slate-800 text-xs text-center">
+      <span class="text-yellow-400 font-bold">Set ${escapeHtml(label)} (${sb.pieceCount}/3)</span>: ${bonuses.join(" ")}
+    </div>
+  `;
 }
 
 function renderActiveMission(m) {

@@ -1,6 +1,7 @@
 package com.dro.modules.player.api.dto.response;
 
 import com.dro.modules.digimon.api.dto.response.DigimonResponse;
+import com.dro.modules.equipment.api.dto.response.DigimonEquipmentResponse;
 import com.dro.modules.equipment.api.dto.response.EquipmentResponse;
 import com.dro.modules.incubation.api.IncubationResponse;
 
@@ -15,6 +16,7 @@ public record PlayerDashboardResponse(
         LocalDateTime createdAt,
         DigimonResponse activeDigimon,
         List<EquipmentResponse> equippedItems,
+        DigimonEquipmentResponse.SetBonusResponse setBonus,
         List<InventorySummaryResponse> inventory,
         List<ActiveMissionResponse> activeMissions,
         IncubationResponse incubation

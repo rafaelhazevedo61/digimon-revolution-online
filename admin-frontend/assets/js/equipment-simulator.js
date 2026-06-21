@@ -12,6 +12,14 @@ const SIM_RARITY_MULTIPLIERS = { COMMON: 1.0, RARE: 1.15, EPIC: 1.3, LEGENDARY: 
 const SIM_REFINE_SUCCESS = [100, 95, 90, 80, 70, 60, 50, 40, 30, 20];
 const SIM_REFINE_COST = (level) => 1000 + (level * 500);
 
+// Set bonuses: { 2: [hp%, atk%, def%], 3: [hp%, atk%, def%] }
+const SIM_SET_BONUSES = {
+  BERSERKER:  { 2: [0, 10, 0],  3: [0, 20, 0]  },
+  GUARDIAN:   { 2: [5, 0, 10],  3: [10, 0, 20]  },
+  VITALITY:   { 2: [10, 0, 0],  3: [20, 0, 0]   },
+  BALANCED:   { 2: [5, 5, 5],   3: [10, 10, 10]  }
+};
+
 const SIM_BASE_STATS = {
   BERSERKER: {
     WEAPON:    { hp: 0,  atk: 10, def: 0 },
@@ -118,9 +126,11 @@ function renderEquipmentSimulatorPage() {
 
 function simUpdate() {
   let totalHp = 0, totalAtk = 0, totalDef = 0;
+  const setCounts = {};
 
   SIM_SLOTS.forEach(slot => {
     const set = document.getElementById(`sim-${slot}-set`).value;
+    setCounts[set] = (setCounts[set] || 0) + 1;
     const tier = parseInt(document.getElementById(`sim-${slot}-tier`).value);
     const rarity = document.getElementById(`sim-${slot}-rarity`).value;
     const refine = parseInt(document.getElementById(`sim-${slot}-refine`).value);
@@ -163,28 +173,73 @@ function simUpdate() {
     `;
   });
 
+  // Compute set bonus
+  let dominantSet = null;
+  let dominantCount = 0;
+  for (const [s, c] of Object.entries(setCounts)) {
+    if (c >= 2 && c > dominantCount) { dominantSet = s; dominantCount = c; }
+  }
+
+  let setBonusHp = 0, setBonusAtk = 0, setBonusDef = 0;
+  let setBonusLabel = "";
+  if (dominantSet && dominantCount >= 2) {
+    const tier = dominantCount >= 3 ? 3 : 2;
+    const b = SIM_SET_BONUSES[dominantSet][tier];
+    setBonusHp = Math.round(totalHp * b[0] / 100);
+    setBonusAtk = Math.round(totalAtk * b[1] / 100);
+    setBonusDef = Math.round(totalDef * b[2] / 100);
+    const parts = [];
+    if (b[0] > 0) parts.push(`HP +${b[0]}%`);
+    if (b[1] > 0) parts.push(`ATK +${b[1]}%`);
+    if (b[2] > 0) parts.push(`DEF +${b[2]}%`);
+    setBonusLabel = `Set ${SIM_SET_LABELS[dominantSet]} (${dominantCount}/3): ${parts.join(", ")}`;
+  }
+
+  const finalHp = totalHp + setBonusHp;
+  const finalAtk = totalAtk + setBonusAtk;
+  const finalDef = totalDef + setBonusDef;
+  const finalTotal = finalHp + finalAtk + finalDef;
+
   const totalsDiv = document.getElementById("sim-totals");
-  const totalStats = totalHp + totalAtk + totalDef;
 
   totalsDiv.innerHTML = `
     <div class="card">
       <h3 class="text-lg font-bold mb-4 text-center">Bonus Total de Equipamentos</h3>
+
+      ${setBonusLabel ? `
+      <div class="mb-4 p-3 rounded-lg bg-yellow-900/30 border border-yellow-700 text-center">
+        <p class="text-sm font-bold text-yellow-400">${setBonusLabel}</p>
+        <p class="text-xs text-slate-400 mt-1">
+          ${setBonusHp > 0 ? `<span class="text-red-400">HP +${setBonusHp}</span> ` : ''}
+          ${setBonusAtk > 0 ? `<span class="text-orange-400">ATK +${setBonusAtk}</span> ` : ''}
+          ${setBonusDef > 0 ? `<span class="text-blue-400">DEF +${setBonusDef}</span> ` : ''}
+        </p>
+      </div>
+      ` : `
+      <div class="mb-4 p-3 rounded-lg bg-slate-800 text-center">
+        <p class="text-xs text-slate-500">Equipe 2+ pecas do mesmo set para ativar bonus</p>
+      </div>
+      `}
+
       <div class="grid grid-cols-4 gap-4 text-center">
         <div class="bg-slate-800 rounded-lg p-4">
           <p class="text-xs text-slate-400 mb-1">HP</p>
-          <p class="text-2xl font-bold text-red-400">+${totalHp}</p>
+          <p class="text-2xl font-bold text-red-400">+${finalHp}</p>
+          ${setBonusHp > 0 ? `<p class="text-xs text-yellow-400">(+${setBonusHp} set)</p>` : ''}
         </div>
         <div class="bg-slate-800 rounded-lg p-4">
           <p class="text-xs text-slate-400 mb-1">ATK</p>
-          <p class="text-2xl font-bold text-orange-400">+${totalAtk}</p>
+          <p class="text-2xl font-bold text-orange-400">+${finalAtk}</p>
+          ${setBonusAtk > 0 ? `<p class="text-xs text-yellow-400">(+${setBonusAtk} set)</p>` : ''}
         </div>
         <div class="bg-slate-800 rounded-lg p-4">
           <p class="text-xs text-slate-400 mb-1">DEF</p>
-          <p class="text-2xl font-bold text-blue-400">+${totalDef}</p>
+          <p class="text-2xl font-bold text-blue-400">+${finalDef}</p>
+          ${setBonusDef > 0 ? `<p class="text-xs text-yellow-400">(+${setBonusDef} set)</p>` : ''}
         </div>
         <div class="bg-slate-800 rounded-lg p-4">
           <p class="text-xs text-slate-400 mb-1">TOTAL</p>
-          <p class="text-2xl font-bold text-cyan-400">+${totalStats}</p>
+          <p class="text-2xl font-bold text-cyan-400">+${finalTotal}</p>
         </div>
       </div>
 
@@ -226,6 +281,11 @@ function simRenderCompare() {
       const s = simCalcStats(set, slot, tier, rarity, refine);
       hp += s.hp; atk += s.atk; def += s.def;
     });
+    // Apply 3-piece set bonus (full set in compare)
+    const b3 = SIM_SET_BONUSES[set][3];
+    hp += Math.round(hp * b3[0] / 100);
+    atk += Math.round(atk * b3[1] / 100);
+    def += Math.round(def * b3[2] / 100);
     const total = hp + atk + def;
     html += `
       <tr class="border-b border-slate-800">
@@ -240,7 +300,7 @@ function simRenderCompare() {
 
   html += `</tbody></table></div>`;
 
-  html += `<p class="text-xs text-slate-500 mt-2">* Comparativo usa T${tier}, ${rarity}, +${refine} da Arma para todos os slots</p>`;
+  html += `<p class="text-xs text-slate-500 mt-2">* Comparativo usa T${tier}, ${rarity}, +${refine} da Arma para todos os slots (com bonus de 3 pecas)</p>`;
 
   container.innerHTML = html;
 }
