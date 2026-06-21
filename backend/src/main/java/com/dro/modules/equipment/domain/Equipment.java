@@ -67,14 +67,14 @@ public class Equipment {
     }
 
     public int getEffectiveBonusHp() {
-        return bonusHp + refinementLevel;
+        return bonusHp + (refinementLevel * 2);
     }
 
     public int getEffectiveBonusAttack() {
-        return bonusAttack + refinementLevel;
+        return bonusAttack + (refinementLevel * 2);
     }
 
     public int getEffectiveBonusDefense() {
-        return bonusDefense + refinementLevel;
+        return bonusDefense + (refinementLevel * 2);
     }
 }

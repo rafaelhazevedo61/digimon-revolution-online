@@ -324,9 +324,9 @@ async function invShowRefine(equipmentId) {
   overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 
   const nextLevel = preview.nextRefinementLevel;
-  const nextHp = eq.bonusHp > 0 ? eq.effectiveBonusHp + 1 : 0;
-  const nextAtk = eq.bonusAttack > 0 ? eq.effectiveBonusAttack + 1 : 0;
-  const nextDef = eq.bonusDefense > 0 ? eq.effectiveBonusDefense + 1 : 0;
+  const nextHp = eq.bonusHp > 0 ? eq.effectiveBonusHp + 2 : 0;
+  const nextAtk = eq.bonusAttack > 0 ? eq.effectiveBonusAttack + 2 : 0;
+  const nextDef = eq.bonusDefense > 0 ? eq.effectiveBonusDefense + 2 : 0;
 
   overlay.innerHTML = `
     <div class="card" style="max-width:420px;width:100%;max-height:85vh;overflow-y:auto;border-radius:1rem 1rem 0 0;margin:0 auto;">
