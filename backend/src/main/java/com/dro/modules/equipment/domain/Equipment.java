@@ -67,14 +67,17 @@ public class Equipment {
     }
 
     public int getEffectiveBonusHp() {
+        if (bonusHp <= 0) return 0;
         return (int) Math.round(bonusHp * rarity.getStatMultiplier()) + (refinementLevel * 2);
     }
 
     public int getEffectiveBonusAttack() {
+        if (bonusAttack <= 0) return 0;
         return (int) Math.round(bonusAttack * rarity.getStatMultiplier()) + (refinementLevel * 2);
     }
 
     public int getEffectiveBonusDefense() {
+        if (bonusDefense <= 0) return 0;
         return (int) Math.round(bonusDefense * rarity.getStatMultiplier()) + (refinementLevel * 2);
     }
 }
