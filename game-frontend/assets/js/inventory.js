@@ -347,7 +347,7 @@ async function invShowRefine(equipmentId) {
       </div>
 
       <div class="card-sm mb-3">
-        <p class="text-xs text-slate-400 mb-2">Custo</p>
+        <p class="text-xs text-slate-400 mb-2">Custo e Chance</p>
         <div class="flex justify-around text-sm">
           <div class="text-center">
             <span class="text-yellow-400 font-bold">${preview.costBits}</span>
@@ -359,13 +359,17 @@ async function invShowRefine(equipmentId) {
             <span class="text-slate-400"> Pedra</span>
             <br><span class="text-xs ${preview.currentStones >= preview.costStones ? 'text-green-400' : 'text-red-400'}">(tem: ${preview.currentStones})</span>
           </div>
+          <div class="text-center">
+            <span class="font-bold ${preview.successRate >= 70 ? 'text-green-400' : preview.successRate >= 40 ? 'text-yellow-400' : 'text-red-400'}">${preview.successRate}%</span>
+            <span class="text-slate-400"> Chance</span>
+          </div>
         </div>
       </div>
 
       <button id="refine-btn" class="btn-primary w-full py-3 text-base font-bold"
         ${!preview.canRefine ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}
         onclick="invDoRefine('${equipmentId}')">
-        🔨 Refinar para +${nextLevel}
+        🔨 Refinar para +${nextLevel} (${preview.successRate}%)
       </button>
       ${!preview.canRefine ? `<p class="text-red-400 text-xs text-center mt-2">Recursos insuficientes</p>` : ''}
     </div>
@@ -380,7 +384,12 @@ async function invDoRefine(equipmentId) {
 
   try {
     const result = await apiPost("/equipment/refine", { equipmentId: equipmentId });
-    showToast(result.message || "Refinamento concluído!");
+
+    if (result.success) {
+      showToast(result.message || "Refinamento bem-sucedido!");
+    } else {
+      showToast(result.message || "Refinamento falhou!", "error");
+    }
 
     const overlay = document.getElementById("refine-overlay");
     if (overlay) overlay.remove();

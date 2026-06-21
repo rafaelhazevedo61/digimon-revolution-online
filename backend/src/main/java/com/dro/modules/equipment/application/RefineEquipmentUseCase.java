@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
@@ -59,7 +60,9 @@ public class RefineEquipmentUseCase {
             throw new UnprocessableException("Equipment is already at maximum refinement level (+10)");
         }
 
-        int costBits = EquipmentRules.refinementCostBits(equipment.getRefinementLevel());
+        int currentLevel = equipment.getRefinementLevel();
+        int costBits = EquipmentRules.refinementCostBits(currentLevel);
+        int successRate = EquipmentRules.refinementSuccessRate(currentLevel);
 
         if (digimon.getBits() < costBits) {
             throw new UnprocessableException(
@@ -78,15 +81,27 @@ public class RefineEquipmentUseCase {
 
         digimon.setBits(digimon.getBits() - costBits);
         stoneItem.setQuantity(stoneItem.getQuantity() - STONES_PER_REFINEMENT);
-        equipment.setRefinementLevel(equipment.getRefinementLevel() + 1);
+
+        int roll = ThreadLocalRandom.current().nextInt(1, 101);
+        boolean success = roll <= successRate;
+
+        if (success) {
+            equipment.setRefinementLevel(currentLevel + 1);
+        }
 
         digimonRepository.save(digimon);
         inventoryRepository.save(stoneItem);
         equipmentRepository.save(equipment);
 
+        String message = success
+                ? "Refinamento bem-sucedido! +" + equipment.getRefinementLevel()
+                : "Refinamento falhou! O equipamento permanece em +" + currentLevel;
+
         return new RefineEquipmentResponse(
-                "Equipment refined to +" + equipment.getRefinementLevel(),
+                message,
+                success,
                 equipment.getRefinementLevel(),
+                successRate,
                 costBits,
                 STONES_PER_REFINEMENT,
                 EquipmentResponse.from(equipment)

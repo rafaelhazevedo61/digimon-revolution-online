@@ -125,9 +125,12 @@ public class EquipmentController {
                 && digimon.getBits() >= costBits
                 && currentStones >= 1;
 
+        int successRate = EquipmentRules.refinementSuccessRate(currentLevel);
+
         return ResponseEntity.ok(new RefinePreviewResponse(
                 currentLevel,
                 currentLevel + 1,
+                successRate,
                 costBits,
                 1,
                 digimon.getBits(),
