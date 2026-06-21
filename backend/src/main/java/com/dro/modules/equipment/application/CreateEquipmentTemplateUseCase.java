@@ -21,7 +21,7 @@ public class CreateEquipmentTemplateUseCase {
     @Transactional
     public EquipmentTemplateResponse execute(CreateEquipmentTemplateRequest request) {
 
-        if (equipmentTemplateRepository.existsById(request.name())) {
+        if (equipmentTemplateRepository.findByName(request.name()).isPresent()) {
             throw new ConflictException("Equipment template already exists: " + request.name());
         }
 
@@ -29,6 +29,8 @@ public class CreateEquipmentTemplateUseCase {
 
         EquipmentTemplateEntity entity = EquipmentTemplateEntity.builder()
                 .name(request.name())
+                .setCode(request.setCode())
+                .tier(request.tier())
                 .slot(request.slot())
                 .rarity(request.rarity())
                 .bonusHp(request.bonusHp())

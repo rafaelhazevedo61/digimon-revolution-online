@@ -195,6 +195,22 @@ function invItemCategoryName(itemType) {
 
 // ==================== EQUIPMENT TAB ====================
 
+function invSetLabel(setCode) {
+  const map = {
+    BERSERKER: "Berserker", GUARDIAN: "Guardião",
+    VITALITY: "Vitalidade", BALANCED: "Equilibrado"
+  };
+  return map[setCode] || setCode;
+}
+
+function invSetBadge(setCode) {
+  const map = {
+    BERSERKER: "legendary", GUARDIAN: "rare",
+    VITALITY: "epic", BALANCED: "champion"
+  };
+  return map[setCode] || "common";
+}
+
 function invRenderEquipment() {
   const content = document.getElementById("inv-content");
 
@@ -215,11 +231,12 @@ function invRenderEquipment() {
     const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
     const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
     const emoji = slotEmoji[eq.slot] || "⚔️";
+    const refLabel = eq.refinementLevel > 0 ? ` +${eq.refinementLevel}` : "";
 
     const stats = [];
-    if (eq.bonusHp > 0) stats.push(`<span class="text-red-400">HP+${eq.bonusHp}</span>`);
-    if (eq.bonusAttack > 0) stats.push(`<span class="text-orange-400">ATK+${eq.bonusAttack}</span>`);
-    if (eq.bonusDefense > 0) stats.push(`<span class="text-blue-400">DEF+${eq.bonusDefense}</span>`);
+    if (eq.effectiveBonusHp > 0) stats.push(`<span class="text-red-400">HP+${eq.effectiveBonusHp}</span>`);
+    if (eq.effectiveBonusAttack > 0) stats.push(`<span class="text-orange-400">ATK+${eq.effectiveBonusAttack}</span>`);
+    if (eq.effectiveBonusDefense > 0) stats.push(`<span class="text-blue-400">DEF+${eq.effectiveBonusDefense}</span>`);
 
     return `
       <div class="card-sm mb-2 ${eq.equipped ? 'border-cyan-800' : ''}">
@@ -227,16 +244,20 @@ function invRenderEquipment() {
           <div class="text-2xl">${emoji}</div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
-              <p class="font-bold text-sm truncate">${escapeHtml(eq.name)}</p>
+              <p class="font-bold text-sm truncate">${escapeHtml(eq.name)}${refLabel}</p>
               ${eq.equipped ? '<span class="badge badge-success">Equipado</span>' : ''}
             </div>
             <div class="flex gap-2 mt-1 flex-wrap">
-              <span class="badge badge-${eq.rarity ? eq.rarity.toLowerCase() : 'common'}">${escapeHtml(eq.rarity)}</span>
+              ${eq.setCode ? `<span class="badge badge-${invSetBadge(eq.setCode)}">${escapeHtml(invSetLabel(eq.setCode))}</span>` : ''}
+              <span class="badge badge-${eq.rarity ? eq.rarity.toLowerCase() : 'common'}">T${eq.tier || '?'}</span>
               <span class="text-xs text-slate-500">${slotName[eq.slot] || eq.slot}</span>
             </div>
             ${stats.length > 0 ? `<div class="flex gap-2 mt-1 text-xs font-bold">${stats.join(" ")}</div>` : ""}
           </div>
-          <div>
+          <div class="flex flex-col gap-1">
+            ${eq.refinementLevel < 10 ? `
+              <button class="btn-sm" style="background:#4a2800;color:#f59e0b" onclick="invShowRefine('${eq.id}')">Refinar</button>
+            ` : ''}
             ${eq.equipped ? `
               <button class="btn-sm" style="background:#7f1d1d;color:#fca5a5" onclick="invUnequip('${eq.id}')">Desequipar</button>
             ` : `
@@ -276,5 +297,106 @@ async function invReloadEquipment() {
     invRenderEquipment();
   } catch (err) {
     showToast(err.message, "error");
+  }
+}
+
+// ==================== REFINE MODAL ====================
+
+async function invShowRefine(equipmentId) {
+  const eq = invEquipments.find(e => e.id === equipmentId);
+  if (!eq) return;
+
+  let preview = null;
+  try {
+    preview = await apiGet(`/equipment/${equipmentId}/refine-preview`);
+  } catch (err) {
+    showToast(err.message, "error");
+    return;
+  }
+
+  const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
+  const emoji = slotEmoji[eq.slot] || "⚔️";
+  const refLabel = eq.refinementLevel > 0 ? ` +${eq.refinementLevel}` : "";
+
+  const overlay = document.createElement("div");
+  overlay.id = "refine-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;display:flex;align-items:flex-end;justify-content:center;";
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+  const nextLevel = preview.nextRefinementLevel;
+  const nextHp = eq.bonusHp > 0 ? eq.effectiveBonusHp + 2 : 0;
+  const nextAtk = eq.bonusAttack > 0 ? eq.effectiveBonusAttack + 2 : 0;
+  const nextDef = eq.bonusDefense > 0 ? eq.effectiveBonusDefense + 2 : 0;
+
+  overlay.innerHTML = `
+    <div class="card" style="max-width:420px;width:100%;max-height:85vh;overflow-y:auto;border-radius:1rem 1rem 0 0;margin:0 auto;">
+      <div class="text-center mb-3">
+        <div class="text-3xl mb-1">${emoji}</div>
+        <h3 class="text-lg font-bold">${escapeHtml(eq.name)}${refLabel}</h3>
+        ${eq.setCode ? `<span class="badge badge-${invSetBadge(eq.setCode)}">${escapeHtml(invSetLabel(eq.setCode))}</span>` : ''}
+        <span class="badge badge-${eq.rarity ? eq.rarity.toLowerCase() : 'common'}">T${eq.tier || '?'}</span>
+      </div>
+
+      <div class="card-sm mb-3">
+        <p class="text-xs text-slate-400 mb-2">Refinamento: +${preview.currentRefinementLevel} → +${nextLevel}</p>
+        <div class="grid grid-cols-3 gap-2 text-center text-sm">
+          ${eq.bonusHp > 0 ? `<div><span class="text-slate-400">HP</span><br><span class="text-red-400 font-bold">${eq.effectiveBonusHp} → ${nextHp}</span></div>` : ''}
+          ${eq.bonusAttack > 0 ? `<div><span class="text-slate-400">ATK</span><br><span class="text-orange-400 font-bold">${eq.effectiveBonusAttack} → ${nextAtk}</span></div>` : ''}
+          ${eq.bonusDefense > 0 ? `<div><span class="text-slate-400">DEF</span><br><span class="text-blue-400 font-bold">${eq.effectiveBonusDefense} → ${nextDef}</span></div>` : ''}
+        </div>
+      </div>
+
+      <div class="card-sm mb-3">
+        <p class="text-xs text-slate-400 mb-2">Custo e Chance</p>
+        <div class="flex justify-around text-sm">
+          <div class="text-center">
+            <span class="text-yellow-400 font-bold">${preview.costBits}</span>
+            <span class="text-slate-400"> Bits</span>
+            <br><span class="text-xs ${preview.currentBits >= preview.costBits ? 'text-green-400' : 'text-red-400'}">(tem: ${preview.currentBits})</span>
+          </div>
+          <div class="text-center">
+            <span class="text-purple-400 font-bold">${preview.costStones}</span>
+            <span class="text-slate-400"> Pedra</span>
+            <br><span class="text-xs ${preview.currentStones >= preview.costStones ? 'text-green-400' : 'text-red-400'}">(tem: ${preview.currentStones})</span>
+          </div>
+          <div class="text-center">
+            <span class="font-bold ${preview.successRate >= 70 ? 'text-green-400' : preview.successRate >= 40 ? 'text-yellow-400' : 'text-red-400'}">${preview.successRate}%</span>
+            <span class="text-slate-400"> Chance</span>
+          </div>
+        </div>
+      </div>
+
+      <button id="refine-btn" class="btn-primary w-full py-3 text-base font-bold"
+        ${!preview.canRefine ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}
+        onclick="invDoRefine('${equipmentId}')">
+        🔨 Refinar para +${nextLevel} (${preview.successRate}%)
+      </button>
+      ${!preview.canRefine ? `<p class="text-red-400 text-xs text-center mt-2">Recursos insuficientes</p>` : ''}
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+}
+
+async function invDoRefine(equipmentId) {
+  const btn = document.getElementById("refine-btn");
+  if (btn) { btn.disabled = true; btn.textContent = "Refinando..."; }
+
+  try {
+    const result = await apiPost("/equipment/refine", { equipmentId: equipmentId });
+
+    if (result.success) {
+      showToast(result.message || "Refinamento bem-sucedido!");
+    } else {
+      showToast(result.message || "Refinamento falhou!", "error");
+    }
+
+    const overlay = document.getElementById("refine-overlay");
+    if (overlay) overlay.remove();
+
+    await invReloadEquipment();
+  } catch (err) {
+    showToast(err.message, "error");
+    if (btn) { btn.disabled = false; btn.textContent = "🔨 Refinar"; }
   }
 }

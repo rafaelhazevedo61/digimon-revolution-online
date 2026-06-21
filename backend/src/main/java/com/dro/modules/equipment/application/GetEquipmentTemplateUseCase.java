@@ -13,7 +13,7 @@ public class GetEquipmentTemplateUseCase {
     private final EquipmentTemplateRepository equipmentTemplateRepository;
 
     public EquipmentTemplateResponse execute(String name) {
-        return equipmentTemplateRepository.findById(name)
+        return equipmentTemplateRepository.findByName(name)
                 .map(EquipmentTemplateResponse::from)
                 .orElseThrow(() -> new NotFoundException("Equipment template not found: " + name));
     }

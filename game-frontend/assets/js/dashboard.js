@@ -1,3 +1,5 @@
+let dashEquippedItems = [];
+
 async function renderDashboardPage() {
   const app = document.getElementById("app");
   showBottomNav("dashboard");
@@ -25,6 +27,7 @@ async function renderDashboardPage() {
 function renderDashContent(data) {
   const container = document.getElementById("dash-content");
   const d = data.activeDigimon;
+  dashEquippedItems = data.equippedItems || [];
 
   container.innerHTML = `
     <!-- Player header -->
@@ -63,6 +66,7 @@ function renderDashContent(data) {
       <div class="grid grid-cols-3 gap-2">
         ${renderEquipSlots(data.equippedItems || [])}
       </div>
+      ${renderSetBonus(data.setBonus)}
     </div>
 
     <!-- Actions -->
@@ -173,11 +177,14 @@ function renderEquipSlots(items) {
     const item = items.find(i => i.slot === slot);
     if (item) {
       const border = rarityBorder[item.rarity] || "border-slate-600";
+      const refLabel = item.refinementLevel > 0 ? ` +${item.refinementLevel}` : "";
       return `
-        <div class="card-sm text-center ${border}">
+        <div class="card-sm text-center ${border}" style="cursor:pointer" onclick="showEquipDetailModal('${item.id}')">
           <p class="text-lg">${slotEmoji[slot]}</p>
-          <p class="text-xs font-bold truncate">${escapeHtml(item.name)}</p>
-          <span class="badge badge-${item.rarity ? item.rarity.toLowerCase() : 'common'}" style="font-size:0.6rem">${item.rarity}</span>
+          <p class="text-xs font-bold truncate">${escapeHtml(item.name)}${refLabel}</p>
+          <div class="flex gap-1 justify-center flex-wrap">
+            <span class="badge badge-${item.rarity ? item.rarity.toLowerCase() : 'common'}" style="font-size:0.6rem">T${item.tier || '?'}</span>
+          </div>
         </div>
       `;
     }
@@ -188,6 +195,22 @@ function renderEquipSlots(items) {
       </div>
     `;
   }).join("");
+}
+
+function renderSetBonus(sb) {
+  if (!sb || !sb.setCode || sb.pieceCount < 2) return "";
+  const setLabels = { BERSERKER: "Berserker", GUARDIAN: "Guardiao", VITALITY: "Vitalidade", BALANCED: "Equilibrado" };
+  const label = setLabels[sb.setCode] || sb.setCode;
+  const bonuses = [];
+  if (sb.bonusHpPercent > 0) bonuses.push(`<span class="text-red-400">HP +${sb.bonusHpPercent}%</span>`);
+  if (sb.bonusAtkPercent > 0) bonuses.push(`<span class="text-orange-400">ATK +${sb.bonusAtkPercent}%</span>`);
+  if (sb.bonusDefPercent > 0) bonuses.push(`<span class="text-blue-400">DEF +${sb.bonusDefPercent}%</span>`);
+  if (bonuses.length === 0) return "";
+  return `
+    <div class="mt-2 px-2 py-1.5 rounded-lg bg-slate-800 text-xs text-center">
+      <span class="text-yellow-400 font-bold">Set ${escapeHtml(label)} (${sb.pieceCount}/3)</span>: ${bonuses.join(" ")}
+    </div>
+  `;
 }
 
 function renderActiveMission(m) {
@@ -333,4 +356,65 @@ function formatTime(seconds) {
 function getXpForLevel(level) {
   if (level >= 100) return 0;
   return level * 100;
+}
+
+function showEquipDetailModal(equipmentId) {
+  const eq = dashEquippedItems.find(e => e.id === equipmentId);
+  if (!eq) return;
+
+  const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
+  const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
+  const emoji = slotEmoji[eq.slot] || "⚔️";
+  const refLabel = eq.refinementLevel > 0 ? ` +${eq.refinementLevel}` : "";
+  const setLabel = typeof invSetLabel === "function" ? invSetLabel(eq.setCode) : (eq.setCode || "");
+  const setBadge = typeof invSetBadge === "function" ? invSetBadge(eq.setCode) : "common";
+  const rarityLabel = { COMMON: "Common", RARE: "Rare", EPIC: "Epic", LEGENDARY: "Legendary" };
+
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;display:flex;align-items:flex-end;justify-content:center;";
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+  overlay.innerHTML = `
+    <div class="card" style="max-width:420px;width:100%;max-height:85vh;overflow-y:auto;border-radius:1rem 1rem 0 0;margin:0 auto;">
+      <div class="text-center mb-3">
+        <div class="text-3xl mb-1">${emoji}</div>
+        <h3 class="text-lg font-bold">${escapeHtml(eq.name)}${refLabel}</h3>
+        <p class="text-xs text-slate-400 mb-2">${slotName[eq.slot] || eq.slot}</p>
+        <div class="flex gap-1 justify-center flex-wrap">
+          ${eq.setCode ? `<span class="badge badge-${setBadge}">${escapeHtml(setLabel)}</span>` : ''}
+          <span class="badge badge-${eq.rarity ? eq.rarity.toLowerCase() : 'common'}">${rarityLabel[eq.rarity] || eq.rarity}</span>
+          <span class="badge badge-common">T${eq.tier || '?'}</span>
+        </div>
+      </div>
+
+      <div class="card-sm mb-3">
+        <p class="text-xs text-slate-400 mb-2">Stats Base</p>
+        <div class="grid grid-cols-3 gap-2 text-center text-sm">
+          ${eq.bonusHp > 0 ? `<div><span class="text-slate-400">HP</span><br><span class="text-red-400">${eq.bonusHp}</span></div>` : ''}
+          ${eq.bonusAttack > 0 ? `<div><span class="text-slate-400">ATK</span><br><span class="text-orange-400">${eq.bonusAttack}</span></div>` : ''}
+          ${eq.bonusDefense > 0 ? `<div><span class="text-slate-400">DEF</span><br><span class="text-blue-400">${eq.bonusDefense}</span></div>` : ''}
+        </div>
+      </div>
+
+      <div class="card-sm mb-3">
+        <p class="text-xs text-slate-400 mb-2">Stats Efetivos</p>
+        <div class="grid grid-cols-3 gap-2 text-center text-sm">
+          ${eq.effectiveBonusHp > 0 ? `<div><span class="text-slate-400">HP</span><br><span class="text-red-400 font-bold">${eq.effectiveBonusHp}</span></div>` : ''}
+          ${eq.effectiveBonusAttack > 0 ? `<div><span class="text-slate-400">ATK</span><br><span class="text-orange-400 font-bold">${eq.effectiveBonusAttack}</span></div>` : ''}
+          ${eq.effectiveBonusDefense > 0 ? `<div><span class="text-slate-400">DEF</span><br><span class="text-blue-400 font-bold">${eq.effectiveBonusDefense}</span></div>` : ''}
+        </div>
+      </div>
+
+      ${eq.refinementLevel > 0 ? `
+      <div class="card-sm mb-3">
+        <p class="text-xs text-slate-400 mb-1">Refinamento</p>
+        <p class="text-center text-sm font-bold text-yellow-400">+${eq.refinementLevel} (+${eq.refinementLevel * 2} em cada stat)</p>
+      </div>
+      ` : ''}
+
+      <button class="btn-primary w-full py-3 text-base" onclick="this.closest('div[style]').remove()">Fechar</button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
 }

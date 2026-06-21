@@ -18,7 +18,7 @@ public class UpdateEquipmentTemplateUseCase {
 
     public EquipmentTemplateResponse execute(String name, UpdateEquipmentTemplateRequest request) {
 
-        EquipmentTemplateEntity entity = equipmentTemplateRepository.findById(name)
+        EquipmentTemplateEntity entity = equipmentTemplateRepository.findByName(name)
                 .orElseThrow(() -> new NotFoundException("Equipment template not found: " + name));
 
         entity.setSlot(request.slot());

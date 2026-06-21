@@ -27,6 +27,9 @@ public enum ItemType {
     FRAGMENT_MEGA,
 
     // Materiais de evolução (diferenciados por material_code)
-    EVOLUTION_MATERIAL
+    EVOLUTION_MATERIAL,
+
+    // Material de refinamento
+    REFINEMENT_STONE
 
 }

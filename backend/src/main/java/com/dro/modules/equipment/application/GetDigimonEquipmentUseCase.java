@@ -49,12 +49,18 @@ public class GetDigimonEquipmentUseCase {
                 .map(EquipmentResponse::from)
                 .toList();
 
+        var setInfo = EquipmentRules.getSetBonusInfo(equipped);
+        var setBonus = new DigimonEquipmentResponse.SetBonusResponse(
+                setInfo.setCode(), setInfo.pieceCount(),
+                setInfo.bonusHpPercent(), setInfo.bonusAtkPercent(), setInfo.bonusDefPercent());
+
         return new DigimonEquipmentResponse(
                 digimonId,
                 items,
                 EquipmentRules.totalBonusHp(equipped),
                 EquipmentRules.totalBonusAttack(equipped),
-                EquipmentRules.totalBonusDefense(equipped)
+                EquipmentRules.totalBonusDefense(equipped),
+                setBonus
         );
     }
 }

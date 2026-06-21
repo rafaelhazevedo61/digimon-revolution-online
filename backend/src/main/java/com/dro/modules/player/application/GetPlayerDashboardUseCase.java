@@ -5,6 +5,7 @@ import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.DigimonInfos;
 import com.dro.modules.digimon.infra.DigimonInfosRepository;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.equipment.api.dto.response.DigimonEquipmentResponse;
 import com.dro.modules.equipment.api.dto.response.EquipmentResponse;
 import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.domain.EquipmentRules;
@@ -61,7 +62,14 @@ public class GetPlayerDashboardUseCase {
 
         DigimonResponse activeDigimon = buildActiveDigimon(player);
 
-        List<EquipmentResponse> equippedItems = buildEquippedItems(player);
+        List<Equipment> equippedDomain = buildEquippedDomainItems(player);
+        List<EquipmentResponse> equippedItems = equippedDomain.stream()
+                .map(EquipmentResponse::from).toList();
+
+        var setInfo = EquipmentRules.getSetBonusInfo(equippedDomain);
+        var setBonus = new DigimonEquipmentResponse.SetBonusResponse(
+                setInfo.setCode(), setInfo.pieceCount(),
+                setInfo.bonusHpPercent(), setInfo.bonusAtkPercent(), setInfo.bonusDefPercent());
 
         List<InventorySummaryResponse> inventory = buildInventory(player);
 
@@ -76,6 +84,7 @@ public class GetPlayerDashboardUseCase {
                 player.getCreatedAt(),
                 activeDigimon,
                 equippedItems,
+                setBonus,
                 inventory,
                 activeMissions,
                 incubation
@@ -136,7 +145,7 @@ public class GetPlayerDashboardUseCase {
         );
     }
 
-    private List<EquipmentResponse> buildEquippedItems(Player player) {
+    private List<Equipment> buildEquippedDomainItems(Player player) {
 
         if (player.getActiveDigimonId() == null) {
             return List.of();
@@ -149,9 +158,7 @@ public class GetPlayerDashboardUseCase {
             return List.of();
         }
 
-        return getEquippedItems(digimon).stream()
-                .map(EquipmentResponse::from)
-                .toList();
+        return getEquippedItems(digimon);
     }
 
     private List<InventorySummaryResponse> buildInventory(Player player) {

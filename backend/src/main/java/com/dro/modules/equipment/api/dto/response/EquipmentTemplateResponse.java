@@ -7,7 +7,10 @@ import com.dro.modules.equipment.domain.EquipmentTemplateEntity;
 import java.time.LocalDateTime;
 
 public record EquipmentTemplateResponse(
+        Long id,
         String name,
+        String setCode,
+        int tier,
         EquipmentSlot slot,
         EquipmentRarity rarity,
         int bonusHp,
@@ -21,7 +24,10 @@ public record EquipmentTemplateResponse(
 ) {
     public static EquipmentTemplateResponse from(EquipmentTemplateEntity entity) {
         return new EquipmentTemplateResponse(
+                entity.getId(),
                 entity.getName(),
+                entity.getSetCode(),
+                entity.getTier(),
                 entity.getSlot(),
                 entity.getRarity(),
                 entity.getBonusHp(),

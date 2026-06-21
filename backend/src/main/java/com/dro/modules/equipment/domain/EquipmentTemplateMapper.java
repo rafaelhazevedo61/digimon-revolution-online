@@ -9,6 +9,8 @@ public class EquipmentTemplateMapper {
                 entity.getName(),
                 entity.getSlot(),
                 entity.getRarity(),
+                entity.getSetCode(),
+                entity.getTier(),
                 entity.getBonusHp(),
                 entity.getBonusAttack(),
                 entity.getBonusDefense()

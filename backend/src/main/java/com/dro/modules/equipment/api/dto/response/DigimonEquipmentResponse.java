@@ -8,6 +8,8 @@ public record DigimonEquipmentResponse(
         List<EquipmentResponse> equippedItems,
         int totalBonusHp,
         int totalBonusAttack,
-        int totalBonusDefense
+        int totalBonusDefense,
+        SetBonusResponse setBonus
 ) {
+    public record SetBonusResponse(String setCode, int pieceCount, int bonusHpPercent, int bonusAtkPercent, int bonusDefPercent) {}
 }
