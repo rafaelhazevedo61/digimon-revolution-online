@@ -6,7 +6,8 @@ const routes = {
     players: renderPlayersPage,
     "equipment-templates": renderEquipmentTemplatesPage,
     "shop-products": renderShopProductsPage,
-    missions: renderMissionsPage
+    missions: renderMissionsPage,
+    "equipment-simulator": renderEquipmentSimulatorPage
   };
   
   function navigateTo(route) {
