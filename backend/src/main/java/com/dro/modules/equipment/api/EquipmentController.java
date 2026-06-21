@@ -86,7 +86,7 @@ public class EquipmentController {
             @RequestBody @Valid GrantEquipmentRequest request
     ) {
         UUID equipmentId = grantEquipmentUseCase.execute(
-                request.digimonId(), request.templateName()
+                request.digimonId(), request.templateName(), request.rarity()
         );
         return ResponseEntity.ok(new GrantEquipmentResponse(
                 equipmentId, "Equipment granted successfully"
