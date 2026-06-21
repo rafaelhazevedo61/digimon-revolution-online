@@ -65,7 +65,7 @@ public class CreateShopProductUseCase {
             if (request.equipmentTemplateName() == null || request.equipmentTemplateName().isBlank()) {
                 throw new BadRequestException("equipmentTemplateName is required for EQUIPMENT products");
             }
-            if (!equipmentTemplateRepository.existsById(request.equipmentTemplateName())) {
+            if (equipmentTemplateRepository.findByName(request.equipmentTemplateName()).isEmpty()) {
                 throw new NotFoundException("Equipment template not found: " + request.equipmentTemplateName());
             }
         }

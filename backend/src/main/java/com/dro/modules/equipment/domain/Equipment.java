@@ -41,6 +41,16 @@ public class Equipment {
     @Column(nullable = false)
     private int bonusDefense;
 
+    @Column(name = "set_code")
+    private String setCode;
+
+    @Column
+    private int tier;
+
+    @Column(name = "refinement_level", nullable = false)
+    @Builder.Default
+    private int refinementLevel = 0;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -54,5 +64,17 @@ public class Equipment {
 
     public void unequip() {
         this.equipped = false;
+    }
+
+    public int getEffectiveBonusHp() {
+        return bonusHp + refinementLevel;
+    }
+
+    public int getEffectiveBonusAttack() {
+        return bonusAttack + refinementLevel;
+    }
+
+    public int getEffectiveBonusDefense() {
+        return bonusDefense + refinementLevel;
     }
 }

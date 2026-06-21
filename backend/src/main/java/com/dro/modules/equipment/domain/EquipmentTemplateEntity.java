@@ -13,10 +13,19 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EquipmentTemplateEntity implements Persistable<String> {
+public class EquipmentTemplateEntity implements Persistable<Long> {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private String name;
+
+    @Column(name = "set_code", nullable = false)
+    private String setCode;
+
+    @Column(nullable = false)
+    private int tier;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -59,8 +68,8 @@ public class EquipmentTemplateEntity implements Persistable<String> {
     private boolean newEntity = false;
 
     @Override
-    public String getId() {
-        return name;
+    public Long getId() {
+        return id;
     }
 
     @Override

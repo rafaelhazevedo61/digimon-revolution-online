@@ -17,7 +17,7 @@ public class ToggleEquipmentTemplateUseCase {
 
     public EquipmentTemplateResponse execute(String name) {
 
-        EquipmentTemplateEntity entity = equipmentTemplateRepository.findById(name)
+        EquipmentTemplateEntity entity = equipmentTemplateRepository.findByName(name)
                 .orElseThrow(() -> new NotFoundException("Equipment template not found: " + name));
 
         entity.setActive(!entity.isActive());

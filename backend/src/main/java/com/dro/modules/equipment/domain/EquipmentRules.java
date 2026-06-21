@@ -13,15 +13,21 @@ public class EquipmentRules {
         }
     }
 
+    public static final int MAX_REFINEMENT_LEVEL = 10;
+
     public static int totalBonusHp(List<Equipment> equippedItems) {
-        return equippedItems.stream().mapToInt(Equipment::getBonusHp).sum();
+        return equippedItems.stream().mapToInt(Equipment::getEffectiveBonusHp).sum();
     }
 
     public static int totalBonusAttack(List<Equipment> equippedItems) {
-        return equippedItems.stream().mapToInt(Equipment::getBonusAttack).sum();
+        return equippedItems.stream().mapToInt(Equipment::getEffectiveBonusAttack).sum();
     }
 
     public static int totalBonusDefense(List<Equipment> equippedItems) {
-        return equippedItems.stream().mapToInt(Equipment::getBonusDefense).sum();
+        return equippedItems.stream().mapToInt(Equipment::getEffectiveBonusDefense).sum();
+    }
+
+    public static int refinementCostBits(int currentLevel) {
+        return 1000 + (currentLevel * 500);
     }
 }

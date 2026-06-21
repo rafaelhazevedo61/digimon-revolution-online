@@ -173,11 +173,14 @@ function renderEquipSlots(items) {
     const item = items.find(i => i.slot === slot);
     if (item) {
       const border = rarityBorder[item.rarity] || "border-slate-600";
+      const refLabel = item.refinementLevel > 0 ? ` +${item.refinementLevel}` : "";
       return `
         <div class="card-sm text-center ${border}">
           <p class="text-lg">${slotEmoji[slot]}</p>
-          <p class="text-xs font-bold truncate">${escapeHtml(item.name)}</p>
-          <span class="badge badge-${item.rarity ? item.rarity.toLowerCase() : 'common'}" style="font-size:0.6rem">${item.rarity}</span>
+          <p class="text-xs font-bold truncate">${escapeHtml(item.name)}${refLabel}</p>
+          <div class="flex gap-1 justify-center flex-wrap">
+            <span class="badge badge-${item.rarity ? item.rarity.toLowerCase() : 'common'}" style="font-size:0.6rem">T${item.tier || '?'}</span>
+          </div>
         </div>
       `;
     }

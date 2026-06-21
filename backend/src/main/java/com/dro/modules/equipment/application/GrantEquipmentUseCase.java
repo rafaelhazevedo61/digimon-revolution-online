@@ -21,7 +21,7 @@ public class GrantEquipmentUseCase {
 
     public UUID execute(UUID digimonId, String templateName) {
 
-        EquipmentTemplate template = equipmentTemplateRepository.findById(templateName)
+        EquipmentTemplate template = equipmentTemplateRepository.findByName(templateName)
                 .map(EquipmentTemplateMapper::toTemplate)
                 .orElseThrow(() -> new NotFoundException("Equipment template not found: " + templateName));
 
@@ -31,6 +31,8 @@ public class GrantEquipmentUseCase {
                 .name(template.getName())
                 .slot(template.getSlot())
                 .rarity(template.getRarity())
+                .setCode(template.getSetCode())
+                .tier(template.getTier())
                 .bonusHp(template.getBonusHp())
                 .bonusAttack(template.getBonusAttack())
                 .bonusDefense(template.getBonusDefense())
