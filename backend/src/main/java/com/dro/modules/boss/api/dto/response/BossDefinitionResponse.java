@@ -20,5 +20,6 @@ public record BossDefinitionResponse(
         String imageUrl,
         boolean available,
         Long cooldownRemainingSeconds,
+        Integer winChance,
         List<BossDropResponse> drops
 ) {}

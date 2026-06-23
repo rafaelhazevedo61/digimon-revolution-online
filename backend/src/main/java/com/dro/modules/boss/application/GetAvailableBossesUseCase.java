@@ -2,11 +2,15 @@ package com.dro.modules.boss.application;
 
 import com.dro.modules.boss.api.dto.response.BossDefinitionResponse;
 import com.dro.modules.boss.api.dto.response.BossDropResponse;
+import com.dro.modules.boss.domain.BossCombatRules;
 import com.dro.modules.boss.domain.BossDefinitionEntity;
 import com.dro.modules.boss.infra.BossAttemptRepository;
 import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.equipment.domain.Equipment;
+import com.dro.modules.equipment.domain.EquipmentRules;
+import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
@@ -30,6 +34,7 @@ public class GetAvailableBossesUseCase {
     private final BossAttemptRepository bossAttemptRepository;
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
+    private final EquipmentRepository equipmentRepository;
 
     public List<BossDefinitionResponse> execute(String token) {
 
@@ -38,6 +43,13 @@ public class GetAvailableBossesUseCase {
                 .orElseThrow(() -> new NotFoundException("Player not found"));
         Digimon digimon = digimonRepository.findById(player.getActiveDigimonId())
                 .orElseThrow(() -> new NotFoundException("Active digimon not found"));
+
+        List<Equipment> equippedItems = equipmentRepository.findByDigimonId(digimon.getId())
+                .stream().filter(Equipment::isEquipped).toList();
+        int totalHp = digimon.getHp() + EquipmentRules.totalBonusHp(equippedItems);
+        int totalAtk = digimon.getAttack() + EquipmentRules.totalBonusAttack(equippedItems);
+        int totalDef = digimon.getDefense() + EquipmentRules.totalBonusDefense(equippedItems);
+        double digimonPower = BossCombatRules.calculatePower(totalHp, totalAtk, totalDef);
 
         List<BossDefinitionEntity> bosses = bossDefinitionRepository.findAllActive();
 
@@ -52,6 +64,9 @@ public class GetAvailableBossesUseCase {
 
             Long cooldownRemaining = calculateCooldownRemaining(playerId, boss);
             boolean available = meetsRequirements && (cooldownRemaining == null || cooldownRemaining <= 0);
+
+            double bossPower = BossCombatRules.calculatePower(boss.getHp(), boss.getAtk(), boss.getDef());
+            Integer winChance = meetsRequirements ? BossCombatRules.calculateWinChance(digimonPower, bossPower) : null;
 
             List<BossDropResponse> drops = boss.getDrops() != null
                     ? boss.getDrops().stream().map(d -> new BossDropResponse(
@@ -78,6 +93,7 @@ public class GetAvailableBossesUseCase {
                     boss.getImageUrl(),
                     available,
                     cooldownRemaining != null && cooldownRemaining > 0 ? cooldownRemaining : null,
+                    winChance,
                     drops
             );
         }).toList();

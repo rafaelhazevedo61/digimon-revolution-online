@@ -102,7 +102,8 @@ function renderBossList() {
     } else if (!available) {
       statusBadge = `<span class="text-xs text-red-400">Requisitos nao atendidos</span>`;
     } else {
-      statusBadge = `<span class="text-xs text-green-400">Disponivel</span>`;
+      const chanceColor = boss.winChance >= 60 ? "text-green-400" : boss.winChance >= 30 ? "text-yellow-400" : "text-red-400";
+      statusBadge = `<span class="text-xs ${chanceColor}">Chance: ${boss.winChance}%</span>`;
     }
 
     return `
@@ -211,9 +212,23 @@ function openBossDetail(bossCode) {
         </div>
       </div>
 
-      ${boss.available
+      ${boss.available && boss.winChance != null
+        ? `<div class="card-sm mb-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-slate-400">Sua chance de vitoria</span>
+              <span class="text-sm font-bold ${boss.winChance >= 60 ? "text-green-400" : boss.winChance >= 30 ? "text-yellow-400" : "text-red-400"}">${boss.winChance}%</span>
+            </div>
+            ${boss.winChance < 30 ? '<p class="text-xs text-red-400 mt-1">Chance minima de 30% necessaria para desafiar</p>' : ''}
+          </div>`
+        : ''}
+
+      ${boss.available && boss.winChance != null && boss.winChance >= 30
         ? `<button class="btn-primary w-full text-sm py-3" onclick="startBossChallenge('${boss.code}')">
             Desafiar ${escapeHtml(boss.name)}
+          </button>`
+        : boss.available && boss.winChance != null && boss.winChance < 30
+        ? `<button class="w-full text-sm py-3 rounded-xl font-bold bg-red-900/50 text-red-400 cursor-not-allowed" disabled>
+            Muito fraco para desafiar (min 30%)
           </button>`
         : `<button class="w-full text-sm py-3 rounded-xl font-bold bg-slate-700 text-slate-400 cursor-not-allowed" disabled>
             ${boss.cooldownRemainingSeconds && boss.cooldownRemainingSeconds > 0

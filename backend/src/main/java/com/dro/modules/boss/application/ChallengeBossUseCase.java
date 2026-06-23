@@ -87,8 +87,13 @@ public class ChallengeBossUseCase {
         double bossPower = BossCombatRules.calculatePower(boss.getHp(), boss.getAtk(), boss.getDef());
         int winChance = BossCombatRules.calculateWinChance(digimonPower, bossPower);
 
-        int roll = ThreadLocalRandom.current().nextInt(1, 101);
-        boolean victory = roll <= winChance;
+        boolean victory;
+        if (BossCombatRules.isBelowThreshold(winChance)) {
+            victory = false;
+        } else {
+            int roll = ThreadLocalRandom.current().nextInt(1, 101);
+            victory = roll <= winChance;
+        }
 
         int xpGained;
         int bitsGained;
