@@ -5,12 +5,19 @@ const BOSS_TYPE_INFO = {
   MONTHLY: { label: "Mensal", color: "bg-yellow-700 text-yellow-100", desc: "1x por mes" }
 };
 
+const BOSS_STAGE_TABS = [
+  { key: "ROOKIE", label: "Rookie", color: "bg-green-700 text-green-100" },
+  { key: "CHAMPION", label: "Champion", color: "bg-blue-700 text-blue-100" },
+  { key: "ULTIMATE", label: "Ultimate", color: "bg-purple-700 text-purple-100" },
+  { key: "MEGA", label: "Mega", color: "bg-red-700 text-red-100" }
+];
+
 const STAGE_LABELS = {
   BABY: "Baby", BABY_II: "Baby II", ROOKIE: "Rookie", CHAMPION: "Champion", ULTIMATE: "Ultimate", MEGA: "Mega"
 };
 
 let bossesData = [];
-let bossActiveTab = "NORMAL";
+let bossActiveStage = "ROOKIE";
 
 async function renderBossesPage() {
   const app = document.getElementById("app");
@@ -22,7 +29,7 @@ async function renderBossesPage() {
         <h2 class="text-lg font-bold px-1">Bosses</h2>
         <button class="text-xs text-cyan-400 hover:text-cyan-300" onclick="navigateTo('boss-history')">Historico</button>
       </div>
-      <div class="flex gap-2 mb-4 overflow-x-auto pb-1" id="boss-tabs"></div>
+      <div class="flex gap-2 mb-4 overflow-x-auto pb-1" id="boss-stage-tabs"></div>
       <div id="bosses-list">
         <div class="card animate-pulse mb-3"><div class="h-24"></div></div>
         <div class="card animate-pulse mb-3"><div class="h-24"></div></div>
@@ -32,7 +39,7 @@ async function renderBossesPage() {
 
   try {
     bossesData = await apiGet("/bosses/available");
-    renderBossTabs();
+    renderBossStageTabs();
     renderBossList();
   } catch (err) {
     document.getElementById("bosses-list").innerHTML = `
@@ -41,18 +48,16 @@ async function renderBossesPage() {
   }
 }
 
-function renderBossTabs() {
-  const tabs = document.getElementById("boss-tabs");
-  const types = ["NORMAL", "DAILY", "WEEKLY", "MONTHLY"];
-  tabs.innerHTML = types.map(t => {
-    const info = BOSS_TYPE_INFO[t];
-    const active = t === bossActiveTab;
-    const count = bossesData.filter(b => b.bossType === t).length;
+function renderBossStageTabs() {
+  const tabs = document.getElementById("boss-stage-tabs");
+  tabs.innerHTML = BOSS_STAGE_TABS.map(s => {
+    const active = s.key === bossActiveStage;
+    const count = bossesData.filter(b => b.requiredStage === s.key).length;
     return `
       <button class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors
-        ${active ? info.color : "bg-slate-800 text-slate-400 hover:bg-slate-700"}"
-        onclick="bossActiveTab='${t}'; renderBossTabs(); renderBossList();">
-        ${escapeHtml(info.label)} (${count})
+        ${active ? s.color : "bg-slate-800 text-slate-400 hover:bg-slate-700"}"
+        onclick="bossActiveStage='${s.key}'; renderBossStageTabs(); renderBossList();">
+        ${escapeHtml(s.label)} (${count})
       </button>
     `;
   }).join("");
@@ -60,10 +65,10 @@ function renderBossTabs() {
 
 function renderBossList() {
   const container = document.getElementById("bosses-list");
-  const filtered = bossesData.filter(b => b.bossType === bossActiveTab);
+  const filtered = bossesData.filter(b => b.requiredStage === bossActiveStage);
 
   if (filtered.length === 0) {
-    container.innerHTML = `<div class="card text-center text-slate-400 text-sm">Nenhum boss deste tipo disponivel</div>`;
+    container.innerHTML = `<div class="card text-center text-slate-400 text-sm">Nenhum boss neste stage</div>`;
     return;
   }
 
@@ -82,8 +87,8 @@ function renderBossList() {
     }
 
     return `
-      <div class="card mb-3 ${available ? "cursor-pointer hover:border-slate-500" : "opacity-60"}"
-        onclick="${available ? `openBossDetail('${boss.code}')` : ""}">
+      <div class="card mb-3 cursor-pointer hover:border-slate-500 ${!available ? "opacity-60" : ""}"
+        onclick="openBossDetail('${boss.code}')">
         <div class="flex items-center gap-3">
           <div class="w-14 h-14 rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0">
             ${boss.imageUrl
@@ -96,7 +101,7 @@ function renderBossList() {
               <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${typeInfo.color}">${escapeHtml(typeInfo.label)}</span>
             </div>
             <div class="text-xs text-slate-400 mb-1">
-              ${escapeHtml(STAGE_LABELS[boss.requiredStage] || boss.requiredStage)} Lv.${boss.requiredLevel}
+              Lv.${boss.requiredLevel}
               ${boss.requiredRebirths > 0 ? ` | Rebirth ${boss.requiredRebirths}+` : ""}
             </div>
             <div class="flex items-center gap-3 text-xs">
@@ -178,9 +183,25 @@ function openBossDetail(bossCode) {
         ${dropsHtml}
       </div>
 
-      <button class="btn-primary w-full text-sm py-3" onclick="startBossChallenge('${boss.code}')">
-        Desafiar ${escapeHtml(boss.name)}
-      </button>
+      <div class="card-sm mb-3">
+        <p class="text-xs text-slate-400 mb-2">Requisitos</p>
+        <div class="flex gap-4 text-sm">
+          <span class="text-slate-200">Stage: ${escapeHtml(STAGE_LABELS[boss.requiredStage] || boss.requiredStage)}</span>
+          <span class="text-slate-200">Level: ${boss.requiredLevel}</span>
+          ${boss.requiredRebirths > 0 ? `<span class="text-slate-200">Rebirth: ${boss.requiredRebirths}+</span>` : ""}
+        </div>
+      </div>
+
+      ${boss.available
+        ? `<button class="btn-primary w-full text-sm py-3" onclick="startBossChallenge('${boss.code}')">
+            Desafiar ${escapeHtml(boss.name)}
+          </button>`
+        : `<button class="w-full text-sm py-3 rounded-xl font-bold bg-slate-700 text-slate-400 cursor-not-allowed" disabled>
+            ${boss.cooldownRemainingSeconds && boss.cooldownRemainingSeconds > 0
+              ? `Cooldown: ${formatCooldown(boss.cooldownRemainingSeconds)}`
+              : "Requisitos nao atendidos"}
+          </button>`
+      }
     </div>
   `;
 
