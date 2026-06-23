@@ -112,6 +112,7 @@ function renderDigimonCard(d) {
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <h3 class="font-bold text-lg truncate">${escapeHtml(d.name)}</h3>
+            <button class="text-slate-500 hover:text-slate-300 text-xs" onclick="event.stopPropagation(); openRenameModal('${d.id}', '${escapeHtml(d.name)}')" title="Renomear">✏️</button>
             <span class="text-sm font-bold text-cyan-400">Lv.${d.level}</span>
           </div>
           <p class="text-xs text-slate-400">${escapeHtml(d.type) || "Desconhecido"}</p>
@@ -356,6 +357,63 @@ function formatTime(seconds) {
 function getXpForLevel(level) {
   if (level >= 100) return 0;
   return level * 100;
+}
+
+function openRenameModal(digimonId, currentName) {
+  const overlay = document.createElement("div");
+  overlay.id = "rename-overlay";
+  overlay.className = "fixed inset-0 bg-black/70 z-50 flex items-center justify-center animate-fade-in";
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+  overlay.innerHTML = `
+    <div class="card" style="max-width:360px;width:90%;">
+      <h3 class="font-bold text-lg mb-3 text-center">Renomear Digimon</h3>
+      <input id="rename-input" type="text" maxlength="20" value="${escapeHtml(currentName)}"
+        class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white text-sm mb-1 outline-none focus:border-cyan-500"
+        placeholder="Novo nome (max 20 caracteres)">
+      <p class="text-xs text-slate-500 mb-3 text-right"><span id="rename-char-count">${currentName.length}</span>/20</p>
+      <div class="flex gap-2">
+        <button class="flex-1 py-2 rounded-lg font-bold text-sm bg-slate-700 text-slate-300" onclick="document.getElementById('rename-overlay').remove()">Cancelar</button>
+        <button id="rename-confirm-btn" class="flex-1 py-2 rounded-lg font-bold text-sm btn-primary" onclick="confirmRename('${digimonId}')">Salvar</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const input = document.getElementById("rename-input");
+  input.focus();
+  input.select();
+  input.addEventListener("input", () => {
+    document.getElementById("rename-char-count").textContent = input.value.length;
+  });
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") confirmRename(digimonId);
+  });
+}
+
+async function confirmRename(digimonId) {
+  const input = document.getElementById("rename-input");
+  const newName = input.value.trim();
+  if (!newName || newName.length > 20) {
+    showToast("Nome deve ter entre 1 e 20 caracteres", "error");
+    return;
+  }
+
+  const btn = document.getElementById("rename-confirm-btn");
+  btn.disabled = true;
+  btn.textContent = "Salvando...";
+
+  try {
+    await apiPut("/digimon/rename", { digimonId, newName });
+    document.getElementById("rename-overlay").remove();
+    showToast("Digimon renomeado!");
+    renderDashboardPage();
+  } catch (err) {
+    showToast(err.message, "error");
+    btn.disabled = false;
+    btn.textContent = "Salvar";
+  }
 }
 
 function showEquipDetailModal(equipmentId) {
