@@ -241,7 +241,7 @@ async function startBossChallenge(bossCode) {
   `;
 
   try {
-    const dashboard = await apiGet("/player/dashboard");
+    const dashboard = await apiGet("/players/me/dashboard");
     const digimonId = dashboard.digimon.id;
 
     const result = await apiPost(`/bosses/${bossCode}/challenge`, { digimonId });
