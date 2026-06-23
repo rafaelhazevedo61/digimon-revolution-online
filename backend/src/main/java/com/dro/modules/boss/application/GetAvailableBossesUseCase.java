@@ -13,10 +13,14 @@ import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import com.dro.modules.boss.domain.BossType;
+
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,7 +41,11 @@ public class GetAvailableBossesUseCase {
 
         List<BossDefinitionEntity> bosses = bossDefinitionRepository.findAllActive();
 
-        return bosses.stream().map(boss -> {
+        Set<Long> todaysDailyBossIds = getTodaysDailyBossIds(bosses);
+
+        return bosses.stream()
+                .filter(boss -> boss.getBossType() != BossType.DAILY || todaysDailyBossIds.contains(boss.getId()))
+                .map(boss -> {
             boolean meetsRequirements = digimon.getStage().ordinal() >= boss.getRequiredStage().ordinal()
                     && digimon.getLevel() >= boss.getRequiredLevel()
                     && digimon.getRebirthCount() >= boss.getRequiredRebirths();
@@ -73,6 +81,23 @@ public class GetAvailableBossesUseCase {
                     drops
             );
         }).toList();
+    }
+
+    private Set<Long> getTodaysDailyBossIds(List<BossDefinitionEntity> allBosses) {
+        long dayIndex = LocalDate.now(ZoneOffset.UTC).toEpochDay();
+
+        Map<String, List<BossDefinitionEntity>> dailyByStage = allBosses.stream()
+                .filter(b -> b.getBossType() == BossType.DAILY)
+                .sorted(Comparator.comparingLong(BossDefinitionEntity::getId))
+                .collect(Collectors.groupingBy(b -> b.getRequiredStage().name(), LinkedHashMap::new, Collectors.toList()));
+
+        Set<Long> result = new HashSet<>();
+        for (List<BossDefinitionEntity> group : dailyByStage.values()) {
+            if (group.isEmpty()) continue;
+            int todayIndex = (int) (dayIndex % group.size());
+            result.add(group.get(todayIndex).getId());
+        }
+        return result;
     }
 
     private Long calculateCooldownRemaining(UUID playerId, BossDefinitionEntity boss) {

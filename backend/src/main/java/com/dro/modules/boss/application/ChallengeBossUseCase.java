@@ -22,11 +22,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +53,10 @@ public class ChallengeBossUseCase {
 
         if (!boss.isActive()) {
             throw new BadRequestException("Boss is not active");
+        }
+
+        if (boss.getBossType() == BossType.DAILY) {
+            validateDailyRotation(boss);
         }
 
         Digimon digimon = digimonRepository.findById(digimonId)
@@ -127,6 +132,23 @@ public class ChallengeBossUseCase {
                 bitsGained,
                 drops
         );
+    }
+
+    private void validateDailyRotation(BossDefinitionEntity boss) {
+        List<BossDefinitionEntity> dailySameStage = bossDefinitionRepository.findAllActive().stream()
+                .filter(b -> b.getBossType() == BossType.DAILY && b.getRequiredStage() == boss.getRequiredStage())
+                .sorted(Comparator.comparingLong(BossDefinitionEntity::getId))
+                .toList();
+
+        if (dailySameStage.size() <= 1) return;
+
+        long dayIndex = LocalDate.now(ZoneOffset.UTC).toEpochDay();
+        int todayIndex = (int) (dayIndex % dailySameStage.size());
+        BossDefinitionEntity todaysBoss = dailySameStage.get(todayIndex);
+
+        if (!todaysBoss.getId().equals(boss.getId())) {
+            throw new BadRequestException("This daily boss is not available today. Today's boss: " + todaysBoss.getName());
+        }
     }
 
     private void validateRequirements(BossDefinitionEntity boss, Digimon digimon) {
