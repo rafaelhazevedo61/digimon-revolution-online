@@ -18,6 +18,7 @@ const STAGE_LABELS = {
 
 let bossesData = [];
 let bossActiveStage = "ROOKIE";
+let bossActiveType = "NORMAL";
 
 async function renderBossesPage() {
   const app = document.getElementById("app");
@@ -29,7 +30,8 @@ async function renderBossesPage() {
         <h2 class="text-lg font-bold px-1">Bosses</h2>
         <button class="text-xs text-cyan-400 hover:text-cyan-300" onclick="navigateTo('boss-history')">Historico</button>
       </div>
-      <div class="flex gap-2 mb-4 overflow-x-auto pb-1" id="boss-stage-tabs"></div>
+      <div class="flex gap-2 mb-3 overflow-x-auto pb-1" id="boss-stage-tabs"></div>
+      <div class="flex gap-2 mb-4 overflow-x-auto pb-1" id="boss-type-tabs"></div>
       <div id="bosses-list">
         <div class="card animate-pulse mb-3"><div class="h-24"></div></div>
         <div class="card animate-pulse mb-3"><div class="h-24"></div></div>
@@ -40,6 +42,7 @@ async function renderBossesPage() {
   try {
     bossesData = await apiGet("/bosses/available");
     renderBossStageTabs();
+    renderBossTypeTabs();
     renderBossList();
   } catch (err) {
     document.getElementById("bosses-list").innerHTML = `
@@ -52,12 +55,28 @@ function renderBossStageTabs() {
   const tabs = document.getElementById("boss-stage-tabs");
   tabs.innerHTML = BOSS_STAGE_TABS.map(s => {
     const active = s.key === bossActiveStage;
-    const count = bossesData.filter(b => b.requiredStage === s.key).length;
     return `
       <button class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors
         ${active ? s.color : "bg-slate-800 text-slate-400 hover:bg-slate-700"}"
-        onclick="bossActiveStage='${s.key}'; renderBossStageTabs(); renderBossList();">
-        ${escapeHtml(s.label)} (${count})
+        onclick="bossActiveStage='${s.key}'; renderBossStageTabs(); renderBossTypeTabs(); renderBossList();">
+        ${escapeHtml(s.label)}
+      </button>
+    `;
+  }).join("");
+}
+
+function renderBossTypeTabs() {
+  const tabs = document.getElementById("boss-type-tabs");
+  const types = ["NORMAL", "DAILY", "WEEKLY", "MONTHLY"];
+  tabs.innerHTML = types.map(t => {
+    const info = BOSS_TYPE_INFO[t];
+    const active = t === bossActiveType;
+    const count = bossesData.filter(b => b.requiredStage === bossActiveStage && b.bossType === t).length;
+    return `
+      <button class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors
+        ${active ? info.color : "bg-slate-800 text-slate-400 hover:bg-slate-700"}"
+        onclick="bossActiveType='${t}'; renderBossTypeTabs(); renderBossList();">
+        ${escapeHtml(info.label)} (${count})
       </button>
     `;
   }).join("");
@@ -65,7 +84,7 @@ function renderBossStageTabs() {
 
 function renderBossList() {
   const container = document.getElementById("bosses-list");
-  const filtered = bossesData.filter(b => b.requiredStage === bossActiveStage);
+  const filtered = bossesData.filter(b => b.requiredStage === bossActiveStage && b.bossType === bossActiveType);
 
   if (filtered.length === 0) {
     container.innerHTML = `<div class="card text-center text-slate-400 text-sm">Nenhum boss neste stage</div>`;
