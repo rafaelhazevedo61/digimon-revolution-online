@@ -89,10 +89,13 @@ function rankRender() {
 
   const stageMap = { BABY: "Baby", BABY_II: "Baby II", ROOKIE: "Rookie", CHAMPION: "Champion", ULTIMATE: "Ultimate", MEGA: "Mega" };
 
+  const myPlayerId = getPlayerId();
+
   let html = rankEntries.map(e => {
     const posIcon = e.position === 1 ? "🥇" : e.position === 2 ? "🥈" : e.position === 3 ? "🥉" : `<span class="text-slate-500 font-bold text-sm">#${e.position}</span>`;
     const stage = stageMap[e.digimonStage] || e.digimonStage;
     const gradeBadge = rankGradeBadge(e.grade);
+    const isOwn = e.playerId === myPlayerId;
 
     let detail = "";
     if (rankTab === "level") {
@@ -104,7 +107,7 @@ function rankRender() {
     }
 
     return `
-      <div class="card-sm mb-2 flex items-center gap-3 cursor-pointer" onclick="rankShowPreview('${e.digimonId}')">
+      <div class="card-sm mb-2 flex items-center gap-3 cursor-pointer ${isOwn ? "border-cyan-500 bg-cyan-950/30" : ""}" onclick="rankShowPreview('${e.digimonId}')">
         <div class="w-8 text-center text-lg">${posIcon}</div>
         <div class="text-2xl">🐉</div>
         <div class="flex-1 min-w-0">
@@ -117,7 +120,7 @@ function rankRender() {
             ${rankTab !== "grade" ? `<span class="badge ${gradeBadge}">${escapeHtml(e.grade)}</span>` : `<span class="text-cyan-400 text-xs font-bold">Lv.${e.level}</span>`}
             ${e.rebirthCount > 0 && rankTab !== "rebirth" ? `<span class="text-xs text-amber-400">🔄x${e.rebirthCount}</span>` : ""}
           </div>
-          <p class="text-xs text-slate-500 mt-1">👤 ${escapeHtml(e.playerName)}</p>
+          <p class="text-xs ${isOwn ? "text-cyan-400" : "text-slate-500"} mt-1">👤 ${escapeHtml(e.playerName)}${isOwn ? ' <span class="text-cyan-300 font-bold">(Voce)</span>' : ''}</p>
         </div>
         <div class="text-slate-500 text-lg">👁️</div>
       </div>
