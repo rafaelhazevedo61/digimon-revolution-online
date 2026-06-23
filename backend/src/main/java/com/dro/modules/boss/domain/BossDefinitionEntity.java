@@ -1,0 +1,74 @@
+package com.dro.modules.boss.domain;
+
+import com.dro.modules.digimon.domain.enums.Stage;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.util.List;
+
+@Entity
+@Table(name = "boss_definitions")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class BossDefinitionEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true)
+    private String code;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "boss_type", nullable = false)
+    private BossType bossType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "required_stage", nullable = false)
+    private Stage requiredStage;
+
+    @Column(name = "required_level", nullable = false)
+    private int requiredLevel;
+
+    @Column(name = "required_rebirths", nullable = false)
+    private int requiredRebirths;
+
+    @Column(nullable = false)
+    private int hp;
+
+    @Column(nullable = false)
+    private int atk;
+
+    @Column(nullable = false)
+    private int def;
+
+    @Column(name = "energy_cost", nullable = false)
+    private int energyCost;
+
+    @Column(name = "cooldown_minutes", nullable = false)
+    private int cooldownMinutes;
+
+    @Column(name = "base_xp_reward", nullable = false)
+    private int baseXpReward;
+
+    @Column(name = "base_bits_reward", nullable = false)
+    private int baseBitsReward;
+
+    @Column(name = "defeat_xp_percent", nullable = false)
+    private int defeatXpPercent;
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(nullable = false)
+    private boolean active;
+
+    @OneToMany(mappedBy = "boss", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<BossDropEntity> drops;
+}

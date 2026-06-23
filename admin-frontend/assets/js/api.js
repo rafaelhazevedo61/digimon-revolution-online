@@ -60,6 +60,21 @@ async function apiGet(path, params = {}) {
     return response.json();
   }
   
+  async function apiDelete(path) {
+    const response = await fetch(`${CONFIG.API_BASE_URL}${path}`, {
+      method: "DELETE"
+    });
+
+    if (!response.ok) {
+      const message = await safelyReadError(response);
+      throw new Error(message || `Erro HTTP ${response.status}`);
+    }
+
+    const text = await response.text();
+    if (!text) return null;
+    try { return JSON.parse(text); } catch { return text; }
+  }
+
   async function safelyReadError(response) {
     try {
       const data = await response.json();

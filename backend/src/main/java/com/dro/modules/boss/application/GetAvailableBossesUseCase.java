@@ -1,0 +1,93 @@
+package com.dro.modules.boss.application;
+
+import com.dro.modules.boss.api.dto.response.BossDefinitionResponse;
+import com.dro.modules.boss.api.dto.response.BossDropResponse;
+import com.dro.modules.boss.domain.BossDefinitionEntity;
+import com.dro.modules.boss.infra.BossAttemptRepository;
+import com.dro.modules.boss.infra.BossDefinitionRepository;
+import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.util.TokenExtractor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class GetAvailableBossesUseCase {
+
+    private final BossDefinitionRepository bossDefinitionRepository;
+    private final BossAttemptRepository bossAttemptRepository;
+    private final PlayerRepository playerRepository;
+    private final DigimonRepository digimonRepository;
+
+    public List<BossDefinitionResponse> execute(String token) {
+
+        UUID playerId = TokenExtractor.extractPlayerId(token);
+        var player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new NotFoundException("Player not found"));
+        Digimon digimon = digimonRepository.findById(player.getActiveDigimonId())
+                .orElseThrow(() -> new NotFoundException("Active digimon not found"));
+
+        List<BossDefinitionEntity> bosses = bossDefinitionRepository.findAllActive();
+
+        return bosses.stream().map(boss -> {
+            boolean meetsRequirements = digimon.getStage().ordinal() >= boss.getRequiredStage().ordinal()
+                    && digimon.getLevel() >= boss.getRequiredLevel()
+                    && digimon.getRebirthCount() >= boss.getRequiredRebirths();
+
+            Long cooldownRemaining = calculateCooldownRemaining(playerId, boss);
+            boolean available = meetsRequirements && (cooldownRemaining == null || cooldownRemaining <= 0);
+
+            List<BossDropResponse> drops = boss.getDrops() != null
+                    ? boss.getDrops().stream().map(d -> new BossDropResponse(
+                    d.getDropType(), d.getItemCode(), d.getTemplateName(),
+                    d.getEquipmentRarity(), d.getChance(), d.getMinQuantity(), d.getMaxQuantity()
+            )).toList()
+                    : List.of();
+
+            return new BossDefinitionResponse(
+                    boss.getId(),
+                    boss.getCode(),
+                    boss.getName(),
+                    boss.getBossType().name(),
+                    boss.getRequiredStage().name(),
+                    boss.getRequiredLevel(),
+                    boss.getRequiredRebirths(),
+                    boss.getHp(),
+                    boss.getAtk(),
+                    boss.getDef(),
+                    boss.getEnergyCost(),
+                    boss.getCooldownMinutes(),
+                    boss.getBaseXpReward(),
+                    boss.getBaseBitsReward(),
+                    boss.getImageUrl(),
+                    available,
+                    cooldownRemaining != null && cooldownRemaining > 0 ? cooldownRemaining : null,
+                    drops
+            );
+        }).toList();
+    }
+
+    private Long calculateCooldownRemaining(UUID playerId, BossDefinitionEntity boss) {
+        var lastAttempt = bossAttemptRepository
+                .findFirstByPlayerIdAndBossIdOrderByCreatedAtDesc(playerId, boss.getId());
+
+        if (lastAttempt.isEmpty()) return null;
+
+        Instant lastTime = lastAttempt.get().getCreatedAt();
+        Instant cooldownEnd = lastTime.plus(boss.getCooldownMinutes(), ChronoUnit.MINUTES);
+        Instant now = Instant.now();
+
+        if (now.isBefore(cooldownEnd)) {
+            return now.until(cooldownEnd, ChronoUnit.SECONDS);
+        }
+        return null;
+    }
+}

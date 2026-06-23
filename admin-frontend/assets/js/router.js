@@ -7,7 +7,8 @@ const routes = {
     "equipment-templates": renderEquipmentTemplatesPage,
     "shop-products": renderShopProductsPage,
     missions: renderMissionsPage,
-    "equipment-simulator": renderEquipmentSimulatorPage
+    "equipment-simulator": renderEquipmentSimulatorPage,
+    bosses: renderBossesAdminPage
   };
   
   function navigateTo(route) {

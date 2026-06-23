@@ -12,6 +12,8 @@ const routes = {
   ranking: renderRankingPage,
   incubation: renderIncubationPage,
   pokedex: renderPokedexPage,
+  bosses: renderBossesPage,
+  "boss-history": renderBossHistoryPage,
   more: renderMorePage
 };
 
