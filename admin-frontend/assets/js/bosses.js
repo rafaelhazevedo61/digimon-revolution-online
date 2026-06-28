@@ -260,7 +260,7 @@ async function openBossDrops(bossId) {
               ${drops.map(d => `
                 <tr class="border-b border-slate-800">
                   <td class="py-1 px-2"><span class="px-1.5 py-0.5 rounded text-xs ${d.dropType === "EQUIPMENT" ? "bg-purple-800" : "bg-slate-700"}">${d.dropType}</span></td>
-                  <td class="py-1 px-2">${d.dropType === "EQUIPMENT" ? (d.templateName || "-") + " " + (d.equipmentRarity || "") : (d.itemCode || "-")}</td>
+                  <td class="py-1 px-2">${d.dropType === "EQUIPMENT" ? (d.templateName || "-") : (d.itemCode || "-")}</td>
                   <td class="py-1 px-2">${d.chance}%</td>
                   <td class="py-1 px-2">${d.minQuantity}-${d.maxQuantity}</td>
                   <td class="py-1 px-2"><button class="text-red-400 text-xs hover:text-red-300" onclick="deleteDrop(${d.id}, ${bossId})">X</button></td>
@@ -327,7 +327,7 @@ function openDropForm(bossId) {
 
 function toggleDropFields() {
   const type = document.getElementById("df-type").value;
-  document.getElementById("df-item-field").classList.toggle("hidden", type === "EQUIPMENT");
+  document.getElementById("df-item-field").classList.toggle("hidden", type !== "ITEM");
   document.getElementById("df-template-field").classList.toggle("hidden", type !== "EQUIPMENT");
   document.getElementById("df-rarity-field").classList.toggle("hidden", type !== "EQUIPMENT");
 }

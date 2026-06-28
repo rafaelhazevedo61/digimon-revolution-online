@@ -32,7 +32,7 @@ public class EquipmentTemplateEntity implements Persistable<Long> {
     private EquipmentSlot slot;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column
     private EquipmentRarity rarity;
 
     @Column(name = "bonus_hp", nullable = false)

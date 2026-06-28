@@ -4,5 +4,6 @@ public record DropRewardResponse(
         String type,
         String code,
         String name,
-        int quantity
+        int quantity,
+        String rarity
 ) {}

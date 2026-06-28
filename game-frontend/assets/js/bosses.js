@@ -30,8 +30,8 @@ async function renderBossesPage() {
         <h2 class="text-lg font-bold px-1">Bosses</h2>
         <button class="text-xs text-cyan-400 hover:text-cyan-300" onclick="navigateTo('boss-history')">Historico</button>
       </div>
-      <div class="flex gap-2 mb-3 overflow-x-auto pb-1" id="boss-stage-tabs"></div>
-      <div class="flex gap-2 mb-4 overflow-x-auto pb-1" id="boss-type-tabs"></div>
+      <div class="flex gap-1.5 mb-3" id="boss-stage-tabs"></div>
+      <div class="flex gap-1.5 mb-4" id="boss-type-tabs"></div>
       <div id="bosses-list">
         <div class="card animate-pulse mb-3"><div class="h-24"></div></div>
         <div class="card animate-pulse mb-3"><div class="h-24"></div></div>
@@ -56,7 +56,7 @@ function renderBossStageTabs() {
   tabs.innerHTML = BOSS_STAGE_TABS.map(s => {
     const active = s.key === bossActiveStage;
     return `
-      <button class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors
+      <button class="flex-1 py-1.5 rounded-lg text-xs font-bold text-center transition-colors
         ${active ? s.color : "bg-slate-800 text-slate-400 hover:bg-slate-700"}"
         onclick="bossActiveStage='${s.key}'; renderBossStageTabs(); renderBossTypeTabs(); renderBossList();">
         ${escapeHtml(s.label)}
@@ -73,7 +73,7 @@ function renderBossTypeTabs() {
     const active = t === bossActiveType;
     const count = bossesData.filter(b => b.requiredStage === bossActiveStage && b.bossType === t).length;
     return `
-      <button class="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors
+      <button class="flex-1 py-1.5 rounded-lg text-xs font-bold text-center transition-colors
         ${active ? info.color : "bg-slate-800 text-slate-400 hover:bg-slate-700"}"
         onclick="bossActiveType='${t}'; renderBossTypeTabs(); renderBossList();">
         ${escapeHtml(info.label)} (${count})
@@ -148,18 +148,26 @@ function openBossDetail(bossCode) {
 
   const typeInfo = BOSS_TYPE_INFO[boss.bossType] || BOSS_TYPE_INFO.NORMAL;
 
-  const dropsHtml = (boss.drops && boss.drops.length > 0)
-    ? boss.drops.map(d => {
-      const name = d.dropType === "EQUIPMENT"
-        ? `${escapeHtml(d.templateName || "Equipamento")} (${escapeHtml(d.equipmentRarity || "?")})`
-        : escapeHtml(d.itemCode || "Item");
-      const qty = d.minQuantity === d.maxQuantity ? `x${d.minQuantity}` : `x${d.minQuantity}-${d.maxQuantity}`;
-      return `<div class="flex justify-between text-xs py-1 border-b border-slate-700 last:border-0">
-        <span class="${d.dropType === "EQUIPMENT" ? "text-purple-300" : "text-slate-200"}">${name} ${qty}</span>
-        <span class="text-slate-400">${d.chance}%</span>
-      </div>`;
-    }).join("")
-    : `<p class="text-xs text-slate-500">Sem drops configurados</p>`;
+  const equipDrops = (boss.drops || []).filter(d => d.dropType === "EQUIPMENT");
+  const itemDrops = (boss.drops || []).filter(d => d.dropType !== "EQUIPMENT");
+
+  let dropsHtml = "";
+  if (equipDrops.length > 0) {
+    const chance = equipDrops[0].chance;
+    dropsHtml += `<div class="flex justify-between text-xs py-1 border-b border-slate-700">
+      <span class="text-cyan-300">Equipamento Aleatorio (${equipDrops.length} possiveis)</span>
+      <span class="text-slate-400">${chance}%</span>
+    </div>`;
+  }
+  dropsHtml += itemDrops.map(d => {
+    const name = escapeHtml(d.itemCode || "Item");
+    const qty = d.minQuantity === d.maxQuantity ? `x${d.minQuantity}` : `x${d.minQuantity}-${d.maxQuantity}`;
+    return `<div class="flex justify-between text-xs py-1 border-b border-slate-700 last:border-0">
+      <span class="text-slate-200">${name} ${qty}</span>
+      <span class="text-slate-400">${d.chance}%</span>
+    </div>`;
+  }).join("");
+  if (!dropsHtml) dropsHtml = `<p class="text-xs text-slate-500">Sem drops configurados</p>`;
 
   const overlay = document.createElement("div");
   overlay.id = "boss-detail-overlay";
@@ -277,13 +285,18 @@ function renderBossResult(result) {
   const app = document.getElementById("app");
   const victory = result.result === "VICTORY";
 
+  const rarityColor = { COMMON: "text-slate-300", RARE: "text-blue-400", EPIC: "text-purple-400", LEGENDARY: "text-yellow-400" };
   const dropsHtml = result.drops && result.drops.length > 0
-    ? result.drops.map(d => `
+    ? result.drops.map(d => {
+      const label = d.type === "EQUIPMENT" && d.rarity
+        ? `${escapeHtml(d.name || d.code)} <span class="${rarityColor[d.rarity] || 'text-slate-300'}">(${d.rarity})</span>`
+        : escapeHtml(d.name || d.code);
+      return `
       <div class="flex justify-between text-sm py-1.5 border-b border-slate-700 last:border-0">
-        <span class="${d.type === "EQUIPMENT" ? "text-purple-300" : "text-slate-200"}">${escapeHtml(d.name || d.code)}</span>
+        <span class="${d.type === "EQUIPMENT" ? "text-purple-300" : "text-slate-200"}">${label}</span>
         <span class="text-slate-400">x${d.quantity}</span>
-      </div>
-    `).join("")
+      </div>`;
+    }).join("")
     : "";
 
   app.innerHTML = `

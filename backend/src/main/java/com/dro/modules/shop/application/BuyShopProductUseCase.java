@@ -3,6 +3,7 @@ package com.dro.modules.shop.application;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.equipment.application.GrantEquipmentUseCase;
+import com.dro.modules.equipment.domain.EquipmentRarityRules;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
@@ -80,7 +81,8 @@ public class BuyShopProductUseCase {
         if (product.getProductType() == ShopProductType.EQUIPMENT) {
             equipmentId = grantEquipmentUseCase.execute(
                     digimon.getId(),
-                    product.getEquipmentTemplateName()
+                    product.getEquipmentTemplateName(),
+                    EquipmentRarityRules.rollRarity("SHOP")
             );
         }
 

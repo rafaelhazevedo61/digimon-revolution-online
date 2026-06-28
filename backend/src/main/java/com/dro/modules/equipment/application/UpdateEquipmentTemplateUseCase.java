@@ -22,7 +22,9 @@ public class UpdateEquipmentTemplateUseCase {
                 .orElseThrow(() -> new NotFoundException("Equipment template not found: " + name));
 
         entity.setSlot(request.slot());
-        entity.setRarity(request.rarity());
+        if (request.setCode() != null) entity.setSetCode(request.setCode());
+        if (request.tier() != null) entity.setTier(request.tier());
+        if (request.rarity() != null) entity.setRarity(request.rarity());
         entity.setBonusHp(request.bonusHp());
         entity.setBonusAttack(request.bonusAttack());
         entity.setBonusDefense(request.bonusDefense());

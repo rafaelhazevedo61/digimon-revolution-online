@@ -2,6 +2,7 @@ package com.dro.modules.equipment.application;
 
 import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.domain.EquipmentRarity;
+import com.dro.modules.equipment.domain.EquipmentRarityRules;
 import com.dro.modules.equipment.domain.EquipmentTemplate;
 import com.dro.modules.equipment.domain.EquipmentTemplateMapper;
 import com.dro.modules.equipment.infra.EquipmentRepository;
@@ -30,7 +31,9 @@ public class GrantEquipmentUseCase {
                 .map(EquipmentTemplateMapper::toTemplate)
                 .orElseThrow(() -> new NotFoundException("Equipment template not found: " + templateName));
 
-        EquipmentRarity rarity = rarityOverride != null ? rarityOverride : template.getRarity();
+        EquipmentRarity rarity = rarityOverride != null
+                ? rarityOverride
+                : EquipmentRarityRules.rollRarity();
 
         Equipment equipment = Equipment.builder()
                 .id(UUID.randomUUID())

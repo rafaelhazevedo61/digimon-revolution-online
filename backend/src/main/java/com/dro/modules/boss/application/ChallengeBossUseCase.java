@@ -10,6 +10,7 @@ import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.equipment.application.GrantEquipmentUseCase;
 import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.domain.EquipmentRarity;
+import com.dro.modules.equipment.domain.EquipmentRarityRules;
 import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
@@ -191,7 +192,31 @@ public class ChallengeBossUseCase {
 
         if (boss.getDrops() == null) return rewards;
 
+        List<BossDropEntity> equipDrops = new ArrayList<>();
+        List<BossDropEntity> itemDrops = new ArrayList<>();
+
         for (BossDropEntity drop : boss.getDrops()) {
+            if ("EQUIPMENT".equals(drop.getDropType())) {
+                equipDrops.add(drop);
+            } else {
+                itemDrops.add(drop);
+            }
+        }
+
+        if (!equipDrops.isEmpty()) {
+            int poolChance = equipDrops.get(0).getChance();
+            int roll = ThreadLocalRandom.current().nextInt(1, 101);
+            if (roll <= poolChance) {
+                BossDropEntity picked = equipDrops.get(
+                        ThreadLocalRandom.current().nextInt(equipDrops.size()));
+                String profile = "BOSS_" + boss.getBossType().name();
+                EquipmentRarity rarity = EquipmentRarityRules.rollRarity(profile);
+                grantEquipmentUseCase.execute(digimonId, picked.getTemplateName(), rarity);
+                rewards.add(new DropRewardResponse("EQUIPMENT", picked.getTemplateName(), picked.getTemplateName(), 1, rarity.name()));
+            }
+        }
+
+        for (BossDropEntity drop : itemDrops) {
             int roll = ThreadLocalRandom.current().nextInt(1, 101);
             if (roll > drop.getChance()) continue;
 
@@ -200,22 +225,11 @@ public class ChallengeBossUseCase {
                 quantity = ThreadLocalRandom.current().nextInt(drop.getMinQuantity(), drop.getMaxQuantity() + 1);
             }
 
-            if ("EQUIPMENT".equals(drop.getDropType())) {
-                if (drop.getTemplateName() != null) {
-                    EquipmentRarity rarity = drop.getEquipmentRarity() != null
-                            ? EquipmentRarity.valueOf(drop.getEquipmentRarity())
-                            : null;
-                    grantEquipmentUseCase.execute(digimonId, drop.getTemplateName(), rarity);
-                    rewards.add(new DropRewardResponse("EQUIPMENT", drop.getTemplateName(), drop.getTemplateName(), 1));
-                }
-            } else {
-                try {
-                    ItemType itemType = ItemType.valueOf(drop.getItemCode());
-                    addItemUseCase.execute(digimonId, itemType, quantity);
-                    rewards.add(new DropRewardResponse("ITEM", drop.getItemCode(), drop.getItemCode(), quantity));
-                } catch (IllegalArgumentException ignored) {
-                    // Skip unknown item codes
-                }
+            try {
+                ItemType itemType = ItemType.valueOf(drop.getItemCode());
+                addItemUseCase.execute(digimonId, itemType, quantity);
+                rewards.add(new DropRewardResponse("ITEM", drop.getItemCode(), drop.getItemCode(), quantity, null));
+            } catch (IllegalArgumentException ignored) {
             }
         }
 
