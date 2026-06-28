@@ -10,6 +10,7 @@ import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.equipment.application.GrantEquipmentUseCase;
 import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.domain.EquipmentRarity;
+import com.dro.modules.equipment.domain.EquipmentRarityRules;
 import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
@@ -202,9 +203,13 @@ public class ChallengeBossUseCase {
 
             if ("EQUIPMENT".equals(drop.getDropType())) {
                 if (drop.getTemplateName() != null) {
-                    EquipmentRarity rarity = drop.getEquipmentRarity() != null
-                            ? EquipmentRarity.valueOf(drop.getEquipmentRarity())
-                            : null;
+                    EquipmentRarity rarity;
+                    if (drop.getEquipmentRarity() != null) {
+                        rarity = EquipmentRarity.valueOf(drop.getEquipmentRarity());
+                    } else {
+                        String profile = "BOSS_" + boss.getBossType().name();
+                        rarity = EquipmentRarityRules.rollRarity(profile);
+                    }
                     grantEquipmentUseCase.execute(digimonId, drop.getTemplateName(), rarity);
                     rewards.add(new DropRewardResponse("EQUIPMENT", drop.getTemplateName(), drop.getTemplateName(), 1));
                 }
