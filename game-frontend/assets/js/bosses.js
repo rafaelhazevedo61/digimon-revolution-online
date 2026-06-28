@@ -148,24 +148,26 @@ function openBossDetail(bossCode) {
 
   const typeInfo = BOSS_TYPE_INFO[boss.bossType] || BOSS_TYPE_INFO.NORMAL;
 
-  const dropsHtml = (boss.drops && boss.drops.length > 0)
-    ? boss.drops.map(d => {
-      let name;
-      if (d.dropType === "EQUIPMENT_POOL") {
-        name = "Equipamento Aleatorio (Raridade via Perfil)";
-      } else if (d.dropType === "EQUIPMENT") {
-        name = `${escapeHtml(d.templateName || "Equipamento")} (Raridade Aleatoria)`;
-      } else {
-        name = escapeHtml(d.itemCode || "Item");
-      }
-      const qty = d.minQuantity === d.maxQuantity ? `x${d.minQuantity}` : `x${d.minQuantity}-${d.maxQuantity}`;
-      const color = d.dropType === "EQUIPMENT_POOL" ? "text-cyan-300" : "text-slate-200";
-      return `<div class="flex justify-between text-xs py-1 border-b border-slate-700 last:border-0">
-        <span class="${color}">${name} ${qty}</span>
-        <span class="text-slate-400">${d.chance}%</span>
-      </div>`;
-    }).join("")
-    : `<p class="text-xs text-slate-500">Sem drops configurados</p>`;
+  const equipDrops = (boss.drops || []).filter(d => d.dropType === "EQUIPMENT");
+  const itemDrops = (boss.drops || []).filter(d => d.dropType !== "EQUIPMENT");
+
+  let dropsHtml = "";
+  if (equipDrops.length > 0) {
+    const chance = equipDrops[0].chance;
+    dropsHtml += `<div class="flex justify-between text-xs py-1 border-b border-slate-700">
+      <span class="text-cyan-300">Equipamento Aleatorio (${equipDrops.length} possiveis)</span>
+      <span class="text-slate-400">${chance}%</span>
+    </div>`;
+  }
+  dropsHtml += itemDrops.map(d => {
+    const name = escapeHtml(d.itemCode || "Item");
+    const qty = d.minQuantity === d.maxQuantity ? `x${d.minQuantity}` : `x${d.minQuantity}-${d.maxQuantity}`;
+    return `<div class="flex justify-between text-xs py-1 border-b border-slate-700 last:border-0">
+      <span class="text-slate-200">${name} ${qty}</span>
+      <span class="text-slate-400">${d.chance}%</span>
+    </div>`;
+  }).join("");
+  if (!dropsHtml) dropsHtml = `<p class="text-xs text-slate-500">Sem drops configurados</p>`;
 
   const overlay = document.createElement("div");
   overlay.id = "boss-detail-overlay";

@@ -1,7 +1,14 @@
--- Adiciona drop tipo EQUIPMENT_POOL para todos os bosses.
--- Ao dropar, o sistema seleciona 1 template aleatorio e rola a raridade
--- usando o perfil do tipo de boss (BOSS_NORMAL, BOSS_DAILY, BOSS_WEEKLY, BOSS_MONTHLY).
+-- Remove drops de EQUIPMENT_POOL (se existirem de migration anterior)
+DELETE FROM boss_drops WHERE drop_type = 'EQUIPMENT_POOL';
 
-INSERT INTO boss_drops (boss_id, drop_type, chance, min_quantity, max_quantity)
-SELECT id, 'EQUIPMENT_POOL', 25, 1, 1
-FROM boss_definitions;
+-- Remove drops de EQUIPMENT antigos (se existirem)
+DELETE FROM boss_drops WHERE drop_type = 'EQUIPMENT';
+
+-- Adiciona todos os 120 equipment templates como drops EQUIPMENT para cada boss.
+-- Chance = 25% (usada como chance do pool: 1 roll, se passar sorteia 1 template aleatorio).
+-- Raridade e rolada em runtime via EquipmentRarityRules usando o perfil do boss type.
+INSERT INTO boss_drops (boss_id, drop_type, template_name, chance, min_quantity, max_quantity)
+SELECT bd.id, 'EQUIPMENT', et.name, 25, 1, 1
+FROM boss_definitions bd
+CROSS JOIN equipment_templates et
+WHERE et.active = true;
