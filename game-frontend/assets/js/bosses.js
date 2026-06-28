@@ -151,7 +151,7 @@ function openBossDetail(bossCode) {
   const dropsHtml = (boss.drops && boss.drops.length > 0)
     ? boss.drops.map(d => {
       const name = d.dropType === "EQUIPMENT"
-        ? `${escapeHtml(d.templateName || "Equipamento")} (${escapeHtml(d.equipmentRarity || "?")})`
+        ? `${escapeHtml(d.templateName || "Equipamento")} (Raridade Aleatoria)`
         : escapeHtml(d.itemCode || "Item");
       const qty = d.minQuantity === d.maxQuantity ? `x${d.minQuantity}` : `x${d.minQuantity}-${d.maxQuantity}`;
       return `<div class="flex justify-between text-xs py-1 border-b border-slate-700 last:border-0">
@@ -277,13 +277,18 @@ function renderBossResult(result) {
   const app = document.getElementById("app");
   const victory = result.result === "VICTORY";
 
+  const rarityColor = { COMMON: "text-slate-300", RARE: "text-blue-400", EPIC: "text-purple-400", LEGENDARY: "text-yellow-400" };
   const dropsHtml = result.drops && result.drops.length > 0
-    ? result.drops.map(d => `
+    ? result.drops.map(d => {
+      const label = d.type === "EQUIPMENT" && d.rarity
+        ? `${escapeHtml(d.name || d.code)} <span class="${rarityColor[d.rarity] || 'text-slate-300'}">(${d.rarity})</span>`
+        : escapeHtml(d.name || d.code);
+      return `
       <div class="flex justify-between text-sm py-1.5 border-b border-slate-700 last:border-0">
-        <span class="${d.type === "EQUIPMENT" ? "text-purple-300" : "text-slate-200"}">${escapeHtml(d.name || d.code)}</span>
+        <span class="${d.type === "EQUIPMENT" ? "text-purple-300" : "text-slate-200"}">${label}</span>
         <span class="text-slate-400">x${d.quantity}</span>
-      </div>
-    `).join("")
+      </div>`;
+    }).join("")
     : "";
 
   app.innerHTML = `

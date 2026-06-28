@@ -211,13 +211,13 @@ public class ChallengeBossUseCase {
                         rarity = EquipmentRarityRules.rollRarity(profile);
                     }
                     grantEquipmentUseCase.execute(digimonId, drop.getTemplateName(), rarity);
-                    rewards.add(new DropRewardResponse("EQUIPMENT", drop.getTemplateName(), drop.getTemplateName(), 1));
+                    rewards.add(new DropRewardResponse("EQUIPMENT", drop.getTemplateName(), drop.getTemplateName(), 1, rarity.name()));
                 }
             } else {
                 try {
                     ItemType itemType = ItemType.valueOf(drop.getItemCode());
                     addItemUseCase.execute(digimonId, itemType, quantity);
-                    rewards.add(new DropRewardResponse("ITEM", drop.getItemCode(), drop.getItemCode(), quantity));
+                    rewards.add(new DropRewardResponse("ITEM", drop.getItemCode(), drop.getItemCode(), quantity, null));
                 } catch (IllegalArgumentException ignored) {
                     // Skip unknown item codes
                 }
