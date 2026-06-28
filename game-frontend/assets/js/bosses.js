@@ -155,7 +155,7 @@ function openBossDetail(bossCode) {
         : escapeHtml(d.itemCode || "Item");
       const qty = d.minQuantity === d.maxQuantity ? `x${d.minQuantity}` : `x${d.minQuantity}-${d.maxQuantity}`;
       return `<div class="flex justify-between text-xs py-1 border-b border-slate-700 last:border-0">
-        <span class="${d.dropType === "EQUIPMENT" ? "text-purple-300" : "text-slate-200"}">${name} ${qty}</span>
+        <span class="text-slate-200">${name} ${qty}</span>
         <span class="text-slate-400">${d.chance}%</span>
       </div>`;
     }).join("")
