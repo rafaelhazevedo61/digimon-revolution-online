@@ -30,7 +30,9 @@ public class GrantEquipmentUseCase {
                 .map(EquipmentTemplateMapper::toTemplate)
                 .orElseThrow(() -> new NotFoundException("Equipment template not found: " + templateName));
 
-        EquipmentRarity rarity = rarityOverride != null ? rarityOverride : template.getRarity();
+        EquipmentRarity rarity = rarityOverride != null
+                ? rarityOverride
+                : (template.getRarity() != null ? template.getRarity() : EquipmentRarity.COMMON);
 
         Equipment equipment = Equipment.builder()
                 .id(UUID.randomUUID())

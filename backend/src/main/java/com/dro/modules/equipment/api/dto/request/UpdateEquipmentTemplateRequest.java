@@ -7,7 +7,9 @@ import jakarta.validation.constraints.NotNull;
 
 public record UpdateEquipmentTemplateRequest(
         @NotNull EquipmentSlot slot,
-        @NotNull EquipmentRarity rarity,
+        String setCode,
+        Integer tier,
+        EquipmentRarity rarity,
         @Min(0) int bonusHp,
         @Min(0) int bonusAttack,
         @Min(0) int bonusDefense

@@ -11,7 +11,7 @@ public record CreateEquipmentTemplateRequest(
         @NotBlank String setCode,
         @Min(1) int tier,
         @NotNull EquipmentSlot slot,
-        @NotNull EquipmentRarity rarity,
+        EquipmentRarity rarity,
         @Min(0) int bonusHp,
         @Min(0) int bonusAttack,
         @Min(0) int bonusDefense

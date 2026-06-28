@@ -72,7 +72,8 @@ function renderEquipmentTemplatesTable(templates) {
           <tr>
             <th>Nome</th>
             <th>Slot</th>
-            <th>Raridade</th>
+            <th>Set</th>
+            <th>Tier</th>
             <th>HP</th>
             <th>ATK</th>
             <th>DEF</th>
@@ -99,7 +100,8 @@ function renderEqtRow(t) {
     <tr>
       <td class="font-semibold">${t.name}</td>
       <td><span class="badge">${t.slot}</span></td>
-      <td><span class="badge badge-${t.rarity.toLowerCase()}">${t.rarity}</span></td>
+      <td><span class="badge">${t.setCode || '-'}</span></td>
+      <td>${t.tier || '-'}</td>
       <td>${t.bonusHp > 0 ? `+${t.bonusHp}` : "-"}</td>
       <td>${t.bonusAttack > 0 ? `+${t.bonusAttack}` : "-"}</td>
       <td>${t.bonusDefense > 0 ? `+${t.bonusDefense}` : "-"}</td>
@@ -133,7 +135,8 @@ function eqtShowCreateModal() {
   eqtRenderModal("Novo Template", {
     name: "",
     slot: "WEAPON",
-    rarity: "COMMON",
+    setCode: "BERSERKER",
+    tier: 1,
     bonusHp: 0,
     bonusAttack: 0,
     bonusDefense: 0
@@ -174,10 +177,15 @@ function eqtRenderModal(title, data, isEdit) {
             </div>
 
             <div>
-              <label class="text-sm text-slate-400">Raridade</label>
-              <select id="eqt-rarity" class="input mt-1">
-                ${eqtRarityOptions(data.rarity)}
+              <label class="text-sm text-slate-400">Set</label>
+              <select id="eqt-set" class="input mt-1">
+                ${eqtSetOptions(data.setCode)}
               </select>
+            </div>
+
+            <div>
+              <label class="text-sm text-slate-400">Tier</label>
+              <input id="eqt-tier" type="number" min="1" max="10" class="input mt-1" value="${data.tier || 1}" required />
             </div>
 
             <div>
@@ -194,6 +202,10 @@ function eqtRenderModal(title, data, isEdit) {
               <label class="text-sm text-slate-400">Bonus DEF</label>
               <input id="eqt-def" type="number" min="0" class="input mt-1" value="${data.bonusDefense}" required />
             </div>
+          </div>
+
+          <div class="mt-3 p-2 rounded bg-slate-800 text-xs text-slate-500">
+            Raridade e definida por instancia (no grant/drop), nao no template.
           </div>
 
           <div id="eqt-form-error" class="hidden mt-4 p-3 rounded-lg bg-red-950/30 border border-red-900 text-red-200 text-sm"></div>
@@ -216,7 +228,8 @@ async function eqtSubmitForm(event) {
 
   const body = {
     slot: document.getElementById("eqt-slot").value,
-    rarity: document.getElementById("eqt-rarity").value,
+    setCode: document.getElementById("eqt-set").value,
+    tier: Number(document.getElementById("eqt-tier").value),
     bonusHp: Number(document.getElementById("eqt-hp").value),
     bonusAttack: Number(document.getElementById("eqt-atk").value),
     bonusDefense: Number(document.getElementById("eqt-def").value)
@@ -257,9 +270,9 @@ function eqtSlotOptions(selected) {
   return slots.map(s => `<option value="${s}" ${s === selected ? "selected" : ""}>${s}</option>`).join("");
 }
 
-function eqtRarityOptions(selected) {
-  const rarities = ["COMMON", "RARE", "EPIC", "LEGENDARY"];
-  return rarities.map(r => `<option value="${r}" ${r === selected ? "selected" : ""}>${r}</option>`).join("");
+function eqtSetOptions(selected) {
+  const sets = ["BERSERKER", "GUARDIAN", "VITALITY", "BALANCED"];
+  return sets.map(s => `<option value="${s}" ${s === selected ? "selected" : ""}>${s}</option>`).join("");
 }
 
 function eqtFormatDate(dateStr) {
