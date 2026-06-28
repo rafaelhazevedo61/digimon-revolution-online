@@ -28,6 +28,13 @@ async function renderMorePage() {
             <p class="text-xs text-slate-400">Chocar novas digitamas</p>
           </div>
         </button>
+        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('storage')">
+          <span class="text-2xl">📦</span>
+          <div>
+            <p class="font-bold text-sm">Storage</p>
+            <p class="text-xs text-slate-400">Guardar e retirar Digimons</p>
+          </div>
+        </button>
         <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('pokedex')">
           <span class="text-2xl">📖</span>
           <div>

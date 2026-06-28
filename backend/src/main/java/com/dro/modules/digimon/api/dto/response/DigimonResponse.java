@@ -35,4 +35,17 @@ public record DigimonResponse(
         int equipBonusAttack,
         int equipBonusDefense
 ) {
+
+    public static DigimonResponse from(com.dro.modules.digimon.domain.Digimon d) {
+        return new DigimonResponse(
+                d.getId(), d.getName(), d.getType(), d.getStage(),
+                d.getLevel(), d.getExperience(),
+                d.getHp(), d.getAttack(), d.getDefense(),
+                d.getIvHp(), d.getIvAttack(), d.getIvDefense(),
+                d.getGrade(), d.getRarity(), d.getPersonality(), d.getTrait(),
+                d.getEnergy(), d.getMaxEnergy(), d.getBits(),
+                d.getRebirthCount(), d.getRebornedFrom(), d.getStatus(),
+                d.getDigimonInfoId(), null, null, 0, 0, 0
+        );
+    }
 }

@@ -74,6 +74,33 @@ public class GetDigimonUseCase {
                 .toList();
     }
 
+    public List<DigimonResponse> executeStorage(String token) {
+        UUID playerId = TokenExtractor.extractPlayerId(token);
+
+        return digimonRepository.findByPlayerIdAndStatus(playerId, DigimonStatus.STORED)
+                .stream()
+                .map(d -> {
+                    DigimonInfos info = d.getDigimonInfoId() != null
+                            ? digimonInfosRepository.findById(d.getDigimonInfoId()).orElse(null)
+                            : null;
+
+                    return new DigimonResponse(
+                            d.getId(), d.getName(), d.getType(), d.getStage(),
+                            d.getLevel(), d.getExperience(),
+                            d.getHp(), d.getAttack(), d.getDefense(),
+                            d.getIvHp(), d.getIvAttack(), d.getIvDefense(),
+                            d.getGrade(), d.getRarity(), d.getPersonality(), d.getTrait(),
+                            d.getEnergy(), d.getMaxEnergy(), d.getBits(),
+                            d.getRebirthCount(), d.getRebornedFrom(), d.getStatus(),
+                            d.getDigimonInfoId(),
+                            info != null ? info.getAttribute().name() : null,
+                            info != null ? info.getElement().name() : null,
+                            0, 0, 0
+                    );
+                })
+                .toList();
+    }
+
     private List<Equipment> getEquippedItems(Digimon digimon) {
         List<Equipment> equipped = new ArrayList<>();
 

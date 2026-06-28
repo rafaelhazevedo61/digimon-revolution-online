@@ -19,5 +19,14 @@ public record PlayerDashboardResponse(
         DigimonEquipmentResponse.SetBonusResponse setBonus,
         List<InventorySummaryResponse> inventory,
         List<ActiveMissionResponse> activeMissions,
-        IncubationResponse incubation
-) {}
+        IncubationResponse incubation,
+        SlotInfoResponse slotInfo
+) {
+
+    public record SlotInfoResponse(
+            int activeDigimons,
+            int maxDigimonSlots,
+            int storedDigimons,
+            int maxStorageSlots
+    ) {}
+}
