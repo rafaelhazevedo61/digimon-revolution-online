@@ -1,7 +1,10 @@
 const eqtState = {
   templates: [],
   activeOnly: false,
-  editing: null
+  editing: null,
+  search: "",
+  sortCol: "name",
+  sortDir: "asc"
 };
 
 function renderEquipmentTemplatesPage() {
@@ -15,7 +18,9 @@ function renderEquipmentTemplatesPage() {
   app.innerHTML = `
     <div class="card mb-6">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4 flex-wrap">
+          <input type="text" id="eqt-search" class="input" placeholder="Buscar por nome..." 
+            value="${eqtState.search}" oninput="eqtOnSearch(this.value)" style="width:220px" />
           <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
             <input type="checkbox" id="eqt-active-only" ${eqtState.activeOnly ? "checked" : ""} 
               onchange="eqtToggleActiveFilter()" class="accent-cyan-500" />
@@ -46,7 +51,7 @@ async function loadEquipmentTemplates() {
 
     const templates = await apiGet("/admin/equipment-templates", params);
     eqtState.templates = templates;
-    renderEquipmentTemplatesTable(templates);
+    eqtRenderFiltered();
   } catch (error) {
     container.innerHTML = `
       <div class="card border-red-900 bg-red-950/30">
@@ -57,27 +62,81 @@ async function loadEquipmentTemplates() {
   }
 }
 
+function eqtOnSearch(value) {
+  eqtState.search = value;
+  eqtRenderFiltered();
+}
+
+function eqtToggleSort(col) {
+  if (eqtState.sortCol === col) {
+    eqtState.sortDir = eqtState.sortDir === "asc" ? "desc" : "asc";
+  } else {
+    eqtState.sortCol = col;
+    eqtState.sortDir = "asc";
+  }
+  eqtRenderFiltered();
+}
+
+function eqtRenderFiltered() {
+  let filtered = [...eqtState.templates];
+
+  if (eqtState.search.trim()) {
+    const q = eqtState.search.trim().toLowerCase();
+    filtered = filtered.filter(t => t.name.toLowerCase().includes(q));
+  }
+
+  const col = eqtState.sortCol;
+  const dir = eqtState.sortDir === "asc" ? 1 : -1;
+
+  filtered.sort((a, b) => {
+    let va = a[col];
+    let vb = b[col];
+    if (col === "tier" || col === "bonusHp" || col === "bonusAttack" || col === "bonusDefense") {
+      return ((va || 0) - (vb || 0)) * dir;
+    }
+    if (col === "active") {
+      return ((va ? 1 : 0) - (vb ? 1 : 0)) * dir;
+    }
+    va = (va || "").toString().toLowerCase();
+    vb = (vb || "").toString().toLowerCase();
+    return va.localeCompare(vb) * dir;
+  });
+
+  renderEquipmentTemplatesTable(filtered);
+}
+
+function eqtSortIcon(col) {
+  if (eqtState.sortCol !== col) return '<span class="text-slate-600 ml-1">&#8597;</span>';
+  return eqtState.sortDir === "asc"
+    ? '<span class="text-cyan-400 ml-1">&#9650;</span>'
+    : '<span class="text-cyan-400 ml-1">&#9660;</span>';
+}
+
 function renderEquipmentTemplatesTable(templates) {
   const container = document.getElementById("eqt-result");
+
+  const total = eqtState.templates.length;
+  const shown = templates.length;
+  const countLabel = eqtState.search.trim() ? `${shown} de ${total}` : `${total}`;
 
   container.innerHTML = `
     <div class="mb-4">
       <h3 class="text-lg font-bold">Templates de Equipamento</h3>
-      <p class="text-sm text-slate-400">Total: ${templates.length}</p>
+      <p class="text-sm text-slate-400">Total: ${countLabel}</p>
     </div>
 
     <div class="table-wrapper">
       <table class="table">
         <thead>
           <tr>
-            <th>Nome</th>
-            <th>Slot</th>
-            <th>Set</th>
-            <th>Tier</th>
-            <th>HP</th>
-            <th>ATK</th>
-            <th>DEF</th>
-            <th>Status</th>
+            <th class="cursor-pointer select-none" onclick="eqtToggleSort('name')">Nome ${eqtSortIcon('name')}</th>
+            <th class="cursor-pointer select-none" onclick="eqtToggleSort('slot')">Slot ${eqtSortIcon('slot')}</th>
+            <th class="cursor-pointer select-none" onclick="eqtToggleSort('setCode')">Set ${eqtSortIcon('setCode')}</th>
+            <th class="cursor-pointer select-none" onclick="eqtToggleSort('tier')">Tier ${eqtSortIcon('tier')}</th>
+            <th class="cursor-pointer select-none" onclick="eqtToggleSort('bonusHp')">HP ${eqtSortIcon('bonusHp')}</th>
+            <th class="cursor-pointer select-none" onclick="eqtToggleSort('bonusAttack')">ATK ${eqtSortIcon('bonusAttack')}</th>
+            <th class="cursor-pointer select-none" onclick="eqtToggleSort('bonusDefense')">DEF ${eqtSortIcon('bonusDefense')}</th>
+            <th class="cursor-pointer select-none" onclick="eqtToggleSort('active')">Status ${eqtSortIcon('active')}</th>
             <th>Atualizado</th>
             <th>Ações</th>
           </tr>
