@@ -150,12 +150,18 @@ function openBossDetail(bossCode) {
 
   const dropsHtml = (boss.drops && boss.drops.length > 0)
     ? boss.drops.map(d => {
-      const name = d.dropType === "EQUIPMENT"
-        ? `${escapeHtml(d.templateName || "Equipamento")} (Raridade Aleatoria)`
-        : escapeHtml(d.itemCode || "Item");
+      let name;
+      if (d.dropType === "EQUIPMENT_POOL") {
+        name = "Equipamento Aleatorio (Raridade via Perfil)";
+      } else if (d.dropType === "EQUIPMENT") {
+        name = `${escapeHtml(d.templateName || "Equipamento")} (Raridade Aleatoria)`;
+      } else {
+        name = escapeHtml(d.itemCode || "Item");
+      }
       const qty = d.minQuantity === d.maxQuantity ? `x${d.minQuantity}` : `x${d.minQuantity}-${d.maxQuantity}`;
+      const color = d.dropType === "EQUIPMENT_POOL" ? "text-cyan-300" : "text-slate-200";
       return `<div class="flex justify-between text-xs py-1 border-b border-slate-700 last:border-0">
-        <span class="text-slate-200">${name} ${qty}</span>
+        <span class="${color}">${name} ${qty}</span>
         <span class="text-slate-400">${d.chance}%</span>
       </div>`;
     }).join("")

@@ -12,7 +12,9 @@ import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.domain.EquipmentRarity;
 import com.dro.modules.equipment.domain.EquipmentRarityRules;
 import com.dro.modules.equipment.domain.EquipmentRules;
+import com.dro.modules.equipment.domain.EquipmentTemplateEntity;
 import com.dro.modules.equipment.infra.EquipmentRepository;
+import com.dro.modules.equipment.infra.EquipmentTemplateRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.player.infra.PlayerRepository;
@@ -39,6 +41,7 @@ public class ChallengeBossUseCase {
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
     private final EquipmentRepository equipmentRepository;
+    private final EquipmentTemplateRepository equipmentTemplateRepository;
     private final AddItemUseCase addItemUseCase;
     private final GrantEquipmentUseCase grantEquipmentUseCase;
 
@@ -201,7 +204,17 @@ public class ChallengeBossUseCase {
                 quantity = ThreadLocalRandom.current().nextInt(drop.getMinQuantity(), drop.getMaxQuantity() + 1);
             }
 
-            if ("EQUIPMENT".equals(drop.getDropType())) {
+            if ("EQUIPMENT_POOL".equals(drop.getDropType())) {
+                List<EquipmentTemplateEntity> templates = equipmentTemplateRepository.findByActiveTrueOrderByNameAsc();
+                if (!templates.isEmpty()) {
+                    EquipmentTemplateEntity picked = templates.get(
+                            ThreadLocalRandom.current().nextInt(templates.size()));
+                    String profile = "BOSS_" + boss.getBossType().name();
+                    EquipmentRarity rarity = EquipmentRarityRules.rollRarity(profile);
+                    grantEquipmentUseCase.execute(digimonId, picked.getName(), rarity);
+                    rewards.add(new DropRewardResponse("EQUIPMENT", picked.getName(), picked.getName(), 1, rarity.name()));
+                }
+            } else if ("EQUIPMENT".equals(drop.getDropType())) {
                 if (drop.getTemplateName() != null) {
                     EquipmentRarity rarity;
                     if (drop.getEquipmentRarity() != null) {
