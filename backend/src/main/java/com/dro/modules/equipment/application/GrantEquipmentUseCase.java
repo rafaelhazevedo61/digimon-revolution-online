@@ -2,6 +2,7 @@ package com.dro.modules.equipment.application;
 
 import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.domain.EquipmentRarity;
+import com.dro.modules.equipment.domain.EquipmentRarityRules;
 import com.dro.modules.equipment.domain.EquipmentTemplate;
 import com.dro.modules.equipment.domain.EquipmentTemplateMapper;
 import com.dro.modules.equipment.infra.EquipmentRepository;
@@ -32,7 +33,7 @@ public class GrantEquipmentUseCase {
 
         EquipmentRarity rarity = rarityOverride != null
                 ? rarityOverride
-                : (template.getRarity() != null ? template.getRarity() : EquipmentRarity.COMMON);
+                : EquipmentRarityRules.rollRarity();
 
         Equipment equipment = Equipment.builder()
                 .id(UUID.randomUUID())
