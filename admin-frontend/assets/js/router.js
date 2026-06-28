@@ -8,7 +8,8 @@ const routes = {
     "shop-products": renderShopProductsPage,
     missions: renderMissionsPage,
     "equipment-simulator": renderEquipmentSimulatorPage,
-    bosses: renderBossesAdminPage
+    bosses: renderBossesAdminPage,
+    "digimon-simulator": renderDigimonSimulatorPage
   };
   
   function navigateTo(route) {
