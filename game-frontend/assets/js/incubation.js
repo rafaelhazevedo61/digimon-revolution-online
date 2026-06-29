@@ -16,7 +16,12 @@ async function renderIncubationPage() {
   if (incubTimerInterval) { clearInterval(incubTimerInterval); incubTimerInterval = null; }
 
   try {
-    const incubation = await incubFetchActive();
+    const [incubation, dashboard] = await Promise.all([
+      incubFetchActive(),
+      apiGet("/players/me/dashboard")
+    ]);
+
+    window._incubSlotInfo = dashboard.slotInfo;
 
     if (incubation) {
       incubRenderActive(incubation);
@@ -58,11 +63,7 @@ function incubRenderActive(inc) {
         ${!done ? `<p class="text-xs text-slate-500 mt-1">Aguardando incubação...</p>` : ""}
       </div>
 
-      ${done ? `
-        <button class="btn-primary w-full text-lg py-3" id="incub-claim-btn" onclick="incubClaim()">
-          🐣 Chocar!
-        </button>
-      ` : `
+      ${done ? incubClaimButton() : `
         <div class="w-full bg-slate-800 rounded-full h-2 mb-2">
           <div class="h-2 rounded-full" style="background:#f59e0b;width:${incubProgress(inc)}%" id="incub-bar"></div>
         </div>
@@ -120,6 +121,30 @@ async function incubClaim() {
     showToast(err.message, "error");
     if (btn) { btn.disabled = false; btn.textContent = "🐣 Chocar!"; }
   }
+}
+
+function incubClaimButton() {
+  const si = window._incubSlotInfo;
+  if (si && si.activeDigimons >= si.maxDigimonSlots) {
+    return `
+      <div class="mb-2">
+        <p class="text-xs text-red-400 font-bold mb-1">Slots ativos cheios (${si.activeDigimons}/${si.maxDigimonSlots})</p>
+        <p class="text-xs text-slate-500">Guarde um Digimon no Storage para poder chocar.</p>
+      </div>
+      <button class="btn-primary w-full text-lg py-3 opacity-50 cursor-not-allowed" disabled>
+        🐣 Chocar!
+      </button>
+      <button class="btn-sm w-full mt-2" style="background:#1e3a5f;color:#7dd3fc" onclick="navigateTo('digimon-select')">
+        📦 Ir para Digimon / Storage
+      </button>
+    `;
+  }
+  return `
+    ${si ? `<p class="text-xs text-slate-500 mb-2">Slots: ${si.activeDigimons}/${si.maxDigimonSlots}</p>` : ''}
+    <button class="btn-primary w-full text-lg py-3" id="incub-claim-btn" onclick="incubClaim()">
+      🐣 Chocar!
+    </button>
+  `;
 }
 
 // ==================== START INCUBATION ====================

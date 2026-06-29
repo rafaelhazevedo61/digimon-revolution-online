@@ -9,6 +9,7 @@ import com.dro.modules.digitama.infra.DigitamaPoolRepository;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.DigimonFactory;
 import com.dro.modules.digimon.domain.DigimonInfos;
+import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.incubation.domain.Incubation;
 import com.dro.modules.incubation.domain.IncubationStatus;
@@ -40,6 +41,8 @@ public class ClaimIncubationUseCase {
         Incubation incubation = findActiveIncubation(playerId);
 
         validateIncubationFinished(incubation);
+
+        validateDigimonSlots(playerId);
 
         Digimon digimon = createDigimonFromIncubation(playerId, incubation);
 
@@ -102,6 +105,18 @@ public class ClaimIncubationUseCase {
         if (player.getActiveDigimonId() == null) {
             player.setActiveDigimonId(digimon.getId());
             playerRepository.save(player);
+        }
+    }
+
+    private void validateDigimonSlots(UUID playerId) {
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new NotFoundException("Player not found"));
+
+        long activeCount = digimonRepository.countByPlayerIdAndStatus(playerId, DigimonStatus.ACTIVE);
+        if (activeCount >= player.getMaxDigimonSlots()) {
+            throw new BadRequestException(
+                    "Slots de Digimon cheios (" + activeCount + "/" + player.getMaxDigimonSlots() +
+                    "). Guarde um Digimon no Storage para liberar espaço.");
         }
     }
 

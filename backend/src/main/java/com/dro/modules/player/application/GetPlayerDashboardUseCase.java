@@ -24,6 +24,7 @@ import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.player.api.dto.response.ActiveMissionResponse;
 import com.dro.modules.player.api.dto.response.InventorySummaryResponse;
+import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.player.api.dto.response.PlayerDashboardResponse;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
@@ -77,6 +78,13 @@ public class GetPlayerDashboardUseCase {
 
         IncubationResponse incubation = buildIncubation(playerId);
 
+        long activeCount = digimonRepository.countByPlayerIdAndStatus(playerId, DigimonStatus.ACTIVE);
+        long storedCount = digimonRepository.countByPlayerIdAndStatus(playerId, DigimonStatus.STORED);
+        var slotInfo = new PlayerDashboardResponse.SlotInfoResponse(
+                (int) activeCount, player.getMaxDigimonSlots(),
+                (int) storedCount, player.getMaxStorageSlots()
+        );
+
         return new PlayerDashboardResponse(
                 player.getId(),
                 player.getUsername(),
@@ -87,7 +95,8 @@ public class GetPlayerDashboardUseCase {
                 setBonus,
                 inventory,
                 activeMissions,
-                incubation
+                incubation,
+                slotInfo
         );
     }
 

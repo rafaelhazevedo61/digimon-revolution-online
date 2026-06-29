@@ -43,6 +43,12 @@ public class Player {
     @Column(name = "has_selected_starter", nullable = false)
     private boolean starterSelected;
 
+    @Column(name = "max_digimon_slots", nullable = false)
+    private int maxDigimonSlots = 3;
+
+    @Column(name = "max_storage_slots", nullable = false)
+    private int maxStorageSlots = 50;
+
     public boolean hasSelectedStarter() {
         return starterSelected;
     }

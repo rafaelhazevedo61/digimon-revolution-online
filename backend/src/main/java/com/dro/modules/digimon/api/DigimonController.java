@@ -36,6 +36,8 @@ public class DigimonController {
     private final RebirthPreviewUseCase rebirthPreviewUseCase;
     private final SimulateTraitHatchUseCase simulateTraitHatchUseCase;
     private final RenameDigimonUseCase renameDigimonUseCase;
+    private final StoreDigimonUseCase storeDigimonUseCase;
+    private final RetrieveDigimonUseCase retrieveDigimonUseCase;
     private final GetEvolutionOptionsUseCase getEvolutionOptionsUseCase;
 
     @GetMapping("/me")
@@ -138,5 +140,30 @@ public class DigimonController {
     ) {
         renameDigimonUseCase.execute(authorization, request.digimonId(), request.newName());
         return ResponseEntity.ok(Map.of("message", "Digimon renamed successfully"));
+    }
+
+    @PostMapping("/{digimonId}/store")
+    public ResponseEntity<DigimonResponse> store(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable UUID digimonId
+    ) {
+        var digimon = storeDigimonUseCase.execute(authorization, digimonId);
+        return ResponseEntity.ok(DigimonResponse.from(digimon));
+    }
+
+    @PostMapping("/{digimonId}/retrieve")
+    public ResponseEntity<DigimonResponse> retrieve(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable UUID digimonId
+    ) {
+        var digimon = retrieveDigimonUseCase.execute(authorization, digimonId);
+        return ResponseEntity.ok(DigimonResponse.from(digimon));
+    }
+
+    @GetMapping("/storage")
+    public ResponseEntity<List<DigimonResponse>> storage(
+            @RequestHeader("Authorization") String authorization
+    ) {
+        return ResponseEntity.ok(useCase.executeStorage(authorization));
     }
 }
