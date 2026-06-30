@@ -4,6 +4,7 @@ import com.dro.modules.auth.api.dto.RegisterRequest;
 import com.dro.modules.auth.domain.exception.EmailAlreadyRegisteredException;
 import com.dro.modules.auth.domain.exception.UsernameAlreadyTakenException;
 import com.dro.modules.player.domain.Player;
+import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,6 +36,9 @@ public class RegisterUseCase {
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .createdAt(LocalDateTime.now())
+                .maxDigimonSlots(3)
+                .maxStorageSlots(50)
+                .userType(UserType.PLAYER)
                 .build();
 
         repository.save(player);
