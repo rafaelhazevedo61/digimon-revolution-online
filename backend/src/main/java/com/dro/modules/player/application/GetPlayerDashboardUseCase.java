@@ -90,6 +90,7 @@ public class GetPlayerDashboardUseCase {
                 player.getUsername(),
                 player.getEmail(),
                 player.getCreatedAt(),
+                player.getUserType().name(),
                 activeDigimon,
                 equippedItems,
                 setBonus,

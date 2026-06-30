@@ -8,6 +8,7 @@ import com.dro.modules.mission.domain.*;
 import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.player.domain.Player;
+import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
@@ -54,11 +55,15 @@ public class StartMissionUseCase {
 
         validateRequirement(digimon, mission);
 
-        // 🔋 Energia
-        digimon.regenerateEnergy();
+        boolean isAdmin = player.getUserType() == UserType.ADMIN;
 
-        if (digimon.getEnergy() < mission.getEnergyCost()) {
-            throw new UnprocessableException("Energia insuficiente");
+        // 🔋 Energia
+        if (!isAdmin) {
+            digimon.regenerateEnergy();
+
+            if (digimon.getEnergy() < mission.getEnergyCost()) {
+                throw new UnprocessableException("Energia insuficiente");
+            }
         }
 
         // 🔒 Verificar se já está em missão
@@ -69,15 +74,21 @@ public class StartMissionUseCase {
             throw new ConflictException("Digimon já está em missão");
         }
 
-        digimon.consumeEnergy(mission.getEnergyCost());
+        if (!isAdmin) {
+            digimon.consumeEnergy(mission.getEnergyCost());
+        }
         digimonRepository.save(digimon);
 
         // ⏱ Criar instância
+        Duration missionDuration = isAdmin
+                ? Duration.ZERO
+                : Duration.ofSeconds(mission.getDurationSeconds());
+
         MissionInstance instance = new MissionInstance(
                 playerId,
                 digimon.getId(),
                 missionId,
-                Duration.ofSeconds(mission.getDurationSeconds())
+                missionDuration
         );
 
         missionInstanceRepository.save(instance);

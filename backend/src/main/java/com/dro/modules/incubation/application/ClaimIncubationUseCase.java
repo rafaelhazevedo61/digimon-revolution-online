@@ -15,6 +15,7 @@ import com.dro.modules.incubation.domain.Incubation;
 import com.dro.modules.incubation.domain.IncubationStatus;
 import com.dro.modules.incubation.infra.IncubationRepository;
 import com.dro.modules.player.domain.Player;
+import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
@@ -38,9 +39,18 @@ public class ClaimIncubationUseCase {
 
         UUID playerId = extractPlayerId(token);
 
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new NotFoundException("Player not found"));
+
+        boolean isAdmin = player.getUserType() == UserType.ADMIN;
+
         Incubation incubation = findActiveIncubation(playerId);
 
-        validateIncubationFinished(incubation);
+        if (isAdmin) {
+            forceReadyIfInProgress(incubation);
+        } else {
+            validateIncubationFinished(incubation);
+        }
 
         validateDigimonSlots(playerId);
 
@@ -117,6 +127,12 @@ public class ClaimIncubationUseCase {
             throw new BadRequestException(
                     "Slots de Digimon cheios (" + activeCount + "/" + player.getMaxDigimonSlots() +
                     "). Guarde um Digimon no Storage para liberar espaço.");
+        }
+    }
+
+    private void forceReadyIfInProgress(Incubation incubation) {
+        if (incubation.getStatus() == IncubationStatus.IN_PROGRESS) {
+            incubation.setStatus(IncubationStatus.READY);
         }
     }
 
