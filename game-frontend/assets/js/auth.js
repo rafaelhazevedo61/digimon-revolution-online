@@ -136,9 +136,10 @@ async function authRegister(e) {
 async function authCheckStartup() {
   try {
     const startup = await apiGet("/players/me/startup");
+
     if (startup.redirectTo === "DIGITAMA_SELECTION" || startup.redirectTo === "DIGITAMA_HATCHING") {
       navigateTo("starter");
-    } else if (startup.redirectTo === "DIGIMON_SELECTION" || startup.redirectTo === "DIGIMON_VIEW") {
+    } else if (startup.redirectTo === "DIGIMON_SELECTION") {
       navigateTo("digimon-select");
     } else {
       navigateTo("dashboard");

@@ -119,7 +119,7 @@ function renderHatchingAnimation(digimon) {
               <p class="text-sm font-bold text-blue-400">${digimon.defense}</p>
             </div>
           </div>
-          <button class="btn-primary w-full mt-6" onclick="hatchConfirm('${digimon.id}')">
+          <button id="hatch-confirm-btn" type="button" class="btn-primary w-full mt-6" onclick="hatchConfirm('${digimon.id}')">
             Começar Jornada!
           </button>
         </div>
@@ -156,11 +156,28 @@ function runHatchSequence() {
 }
 
 async function hatchConfirm(digimonId) {
+  const btn = document.getElementById("hatch-confirm-btn");
+
+  if (!digimonId || digimonId === "undefined" || digimonId === "null") {
+    showToast("Não foi possível identificar o Digimon chocado.", "error");
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Iniciando jornada...";
+  }
+
   try {
     await apiPost("/digimon/select", { digimonId: digimonId });
     navigateTo("dashboard");
   } catch (err) {
     showToast(err.message, "error");
+
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Começar Jornada!";
+    }
   }
 }
 
@@ -192,9 +209,11 @@ async function renderDigimonSelectPage() {
     ]);
 
     const slotInfo = dashboard.slotInfo;
+
     if (slotInfo) {
       const infoEl = document.getElementById("digimon-slot-info");
       const full = slotInfo.activeDigimons >= slotInfo.maxDigimonSlots;
+
       infoEl.innerHTML = `
         <div class="flex justify-center gap-4 text-xs">
           <span class="${full ? 'text-red-400' : 'text-cyan-400'} font-bold">Ativos: ${slotInfo.activeDigimons}/${slotInfo.maxDigimonSlots}</span>
@@ -224,6 +243,7 @@ function renderDigimonSelectCards(digimons, dashboard) {
 
   container.innerHTML = digimons.map(d => {
     const isActive = d.id === activeDigimonId;
+
     return `
     <div class="card flex items-center gap-4 text-left ${isActive ? 'border-cyan-700' : ''}">
       <div class="text-4xl">🐉</div>
@@ -267,5 +287,3 @@ async function storeDigimon(digimonId) {
     showToast(err.message, "error");
   }
 }
-
-
