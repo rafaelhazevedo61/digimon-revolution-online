@@ -26,18 +26,16 @@ public class GetPlayerStartupUseCase {
 
         boolean hasSelectedStarter = player.isStarterSelected() && player.getSelectedDigitama() == null;
 
-        StartupDestination redirectTo = null;
+        StartupDestination redirectTo;
 
-        if(player.isStarterSelected() && player.getSelectedDigitama() != null) {
-            redirectTo = StartupDestination.DIGITAMA_HATCHING;
-        }
-
-        if(player.isStarterSelected() && player.getSelectedDigitama() == null) {
-            redirectTo = StartupDestination.DIGIMON_SELECTION;
-        }
-
-        if(!player.isStarterSelected()) {
+        if (!player.isStarterSelected()) {
             redirectTo = StartupDestination.DIGITAMA_SELECTION;
+        } else if (player.getSelectedDigitama() != null) {
+            redirectTo = StartupDestination.DIGITAMA_HATCHING;
+        } else if (player.getActiveDigimonId() == null) {
+            redirectTo = StartupDestination.DIGIMON_SELECTION;
+        } else {
+            redirectTo = StartupDestination.DASHBOARD;
         }
 
         return new PlayerStartupResponse(
