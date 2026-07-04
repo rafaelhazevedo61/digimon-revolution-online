@@ -23,3 +23,11 @@ server:
 logging:
   level:
     org.springframework.jdbc: DEBUG
+
+dro:
+  security:
+    jwt:
+      secret: ${DRO_JWT_SECRET:dro-local-development-secret-change-this-before-production-2026}
+      issuer: ${DRO_JWT_ISSUER:digimon-revolution-online}
+      expiration-minutes: ${DRO_JWT_EXPIRATION_MINUTES:1440}
+

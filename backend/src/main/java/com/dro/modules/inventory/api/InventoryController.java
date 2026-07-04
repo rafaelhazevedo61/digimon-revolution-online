@@ -11,6 +11,7 @@ import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.util.TokenExtractor;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +34,7 @@ public class InventoryController {
     public ResponseEntity<?> getInventory(
             @RequestHeader("Authorization") String authorization
     ) {
-        UUID playerId = UUID.fromString(authorization.split(":")[1]);
+        UUID playerId = TokenExtractor.extractPlayerId(authorization);
 
         var player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));

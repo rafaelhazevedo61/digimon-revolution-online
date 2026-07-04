@@ -5,11 +5,11 @@ import com.dro.modules.auth.api.dto.LoginResponse;
 import com.dro.modules.auth.domain.exception.InvalidCredentialsException;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +17,7 @@ public class LoginUseCase {
 
     private final PlayerRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public LoginResponse execute(LoginRequest request) {
 
@@ -27,8 +28,7 @@ public class LoginUseCase {
             throw new InvalidCredentialsException();
         }
 
-        // Token fake por enquanto
-        String token = UUID.randomUUID() + ":" + player.getId();
+        String token = jwtService.generateToken(player);
 
         return new LoginResponse(player.getId(), token);
     }
