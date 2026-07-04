@@ -32,6 +32,17 @@ async function apiGet(path, params = {}) {
     return response.json();
   }
 
+  async function apiPostVoid(path) {
+    const response = await fetch(`${CONFIG.API_BASE_URL}${path}`, {
+      method: "POST"
+    });
+
+    if (!response.ok) {
+      const message = await safelyReadError(response);
+      throw new Error(message || `Erro HTTP ${response.status}`);
+    }
+  }
+
   async function apiPut(path, body) {
     const response = await fetch(`${CONFIG.API_BASE_URL}${path}`, {
       method: "PUT",

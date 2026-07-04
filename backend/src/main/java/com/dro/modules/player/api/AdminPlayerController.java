@@ -2,6 +2,7 @@ package com.dro.modules.player.api;
 
 import com.dro.modules.player.api.dto.response.AdminPlayerPageResponse;
 import com.dro.modules.player.application.GetAdminPlayersUseCase;
+import com.dro.modules.player.application.WipePlayerDataUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminPlayerController {
 
     private final GetAdminPlayersUseCase getAdminPlayersUseCase;
+    private final WipePlayerDataUseCase wipePlayerDataUseCase;
 
     @GetMapping
     public ResponseEntity<AdminPlayerPageResponse> getPlayers(
@@ -42,6 +44,12 @@ public class AdminPlayerController {
                         pageRequest
                 )
         );
+    }
+
+    @PostMapping("/wipe")
+    public ResponseEntity<Void> wipe() {
+        wipePlayerDataUseCase.execute();
+        return ResponseEntity.ok().build();
     }
 
     private int normalizePageSize(int size) {

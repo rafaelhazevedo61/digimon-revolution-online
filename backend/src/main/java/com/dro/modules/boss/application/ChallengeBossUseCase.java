@@ -15,6 +15,7 @@ import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
@@ -68,14 +69,19 @@ public class ChallengeBossUseCase {
         }
 
         validateRequirements(boss, digimon);
-        validateCooldown(playerId, boss);
 
-        digimon.regenerateEnergy();
-        if (digimon.getEnergy() < boss.getEnergyCost()) {
-            throw new BadRequestException("Not enough energy. Required: " + boss.getEnergyCost() + ", current: " + digimon.getEnergy());
+        boolean isAdmin = player.getUserType() == UserType.ADMIN;
+
+        if (!isAdmin) {
+            validateCooldown(playerId, boss);
+
+            digimon.regenerateEnergy();
+            if (digimon.getEnergy() < boss.getEnergyCost()) {
+                throw new BadRequestException("Not enough energy. Required: " + boss.getEnergyCost() + ", current: " + digimon.getEnergy());
+            }
+
+            digimon.consumeEnergy(boss.getEnergyCost());
         }
-
-        digimon.consumeEnergy(boss.getEnergyCost());
 
         List<Equipment> equippedItems = equipmentRepository.findByDigimonId(digimon.getId())
                 .stream().filter(Equipment::isEquipped).toList();

@@ -43,6 +43,11 @@ public class Player {
     @Column(name = "has_selected_starter", nullable = false)
     private boolean starterSelected;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_type", nullable = false)
+    @Builder.Default
+    private UserType userType = UserType.PLAYER;
+
     @Column(name = "max_digimon_slots", nullable = false)
     private int maxDigimonSlots = 3;
 
