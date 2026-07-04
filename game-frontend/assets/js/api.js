@@ -26,7 +26,7 @@ function isLoggedIn() {
 function authHeaders() {
   const token = getToken();
   const headers = { "Content-Type": "application/json" };
-  if (token) headers["Authorization"] = token;
+  if (token) headers["Authorization"] = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
   return headers;
 }
 
