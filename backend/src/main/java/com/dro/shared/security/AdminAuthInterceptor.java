@@ -1,8 +1,11 @@
 package com.dro.shared.security;
 
+import com.dro.shared.exception.ApiErrorCode;
+import com.dro.shared.exception.dto.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -21,7 +24,7 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
 
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || authHeader.isBlank()) {
-            sendError(response, HttpServletResponse.SC_UNAUTHORIZED, "Missing Authorization header");
+            sendError(response, request, HttpStatus.UNAUTHORIZED, ApiErrorCode.UNAUTHORIZED, "Missing Authorization header");
             return false;
         }
 
@@ -34,20 +37,36 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
 
             Object userType = claims.get("userType");
             if (!"ADMIN".equals(userType)) {
-                sendError(response, HttpServletResponse.SC_FORBIDDEN, "Access denied: admin only");
+                sendError(response, request, HttpStatus.FORBIDDEN, ApiErrorCode.FORBIDDEN, "Access denied: admin only");
                 return false;
             }
 
             return true;
         } catch (Exception e) {
-            sendError(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
+            sendError(response, request, HttpStatus.UNAUTHORIZED, ApiErrorCode.UNAUTHORIZED, "Invalid or expired token");
             return false;
         }
     }
 
-    private void sendError(HttpServletResponse response, int status, String message) throws Exception {
-        response.setStatus(status);
+    private void sendError(
+            HttpServletResponse response,
+            HttpServletRequest request,
+            HttpStatus status,
+            ApiErrorCode code,
+            String message
+    ) throws Exception {
+        response.setStatus(status.value());
         response.setContentType("application/json");
-        response.getWriter().write(OBJECT_MAPPER.writeValueAsString(Map.of("message", message)));
+        response.setCharacterEncoding("UTF-8");
+
+        ErrorResponse errorResponse = ErrorResponse.of(
+                status.value(),
+                status.getReasonPhrase(),
+                code,
+                message,
+                request.getRequestURI()
+        );
+
+        response.getWriter().write(OBJECT_MAPPER.writeValueAsString(errorResponse));
     }
 }

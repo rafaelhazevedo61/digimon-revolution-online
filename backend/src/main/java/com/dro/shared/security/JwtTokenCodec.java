@@ -1,6 +1,6 @@
 package com.dro.shared.security;
 
-import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.UnauthorizedException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -46,19 +46,19 @@ public final class JwtTokenCodec {
             String[] parts = token.split("\\.");
 
             if (parts.length != 3) {
-                throw new BadRequestException("Invalid JWT token");
+                throw new UnauthorizedException("Invalid JWT token");
             }
 
             String content = parts[0] + "." + parts[1];
             String expectedSignature = sign(content, secret);
 
             if (!MessageDigest.isEqual(expectedSignature.getBytes(StandardCharsets.UTF_8), parts[2].getBytes(StandardCharsets.UTF_8))) {
-                throw new BadRequestException("Invalid JWT signature");
+                throw new UnauthorizedException("Invalid JWT signature");
             }
 
             Map<String, Object> header = decodeJson(parts[0]);
             if (!"HS256".equals(header.get("alg"))) {
-                throw new BadRequestException("Invalid JWT algorithm");
+                throw new UnauthorizedException("Invalid JWT algorithm");
             }
 
             Map<String, Object> claims = decodeJson(parts[1]);
@@ -66,16 +66,16 @@ public final class JwtTokenCodec {
             validateExpiration(claims);
 
             return claims;
-        } catch (BadRequestException e) {
+        } catch (UnauthorizedException e) {
             throw e;
         } catch (Exception e) {
-            throw new BadRequestException("Invalid JWT token");
+            throw new UnauthorizedException("Invalid JWT token");
         }
     }
 
     public static String normalize(String rawToken) {
         if (rawToken == null || rawToken.isBlank()) {
-            throw new BadRequestException("Missing JWT token");
+            throw new UnauthorizedException("Missing JWT token");
         }
 
         String token = rawToken.trim();
@@ -84,7 +84,7 @@ public final class JwtTokenCodec {
         }
 
         if (token.isBlank()) {
-            throw new BadRequestException("Missing JWT token");
+            throw new UnauthorizedException("Missing JWT token");
         }
 
         return token;
@@ -108,19 +108,19 @@ public final class JwtTokenCodec {
     private static void validateIssuer(Map<String, Object> claims, String expectedIssuer) {
         Object issuer = claims.get("iss");
         if (expectedIssuer != null && !expectedIssuer.isBlank() && !expectedIssuer.equals(issuer)) {
-            throw new BadRequestException("Invalid JWT issuer");
+            throw new UnauthorizedException("Invalid JWT issuer");
         }
     }
 
     private static void validateExpiration(Map<String, Object> claims) {
         Object exp = claims.get("exp");
         if (!(exp instanceof Number number)) {
-            throw new BadRequestException("Invalid JWT expiration");
+            throw new UnauthorizedException("Invalid JWT expiration");
         }
 
         long expirationEpochSeconds = number.longValue();
         if (Instant.now().getEpochSecond() >= expirationEpochSeconds) {
-            throw new BadRequestException("Expired JWT token");
+            throw new UnauthorizedException("Expired JWT token");
         }
     }
 }
