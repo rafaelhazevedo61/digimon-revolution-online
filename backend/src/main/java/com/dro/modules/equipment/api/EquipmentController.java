@@ -1,12 +1,10 @@
 package com.dro.modules.equipment.api;
 
 import com.dro.modules.equipment.api.dto.request.EquipRequest;
-import com.dro.modules.equipment.api.dto.request.GrantEquipmentRequest;
 import com.dro.modules.equipment.api.dto.request.RefineEquipmentRequest;
 import com.dro.modules.equipment.api.dto.request.UnequipRequest;
 import com.dro.modules.equipment.api.dto.response.DigimonEquipmentResponse;
 import com.dro.modules.equipment.api.dto.response.EquipmentResponse;
-import com.dro.modules.equipment.api.dto.response.GrantEquipmentResponse;
 import com.dro.modules.equipment.api.dto.response.RefineEquipmentResponse;
 import com.dro.modules.equipment.api.dto.response.RefinePreviewResponse;
 import com.dro.modules.equipment.application.*;
@@ -32,7 +30,6 @@ public class EquipmentController {
     private final EquipUseCase equipUseCase;
     private final UnequipUseCase unequipUseCase;
     private final UnequipAllUseCase unequipAllUseCase;
-    private final GrantEquipmentUseCase grantEquipmentUseCase;
     private final RefineEquipmentUseCase refineEquipmentUseCase;
     private final com.dro.modules.equipment.infra.EquipmentRepository equipmentRepository;
     private final InventoryRepository inventoryRepository;
@@ -81,18 +78,6 @@ public class EquipmentController {
         return ResponseEntity.ok(Map.of("message", count + " equipment(s) unequipped successfully", "count", count));
     }
 
-    @PostMapping("/grant")
-    public ResponseEntity<GrantEquipmentResponse> grant(
-            @RequestBody @Valid GrantEquipmentRequest request
-    ) {
-        UUID equipmentId = grantEquipmentUseCase.execute(
-                request.digimonId(), request.templateName(), request.rarity()
-        );
-        return ResponseEntity.ok(new GrantEquipmentResponse(
-                equipmentId, "Equipment granted successfully"
-        ));
-    }
-
     @PostMapping("/refine")
     public ResponseEntity<RefineEquipmentResponse> refine(
             @RequestHeader("Authorization") String authorization,
@@ -114,6 +99,10 @@ public class EquipmentController {
 
         var equip = equipmentRepository.findById(equipmentId)
                 .orElseThrow(() -> new com.dro.shared.exception.NotFoundException("Equipment not found"));
+
+        if (!equip.getDigimonId().equals(digimon.getId())) {
+            throw new com.dro.shared.exception.ForbiddenException("Equipment does not belong to this Digimon");
+        }
 
         int currentLevel = equip.getRefinementLevel();
         int costBits = EquipmentRules.refinementCostBits(currentLevel);

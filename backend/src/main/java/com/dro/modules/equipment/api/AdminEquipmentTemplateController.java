@@ -1,8 +1,10 @@
 package com.dro.modules.equipment.api;
 
 import com.dro.modules.equipment.api.dto.request.CreateEquipmentTemplateRequest;
+import com.dro.modules.equipment.api.dto.request.GrantEquipmentRequest;
 import com.dro.modules.equipment.api.dto.request.UpdateEquipmentTemplateRequest;
 import com.dro.modules.equipment.api.dto.response.EquipmentTemplateResponse;
+import com.dro.modules.equipment.api.dto.response.GrantEquipmentResponse;
 import com.dro.modules.equipment.application.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/admin/equipment-templates")
@@ -22,6 +25,7 @@ public class AdminEquipmentTemplateController {
     private final GetEquipmentTemplateUseCase getEquipmentTemplateUseCase;
     private final UpdateEquipmentTemplateUseCase updateEquipmentTemplateUseCase;
     private final ToggleEquipmentTemplateUseCase toggleEquipmentTemplateUseCase;
+    private final GrantEquipmentUseCase grantEquipmentUseCase;
 
     @PostMapping
     public ResponseEntity<EquipmentTemplateResponse> create(
@@ -59,5 +63,17 @@ public class AdminEquipmentTemplateController {
             @PathVariable String name
     ) {
         return ResponseEntity.ok(toggleEquipmentTemplateUseCase.execute(name));
+    }
+
+    @PostMapping("/grant")
+    public ResponseEntity<GrantEquipmentResponse> grant(
+            @RequestBody @Valid GrantEquipmentRequest request
+    ) {
+        UUID equipmentId = grantEquipmentUseCase.execute(
+                request.digimonId(), request.templateName(), request.rarity()
+        );
+        return ResponseEntity.ok(new GrantEquipmentResponse(
+                equipmentId, "Equipment granted successfully"
+        ));
     }
 }

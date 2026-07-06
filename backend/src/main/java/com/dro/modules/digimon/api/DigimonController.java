@@ -28,7 +28,6 @@ public class DigimonController {
 
     private final GetDigimonUseCase useCase;
     private final GetDigimonByIdUseCase getDigimonByIdUseCase;
-    private final AddExperienceUseCase addExperienceUseCase;
     private final SelectActiveDigimonUseCase selectUseCase;
     private final EvolveDigimonUseCase evolveDigimonUseCase;
     private final RebirthUseCase rebirthUseCase;
@@ -45,15 +44,6 @@ public class DigimonController {
             @RequestHeader("Authorization") String authorization
     ) {
         return ResponseEntity.ok(useCase.execute(authorization));
-    }
-
-    @PostMapping("/add-xp")
-    public ResponseEntity<Void> addXp(
-            @RequestHeader("Authorization") String authorization,
-            @RequestParam int amount
-    ) {
-        addExperienceUseCase.execute(authorization, amount);
-        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/select")
@@ -94,9 +84,10 @@ public class DigimonController {
 
     @GetMapping("/{digimonId}")
     public ResponseEntity<DigimonResponse> getById(
+            @RequestHeader("Authorization") String authorization,
             @PathVariable UUID digimonId
     ) {
-        return ResponseEntity.ok(getDigimonByIdUseCase.execute(digimonId));
+        return ResponseEntity.ok(getDigimonByIdUseCase.execute(authorization, digimonId));
     }
 
     @GetMapping("/level-table")
