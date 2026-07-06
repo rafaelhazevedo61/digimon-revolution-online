@@ -38,4 +38,13 @@ public class AddExperienceUseCase {
 
         repository.save(digimon);
     }
+
+    @Transactional
+    public void executeForDigimon(UUID digimonId, int xp) {
+        Digimon digimon = repository.findById(digimonId)
+                .orElseThrow(() -> new NotFoundException("Digimon not found"));
+
+        digimon.gainExperience(xp);
+        repository.save(digimon);
+    }
 }

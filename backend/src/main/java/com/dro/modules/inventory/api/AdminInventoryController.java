@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/admin/inventory")
 @RequiredArgsConstructor
@@ -34,5 +37,18 @@ public class AdminInventoryController {
                 request.quantity(),
                 "Item granted successfully"
         ));
+    }
+
+    @GetMapping("/item-definitions")
+    public ResponseEntity<List<Map<String, String>>> listItemDefinitions() {
+        List<ItemDefinition> items = itemDefinitionRepository.findAll();
+        List<Map<String, String>> result = items.stream()
+                .map(i -> Map.of(
+                        "code", i.getCode(),
+                        "name", i.getName(),
+                        "category", i.getCategory()
+                ))
+                .toList();
+        return ResponseEntity.ok(result);
     }
 }
