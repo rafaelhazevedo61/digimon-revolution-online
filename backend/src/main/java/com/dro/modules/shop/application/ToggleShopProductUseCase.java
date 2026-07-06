@@ -6,6 +6,7 @@ import com.dro.modules.shop.infra.ShopProductRepository;
 import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +16,7 @@ public class ToggleShopProductUseCase {
 
     private final ShopProductRepository shopProductRepository;
 
+    @Transactional
     public AdminShopProductResponse execute(String code) {
 
         ShopProductEntity entity = shopProductRepository.findById(code)

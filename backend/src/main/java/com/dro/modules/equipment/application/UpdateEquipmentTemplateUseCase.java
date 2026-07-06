@@ -7,6 +7,7 @@ import com.dro.modules.equipment.infra.EquipmentTemplateRepository;
 import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -16,6 +17,7 @@ public class UpdateEquipmentTemplateUseCase {
 
     private final EquipmentTemplateRepository equipmentTemplateRepository;
 
+    @Transactional
     public EquipmentTemplateResponse execute(String name, UpdateEquipmentTemplateRequest request) {
 
         EquipmentTemplateEntity entity = equipmentTemplateRepository.findByName(name)

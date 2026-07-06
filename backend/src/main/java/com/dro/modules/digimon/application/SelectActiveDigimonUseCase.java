@@ -7,6 +7,7 @@ import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -17,6 +18,7 @@ public class SelectActiveDigimonUseCase {
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
 
+    @Transactional
     public void execute(String token, UUID digimonId) {
 
         UUID playerId = TokenExtractor.extractPlayerId(token);
