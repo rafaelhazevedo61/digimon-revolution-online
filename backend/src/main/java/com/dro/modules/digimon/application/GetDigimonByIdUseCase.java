@@ -10,6 +10,7 @@ import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.equipment.domain.EquipmentSlot;
 import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +26,9 @@ public class GetDigimonByIdUseCase {
     private final DigimonInfosRepository digimonInfosRepository;
     private final EquipmentRepository equipmentRepository;
 
-    public DigimonResponse execute(UUID digimonId) {
+    public DigimonResponse execute(String token, UUID digimonId) {
+
+        TokenExtractor.extractPlayerId(token);
 
         Digimon digimon = digimonRepository.findById(digimonId)
                 .orElseThrow(() -> new NotFoundException("Digimon not found"));

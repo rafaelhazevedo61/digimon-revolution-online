@@ -9,7 +9,8 @@ const routes = {
     missions: renderMissionsPage,
     "equipment-simulator": renderEquipmentSimulatorPage,
     bosses: renderBossesAdminPage,
-    "digimon-simulator": renderDigimonSimulatorPage
+    "digimon-simulator": renderDigimonSimulatorPage,
+    tools: renderToolsPage
   };
   
   function navigateTo(route) {
