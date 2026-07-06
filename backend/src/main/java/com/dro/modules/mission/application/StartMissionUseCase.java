@@ -17,6 +17,7 @@ import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -33,6 +34,7 @@ public class StartMissionUseCase {
 
     private static final long COOLDOWN_SECONDS = 10;
 
+    @Transactional
     public MissionStartResponse execute(String token, String missionId) {
 
         UUID playerId = TokenExtractor.extractPlayerId(token);

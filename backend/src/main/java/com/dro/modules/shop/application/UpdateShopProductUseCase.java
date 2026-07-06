@@ -10,6 +10,7 @@ import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -20,6 +21,7 @@ public class UpdateShopProductUseCase {
     private final ShopProductRepository shopProductRepository;
     private final EquipmentTemplateRepository equipmentTemplateRepository;
 
+    @Transactional
     public AdminShopProductResponse execute(String code, UpdateShopProductRequest request) {
 
         ShopProductEntity entity = shopProductRepository.findById(code)

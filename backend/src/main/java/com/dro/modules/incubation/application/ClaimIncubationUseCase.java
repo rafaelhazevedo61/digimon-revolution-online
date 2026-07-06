@@ -22,6 +22,7 @@ import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -35,6 +36,7 @@ public class ClaimIncubationUseCase {
     private final PlayerRepository playerRepository;
     private final DigitamaPoolRepository digitamaPoolRepository;
 
+    @Transactional
     public Digimon execute(String token) {
 
         UUID playerId = extractPlayerId(token);

@@ -13,6 +13,7 @@ import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -25,6 +26,7 @@ public class StartIncubationUseCase {
     private final InventoryRepository inventoryRepository;
     private final PlayerRepository playerRepository;
 
+    @Transactional
     public void execute(String token, ItemType digitamaType, ItemType incubatorType) {
 
         UUID playerId = TokenExtractor.extractPlayerId(token);

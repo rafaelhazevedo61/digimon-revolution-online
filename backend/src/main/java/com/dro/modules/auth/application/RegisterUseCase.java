@@ -9,6 +9,7 @@ import com.dro.modules.player.infra.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -20,6 +21,7 @@ public class RegisterUseCase {
     private final PlayerRepository repository;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional
     public void execute(RegisterRequest request) {
 
         if (repository.existsByEmail(request.email())) {

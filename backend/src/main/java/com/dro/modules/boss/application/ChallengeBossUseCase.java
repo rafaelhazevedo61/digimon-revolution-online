@@ -22,6 +22,7 @@ import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -43,6 +44,7 @@ public class ChallengeBossUseCase {
     private final AddItemUseCase addItemUseCase;
     private final GrantEquipmentUseCase grantEquipmentUseCase;
 
+    @Transactional
     public BossChallengeResponse execute(String token, String bossCode, UUID digimonId) {
 
         UUID playerId = TokenExtractor.extractPlayerId(token);

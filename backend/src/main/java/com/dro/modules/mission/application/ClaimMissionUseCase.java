@@ -20,6 +20,7 @@ import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +49,7 @@ public class ClaimMissionUseCase {
         this.missionDefinitionRepository = missionDefinitionRepository;
     }
 
+    @Transactional
     public MissionResultResponse execute(String token, UUID missionInstanceId) {
 
         UUID playerId = TokenExtractor.extractPlayerId(token);
