@@ -1,6 +1,6 @@
 package com.dro.shared.util;
 
-import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.UnauthorizedException;
 import com.dro.shared.security.JwtSettings;
 import com.dro.shared.security.JwtTokenCodec;
 
@@ -21,13 +21,13 @@ public class TokenExtractor {
 
         Object subject = claims.get("sub");
         if (!(subject instanceof String playerId) || playerId.isBlank()) {
-            throw new BadRequestException("Invalid JWT subject");
+            throw new UnauthorizedException("Invalid JWT subject");
         }
 
         try {
             return UUID.fromString(playerId);
         } catch (IllegalArgumentException e) {
-            throw new BadRequestException("Invalid JWT subject");
+            throw new UnauthorizedException("Invalid JWT subject");
         }
     }
 }
