@@ -13,6 +13,8 @@ import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.modules.tutorial.application.TutorialService;
+import com.dro.modules.tutorial.domain.TutorialStep;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
@@ -36,6 +38,7 @@ public class EvolveDigimonUseCase {
     private final EvolutionLineRepository evolutionLineRepository;
     private final ConsumeItemUseCase consumeItemUseCase;
     private final ItemDefinitionRepository itemDefinitionRepository;
+    private final TutorialService tutorialService;
 
     @Transactional
     public void execute(String token, Long evolutionLineId) {
@@ -80,6 +83,8 @@ public class EvolveDigimonUseCase {
         recalculateStats(digimon, nextInfo);
 
         digimonRepository.save(digimon);
+
+        tutorialService.completeStep(playerId, TutorialStep.EVOLVE_DIGIMON);
     }
 
     private EvolutionLine resolveEvolutionLine(Digimon digimon, Long evolutionLineId) {

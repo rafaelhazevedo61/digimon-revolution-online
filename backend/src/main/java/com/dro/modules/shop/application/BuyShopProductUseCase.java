@@ -13,6 +13,8 @@ import com.dro.modules.shop.domain.ShopProduct;
 import com.dro.modules.shop.domain.ShopProductMapper;
 import com.dro.modules.shop.domain.ShopProductType;
 import com.dro.modules.shop.infra.ShopProductRepository;
+import com.dro.modules.tutorial.application.TutorialService;
+import com.dro.modules.tutorial.domain.TutorialStep;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnprocessableException;
@@ -32,6 +34,7 @@ public class BuyShopProductUseCase {
     private final AddItemUseCase addItemUseCase;
     private final GrantEquipmentUseCase grantEquipmentUseCase;
     private final ShopProductRepository shopProductRepository;
+    private final TutorialService tutorialService;
 
     @Transactional
     public BuyShopProductResponse execute(String token, BuyShopProductRequest request) {
@@ -88,6 +91,8 @@ public class BuyShopProductUseCase {
 
         digimon.setBits(digimon.getBits() - totalPrice);
         digimonRepository.save(digimon);
+
+        tutorialService.completeStep(playerId, TutorialStep.BUY_SHOP);
 
         return new BuyShopProductResponse(
                 product.getCode(),

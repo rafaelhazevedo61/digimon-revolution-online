@@ -39,6 +39,8 @@ function renderDashContent(data) {
       <button class="text-xs text-slate-500 hover:text-red-400" onclick="authLogout()">Sair</button>
     </div>
 
+    <div id="tutorial-card"></div>
+
     ${d ? renderDigimonCard(d) : `
       <div class="card text-center mb-4">
         <p class="text-slate-400">Nenhum Digimon ativo</p>
@@ -91,6 +93,7 @@ function renderDashContent(data) {
 
   startMissionTimers();
   startIncubationTimer();
+  loadTutorialCard();
 }
 
 function renderDigimonCard(d) {
