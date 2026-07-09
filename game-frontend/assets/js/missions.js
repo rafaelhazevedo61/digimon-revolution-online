@@ -86,7 +86,8 @@ function renderActiveMissionCard(m) {
 async function claimMissionFromList(instanceId) {
   try {
     const result = await apiPost(`/missions/${instanceId}/claim`);
-    showToast(`+${result.xpGained} XP${result.levelUp ? " — LEVEL UP!" : ""}`);
+    const bitsPart = result.bitsGained > 0 ? ` +${result.bitsGained} bits` : "";
+    showToast(`+${result.xpGained} XP${bitsPart}${result.levelUp ? " — LEVEL UP!" : ""}`);
     loadActiveMissions();
   } catch (err) {
     showToast(err.message, "error");
@@ -232,6 +233,7 @@ function renderMissionCards(missions, area) {
       <div class="flex gap-3 text-xs text-slate-400 mb-3 flex-wrap">
         <span>⚡ Nível ${m.requiredLevel}</span>
         <span>✨ ${m.xpReward} XP</span>
+        ${m.bitsReward > 0 ? `<span class="text-yellow-500">💰 ${m.bitsReward} bits</span>` : ""}
         <span>🔋 ${m.energyCost} energia</span>
         <span>⏱️ ${formatTime(m.durationSeconds)}</span>
       </div>

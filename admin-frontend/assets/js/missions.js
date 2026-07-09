@@ -114,6 +114,7 @@ function renderMissionsTable(missions) {
             <th>Stage</th>
             <th>Nível</th>
             <th>XP</th>
+            <th>Bits</th>
             <th>Energia</th>
             <th>Duração</th>
             <th>Rewards</th>
@@ -146,6 +147,7 @@ function renderMissionRow(m) {
       <td><span class="badge">${m.requiredStage}</span></td>
       <td>${m.requiredLevel}</td>
       <td>${m.baseXp}</td>
+      <td>${m.baseBits ?? 0}</td>
       <td>${m.energyCost}</td>
       <td>${m.durationSeconds}s</td>
       <td><span class="badge">${m.rewards ? m.rewards.length : 0}</span></td>
@@ -188,6 +190,7 @@ function missionShowCreateModal() {
     requiredStage: "ROOKIE",
     requiredLevel: 1,
     baseXp: 100,
+    baseBits: 50,
     energyCost: 5,
     durationSeconds: 60,
     rewards: [{ itemType: "TRAINING_STONE", baseQuantity: 1 }],
@@ -252,6 +255,10 @@ function missionRenderModal(title, data, isEdit) {
             <div>
               <label class="text-sm text-slate-400">XP Base</label>
               <input id="mission-xp" type="number" min="0" class="input mt-1" value="${data.baseXp}" required />
+            </div>
+            <div>
+              <label class="text-sm text-slate-400">Bits Base</label>
+              <input id="mission-bits" type="number" min="0" class="input mt-1" value="${data.baseBits ?? 0}" required />
             </div>
             <div>
               <label class="text-sm text-slate-400">Custo de Energia</label>
@@ -407,6 +414,7 @@ async function missionSubmitForm(event) {
     requiredStage: document.getElementById("mission-stage").value,
     requiredLevel: Number(document.getElementById("mission-level").value),
     baseXp: Number(document.getElementById("mission-xp").value),
+    baseBits: Number(document.getElementById("mission-bits").value),
     energyCost: Number(document.getElementById("mission-energy").value),
     durationSeconds: Number(document.getElementById("mission-duration").value),
     rewards,

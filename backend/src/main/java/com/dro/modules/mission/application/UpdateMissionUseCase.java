@@ -34,6 +34,7 @@ public class UpdateMissionUseCase {
         entity.setRequiredStage(request.requiredStage());
         entity.setRequiredLevel(request.requiredLevel());
         entity.setBaseXp(request.baseXp());
+        entity.setBaseBits(request.baseBits());
         entity.setEnergyCost(request.energyCost());
         entity.setDurationSeconds(request.durationSeconds());
         entity.setUpdatedAt(LocalDateTime.now());

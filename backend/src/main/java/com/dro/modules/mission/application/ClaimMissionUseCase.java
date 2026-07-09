@@ -97,6 +97,15 @@ public class ClaimMissionUseCase {
 
         boolean levelUp = digimon.getLevel() > previousLevel;
 
+        int bitsGained = calculateScaledBits(
+                mission.getBaseBits(),
+                completionCount
+        );
+
+        if (bitsGained > 0) {
+            digimon.setBits(digimon.getBits() + bitsGained);
+        }
+
         List<RewardResponse> rewards = new ArrayList<>();
 
         UUID digimonId = instance.getDigimonId();
@@ -119,6 +128,7 @@ public class ClaimMissionUseCase {
         return new MissionResultResponse(
                 mission.getId(),
                 xpGained,
+                bitsGained,
                 levelUp,
                 rewards
         );
@@ -143,6 +153,12 @@ public class ClaimMissionUseCase {
         double multiplier = calculateProgressMultiplier(completionCount);
 
         return (int) Math.floor(baseXp * multiplier);
+    }
+
+    private int calculateScaledBits(int baseBits, int completionCount) {
+        double multiplier = calculateProgressMultiplier(completionCount);
+
+        return (int) Math.floor(baseBits * multiplier);
     }
 
     private List<RewardResponse> applyFixedRewards(

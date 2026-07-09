@@ -263,7 +263,8 @@ function renderIncubation(inc) {
 async function claimMission(instanceId) {
   try {
     const result = await apiPost(`/missions/${instanceId}/claim`);
-    showToast(`+${result.xpGained} XP${result.levelUp ? " — LEVEL UP!" : ""}`);
+    const bitsPart = result.bitsGained > 0 ? ` +${result.bitsGained} bits` : "";
+    showToast(`+${result.xpGained} XP${bitsPart}${result.levelUp ? " — LEVEL UP!" : ""}`);
     renderDashboardPage();
   } catch (err) {
     showToast(err.message, "error");

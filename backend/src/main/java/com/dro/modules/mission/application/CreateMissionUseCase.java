@@ -40,6 +40,7 @@ public class CreateMissionUseCase {
                 .requiredStage(request.requiredStage())
                 .requiredLevel(request.requiredLevel())
                 .baseXp(request.baseXp())
+                .baseBits(request.baseBits())
                 .energyCost(request.energyCost())
                 .durationSeconds(request.durationSeconds())
                 .createdAt(now)
