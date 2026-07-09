@@ -8,6 +8,7 @@ import java.util.UUID;
 public record MissionInstanceResponse(
         UUID missionInstanceId,
         String missionId,
+        String missionName,
         MissionStatus status,
         Instant startedAt,
         Instant endsAt
