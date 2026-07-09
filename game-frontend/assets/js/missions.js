@@ -15,6 +15,7 @@ async function renderMissionsPage() {
 
   app.innerHTML = `
     <div class="page-container">
+      <div id="active-missions"></div>
       <h2 class="text-lg font-bold mb-4 px-1">Mapa de Áreas</h2>
       <div id="areas-list">
         <div class="card animate-pulse mb-3"><div class="h-20"></div></div>
@@ -22,6 +23,8 @@ async function renderMissionsPage() {
       </div>
     </div>
   `;
+
+  loadActiveMissions();
 
   try {
     const areas = await apiGet("/areas");
@@ -31,6 +34,92 @@ async function renderMissionsPage() {
       <div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>
     `;
   }
+}
+
+async function loadActiveMissions() {
+  const container = document.getElementById("active-missions");
+  if (!container) return;
+
+  let active;
+  try {
+    active = await apiGet("/missions/active");
+  } catch (err) {
+    return;
+  }
+
+  if (!active || active.length === 0) {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="mb-4">
+      <h3 class="text-sm font-bold text-slate-300 mb-2 px-1">Missões em Andamento</h3>
+      ${active.map(renderActiveMissionCard).join("")}
+    </div>
+  `;
+
+  startMissionsPageTimers();
+}
+
+function renderActiveMissionCard(m) {
+  const now = Date.now();
+  const endsAt = new Date(m.endsAt).getTime();
+  const remaining = Math.max(0, Math.floor((endsAt - now) / 1000));
+  const done = m.status === "COMPLETED" || remaining <= 0;
+
+  return `
+    <div class="card-sm mb-2 flex items-center justify-between" data-mp-instance="${m.missionInstanceId}" data-mp-ends-at="${m.endsAt}">
+      <div class="min-w-0">
+        <p class="font-bold text-sm truncate">${escapeHtml(m.missionName || m.missionId)}</p>
+        <p class="text-xs mp-timer ${done ? "text-green-400 font-bold" : "text-slate-500"}">${done ? "Concluída!" : formatTime(remaining)}</p>
+      </div>
+      ${done ? `
+        <button class="btn-sm btn-primary" onclick="claimMissionFromList('${m.missionInstanceId}')">Resgatar</button>
+      ` : `
+        <span class="badge">Em andamento</span>
+      `}
+    </div>
+  `;
+}
+
+async function claimMissionFromList(instanceId) {
+  try {
+    const result = await apiPost(`/missions/${instanceId}/claim`);
+    const bitsPart = result.bitsGained > 0 ? ` +${result.bitsGained} bits` : "";
+    showToast(`+${result.xpGained} XP${bitsPart}${result.levelUp ? " — LEVEL UP!" : ""}`);
+    loadActiveMissions();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+let missionsPageTimerInterval = null;
+
+function startMissionsPageTimers() {
+  if (missionsPageTimerInterval) clearInterval(missionsPageTimerInterval);
+  missionsPageTimerInterval = setInterval(() => {
+    const cards = document.querySelectorAll("[data-mp-instance]");
+    if (cards.length === 0) { clearInterval(missionsPageTimerInterval); return; }
+
+    cards.forEach(el => {
+      const endsAt = new Date(el.dataset.mpEndsAt).getTime();
+      const remaining = Math.max(0, Math.floor((endsAt - Date.now()) / 1000));
+      const timerEl = el.querySelector(".mp-timer");
+      if (!timerEl) return;
+
+      if (remaining <= 0) {
+        timerEl.textContent = "Concluída!";
+        timerEl.className = "text-xs mp-timer text-green-400 font-bold";
+        const badge = el.querySelector(".badge");
+        if (badge) {
+          badge.outerHTML = `<button class="btn-sm btn-primary" onclick="claimMissionFromList('${el.dataset.mpInstance}')">Resgatar</button>`;
+        }
+      } else {
+        timerEl.textContent = formatTime(remaining);
+      }
+    });
+  }, 1000);
 }
 
 function renderAreaCards(areas) {
@@ -144,6 +233,7 @@ function renderMissionCards(missions, area) {
       <div class="flex gap-3 text-xs text-slate-400 mb-3 flex-wrap">
         <span>⚡ Nível ${m.requiredLevel}</span>
         <span>✨ ${m.xpReward} XP</span>
+        ${m.bitsReward > 0 ? `<span class="text-yellow-500">💰 ${m.bitsReward} bits</span>` : ""}
         <span>🔋 ${m.energyCost} energia</span>
         <span>⏱️ ${formatTime(m.durationSeconds)}</span>
       </div>
@@ -157,9 +247,9 @@ function renderMissionCards(missions, area) {
 
 async function startMission(missionId, area) {
   try {
-    const result = await apiPost("/missions/start", { missionId: missionId });
+    await apiPost("/missions/start", { missionId: missionId });
     showToast("Missão iniciada!");
-    renderMissionAreaPage({ area: area });
+    navigateTo("dashboard");
   } catch (err) {
     showToast(err.message, "error");
   }

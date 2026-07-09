@@ -48,6 +48,7 @@ public class GetAvailableMissionsUseCase {
                         m.getArea().name(),
                         m.getRequiredLevel(),
                         m.getBaseXp(),
+                        m.getBaseBits(),
                         m.getEnergyCost(),
                         m.getDurationSeconds()
                 ))

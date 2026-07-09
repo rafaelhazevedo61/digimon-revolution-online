@@ -40,6 +40,10 @@ public class MissionDefinitionEntity implements Persistable<String> {
     @Column(name = "base_xp", nullable = false)
     private int baseXp;
 
+    @Column(name = "base_bits", nullable = false)
+    @Builder.Default
+    private int baseBits = 0;
+
     @Column(name = "energy_cost", nullable = false)
     private int energyCost;
 

@@ -7,6 +7,7 @@ public record MissionResponse(
         String area,
         int requiredLevel,
         int xpReward,
+        int bitsReward,
         int energyCost,
         int durationSeconds
 ) {}

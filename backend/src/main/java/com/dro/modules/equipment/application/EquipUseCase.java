@@ -6,6 +6,8 @@ import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.modules.tutorial.application.TutorialService;
+import com.dro.modules.tutorial.domain.TutorialStep;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ForbiddenException;
 import com.dro.shared.exception.NotFoundException;
@@ -23,6 +25,7 @@ public class EquipUseCase {
     private final EquipmentRepository equipmentRepository;
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
+    private final TutorialService tutorialService;
 
     @Transactional
     public void execute(String token, UUID equipmentId) {
@@ -63,5 +66,7 @@ public class EquipUseCase {
 
         equipmentRepository.save(equipment);
         digimonRepository.save(digimon);
+
+        tutorialService.completeStep(playerId, TutorialStep.EQUIP_ITEM);
     }
 }

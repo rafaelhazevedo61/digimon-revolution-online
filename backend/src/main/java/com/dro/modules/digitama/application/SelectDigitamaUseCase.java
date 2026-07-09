@@ -3,6 +3,8 @@ package com.dro.modules.digitama.application;
 import com.dro.modules.digitama.domain.enums.DigitamaType;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.modules.tutorial.application.TutorialService;
+import com.dro.modules.tutorial.domain.TutorialStep;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
@@ -17,6 +19,7 @@ import java.util.UUID;
 public class SelectDigitamaUseCase {
 
     private final PlayerRepository repository;
+    private final TutorialService tutorialService;
 
     @Transactional
     public void execute(String token, DigitamaType type) {
@@ -37,5 +40,7 @@ public class SelectDigitamaUseCase {
         player.setSelectedDigitama(type);
         player.markStarterAsSelected();
         repository.save(player);
+
+        tutorialService.completeStep(playerId, TutorialStep.SELECT_DIGITAMA);
     }
 }

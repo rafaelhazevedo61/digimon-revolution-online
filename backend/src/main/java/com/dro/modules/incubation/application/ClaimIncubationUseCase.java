@@ -17,6 +17,8 @@ import com.dro.modules.incubation.infra.IncubationRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.modules.tutorial.application.TutorialService;
+import com.dro.modules.tutorial.domain.TutorialStep;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
@@ -35,6 +37,7 @@ public class ClaimIncubationUseCase {
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
     private final DigitamaPoolRepository digitamaPoolRepository;
+    private final TutorialService tutorialService;
 
     @Transactional
     public Digimon execute(String token) {
@@ -63,6 +66,8 @@ public class ClaimIncubationUseCase {
         setActiveIfFirstDigimon(playerId, digimon);
 
         finalizeIncubation(incubation);
+
+        tutorialService.completeStep(playerId, TutorialStep.HATCH_DIGIMON);
 
         return digimon;
     }

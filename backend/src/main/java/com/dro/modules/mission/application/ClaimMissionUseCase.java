@@ -15,6 +15,8 @@ import com.dro.modules.mission.domain.PlayerMissionProgress;
 import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.mission.infra.PlayerMissionProgressRepository;
+import com.dro.modules.tutorial.application.TutorialService;
+import com.dro.modules.tutorial.domain.TutorialStep;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
@@ -34,19 +36,22 @@ public class ClaimMissionUseCase {
     private final PlayerMissionProgressRepository progressRepository;
     private final AddItemUseCase addItemUseCase;
     private final MissionDefinitionRepository missionDefinitionRepository;
+    private final TutorialService tutorialService;
 
     public ClaimMissionUseCase(
             MissionInstanceRepository missionInstanceRepository,
             DigimonRepository digimonRepository,
             PlayerMissionProgressRepository progressRepository,
             AddItemUseCase addItemUseCase,
-            MissionDefinitionRepository missionDefinitionRepository
+            MissionDefinitionRepository missionDefinitionRepository,
+            TutorialService tutorialService
     ) {
         this.missionInstanceRepository = missionInstanceRepository;
         this.digimonRepository = digimonRepository;
         this.progressRepository = progressRepository;
         this.addItemUseCase = addItemUseCase;
         this.missionDefinitionRepository = missionDefinitionRepository;
+        this.tutorialService = tutorialService;
     }
 
     @Transactional
@@ -92,6 +97,15 @@ public class ClaimMissionUseCase {
 
         boolean levelUp = digimon.getLevel() > previousLevel;
 
+        int bitsGained = calculateScaledBits(
+                mission.getBaseBits(),
+                completionCount
+        );
+
+        if (bitsGained > 0) {
+            digimon.setBits(digimon.getBits() + bitsGained);
+        }
+
         List<RewardResponse> rewards = new ArrayList<>();
 
         UUID digimonId = instance.getDigimonId();
@@ -109,9 +123,12 @@ public class ClaimMissionUseCase {
         missionInstanceRepository.save(instance);
         digimonRepository.save(digimon);
 
+        tutorialService.completeStep(playerId, TutorialStep.COMPLETE_MISSION);
+
         return new MissionResultResponse(
                 mission.getId(),
                 xpGained,
+                bitsGained,
                 levelUp,
                 rewards
         );
@@ -136,6 +153,12 @@ public class ClaimMissionUseCase {
         double multiplier = calculateProgressMultiplier(completionCount);
 
         return (int) Math.floor(baseXp * multiplier);
+    }
+
+    private int calculateScaledBits(int baseBits, int completionCount) {
+        double multiplier = calculateProgressMultiplier(completionCount);
+
+        return (int) Math.floor(baseBits * multiplier);
     }
 
     private List<RewardResponse> applyFixedRewards(

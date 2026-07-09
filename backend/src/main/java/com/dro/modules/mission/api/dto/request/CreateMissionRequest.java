@@ -18,6 +18,7 @@ public record CreateMissionRequest(
         @NotNull Stage requiredStage,
         @Min(1) int requiredLevel,
         @Min(0) int baseXp,
+        @Min(0) int baseBits,
         @Min(1) int energyCost,
         @Min(1) int durationSeconds,
         @Valid @Size(min = 1) List<RewardRequest> rewards,

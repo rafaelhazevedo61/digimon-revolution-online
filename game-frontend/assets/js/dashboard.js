@@ -39,6 +39,8 @@ function renderDashContent(data) {
       <button class="text-xs text-slate-500 hover:text-red-400" onclick="authLogout()">Sair</button>
     </div>
 
+    <div id="tutorial-card"></div>
+
     ${d ? renderDigimonCard(d) : `
       <div class="card text-center mb-4">
         <p class="text-slate-400">Nenhum Digimon ativo</p>
@@ -91,6 +93,7 @@ function renderDashContent(data) {
 
   startMissionTimers();
   startIncubationTimer();
+  loadTutorialCard();
 }
 
 function renderDigimonCard(d) {
@@ -260,7 +263,8 @@ function renderIncubation(inc) {
 async function claimMission(instanceId) {
   try {
     const result = await apiPost(`/missions/${instanceId}/claim`);
-    showToast(`+${result.xpGained} XP${result.levelUp ? " — LEVEL UP!" : ""}`);
+    const bitsPart = result.bitsGained > 0 ? ` +${result.bitsGained} bits` : "";
+    showToast(`+${result.xpGained} XP${bitsPart}${result.levelUp ? " — LEVEL UP!" : ""}`);
     renderDashboardPage();
   } catch (err) {
     showToast(err.message, "error");

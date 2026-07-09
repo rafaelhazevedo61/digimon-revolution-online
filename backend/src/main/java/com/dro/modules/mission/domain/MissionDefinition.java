@@ -16,6 +16,7 @@ public class MissionDefinition {
     private final Stage requiredStage;
     private final int requiredLevel;
     private final int baseXp;
+    private final int baseBits;
     private final int energyCost;
     private final int durationSeconds;
     private final List<MissionReward> fixedRewards;

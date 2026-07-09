@@ -34,6 +34,7 @@ public class MissionDefinitionMapper {
                 entity.getRequiredStage(),
                 entity.getRequiredLevel(),
                 entity.getBaseXp(),
+                entity.getBaseBits(),
                 entity.getEnergyCost(),
                 entity.getDurationSeconds(),
                 rewards,
