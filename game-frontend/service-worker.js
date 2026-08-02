@@ -1,4 +1,4 @@
-const CACHE_NAME = "dro-game-v11";
+const CACHE_NAME = "dro-game-v12";
 const STATIC_ASSETS = [
   "/",
   "/index.html",

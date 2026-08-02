@@ -12,5 +12,6 @@ public record ArenaOpponentResponse(
         int level,
         int rating,
         int power,
-        int winChance
+        int winChance,
+        int bitsReward
 ) {}

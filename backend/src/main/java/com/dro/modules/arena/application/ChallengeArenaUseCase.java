@@ -59,6 +59,11 @@ public class ChallengeArenaUseCase {
 
         boolean isAdmin = player.getUserType() == UserType.ADMIN;
 
+        if (!isAdmin && !ArenaRules.withinChallengeWindow(attacker.getArenaRating(), defender.getArenaRating())) {
+            throw new BadRequestException("Opponent out of your rating range (max "
+                    + ArenaRules.RATING_WINDOW + " points difference)");
+        }
+
         if (!isAdmin) {
             attacker.regenerateEnergy();
             if (attacker.getEnergy() < ArenaRules.ENERGY_COST) {
@@ -91,7 +96,7 @@ public class ChallengeArenaUseCase {
         if (victory) {
             attacker.setArenaWins(attacker.getArenaWins() + 1);
             defender.setArenaLosses(defender.getArenaLosses() + 1);
-            bitsGained = ArenaRules.WIN_BITS;
+            bitsGained = ArenaRules.winBits(attackerRatingBefore, defenderRatingBefore);
             attacker.setBits(attacker.getBits() + bitsGained);
         } else {
             attacker.setArenaLosses(attacker.getArenaLosses() + 1);

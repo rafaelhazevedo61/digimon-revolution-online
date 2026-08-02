@@ -52,6 +52,7 @@ public class GetArenaLobbyUseCase {
                 .findByStatusAndPlayerIdNot(DigimonStatus.ACTIVE, playerId);
 
         List<Digimon> nearest = candidates.stream()
+                .filter(d -> ArenaRules.withinChallengeWindow(me.getArenaRating(), d.getArenaRating()))
                 .sorted(Comparator.comparingInt(d -> Math.abs(d.getArenaRating() - me.getArenaRating())))
                 .limit(MAX_OPPONENTS)
                 .toList();
@@ -76,7 +77,8 @@ public class GetArenaLobbyUseCase {
                     d.getLevel(),
                     d.getArenaRating(),
                     (int) Math.round(power),
-                    winChance
+                    winChance,
+                    ArenaRules.winBits(me.getArenaRating(), d.getArenaRating())
             );
         }).toList();
 

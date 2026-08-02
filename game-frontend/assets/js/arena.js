@@ -80,6 +80,7 @@ function renderArenaLobby(lobby) {
           </div>
           <div class="text-xs mt-0.5">
             <span class="${arenaWinChanceColor(o.winChance)}">Chance: ${o.winChance}%</span>
+            <span class="ml-2 text-amber-400">🏆 +${o.bitsReward} bits</span>
           </div>
         </div>
         <button
@@ -92,7 +93,7 @@ function renderArenaLobby(lobby) {
   }).join("");
 
   container.innerHTML = myCard + `
-    <p class="text-xs text-slate-400 mb-2 px-1">Oponentes proximos do seu rating</p>
+    <p class="text-xs text-slate-400 mb-2 px-1">Oponentes dentro de ±200 pts do seu rating</p>
     ${opponentsHtml}
     ${lobby.energy < lobby.energyCost ? `<p class="text-xs text-red-400 mt-2 px-1">Energia insuficiente para desafiar (recarrega com o tempo)</p>` : ""}
   `;
