@@ -81,6 +81,18 @@ public class Digimon {
     @Column(name = "rebirth_count", nullable = false)
     private int rebirthCount;
 
+    @Column(name = "arena_rating", nullable = false)
+    @Builder.Default
+    private int arenaRating = 1000;
+
+    @Column(name = "arena_wins", nullable = false)
+    @Builder.Default
+    private int arenaWins = 0;
+
+    @Column(name = "arena_losses", nullable = false)
+    @Builder.Default
+    private int arenaLosses = 0;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private DigimonStatus status;

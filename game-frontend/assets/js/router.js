@@ -14,6 +14,9 @@ const routes = {
   pokedex: renderPokedexPage,
   bosses: renderBossesPage,
   "boss-history": renderBossHistoryPage,
+  arena: renderArenaPage,
+  "arena-ranking": renderArenaRankingPage,
+  "arena-history": renderArenaHistoryPage,
   storage: renderStoragePage,
   more: renderMorePage
 };

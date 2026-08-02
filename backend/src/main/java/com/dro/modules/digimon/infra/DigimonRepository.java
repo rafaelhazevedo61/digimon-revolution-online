@@ -29,4 +29,8 @@ public interface DigimonRepository extends JpaRepository<Digimon, UUID> {
 
     Page<Digimon> findByStatusAndRebirthCountGreaterThanOrderByRebirthCountDescLevelDesc(DigimonStatus status, int rebirthCount, Pageable pageable);
 
+    List<Digimon> findByStatusAndPlayerIdNot(DigimonStatus status, UUID playerId);
+
+    Page<Digimon> findByStatusOrderByArenaRatingDescLevelDesc(DigimonStatus status, Pageable pageable);
+
 }

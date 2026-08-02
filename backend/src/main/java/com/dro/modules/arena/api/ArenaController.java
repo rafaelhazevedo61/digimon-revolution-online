@@ -1,0 +1,60 @@
+package com.dro.modules.arena.api;
+
+import com.dro.modules.arena.api.dto.request.ChallengeArenaRequest;
+import com.dro.modules.arena.api.dto.response.ArenaHistoryEntryResponse;
+import com.dro.modules.arena.api.dto.response.ArenaLobbyResponse;
+import com.dro.modules.arena.api.dto.response.ArenaMatchResponse;
+import com.dro.modules.arena.api.dto.response.ArenaRankingEntryResponse;
+import com.dro.modules.arena.application.ChallengeArenaUseCase;
+import com.dro.modules.arena.application.GetArenaHistoryUseCase;
+import com.dro.modules.arena.application.GetArenaLobbyUseCase;
+import com.dro.modules.arena.application.GetArenaRankingUseCase;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/arena")
+@RequiredArgsConstructor
+public class ArenaController {
+
+    private final GetArenaLobbyUseCase getArenaLobbyUseCase;
+    private final ChallengeArenaUseCase challengeArenaUseCase;
+    private final GetArenaRankingUseCase getArenaRankingUseCase;
+    private final GetArenaHistoryUseCase getArenaHistoryUseCase;
+
+    @GetMapping("/lobby")
+    public ResponseEntity<ArenaLobbyResponse> getLobby(
+            @RequestHeader("Authorization") String authorization
+    ) {
+        return ResponseEntity.ok(getArenaLobbyUseCase.execute(authorization));
+    }
+
+    @PostMapping("/challenge")
+    public ResponseEntity<ArenaMatchResponse> challenge(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody @Valid ChallengeArenaRequest request
+    ) {
+        return ResponseEntity.ok(challengeArenaUseCase.execute(authorization, request.opponentDigimonId()));
+    }
+
+    @GetMapping("/ranking")
+    public ResponseEntity<List<ArenaRankingEntryResponse>> getRanking(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(getArenaRankingUseCase.execute(page, size));
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<List<ArenaHistoryEntryResponse>> getHistory(
+            @RequestHeader("Authorization") String authorization,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return ResponseEntity.ok(getArenaHistoryUseCase.execute(authorization, page, size));
+    }
+}

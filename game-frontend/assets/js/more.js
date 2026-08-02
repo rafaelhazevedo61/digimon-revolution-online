@@ -14,6 +14,13 @@ async function renderMorePage() {
             <p class="text-xs text-slate-400">Desafie bosses poderosos</p>
           </div>
         </button>
+        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('arena')">
+          <span class="text-2xl">⚔️</span>
+          <div>
+            <p class="font-bold text-sm">Arena</p>
+            <p class="text-xs text-slate-400">Duele contra outros jogadores</p>
+          </div>
+        </button>
         <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('ranking')">
           <span class="text-2xl">🏆</span>
           <div>
