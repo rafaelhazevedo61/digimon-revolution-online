@@ -2,7 +2,9 @@ package com.dro.modules.arena.application;
 
 import com.dro.modules.arena.api.dto.response.ArenaLobbyResponse;
 import com.dro.modules.arena.api.dto.response.ArenaOpponentResponse;
+import com.dro.modules.arena.domain.ArenaMatch;
 import com.dro.modules.arena.domain.ArenaRules;
+import com.dro.modules.arena.infra.ArenaMatchRepository;
 import com.dro.modules.boss.domain.BossCombatRules;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
@@ -15,6 +17,8 @@ import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -32,6 +36,7 @@ public class GetArenaLobbyUseCase {
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final DigimonPowerService digimonPowerService;
+    private final ArenaMatchRepository arenaMatchRepository;
 
     public ArenaLobbyResponse execute(String token) {
 
@@ -86,9 +91,29 @@ public class GetArenaLobbyUseCase {
                 .stream()
                 .collect(Collectors.toMap(Player::getId, Player::getUsername));
 
+        Instant now = Instant.now();
+        Instant startOfDay = now.truncatedTo(ChronoUnit.DAYS);
+        long usedToday = arenaMatchRepository
+                .countByAttackerPlayerIdAndCreatedAtGreaterThanEqual(playerId, startOfDay);
+
+        Instant cooldownSince = now.minus(ArenaRules.TARGET_COOLDOWN_MINUTES, ChronoUnit.MINUTES);
+        Map<UUID, Instant> lastChallengePerTarget = arenaMatchRepository
+                .findByAttackerPlayerIdAndCreatedAtGreaterThanEqual(playerId, cooldownSince)
+                .stream()
+                .collect(Collectors.toMap(
+                        ArenaMatch::getDefenderDigimonId,
+                        ArenaMatch::getCreatedAt,
+                        (a, b) -> a.isAfter(b) ? a : b));
+
         List<ArenaOpponentResponse> opponents = nearest.stream().map(d -> {
             double power = digimonPowerService.calculatePower(d);
             int winChance = BossCombatRules.calculateWinChance(myPower, power);
+            int cooldownSecondsRemaining = 0;
+            Instant lastChallenge = lastChallengePerTarget.get(d.getId());
+            if (lastChallenge != null) {
+                Instant readyAt = lastChallenge.plus(ArenaRules.TARGET_COOLDOWN_MINUTES, ChronoUnit.MINUTES);
+                cooldownSecondsRemaining = (int) Math.max(0, readyAt.getEpochSecond() - now.getEpochSecond());
+            }
             return new ArenaOpponentResponse(
                     d.getId(),
                     d.getName(),
@@ -99,7 +124,8 @@ public class GetArenaLobbyUseCase {
                     (int) Math.round(power),
                     winChance,
                     ArenaRules.winBits(me.getArenaRating(), d.getArenaRating()),
-                    d.isBot()
+                    d.isBot(),
+                    cooldownSecondsRemaining
             );
         }).toList();
 
@@ -111,6 +137,9 @@ public class GetArenaLobbyUseCase {
                 (int) Math.round(myPower),
                 me.getEnergy(),
                 ArenaRules.ENERGY_COST,
+                ArenaRules.DAILY_CHALLENGE_LIMIT,
+                (int) usedToday,
+                ArenaRules.remainingDailyChallenges(usedToday),
                 opponents
         );
     }

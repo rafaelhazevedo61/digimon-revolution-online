@@ -55,6 +55,23 @@ public class ArenaRules {
         return Math.max(MIN_WIN_BITS, Math.min(MAX_WIN_BITS, bits));
     }
 
+    /** Máximo de desafios que um jogador pode fazer por dia (reset natural à meia-noite UTC). */
+    public static final int DAILY_CHALLENGE_LIMIT = 20;
+
+    /** Intervalo mínimo (minutos) antes de poder desafiar o mesmo alvo novamente. */
+    public static final int TARGET_COOLDOWN_MINUTES = 30;
+
+    /** Desafios restantes no dia, dado quantos já foram usados (nunca negativo). */
+    public static int remainingDailyChallenges(long usedToday) {
+        long remaining = DAILY_CHALLENGE_LIMIT - usedToday;
+        return (int) Math.max(0, remaining);
+    }
+
+    /** True se o limite diário de desafios já foi atingido. */
+    public static boolean dailyLimitReached(long usedToday) {
+        return usedToday >= DAILY_CHALLENGE_LIMIT;
+    }
+
     /** Score esperado do jogador A contra B (probabilidade ELO, 0..1). */
     public static double expectedScore(int ratingA, int ratingB) {
         return 1.0 / (1.0 + Math.pow(10, (ratingB - ratingA) / 400.0));

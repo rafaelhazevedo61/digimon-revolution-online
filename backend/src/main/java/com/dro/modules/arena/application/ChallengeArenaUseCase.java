@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -66,6 +67,28 @@ public class ChallengeArenaUseCase {
 
         if (!isAdmin && !ArenaRules.withinStageRange(attacker.getStage(), defender.getStage())) {
             throw new BadRequestException("Opponent stage too far from yours");
+        }
+
+        if (!isAdmin) {
+            Instant startOfDay = Instant.now().truncatedTo(ChronoUnit.DAYS);
+            long usedToday = arenaMatchRepository
+                    .countByAttackerPlayerIdAndCreatedAtGreaterThanEqual(playerId, startOfDay);
+            if (ArenaRules.dailyLimitReached(usedToday)) {
+                throw new BadRequestException("Daily challenge limit reached ("
+                        + ArenaRules.DAILY_CHALLENGE_LIMIT + " per day). Come back tomorrow.");
+            }
+
+            arenaMatchRepository
+                    .findFirstByAttackerPlayerIdAndDefenderDigimonIdOrderByCreatedAtDesc(playerId, opponentDigimonId)
+                    .ifPresent(last -> {
+                        Instant readyAt = last.getCreatedAt()
+                                .plus(ArenaRules.TARGET_COOLDOWN_MINUTES, ChronoUnit.MINUTES);
+                        long secondsLeft = readyAt.getEpochSecond() - Instant.now().getEpochSecond();
+                        if (secondsLeft > 0) {
+                            throw new BadRequestException("You recently challenged this opponent. Try again in "
+                                    + ((secondsLeft + 59) / 60) + " min.");
+                        }
+                    });
         }
 
         if (!isAdmin) {

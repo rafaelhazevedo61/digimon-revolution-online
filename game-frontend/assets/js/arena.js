@@ -6,6 +6,13 @@ function arenaWinChanceColor(chance) {
   return chance >= 60 ? "text-green-400" : chance >= 40 ? "text-yellow-400" : "text-red-400";
 }
 
+function arenaFormatCooldown(seconds) {
+  if (seconds <= 0) return "";
+  const min = Math.floor(seconds / 60);
+  const sec = seconds % 60;
+  return min > 0 ? `${min}min` : `${sec}s`;
+}
+
 async function renderArenaPage() {
   const app = document.getElementById("app");
   showBottomNav("more");
@@ -54,8 +61,14 @@ function renderArenaLobby(lobby) {
         <span class="text-purple-300">Poder ${lobby.power}</span>
       </div>
       <div class="mt-2 text-xs text-slate-400">Energia: ${lobby.energy} (custo ${lobby.energyCost} por desafio)</div>
+      ${lobby.dailyChallengeLimit ? `<div class="mt-1 text-xs ${lobby.challengesRemaining > 0 ? "text-slate-400" : "text-red-400"}">
+        Desafios hoje: ${lobby.challengesUsedToday}/${lobby.dailyChallengeLimit}
+        (${lobby.challengesRemaining} restantes)
+      </div>` : ""}
     </div>
   `;
+
+  const dailyLimitReached = lobby.dailyChallengeLimit > 0 && lobby.challengesRemaining <= 0;
 
   if (!lobby.opponents || lobby.opponents.length === 0) {
     container.innerHTML = myCard + `
@@ -65,7 +78,11 @@ function renderArenaLobby(lobby) {
   }
 
   const opponentsHtml = lobby.opponents.map(o => {
-    const canFight = lobby.energy >= lobby.energyCost;
+    const onCooldown = (o.cooldownSecondsRemaining || 0) > 0;
+    const canFight = lobby.energy >= lobby.energyCost && !dailyLimitReached && !onCooldown;
+    let btnLabel = "Desafiar";
+    if (onCooldown) btnLabel = `Aguarde ${arenaFormatCooldown(o.cooldownSecondsRemaining)}`;
+    else if (dailyLimitReached) btnLabel = "Limite diário";
     return `
       <div class="card-sm mb-2 flex items-center gap-3">
         <div class="flex-1 min-w-0">
@@ -82,12 +99,13 @@ function renderArenaLobby(lobby) {
           <div class="text-xs mt-0.5">
             <span class="${arenaWinChanceColor(o.winChance)}">Chance: ${o.winChance}%</span>
             <span class="ml-2 text-amber-400">🏆 +${o.bitsReward} bits</span>
+            ${onCooldown ? `<span class="ml-2 text-slate-500">⏳ ${arenaFormatCooldown(o.cooldownSecondsRemaining)}</span>` : ""}
           </div>
         </div>
         <button
           class="px-3 py-2 rounded-lg text-xs font-bold ${canFight ? "btn-primary" : "bg-slate-700 text-slate-400 cursor-not-allowed"}"
           ${canFight ? `onclick="startArenaChallenge('${o.digimonId}', '${escapeHtml(o.digimonName).replace(/'/g, "\\'")}')"` : "disabled"}>
-          Desafiar
+          ${btnLabel}
         </button>
       </div>
     `;
@@ -95,6 +113,7 @@ function renderArenaLobby(lobby) {
 
   container.innerHTML = myCard + `
     <p class="text-xs text-slate-400 mb-2 px-1">Oponentes no mesmo stage (ou adjacente) e dentro de ±200 pts</p>
+    ${dailyLimitReached ? `<p class="text-xs text-red-400 mb-2 px-1">Você atingiu o limite diário de desafios. Volte amanhã.</p>` : ""}
     ${opponentsHtml}
     ${lobby.energy < lobby.energyCost ? `<p class="text-xs text-red-400 mt-2 px-1">Energia insuficiente para desafiar (recarrega com o tempo)</p>` : ""}
   `;
