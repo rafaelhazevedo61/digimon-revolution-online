@@ -19,18 +19,25 @@ public interface DigimonRepository extends JpaRepository<Digimon, UUID> {
 
     long countByPlayerIdAndStatus(UUID playerId, DigimonStatus status);
 
-    Page<Digimon> findByStatusOrderByLevelDescExperienceDesc(DigimonStatus status, Pageable pageable);
+    @Query("SELECT d FROM Digimon d WHERE d.status = :status AND d.bot = false " +
+            "ORDER BY d.level DESC, d.experience DESC")
+    Page<Digimon> findByStatusOrderByLevelDescExperienceDesc(@Param("status") DigimonStatus status, Pageable pageable);
 
-    @Query("SELECT d FROM Digimon d WHERE d.status = :status ORDER BY " +
+    @Query("SELECT d FROM Digimon d WHERE d.status = :status AND d.bot = false ORDER BY " +
             "CASE d.grade WHEN 'SSS' THEN 0 WHEN 'SS' THEN 1 WHEN 'S' THEN 2 " +
             "WHEN 'A' THEN 3 WHEN 'B' THEN 4 WHEN 'C' THEN 5 WHEN 'D' THEN 6 WHEN 'E' THEN 7 END ASC, " +
             "d.level DESC")
     Page<Digimon> findByStatusOrderByGradeQualityAscLevelDesc(@Param("status") DigimonStatus status, Pageable pageable);
 
-    Page<Digimon> findByStatusAndRebirthCountGreaterThanOrderByRebirthCountDescLevelDesc(DigimonStatus status, int rebirthCount, Pageable pageable);
+    @Query("SELECT d FROM Digimon d WHERE d.status = :status AND d.bot = false AND d.rebirthCount > :rebirthCount " +
+            "ORDER BY d.rebirthCount DESC, d.level DESC")
+    Page<Digimon> findByStatusAndRebirthCountGreaterThanOrderByRebirthCountDescLevelDesc(
+            @Param("status") DigimonStatus status, @Param("rebirthCount") int rebirthCount, Pageable pageable);
 
     List<Digimon> findByStatusAndPlayerIdNot(DigimonStatus status, UUID playerId);
 
-    Page<Digimon> findByStatusOrderByArenaRatingDescLevelDesc(DigimonStatus status, Pageable pageable);
+    @Query("SELECT d FROM Digimon d WHERE d.status = :status AND d.bot = false " +
+            "ORDER BY d.arenaRating DESC, d.level DESC")
+    Page<Digimon> findByStatusOrderByArenaRatingDescLevelDesc(@Param("status") DigimonStatus status, Pageable pageable);
 
 }

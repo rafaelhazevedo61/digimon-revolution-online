@@ -64,6 +64,10 @@ public class ChallengeArenaUseCase {
                     + ArenaRules.RATING_WINDOW + " points difference)");
         }
 
+        if (!isAdmin && !ArenaRules.withinStageRange(attacker.getStage(), defender.getStage())) {
+            throw new BadRequestException("Opponent stage too far from yours");
+        }
+
         if (!isAdmin) {
             attacker.regenerateEnergy();
             if (attacker.getEnergy() < ArenaRules.ENERGY_COST) {
@@ -84,27 +88,34 @@ public class ChallengeArenaUseCase {
         int defenderRatingBefore = defender.getArenaRating();
 
         double attackerExpected = ArenaRules.expectedScore(attackerRatingBefore, defenderRatingBefore);
-        double defenderExpected = ArenaRules.expectedScore(defenderRatingBefore, attackerRatingBefore);
 
         int attackerRatingAfter = ArenaRules.newRating(attackerRatingBefore, attackerExpected, victory ? 1 : 0);
-        int defenderRatingAfter = ArenaRules.newRating(defenderRatingBefore, defenderExpected, victory ? 0 : 1);
-
         attacker.setArenaRating(attackerRatingAfter);
-        defender.setArenaRating(defenderRatingAfter);
+
+        // Bots são referências fixas: não têm rating/estatísticas alteradas nem persistidas.
+        boolean defenderIsBot = defender.isBot();
+        int defenderRatingAfter = defenderRatingBefore;
+        if (!defenderIsBot) {
+            double defenderExpected = ArenaRules.expectedScore(defenderRatingBefore, attackerRatingBefore);
+            defenderRatingAfter = ArenaRules.newRating(defenderRatingBefore, defenderExpected, victory ? 0 : 1);
+            defender.setArenaRating(defenderRatingAfter);
+        }
 
         int bitsGained = 0;
         if (victory) {
             attacker.setArenaWins(attacker.getArenaWins() + 1);
-            defender.setArenaLosses(defender.getArenaLosses() + 1);
             bitsGained = ArenaRules.winBits(attackerRatingBefore, defenderRatingBefore);
             attacker.setBits(attacker.getBits() + bitsGained);
+            if (!defenderIsBot) defender.setArenaLosses(defender.getArenaLosses() + 1);
         } else {
             attacker.setArenaLosses(attacker.getArenaLosses() + 1);
-            defender.setArenaWins(defender.getArenaWins() + 1);
+            if (!defenderIsBot) defender.setArenaWins(defender.getArenaWins() + 1);
         }
 
         digimonRepository.save(attacker);
-        digimonRepository.save(defender);
+        if (!defenderIsBot) {
+            digimonRepository.save(defender);
+        }
 
         int attackerRatingChange = attackerRatingAfter - attackerRatingBefore;
         int defenderRatingChange = defenderRatingAfter - defenderRatingBefore;

@@ -93,6 +93,10 @@ public class Digimon {
     @Builder.Default
     private int arenaLosses = 0;
 
+    @Column(name = "is_bot", nullable = false)
+    @Builder.Default
+    private boolean bot = false;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private DigimonStatus status;

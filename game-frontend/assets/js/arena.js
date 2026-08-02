@@ -71,6 +71,7 @@ function renderArenaLobby(lobby) {
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <span class="font-bold text-sm truncate">${escapeHtml(o.digimonName)}</span>
+            ${o.bot ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-600 text-slate-200">BOT</span>` : ""}
             <span class="text-[10px] text-slate-500">${escapeHtml(ARENA_STAGE_LABELS[o.stage] || o.stage)} Lv.${o.level}</span>
           </div>
           <div class="text-xs text-slate-400 mt-0.5">
@@ -93,7 +94,7 @@ function renderArenaLobby(lobby) {
   }).join("");
 
   container.innerHTML = myCard + `
-    <p class="text-xs text-slate-400 mb-2 px-1">Oponentes dentro de ±200 pts do seu rating</p>
+    <p class="text-xs text-slate-400 mb-2 px-1">Oponentes no mesmo stage (ou adjacente) e dentro de ±200 pts</p>
     ${opponentsHtml}
     ${lobby.energy < lobby.energyCost ? `<p class="text-xs text-red-400 mt-2 px-1">Energia insuficiente para desafiar (recarrega com o tempo)</p>` : ""}
   `;

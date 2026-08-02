@@ -1,8 +1,18 @@
 package com.dro.modules.arena.domain;
 
+import com.dro.modules.digimon.domain.enums.Stage;
+
 public class ArenaRules {
 
     private ArenaRules() {
+    }
+
+    /** Diferença máxima de stage permitida entre oponentes (0 = só mesmo stage, 1 = adjacente). */
+    public static final int STAGE_RANGE = 1;
+
+    /** True se os stages estão dentro do alcance permitido (mesmo stage ou adjacente). */
+    public static boolean withinStageRange(Stage a, Stage b) {
+        return Math.abs(a.ordinal() - b.ordinal()) <= STAGE_RANGE;
     }
 
     /** Rating inicial de cada Digimon na arena. */

@@ -15,6 +15,7 @@ import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 public class GetArenaLobbyUseCase {
 
     private static final int MAX_OPPONENTS = 15;
+    private static final int MIN_LIST = 10;
 
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
@@ -51,11 +53,29 @@ public class GetArenaLobbyUseCase {
         List<Digimon> candidates = digimonRepository
                 .findByStatusAndPlayerIdNot(DigimonStatus.ACTIVE, playerId);
 
-        List<Digimon> nearest = candidates.stream()
+        Comparator<Digimon> byProximity =
+                Comparator.comparingInt(d -> Math.abs(d.getArenaRating() - me.getArenaRating()));
+
+        List<Digimon> eligible = candidates.stream()
                 .filter(d -> ArenaRules.withinChallengeWindow(me.getArenaRating(), d.getArenaRating()))
-                .sorted(Comparator.comparingInt(d -> Math.abs(d.getArenaRating() - me.getArenaRating())))
+                .filter(d -> ArenaRules.withinStageRange(me.getStage(), d.getStage()))
+                .toList();
+
+        List<Digimon> reals = eligible.stream()
+                .filter(d -> !d.isBot())
+                .sorted(byProximity)
                 .limit(MAX_OPPONENTS)
                 .toList();
+
+        // Preenche a lista com bots quando há poucos oponentes reais.
+        List<Digimon> nearest = new ArrayList<>(reals);
+        if (nearest.size() < MIN_LIST) {
+            eligible.stream()
+                    .filter(Digimon::isBot)
+                    .sorted(byProximity)
+                    .limit((long) MIN_LIST - nearest.size())
+                    .forEach(nearest::add);
+        }
 
         List<UUID> opponentPlayerIds = nearest.stream()
                 .map(Digimon::getPlayerId)
@@ -78,7 +98,8 @@ public class GetArenaLobbyUseCase {
                     d.getArenaRating(),
                     (int) Math.round(power),
                     winChance,
-                    ArenaRules.winBits(me.getArenaRating(), d.getArenaRating())
+                    ArenaRules.winBits(me.getArenaRating(), d.getArenaRating()),
+                    d.isBot()
             );
         }).toList();
 
