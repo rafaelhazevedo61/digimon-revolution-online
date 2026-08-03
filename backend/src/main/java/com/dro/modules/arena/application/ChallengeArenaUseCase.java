@@ -61,7 +61,10 @@ public class ChallengeArenaUseCase {
 
         boolean isAdmin = player.getUserType() == UserType.ADMIN;
 
-        if (!isAdmin && !ArenaRules.withinChallengeWindow(attacker.getArenaRating(), defender.getArenaRating())) {
+        // Bots ignoram a janela de rating (só respeitam stage) para garantir oponentes
+        // de preenchimento mesmo quando o jogador está com rating muito alto/baixo.
+        if (!isAdmin && !defender.isBot()
+                && !ArenaRules.withinChallengeWindow(attacker.getArenaRating(), defender.getArenaRating())) {
             throw new BadRequestException("Opponent out of your rating range (max "
                     + ArenaRules.RATING_WINDOW + " points difference)");
         }

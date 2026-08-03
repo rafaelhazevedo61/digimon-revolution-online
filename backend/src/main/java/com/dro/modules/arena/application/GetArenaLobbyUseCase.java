@@ -60,22 +60,22 @@ public class GetArenaLobbyUseCase {
         Comparator<Digimon> byProximity =
                 Comparator.comparingInt(d -> Math.abs(d.getArenaRating() - me.getArenaRating()));
 
-        List<Digimon> eligible = candidates.stream()
+        // Jogadores reais respeitam janela de rating (±200) + stage.
+        List<Digimon> reals = candidates.stream()
+                .filter(d -> !d.isBot())
                 .filter(d -> ArenaRules.withinChallengeWindow(me.getArenaRating(), d.getArenaRating()))
                 .filter(d -> ArenaRules.withinStageRange(me.getStage(), d.getStage()))
-                .toList();
-
-        List<Digimon> reals = eligible.stream()
-                .filter(d -> !d.isBot())
                 .sorted(byProximity)
                 .limit(MAX_OPPONENTS)
                 .toList();
 
-        // Preenche a lista com bots quando há poucos oponentes reais.
+        // Bots preenchem até MIN_LIST ignorando a janela de rating (só respeitam stage),
+        // garantindo sempre >= 10 oponentes mesmo quando o jogador sobe muito de rating.
         List<Digimon> nearest = new ArrayList<>(reals);
         if (nearest.size() < MIN_LIST) {
-            eligible.stream()
+            candidates.stream()
                     .filter(Digimon::isBot)
+                    .filter(d -> ArenaRules.withinStageRange(me.getStage(), d.getStage()))
                     .sorted(byProximity)
                     .limit((long) MIN_LIST - nearest.size())
                     .forEach(nearest::add);

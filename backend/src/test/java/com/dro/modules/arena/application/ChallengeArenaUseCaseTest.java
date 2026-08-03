@@ -254,6 +254,15 @@ class ChallengeArenaUseCaseTest {
     }
 
     @Test
+    void botDefenderIgnoresRatingWindow() {
+        defender = digimon(defenderId, opponentPlayerId, 1000 + ArenaRules.RATING_WINDOW + 500, Stage.ROOKIE, true);
+        stubDigimons();
+        stubPowers(1000.0, 100.0);
+
+        assertDoesNotThrow(() -> challengeWithRoll(1));
+    }
+
+    @Test
     void throwsWhenOpponentStageTooFar() {
         defender.setStage(Stage.MEGA);
         attacker.setStage(Stage.BABY);
