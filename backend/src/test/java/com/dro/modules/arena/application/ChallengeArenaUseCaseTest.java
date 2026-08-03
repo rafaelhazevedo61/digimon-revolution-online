@@ -15,6 +15,7 @@ import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.ConflictException;
 import com.dro.shared.security.JwtSettings;
 import com.dro.shared.security.JwtTokenCodec;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -302,6 +304,17 @@ class ChallengeArenaUseCaseTest {
                 .countByAttackerPlayerIdAndCreatedAtGreaterThanEqual(any(), any());
         verify(arenaMatchRepository, never())
                 .findFirstByAttackerPlayerIdAndDefenderDigimonIdOrderByCreatedAtDesc(any(), any());
+    }
+
+    @Test
+    void concurrentDefenderUpdateThrowsConflict() {
+        stubDigimons();
+        stubPowers(1000.0, 100.0);
+        doThrow(new ObjectOptimisticLockingFailureException(Digimon.class, defenderId))
+                .when(digimonRepository).flush();
+
+        assertThrows(ConflictException.class, () -> challengeWithRoll(1));
+        verify(arenaMatchRepository, never()).save(any());
     }
 
     @Test

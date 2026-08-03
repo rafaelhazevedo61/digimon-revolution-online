@@ -4,7 +4,6 @@ import com.dro.modules.arena.api.dto.response.ArenaMatchResponse;
 import com.dro.modules.arena.domain.ArenaMatch;
 import com.dro.modules.arena.domain.ArenaRules;
 import com.dro.modules.arena.infra.ArenaMatchRepository;
-import com.dro.modules.boss.domain.BossCombatRules;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
@@ -12,9 +11,11 @@ import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -103,7 +104,7 @@ public class ChallengeArenaUseCase {
         double attackerPower = digimonPowerService.calculatePower(attacker);
         double defenderPower = digimonPowerService.calculatePower(defender);
 
-        int winChance = BossCombatRules.calculateWinChance(attackerPower, defenderPower);
+        int winChance = ArenaRules.winChance(attackerPower, defenderPower);
         int roll = ThreadLocalRandom.current().nextInt(1, 101);
         boolean victory = roll <= winChance;
 
@@ -135,9 +136,17 @@ public class ChallengeArenaUseCase {
             if (!defenderIsBot) defender.setArenaWins(defender.getArenaWins() + 1);
         }
 
-        digimonRepository.save(attacker);
-        if (!defenderIsBot) {
-            digimonRepository.save(defender);
+        try {
+            digimonRepository.save(attacker);
+            if (!defenderIsBot) {
+                digimonRepository.save(defender);
+            }
+            // Força o UPDATE (com checagem de @Version) antes de gravar a partida,
+            // detectando desafios simultâneos ao mesmo defensor.
+            digimonRepository.flush();
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new ConflictException(
+                    "O oponente foi atualizado por outra partida ao mesmo tempo. Tente novamente.");
         }
 
         int attackerRatingChange = attackerRatingAfter - attackerRatingBefore;

@@ -5,7 +5,6 @@ import com.dro.modules.arena.api.dto.response.ArenaOpponentResponse;
 import com.dro.modules.arena.domain.ArenaMatch;
 import com.dro.modules.arena.domain.ArenaRules;
 import com.dro.modules.arena.infra.ArenaMatchRepository;
-import com.dro.modules.boss.domain.BossCombatRules;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
@@ -107,7 +106,7 @@ public class GetArenaLobbyUseCase {
 
         List<ArenaOpponentResponse> opponents = nearest.stream().map(d -> {
             double power = digimonPowerService.calculatePower(d);
-            int winChance = BossCombatRules.calculateWinChance(myPower, power);
+            int winChance = ArenaRules.winChance(myPower, power);
             int cooldownSecondsRemaining = 0;
             Instant lastChallenge = lastChallengePerTarget.get(d.getId());
             if (lastChallenge != null) {

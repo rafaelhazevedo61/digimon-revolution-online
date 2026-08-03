@@ -97,6 +97,11 @@ public class Digimon {
     @Builder.Default
     private boolean bot = false;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    @Builder.Default
+    private long version = 0;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private DigimonStatus status;

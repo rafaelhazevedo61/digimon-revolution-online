@@ -95,6 +95,31 @@ class ArenaRulesTest {
     }
 
     @Test
+    void winChanceIsFiftyForEqualPower() {
+        assertEquals(50, ArenaRules.winChance(500.0, 500.0));
+    }
+
+    @Test
+    void winChanceHigherForStrongerAttacker() {
+        int strong = ArenaRules.winChance(900.0, 100.0);
+        int weak = ArenaRules.winChance(100.0, 900.0);
+        assertTrue(strong > 50);
+        assertTrue(weak < 50);
+        assertEquals(100, strong + weak);
+    }
+
+    @Test
+    void winChanceIsClampedToBounds() {
+        assertEquals(ArenaRules.MAX_WIN_CHANCE, ArenaRules.winChance(1_000_000.0, 1.0));
+        assertEquals(ArenaRules.MIN_WIN_CHANCE, ArenaRules.winChance(1.0, 1_000_000.0));
+    }
+
+    @Test
+    void winChanceDefaultsToFiftyWhenNoPower() {
+        assertEquals(50, ArenaRules.winChance(0.0, 0.0));
+    }
+
+    @Test
     void dailyLimitReachedWhenUsedMeetsLimit() {
         assertFalse(ArenaRules.dailyLimitReached(ArenaRules.DAILY_CHALLENGE_LIMIT - 1));
         assertTrue(ArenaRules.dailyLimitReached(ArenaRules.DAILY_CHALLENGE_LIMIT));

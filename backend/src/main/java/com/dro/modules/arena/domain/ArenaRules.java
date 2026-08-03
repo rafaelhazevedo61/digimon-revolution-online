@@ -45,6 +45,23 @@ public class ArenaRules {
         return Math.abs(myRating - opponentRating) <= RATING_WINDOW;
     }
 
+    /** Faixa da chance de vitória na arena (evita 0%/100% garantidos). */
+    public static final int MIN_WIN_CHANCE = 5;
+    public static final int MAX_WIN_CHANCE = 95;
+
+    /**
+     * Chance de vitória do atacante (%), proporcional à força relativa:
+     * {@code atk / (atk + def)}. Poderes iguais → ~50% (empate justo),
+     * ao contrário da fórmula de boss em que poderes iguais dariam ~95%.
+     * Limitada a [MIN_WIN_CHANCE, MAX_WIN_CHANCE].
+     */
+    public static int winChance(double attackerPower, double defenderPower) {
+        double total = attackerPower + defenderPower;
+        if (total <= 0) return 50;
+        int chance = (int) Math.round((attackerPower / total) * 100);
+        return Math.min(MAX_WIN_CHANCE, Math.max(MIN_WIN_CHANCE, chance));
+    }
+
     /**
      * Bits de vitória proporcionais à diferença de rating: bater alguém mais forte
      * (rating maior) rende mais; bater alguém mais fraco rende menos.
