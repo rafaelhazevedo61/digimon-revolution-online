@@ -56,7 +56,7 @@ public class ArenaRules {
     }
 
     /** Máximo de desafios que um jogador pode fazer por dia (reset natural à meia-noite UTC). */
-    public static final int DAILY_CHALLENGE_LIMIT = 20;
+    public static final int DAILY_CHALLENGE_LIMIT = 5;
 
     /** Intervalo mínimo (minutos) antes de poder desafiar o mesmo alvo novamente. */
     public static final int TARGET_COOLDOWN_MINUTES = 30;
