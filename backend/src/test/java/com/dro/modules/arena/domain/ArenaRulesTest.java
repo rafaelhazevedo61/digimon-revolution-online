@@ -148,22 +148,22 @@ class ArenaRulesTest {
     @Test
     void tierForMapsRatingToBand() {
         assertEquals(ArenaTier.BRONZE, ArenaRules.tierFor(0));
-        assertEquals(ArenaTier.BRONZE, ArenaRules.tierFor(899));
-        assertEquals(ArenaTier.PRATA, ArenaRules.tierFor(900));
-        assertEquals(ArenaTier.PRATA, ArenaRules.tierFor(1099));
-        assertEquals(ArenaTier.OURO, ArenaRules.tierFor(1100));
-        assertEquals(ArenaTier.OURO, ArenaRules.tierFor(1299));
-        assertEquals(ArenaTier.PLATINA, ArenaRules.tierFor(1300));
-        assertEquals(ArenaTier.PLATINA, ArenaRules.tierFor(1499));
-        assertEquals(ArenaTier.DIAMANTE, ArenaRules.tierFor(1500));
+        assertEquals(ArenaTier.BRONZE, ArenaRules.tierFor(999));
+        assertEquals(ArenaTier.PRATA, ArenaRules.tierFor(1000));
+        assertEquals(ArenaTier.PRATA, ArenaRules.tierFor(1199));
+        assertEquals(ArenaTier.OURO, ArenaRules.tierFor(1200));
+        assertEquals(ArenaTier.OURO, ArenaRules.tierFor(1499));
+        assertEquals(ArenaTier.PLATINA, ArenaRules.tierFor(1500));
+        assertEquals(ArenaTier.PLATINA, ArenaRules.tierFor(1899));
+        assertEquals(ArenaTier.DIAMANTE, ArenaRules.tierFor(1900));
         assertEquals(ArenaTier.DIAMANTE, ArenaRules.tierFor(5000));
     }
 
     @Test
     void pointsToNextTierCountsRemainingRating() {
-        assertEquals(100, ArenaRules.pointsToNextTier(800)); // bronze -> prata em 900
-        assertEquals(1, ArenaRules.pointsToNextTier(1099)); // prata -> ouro em 1100
-        assertEquals(0, ArenaRules.pointsToNextTier(1600)); // diamante (topo)
+        assertEquals(200, ArenaRules.pointsToNextTier(800)); // bronze -> prata em 1000
+        assertEquals(1, ArenaRules.pointsToNextTier(1199)); // prata -> ouro em 1200
+        assertEquals(0, ArenaRules.pointsToNextTier(2000)); // diamante (topo)
     }
 
     @Test

@@ -6,11 +6,11 @@ package com.dro.modules.arena.domain;
  */
 public enum ArenaTier {
 
-    BRONZE("Bronze", 0, 900),
-    PRATA("Prata", 900, 1100),
-    OURO("Ouro", 1100, 1300),
-    PLATINA("Platina", 1300, 1500),
-    DIAMANTE("Diamante", 1500, Integer.MAX_VALUE);
+    BRONZE("Bronze", 0, 1000),
+    PRATA("Prata", 1000, 1200),
+    OURO("Ouro", 1200, 1500),
+    PLATINA("Platina", 1500, 1900),
+    DIAMANTE("Diamante", 1900, Integer.MAX_VALUE);
 
     private final String label;
     private final int minRating;
