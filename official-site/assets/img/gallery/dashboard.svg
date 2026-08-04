@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#093f85"/><stop offset="1" stop-color="#29a9ff"/></linearGradient><pattern id="p" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="white" stroke-opacity=".08"/></pattern></defs>
+<rect width="1600" height="900" fill="#071b34"/><rect width="1600" height="900" fill="url(#g)" opacity=".78"/><rect width="1600" height="900" fill="url(#p)"/>
+<g fill="none" stroke="white" stroke-opacity=".24"><circle cx="1250" cy="240" r="210"/><circle cx="1250" cy="240" r="150"/><path d="M0 720L520 280 890 540 1600 130"/></g>
+<rect x="100" y="100" width="1400" height="700" rx="26" fill="#071b34" fill-opacity=".55" stroke="white" stroke-opacity=".28"/>
+<rect x="150" y="150" width="300" height="34" rx="17" fill="white" fill-opacity=".16"/><rect x="150" y="215" width="780" height="42" rx="12" fill="white" fill-opacity=".12"/>
+<rect x="150" y="320" width="850" height="390" rx="18" fill="#061426" fill-opacity=".7" stroke="white" stroke-opacity=".18"/>
+<rect x="1050" y="320" width="380" height="180" rx="18" fill="#061426" fill-opacity=".7"/><rect x="1050" y="530" width="380" height="180" rx="18" fill="#061426" fill-opacity=".7"/>
+<text x="800" y="420" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="62" font-weight="800">Dashboard do Jogador</text>
+<text x="800" y="490" text-anchor="middle" fill="white" fill-opacity=".78" font-family="Arial, sans-serif" font-size="28" letter-spacing="7">PAINEL DO PARCEIRO</text>
+<text x="800" y="770" text-anchor="middle" fill="white" fill-opacity=".55" font-family="Arial, sans-serif" font-size="21">SUBSTITUA ESTA IMAGEM POR UMA CAPTURA REAL DO JOGO</text>
+</svg>
