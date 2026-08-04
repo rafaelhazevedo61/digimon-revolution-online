@@ -30,6 +30,19 @@ function authHeaders() {
   return headers;
 }
 
+function handleAuthError(response) {
+  if (response.status === 401 || response.status === 403) {
+    clearAuth();
+    if (typeof navigateTo === "function") {
+      navigateTo("login");
+    } else {
+      window.location.hash = "#login";
+    }
+    return true;
+  }
+  return false;
+}
+
 async function apiGet(path, params = {}) {
   const url = new URL(`${CONFIG.API_BASE_URL}${path}`);
   Object.entries(params).forEach(([k, v]) => {
@@ -39,6 +52,7 @@ async function apiGet(path, params = {}) {
   const response = await fetch(url.toString(), { headers: authHeaders() });
 
   if (!response.ok) {
+    if (handleAuthError(response)) throw new Error("Sessão expirada. Faça login novamente.");
     const msg = await safeReadError(response);
     throw new Error(msg);
   }
@@ -55,6 +69,7 @@ async function apiPost(path, body = null) {
   const response = await fetch(`${CONFIG.API_BASE_URL}${path}`, opts);
 
   if (!response.ok) {
+    if (handleAuthError(response)) throw new Error("Sessão expirada. Faça login novamente.");
     const msg = await safeReadError(response);
     throw new Error(msg);
   }
@@ -72,6 +87,7 @@ async function apiPut(path, body) {
   });
 
   if (!response.ok) {
+    if (handleAuthError(response)) throw new Error("Sessão expirada. Faça login novamente.");
     const msg = await safeReadError(response);
     throw new Error(msg);
   }
