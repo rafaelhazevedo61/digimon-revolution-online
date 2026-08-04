@@ -1,14 +1,19 @@
 package com.dro.modules.arena.api;
 
+import com.dro.modules.arena.api.dto.request.BuyArenaShopRequest;
 import com.dro.modules.arena.api.dto.request.ChallengeArenaRequest;
 import com.dro.modules.arena.api.dto.response.ArenaHistoryEntryResponse;
 import com.dro.modules.arena.api.dto.response.ArenaLobbyResponse;
 import com.dro.modules.arena.api.dto.response.ArenaMatchResponse;
 import com.dro.modules.arena.api.dto.response.ArenaRankingEntryResponse;
+import com.dro.modules.arena.api.dto.response.ArenaShopResponse;
+import com.dro.modules.arena.api.dto.response.BuyArenaShopResponse;
+import com.dro.modules.arena.application.BuyArenaShopProductUseCase;
 import com.dro.modules.arena.application.ChallengeArenaUseCase;
 import com.dro.modules.arena.application.GetArenaHistoryUseCase;
 import com.dro.modules.arena.application.GetArenaLobbyUseCase;
 import com.dro.modules.arena.application.GetArenaRankingUseCase;
+import com.dro.modules.arena.application.GetArenaShopUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +30,8 @@ public class ArenaController {
     private final ChallengeArenaUseCase challengeArenaUseCase;
     private final GetArenaRankingUseCase getArenaRankingUseCase;
     private final GetArenaHistoryUseCase getArenaHistoryUseCase;
+    private final GetArenaShopUseCase getArenaShopUseCase;
+    private final BuyArenaShopProductUseCase buyArenaShopProductUseCase;
 
     @GetMapping("/lobby")
     public ResponseEntity<ArenaLobbyResponse> getLobby(
@@ -56,5 +63,20 @@ public class ArenaController {
             @RequestParam(defaultValue = "20") int size
     ) {
         return ResponseEntity.ok(getArenaHistoryUseCase.execute(authorization, page, size));
+    }
+
+    @GetMapping("/shop")
+    public ResponseEntity<ArenaShopResponse> getShop(
+            @RequestHeader("Authorization") String authorization
+    ) {
+        return ResponseEntity.ok(getArenaShopUseCase.execute(authorization));
+    }
+
+    @PostMapping("/shop/buy")
+    public ResponseEntity<BuyArenaShopResponse> buyFromShop(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody @Valid BuyArenaShopRequest request
+    ) {
+        return ResponseEntity.ok(buyArenaShopProductUseCase.execute(authorization, request));
     }
 }

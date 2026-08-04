@@ -120,6 +120,32 @@ class ArenaRulesTest {
     }
 
     @Test
+    void winArenaCoinsRewardsHarderWinsMore() {
+        int easyWin = ArenaRules.winArenaCoins(95);
+        int coinFlip = ArenaRules.winArenaCoins(50);
+        int hardWin = ArenaRules.winArenaCoins(5);
+        assertTrue(hardWin > coinFlip);
+        assertTrue(coinFlip > easyWin);
+    }
+
+    @Test
+    void winArenaCoinsClampedToBounds() {
+        assertEquals(ArenaRules.WIN_ARENA_COINS_MIN, ArenaRules.winArenaCoins(100));
+        for (int chance = 0; chance <= 100; chance++) {
+            int coins = ArenaRules.winArenaCoins(chance);
+            assertTrue(coins >= ArenaRules.WIN_ARENA_COINS_MIN);
+            assertTrue(coins <= ArenaRules.WIN_ARENA_COINS_MAX);
+        }
+    }
+
+    @Test
+    void lossStillGrantsParticipationCoins() {
+        assertEquals(ArenaRules.LOSS_ARENA_COINS, ArenaRules.lossArenaCoins());
+        assertTrue(ArenaRules.lossArenaCoins() > 0);
+        assertTrue(ArenaRules.lossArenaCoins() < ArenaRules.WIN_ARENA_COINS_MIN);
+    }
+
+    @Test
     void dailyLimitReachedWhenUsedMeetsLimit() {
         assertFalse(ArenaRules.dailyLimitReached(ArenaRules.DAILY_CHALLENGE_LIMIT - 1));
         assertTrue(ArenaRules.dailyLimitReached(ArenaRules.DAILY_CHALLENGE_LIMIT));

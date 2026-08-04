@@ -181,6 +181,32 @@ class ChallengeArenaUseCaseTest {
     }
 
     @Test
+    void victoryGrantsArenaCoinsToPlayer() {
+        stubDigimons();
+        stubPowers(1000.0, 100.0);
+
+        ArenaMatchResponse response = challengeWithRoll(1);
+
+        int expected = ArenaRules.winArenaCoins(response.winChance());
+        assertEquals(expected, response.arenaCoinsGained());
+        assertEquals(expected, player.getArenaCoins());
+        assertEquals(expected, response.arenaCoinsBalance());
+        verify(playerRepository).save(player);
+    }
+
+    @Test
+    void defeatStillGrantsParticipationArenaCoins() {
+        stubDigimons();
+        stubPowers(1000.0, 100.0);
+
+        ArenaMatchResponse response = challengeWithRoll(100);
+
+        assertFalse(response.victory());
+        assertEquals(ArenaRules.LOSS_ARENA_COINS, response.arenaCoinsGained());
+        assertEquals(ArenaRules.LOSS_ARENA_COINS, player.getArenaCoins());
+    }
+
+    @Test
     void realDefenderRatingAndStatsAreUpdatedAndPersisted() {
         stubDigimons();
         stubPowers(1000.0, 100.0);

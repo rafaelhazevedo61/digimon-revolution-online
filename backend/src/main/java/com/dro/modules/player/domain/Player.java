@@ -54,6 +54,10 @@ public class Player {
     @Column(name = "max_storage_slots", nullable = false)
     private int maxStorageSlots = 50;
 
+    @Column(name = "arena_coins", nullable = false)
+    @Builder.Default
+    private int arenaCoins = 0;
+
     public boolean hasSelectedStarter() {
         return starterSelected;
     }

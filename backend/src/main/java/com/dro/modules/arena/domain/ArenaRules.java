@@ -45,6 +45,25 @@ public class ArenaRules {
         return Math.abs(myRating - opponentRating) <= RATING_WINDOW;
     }
 
+    /** Moedas de Arena por combate — vitória rende mais, derrota ainda concede participação. */
+    public static final int WIN_ARENA_COINS_MIN = 15;
+    public static final int WIN_ARENA_COINS_MAX = 40;
+    public static final int LOSS_ARENA_COINS = 5;
+
+    /**
+     * Moedas de Arena por vitória: base {@link #WIN_ARENA_COINS_MIN} + bônus por dificuldade
+     * (quanto menor a chance de vitória, mais moedas), limitado a {@link #WIN_ARENA_COINS_MAX}.
+     */
+    public static int winArenaCoins(int winChance) {
+        int coins = WIN_ARENA_COINS_MIN + (100 - winChance) / 5;
+        return Math.min(WIN_ARENA_COINS_MAX, Math.max(WIN_ARENA_COINS_MIN, coins));
+    }
+
+    /** Moedas de Arena por derrota (participação). */
+    public static int lossArenaCoins() {
+        return LOSS_ARENA_COINS;
+    }
+
     /** Faixa da chance de vitória na arena (evita 0%/100% garantidos). */
     public static final int MIN_WIN_CHANCE = 5;
     public static final int MAX_WIN_CHANCE = 95;

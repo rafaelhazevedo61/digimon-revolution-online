@@ -13,5 +13,6 @@ public record ArenaLobbyResponse(
         int dailyChallengeLimit,
         int challengesUsedToday,
         int challengesRemaining,
+        int arenaCoins,
         List<ArenaOpponentResponse> opponents
 ) {}

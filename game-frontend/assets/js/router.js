@@ -17,6 +17,7 @@ const routes = {
   arena: renderArenaPage,
   "arena-ranking": renderArenaRankingPage,
   "arena-history": renderArenaHistoryPage,
+  "arena-shop": renderArenaShopPage,
   storage: renderStoragePage,
   more: renderMorePage
 };

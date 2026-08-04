@@ -22,6 +22,7 @@ async function renderArenaPage() {
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-bold px-1">Arena</h2>
         <div class="flex gap-3">
+          <button class="text-xs text-cyan-400 hover:text-cyan-300" onclick="navigateTo('arena-shop')">Loja</button>
           <button class="text-xs text-cyan-400 hover:text-cyan-300" onclick="navigateTo('arena-ranking')">Ranking</button>
           <button class="text-xs text-cyan-400 hover:text-cyan-300" onclick="navigateTo('arena-history')">Historico</button>
         </div>
@@ -61,6 +62,7 @@ function renderArenaLobby(lobby) {
         <span class="text-purple-300">Poder ${lobby.power}</span>
       </div>
       <div class="mt-2 text-xs text-slate-400">Energia: ${lobby.energy} (custo ${lobby.energyCost} por desafio)</div>
+      <div class="mt-1 text-xs text-amber-300">🪙 Moedas de Arena: ${lobby.arenaCoins || 0}</div>
       ${lobby.dailyChallengeLimit ? `<div class="mt-1 text-xs ${lobby.challengesRemaining > 0 ? "text-slate-400" : "text-red-400"}">
         Desafios hoje: ${lobby.challengesUsedToday}/${lobby.dailyChallengeLimit}
         (${lobby.challengesRemaining} restantes)
@@ -180,6 +182,10 @@ function renderArenaResult(result) {
           <span class="text-slate-400 text-xs">Recompensa</span>
           <span class="text-amber-400 font-bold">+${result.bitsGained} Bits</span>
         </div>` : ""}
+        ${result.arenaCoinsGained > 0 ? `<div class="flex items-center justify-between text-sm mt-1">
+          <span class="text-slate-400 text-xs">Moedas de Arena</span>
+          <span class="text-amber-300 font-bold">🪙 +${result.arenaCoinsGained} (${result.arenaCoinsBalance})</span>
+        </div>` : ""}
       </div>
 
       <div class="flex gap-2 w-full">
@@ -292,5 +298,79 @@ async function renderArenaHistoryPage() {
     document.getElementById("arena-history-list").innerHTML = `
       <div class="card border-red-900"><p class="text-red-300 text-sm">${escapeHtml(err.message)}</p></div>
     `;
+  }
+}
+
+async function renderArenaShopPage() {
+  const app = document.getElementById("app");
+  showBottomNav("more");
+
+  app.innerHTML = `
+    <div class="page-container">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold px-1">Loja da Arena</h2>
+        <button class="text-sm text-cyan-400" onclick="navigateTo('arena')">Voltar</button>
+      </div>
+      <div id="arena-shop-content">
+        <div class="card animate-pulse mb-3"><div class="h-16"></div></div>
+      </div>
+    </div>
+  `;
+
+  try {
+    const shop = await apiGet("/arena/shop");
+    renderArenaShop(shop);
+  } catch (err) {
+    document.getElementById("arena-shop-content").innerHTML = `
+      <div class="card border-red-900"><p class="text-red-300 text-sm">${escapeHtml(err.message)}</p></div>
+    `;
+  }
+}
+
+function renderArenaShop(shop) {
+  const container = document.getElementById("arena-shop-content");
+  const coins = shop.arenaCoins || 0;
+
+  if (!shop.products || shop.products.length === 0) {
+    container.innerHTML = `
+      <div class="card mb-3 text-center"><span class="text-amber-300 font-bold">🪙 ${coins} Moedas de Arena</span></div>
+      <div class="card text-center text-slate-400 text-sm">Nenhum item disponivel</div>
+    `;
+    return;
+  }
+
+  const productsHtml = shop.products.map(p => {
+    const canBuy = coins >= p.priceCoins;
+    return `
+      <div class="card-sm mb-2 flex items-center gap-3">
+        <div class="flex-1 min-w-0">
+          <span class="font-bold text-sm">${escapeHtml(p.name)}</span>
+          ${p.quantity > 1 ? `<span class="ml-1 text-xs text-slate-400">x${p.quantity}</span>` : ""}
+          <div class="text-xs text-amber-300 mt-0.5">🪙 ${p.priceCoins}</div>
+        </div>
+        <button
+          class="px-3 py-2 rounded-lg text-xs font-bold ${canBuy ? "btn-primary" : "bg-slate-700 text-slate-400 cursor-not-allowed"}"
+          ${canBuy ? `onclick="buyArenaShopItem('${p.code}', '${escapeHtml(p.name).replace(/'/g, "\\'")}')"` : "disabled"}>
+          Comprar
+        </button>
+      </div>
+    `;
+  }).join("");
+
+  container.innerHTML = `
+    <div class="card mb-3 text-center"><span class="text-amber-300 font-bold">🪙 ${coins} Moedas de Arena</span></div>
+    <p class="text-xs text-slate-400 mb-2 px-1">Ganhe moedas lutando na Arena (vitória rende mais, derrota também dá).</p>
+    ${productsHtml}
+  `;
+}
+
+async function buyArenaShopItem(productCode, productName) {
+  try {
+    const result = await apiPost("/arena/shop/buy", { productCode, quantity: 1 });
+    showToast(`Comprou ${result.quantity}x ${productName} (🪙 ${result.arenaCoinsBalance} restantes)`);
+    const shop = await apiGet("/arena/shop");
+    renderArenaShop(shop);
+  } catch (err) {
+    showToast(err.message, "error");
   }
 }

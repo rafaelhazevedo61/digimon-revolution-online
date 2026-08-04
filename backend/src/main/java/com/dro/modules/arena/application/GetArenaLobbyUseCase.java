@@ -139,6 +139,7 @@ public class GetArenaLobbyUseCase {
                 ArenaRules.DAILY_CHALLENGE_LIMIT,
                 (int) usedToday,
                 ArenaRules.remainingDailyChallenges(usedToday),
+                player.getArenaCoins(),
                 opponents
         );
     }

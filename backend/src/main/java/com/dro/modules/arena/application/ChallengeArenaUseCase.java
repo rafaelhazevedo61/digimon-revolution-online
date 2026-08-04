@@ -129,15 +129,19 @@ public class ChallengeArenaUseCase {
         }
 
         int bitsGained = 0;
+        int arenaCoinsGained;
         if (victory) {
             attacker.setArenaWins(attacker.getArenaWins() + 1);
             bitsGained = ArenaRules.winBits(attackerRatingBefore, defenderRatingBefore);
             attacker.setBits(attacker.getBits() + bitsGained);
+            arenaCoinsGained = ArenaRules.winArenaCoins(winChance);
             if (!defenderIsBot) defender.setArenaLosses(defender.getArenaLosses() + 1);
         } else {
             attacker.setArenaLosses(attacker.getArenaLosses() + 1);
+            arenaCoinsGained = ArenaRules.lossArenaCoins();
             if (!defenderIsBot) defender.setArenaWins(defender.getArenaWins() + 1);
         }
+        player.setArenaCoins(player.getArenaCoins() + arenaCoinsGained);
 
         try {
             digimonRepository.save(attacker);
@@ -151,6 +155,8 @@ public class ChallengeArenaUseCase {
             throw new ConflictException(
                     "O oponente foi atualizado por outra partida ao mesmo tempo. Tente novamente.");
         }
+
+        playerRepository.save(player);
 
         int attackerRatingChange = attackerRatingAfter - attackerRatingBefore;
         int defenderRatingChange = defenderRatingAfter - defenderRatingBefore;
@@ -183,7 +189,9 @@ public class ChallengeArenaUseCase {
                 defenderPower,
                 attackerRatingChange,
                 attackerRatingAfter,
-                bitsGained
+                bitsGained,
+                arenaCoinsGained,
+                player.getArenaCoins()
         );
     }
 }

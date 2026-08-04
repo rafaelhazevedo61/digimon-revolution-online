@@ -8,5 +8,7 @@ public record ArenaMatchResponse(
         double defenderPower,
         int ratingChange,
         int newRating,
-        int bitsGained
+        int bitsGained,
+        int arenaCoinsGained,
+        int arenaCoinsBalance
 ) {}
