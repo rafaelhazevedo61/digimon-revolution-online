@@ -146,6 +146,33 @@ class ArenaRulesTest {
     }
 
     @Test
+    void tierForMapsRatingToBand() {
+        assertEquals(ArenaTier.BRONZE, ArenaRules.tierFor(0));
+        assertEquals(ArenaTier.BRONZE, ArenaRules.tierFor(899));
+        assertEquals(ArenaTier.PRATA, ArenaRules.tierFor(900));
+        assertEquals(ArenaTier.PRATA, ArenaRules.tierFor(1099));
+        assertEquals(ArenaTier.OURO, ArenaRules.tierFor(1100));
+        assertEquals(ArenaTier.OURO, ArenaRules.tierFor(1299));
+        assertEquals(ArenaTier.PLATINA, ArenaRules.tierFor(1300));
+        assertEquals(ArenaTier.PLATINA, ArenaRules.tierFor(1499));
+        assertEquals(ArenaTier.DIAMANTE, ArenaRules.tierFor(1500));
+        assertEquals(ArenaTier.DIAMANTE, ArenaRules.tierFor(5000));
+    }
+
+    @Test
+    void pointsToNextTierCountsRemainingRating() {
+        assertEquals(100, ArenaRules.pointsToNextTier(800)); // bronze -> prata em 900
+        assertEquals(1, ArenaRules.pointsToNextTier(1099)); // prata -> ouro em 1100
+        assertEquals(0, ArenaRules.pointsToNextTier(1600)); // diamante (topo)
+    }
+
+    @Test
+    void nextTierIsNullOnlyAtTop() {
+        assertEquals(ArenaTier.DIAMANTE, ArenaTier.PLATINA.next());
+        assertNull(ArenaTier.DIAMANTE.next());
+    }
+
+    @Test
     void dailyLimitReachedWhenUsedMeetsLimit() {
         assertFalse(ArenaRules.dailyLimitReached(ArenaRules.DAILY_CHALLENGE_LIMIT - 1));
         assertTrue(ArenaRules.dailyLimitReached(ArenaRules.DAILY_CHALLENGE_LIMIT));

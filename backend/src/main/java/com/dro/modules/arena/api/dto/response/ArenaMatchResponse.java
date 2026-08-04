@@ -10,5 +10,6 @@ public record ArenaMatchResponse(
         int newRating,
         int bitsGained,
         int arenaCoinsGained,
-        int arenaCoinsBalance
+        int arenaCoinsBalance,
+        String tier
 ) {}

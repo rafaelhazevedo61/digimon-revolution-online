@@ -1,6 +1,7 @@
 package com.dro.modules.arena.application;
 
 import com.dro.modules.arena.api.dto.response.ArenaRankingEntryResponse;
+import com.dro.modules.arena.domain.ArenaRules;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
@@ -55,7 +56,8 @@ public class GetArenaRankingUseCase {
                     d.getArenaWins(),
                     d.getArenaLosses(),
                     d.getId(),
-                    d.getPlayerId()
+                    d.getPlayerId(),
+                    ArenaRules.tierFor(d.getArenaRating()).getLabel()
             ));
         }
         return entries;

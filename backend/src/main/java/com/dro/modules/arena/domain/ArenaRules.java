@@ -108,6 +108,20 @@ public class ArenaRules {
         return usedToday >= DAILY_CHALLENGE_LIMIT;
     }
 
+    /** Tier de Arena correspondente a um rating. */
+    public static ArenaTier tierFor(int rating) {
+        return ArenaTier.fromRating(rating);
+    }
+
+    /**
+     * Pontos que faltam para o próximo tier (0 se já está no tier máximo).
+     */
+    public static int pointsToNextTier(int rating) {
+        ArenaTier tier = ArenaTier.fromRating(rating);
+        ArenaTier next = tier.next();
+        return next == null ? 0 : Math.max(0, next.getMinRating() - rating);
+    }
+
     /** Score esperado do jogador A contra B (probabilidade ELO, 0..1). */
     public static double expectedScore(int ratingA, int ratingB) {
         return 1.0 / (1.0 + Math.pow(10, (ratingB - ratingA) / 400.0));

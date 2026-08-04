@@ -14,5 +14,8 @@ public record ArenaLobbyResponse(
         int challengesUsedToday,
         int challengesRemaining,
         int arenaCoins,
+        String tier,
+        String nextTier,
+        int pointsToNextTier,
         List<ArenaOpponentResponse> opponents
 ) {}

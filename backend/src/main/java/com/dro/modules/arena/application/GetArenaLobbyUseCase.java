@@ -124,7 +124,8 @@ public class GetArenaLobbyUseCase {
                     winChance,
                     ArenaRules.winBits(me.getArenaRating(), d.getArenaRating()),
                     d.isBot(),
-                    cooldownSecondsRemaining
+                    cooldownSecondsRemaining,
+                    ArenaRules.tierFor(d.getArenaRating()).getLabel()
             );
         }).toList();
 
@@ -140,6 +141,11 @@ public class GetArenaLobbyUseCase {
                 (int) usedToday,
                 ArenaRules.remainingDailyChallenges(usedToday),
                 player.getArenaCoins(),
+                ArenaRules.tierFor(me.getArenaRating()).getLabel(),
+                ArenaRules.tierFor(me.getArenaRating()).next() == null
+                        ? null
+                        : ArenaRules.tierFor(me.getArenaRating()).next().getLabel(),
+                ArenaRules.pointsToNextTier(me.getArenaRating()),
                 opponents
         );
     }

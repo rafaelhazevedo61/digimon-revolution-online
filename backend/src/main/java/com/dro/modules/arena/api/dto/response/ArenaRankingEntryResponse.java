@@ -14,5 +14,6 @@ public record ArenaRankingEntryResponse(
         int wins,
         int losses,
         UUID digimonId,
-        UUID playerId
+        UUID playerId,
+        String tier
 ) {}

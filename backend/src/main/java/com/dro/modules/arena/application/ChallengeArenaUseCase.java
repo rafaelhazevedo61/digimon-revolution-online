@@ -191,7 +191,8 @@ public class ChallengeArenaUseCase {
                 attackerRatingAfter,
                 bitsGained,
                 arenaCoinsGained,
-                player.getArenaCoins()
+                player.getArenaCoins(),
+                ArenaRules.tierFor(attackerRatingAfter).getLabel()
         );
     }
 }

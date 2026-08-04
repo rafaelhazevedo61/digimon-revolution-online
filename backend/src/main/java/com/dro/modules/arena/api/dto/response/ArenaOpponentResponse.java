@@ -15,5 +15,6 @@ public record ArenaOpponentResponse(
         int winChance,
         int bitsReward,
         boolean bot,
-        int cooldownSecondsRemaining
+        int cooldownSecondsRemaining,
+        String tier
 ) {}

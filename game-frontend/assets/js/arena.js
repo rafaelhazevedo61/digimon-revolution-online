@@ -6,6 +6,20 @@ function arenaWinChanceColor(chance) {
   return chance >= 60 ? "text-green-400" : chance >= 40 ? "text-yellow-400" : "text-red-400";
 }
 
+const ARENA_TIER_STYLES = {
+  Bronze: "bg-amber-900/60 text-amber-300 border border-amber-700",
+  Prata: "bg-slate-500/40 text-slate-100 border border-slate-400",
+  Ouro: "bg-yellow-700/50 text-yellow-300 border border-yellow-500",
+  Platina: "bg-cyan-800/50 text-cyan-200 border border-cyan-500",
+  Diamante: "bg-fuchsia-800/50 text-fuchsia-200 border border-fuchsia-400"
+};
+
+function arenaTierBadge(tier) {
+  if (!tier) return "";
+  const cls = ARENA_TIER_STYLES[tier] || "bg-slate-600 text-slate-200";
+  return `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${cls}">${escapeHtml(tier)}</span>`;
+}
+
 function arenaFormatCooldown(seconds) {
   if (seconds <= 0) return "";
   const min = Math.floor(seconds / 60);
@@ -52,9 +66,15 @@ function renderArenaLobby(lobby) {
   const myCard = `
     <div class="card mb-4">
       <div class="flex items-center justify-between mb-2">
-        <span class="font-bold text-sm">${escapeHtml(lobby.digimonName)}</span>
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="font-bold text-sm truncate">${escapeHtml(lobby.digimonName)}</span>
+          ${arenaTierBadge(lobby.tier)}
+        </div>
         <span class="text-lg font-bold text-cyan-400">${lobby.rating} <span class="text-xs text-slate-400">pts</span></span>
       </div>
+      ${lobby.nextTier ? `<div class="text-[11px] text-slate-400 mb-2">
+        Faltam <span class="text-cyan-300 font-bold">${lobby.pointsToNextTier} pts</span> para ${escapeHtml(lobby.nextTier)}
+      </div>` : `<div class="text-[11px] text-fuchsia-300 mb-2">Tier máximo alcançado 💎</div>`}
       <div class="flex items-center gap-4 text-xs text-slate-300">
         <span class="text-green-400">${lobby.wins}V</span>
         <span class="text-red-400">${lobby.losses}D</span>
@@ -91,6 +111,7 @@ function renderArenaLobby(lobby) {
           <div class="flex items-center gap-2">
             <span class="font-bold text-sm truncate">${escapeHtml(o.digimonName)}</span>
             ${o.bot ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-600 text-slate-200">BOT</span>` : ""}
+            ${arenaTierBadge(o.tier)}
             <span class="text-[10px] text-slate-500">${escapeHtml(ARENA_STAGE_LABELS[o.stage] || o.stage)} Lv.${o.level}</span>
           </div>
           <div class="text-xs text-slate-400 mt-0.5">
@@ -176,7 +197,7 @@ function renderArenaResult(result) {
       <div class="card-sm w-full mb-3">
         <div class="flex items-center justify-between text-sm">
           <span class="text-slate-400 text-xs">Rating</span>
-          <span class="font-bold ${change >= 0 ? "text-green-400" : "text-red-400"}">${changeStr} → ${result.newRating} pts</span>
+          <span class="font-bold ${change >= 0 ? "text-green-400" : "text-red-400"}">${changeStr} → ${result.newRating} pts ${arenaTierBadge(result.tier)}</span>
         </div>
         ${result.bitsGained > 0 ? `<div class="flex items-center justify-between text-sm mt-1">
           <span class="text-slate-400 text-xs">Recompensa</span>
@@ -232,6 +253,7 @@ async function renderArenaRankingPage() {
           <span class="w-8 text-center text-sm font-bold">${medal}</span>
           <div class="flex-1 min-w-0">
             <span class="font-bold text-sm">${escapeHtml(e.digimonName)}</span>
+            ${arenaTierBadge(e.tier)}
             ${mine ? `<span class="ml-1 text-[10px] text-cyan-400">(voce)</span>` : ""}
             <div class="text-xs text-slate-400 mt-0.5">
               @${escapeHtml(e.playerName)} · ${escapeHtml(ARENA_STAGE_LABELS[e.stage] || e.stage)} Lv.${e.level}
