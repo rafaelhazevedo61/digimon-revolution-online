@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0759b8" />
+  <meta name="description" content="Galeria de imagens e registros do desenvolvimento do Digimon Revolution Online." />
+  <title>Galeria — Digimon Revolution Online</title>
+  <link rel="icon" type="image/png" href="assets/img/icon-192.png" />
+  <link rel="stylesheet" href="assets/css/site.css" />
+</head>
+<body class="internal-page">
+  <a class="skip-link" href="#main">Ir para o conteúdo</a>
+  <header class="site-header is-scrolled" id="topo">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="Digimon Revolution Online - início"><span class="brand-mark" aria-hidden="true"><span></span></span><span class="brand-copy"><strong>DIGIMON</strong><small>REVOLUTION ONLINE</small></span></a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav" aria-label="Abrir menu"><span></span><span></span><span></span></button>
+      <nav class="main-nav" id="main-nav" aria-label="Navegação principal">
+        <a href="index.html#sobre">O jogo</a><a href="index.html#sistemas">Sistemas</a><a href="index.html#roadmap">Roadmap</a><a href="noticias.html">Notícias</a><a class="active" href="galeria.html">Galeria</a><a href="index.html#faq">FAQ</a>
+      </nav>
+      <a class="button button-small button-primary header-cta" href="../game-frontend/index.html">Jogar agora</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="gallery-hero">
+      <div class="digital-grid" aria-hidden="true"></div>
+      <div class="container gallery-hero-inner">
+        <span class="section-kicker">REGISTROS DO PROJETO</span>
+        <h1>Galeria de desenvolvimento</h1>
+        <p>Acompanhe interfaces, sistemas e momentos marcantes da construção do Digimon Revolution Online.</p>
+      </div>
+    </section>
+
+    <section class="section gallery-page-section">
+      <div class="container">
+        <div class="gallery-toolbar" aria-label="Filtrar galeria">
+          <button class="gallery-filter is-active" type="button" data-gallery-filter="Todos">Todos</button>
+          <button class="gallery-filter" type="button" data-gallery-filter="Jornada">Jornada</button>
+          <button class="gallery-filter" type="button" data-gallery-filter="Interface">Interface</button>
+          <button class="gallery-filter" type="button" data-gallery-filter="Gameplay">Gameplay</button>
+          <button class="gallery-filter" type="button" data-gallery-filter="Progressão">Progressão</button>
+        </div>
+        <div class="gallery-grid gallery-grid-full" data-gallery-grid="full"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-main"><div class="footer-brand"><a class="brand" href="index.html"><span class="brand-mark"><span></span></span><span class="brand-copy"><strong>DIGIMON</strong><small>REVOLUTION ONLINE</small></span></a><p>Um projeto independente criado por fãs para fãs do universo Digimon.</p></div><div class="footer-links"><div><strong>Portal</strong><a href="index.html#sobre">O jogo</a><a href="index.html#sistemas">Sistemas</a><a href="noticias.html">Notícias</a><a href="galeria.html">Galeria</a></div><div><strong>Jogar</strong><a href="../game-frontend/index.html">Abrir jogo</a><a href="index.html#faq">FAQ</a><span class="muted-link">Wiki — em breve</span></div></div></div>
+    <div class="container footer-bottom"><span>© <span id="current-year"></span> Digimon Revolution Online.</span><span>Projeto não oficial e sem afiliação à Bandai, Toei Animation ou detentores da marca Digimon.</span></div>
+  </footer>
+
+  <div class="gallery-modal" data-gallery-modal hidden><div class="gallery-modal-backdrop" data-gallery-backdrop></div><div class="gallery-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="gallery-modal-title"><button class="gallery-modal-close" type="button" data-gallery-close aria-label="Fechar imagem">×</button><div class="gallery-modal-media"><img data-gallery-modal-image src="" alt="" /></div><div class="gallery-modal-copy"><span data-gallery-modal-category></span><h2 id="gallery-modal-title" data-gallery-modal-title></h2><p data-gallery-modal-description></p></div></div></div>
+
+  <script src="assets/js/site.js"></script>
+  <script src="assets/js/gallery-data.js"></script>
+  <script src="assets/js/gallery.js"></script>
+</body>
+</html>
