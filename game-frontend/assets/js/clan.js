@@ -181,10 +181,11 @@ function renderClanDetail(clan) {
         ${canManage ? `<button class="text-xs text-cyan-400" onclick="clanEdit('${clan.id}')">Editar</button>` : ""}
       </div>
 
-      <div class="grid grid-cols-3 gap-2 mt-4 text-center">
+      <div class="grid grid-cols-4 gap-2 mt-4 text-center">
         <div class="card-sm"><p class="text-xs text-slate-500">Nível</p><p class="font-bold text-cyan-400">${clan.level}</p></div>
         <div class="card-sm"><p class="text-xs text-slate-500">Membros</p><p class="font-bold">${clan.memberCount}/${clan.maxMembers}</p></div>
-        <div class="card-sm"><p class="text-xs text-slate-500">Líder</p><p class="font-bold text-sm">${escapeHtml(clan.leaderUsername)}</p></div>
+        <div class="card-sm"><p class="text-xs text-slate-500">Vagas do nível</p><p class="font-bold text-green-400">${clan.baseMaxMembers}</p></div>
+        <div class="card-sm"><p class="text-xs text-slate-500">Vagas compradas</p><p class="font-bold text-amber-400">${clan.boughtSlots}</p></div>
       </div>
 
       <div class="mt-4">
@@ -195,7 +196,13 @@ function renderClanDetail(clan) {
         <div class="w-full bg-slate-800 rounded-full h-2"><div class="bg-cyan-500 h-2 rounded-full" style="width:${xpPercent}%"></div></div>
       </div>
 
-      ${isLeader ? `<button class="btn-primary w-full mt-3" onclick="clanBuySlot('${clan.id}')">Comprar vaga extra</button>` : ""}
+      ${isLeader ? `
+        <button class="btn-primary w-full mt-3" onclick="clanBuySlot('${clan.id}')">
+          Comprar vaga extra (${clan.nextSlotCost} bits)
+        </button>
+        <p class="text-xs text-slate-500 text-center mt-1">As vagas também aumentam automaticamente ao subir de nível do clã.</p>
+      ` : ""}
+      ${!isLeader ? `<p class="text-xs text-slate-500 text-center mt-3">As vagas aumentam automaticamente ao subir de nível do clã.</p>` : ""}
     </div>
 
     <h3 class="font-bold mb-2">Membros</h3>
