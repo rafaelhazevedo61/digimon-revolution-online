@@ -24,7 +24,7 @@ public class GetClanRankingUseCase {
     private final ClanResponseMapper mapper;
 
     public Page<ClanRankingEntryResponse> execute(int page, int size) {
-        List<Clan> all = clanRepository.findAll(Sort.by("createdAt").descending());
+        List<Clan> all = clanRepository.findAll();
 
         List<ClanRankingEntryResponse> ranked = all.stream()
                 .map(c -> {
@@ -32,19 +32,22 @@ public class GetClanRankingUseCase {
                     return mapper.toRankingEntry(0, c, members);
                 })
                 .sorted(Comparator.comparingLong(ClanRankingEntryResponse::totalPower).reversed()
-                        .thenComparing(ClanRankingEntryResponse::memberCount).reversed())
+                        .thenComparingInt(ClanRankingEntryResponse::memberCount).reversed()
+                        .thenComparing(ClanRankingEntryResponse::name))
                 .toList();
 
-        List<ClanRankingEntryResponse> withPosition = ranked.stream()
-                .map(entry -> new ClanRankingEntryResponse(
-                        ranked.indexOf(entry) + 1,
-                        entry.id(),
-                        entry.name(),
-                        entry.tag(),
-                        entry.memberCount(),
-                        entry.totalPower()
-                ))
-                .toList();
+        List<ClanRankingEntryResponse> withPosition = new java.util.ArrayList<>();
+        for (int i = 0; i < ranked.size(); i++) {
+            ClanRankingEntryResponse entry = ranked.get(i);
+            withPosition.add(new ClanRankingEntryResponse(
+                    i + 1,
+                    entry.id(),
+                    entry.name(),
+                    entry.tag(),
+                    entry.memberCount(),
+                    entry.totalPower()
+            ));
+        }
 
         int start = page * size;
         if (start >= withPosition.size()) {
