@@ -4,8 +4,6 @@ import com.dro.modules.boss.api.dto.response.BossChallengeResponse;
 import com.dro.modules.boss.api.dto.response.DropRewardResponse;
 import com.dro.modules.boss.domain.*;
 import com.dro.modules.boss.infra.BossAttemptRepository;
-import com.dro.modules.clan.application.ClanExperienceService;
-import com.dro.modules.clan.domain.ClanRules;
 import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
@@ -45,7 +43,6 @@ public class ChallengeBossUseCase {
     private final EquipmentRepository equipmentRepository;
     private final AddItemUseCase addItemUseCase;
     private final GrantEquipmentUseCase grantEquipmentUseCase;
-    private final ClanExperienceService clanExperienceService;
 
     @Transactional
     public BossChallengeResponse execute(String token, String bossCode, UUID digimonId) {
@@ -137,7 +134,6 @@ public class ChallengeBossUseCase {
                 .build();
 
         bossAttemptRepository.save(attempt);
-        clanExperienceService.grantExperience(playerId, ClanRules.experienceForBoss());
 
         return new BossChallengeResponse(
                 boss.getCode(),

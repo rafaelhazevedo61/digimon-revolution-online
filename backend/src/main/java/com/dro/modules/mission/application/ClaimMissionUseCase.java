@@ -14,8 +14,6 @@ import com.dro.modules.mission.domain.MissionReward;
 import com.dro.modules.mission.domain.PlayerMissionProgress;
 import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
-import com.dro.modules.clan.application.ClanExperienceService;
-import com.dro.modules.clan.domain.ClanRules;
 import com.dro.modules.mission.infra.PlayerMissionProgressRepository;
 import com.dro.modules.tutorial.application.TutorialService;
 import com.dro.modules.tutorial.domain.TutorialStep;
@@ -39,7 +37,6 @@ public class ClaimMissionUseCase {
     private final AddItemUseCase addItemUseCase;
     private final MissionDefinitionRepository missionDefinitionRepository;
     private final TutorialService tutorialService;
-    private final ClanExperienceService clanExperienceService;
 
     public ClaimMissionUseCase(
             MissionInstanceRepository missionInstanceRepository,
@@ -47,8 +44,7 @@ public class ClaimMissionUseCase {
             PlayerMissionProgressRepository progressRepository,
             AddItemUseCase addItemUseCase,
             MissionDefinitionRepository missionDefinitionRepository,
-            TutorialService tutorialService,
-            ClanExperienceService clanExperienceService
+            TutorialService tutorialService
     ) {
         this.missionInstanceRepository = missionInstanceRepository;
         this.digimonRepository = digimonRepository;
@@ -56,7 +52,6 @@ public class ClaimMissionUseCase {
         this.addItemUseCase = addItemUseCase;
         this.missionDefinitionRepository = missionDefinitionRepository;
         this.tutorialService = tutorialService;
-        this.clanExperienceService = clanExperienceService;
     }
 
     @Transactional
@@ -129,7 +124,6 @@ public class ClaimMissionUseCase {
         digimonRepository.save(digimon);
 
         tutorialService.completeStep(playerId, TutorialStep.COMPLETE_MISSION);
-        clanExperienceService.grantExperience(playerId, ClanRules.experienceForMission());
 
         return new MissionResultResponse(
                 mission.getId(),
