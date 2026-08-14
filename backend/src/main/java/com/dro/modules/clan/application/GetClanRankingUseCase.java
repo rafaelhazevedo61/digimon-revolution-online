@@ -31,9 +31,13 @@ public class GetClanRankingUseCase {
                     List<Player> members = playerRepository.findByClanId(c.getId());
                     return mapper.toRankingEntry(0, c, members);
                 })
-                .sorted(Comparator.comparingLong(ClanRankingEntryResponse::totalPower).reversed()
-                        .thenComparingInt(ClanRankingEntryResponse::memberCount).reversed()
-                        .thenComparing(ClanRankingEntryResponse::name))
+                .sorted((a, b) -> {
+                    int powerCmp = Long.compare(b.totalPower(), a.totalPower());
+                    if (powerCmp != 0) return powerCmp;
+                    int memberCmp = Integer.compare(b.memberCount(), a.memberCount());
+                    if (memberCmp != 0) return memberCmp;
+                    return a.name().compareToIgnoreCase(b.name());
+                })
                 .toList();
 
         List<ClanRankingEntryResponse> withPosition = new java.util.ArrayList<>();
