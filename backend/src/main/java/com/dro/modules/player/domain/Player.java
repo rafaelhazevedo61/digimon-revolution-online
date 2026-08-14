@@ -1,5 +1,6 @@
 package com.dro.modules.player.domain;
 
+import com.dro.modules.clan.domain.ClanRole;
 import com.dro.modules.digitama.domain.enums.DigitamaType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -57,6 +58,16 @@ public class Player {
     @Column(name = "arena_coins", nullable = false)
     @Builder.Default
     private int arenaCoins = 0;
+
+    @Column(name = "clan_id")
+    private UUID clanId;
+
+    @Column(name = "clan_role")
+    @Enumerated(EnumType.STRING)
+    private ClanRole clanRole;
+
+    @Column(name = "clan_joined_at")
+    private LocalDateTime clanJoinedAt;
 
     public boolean hasSelectedStarter() {
         return starterSelected;

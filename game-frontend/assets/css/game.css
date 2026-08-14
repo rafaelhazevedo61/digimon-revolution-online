@@ -91,6 +91,34 @@ body {
   color: white;
 }
 
+.btn-secondary {
+  background: #334155;
+  color: #e2e8f0;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-secondary:hover { opacity: 0.9; }
+
+.btn-red {
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-red:hover { opacity: 0.9; }
+
 /* ===================== Tabs ===================== */
 .tab-btn {
   flex: 1;

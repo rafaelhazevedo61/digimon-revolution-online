@@ -28,6 +28,13 @@ async function renderMorePage() {
             <p class="text-xs text-slate-400">Top jogadores</p>
           </div>
         </button>
+        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('clans')">
+          <span class="text-2xl">🛡️</span>
+          <div>
+            <p class="font-bold text-sm">Clãs</p>
+            <p class="text-xs text-slate-400">Crie ou entre em um clã</p>
+          </div>
+        </button>
         <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('incubation')">
           <span class="text-2xl">🥚</span>
           <div>

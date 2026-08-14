@@ -97,6 +97,41 @@ async function apiPut(path, body) {
   try { return JSON.parse(text); } catch { return text; }
 }
 
+async function apiPatch(path, body) {
+  const response = await fetch(`${CONFIG.API_BASE_URL}${path}`, {
+    method: "PATCH",
+    headers: authHeaders(),
+    body: JSON.stringify(body)
+  });
+
+  if (!response.ok) {
+    if (handleAuthError(response)) throw new Error("Sessão expirada. Faça login novamente.");
+    const msg = await safeReadError(response);
+    throw new Error(msg);
+  }
+
+  const text = await response.text();
+  if (!text) return null;
+  try { return JSON.parse(text); } catch { return text; }
+}
+
+async function apiDelete(path) {
+  const response = await fetch(`${CONFIG.API_BASE_URL}${path}`, {
+    method: "DELETE",
+    headers: authHeaders()
+  });
+
+  if (!response.ok) {
+    if (handleAuthError(response)) throw new Error("Sessão expirada. Faça login novamente.");
+    const msg = await safeReadError(response);
+    throw new Error(msg);
+  }
+
+  const text = await response.text();
+  if (!text) return null;
+  try { return JSON.parse(text); } catch { return text; }
+}
+
 async function safeReadError(response) {
   try {
     const data = await response.json();

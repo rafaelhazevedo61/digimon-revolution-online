@@ -1,5 +1,7 @@
 package com.dro.modules.digimon.application;
 
+import com.dro.modules.clan.application.ClanExperienceService;
+import com.dro.modules.clan.domain.ClanRules;
 import com.dro.modules.digimon.domain.*;
 import com.dro.modules.digimon.domain.enums.*;
 import com.dro.modules.digimon.infra.DigimonInfosRepository;
@@ -46,6 +48,7 @@ public class RebirthUseCase {
     private final MissionInstanceRepository missionInstanceRepository;
     private final DigimonInfosRepository digimonInfosRepository;
     private final EvolutionLineRepository evolutionLineRepository;
+    private final ClanExperienceService clanExperienceService;
 
     private final Random random = new Random();
 
@@ -87,6 +90,8 @@ public class RebirthUseCase {
         inventoryRepository.save(dataCore);
 
         updateActiveDigimonIfNeeded(player, oldDigimon, newDigimon);
+
+        clanExperienceService.grantExperience(playerId, ClanRules.experienceForRebirth());
     }
 
     private UUID extractPlayerId(String token) {

@@ -4,6 +4,8 @@ import com.dro.modules.arena.api.dto.response.ArenaMatchResponse;
 import com.dro.modules.arena.domain.ArenaMatch;
 import com.dro.modules.arena.domain.ArenaRules;
 import com.dro.modules.arena.infra.ArenaMatchRepository;
+import com.dro.modules.clan.application.ClanExperienceService;
+import com.dro.modules.clan.domain.ClanRules;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
@@ -32,6 +34,7 @@ public class ChallengeArenaUseCase {
     private final DigimonRepository digimonRepository;
     private final ArenaMatchRepository arenaMatchRepository;
     private final DigimonPowerService digimonPowerService;
+    private final ClanExperienceService clanExperienceService;
 
     @Transactional
     public ArenaMatchResponse execute(String token, UUID opponentDigimonId) {
@@ -180,6 +183,11 @@ public class ChallengeArenaUseCase {
                 .build();
 
         arenaMatchRepository.save(match);
+
+        clanExperienceService.grantExperience(playerId, ClanRules.experienceForArena(victory));
+        if (!defenderIsBot) {
+            clanExperienceService.grantExperience(defender.getPlayerId(), ClanRules.experienceForArena(!victory));
+        }
 
         return new ArenaMatchResponse(
                 victory,
