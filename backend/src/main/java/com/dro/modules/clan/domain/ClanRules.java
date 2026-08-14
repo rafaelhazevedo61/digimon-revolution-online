@@ -21,6 +21,7 @@ public class ClanRules {
     public static final int INITIAL_MAX_MEMBERS = 5;
     public static final int CREATE_COST = 0; // bits; 0 no MVP, ajustável aqui
     public static final int SLOT_BASE_COST = 500; // bits
+    public static final int MAX_BOUGHT_SLOTS = 10; // limite de vagas extras compráveis
     public static final int MAX_LEVEL = 20;
 
     private static final List<LevelBonus> LEVEL_BONUSES = List.of(
@@ -124,7 +125,14 @@ public class ClanRules {
     }
 
     public static int slotCost(int boughtSlots) {
+        if (boughtSlots >= MAX_BOUGHT_SLOTS) {
+            return 0;
+        }
         return SLOT_BASE_COST * (int) Math.pow(2, boughtSlots);
+    }
+
+    public static boolean isMaxSlotsReached(int boughtSlots) {
+        return boughtSlots >= MAX_BOUGHT_SLOTS;
     }
 
     public static boolean canManageClanInfo(ClanRole role) {

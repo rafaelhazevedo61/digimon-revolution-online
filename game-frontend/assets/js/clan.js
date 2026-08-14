@@ -197,12 +197,14 @@ function renderClanDetail(clan) {
       </div>
 
       ${isLeader ? `
-        <button class="btn-primary w-full mt-3" onclick="clanBuySlot('${clan.id}')">
-          Comprar vaga extra (${clan.nextSlotCost} bits)
-        </button>
+        ${clan.nextSlotCost > 0 ? `
+          <button class="btn-primary w-full mt-3" onclick="clanBuySlot('${clan.id}')">
+            Comprar vaga extra (${clan.nextSlotCost} bits)
+          </button>
+          <p class="text-xs text-slate-500 text-center mt-1">Limite de vagas extras: ${clan.boughtSlots}/${clan.maxBoughtSlots}</p>
+        ` : `<p class="text-xs text-amber-400 text-center mt-3">Limite de vagas extras atingido (${clan.maxBoughtSlots}/${clan.maxBoughtSlots})</p>`}
         <p class="text-xs text-slate-500 text-center mt-1">As vagas também aumentam automaticamente ao subir de nível do clã.</p>
-      ` : ""}
-      ${!isLeader ? `<p class="text-xs text-slate-500 text-center mt-3">As vagas aumentam automaticamente ao subir de nível do clã.</p>` : ""}
+      ` : `<p class="text-xs text-slate-500 text-center mt-3">As vagas aumentam automaticamente ao subir de nível do clã.</p>`}
     </div>
 
     <h3 class="font-bold mb-2">Membros</h3>

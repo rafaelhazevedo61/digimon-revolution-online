@@ -14,6 +14,7 @@ public record ClanResponse(
         String emblem,
         int baseMaxMembers,
         int boughtSlots,
+        int maxBoughtSlots,
         int maxMembers,
         int nextSlotCost,
         int memberCount,

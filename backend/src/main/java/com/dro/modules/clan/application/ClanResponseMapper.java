@@ -50,6 +50,7 @@ public class ClanResponseMapper {
                 clan.getEmblem(),
                 clan.getMaxMembers(),
                 clan.getBoughtSlots(),
+                ClanRules.MAX_BOUGHT_SLOTS,
                 clan.getEffectiveMaxMembers(),
                 ClanRules.slotCost(clan.getBoughtSlots()),
                 members.size(),

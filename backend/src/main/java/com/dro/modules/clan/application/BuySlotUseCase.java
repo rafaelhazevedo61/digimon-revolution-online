@@ -41,6 +41,10 @@ public class BuySlotUseCase {
         Digimon activeDigimon = digimonRepository.findById(player.getActiveDigimonId())
                 .orElseThrow(() -> new NotFoundException("Active Digimon not found"));
 
+        if (ClanRules.isMaxSlotsReached(clan.getBoughtSlots())) {
+            throw new BadRequestException("Maximum bought slots reached (" + ClanRules.MAX_BOUGHT_SLOTS + ")");
+        }
+
         int cost = ClanRules.slotCost(clan.getBoughtSlots());
         if (activeDigimon.getBits() < cost) {
             throw new BadRequestException("Not enough bits to buy a clan slot");
