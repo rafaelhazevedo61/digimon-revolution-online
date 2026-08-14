@@ -159,6 +159,7 @@ async function hatchConfirm(digimonId) {
   const btn = document.getElementById("hatch-confirm-btn");
 
   if (!digimonId || digimonId === "undefined" || digimonId === "null") {
+    console.error("hatchConfirm: digimonId inválido", digimonId);
     showToast("Não foi possível identificar o Digimon chocado.", "error");
     return;
   }
@@ -169,9 +170,14 @@ async function hatchConfirm(digimonId) {
   }
 
   try {
+    console.log("hatchConfirm: selecionando Digimon", digimonId);
     await apiPost("/digimon/select", { digimonId: digimonId });
+    console.log("hatchConfirm: sucesso, navegando para dashboard");
     navigateTo("dashboard");
+    // Fallback caso navigateTo não altere o hash
+    window.location.hash = "dashboard";
   } catch (err) {
+    console.error("hatchConfirm: erro", err);
     showToast(err.message, "error");
 
     if (btn) {
