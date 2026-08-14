@@ -24,6 +24,4 @@ public interface ClanRepository extends JpaRepository<Clan, UUID> {
             "LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
             "LOWER(c.tag) LIKE LOWER(CONCAT('%', :query, '%'))")
     Page<Clan> searchByNameOrTag(@Param("query") String query, Pageable pageable);
-
-    long countByNameOrTag(@Param("query") String query);
 }
