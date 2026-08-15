@@ -459,6 +459,7 @@ function formatObjective(type) {
     MISSIONS_COMPLETED: "Missões concluídas:",
     BOSSES_DEFEATED: "Bosses derrotados:",
     ARENA_WINS: "Vitórias na arena:",
+    ARENA_DUELS: "Duelos na arena:",
     REBIRTHS_DONE: "Rebirths realizados:"
   };
   return map[type] || type;

@@ -155,6 +155,11 @@ public class ChallengeArenaUseCase {
             arenaCoinsGained = ArenaRules.lossArenaCoins();
             if (!defenderIsBot) defender.setArenaWins(defender.getArenaWins() + 1);
         }
+
+        if (attackerClanId != null) {
+            clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.ARENA_DUELS);
+        }
+
         player.setArenaCoins(player.getArenaCoins() + arenaCoinsGained);
 
         try {
