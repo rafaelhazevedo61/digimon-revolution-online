@@ -139,6 +139,7 @@ const playerState = {
               <th>Digimon Ativo</th>
               <th>Última Missão</th>
               <th>Criado em</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -184,6 +185,12 @@ const playerState = {
   
         <td>
           ${formatDateTime(player.createdAt)}
+        </td>
+
+        <td>
+          <button class="btn-secondary text-xs" onclick='adminResetPassword(${JSON.stringify(player).replace(/'/g, "&#39;")})'>
+            Resetar senha
+          </button>
         </td>
       </tr>
     `;
@@ -265,4 +272,31 @@ const playerState = {
         ${date.toLocaleString("pt-BR")}
       </span>
     `;
+  }
+
+  async function adminResetPassword(player) {
+    const generateRandom = window.confirm(
+      `Gerar senha aleatória para ${player.username}?\n\nClique OK para gerar automática.\nClique Cancelar para digitar uma senha manual.`
+    );
+
+    let body = { generateRandom };
+
+    if (!generateRandom) {
+      const newPassword = window.prompt(`Nova senha para ${player.username}:`);
+      if (newPassword === null) return;
+      if (newPassword.length < 4 || newPassword.length > 60) {
+        window.alert("A senha deve ter entre 4 e 60 caracteres.");
+        return;
+      }
+      body.newPassword = newPassword;
+    }
+
+    try {
+      const result = await apiPost(`/admin/players/${player.id}/reset-password`, body);
+      window.alert(
+        `Senha alterada com sucesso!\n\nPlayer: ${result.username}\nSenha: ${result.newPassword}`
+      );
+    } catch (error) {
+      window.alert(`Erro ao resetar senha: ${error.message}`);
+    }
   }
