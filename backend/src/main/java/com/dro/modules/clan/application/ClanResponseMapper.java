@@ -2,12 +2,12 @@ package com.dro.modules.clan.application;
 
 import com.dro.modules.arena.application.DigimonPowerService;
 import com.dro.modules.clan.api.dto.response.ClanMemberResponse;
-import com.dro.modules.clan.domain.ClanRules;
 import com.dro.modules.clan.api.dto.response.ClanRankingEntryResponse;
 import com.dro.modules.clan.api.dto.response.ClanResponse;
 import com.dro.modules.clan.api.dto.response.ClanRoleResponse;
 import com.dro.modules.clan.api.dto.response.ClanSummaryResponse;
 import com.dro.modules.clan.domain.Clan;
+import com.dro.modules.clan.domain.ClanRules;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.player.domain.Player;
@@ -25,6 +25,7 @@ public class ClanResponseMapper {
 
     private final DigimonRepository digimonRepository;
     private final DigimonPowerService digimonPowerService;
+    private final ClanBonusService clanBonusService;
 
     public ClanResponse toResponse(Clan clan, Player viewer, List<Player> members) {
         List<ClanMemberResponse> memberResponses = members.stream()
@@ -40,6 +41,9 @@ public class ClanResponseMapper {
 
         boolean isMember = viewer.getClanId() != null && viewer.getClanId().equals(clan.getId());
 
+        int memberCapacityUpgradeLevel = clanBonusService.getMemberCapacityBonus(clan.getId());
+        int effectiveMaxMembers = clanBonusService.getEffectiveMaxMembers(clan);
+
         return new ClanResponse(
                 clan.getId(),
                 clan.getName(),
@@ -49,18 +53,18 @@ public class ClanResponseMapper {
                 leader.getUsername(),
                 clan.getEmblem(),
                 clan.getMaxMembers(),
-                clan.getBoughtSlots(),
-                ClanRules.MAX_BOUGHT_SLOTS,
-                clan.getEffectiveMaxMembers(),
-                ClanRules.slotCost(clan.getBoughtSlots()),
+                effectiveMaxMembers,
+                memberCapacityUpgradeLevel,
                 members.size(),
                 clan.getLevel(),
                 clan.getExperience(),
                 ClanRules.xpToNextLevel(clan.getLevel(), clan.getExperience()),
+                clan.getHonorMarks(),
                 clan.getCreatedAt(),
                 memberResponses,
                 isMember,
-                isMember ? new ClanRoleResponse(viewer.getClanRole()) : null
+                isMember ? new ClanRoleResponse(viewer.getClanRole()) : null,
+                clanBonusService.activeUpgrades(clan.getId())
         );
     }
 
@@ -69,7 +73,7 @@ public class ClanResponseMapper {
         if (member.getActiveDigimonId() != null) {
             Optional<Digimon> digimon = digimonRepository.findById(member.getActiveDigimonId());
             if (digimon.isPresent()) {
-                power = (int) Math.round(digimonPowerService.calculatePower(digimon.get()));
+                power = (int) Math.round(digimonPowerService.calculatePower(digimon.get(), member.getClanId()));
             }
         }
         return new ClanMemberResponse(
@@ -88,7 +92,7 @@ public class ClanResponseMapper {
                 clan.getTag(),
                 clan.getDescription(),
                 memberCount,
-                clan.getEffectiveMaxMembers(),
+                clanBonusService.getEffectiveMaxMembers(clan),
                 clan.getLevel(),
                 clan.getCreatedAt()
         );
@@ -96,7 +100,7 @@ public class ClanResponseMapper {
 
     public ClanRankingEntryResponse toRankingEntry(int position, Clan clan, List<Player> members) {
         long totalPower = members.stream()
-                .mapToLong(m -> activeDigimonPower(m.getActiveDigimonId()))
+                .mapToLong(m -> activeDigimonPower(m.getActiveDigimonId(), m.getClanId()))
                 .sum();
         return new ClanRankingEntryResponse(
                 position,
@@ -108,10 +112,10 @@ public class ClanResponseMapper {
         );
     }
 
-    private long activeDigimonPower(UUID activeDigimonId) {
+    private long activeDigimonPower(UUID activeDigimonId, UUID clanId) {
         if (activeDigimonId == null) return 0L;
         return digimonRepository.findById(activeDigimonId)
-                .map(d -> (long) Math.round(digimonPowerService.calculatePower(d)))
+                .map(d -> (long) Math.round(digimonPowerService.calculatePower(d, clanId)))
                 .orElse(0L);
     }
 

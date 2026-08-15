@@ -11,6 +11,8 @@ import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.mission.domain.MissionStatus;
+import com.dro.modules.clan.application.ClanMissionProgressTracker;
+import com.dro.modules.clan.domain.enums.ClanMissionObjectiveType;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
@@ -46,6 +48,7 @@ public class RebirthUseCase {
     private final MissionInstanceRepository missionInstanceRepository;
     private final DigimonInfosRepository digimonInfosRepository;
     private final EvolutionLineRepository evolutionLineRepository;
+    private final ClanMissionProgressTracker clanMissionProgressTracker;
 
     private final Random random = new Random();
 
@@ -85,6 +88,10 @@ public class RebirthUseCase {
         digimonRepository.save(oldDigimon);
         digimonRepository.save(newDigimon);
         inventoryRepository.save(dataCore);
+
+        if (player.getClanId() != null) {
+            clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.REBIRTHS_DONE);
+        }
 
         updateActiveDigimonIfNeeded(player, oldDigimon, newDigimon);
     }

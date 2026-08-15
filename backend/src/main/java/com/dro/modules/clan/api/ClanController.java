@@ -3,10 +3,10 @@ package com.dro.modules.clan.api;
 import com.dro.modules.clan.api.dto.request.ChangeRoleRequest;
 import com.dro.modules.clan.api.dto.request.ClanCreateRequest;
 import com.dro.modules.clan.api.dto.request.ClanUpdateRequest;
-import com.dro.modules.clan.api.dto.response.BuySlotResponse;
 import com.dro.modules.clan.api.dto.response.ClanRankingEntryResponse;
 import com.dro.modules.clan.api.dto.response.ClanResponse;
 import com.dro.modules.clan.api.dto.response.ClanSummaryResponse;
+import com.dro.modules.clan.api.dto.response.ClanUpgradeResponse;
 import com.dro.modules.clan.application.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,8 @@ public class ClanController {
     private final ChangeRoleUseCase changeRoleUseCase;
     private final TransferLeadershipUseCase transferLeadershipUseCase;
     private final DissolveClanUseCase dissolveClanUseCase;
-    private final BuySlotUseCase buySlotUseCase;
+    private final ListClanUpgradesUseCase listClanUpgradesUseCase;
+    private final BuyUpgradeUseCase buyUpgradeUseCase;
     private final GetClanRankingUseCase getClanRankingUseCase;
 
     @PostMapping
@@ -132,12 +133,21 @@ public class ClanController {
         return ResponseEntity.ok(transferLeadershipUseCase.execute(authorization, id, username));
     }
 
-    @PostMapping("/{id}/upgrade/buy-slot")
-    public ResponseEntity<BuySlotResponse> buySlot(
+    @GetMapping("/{id}/upgrades")
+    public ResponseEntity<List<ClanUpgradeResponse>> listUpgrades(
             @RequestHeader("Authorization") String authorization,
             @PathVariable UUID id
     ) {
-        return ResponseEntity.ok(buySlotUseCase.execute(authorization, id));
+        return ResponseEntity.ok(listClanUpgradesUseCase.execute(authorization, id));
+    }
+
+    @PostMapping("/{id}/upgrades/{code}/buy")
+    public ResponseEntity<ClanUpgradeResponse> buyUpgrade(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable UUID id,
+            @PathVariable String code
+    ) {
+        return ResponseEntity.ok(buyUpgradeUseCase.execute(authorization, id, code));
     }
 
     @GetMapping("/ranking")

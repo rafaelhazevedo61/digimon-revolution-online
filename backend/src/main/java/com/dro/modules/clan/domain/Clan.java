@@ -45,14 +45,10 @@ public class Clan {
     @Builder.Default
     private int experience = 0;
 
-    @Column(name = "bought_slots", nullable = false)
+    @Column(name = "honor_marks", nullable = false)
     @Builder.Default
-    private int boughtSlots = 0;
+    private int honorMarks = 0;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-
-    public int getEffectiveMaxMembers() {
-        return maxMembers + boughtSlots;
-    }
 }

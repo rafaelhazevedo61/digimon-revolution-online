@@ -97,10 +97,10 @@ public class ClanAuthorizationService {
         }
     }
 
-    public void assertCanBuySlot(Player player, Clan clan) {
+    public void assertCanBuyUpgrade(Player player, Clan clan) {
         assertInClan(player, clan);
         if (!isAdmin(player) && player.getClanRole() != ClanRole.LEADER) {
-            throw new ForbiddenException("Only the leader can buy slots");
+            throw new ForbiddenException("Only the leader can buy upgrades");
         }
     }
 

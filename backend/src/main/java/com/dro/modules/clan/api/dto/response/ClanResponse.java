@@ -13,17 +13,17 @@ public record ClanResponse(
         String leaderUsername,
         String emblem,
         int baseMaxMembers,
-        int boughtSlots,
-        int maxBoughtSlots,
         int maxMembers,
-        int nextSlotCost,
+        int memberCapacityUpgradeLevel,
         int memberCount,
         int level,
         int experience,
         int xpToNextLevel,
+        int honorMarks,
         LocalDateTime createdAt,
         List<ClanMemberResponse> members,
         boolean isMember,
-        ClanRoleResponse myRole
+        ClanRoleResponse myRole,
+        List<ClanUpgradeResponse> activeUpgrades
 ) {
 }

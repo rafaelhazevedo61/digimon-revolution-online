@@ -15,6 +15,11 @@ import com.dro.modules.mission.domain.PlayerMissionProgress;
 import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.mission.infra.PlayerMissionProgressRepository;
+import com.dro.modules.clan.application.ClanBonusService;
+import com.dro.modules.clan.application.ClanMissionProgressTracker;
+import com.dro.modules.clan.domain.enums.ClanMissionObjectiveType;
+import com.dro.modules.player.domain.Player;
+import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.tutorial.application.TutorialService;
 import com.dro.modules.tutorial.domain.TutorialStep;
 import com.dro.shared.exception.BadRequestException;
@@ -37,6 +42,9 @@ public class ClaimMissionUseCase {
     private final AddItemUseCase addItemUseCase;
     private final MissionDefinitionRepository missionDefinitionRepository;
     private final TutorialService tutorialService;
+    private final ClanBonusService clanBonusService;
+    private final ClanMissionProgressTracker clanMissionProgressTracker;
+    private final PlayerRepository playerRepository;
 
     public ClaimMissionUseCase(
             MissionInstanceRepository missionInstanceRepository,
@@ -44,7 +52,10 @@ public class ClaimMissionUseCase {
             PlayerMissionProgressRepository progressRepository,
             AddItemUseCase addItemUseCase,
             MissionDefinitionRepository missionDefinitionRepository,
-            TutorialService tutorialService
+            TutorialService tutorialService,
+            ClanBonusService clanBonusService,
+            ClanMissionProgressTracker clanMissionProgressTracker,
+            PlayerRepository playerRepository
     ) {
         this.missionInstanceRepository = missionInstanceRepository;
         this.digimonRepository = digimonRepository;
@@ -52,6 +63,9 @@ public class ClaimMissionUseCase {
         this.addItemUseCase = addItemUseCase;
         this.missionDefinitionRepository = missionDefinitionRepository;
         this.tutorialService = tutorialService;
+        this.clanBonusService = clanBonusService;
+        this.clanMissionProgressTracker = clanMissionProgressTracker;
+        this.playerRepository = playerRepository;
     }
 
     @Transactional
@@ -88,19 +102,26 @@ public class ClaimMissionUseCase {
 
         int previousLevel = digimon.getLevel();
 
-        int xpGained = calculateScaledXp(
+        Player player = playerRepository.findById(playerId)
+                .orElse(null);
+        UUID clanId = player != null ? player.getClanId() : null;
+
+        double xpMultiplier = clanId != null ? clanBonusService.getMissionXpMultiplier(clanId) : 1.0;
+        double bitsMultiplier = clanId != null ? clanBonusService.getMissionBitsMultiplier(clanId) : 1.0;
+
+        int xpGained = (int) Math.floor(calculateScaledXp(
                 mission.getBaseXp(),
                 completionCount
-        );
+        ) * xpMultiplier);
 
         digimon.gainExperience(xpGained);
 
         boolean levelUp = digimon.getLevel() > previousLevel;
 
-        int bitsGained = calculateScaledBits(
+        int bitsGained = (int) Math.floor(calculateScaledBits(
                 mission.getBaseBits(),
                 completionCount
-        );
+        ) * bitsMultiplier);
 
         if (bitsGained > 0) {
             digimon.setBits(digimon.getBits() + bitsGained);
@@ -122,6 +143,10 @@ public class ClaimMissionUseCase {
 
         missionInstanceRepository.save(instance);
         digimonRepository.save(digimon);
+
+        if (clanId != null) {
+            clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.MISSIONS_COMPLETED);
+        }
 
         tutorialService.completeStep(playerId, TutorialStep.COMPLETE_MISSION);
 

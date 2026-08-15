@@ -34,7 +34,7 @@ class ClanRulesTest {
         assertEquals("A cool clan", clan.getDescription());
         assertEquals(leaderId, clan.getLeaderId());
         assertEquals(1, clan.getLevel());
-        assertEquals(5, clan.getEffectiveMaxMembers());
+        assertEquals(5, clan.getMaxMembers());
     }
 
     @Test
@@ -43,7 +43,7 @@ class ClanRulesTest {
         assertEquals(6, ClanRules.getMaxMembersForLevel(2));
         assertEquals(10, ClanRules.getMaxMembersForLevel(5));
         assertEquals(15, ClanRules.getMaxMembersForLevel(10));
-        assertEquals(25, ClanRules.getMaxMembersForLevel(20));
+        assertEquals(15, ClanRules.getMaxMembersForLevel(20)); // capped at MAX_LEVEL
     }
 
     @Test
@@ -56,29 +56,20 @@ class ClanRulesTest {
                 .maxMembers(ClanRules.INITIAL_MAX_MEMBERS)
                 .level(1)
                 .experience(0)
-                .boughtSlots(0)
                 .build();
 
         int levels = ClanRules.addExperience(clan, 1500);
 
         assertEquals(1, levels);
         assertEquals(2, clan.getLevel());
-        assertEquals(6, clan.getEffectiveMaxMembers());
+        assertEquals(6, clan.getMaxMembers());
         assertTrue(clan.getExperience() >= 1500);
     }
 
     @Test
     void xpToNextLevel() {
         assertEquals(1000, ClanRules.xpToNextLevel(1, 0));
-        assertEquals(0, ClanRules.xpToNextLevel(20, 1_500_000));
-    }
-
-    @Test
-    void slotCostScalesExponentially() {
-        assertEquals(500, ClanRules.slotCost(0));
-        assertEquals(1000, ClanRules.slotCost(1));
-        assertEquals(2000, ClanRules.slotCost(2));
-        assertEquals(4000, ClanRules.slotCost(3));
+        assertEquals(0, ClanRules.xpToNextLevel(10, 1_500_000));
     }
 
     @Test

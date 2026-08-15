@@ -4,6 +4,7 @@ import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.mission.api.dto.response.MissionStartResponse;
+import com.dro.modules.clan.application.ClanBonusService;
 import com.dro.modules.mission.domain.*;
 import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
@@ -31,6 +32,7 @@ public class StartMissionUseCase {
     private final DigimonRepository digimonRepository;
     private final MissionInstanceRepository missionInstanceRepository;
     private final MissionDefinitionRepository missionDefinitionRepository;
+    private final ClanBonusService clanBonusService;
 
     private static final long COOLDOWN_SECONDS = 10;
 
@@ -60,12 +62,21 @@ public class StartMissionUseCase {
         boolean isAdmin = player.getUserType() == UserType.ADMIN;
 
         // 🔋 Energia
-        if (!isAdmin) {
-            digimon.regenerateEnergy();
+        UUID clanId = player.getClanId();
 
-            if (digimon.getEnergy() < mission.getEnergyCost()) {
+        if (!isAdmin) {
+            int maxEnergyBonus = clanId != null ? clanBonusService.getMaxEnergyBonus(clanId) : 0;
+            digimon.regenerateEnergy(maxEnergyBonus);
+
+            int energyCost = clanId != null
+                    ? applyCostReduction(mission.getEnergyCost(), clanBonusService.getEnergyCostMultiplier(clanId))
+                    : mission.getEnergyCost();
+
+            if (digimon.getEnergy() < energyCost) {
                 throw new UnprocessableException("Energia insuficiente");
             }
+
+            digimon.consumeEnergy(energyCost);
         }
 
         // 🔒 Verificar se já está em missão
@@ -76,9 +87,6 @@ public class StartMissionUseCase {
             throw new ConflictException("Digimon já está em missão");
         }
 
-        if (!isAdmin) {
-            digimon.consumeEnergy(mission.getEnergyCost());
-        }
         digimonRepository.save(digimon);
 
         // ⏱ Criar instância
@@ -108,6 +116,11 @@ public class StartMissionUseCase {
                 .map(Digimon::getStage)
                 .max(Enum::compareTo)
                 .orElse(Stage.BABY);
+    }
+
+    private int applyCostReduction(int baseCost, double multiplier) {
+        if (multiplier >= 1.0) return baseCost;
+        return Math.max(1, (int) Math.floor(baseCost * multiplier));
     }
 
     private void validateCooldown (Player player) {

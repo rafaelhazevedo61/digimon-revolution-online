@@ -5,6 +5,7 @@ import com.dro.modules.arena.api.dto.response.ArenaOpponentResponse;
 import com.dro.modules.arena.domain.ArenaMatch;
 import com.dro.modules.arena.domain.ArenaRules;
 import com.dro.modules.arena.infra.ArenaMatchRepository;
+import com.dro.modules.clan.application.ClanBonusService;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
@@ -36,6 +37,7 @@ public class GetArenaLobbyUseCase {
     private final DigimonRepository digimonRepository;
     private final DigimonPowerService digimonPowerService;
     private final ArenaMatchRepository arenaMatchRepository;
+    private final ClanBonusService clanBonusService;
 
     public ArenaLobbyResponse execute(String token) {
 
@@ -51,8 +53,10 @@ public class GetArenaLobbyUseCase {
         Digimon me = digimonRepository.findById(player.getActiveDigimonId())
                 .orElseThrow(() -> new NotFoundException("Active Digimon not found"));
 
-        me.regenerateEnergy();
-        double myPower = digimonPowerService.calculatePower(me);
+        UUID myClanId = player.getClanId();
+        int maxEnergyBonus = myClanId != null ? clanBonusService.getMaxEnergyBonus(myClanId) : 0;
+        me.regenerateEnergy(maxEnergyBonus);
+        double myPower = digimonPowerService.calculatePower(me, myClanId);
 
         List<Digimon> candidates = digimonRepository
                 .findByStatusAndPlayerIdNot(DigimonStatus.ACTIVE, playerId);

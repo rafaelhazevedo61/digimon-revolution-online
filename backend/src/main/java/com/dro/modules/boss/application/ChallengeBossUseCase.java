@@ -10,6 +10,9 @@ import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.equipment.application.GrantEquipmentUseCase;
 import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.domain.EquipmentRarity;
+import com.dro.modules.clan.application.ClanBonusService;
+import com.dro.modules.clan.application.ClanMissionProgressTracker;
+import com.dro.modules.clan.domain.enums.ClanMissionObjectiveType;
 import com.dro.modules.equipment.domain.EquipmentRarityRules;
 import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.equipment.infra.EquipmentRepository;
@@ -43,6 +46,8 @@ public class ChallengeBossUseCase {
     private final EquipmentRepository equipmentRepository;
     private final AddItemUseCase addItemUseCase;
     private final GrantEquipmentUseCase grantEquipmentUseCase;
+    private final ClanBonusService clanBonusService;
+    private final ClanMissionProgressTracker clanMissionProgressTracker;
 
     @Transactional
     public BossChallengeResponse execute(String token, String bossCode, UUID digimonId) {
@@ -73,24 +78,33 @@ public class ChallengeBossUseCase {
         validateRequirements(boss, digimon);
 
         boolean isAdmin = player.getUserType() == UserType.ADMIN;
+        UUID clanId = player.getClanId();
 
         if (!isAdmin) {
             validateCooldown(playerId, boss);
 
-            digimon.regenerateEnergy();
-            if (digimon.getEnergy() < boss.getEnergyCost()) {
-                throw new BadRequestException("Not enough energy. Required: " + boss.getEnergyCost() + ", current: " + digimon.getEnergy());
+            int maxEnergyBonus = clanId != null ? clanBonusService.getMaxEnergyBonus(clanId) : 0;
+            digimon.regenerateEnergy(maxEnergyBonus);
+            int energyCost = clanId != null
+                    ? applyCostReduction(boss.getEnergyCost(), clanBonusService.getEnergyCostMultiplier(clanId))
+                    : boss.getEnergyCost();
+            if (digimon.getEnergy() < energyCost) {
+                throw new BadRequestException("Not enough energy. Required: " + energyCost + ", current: " + digimon.getEnergy());
             }
 
-            digimon.consumeEnergy(boss.getEnergyCost());
+            digimon.consumeEnergy(energyCost);
         }
 
         List<Equipment> equippedItems = equipmentRepository.findByDigimonId(digimon.getId())
                 .stream().filter(Equipment::isEquipped).toList();
 
-        int totalHp = digimon.getHp() + EquipmentRules.totalBonusHp(equippedItems);
-        int totalAtk = digimon.getAttack() + EquipmentRules.totalBonusAttack(equippedItems);
-        int totalDef = digimon.getDefense() + EquipmentRules.totalBonusDefense(equippedItems);
+        double atkBonus = clanId != null ? clanBonusService.getAttackBonusPercent(clanId) : 0.0;
+        double defBonus = clanId != null ? clanBonusService.getDefenseBonusPercent(clanId) : 0.0;
+        double hpBonus = clanId != null ? clanBonusService.getHpBonusPercent(clanId) : 0.0;
+
+        int totalHp = applyBonus(digimon.getHp() + EquipmentRules.totalBonusHp(equippedItems), hpBonus);
+        int totalAtk = applyBonus(digimon.getAttack() + EquipmentRules.totalBonusAttack(equippedItems), atkBonus);
+        int totalDef = applyBonus(digimon.getDefense() + EquipmentRules.totalBonusDefense(equippedItems), defBonus);
 
         double digimonPower = BossCombatRules.calculatePower(totalHp, totalAtk, totalDef);
         double bossPower = BossCombatRules.calculatePower(boss.getHp(), boss.getAtk(), boss.getDef());
@@ -110,8 +124,12 @@ public class ChallengeBossUseCase {
 
         if (victory) {
             xpGained = boss.getBaseXpReward();
-            bitsGained = boss.getBaseBitsReward();
-            drops = rollDrops(boss, digimon.getId());
+            double bitsMultiplier = clanId != null ? clanBonusService.getMissionBitsMultiplier(clanId) : 1.0;
+            bitsGained = (int) Math.floor(boss.getBaseBitsReward() * bitsMultiplier);
+            drops = rollDrops(boss, digimon.getId(), clanId);
+            if (clanId != null) {
+                clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.BOSSES_DEFEATED);
+            }
         } else {
             xpGained = (int) Math.round(boss.getBaseXpReward() * boss.getDefeatXpPercent() / 100.0);
             bitsGained = 0;
@@ -195,10 +213,13 @@ public class ChallengeBossUseCase {
         }
     }
 
-    private List<DropRewardResponse> rollDrops(BossDefinitionEntity boss, UUID digimonId) {
+    private List<DropRewardResponse> rollDrops(BossDefinitionEntity boss, UUID digimonId, UUID clanId) {
         List<DropRewardResponse> rewards = new ArrayList<>();
 
         if (boss.getDrops() == null) return rewards;
+
+        double dropBonusPercent = clanId != null ? clanBonusService.getBossDropBonusPercent(clanId) : 0.0;
+        int dropBonusPoints = (int) Math.round(dropBonusPercent * 100);
 
         List<BossDropEntity> equipDrops = new ArrayList<>();
         List<BossDropEntity> itemDrops = new ArrayList<>();
@@ -212,13 +233,13 @@ public class ChallengeBossUseCase {
         }
 
         if (!equipDrops.isEmpty()) {
-            int poolChance = equipDrops.get(0).getChance();
+            int poolChance = Math.min(100, equipDrops.get(0).getChance() + dropBonusPoints);
             int roll = ThreadLocalRandom.current().nextInt(1, 101);
             if (roll <= poolChance) {
                 BossDropEntity picked = equipDrops.get(
                         ThreadLocalRandom.current().nextInt(equipDrops.size()));
                 String profile = "BOSS_" + boss.getBossType().name();
-                EquipmentRarity rarity = EquipmentRarityRules.rollRarity(profile);
+                EquipmentRarity rarity = EquipmentRarityRules.rollRarity(profile, dropBonusPercent);
                 grantEquipmentUseCase.execute(digimonId, picked.getTemplateName(), rarity);
                 rewards.add(new DropRewardResponse("EQUIPMENT", picked.getTemplateName(), picked.getTemplateName(), 1, rarity.name()));
             }
@@ -226,7 +247,7 @@ public class ChallengeBossUseCase {
 
         for (BossDropEntity drop : itemDrops) {
             int roll = ThreadLocalRandom.current().nextInt(1, 101);
-            if (roll > drop.getChance()) continue;
+            if (roll > Math.min(100, drop.getChance() + dropBonusPoints)) continue;
 
             int quantity = drop.getMinQuantity();
             if (drop.getMaxQuantity() > drop.getMinQuantity()) {
@@ -242,5 +263,15 @@ public class ChallengeBossUseCase {
         }
 
         return rewards;
+    }
+
+    private int applyBonus(int base, double percent) {
+        if (percent <= 0) return base;
+        return (int) Math.floor(base * (1.0 + percent));
+    }
+
+    private int applyCostReduction(int baseCost, double multiplier) {
+        if (multiplier >= 1.0) return baseCost;
+        return Math.max(1, (int) Math.floor(baseCost * multiplier));
     }
 }

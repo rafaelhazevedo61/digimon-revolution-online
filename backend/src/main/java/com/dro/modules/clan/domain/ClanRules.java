@@ -20,9 +20,7 @@ public class ClanRules {
     public static final int MAX_DESCRIPTION_LENGTH = 280;
     public static final int INITIAL_MAX_MEMBERS = 5;
     public static final int CREATE_COST = 0; // bits; 0 no MVP, ajustável aqui
-    public static final int SLOT_BASE_COST = 500; // bits
-    public static final int MAX_BOUGHT_SLOTS = 10; // limite de vagas extras compráveis
-    public static final int MAX_LEVEL = 20;
+    public static final int MAX_LEVEL = 10;
 
     private static final List<LevelBonus> LEVEL_BONUSES = List.of(
             new LevelBonus(1, 0, 0),
@@ -34,17 +32,7 @@ public class ClanRules {
             new LevelBonus(7, 30000, 1),
             new LevelBonus(8, 48000, 1),
             new LevelBonus(9, 72000, 1),
-            new LevelBonus(10, 105000, 1),
-            new LevelBonus(11, 150000, 1),
-            new LevelBonus(12, 205000, 1),
-            new LevelBonus(13, 275000, 1),
-            new LevelBonus(14, 360000, 1),
-            new LevelBonus(15, 465000, 1),
-            new LevelBonus(16, 590000, 1),
-            new LevelBonus(17, 740000, 1),
-            new LevelBonus(18, 920000, 1),
-            new LevelBonus(19, 1140000, 1),
-            new LevelBonus(20, 1400000, 1)
+            new LevelBonus(10, 105000, 1)
     );
 
     private static final Map<Integer, LevelBonus> BY_LEVEL =
@@ -124,17 +112,6 @@ public class ClanRules {
         return levelsGained;
     }
 
-    public static int slotCost(int boughtSlots) {
-        if (boughtSlots >= MAX_BOUGHT_SLOTS) {
-            return 0;
-        }
-        return SLOT_BASE_COST * (int) Math.pow(2, boughtSlots);
-    }
-
-    public static boolean isMaxSlotsReached(int boughtSlots) {
-        return boughtSlots >= MAX_BOUGHT_SLOTS;
-    }
-
     public static boolean canManageClanInfo(ClanRole role) {
         return role == ClanRole.LEADER || role == ClanRole.OFFICER;
     }
@@ -191,7 +168,6 @@ public class ClanRules {
                 .maxMembers(INITIAL_MAX_MEMBERS)
                 .level(1)
                 .experience(0)
-                .boughtSlots(0)
                 .createdAt(now)
                 .build();
     }

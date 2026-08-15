@@ -23,6 +23,7 @@ public class JoinClanUseCase {
     private final ClanRepository clanRepository;
     private final PlayerRepository playerRepository;
     private final ClanResponseMapper mapper;
+    private final ClanBonusService clanBonusService;
 
     @Transactional
     public ClanResponse execute(String token, UUID clanId) {
@@ -39,7 +40,7 @@ public class JoinClanUseCase {
                 .orElseThrow(() -> new NotFoundException("Clan not found"));
 
         long memberCount = playerRepository.countByClanId(clan.getId());
-        if (memberCount >= clan.getEffectiveMaxMembers()) {
+        if (memberCount >= clanBonusService.getEffectiveMaxMembers(clan)) {
             throw new BadRequestException("Clan is full");
         }
 

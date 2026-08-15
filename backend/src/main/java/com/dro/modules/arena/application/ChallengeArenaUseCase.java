@@ -4,6 +4,9 @@ import com.dro.modules.arena.api.dto.response.ArenaMatchResponse;
 import com.dro.modules.arena.domain.ArenaMatch;
 import com.dro.modules.arena.domain.ArenaRules;
 import com.dro.modules.arena.infra.ArenaMatchRepository;
+import com.dro.modules.clan.application.ClanBonusService;
+import com.dro.modules.clan.application.ClanMissionProgressTracker;
+import com.dro.modules.clan.domain.enums.ClanMissionObjectiveType;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
@@ -32,6 +35,8 @@ public class ChallengeArenaUseCase {
     private final DigimonRepository digimonRepository;
     private final ArenaMatchRepository arenaMatchRepository;
     private final DigimonPowerService digimonPowerService;
+    private final ClanBonusService clanBonusService;
+    private final ClanMissionProgressTracker clanMissionProgressTracker;
 
     @Transactional
     public ArenaMatchResponse execute(String token, UUID opponentDigimonId) {
@@ -95,16 +100,22 @@ public class ChallengeArenaUseCase {
                     });
         }
 
+        UUID attackerClanId = player.getClanId();
+
         if (!isAdmin) {
-            attacker.regenerateEnergy();
-            if (attacker.getEnergy() < ArenaRules.ENERGY_COST) {
-                throw new BadRequestException("Not enough energy. Required: " + ArenaRules.ENERGY_COST
+            int maxEnergyBonus = attackerClanId != null ? clanBonusService.getMaxEnergyBonus(attackerClanId) : 0;
+            attacker.regenerateEnergy(maxEnergyBonus);
+            int energyCost = attackerClanId != null
+                    ? applyCostReduction(ArenaRules.ENERGY_COST, clanBonusService.getEnergyCostMultiplier(attackerClanId))
+                    : ArenaRules.ENERGY_COST;
+            if (attacker.getEnergy() < energyCost) {
+                throw new BadRequestException("Not enough energy. Required: " + energyCost
                         + ", current: " + attacker.getEnergy());
             }
-            attacker.consumeEnergy(ArenaRules.ENERGY_COST);
+            attacker.consumeEnergy(energyCost);
         }
 
-        double attackerPower = digimonPowerService.calculatePower(attacker);
+        double attackerPower = digimonPowerService.calculatePower(attacker, attackerClanId);
         double defenderPower = digimonPowerService.calculatePower(defender);
 
         int winChance = ArenaRules.winChance(attackerPower, defenderPower);
@@ -131,6 +142,9 @@ public class ChallengeArenaUseCase {
         int bitsGained = 0;
         int arenaCoinsGained;
         if (victory) {
+            if (attackerClanId != null) {
+                clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.ARENA_WINS);
+            }
             attacker.setArenaWins(attacker.getArenaWins() + 1);
             bitsGained = ArenaRules.winBits(attackerRatingBefore, defenderRatingBefore);
             attacker.setBits(attacker.getBits() + bitsGained);
@@ -194,5 +208,10 @@ public class ChallengeArenaUseCase {
                 player.getArenaCoins(),
                 ArenaRules.tierFor(attackerRatingAfter).getLabel()
         );
+    }
+
+    private int applyCostReduction(int baseCost, double multiplier) {
+        if (multiplier >= 1.0) return baseCost;
+        return Math.max(1, (int) Math.floor(baseCost * multiplier));
     }
 }
