@@ -309,13 +309,11 @@ const playerState = {
     modal.innerHTML = `
       <div class="card w-full max-w-md">
         <h3 class="text-lg font-bold mb-2">Senha redefinida</h3>
-        <p class="text-sm text-slate-400 mb-4">Player: <span class="text-cyan-300">${username}</span></p>
+        <p class="text-sm text-slate-400 mb-4">Player: <span id="reset-password-username" class="text-cyan-300"></span></p>
 
         <label class="text-sm text-slate-400">Nova senha</label>
         <div class="flex gap-2 mt-1 mb-4">
-          <input id="reset-password-value" type="text" readonly
-                 value="${password.replace(/"/g, "&quot;")}"
-                 class="input font-mono text-sm flex-1" />
+          <input id="reset-password-value" type="text" readonly class="input font-mono text-sm flex-1" />
           <button id="reset-password-copy" class="btn-primary whitespace-nowrap">Copiar</button>
         </div>
 
@@ -327,7 +325,9 @@ const playerState = {
 
     document.body.appendChild(modal);
 
+    modal.querySelector("#reset-password-username").textContent = username;
     const input = modal.querySelector("#reset-password-value");
+    input.value = password;
     input.focus();
     input.select();
 
