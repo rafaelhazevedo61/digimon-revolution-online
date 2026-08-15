@@ -293,10 +293,58 @@ const playerState = {
 
     try {
       const result = await apiPost(`/admin/players/${player.id}/reset-password`, body);
-      window.alert(
-        `Senha alterada com sucesso!\n\nPlayer: ${result.username}\nSenha: ${result.newPassword}`
-      );
+      showResetPasswordModal(result.username, result.newPassword);
     } catch (error) {
       window.alert(`Erro ao resetar senha: ${error.message}`);
     }
+  }
+
+  function showResetPasswordModal(username, password) {
+    const existing = document.getElementById("reset-password-modal");
+    if (existing) existing.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "reset-password-modal";
+    modal.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4";
+    modal.innerHTML = `
+      <div class="card w-full max-w-md">
+        <h3 class="text-lg font-bold mb-2">Senha redefinida</h3>
+        <p class="text-sm text-slate-400 mb-4">Player: <span class="text-cyan-300">${username}</span></p>
+
+        <label class="text-sm text-slate-400">Nova senha</label>
+        <div class="flex gap-2 mt-1 mb-4">
+          <input id="reset-password-value" type="text" readonly
+                 value="${password.replace(/"/g, "&quot;")}"
+                 class="input font-mono text-sm flex-1" />
+          <button id="reset-password-copy" class="btn-primary whitespace-nowrap">Copiar</button>
+        </div>
+
+        <div class="flex justify-end gap-2">
+          <button id="reset-password-close" class="btn-secondary">Fechar</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const input = modal.querySelector("#reset-password-value");
+    input.focus();
+    input.select();
+
+    modal.querySelector("#reset-password-copy").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(input.value);
+        window.alert("Senha copiada para a área de transferência.");
+      } catch {
+        input.select();
+        document.execCommand("copy");
+        window.alert("Senha selecionada. Use Ctrl+C para copiar.");
+      }
+    });
+
+    modal.querySelector("#reset-password-close").addEventListener("click", () => modal.remove());
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.remove();
+    });
   }
