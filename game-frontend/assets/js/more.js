@@ -56,11 +56,11 @@ async function renderMorePage() {
             <p class="text-xs text-slate-400">Catálogo de todos os Digimons</p>
           </div>
         </button>
-        <button class="card-sm flex items-center gap-3 text-left w-full opacity-50" disabled>
+        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('settings')">
           <span class="text-2xl">⚙️</span>
           <div>
             <p class="font-bold text-sm">Configurações</p>
-            <p class="text-xs text-slate-400">Conta e preferências — em breve</p>
+            <p class="text-xs text-slate-400">Conta e preferências</p>
           </div>
         </button>
       </div>

@@ -21,7 +21,8 @@ const routes = {
   storage: renderStoragePage,
   clans: renderClansPage,
   "clan-ranking": renderClanRanking,
-  more: renderMorePage
+  more: renderMorePage,
+  settings: renderSettingsPage
 };
 
 function navigateTo(route, params = {}) {
