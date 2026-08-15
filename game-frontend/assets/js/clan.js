@@ -438,11 +438,20 @@ function renderPlayerMission(m) {
           <p class="text-xs text-slate-400">${formatObjective(m.objectiveType)} ${m.progress}/${m.targetValue}</p>
           <p class="text-xs text-slate-500">Recompensa: ${m.honorMarksReward} HM · ${m.clanXpReward} XP</p>
         </div>
-        ${m.status === "COMPLETED" || complete ? `<button class="btn-primary text-sm py-1 px-2" onclick="clanClaimMission('${m.id}')">Resgatar</button>` : `<span class="text-xs text-slate-500">${m.status}</span>`}
+        ${m.status === "COMPLETED" || complete ? `<button class="btn-primary text-sm py-1 px-2" onclick="clanClaimMission('${m.id}')">Resgatar</button>` : `<span class="text-xs text-slate-500">${formatMissionStatus(m.status)}</span>`}
       </div>
       <div class="w-full bg-slate-800 rounded-full h-1.5 mt-2"><div class="bg-cyan-500 h-1.5 rounded-full" style="width:${percent}%"></div></div>
     </div>
   `;
+}
+
+function formatMissionStatus(status) {
+  const map = {
+    IN_PROGRESS: "Em andamento",
+    COMPLETED: "Concluída",
+    CLAIMED: "Resgatada"
+  };
+  return map[status] || status;
 }
 
 function formatObjective(type) {
