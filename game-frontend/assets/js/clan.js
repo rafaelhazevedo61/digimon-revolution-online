@@ -614,14 +614,49 @@ async function clanLoadRaid() {
 async function clanAttackRaid() {
   try {
     const result = await apiPost("/clan-raids/attack");
-    const rewardText = result.defeated
-      ? ` · Clã ganhou ${result.clanHonorMarksGained.toLocaleString()} HM e ${result.clanXpGained.toLocaleString()} XP`
-      : "";
-    showToast(`Dano ${result.damage.toLocaleString()} · +${result.xpGained.toLocaleString()} XP · +${result.bitsGained.toLocaleString()} Bits${rewardText}`, "success");
+    showRaidAttackModal(result);
     clanLoadRaid();
   } catch (err) {
     showToast(err.message, "error");
   }
+}
+
+function showRaidAttackModal(result) {
+  const existing = document.getElementById("raid-attack-modal");
+  if (existing) existing.remove();
+
+  const rewardRow = result.defeated
+    ? `<p class="text-green-400 text-sm font-bold mb-1">Clã ganhou ${result.clanHonorMarksGained.toLocaleString()} Honor Marks e ${result.clanXpGained.toLocaleString()} XP!</p>`
+    : "";
+
+  const overlay = document.createElement("div");
+  overlay.id = "raid-attack-modal";
+  overlay.className = "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70";
+  overlay.innerHTML = `
+    <div class="bg-slate-900 border border-cyan-900 rounded-xl max-w-sm w-full p-5 shadow-2xl">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="font-bold text-lg text-cyan-400">Resultado do Ataque</h3>
+        <button class="text-slate-400 text-2xl" onclick="document.getElementById('raid-attack-modal').remove()">&times;</button>
+      </div>
+      <div class="text-center mb-4">
+        <p class="text-3xl font-bold text-white mb-1">${result.damage.toLocaleString()}</p>
+        <p class="text-xs text-slate-400">Dano causado</p>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mb-4 text-sm">
+        <div class="bg-slate-800 rounded-lg p-2 text-center">
+          <p class="font-bold text-cyan-400">+${result.xpGained.toLocaleString()}</p>
+          <p class="text-xs text-slate-400">XP</p>
+        </div>
+        <div class="bg-slate-800 rounded-lg p-2 text-center">
+          <p class="font-bold text-yellow-400">+${result.bitsGained.toLocaleString()}</p>
+          <p class="text-xs text-slate-400">Bits</p>
+        </div>
+      </div>
+      ${rewardRow}
+      <button class="btn-primary w-full" onclick="document.getElementById('raid-attack-modal').remove()">Fechar</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
 }
 
 function renderClanCreate() {
