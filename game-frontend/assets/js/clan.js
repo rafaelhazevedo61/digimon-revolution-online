@@ -615,9 +615,9 @@ async function clanAttackRaid() {
   try {
     const result = await apiPost("/clan-raids/attack");
     const rewardText = result.defeated
-      ? ` · Clã ganhou ${result.clanHonorMarksGained} HM e ${result.clanXpGained} XP`
+      ? ` · Clã ganhou ${result.clanHonorMarksGained.toLocaleString()} HM e ${result.clanXpGained.toLocaleString()} XP`
       : "";
-    showToast(`Dano ${result.damage.toLocaleString()}!${rewardText}`, result.defeated ? "success" : "success");
+    showToast(`Dano ${result.damage.toLocaleString()} · +${result.xpGained.toLocaleString()} XP · +${result.bitsGained.toLocaleString()} Bits${rewardText}`, "success");
     clanLoadRaid();
   } catch (err) {
     showToast(err.message, "error");
