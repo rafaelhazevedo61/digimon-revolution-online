@@ -1,0 +1,43 @@
+package com.dro.modules.clan.raid.domain;
+
+import com.dro.modules.boss.domain.BossCombatRules;
+import lombok.experimental.UtilityClass;
+
+import java.util.concurrent.ThreadLocalRandom;
+
+@UtilityClass
+public class ClanRaidRules {
+
+    public static final int DAILY_ATTACK_LIMIT = 3;
+    public static final double DAMAGE_PERCENT_PER_WIN_CHANCE = 0.15;
+    public static final int MIN_DAMAGE_PERCENT = 1;
+
+    public static int dailyAttacksRemaining(long usedToday) {
+        long remaining = DAILY_ATTACK_LIMIT - usedToday;
+        return (int) Math.max(0, remaining);
+    }
+
+    public static boolean dailyLimitReached(long usedToday) {
+        return usedToday >= DAILY_ATTACK_LIMIT;
+    }
+
+    public static int calculateDamage(int maxHp, int winChance) {
+        int maxPercent = Math.max(MIN_DAMAGE_PERCENT,
+                (int) Math.round(winChance * DAMAGE_PERCENT_PER_WIN_CHANCE));
+
+        int percent = ThreadLocalRandom.current().nextInt(MIN_DAMAGE_PERCENT, maxPercent + 1);
+        return (int) Math.max(1, Math.round(maxHp * percent / 100.0));
+    }
+
+    public static int hitXp(int baseXpReward, int defeatXpPercent) {
+        return (int) Math.max(1, Math.round(baseXpReward * defeatXpPercent / 100.0));
+    }
+
+    public static int hitBits(int baseBitsReward, int defeatXpPercent) {
+        return Math.max(1, (int) Math.round(baseBitsReward * defeatXpPercent / 100.0));
+    }
+
+    public static int calculateWinChance(double digimonPower, double bossPower) {
+        return BossCombatRules.calculateWinChance(digimonPower, bossPower);
+    }
+}

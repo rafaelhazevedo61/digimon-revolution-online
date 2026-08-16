@@ -4,5 +4,6 @@ public enum BossType {
     NORMAL,
     DAILY,
     WEEKLY,
-    MONTHLY
+    MONTHLY,
+    CLAN
 }

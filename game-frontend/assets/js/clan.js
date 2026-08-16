@@ -198,6 +198,8 @@ function clanShowTab(tab) {
     clanLoadUpgrades();
   } else if (tab === "missions") {
     clanLoadMissions();
+  } else if (tab === "raid") {
+    clanLoadRaid();
   }
 }
 
@@ -224,7 +226,7 @@ function renderClanDetailHtml(clan, opts = {}) {
     `
     : "";
 
-  const showMissionTab = clan.isMember && !preview;
+  const showMemberTabs = clan.isMember && !preview;
 
   return `
     ${backButton}
@@ -258,7 +260,8 @@ function renderClanDetailHtml(clan, opts = {}) {
     <div class="flex gap-2 mb-3 overflow-x-auto">
       <button id="clan-tab-members" class="clan-tab-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-cyan-600 text-white" onclick="clanShowTab('members')">Membros</button>
       <button id="clan-tab-upgrades" class="clan-tab-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('upgrades')">Melhorias</button>
-      ${showMissionTab ? `<button id="clan-tab-missions" class="clan-tab-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('missions')">Missões</button>` : ""}
+      ${showMemberTabs ? `<button id="clan-tab-missions" class="clan-tab-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('missions')">Missões</button>` : ""}
+      ${showMemberTabs ? `<button id="clan-tab-raid" class="clan-tab-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('raid')">Raid</button>` : ""}
     </div>
 
     <div id="clan-tab-content" class="mb-4"></div>
@@ -515,6 +518,105 @@ async function clanClaimMission(playerMissionId) {
     const clan = await apiGet(`/clans/${currentClan.id}`);
     renderClanDetail(clan);
     clanShowTab("missions");
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function clanLoadRaid() {
+  const container = safeContent("clan-tab-content");
+  if (!container) return;
+  container.innerHTML = `<div class="card animate-pulse"><div class="h-24"></div></div>`;
+
+  try {
+    const raid = await apiGet("/clan-raids/me");
+    const percent = raid.maxHp > 0
+      ? Math.min(100, Math.round(((raid.maxHp - raid.remainingHp) / raid.maxHp) * 100))
+      : 100;
+    const defeated = raid.status === "DEFEATED";
+
+    let rankingHtml = "";
+    if (raid.ranking && raid.ranking.length > 0) {
+      const rankColor = (index) => {
+        if (index === 0) return "text-yellow-400";
+        if (index === 1) return "text-slate-300";
+        if (index === 2) return "text-amber-600";
+        return "text-slate-400";
+      };
+      rankingHtml = `
+        <div class="card mt-4 border-cyan-900">
+          <p class="font-bold mb-2 text-sm">Ranking de Dano</p>
+          ${raid.ranking.map((entry, i) => `
+            <div class="flex justify-between items-center py-1.5 border-b border-slate-800 last:border-0">
+              <div class="flex items-center gap-2">
+                <span class="font-bold w-5 ${rankColor(i)}">${entry.position}.</span>
+                <span class="text-sm text-slate-200">${escapeHtml(entry.username)}</span>
+              </div>
+              <span class="text-xs text-cyan-400 font-mono">${entry.totalDamage.toLocaleString()}</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    let attacksHtml = "";
+    if (raid.recentAttacks && raid.recentAttacks.length > 0) {
+      attacksHtml = `
+        <div class="card mt-4 border-slate-800">
+          <p class="font-bold mb-2 text-sm">Últimos ataques</p>
+          ${raid.recentAttacks.map(a => `
+            <div class="flex justify-between items-center py-1 border-b border-slate-800 last:border-0">
+              <span class="text-sm text-slate-200">${escapeHtml(a.username)}</span>
+              <span class="text-xs text-cyan-400 font-mono">${a.damage.toLocaleString()}</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    container.innerHTML = `
+      <h3 class="font-bold mb-2">Raid de Clã</h3>
+
+      <div class="card mb-3">
+        <div class="flex items-center gap-3 mb-3">
+          ${raid.bossImageUrl ? `<img src="${escapeHtml(raid.bossImageUrl)}" class="w-16 h-16 rounded-lg object-cover" alt="">` : ""}
+          <div>
+            <p class="font-bold">${escapeHtml(raid.bossName)}</p>
+            <p class="text-xs ${defeated ? 'text-green-400' : 'text-slate-400'}">${defeated ? 'Derrotado' : 'Em batalha'}</p>
+          </div>
+        </div>
+
+        <div class="flex justify-between text-xs mb-1">
+          <span class="text-slate-400">HP</span>
+          <span class="text-slate-400">${(raid.maxHp - raid.remainingHp).toLocaleString()} / ${raid.maxHp.toLocaleString()}</span>
+        </div>
+        <div class="w-full bg-slate-800 rounded-full h-2.5 mb-4">
+          <div class="${defeated ? 'bg-green-500' : 'bg-red-500'} h-2.5 rounded-full" style="width:${percent}%"></div>
+        </div>
+
+        <p class="text-xs text-slate-400 mb-3">Seus ataques hoje: <span class="text-cyan-400">${raid.myDailyAttacksUsed}/${raid.myDailyAttacksUsed + raid.myDailyAttacksRemaining}</span> · Seu dano: <span class="text-cyan-400">${raid.myTotalDamage.toLocaleString()}</span></p>
+
+        ${!defeated && raid.myDailyAttacksRemaining > 0 ? `<button class="btn-primary w-full" onclick="clanAttackRaid()">Atacar Raid</button>` : ""}
+        ${!defeated && raid.myDailyAttacksRemaining === 0 ? `<p class="text-xs text-slate-500 text-center">Limite diário de ataques atingido.</p>` : ""}
+        ${defeated ? `<p class="text-xs text-green-400 text-center">Raid derrotado hoje! Volte amanhã.</p>` : ""}
+      </div>
+
+      ${rankingHtml}
+      ${attacksHtml}
+    `;
+  } catch (err) {
+    container.innerHTML = `<div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>`;
+  }
+}
+
+async function clanAttackRaid() {
+  try {
+    const result = await apiPost("/clan-raids/attack");
+    const rewardText = result.defeated
+      ? ` · Clã ganhou ${result.clanHonorMarksGained} HM e ${result.clanXpGained} XP`
+      : "";
+    showToast(`Dano ${result.damage.toLocaleString()}!${rewardText}`, result.defeated ? "success" : "success");
+    clanLoadRaid();
   } catch (err) {
     showToast(err.message, "error");
   }
