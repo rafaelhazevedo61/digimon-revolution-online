@@ -531,7 +531,7 @@ async function clanLoadRaid() {
   try {
     const raid = await apiGet("/clan-raids/me");
     const percent = raid.maxHp > 0
-      ? Math.min(100, Math.round(((raid.maxHp - raid.remainingHp) / raid.maxHp) * 100))
+      ? Math.min(100, Math.round((raid.remainingHp / raid.maxHp) * 100))
       : 100;
     const defeated = raid.status === "DEFEATED";
 
@@ -579,7 +579,9 @@ async function clanLoadRaid() {
 
       <div class="card mb-3">
         <div class="flex items-center gap-3 mb-3">
-          ${raid.bossImageUrl ? `<img src="${escapeHtml(raid.bossImageUrl)}" class="w-16 h-16 rounded-lg object-cover" alt="">` : ""}
+          <div class="w-16 h-16 rounded-lg flex items-center justify-center text-2xl shrink-0" style="background:#334155;color:#94a3b8">
+            ${raid.bossImageUrl ? `<img src="${escapeHtml(raid.bossImageUrl)}" class="w-16 h-16 rounded-lg object-cover" alt="" onerror="this.style.display='none'">` : "👾"}
+          </div>
           <div>
             <p class="font-bold">${escapeHtml(raid.bossName)}</p>
             <p class="text-xs ${defeated ? 'text-green-400' : 'text-slate-400'}">${defeated ? 'Derrotado' : 'Em batalha'}</p>
@@ -588,7 +590,7 @@ async function clanLoadRaid() {
 
         <div class="flex justify-between text-xs mb-1">
           <span class="text-slate-400">HP</span>
-          <span class="text-slate-400">${(raid.maxHp - raid.remainingHp).toLocaleString()} / ${raid.maxHp.toLocaleString()}</span>
+          <span class="text-slate-400">${raid.remainingHp.toLocaleString()} / ${raid.maxHp.toLocaleString()}</span>
         </div>
         <div class="w-full bg-slate-800 rounded-full h-2.5 mb-4">
           <div class="${defeated ? 'bg-green-500' : 'bg-red-500'} h-2.5 rounded-full" style="width:${percent}%"></div>
