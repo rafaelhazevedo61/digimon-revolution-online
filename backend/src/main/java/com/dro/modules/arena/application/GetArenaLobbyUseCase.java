@@ -18,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -95,7 +97,9 @@ public class GetArenaLobbyUseCase {
                 .collect(Collectors.toMap(Player::getId, Player::getUsername));
 
         Instant now = Instant.now();
-        Instant startOfDay = now.truncatedTo(ChronoUnit.DAYS);
+        Instant startOfDay = LocalDate.now(ZoneId.systemDefault())
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant();
         long usedToday = arenaMatchRepository
                 .countByAttackerPlayerIdAndCreatedAtGreaterThanEqual(playerId, startOfDay);
 

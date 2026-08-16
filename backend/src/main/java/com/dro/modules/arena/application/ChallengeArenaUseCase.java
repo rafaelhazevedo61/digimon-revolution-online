@@ -23,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -79,7 +81,9 @@ public class ChallengeArenaUseCase {
         }
 
         if (!isAdmin) {
-            Instant startOfDay = Instant.now().truncatedTo(ChronoUnit.DAYS);
+            Instant startOfDay = LocalDate.now(ZoneId.systemDefault())
+                    .atStartOfDay(ZoneId.systemDefault())
+                    .toInstant();
             long usedToday = arenaMatchRepository
                     .countByAttackerPlayerIdAndCreatedAtGreaterThanEqual(playerId, startOfDay);
             if (ArenaRules.dailyLimitReached(usedToday)) {
@@ -115,7 +119,7 @@ public class ChallengeArenaUseCase {
             attacker.consumeEnergy(energyCost);
         }
 
-        double attackerPower = digimonPowerService.calculatePower(attacker, attackerClanId);
+        double attackerPower = digimonPowerService.calculatePower(attacker);
         double defenderPower = digimonPowerService.calculatePower(defender);
 
         int winChance = ArenaRules.winChance(attackerPower, defenderPower);
