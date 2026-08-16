@@ -4,6 +4,9 @@ import com.dro.modules.arena.api.dto.response.ArenaMatchResponse;
 import com.dro.modules.arena.domain.ArenaMatch;
 import com.dro.modules.arena.domain.ArenaRules;
 import com.dro.modules.arena.infra.ArenaMatchRepository;
+import com.dro.modules.clan.application.ClanBonusService;
+import com.dro.modules.clan.application.ClanMissionProgressTracker;
+import com.dro.modules.clan.domain.enums.ClanMissionObjectiveType;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
@@ -20,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -32,6 +37,8 @@ public class ChallengeArenaUseCase {
     private final DigimonRepository digimonRepository;
     private final ArenaMatchRepository arenaMatchRepository;
     private final DigimonPowerService digimonPowerService;
+    private final ClanBonusService clanBonusService;
+    private final ClanMissionProgressTracker clanMissionProgressTracker;
 
     @Transactional
     public ArenaMatchResponse execute(String token, UUID opponentDigimonId) {
@@ -74,7 +81,9 @@ public class ChallengeArenaUseCase {
         }
 
         if (!isAdmin) {
-            Instant startOfDay = Instant.now().truncatedTo(ChronoUnit.DAYS);
+            Instant startOfDay = LocalDate.now(ZoneId.systemDefault())
+                    .atStartOfDay(ZoneId.systemDefault())
+                    .toInstant();
             long usedToday = arenaMatchRepository
                     .countByAttackerPlayerIdAndCreatedAtGreaterThanEqual(playerId, startOfDay);
             if (ArenaRules.dailyLimitReached(usedToday)) {
@@ -95,13 +104,19 @@ public class ChallengeArenaUseCase {
                     });
         }
 
+        UUID attackerClanId = player.getClanId();
+
         if (!isAdmin) {
-            attacker.regenerateEnergy();
-            if (attacker.getEnergy() < ArenaRules.ENERGY_COST) {
-                throw new BadRequestException("Not enough energy. Required: " + ArenaRules.ENERGY_COST
+            int maxEnergyBonus = attackerClanId != null ? clanBonusService.getMaxEnergyBonus(attackerClanId) : 0;
+            attacker.regenerateEnergy(maxEnergyBonus);
+            int energyCost = attackerClanId != null
+                    ? applyCostReduction(ArenaRules.ENERGY_COST, clanBonusService.getEnergyCostMultiplier(attackerClanId))
+                    : ArenaRules.ENERGY_COST;
+            if (attacker.getEnergy() < energyCost) {
+                throw new BadRequestException("Not enough energy. Required: " + energyCost
                         + ", current: " + attacker.getEnergy());
             }
-            attacker.consumeEnergy(ArenaRules.ENERGY_COST);
+            attacker.consumeEnergy(energyCost);
         }
 
         double attackerPower = digimonPowerService.calculatePower(attacker);
@@ -131,6 +146,9 @@ public class ChallengeArenaUseCase {
         int bitsGained = 0;
         int arenaCoinsGained;
         if (victory) {
+            if (attackerClanId != null) {
+                clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.ARENA_WINS);
+            }
             attacker.setArenaWins(attacker.getArenaWins() + 1);
             bitsGained = ArenaRules.winBits(attackerRatingBefore, defenderRatingBefore);
             attacker.setBits(attacker.getBits() + bitsGained);
@@ -141,6 +159,11 @@ public class ChallengeArenaUseCase {
             arenaCoinsGained = ArenaRules.lossArenaCoins();
             if (!defenderIsBot) defender.setArenaWins(defender.getArenaWins() + 1);
         }
+
+        if (attackerClanId != null) {
+            clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.ARENA_DUELS);
+        }
+
         player.setArenaCoins(player.getArenaCoins() + arenaCoinsGained);
 
         try {
@@ -194,5 +217,10 @@ public class ChallengeArenaUseCase {
                 player.getArenaCoins(),
                 ArenaRules.tierFor(attackerRatingAfter).getLabel()
         );
+    }
+
+    private int applyCostReduction(int baseCost, double multiplier) {
+        if (multiplier >= 1.0) return baseCost;
+        return Math.max(1, (int) Math.floor(baseCost * multiplier));
     }
 }

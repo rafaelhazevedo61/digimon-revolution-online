@@ -204,8 +204,14 @@ public class Digimon {
     }
 
     public void regenerateEnergy() {
+        regenerateEnergy(0);
+    }
 
-        if (energy >= maxEnergy) return;
+    public void regenerateEnergy(int maxEnergyBonus) {
+
+        int effectiveMax = maxEnergy + maxEnergyBonus;
+
+        if (energy >= effectiveMax) return;
 
         Instant now = Instant.now();
 
@@ -215,7 +221,7 @@ public class Digimon {
 
         if (energyRecovered > 0) {
 
-            energy = (int) Math.min(maxEnergy, energy + energyRecovered);
+            energy = (int) Math.min(effectiveMax, energy + energyRecovered);
 
             lastEnergyUpdate = lastEnergyUpdate.plus(
                     Duration.ofMinutes(energyRecovered * 5)

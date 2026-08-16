@@ -1,0 +1,10 @@
+package com.dro.modules.clan.api.dto.response;
+
+import java.util.UUID;
+
+public record ClanHonorMarksRankingEntryResponse(
+        UUID playerId,
+        String username,
+        long contribution
+) {
+}

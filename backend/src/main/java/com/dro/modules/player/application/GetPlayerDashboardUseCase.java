@@ -17,6 +17,7 @@ import com.dro.modules.incubation.domain.IncubationStatus;
 import com.dro.modules.incubation.infra.IncubationRepository;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.infra.InventoryRepository;
+import com.dro.modules.clan.application.ClanBonusService;
 import com.dro.modules.mission.domain.MissionDefinitionEntity;
 import com.dro.modules.mission.domain.MissionInstance;
 import com.dro.modules.mission.infra.MissionDefinitionRepository;
@@ -53,6 +54,7 @@ public class GetPlayerDashboardUseCase {
     private final MissionInstanceRepository missionInstanceRepository;
     private final IncubationRepository incubationRepository;
     private final MissionDefinitionRepository missionDefinitionRepository;
+    private final ClanBonusService clanBonusService;
 
     public PlayerDashboardResponse execute(String token) {
 
@@ -114,10 +116,26 @@ public class GetPlayerDashboardUseCase {
             return null;
         }
 
-        d.regenerateEnergy();
+        UUID clanId = player.getClanId();
+        int maxEnergyBonus = clanId != null ? clanBonusService.getMaxEnergyBonus(clanId) : 0;
+
+        d.regenerateEnergy(maxEnergyBonus);
         digimonRepository.save(d);
 
         List<Equipment> equipped = getEquippedItems(d);
+
+        int equipBonusHp = EquipmentRules.totalBonusHp(equipped);
+        int equipBonusAttack = EquipmentRules.totalBonusAttack(equipped);
+        int equipBonusDefense = EquipmentRules.totalBonusDefense(equipped);
+
+        double hpBonus = clanId != null ? clanBonusService.getHpBonusPercent(clanId) : 0.0;
+        double atkBonus = clanId != null ? clanBonusService.getAttackBonusPercent(clanId) : 0.0;
+        double defBonus = clanId != null ? clanBonusService.getDefenseBonusPercent(clanId) : 0.0;
+
+        int clanBonusHp = calculateClanBonus(d.getHp() + equipBonusHp, hpBonus) - d.getHp() - equipBonusHp;
+        int clanBonusAttack = calculateClanBonus(d.getAttack() + equipBonusAttack, atkBonus) - d.getAttack() - equipBonusAttack;
+        int clanBonusDefense = calculateClanBonus(d.getDefense() + equipBonusDefense, defBonus) - d.getDefense() - equipBonusDefense;
+        int clanBonusMaxEnergy = maxEnergyBonus;
 
         DigimonInfos info = d.getDigimonInfoId() != null
                 ? digimonInfosRepository.findById(d.getDigimonInfoId()).orElse(null)
@@ -149,9 +167,13 @@ public class GetPlayerDashboardUseCase {
                 d.getDigimonInfoId(),
                 info != null ? info.getAttribute().name() : null,
                 info != null ? info.getElement().name() : null,
-                EquipmentRules.totalBonusHp(equipped),
-                EquipmentRules.totalBonusAttack(equipped),
-                EquipmentRules.totalBonusDefense(equipped)
+                equipBonusHp,
+                equipBonusAttack,
+                equipBonusDefense,
+                clanBonusHp,
+                clanBonusAttack,
+                clanBonusDefense,
+                clanBonusMaxEnergy
         );
     }
 
@@ -272,5 +294,10 @@ public class GetPlayerDashboardUseCase {
         }
 
         return equipped;
+    }
+
+    private int calculateClanBonus(int base, double percent) {
+        if (percent <= 0) return base;
+        return (int) Math.floor(base * (1.0 + percent));
     }
 }

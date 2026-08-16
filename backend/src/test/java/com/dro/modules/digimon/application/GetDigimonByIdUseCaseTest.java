@@ -63,7 +63,7 @@ class GetDigimonByIdUseCaseTest {
 
         when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
 
-        DigimonResponse response = useCase.execute(digimonId);
+        DigimonResponse response = useCase.execute(null, digimonId);
 
         assertEquals(digimonId, response.id());
         assertEquals("Botamon", response.name());
@@ -95,7 +95,7 @@ class GetDigimonByIdUseCaseTest {
         when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
         when(equipmentRepository.findById(weapon.getId())).thenReturn(Optional.of(weapon));
 
-        DigimonResponse response = useCase.execute(digimonId);
+        DigimonResponse response = useCase.execute(null, digimonId);
 
         assertEquals(0, response.equipBonusHp());
         assertEquals(5, response.equipBonusAttack());
@@ -107,6 +107,6 @@ class GetDigimonByIdUseCaseTest {
         UUID digimonId = UUID.randomUUID();
         when(digimonRepository.findById(digimonId)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> useCase.execute(digimonId));
+        assertThrows(RuntimeException.class, () -> useCase.execute(null, digimonId));
     }
 }

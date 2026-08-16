@@ -13,6 +13,11 @@ public class EquipmentRarityRules {
                         "Rarity profile must sum to 100, got " + total);
             }
         }
+
+        public RarityProfile withQualityBonus(int bonusPoints) {
+            int cappedBonus = Math.min(bonusPoints, common());
+            return new RarityProfile(common() - cappedBonus, rare(), epic(), legendary() + cappedBonus);
+        }
     }
 
     private static final RarityProfile DEFAULT = new RarityProfile(60, 25, 12, 3);
@@ -46,11 +51,26 @@ public class EquipmentRarityRules {
     }
 
     public static EquipmentRarity rollRarity(RarityProfile profile) {
+        return rollRarity(profile, 0.0);
+    }
+
+    public static EquipmentRarity rollRarity(String profileName, double qualityBonusPercent) {
+        RarityProfile profile = PROFILES.get(profileName);
+        if (profile == null) {
+            throw new IllegalArgumentException("Unknown rarity profile: " + profileName);
+        }
+        return rollRarity(profile, qualityBonusPercent);
+    }
+
+    public static EquipmentRarity rollRarity(RarityProfile profile, double qualityBonusPercent) {
+        int bonusPoints = (int) Math.round(qualityBonusPercent * 100);
+        RarityProfile effective = bonusPoints > 0 ? profile.withQualityBonus(bonusPoints) : profile;
+
         int roll = ThreadLocalRandom.current().nextInt(1, 101);
 
-        if (roll <= profile.legendary()) return EquipmentRarity.LEGENDARY;
-        if (roll <= profile.legendary() + profile.epic()) return EquipmentRarity.EPIC;
-        if (roll <= profile.legendary() + profile.epic() + profile.rare()) return EquipmentRarity.RARE;
+        if (roll <= effective.legendary()) return EquipmentRarity.LEGENDARY;
+        if (roll <= effective.legendary() + effective.epic()) return EquipmentRarity.EPIC;
+        if (roll <= effective.legendary() + effective.epic() + effective.rare()) return EquipmentRarity.RARE;
         return EquipmentRarity.COMMON;
     }
 

@@ -66,7 +66,8 @@ public class GetDigimonByIdUseCase {
                 info != null ? info.getElement().name() : null,
                 EquipmentRules.totalBonusHp(equipped),
                 EquipmentRules.totalBonusAttack(equipped),
-                EquipmentRules.totalBonusDefense(equipped)
+                EquipmentRules.totalBonusDefense(equipped),
+                0, 0, 0, 0
         );
     }
 

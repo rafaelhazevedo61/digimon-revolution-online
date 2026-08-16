@@ -19,7 +19,10 @@ const routes = {
   "arena-history": renderArenaHistoryPage,
   "arena-shop": renderArenaShopPage,
   storage: renderStoragePage,
-  more: renderMorePage
+  clans: renderClansPage,
+  "clan-ranking": renderClanRanking,
+  more: renderMorePage,
+  settings: renderSettingsPage
 };
 
 function navigateTo(route, params = {}) {

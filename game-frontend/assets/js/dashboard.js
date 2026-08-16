@@ -56,7 +56,7 @@ function renderDashContent(data) {
       </div>
       <div class="card-sm text-center">
         <p class="text-xs text-slate-500">Energia</p>
-        <p class="text-lg font-bold text-green-400">${d.energy}/${d.maxEnergy}</p>
+        <p class="text-lg font-bold text-green-400">${d.energy}/${d.maxEnergy}${d.clanBonusMaxEnergy ? `<span class="text-xs text-cyan-400">+${d.clanBonusMaxEnergy}</span>` : ""}</p>
       </div>
     </div>
     ` : ""}
@@ -143,15 +143,15 @@ function renderDigimonCard(d) {
       <div class="grid grid-cols-3 gap-2 text-center text-sm">
         <div>
           <p class="text-xs text-slate-500">HP</p>
-          <p class="font-bold text-red-400">${d.hp}${d.equipBonusHp ? `<span class="text-xs text-green-400">+${d.equipBonusHp}</span>` : ""}</p>
+          <p class="font-bold text-red-400">${d.hp}${d.equipBonusHp ? `<span class="text-xs text-green-400">+${d.equipBonusHp}</span>` : ""}${d.clanBonusHp ? `<span class="text-xs text-cyan-400">+${d.clanBonusHp}</span>` : ""}</p>
         </div>
         <div>
           <p class="text-xs text-slate-500">ATK</p>
-          <p class="font-bold text-orange-400">${d.attack}${d.equipBonusAttack ? `<span class="text-xs text-green-400">+${d.equipBonusAttack}</span>` : ""}</p>
+          <p class="font-bold text-orange-400">${d.attack}${d.equipBonusAttack ? `<span class="text-xs text-green-400">+${d.equipBonusAttack}</span>` : ""}${d.clanBonusAttack ? `<span class="text-xs text-cyan-400">+${d.clanBonusAttack}</span>` : ""}</p>
         </div>
         <div>
           <p class="text-xs text-slate-500">DEF</p>
-          <p class="font-bold text-blue-400">${d.defense}${d.equipBonusDefense ? `<span class="text-xs text-green-400">+${d.equipBonusDefense}</span>` : ""}</p>
+          <p class="font-bold text-blue-400">${d.defense}${d.equipBonusDefense ? `<span class="text-xs text-green-400">+${d.equipBonusDefense}</span>` : ""}${d.clanBonusDefense ? `<span class="text-xs text-cyan-400">+${d.clanBonusDefense}</span>` : ""}</p>
         </div>
       </div>
 

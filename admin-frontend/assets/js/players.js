@@ -139,6 +139,7 @@ const playerState = {
               <th>Digimon Ativo</th>
               <th>Última Missão</th>
               <th>Criado em</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -184,6 +185,12 @@ const playerState = {
   
         <td>
           ${formatDateTime(player.createdAt)}
+        </td>
+
+        <td>
+          <button class="btn-secondary text-xs" onclick='adminResetPassword(${JSON.stringify(player).replace(/'/g, "&#39;")})'>
+            Resetar senha
+          </button>
         </td>
       </tr>
     `;
@@ -265,4 +272,79 @@ const playerState = {
         ${date.toLocaleString("pt-BR")}
       </span>
     `;
+  }
+
+  async function adminResetPassword(player) {
+    const generateRandom = window.confirm(
+      `Gerar senha aleatória para ${player.username}?\n\nClique OK para gerar automática.\nClique Cancelar para digitar uma senha manual.`
+    );
+
+    let body = { generateRandom };
+
+    if (!generateRandom) {
+      const newPassword = window.prompt(`Nova senha para ${player.username}:`);
+      if (newPassword === null) return;
+      if (newPassword.length < 4 || newPassword.length > 60) {
+        window.alert("A senha deve ter entre 4 e 60 caracteres.");
+        return;
+      }
+      body.newPassword = newPassword;
+    }
+
+    try {
+      const result = await apiPost(`/admin/players/${player.id}/reset-password`, body);
+      showResetPasswordModal(result.username, result.newPassword);
+    } catch (error) {
+      window.alert(`Erro ao resetar senha: ${error.message}`);
+    }
+  }
+
+  function showResetPasswordModal(username, password) {
+    const existing = document.getElementById("reset-password-modal");
+    if (existing) existing.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "reset-password-modal";
+    modal.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4";
+    modal.innerHTML = `
+      <div class="card w-full max-w-md">
+        <h3 class="text-lg font-bold mb-2">Senha redefinida</h3>
+        <p class="text-sm text-slate-400 mb-4">Player: <span id="reset-password-username" class="text-cyan-300"></span></p>
+
+        <label class="text-sm text-slate-400">Nova senha</label>
+        <div class="flex gap-2 mt-1 mb-4">
+          <input id="reset-password-value" type="text" readonly class="input font-mono text-sm flex-1" />
+          <button id="reset-password-copy" class="btn-primary whitespace-nowrap">Copiar</button>
+        </div>
+
+        <div class="flex justify-end gap-2">
+          <button id="reset-password-close" class="btn-secondary">Fechar</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector("#reset-password-username").textContent = username;
+    const input = modal.querySelector("#reset-password-value");
+    input.value = password;
+    input.focus();
+    input.select();
+
+    modal.querySelector("#reset-password-copy").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(input.value);
+        window.alert("Senha copiada para a área de transferência.");
+      } catch {
+        input.select();
+        document.execCommand("copy");
+        window.alert("Senha selecionada. Use Ctrl+C para copiar.");
+      }
+    });
+
+    modal.querySelector("#reset-password-close").addEventListener("click", () => modal.remove());
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.remove();
+    });
   }

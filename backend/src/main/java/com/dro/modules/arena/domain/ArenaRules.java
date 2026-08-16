@@ -91,7 +91,7 @@ public class ArenaRules {
         return Math.max(MIN_WIN_BITS, Math.min(MAX_WIN_BITS, bits));
     }
 
-    /** Máximo de desafios que um jogador pode fazer por dia (reset natural à meia-noite UTC). */
+    /** Máximo de desafios que um jogador pode fazer por dia (reset na meia-noite do fuso do servidor). */
     public static final int DAILY_CHALLENGE_LIMIT = 5;
 
     /** Intervalo mínimo (minutos) antes de poder desafiar o mesmo alvo novamente. */

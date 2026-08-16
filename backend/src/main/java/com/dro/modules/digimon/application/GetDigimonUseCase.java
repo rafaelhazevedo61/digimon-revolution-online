@@ -68,7 +68,8 @@ public class GetDigimonUseCase {
                             info != null ? info.getElement().name() : null,
                             EquipmentRules.totalBonusHp(equipped),
                             EquipmentRules.totalBonusAttack(equipped),
-                            EquipmentRules.totalBonusDefense(equipped)
+                            EquipmentRules.totalBonusDefense(equipped),
+                            0, 0, 0, 0
                     );
                 })
                 .toList();
@@ -95,7 +96,7 @@ public class GetDigimonUseCase {
                             d.getDigimonInfoId(),
                             info != null ? info.getAttribute().name() : null,
                             info != null ? info.getElement().name() : null,
-                            0, 0, 0
+                            0, 0, 0, 0, 0, 0, 0
                     );
                 })
                 .toList();
