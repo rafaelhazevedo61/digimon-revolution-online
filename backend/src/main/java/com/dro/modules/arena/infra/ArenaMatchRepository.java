@@ -21,4 +21,8 @@ public interface ArenaMatchRepository extends JpaRepository<ArenaMatch, UUID> {
 
     Optional<ArenaMatch> findFirstByAttackerPlayerIdAndDefenderDigimonIdOrderByCreatedAtDesc(
             UUID attackerPlayerId, UUID defenderDigimonId);
+
+    long deleteByCreatedAtGreaterThanEqual(Instant since);
+
+    List<ArenaMatch> findByCreatedAtGreaterThanEqual(Instant since);
 }

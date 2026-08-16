@@ -17,6 +17,8 @@ public interface ClanRaidAttackRepository extends JpaRepository<ClanRaidAttack, 
 
     long countByClanRaidIdAndCreatedAtGreaterThanEqual(UUID clanRaidId, Instant startOfDay);
 
+    long deleteByCreatedAtGreaterThanEqual(Instant since);
+
     List<ClanRaidAttack> findByClanRaidIdOrderByCreatedAtDesc(UUID clanRaidId);
 
     @Query("SELECT a.playerId, COALESCE(SUM(a.damage), 0) " +

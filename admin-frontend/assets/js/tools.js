@@ -88,6 +88,27 @@ async function renderToolsPage() {
 
       </div>
     </div>
+
+    <div class="card border-red-900/50 mb-6">
+      <h3 class="text-lg font-semibold text-red-400 mb-4">Comandos de Reset</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-slate-900 rounded-lg p-4 border border-slate-800">
+          <p class="text-sm text-slate-300 mb-2">Resetar ataques diários da Arena (todos os jogadores)</p>
+          <button onclick="adminResetArena()" class="btn-primary w-full py-2">Resetar Arena</button>
+          <div id="admin-reset-arena-result" class="text-sm mt-2"></div>
+        </div>
+        <div class="bg-slate-900 rounded-lg p-4 border border-slate-800">
+          <p class="text-sm text-slate-300 mb-2">Resetar ataques da Raid de Clã (todos os clãs)</p>
+          <button onclick="adminResetClanRaid()" class="btn-primary w-full py-2">Resetar Raid</button>
+          <div id="admin-reset-raid-result" class="text-sm mt-2"></div>
+        </div>
+        <div class="bg-slate-900 rounded-lg p-4 border border-slate-800">
+          <p class="text-sm text-slate-300 mb-2">Completar todas as missões de clã em andamento</p>
+          <button onclick="adminCompleteClanMissions()" class="btn-primary w-full py-2">Completar Missões</button>
+          <div id="admin-complete-missions-result" class="text-sm mt-2"></div>
+        </div>
+      </div>
+    </div>
   `;
 
   document.getElementById("tools-player-search-btn").addEventListener("click", toolsSearchPlayers);
@@ -271,6 +292,39 @@ async function toolsGrantItem() {
       `<span class="text-green-400">${result.message}</span>`;
   } catch (err) {
     document.getElementById("tools-item-result").innerHTML =
+      `<span class="text-red-400">${err.message}</span>`;
+  }
+}
+
+async function adminResetArena() {
+  try {
+    const result = await apiPost("/admin/tools/reset-daily-arena-attacks");
+    document.getElementById("admin-reset-arena-result").innerHTML =
+      `<span class="text-green-400">${result.message} (${result.deletedMatches} partidas removidas)</span>`;
+  } catch (err) {
+    document.getElementById("admin-reset-arena-result").innerHTML =
+      `<span class="text-red-400">${err.message}</span>`;
+  }
+}
+
+async function adminResetClanRaid() {
+  try {
+    const result = await apiPost("/admin/tools/reset-clan-raid-daily");
+    document.getElementById("admin-reset-raid-result").innerHTML =
+      `<span class="text-green-400">${result.message} (${result.raidsReset} raids / ${result.attacksDeleted} ataques)</span>`;
+  } catch (err) {
+    document.getElementById("admin-reset-raid-result").innerHTML =
+      `<span class="text-red-400">${err.message}</span>`;
+  }
+}
+
+async function adminCompleteClanMissions() {
+  try {
+    const result = await apiPost("/admin/tools/complete-clan-missions");
+    document.getElementById("admin-complete-missions-result").innerHTML =
+      `<span class="text-green-400">${result.message} (${result.completedCount} missões)</span>`;
+  } catch (err) {
+    document.getElementById("admin-complete-missions-result").innerHTML =
       `<span class="text-red-400">${err.message}</span>`;
   }
 }
