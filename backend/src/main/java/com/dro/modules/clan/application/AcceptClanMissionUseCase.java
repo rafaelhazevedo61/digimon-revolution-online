@@ -51,6 +51,14 @@ public class AcceptClanMissionUseCase {
             throw new ConflictException("You already have an active clan mission");
         }
 
+        LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
+        boolean alreadyAcceptedToday = playerClanMissionRepository
+                .existsByPlayerIdAndClanMissionIdAndAcceptedAtGreaterThanEqual(playerId, missionId, startOfDay);
+
+        if (alreadyAcceptedToday) {
+            throw new BadRequestException("You already accepted this clan mission today");
+        }
+
         Clan clan = clanRepository.findById(player.getClanId())
                 .orElseThrow(() -> new NotFoundException("Clan not found"));
 

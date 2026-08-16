@@ -400,10 +400,11 @@ async function clanLoadMissions() {
     }
 
     html += catalog.map(m => {
-      const accepted = m.alreadyAccepted || (myMission && myMission.missionId === m.id && myMission.status !== "CLAIMED");
-      const canAccept = !hasActive && !accepted && m.minClanLevel <= clan.level;
+      const active = myMission && myMission.missionId === m.id && myMission.status !== "CLAIMED";
+      const doneToday = m.alreadyAccepted && !active;
+      const canAccept = !hasActive && !doneToday && !active && m.minClanLevel <= clan.level;
       return `
-        <div class="card-sm mb-2 ${accepted ? 'border-cyan-800' : ''}">
+        <div class="card-sm mb-2 ${active || doneToday ? 'border-cyan-800' : ''}">
           <div class="flex justify-between items-start">
             <div>
               <p class="font-bold text-sm">${escapeHtml(m.title)}</p>
@@ -412,8 +413,9 @@ async function clanLoadMissions() {
               <p class="text-xs text-slate-500">Recompensa: ${m.minHonorMarksReward}-${m.maxHonorMarksReward} HM · ${m.clanXpReward} XP</p>
             </div>
             <div class="text-right">
-              ${accepted ? `<span class="text-xs text-cyan-400">Ativa</span>` : ""}
-              ${!accepted && m.minClanLevel > clan.level ? `<span class="text-xs text-slate-500">Nv ${m.minClanLevel}</span>` : ""}
+              ${active ? `<span class="text-xs text-cyan-400">Ativa</span>` : ""}
+              ${doneToday ? `<span class="text-xs text-slate-500">Disponível amanhã</span>` : ""}
+              ${!active && !doneToday && m.minClanLevel > clan.level ? `<span class="text-xs text-slate-500">Nv ${m.minClanLevel}</span>` : ""}
             </div>
           </div>
           ${canAccept ? `<button class="btn-primary w-full mt-2 text-sm py-1" onclick="clanAcceptMission('${m.id}')">Aceitar</button>` : ""}

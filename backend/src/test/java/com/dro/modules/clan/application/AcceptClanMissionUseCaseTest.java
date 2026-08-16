@@ -87,6 +87,8 @@ class AcceptClanMissionUseCaseTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
         when(playerClanMissionRepository.findByPlayerIdAndStatusIn(eq(playerId), anyCollection()))
                 .thenReturn(Optional.empty());
+        when(playerClanMissionRepository.existsByPlayerIdAndClanMissionIdAndAcceptedAtGreaterThanEqual(any(), any(), any()))
+                .thenReturn(false);
         when(clanRepository.findById(clanId)).thenReturn(Optional.of(clan));
         when(clanMissionRepository.findById(missionId)).thenReturn(Optional.of(mission));
 
@@ -127,6 +129,28 @@ class AcceptClanMissionUseCaseTest {
                 .thenReturn(Optional.of(active));
 
         assertThrows(ConflictException.class, () -> useCase.execute(token, missionId));
+    }
+
+    @Test
+    void execute_throwsWhenAlreadyAcceptedToday() {
+        UUID playerId = UUID.randomUUID();
+        UUID clanId = UUID.randomUUID();
+        UUID missionId = UUID.randomUUID();
+        String token = makeToken(playerId);
+
+        Player player = Player.builder()
+                .id(playerId)
+                .username("player")
+                .clanId(clanId)
+                .build();
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(playerClanMissionRepository.findByPlayerIdAndStatusIn(eq(playerId), anyCollection()))
+                .thenReturn(Optional.empty());
+        when(playerClanMissionRepository.existsByPlayerIdAndClanMissionIdAndAcceptedAtGreaterThanEqual(any(), any(), any()))
+                .thenReturn(true);
+
+        assertThrows(BadRequestException.class, () -> useCase.execute(token, missionId));
     }
 
     @Test

@@ -4,19 +4,19 @@ import com.dro.modules.clan.api.dto.response.ClanMissionResponse;
 import com.dro.modules.clan.domain.Clan;
 import com.dro.modules.clan.domain.ClanMission;
 import com.dro.modules.clan.domain.PlayerClanMission;
-import com.dro.modules.clan.domain.enums.PlayerClanMissionStatus;
 import com.dro.modules.clan.infra.ClanMissionRepository;
 import com.dro.modules.clan.infra.ClanRepository;
 import com.dro.modules.clan.infra.PlayerClanMissionRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
-import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,15 +41,17 @@ public class ListClanMissionsUseCase {
                 .orElseThrow(() -> new NotFoundException("Clan not found"));
 
         List<ClanMission> missions = clanMissionRepository.findAll();
-        Optional<PlayerClanMission> active = playerClanMissionRepository
-                .findByPlayerIdAndStatus(playerId, PlayerClanMissionStatus.IN_PROGRESS);
-        Set<UUID> acceptedIds = active.map(a -> Set.of(a.getClanMissionId())).orElse(Set.of());
+        LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
+        Set<UUID> acceptedTodayIds = playerClanMissionRepository
+                .findByPlayerIdAndAcceptedAtGreaterThanEqual(playerId, startOfDay).stream()
+                .map(PlayerClanMission::getClanMissionId)
+                .collect(Collectors.toSet());
 
         return missions.stream()
                 .filter(m -> m.getMinClanLevel() <= clan.getLevel())
                 .sorted(Comparator.comparingInt(ClanMission::getMinClanLevel)
                         .thenComparing(ClanMission::getCode))
-                .map(m -> mapper.toCatalog(m, acceptedIds.contains(m.getId())))
+                .map(m -> mapper.toCatalog(m, acceptedTodayIds.contains(m.getId())))
                 .toList();
     }
 }
