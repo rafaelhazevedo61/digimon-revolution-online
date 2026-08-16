@@ -386,9 +386,10 @@ async function clanLoadMissions() {
   container.innerHTML = `<div class="card animate-pulse"><div class="h-24"></div></div>`;
 
   try {
-    const [catalog, myMission] = await Promise.all([
+    const [catalog, myMission, ranking] = await Promise.all([
       apiGet("/clan-missions"),
-      apiGet("/clan-missions/me").catch(() => null)
+      apiGet("/clan-missions/me").catch(() => null),
+      apiGet("/clan-missions/ranking").catch(() => [])
     ]);
 
     const hasActive = myMission && myMission.status !== "CLAIMED";
@@ -422,6 +423,8 @@ async function clanLoadMissions() {
         </div>
       `;
     }).join("");
+
+    html += renderHonorMarksRanking(ranking);
 
     container.innerHTML = html;
   } catch (err) {
@@ -465,6 +468,34 @@ function formatObjective(type) {
     REBIRTHS_DONE: "Rebirths realizados:"
   };
   return map[type] || type;
+}
+
+function renderHonorMarksRanking(ranking) {
+  if (!ranking || ranking.length === 0) return "";
+
+  const rankColor = (index) => {
+    if (index === 0) return "text-yellow-400";
+    if (index === 1) return "text-slate-300";
+    if (index === 2) return "text-amber-600";
+    return "text-slate-400";
+  };
+
+  const rows = ranking.map((entry, i) => `
+    <div class="flex justify-between items-center py-1.5 border-b border-slate-800 last:border-0">
+      <div class="flex items-center gap-2">
+        <span class="font-bold w-5 ${rankColor(i)}">${i + 1}.</span>
+        <span class="text-sm text-slate-200">${escapeHtml(entry.username)}</span>
+      </div>
+      <span class="text-xs text-cyan-400 font-mono">${entry.contribution} HM</span>
+    </div>
+  `).join("");
+
+  return `
+    <div class="card mt-4 border-cyan-900">
+      <p class="font-bold mb-2 text-sm">Ranking de Contribuição</p>
+      ${rows}
+    </div>
+  `;
 }
 
 async function clanAcceptMission(missionId) {

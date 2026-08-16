@@ -1,5 +1,6 @@
 package com.dro.modules.clan.api;
 
+import com.dro.modules.clan.api.dto.response.ClanHonorMarksRankingEntryResponse;
 import com.dro.modules.clan.api.dto.response.ClanMissionResponse;
 import com.dro.modules.clan.api.dto.response.PlayerClanMissionResponse;
 import com.dro.modules.clan.application.*;
@@ -19,6 +20,7 @@ public class ClanMissionController {
     private final AcceptClanMissionUseCase acceptClanMissionUseCase;
     private final ClaimClanMissionUseCase claimClanMissionUseCase;
     private final GetMyClanMissionUseCase getMyClanMissionUseCase;
+    private final GetClanHonorMarksRankingUseCase getClanHonorMarksRankingUseCase;
 
     @GetMapping
     public ResponseEntity<List<ClanMissionResponse>> list(
@@ -49,5 +51,12 @@ public class ClanMissionController {
             @PathVariable UUID id
     ) {
         return ResponseEntity.ok(claimClanMissionUseCase.execute(authorization, id));
+    }
+
+    @GetMapping("/ranking")
+    public ResponseEntity<List<ClanHonorMarksRankingEntryResponse>> getRanking(
+            @RequestHeader("Authorization") String authorization
+    ) {
+        return ResponseEntity.ok(getClanHonorMarksRankingUseCase.execute(authorization));
     }
 }

@@ -23,4 +23,6 @@ public interface PlayerClanMissionRepository extends JpaRepository<PlayerClanMis
     boolean existsByPlayerIdAndClanMissionIdAndAcceptedAtGreaterThanEqual(UUID playerId, UUID clanMissionId, LocalDateTime startOfDay);
 
     List<PlayerClanMission> findByPlayerIdAndAcceptedAtGreaterThanEqual(UUID playerId, LocalDateTime startOfDay);
+
+    List<PlayerClanMission> findByClanIdAndStatus(UUID clanId, PlayerClanMissionStatus status);
 }
