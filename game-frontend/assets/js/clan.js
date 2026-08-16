@@ -479,7 +479,9 @@ async function clanClaimMission(playerMissionId) {
   try {
     await apiPost(`/clan-missions/${playerMissionId}/claim`);
     showToast("Recompensa resgatada!", "success");
-    clanLoadMissions();
+    const clan = await apiGet(`/clans/${currentClan.id}`);
+    renderClanDetail(clan);
+    clanShowTab("missions");
   } catch (err) {
     showToast(err.message, "error");
   }
