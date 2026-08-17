@@ -43,6 +43,26 @@
   const year = document.getElementById('current-year');
   if (year) year.textContent = String(new Date().getFullYear());
 
+  const themeToggle = document.querySelector('[data-theme-toggle]');
+  const savedTheme = localStorage.getItem('dro-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    if (themeToggle) themeToggle.textContent = '☀️';
+  }
+  themeToggle?.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('dro-theme', 'light');
+      themeToggle.textContent = '🌙';
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('dro-theme', 'dark');
+      themeToggle.textContent = '☀️';
+    }
+  });
+
   const ctaModal = document.querySelector('[data-cta-modal]');
   if (ctaModal) {
     const openCtaModal = () => {
