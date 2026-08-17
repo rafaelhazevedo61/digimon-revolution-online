@@ -86,10 +86,24 @@ async function auctionRenderMarket() {
   const cards = (listings.content || []).map(auctionListingCard).join("");
   content.innerHTML = `
     <div class="card space-y-3">
-      <div class="flex flex-col md:flex-row gap-2">
-        <input id="auction-search" class="input flex-1" placeholder="Buscar item..." value="${escapeHtml(auctionState.search)}" />
-        <input id="auction-category" class="input md:w-40" placeholder="Categoria" value="${escapeHtml(auctionState.category)}" />
-        <input id="auction-rarity" class="input md:w-32" placeholder="Raridade" value="${escapeHtml(auctionState.rarity)}" />
+      <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_10rem_9rem_auto] gap-2">
+        <input id="auction-search" class="input" placeholder="Buscar item..." value="${escapeHtml(auctionState.search)}" />
+        <select id="auction-category" class="input" aria-label="Filtrar por categoria">
+          ${auctionFilterOption("", "Todas as categorias", auctionState.category)}
+          ${auctionFilterOption("CONSUMABLE", "Consumíveis", auctionState.category)}
+          ${auctionFilterOption("MATERIAL", "Materiais", auctionState.category)}
+          ${auctionFilterOption("FRAGMENT", "Fragmentos", auctionState.category)}
+          ${auctionFilterOption("EVOLUTION_MATERIAL", "Evolução", auctionState.category)}
+          ${auctionFilterOption("DIGITAMA", "Digitamas", auctionState.category)}
+          ${auctionFilterOption("INCUBATOR", "Incubadoras", auctionState.category)}
+        </select>
+        <select id="auction-rarity" class="input" aria-label="Filtrar por raridade">
+          ${auctionFilterOption("", "Todas as raridades", auctionState.rarity)}
+          ${auctionFilterOption("COMMON", "Comum", auctionState.rarity)}
+          ${auctionFilterOption("RARE", "Rara", auctionState.rarity)}
+          ${auctionFilterOption("EPIC", "Épica", auctionState.rarity)}
+          ${auctionFilterOption("LEGENDARY", "Lendária", auctionState.rarity)}
+        </select>
         <button class="btn-primary" onclick="auctionApplyFilters()">Buscar</button>
       </div>
       <div class="flex items-center justify-between text-xs text-slate-400">
@@ -100,6 +114,11 @@ async function auctionRenderMarket() {
     ${cards || `<div class="card text-center text-slate-400">Nenhum anúncio encontrado.</div>`}
     ${auctionPagination(listings, "auctionRenderMarket")}
   `;
+}
+
+function auctionFilterOption(value, label, selectedValue) {
+  const selected = value === selectedValue ? " selected" : "";
+  return `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(label)}</option>`;
 }
 
 function auctionListingCard(listing) {
