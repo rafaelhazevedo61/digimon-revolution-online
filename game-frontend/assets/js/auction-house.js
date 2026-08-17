@@ -321,9 +321,9 @@ function auctionOpenBuyModal(listing) {
         </div>
 
         <p class="text-xs text-slate-500">O valor exibido é calculado pelo preço de ${Number(listing.unitPrice).toLocaleString("pt-BR")} Bits por unidade. A compra será concluída somente após a confirmação.</p>
-        <div class="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
-          <button type="button" class="btn-secondary w-full sm:w-auto" onclick="auctionCloseBuyModal()">Cancelar</button>
-          <button id="auction-buy-submit" type="submit" class="btn-primary w-full sm:w-auto">Confirmar compra</button>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" class="btn-secondary w-full" onclick="auctionCloseBuyModal()">Cancelar</button>
+          <button id="auction-buy-submit" type="submit" class="btn-primary w-full">Confirmar compra</button>
         </div>
       </form>
     </div>
