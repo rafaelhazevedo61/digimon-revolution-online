@@ -88,12 +88,41 @@ async function renderToolsPage() {
 
       </div>
     </div>
+
+    <div class="card border-red-900/50 mb-6">
+      <h3 class="text-lg font-semibold text-red-400 mb-4">Comandos do Servidor</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-slate-900 rounded-lg p-4 border border-slate-800">
+          <p class="text-sm text-slate-300 mb-2">Buff global de dano (teste) — 100x</p>
+          <div id="admin-damage-buff-status" class="text-sm mb-3 text-slate-400">Carregando...</div>
+          <button id="admin-damage-buff-btn" onclick="adminToggleDamageBuff()" class="btn-primary w-full py-2">Ligar/Desligar Buff</button>
+          <div id="admin-damage-buff-result" class="text-sm mt-2"></div>
+        </div>
+        <div class="bg-slate-900 rounded-lg p-4 border border-slate-800">
+          <p class="text-sm text-slate-300 mb-2">Resetar ataques diários da Arena (todos os jogadores)</p>
+          <button onclick="adminResetArena()" class="btn-primary w-full py-2">Resetar Arena</button>
+          <div id="admin-reset-arena-result" class="text-sm mt-2"></div>
+        </div>
+        <div class="bg-slate-900 rounded-lg p-4 border border-slate-800">
+          <p class="text-sm text-slate-300 mb-2">Resetar ataques da Raid de Clã (todos os clãs)</p>
+          <button onclick="adminResetClanRaid()" class="btn-primary w-full py-2">Resetar Raid</button>
+          <div id="admin-reset-raid-result" class="text-sm mt-2"></div>
+        </div>
+        <div class="bg-slate-900 rounded-lg p-4 border border-slate-800">
+          <p class="text-sm text-slate-300 mb-2">Completar todas as missões de clã em andamento</p>
+          <button onclick="adminCompleteClanMissions()" class="btn-primary w-full py-2">Completar Missões</button>
+          <div id="admin-complete-missions-result" class="text-sm mt-2"></div>
+        </div>
+      </div>
+    </div>
   `;
 
   document.getElementById("tools-player-search-btn").addEventListener("click", toolsSearchPlayers);
   document.getElementById("tools-player-search").addEventListener("keydown", (e) => {
     if (e.key === "Enter") toolsSearchPlayers();
   });
+
+  adminLoadDamageBuff();
 }
 
 async function toolsSearchPlayers() {
@@ -271,6 +300,70 @@ async function toolsGrantItem() {
       `<span class="text-green-400">${result.message}</span>`;
   } catch (err) {
     document.getElementById("tools-item-result").innerHTML =
+      `<span class="text-red-400">${err.message}</span>`;
+  }
+}
+
+async function adminLoadDamageBuff() {
+  try {
+    const result = await apiGet("/admin/server/damage-buff");
+    const status = document.getElementById("admin-damage-buff-status");
+    const btn = document.getElementById("admin-damage-buff-btn");
+    if (status) {
+      status.innerHTML = result.enabled
+        ? `<span class="text-green-400 font-semibold">Buff ativo (${result.multiplier}x dano)</span>`
+        : `<span class="text-slate-400">Buff desligado</span>`;
+    }
+    if (btn) {
+      btn.textContent = result.enabled ? "Desligar Buff" : "Ligar Buff";
+    }
+  } catch (err) {
+    const status = document.getElementById("admin-damage-buff-status");
+    if (status) status.innerHTML = `<span class="text-red-400">${err.message}</span>`;
+  }
+}
+
+async function adminToggleDamageBuff() {
+  try {
+    const result = await apiPost("/admin/server/damage-buff/toggle");
+    await adminLoadDamageBuff();
+    document.getElementById("admin-damage-buff-result").innerHTML =
+      `<span class="text-green-400">Buff ${result.enabled ? "ligado" : "desligado"} (${result.multiplier}x)</span>`;
+  } catch (err) {
+    document.getElementById("admin-damage-buff-result").innerHTML =
+      `<span class="text-red-400">${err.message}</span>`;
+  }
+}
+
+async function adminResetArena() {
+  try {
+    const result = await apiPost("/admin/tools/reset-daily-arena-attacks");
+    document.getElementById("admin-reset-arena-result").innerHTML =
+      `<span class="text-green-400">${result.message} (${result.playersReset} jogadores)</span>`;
+  } catch (err) {
+    document.getElementById("admin-reset-arena-result").innerHTML =
+      `<span class="text-red-400">${err.message}</span>`;
+  }
+}
+
+async function adminResetClanRaid() {
+  try {
+    const result = await apiPost("/admin/tools/reset-clan-raid-daily");
+    document.getElementById("admin-reset-raid-result").innerHTML =
+      `<span class="text-green-400">${result.message} (${result.raidsReset} raids)</span>`;
+  } catch (err) {
+    document.getElementById("admin-reset-raid-result").innerHTML =
+      `<span class="text-red-400">${err.message}</span>`;
+  }
+}
+
+async function adminCompleteClanMissions() {
+  try {
+    const result = await apiPost("/admin/tools/complete-clan-missions");
+    document.getElementById("admin-complete-missions-result").innerHTML =
+      `<span class="text-green-400">${result.message} (${result.completedCount} missões)</span>`;
+  } catch (err) {
+    document.getElementById("admin-complete-missions-result").innerHTML =
       `<span class="text-red-400">${err.message}</span>`;
   }
 }

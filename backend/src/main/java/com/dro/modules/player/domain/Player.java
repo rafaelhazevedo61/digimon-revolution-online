@@ -69,6 +69,9 @@ public class Player {
     @Column(name = "clan_joined_at")
     private LocalDateTime clanJoinedAt;
 
+    @Column(name = "arena_daily_reset_at")
+    private LocalDateTime arenaDailyResetAt;
+
     public boolean hasSelectedStarter() {
         return starterSelected;
     }

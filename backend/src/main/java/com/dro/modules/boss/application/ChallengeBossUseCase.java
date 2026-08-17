@@ -20,6 +20,7 @@ import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.modules.server.application.GlobalDamageBuffService;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
@@ -48,6 +49,7 @@ public class ChallengeBossUseCase {
     private final GrantEquipmentUseCase grantEquipmentUseCase;
     private final ClanBonusService clanBonusService;
     private final ClanMissionProgressTracker clanMissionProgressTracker;
+    private final GlobalDamageBuffService globalDamageBuffService;
 
     @Transactional
     public BossChallengeResponse execute(String token, String bossCode, UUID digimonId) {
@@ -106,12 +108,17 @@ public class ChallengeBossUseCase {
         int totalAtk = applyBonus(digimon.getAttack() + EquipmentRules.totalBonusAttack(equippedItems), atkBonus);
         int totalDef = applyBonus(digimon.getDefense() + EquipmentRules.totalBonusDefense(equippedItems), defBonus);
 
-        double digimonPower = BossCombatRules.calculatePower(totalHp, totalAtk, totalDef);
+        double rawDigimonPower = BossCombatRules.calculatePower(totalHp, totalAtk, totalDef);
+        double digimonPower = rawDigimonPower * globalDamageBuffService.getMultiplier();
         double bossPower = BossCombatRules.calculatePower(boss.getHp(), boss.getAtk(), boss.getDef());
-        int winChance = BossCombatRules.calculateWinChance(digimonPower, bossPower);
+
+        boolean buffActive = globalDamageBuffService.isEnabled();
+        int winChance = buffActive ? 100 : BossCombatRules.calculateWinChance(digimonPower, bossPower);
 
         boolean victory;
-        if (BossCombatRules.isBelowThreshold(winChance)) {
+        if (buffActive) {
+            victory = true;
+        } else if (BossCombatRules.isBelowThreshold(winChance)) {
             victory = false;
         } else {
             int roll = ThreadLocalRandom.current().nextInt(1, 101);

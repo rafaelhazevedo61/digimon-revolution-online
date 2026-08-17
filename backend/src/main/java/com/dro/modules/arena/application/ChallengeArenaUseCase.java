@@ -13,6 +13,7 @@ import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.modules.server.application.GlobalDamageBuffService;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
@@ -39,6 +40,7 @@ public class ChallengeArenaUseCase {
     private final DigimonPowerService digimonPowerService;
     private final ClanBonusService clanBonusService;
     private final ClanMissionProgressTracker clanMissionProgressTracker;
+    private final GlobalDamageBuffService globalDamageBuffService;
 
     @Transactional
     public ArenaMatchResponse execute(String token, UUID opponentDigimonId) {
@@ -84,8 +86,14 @@ public class ChallengeArenaUseCase {
             Instant startOfDay = LocalDate.now(ZoneId.systemDefault())
                     .atStartOfDay(ZoneId.systemDefault())
                     .toInstant();
+            Instant dailyResetCutoff = player.getArenaDailyResetAt() != null
+                    ? player.getArenaDailyResetAt().atZone(ZoneId.systemDefault()).toInstant()
+                    : null;
+            Instant attackCutoff = dailyResetCutoff != null && dailyResetCutoff.isAfter(startOfDay)
+                    ? dailyResetCutoff
+                    : startOfDay;
             long usedToday = arenaMatchRepository
-                    .countByAttackerPlayerIdAndCreatedAtGreaterThanEqual(playerId, startOfDay);
+                    .countByAttackerPlayerIdAndCreatedAtGreaterThanEqual(playerId, attackCutoff);
             if (ArenaRules.dailyLimitReached(usedToday)) {
                 throw new BadRequestException("Daily challenge limit reached ("
                         + ArenaRules.DAILY_CHALLENGE_LIMIT + " per day). Come back tomorrow.");
@@ -119,12 +127,13 @@ public class ChallengeArenaUseCase {
             attacker.consumeEnergy(energyCost);
         }
 
-        double attackerPower = digimonPowerService.calculatePower(attacker);
+        double attackerPower = digimonPowerService.calculatePower(attacker) * globalDamageBuffService.getMultiplier();
         double defenderPower = digimonPowerService.calculatePower(defender);
 
-        int winChance = ArenaRules.winChance(attackerPower, defenderPower);
+        boolean buffActive = globalDamageBuffService.isEnabled();
+        int winChance = buffActive ? 100 : ArenaRules.winChance(attackerPower, defenderPower);
         int roll = ThreadLocalRandom.current().nextInt(1, 101);
-        boolean victory = roll <= winChance;
+        boolean victory = buffActive || roll <= winChance;
 
         int attackerRatingBefore = attacker.getArenaRating();
         int defenderRatingBefore = defender.getArenaRating();

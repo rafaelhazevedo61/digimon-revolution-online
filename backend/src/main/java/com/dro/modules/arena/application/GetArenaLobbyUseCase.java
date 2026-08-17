@@ -100,8 +100,14 @@ public class GetArenaLobbyUseCase {
         Instant startOfDay = LocalDate.now(ZoneId.systemDefault())
                 .atStartOfDay(ZoneId.systemDefault())
                 .toInstant();
+        Instant dailyResetCutoff = player.getArenaDailyResetAt() != null
+                ? player.getArenaDailyResetAt().atZone(ZoneId.systemDefault()).toInstant()
+                : null;
+        Instant attackCutoff = dailyResetCutoff != null && dailyResetCutoff.isAfter(startOfDay)
+                ? dailyResetCutoff
+                : startOfDay;
         long usedToday = arenaMatchRepository
-                .countByAttackerPlayerIdAndCreatedAtGreaterThanEqual(playerId, startOfDay);
+                .countByAttackerPlayerIdAndCreatedAtGreaterThanEqual(playerId, attackCutoff);
 
         Instant cooldownSince = now.minus(ArenaRules.TARGET_COOLDOWN_MINUTES, ChronoUnit.MINUTES);
         Map<UUID, Instant> lastChallengePerTarget = arenaMatchRepository

@@ -2,11 +2,10 @@ package com.dro.shared.exception.dto;
 
 import com.dro.shared.exception.ApiErrorCode;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public record ErrorResponse(
-        LocalDateTime timestamp,
+        String timestamp,
         int status,
         String error,
         ApiErrorCode code,
@@ -22,7 +21,7 @@ public record ErrorResponse(
             String path
     ) {
         return new ErrorResponse(
-                LocalDateTime.now(),
+                java.time.OffsetDateTime.now().toString(),
                 status,
                 error,
                 code,
@@ -41,7 +40,7 @@ public record ErrorResponse(
             List<FieldErrorResponse> fields
     ) {
         return new ErrorResponse(
-                LocalDateTime.now(),
+                java.time.OffsetDateTime.now().toString(),
                 status,
                 error,
                 code,

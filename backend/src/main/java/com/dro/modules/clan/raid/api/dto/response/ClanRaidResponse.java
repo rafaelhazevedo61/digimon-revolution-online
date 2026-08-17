@@ -1,0 +1,26 @@
+package com.dro.modules.clan.raid.api.dto.response;
+
+import com.dro.modules.clan.raid.domain.ClanRaidStatus;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+public record ClanRaidResponse(
+        UUID id,
+        UUID clanId,
+        String bossCode,
+        String bossName,
+        String bossImageUrl,
+        int maxHp,
+        int remainingHp,
+        ClanRaidStatus status,
+        Instant createdAt,
+        Instant defeatedAt,
+        int myDailyAttacksUsed,
+        int myDailyAttacksRemaining,
+        long myTotalDamage,
+        List<ClanRaidRankingEntryResponse> ranking,
+        List<ClanRaidAttackResponse> recentAttacks
+) {
+}
