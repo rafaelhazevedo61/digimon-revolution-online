@@ -4,6 +4,7 @@ import com.dro.shared.exception.dto.ErrorResponse;
 import com.dro.shared.exception.dto.FieldErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -34,6 +35,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(exception.getStatus())
                 .body(response);
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResponse> handleOptimisticLockingFailure(
+            OptimisticLockingFailureException exception,
+            HttpServletRequest request
+    ) {
+        ErrorResponse response = ErrorResponse.of(
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                ApiErrorCode.CONFLICT,
+                "The World Boss was updated by another player. Refresh and try again.",
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
