@@ -19,6 +19,7 @@ import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.modules.server.application.GlobalDamageBuffService;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
@@ -45,6 +46,7 @@ public class AttackClanRaidUseCase {
     private final ClanRaidService clanRaidService;
     private final DigimonPowerService digimonPowerService;
     private final ClanBonusService clanBonusService;
+    private final GlobalDamageBuffService globalDamageBuffService;
 
     @Transactional
     public AttackClanRaidResponse execute(String token) {
@@ -105,7 +107,7 @@ public class AttackClanRaidUseCase {
         double bossPower = BossCombatRules.calculatePower(boss.getHp(), boss.getAtk(), boss.getDef());
         int winChance = BossCombatRules.calculateWinChance(digimonPower, bossPower);
 
-        int damage = ClanRaidRules.calculateDamage(raid.getMaxHp(), winChance);
+        int damage = (int) Math.round(ClanRaidRules.calculateDamage(raid.getMaxHp(), winChance) * globalDamageBuffService.getMultiplier());
         int actualDamage = Math.min(damage, raid.getRemainingHp());
 
         int xpGained = ClanRaidRules.hitXp(boss.getBaseXpReward(), boss.getDefeatXpPercent());
