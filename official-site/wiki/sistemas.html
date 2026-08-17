@@ -54,19 +54,148 @@
 
             <section>
               <h2>Digievolução</h2>
-              <p>Para evoluir é preciso atingir o level mínimo e possuir os fragmentos (e eventualmente materiais) exigidos. Cada espécie pode ter uma ou mais <strong>linhas evolutivas</strong>; quando há mais de uma, o jogador escolhe o caminho.</p>
-              <p>A evolução recalcula todos os stats com o novo multiplicador de estágio e, se não houver nome customizado, atualiza o nome para a nova espécie.</p>
+              <p>A <strong>Digievolução</strong> leva seu Digimon para uma forma mais avançada dentro da própria linha evolutiva. Ela aumenta o potencial dos atributos, libera novas espécies e aproxima o Digimon dos estágios mais poderosos do jogo. Evoluir não é criar outro Digimon: é desenvolver o mesmo companheiro.</p>
+
+              <h3>Como funciona</h3>
+              <p>Na tela de Evolução, o jogo mostra o Digimon ativo, o próximo estágio disponível, a espécie que será obtida, os atributos base da nova forma e todos os requisitos. Se houver mais de uma linha evolutiva possível, cada caminho aparece como uma opção separada para você escolher.</p>
+              <ol>
+                <li>Abra a tela <strong>Evolução</strong> com o Digimon que deseja desenvolver selecionado como ativo.</li>
+                <li>Compare as opções de espécie, estágio, atributo, elemento e atributos base apresentados.</li>
+                <li>Confira o nível exigido e a quantidade de cada material. A tela mostra tanto o que é necessário quanto o que você possui.</li>
+                <li>Quando todos os requisitos forem atendidos, confirme em <strong>“Evoluir!”</strong>. Se faltar nível ou material, o botão ficará bloqueado e a tela informará o motivo.</li>
+              </ol>
+              <p>A evolução é imediata e consome os materiais mostrados para aquela etapa. No fluxo atual, não há cobrança de Bits para evoluir; o custo está nos fragmentos e nos demais materiais específicos da rota.</p>
+
+              <h3>Requisitos por estágio</h3>
+              <p>As linhas atualmente cadastradas seguem estes níveis mínimos e quantidades de fragmentos. O nome exato do fragmento muda conforme a espécie que você vai obter, e algumas rotas também podem exigir materiais adicionais exibidos na tela:</p>
+              <ul>
+                <li><strong>Baby → Baby II:</strong> level 10 e 5 fragmentos da próxima forma.</li>
+                <li><strong>Baby II → Rookie:</strong> level 15 e 10 fragmentos da próxima forma.</li>
+                <li><strong>Rookie → Champion:</strong> level 25 e 20 fragmentos da próxima forma.</li>
+                <li><strong>Champion → Ultimate:</strong> level 50 e 30 fragmentos da próxima forma.</li>
+                <li><strong>Ultimate → Mega:</strong> level 75 e 50 fragmentos da próxima forma.</li>
+              </ul>
+              <p>Esses requisitos são avaliados para cada etapa, não apenas uma vez por linha. Por exemplo, chegar a Champion não libera automaticamente Ultimate: ainda será necessário alcançar o level 50 e reunir os materiais da próxima forma.</p>
+
+              <h3>Linhas evolutivas atuais</h3>
+              <p>As primeiras linhas disponíveis formam caminhos completos do estágio Baby até Mega:</p>
+              <ul>
+                <li><strong>Linha do Agumon:</strong> Botamon → Koromon → Agumon → Greymon → MetalGreymon → WarGreymon.</li>
+                <li><strong>Linha do Gabumon:</strong> Punimon → Tsunomon → Gabumon → Garurumon → WereGarurumon → MetalGarurumon.</li>
+                <li><strong>Linha do Patamon:</strong> Poyomon → Tokomon → Patamon → Angemon → MagnaAngemon → Seraphimon.</li>
+                <li><strong>Linha do Biyomon:</strong> Yuramon → Yokomon → Biyomon → Birdramon → Garudamon → Phoenixmon.</li>
+                <li><strong>Linha do Tentomon:</strong> Pabumon → Motimon → Tentomon → Kabuterimon → MegaKabuterimon → HerculesKabuterimon.</li>
+                <li><strong>Linha do Gomamon:</strong> Pichimon → Bukamon → Gomamon → Ikkakumon → Zudomon → Vikemon.</li>
+              </ul>
+              <p>O jogo pode suportar mais de um caminho para uma mesma espécie. Quando isso acontecer, escolha com atenção: a opção selecionada define a próxima espécie e também os materiais exigidos nas etapas seguintes.</p>
+
+              <h3>O que muda e o que permanece</h3>
+              <p>Ao evoluir, o Digimon passa a usar os atributos base da nova espécie, mas continua sendo o mesmo Digimon. O nível, a experiência, a raridade, os IVs, a personalidade, o trait, a contagem de Rebirth e os demais progressos permanecem. Se você tiver escolhido um nome personalizado, ele também é mantido; caso contrário, o nome acompanha a nova espécie.</p>
+              <p>Os atributos são recalculados para refletir a nova forma. Em termos simples, o jogo combina o atributo base da espécie com parte do IV atual e aplica os modificadores de raridade, estágio, personalidade, trait e Rebirth:</p>
+              <ul>
+                <li><strong>HP:</strong> usa 30% do IV de HP junto do HP base da nova espécie.</li>
+                <li><strong>ATK:</strong> usa 20% do IV de ATK junto do ATK base da nova espécie.</li>
+                <li><strong>DEF:</strong> usa 20% do IV de DEF junto da DEF base da nova espécie.</li>
+              </ul>
+              <p>Cada estágio também possui um multiplicador de poder: Baby x1,00, Baby II x1,10, Rookie x1,20, Champion x1,50, Ultimate x2,00 e Mega x2,80. Por isso, mesmo mantendo seus IVs e demais características, um Digimon evoluído tende a ficar muito mais forte.</p>
+
+              <h3>Quando chegar ao estágio Mega</h3>
+              <p>Mega é o estágio máximo das linhas atuais. Quando o Digimon não possui mais uma próxima evolução, a tela informa que ele atingiu o estágio máximo e oferece o caminho para o <strong>Rebirth</strong>. A partir daí, a escolha deixa de ser “qual é a próxima forma?” e passa a ser “vale a pena renascer para buscar uma nova geração ainda mais forte?”.</p>
             </section>
 
             <section>
               <h2>Rebirth</h2>
-              <p>Digimons no level 100 em estágio Champion ou superior podem renascer. O processo consome Bits e <strong>Data Cores</strong>, marca o antigo como renascido e cria um novo Digimon Baby com:</p>
+              <p>O <strong>Rebirth</strong> é um renascimento estratégico. Em vez de continuar subindo de estágio, um Digimon avançado retorna ao estágio Baby como uma nova geração, com nível reiniciado, novos sorteios e bônus acumulados que tornam os próximos ciclos cada vez mais valiosos.</p>
+              <p>O objetivo não é simplesmente voltar ao começo. O novo Digimon nasce com um novo conjunto de características, mas recebe proteção e bônus baseados na história do Digimon anterior. Com vários Rebirths, você pode buscar uma raridade melhor, IVs mais fortes, traits úteis e um multiplicador permanente de atributos.</p>
+
+              <h3>Quem pode fazer Rebirth</h3>
+              <p>Para realizar o Rebirth, o Digimon precisa atender a todos os requisitos abaixo:</p>
               <ul>
-                <li>Bônus de IV mínimo (+3 por rebirth, cap +30)</li>
-                <li>Bônus de stats (+2% por rebirth, cap +20%)</li>
-                <li>Chance de herdar a raridade anterior</li>
-                <li>Bits transferidos do Digimon anterior</li>
+                <li>Estar no <strong>level 100</strong>.</li>
+                <li>Estar no estágio <strong>Champion, Ultimate ou Mega</strong>.</li>
+                <li>Estar com status ativo. Um Digimon que já renasceu não pode ser renascido novamente; o novo Digimon criado será usado para os próximos ciclos.</li>
+                <li>Não estar participando de uma missão em andamento.</li>
+                <li>Ter Bits suficientes no próprio Digimon.</li>
+                <li>Ter Data Cores suficientes no inventário vinculado ao Digimon.</li>
               </ul>
+              <p>A tela de Rebirth verifica tudo antes da confirmação e mostra exatamente o que está faltando. Se algum requisito não for atendido, o botão <strong>“Renascer!”</strong> fica bloqueado.</p>
+
+              <h3>Custos progressivos</h3>
+              <p>O custo aumenta conforme o número do próximo Rebirth. O primeiro renascimento custa 10.000 Bits e 1 Data Core; o segundo custa 20.000 Bits e 2 Data Cores; o terceiro custa 30.000 Bits e 3 Data Cores, e assim por diante.</p>
+              <ul>
+                <li><strong>Bits:</strong> 10.000 × o número do Rebirth que será realizado.</li>
+                <li><strong>Data Cores:</strong> quantidade igual ao número do Rebirth que será realizado.</li>
+              </ul>
+              <p>Os Bits são descontados do Digimon antigo. O saldo que sobrar é transferido para o novo Digimon, e a prévia mostra quanto restará depois do processo. Os Data Cores são retirados do inventário.</p>
+
+              <h3>O que nasce depois do Rebirth</h3>
+              <p>O resultado é um novo Digimon no estágio <strong>Baby</strong>, no <strong>level 1</strong>, com zero de experiência e com a mesma linha ou tipo de origem. Se o Digimon antigo era o ativo, o novo assume automaticamente o lugar dele como Digimon ativo.</p>
+              <p>O Digimon antigo não é simplesmente apagado: ele é marcado como renascido e fica ligado ao novo como parte da linhagem. O novo Digimon recebe um novo nome de espécie Baby, uma nova personalidade, uma nova raridade sorteada ou herdada, novos IVs sorteados e a contagem de Rebirth aumentada em 1.</p>
+
+              <h3>Bônus que ficam acumulados</h3>
+              <p>Cada Rebirth aumenta o multiplicador de HP, ATK e DEF em 2%. Esse bônus chega a +10% no quinto Rebirth e a <strong>+20% no décimo</strong>. Depois do décimo, o Digimon ainda pode fazer novos Rebirths, mas o bônus direto de atributos permanece limitado a +20%.</p>
+              <ul>
+                <li><strong>Rebirth 1:</strong> x1,02, ou +2% em HP, ATK e DEF.</li>
+                <li><strong>Rebirth 5:</strong> x1,10, ou +10% em HP, ATK e DEF.</li>
+                <li><strong>Rebirth 10 ou superior:</strong> x1,20, ou +20% em HP, ATK e DEF.</li>
+              </ul>
+              <p>Esse multiplicador acompanha o Digimon nas próximas Digievoluções. Portanto, renascer não elimina o trabalho de evolução: depois de voltar ao Baby, o Digimon poderá subir novamente pelos estágios carregando o bônus acumulado.</p>
+
+              <h3>Como funcionam os IVs no novo Digimon</h3>
+              <p>O Rebirth <strong>não soma simplesmente +3 ao IV antigo</strong>. Ele define um valor mínimo protegido e, depois, sorteia o novo IV entre esse mínimo e 100. O bônus de Rebirth é de +3 no mínimo por ciclo, limitado a +30.</p>
+              <p>Para a maioria dos IVs, o mínimo considera três fatores: o piso da nova raridade, o bônus acumulado de Rebirth e metade do IV anterior. Na prática, o novo mínimo é protegido pelo maior desses valores. Há também duas proteções especiais:</p>
+              <ul>
+                <li>Um IV anterior de <strong>100</strong> gera uma nova faixa de 90 a 100.</li>
+                <li>Um IV anterior entre <strong>90 e 99</strong> gera uma nova faixa mínima de 75 a 100.</li>
+                <li>Nos demais casos, o jogo escolhe o maior valor entre o piso da raridade mais o bônus de Rebirth e metade do IV anterior.</li>
+              </ul>
+              <p>Exemplo: se um atributo tinha IV 70 e o novo Digimon receber uma raridade cujo piso é 25, no primeiro Rebirth o bônus de Rebirth é +3. O mínimo será o maior valor entre 28 e 35, portanto o novo IV ficará entre 35 e 100. O resultado exato continua sendo sorteado.</p>
+
+              <h3>Raridade, personalidade e trait</h3>
+              <p>A raridade anterior pode ser herdada, mas isso não é garantido. A chance começa em 42% no primeiro Rebirth, aumenta 2 pontos percentuais por ciclo e chega ao limite de 70% a partir do décimo quinto Rebirth. Se a raridade não for herdada, o jogo faz um novo sorteio com pesos que ficam gradualmente mais favoráveis conforme a quantidade de Rebirths aumenta.</p>
+              <ul>
+                <li><strong>Common:</strong> multiplicador de atributos x1,00 e IV mínimo 0.</li>
+                <li><strong>Rare:</strong> multiplicador de atributos x1,10 e IV mínimo 25.</li>
+                <li><strong>Epic:</strong> multiplicador de atributos x1,25 e IV mínimo 50.</li>
+                <li><strong>Legendary:</strong> multiplicador de atributos x1,50 e IV mínimo 75.</li>
+              </ul>
+              <p>A personalidade é sorteada novamente. Ela pode favorecer uma área específica:</p>
+              <ul>
+                <li><strong>Durable:</strong> +10% HP.</li>
+                <li><strong>Fighter:</strong> +10% ATK.</li>
+                <li><strong>Brainy:</strong> +5% ATK e +5% XP.</li>
+                <li><strong>Nimble:</strong> +5% ATK e +5% DEF.</li>
+                <li><strong>Defender:</strong> +10% DEF.</li>
+                <li><strong>Lively:</strong> +10% XP.</li>
+              </ul>
+              <p>O trait também pode ser obtido no Rebirth. A chance começa em 12% no primeiro ciclo, aumenta 2 pontos percentuais por Rebirth e chega ao limite de 40%. Quando um trait é sorteado, ele pode trazer um dos efeitos abaixo:</p>
+              <ul>
+                <li><strong>Fast Learner:</strong> +10% XP.</li>
+                <li><strong>Vitality:</strong> +10% HP.</li>
+                <li><strong>Berserker:</strong> +10% ATK.</li>
+                <li><strong>Iron Body:</strong> +10% DEF.</li>
+                <li><strong>Energetic:</strong> +5 de energia máxima.</li>
+              </ul>
+
+              <h3>Como os atributos do renascido são calculados</h3>
+              <p>O novo Digimon começa no estágio Baby, então seus atributos são recalculados a partir da espécie Baby da linha, dos novos IVs e dos resultados sorteados. Em linguagem simples, a conta segue esta lógica:</p>
+              <ul>
+                <li><strong>HP novo:</strong> HP base da forma Baby mais 30% do IV de HP, multiplicado pela raridade, personalidade, trait e bônus de Rebirth.</li>
+                <li><strong>ATK novo:</strong> ATK base da forma Baby mais 20% do IV de ATK, multiplicado pela raridade, personalidade, trait e bônus de Rebirth.</li>
+                <li><strong>DEF novo:</strong> DEF base da forma Baby mais 20% do IV de DEF, multiplicado pela raridade, personalidade, trait e bônus de Rebirth.</li>
+              </ul>
+              <p>O novo Digimon começa com 20 de energia máxima. Se nascer com o trait <strong>Energetic</strong>, recebe mais 5 de energia máxima. O valor final é arredondado para baixo, por isso pequenas diferenças nos IVs e nos multiplicadores podem alterar os atributos exibidos.</p>
+
+              <h3>Checklist antes de confirmar</h3>
+              <ul>
+                <li>Confira se o Digimon está no level 100 e em Champion, Ultimate ou Mega.</li>
+                <li>Veja se ele não está ocupado em uma missão.</li>
+                <li>Confirme o custo de Bits e Data Cores do próximo Rebirth.</li>
+                <li>Analise as faixas de IV que a prévia apresenta para HP, ATK e DEF.</li>
+                <li>Lembre-se de que raridade, personalidade, trait e IVs podem mudar; o sistema oferece proteções, mas não garante que todos os resultados serão superiores.</li>
+                <li>Se o Digimon for o ativo, saiba que o novo Baby assumirá o lugar dele automaticamente.</li>
+              </ul>
+              <p>O Rebirth é uma decisão de longo prazo: você abre mão do level e da forma atual para ganhar uma nova oportunidade de crescimento. Quanto melhor for o planejamento dos custos, dos IVs e dos bônus desejados, mais proveitoso será cada novo ciclo.</p>
             </section>
 
             <section>
