@@ -86,8 +86,11 @@ async function auctionRenderMarket() {
   const cards = (listings.content || []).map(auctionListingCard).join("");
   content.innerHTML = `
     <div class="card space-y-3">
-      <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_10rem_9rem_auto] gap-2">
-        <input id="auction-search" class="input" placeholder="Buscar item..." value="${escapeHtml(auctionState.search)}" />
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[minmax(14rem,1fr)_12rem_11rem_7.5rem] gap-2">
+        <label class="min-w-0 sm:col-span-2 lg:col-span-1">
+          <span class="sr-only">Buscar item por nome ou código</span>
+          <input id="auction-search" class="input min-w-0" placeholder="Buscar por nome ou código..." value="${escapeHtml(auctionState.search)}" />
+        </label>
         <select id="auction-category" class="input" aria-label="Filtrar por categoria">
           ${auctionFilterOption("", "Todas as categorias", auctionState.category)}
           ${auctionFilterOption("CONSUMABLE", "Consumíveis", auctionState.category)}
@@ -104,7 +107,7 @@ async function auctionRenderMarket() {
           ${auctionFilterOption("EPIC", "Épica", auctionState.rarity)}
           ${auctionFilterOption("LEGENDARY", "Lendária", auctionState.rarity)}
         </select>
-        <button class="btn-primary" onclick="auctionApplyFilters()">Buscar</button>
+        <button class="btn-primary w-full" onclick="auctionApplyFilters()">Buscar</button>
       </div>
       <div class="flex items-center justify-between text-xs text-slate-400">
         <span>${Number(listings.totalElements || 0).toLocaleString("pt-BR")} anúncio(s) encontrado(s)</span>
