@@ -107,12 +107,12 @@ async function auctionRenderMarket() {
           ${auctionFilterOption("EPIC", "Épica", auctionState.rarity)}
           ${auctionFilterOption("LEGENDARY", "Lendária", auctionState.rarity)}
         </select>
+      </div>
+      <div class="grid grid-cols-2 gap-2 mt-3">
         <button class="btn-primary w-full" onclick="auctionApplyFilters()">Buscar</button>
+        <button class="btn-secondary w-full" onclick="auctionShowCreateForm()">+ Publicar item</button>
       </div>
-      <div class="flex items-center justify-between text-xs text-slate-400">
-        <span>${Number(listings.totalElements || 0).toLocaleString("pt-BR")} anúncio(s) encontrado(s)</span>
-        <button class="btn-secondary" onclick="auctionShowCreateForm()">+ Publicar item</button>
-      </div>
+      <p class="text-center text-xs text-slate-400 mt-2">${Number(listings.totalElements || 0).toLocaleString("pt-BR")} anúncio(s) encontrado(s)</p>
     </div>
     ${cards || `<div class="card text-center text-slate-400">Nenhum anúncio encontrado.</div>`}
     ${auctionPagination(listings, "auctionRenderMarket")}
