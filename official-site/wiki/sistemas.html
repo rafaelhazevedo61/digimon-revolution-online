@@ -44,15 +44,51 @@
 
     <section class="article-page">
       <div class="container">
-        <article class="news-article">
-          <div class="article-body">
-            <section>
+        <div class="systems-layout">
+          <aside class="systems-sidebar" aria-label="Navegação dos sistemas">
+            <div class="systems-toc-card systems-toc-desktop">
+              <span class="systems-toc-eyebrow">Navegação</span>
+              <h2>Explorar sistemas</h2>
+              <nav aria-label="Índice dos sistemas">
+                <ul class="systems-toc-list">
+                  <li><a href="#missoes">Missões</a></li>
+                  <li><a href="#digievolucao">Digievolução</a></li>
+                  <li><a href="#rebirth">Rebirth</a></li>
+                  <li><a href="#incubacao">Incubação</a></li>
+                  <li><a href="#equipamentos">Equipamentos</a></li>
+                  <li><a href="#bosses">Bosses</a></li>
+                  <li><a href="#arena-pvp">Arena PvP</a></li>
+                  <li><a href="#clans-raid">Clãs e Raid de Clã</a></li>
+                  <li><a href="#boss-mundial">Boss Mundial</a></li>
+                </ul>
+              </nav>
+            </div>
+            <details class="systems-toc-card systems-toc-mobile">
+              <summary>Explorar sistemas</summary>
+              <nav aria-label="Índice dos sistemas">
+                <ul class="systems-toc-list">
+                  <li><a href="#missoes">Missões</a></li>
+                  <li><a href="#digievolucao">Digievolução</a></li>
+                  <li><a href="#rebirth">Rebirth</a></li>
+                  <li><a href="#incubacao">Incubação</a></li>
+                  <li><a href="#equipamentos">Equipamentos</a></li>
+                  <li><a href="#bosses">Bosses</a></li>
+                  <li><a href="#arena-pvp">Arena PvP</a></li>
+                  <li><a href="#clans-raid">Clãs e Raid de Clã</a></li>
+                  <li><a href="#boss-mundial">Boss Mundial</a></li>
+                </ul>
+              </nav>
+            </details>
+          </aside>
+          <article class="news-article">
+            <div class="article-body">
+            <section id="missoes">
               <h2>Missões</h2>
               <p>As missões têm <strong>duração real</strong> e consomem energia. Cada área possui dificuldades (Easy, Normal, Hard), requisitos de estágio e recompensas próprias de XP, Bits, itens fixos e loot aleatório.</p>
               <p>Áreas desbloqueadas por estágio: Native Forest (Baby), Gear Savanna e Factorial Town (Rookie), Freezeland (Champion), Server Desert (Ultimate) e Infinity Mountain (Mega).</p>
             </section>
 
-            <section>
+            <section id="digievolucao">
               <h2>Digievolução</h2>
               <p>A <strong>Digievolução</strong> leva seu Digimon para uma forma mais avançada dentro da própria linha evolutiva. Ela aumenta o potencial dos atributos, libera novas espécies e aproxima o Digimon dos estágios mais poderosos do jogo. Evoluir não é criar outro Digimon: é desenvolver o mesmo companheiro.</p>
 
@@ -103,7 +139,7 @@
               <p>Mega é o estágio máximo das linhas atuais. Quando o Digimon não possui mais uma próxima evolução, a tela informa que ele atingiu o estágio máximo e oferece o caminho para o <strong>Rebirth</strong>. A partir daí, a escolha deixa de ser “qual é a próxima forma?” e passa a ser “vale a pena renascer para buscar uma nova geração ainda mais forte?”.</p>
             </section>
 
-            <section>
+            <section id="rebirth">
               <h2>Rebirth</h2>
               <p>O <strong>Rebirth</strong> é um renascimento estratégico. Em vez de continuar subindo de estágio, um Digimon avançado retorna ao estágio Baby como uma nova geração, com nível reiniciado, novos sorteios e bônus acumulados que tornam os próximos ciclos cada vez mais valiosos.</p>
               <p>O objetivo não é simplesmente voltar ao começo. O novo Digimon nasce com um novo conjunto de características, mas recebe proteção e bônus baseados na história do Digimon anterior. Com vários Rebirths, você pode buscar uma raridade melhor, IVs mais fortes, traits úteis e um multiplicador permanente de atributos.</p>
@@ -266,13 +302,13 @@
               <p>O Rebirth é uma decisão de longo prazo: você abre mão do level e da forma atual para ganhar uma nova oportunidade de crescimento. Quanto melhor for o planejamento dos custos, dos IVs e dos bônus desejados, mais proveitoso será cada novo ciclo.</p>
             </section>
 
-            <section>
+            <section id="incubacao">
               <h2>Incubação</h2>
               <p>Após escolher uma Digitama, o jogador usa uma incubadora para iniciar o processo. Cada incubadora tem um tempo de espera: Common (5 min), Rare (2 min) e Epic (30 s). O resgate cria o Digimon com raridade, personalidade, trait e IVs sorteados.</p>
               <p>O resgate só é permitido se houver espaço nos slots ativos (máximo 3).</p>
             </section>
 
-            <section>
+            <section id="equipamentos">
               <h2>Equipamentos</h2>
               <p>Cada Digimon pode equipar uma arma, uma armadura e um acessório. Os equipamentos possuem tier (1-10), refinamento (+0 a +10) e raridade (Common, Rare, Epic, Legendary).</p>
               <p>Completar 2 ou 3 peças do mesmo <strong>set</strong> ativa bônus extras:</p>
@@ -285,7 +321,7 @@
               <p>Refinar consome Bits e <strong>Refinement Stones</strong>. Cada nível aumenta os stats base em +2 e a taxa de sucesso diminui conforme sobe.</p>
             </section>
 
-            <section>
+            <section id="bosses">
               <h2>Bosses</h2>
               <p>Bosses são desafios por estágio que consomem energia e têm cooldown individual. A chance de vitória depende do poder do Digimon contra o poder do boss:</p>
               <pre><code>Power = HP * 0,30 + ATK * 1,50 + DEF * 1,00
@@ -294,7 +330,7 @@ WinChance = clamp(round(digimonPower / bossPower * 100), 5, 95)</code></pre>
               <p>Bosses diários sofrem rotação por estágio todos os dias, garantindo variedade sem repetição.</p>
             </section>
 
-            <section>
+            <section id="arena-pvp">
               <h2>Arena PvP</h2>
               <p>A Arena é <strong>assíncrona</strong>: o jogador desafia o Digimon ativo de outro jogador e o servidor resolve comparando o poder efetivo, com um fator de aleatoriedade.</p>
               <ul>
@@ -306,7 +342,7 @@ WinChance = clamp(round(digimonPower / bossPower * 100), 5, 95)</code></pre>
               </ul>
             </section>
 
-            <section>
+            <section id="clans-raid">
               <h2>Clãs e Raid de Clã</h2>
               <p>Clãs são grupos de jogadores que acumulam <strong>Honor Marks</strong> — moeda coletiva obtida através de missões diárias. O líder pode gastar Honor Marks em upgrades:</p>
               <ul>
@@ -319,7 +355,7 @@ WinChance = clamp(round(digimonPower / bossPower * 100), 5, 95)</code></pre>
               <p>A <strong>Raid de Clã</strong> é um boss compartilhado pelo clã com HP coletivo. Cada membro pode atacar até 3 vezes por dia gastando energia. O dano é acumulado e, ao derrotar o boss, o clã recebe Honor Marks e XP. O ranking de dano mostra quem mais contribuiu.</p>
             </section>
 
-            <section>
+            <section id="boss-mundial">
               <h2>Boss Mundial</h2>
               <p>O <strong>Boss Mundial</strong> é uma batalha coletiva que reúne todos os jogadores do servidor contra o mesmo inimigo. Diferentemente de um boss comum, você não enfrenta uma cópia separada: cada ataque reduz o <strong>HP global</strong> e ajuda toda a comunidade. Se outro jogador atacar antes de você, você verá o resultado desse esforço na mesma barra de vida.</p>
 
@@ -397,8 +433,9 @@ WinChance = clamp(round(digimonPower / bossPower * 100), 5, 95)</code></pre>
               </ul>
               <p>O Boss Mundial é uma oportunidade diária de contribuir com o servidor, receber recompensas e disputar posições no ranking. Volte todos os dias, fortaleça seu Digimon e ajude a comunidade a derrotar o próximo desafio.</p>
             </section>
-          </div>
-        </article>
+            </div>
+          </article>
+        </div>
       </div>
     </section>
   </main>
