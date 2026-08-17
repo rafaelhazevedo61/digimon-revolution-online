@@ -7,7 +7,7 @@
   <meta name="description" content="Galeria de imagens e registros do desenvolvimento do Digimon Revolution Online." />
   <title>Galeria — Digimon Revolution Online</title>
   <link rel="icon" type="image/png" href="assets/img/icon-192.png" />
-  <link rel="stylesheet" href="assets/css/site.css" />
+  <link rel="stylesheet" href="assets/css/site.css?v=3" />
 </head>
 <body class="internal-page">
   <a class="skip-link" href="#main">Ir para o conteúdo</a>
@@ -19,6 +19,7 @@
         <a href="index.html#sobre">O jogo</a><a href="index.html#sistemas">Sistemas</a><a href="index.html#roadmap">Roadmap</a><a href="noticias.html">Notícias</a><a class="active" href="galeria.html">Galeria</a><a href="index.html#faq">FAQ</a>
       </nav>
       <a class="button button-small button-primary header-cta" href="../game-frontend/index.html">Jogar agora</a>
+      <button class="theme-toggle" type="button" aria-label="Alternar tema" data-theme-toggle>🌙</button>
     </div>
   </header>
 
@@ -40,6 +41,8 @@
           <button class="gallery-filter" type="button" data-gallery-filter="Interface">Interface</button>
           <button class="gallery-filter" type="button" data-gallery-filter="Gameplay">Gameplay</button>
           <button class="gallery-filter" type="button" data-gallery-filter="Progressão">Progressão</button>
+          <button class="gallery-filter" type="button" data-gallery-filter="Comunidade">Comunidade</button>
+          <button class="gallery-filter" type="button" data-gallery-filter="PvP">PvP</button>
         </div>
         <div class="gallery-grid gallery-grid-full" data-gallery-grid="full"></div>
       </div>
@@ -53,7 +56,19 @@
 
   <div class="gallery-modal" data-gallery-modal hidden><div class="gallery-modal-backdrop" data-gallery-backdrop></div><div class="gallery-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="gallery-modal-title"><button class="gallery-modal-close" type="button" data-gallery-close aria-label="Fechar imagem">×</button><div class="gallery-modal-media"><img data-gallery-modal-image src="" alt="" /></div><div class="gallery-modal-copy"><span data-gallery-modal-category></span><h2 id="gallery-modal-title" data-gallery-modal-title></h2><p data-gallery-modal-description></p></div></div></div>
 
-  <script src="assets/js/site.js"></script>
+  <div class="cta-modal" data-cta-modal hidden>
+    <div class="cta-modal-backdrop" data-cta-modal-backdrop></div>
+    <div class="cta-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="cta-modal-title">
+      <button class="cta-modal-close" type="button" data-cta-modal-close aria-label="Fechar">×</button>
+      <div class="cta-modal-copy">
+        <span>Em breve</span>
+        <h2 id="cta-modal-title">O jogo ainda não está disponível</h2>
+        <p>O Mundo Digital está em construção. Fique ligado nas novidades para saber quando a jornada começará.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/site.js?v=3"></script>
   <script src="assets/js/gallery-data.js"></script>
   <script src="assets/js/gallery.js"></script>
 </body>
