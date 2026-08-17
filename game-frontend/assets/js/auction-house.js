@@ -104,7 +104,7 @@ async function auctionRenderMarket() {
 
 function auctionListingCard(listing) {
   const isMine = listing.sellerPlayerId === auctionState.dashboard?.id;
-  const icon = listing.icon ? `<img src="${escapeHtml(listing.icon)}" alt="" class="w-10 h-10 object-contain" />` : `<span class="text-3xl">📦</span>`;
+  const icon = auctionIconMarkup(listing);
   return `
     <div class="card flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
       <div class="flex items-center gap-3 min-w-0">
@@ -126,6 +126,63 @@ function auctionListingCard(listing) {
       </div>
     </div>
   `;
+}
+
+function auctionIconMarkup(listing) {
+  const icon = String(listing.icon || "").trim();
+  const isImageUrl = icon.startsWith("http://")
+    || icon.startsWith("https://")
+    || icon.startsWith("/")
+    || icon.startsWith("./")
+    || icon.startsWith("../")
+    || icon.startsWith("assets/")
+    || /\\.(png|jpe?g|gif|webp|svg)(\\?.*)?$/i.test(icon);
+
+  if (isImageUrl) {
+    return `<img src="${escapeHtml(icon)}" alt="" class="w-10 h-10 object-contain" onerror="this.replaceWith(auctionIconFallbackElement('${escapeHtml(listing.category || "")}'))" />`;
+  }
+
+  const emojiByIcon = {
+    potion_small: "🧪",
+    training_stone: "💎",
+    data_core: "🔮",
+    fragment_baby2: "⭐",
+    fragment_rookie: "🧩",
+    fragment_rookie_specific: "🧩",
+    fragment_champion: "🧩",
+    fragment_champion_specific: "🧩",
+    fragment_ultimate: "🧩",
+    fragment_ultimate_specific: "🧩",
+    fragment_mega: "🧩",
+    fragment_mega_specific: "🧩",
+    digitama_starter: "🥚",
+    digitama_fire: "🔥",
+    digitama_water: "💧",
+    digitama_nature: "🌿",
+    incubator_common: "📦",
+    incubator_rare: "📦",
+    incubator_epic: "📦"
+  };
+  return `<span class="text-3xl" aria-hidden="true">${emojiByIcon[icon] || auctionCategoryEmoji(listing.category)}</span>`;
+}
+
+function auctionIconFallbackElement(category) {
+  const element = document.createElement("span");
+  element.className = "text-3xl";
+  element.setAttribute("aria-hidden", "true");
+  element.textContent = auctionCategoryEmoji(category);
+  return element;
+}
+
+function auctionCategoryEmoji(category) {
+  return {
+    CONSUMABLE: "🧪",
+    MATERIAL: "🔮",
+    FRAGMENT: "🧩",
+    EVOLUTION_MATERIAL: "⭐",
+    DIGITAMA: "🥚",
+    INCUBATOR: "📦"
+  }[category] || "📦";
 }
 
 async function auctionShowCreateForm() {
