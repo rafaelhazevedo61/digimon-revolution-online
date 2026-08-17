@@ -76,7 +76,7 @@
     ctaModal.querySelector('[data-cta-modal-backdrop]')?.addEventListener('click', closeCtaModal);
     ctaModal.querySelector('[data-cta-modal-close]')?.addEventListener('click', closeCtaModal);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !ctaModal.hidden) closeCtaModal(); });
-    document.querySelectorAll('a[href="../game-frontend/index.html"]').forEach((link) => {
+    document.querySelectorAll('a[href*="game-frontend/index.html"]').forEach((link) => {
       link.addEventListener('click', (e) => { e.preventDefault(); openCtaModal(); });
     });
   }
