@@ -1,5 +1,28 @@
 window.DRO_NEWS = [
   {
+    id: 'patch-0-6-0',
+    type: 'PATCH NOTES',
+    title: 'Patch 0.6.0 — Boss Mundial do Servidor',
+    summary: 'Um único boss compartilhado por todo o servidor: todos os jogadores atacam, acumulam dano global e competem por ranking, com recompensas por hit e bônus final de derrota.',
+    date: '2026-08-17',
+    version: '0.6.0',
+    featured: true,
+    content: [
+      { heading: 'Boss Mundial', items: [
+        'Instância global compartilhada por todos os jogadores do servidor.',
+        'Qualquer Digimon, estágio ou nível pode participar.',
+        'Limite de 3 ataques por dia, consumindo energia.',
+        'HP coletivo que reduz a cada ataque; ranking de dano global.',
+        'Recompensas de XP/Bits a cada hit e bônus extra ao final do combate.',
+        'Novo menu “Boss Mundial” na seção “Mais” do jogo.'
+      ]},
+      { heading: 'Administração', items: [
+        'Comando admin para resetar tentativas diárias do Boss Mundial.',
+        'Boss Mundial fica separado da lista de bosses normais e da Raid de Clã.'
+      ]}
+    ]
+  },
+  {
     id: 'patch-0-5-0',
     type: 'PATCH NOTES',
     title: 'Patch 0.5.0 — Clãs, Raids e Ferramentas Sociais',

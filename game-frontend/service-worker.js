@@ -1,4 +1,4 @@
-const CACHE_NAME = "dro-game-v33";
+const CACHE_NAME = "dro-game-v34";
 const STATIC_ASSETS = [
   "/",
   "/index.html",
@@ -12,7 +12,9 @@ const STATIC_ASSETS = [
   "/assets/js/dashboard.js",
   "/assets/js/missions.js",
   "/assets/js/clan.js",
-  "/assets/js/settings.js"
+  "/assets/js/world-boss.js",
+  "/assets/js/settings.js",
+  "/assets/img/world-boss-apocalymon.png"
 ];
 
 self.addEventListener("install", event => {

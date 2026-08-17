@@ -66,6 +66,10 @@ public class ChallengeBossUseCase {
             throw new BadRequestException("Boss is not active");
         }
 
+        if (boss.getBossType() == BossType.CLAN || boss.getBossType() == BossType.WORLD) {
+            throw new BadRequestException("This boss can only be challenged through its dedicated raid");
+        }
+
         if (boss.getBossType() == BossType.DAILY) {
             validateDailyRotation(boss);
         }

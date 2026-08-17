@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0759b8" />
-  <meta name="description" content="Conheça os sistemas de Digimon Revolution Online: missões, evolução, rebirth, equipamentos, bosses, arena e clãs." />
+  <meta name="description" content="Conheça os sistemas de Digimon Revolution Online: missões, evolução, rebirth, equipamentos, bosses, arena, clãs e Boss Mundial." />
   <title>Sistemas do Jogo — Wiki DRO</title>
   <link rel="icon" type="image/png" href="../assets/img/icon-192.png" />
-  <link rel="stylesheet" href="../assets/css/site.css?v=4" />
+  <link rel="stylesheet" href="../assets/css/site.css?v=5" />
 </head>
 <body>
   <a class="skip-link" href="#main">Ir para o conteúdo</a>
@@ -44,38 +44,271 @@
 
     <section class="article-page">
       <div class="container">
-        <article class="news-article">
-          <div class="article-body">
-            <section>
+        <div class="systems-layout">
+          <aside class="systems-sidebar" aria-label="Navegação dos sistemas">
+            <div class="systems-toc-card systems-toc-desktop">
+              <span class="systems-toc-eyebrow">Navegação</span>
+              <h2>Explorar sistemas</h2>
+              <nav aria-label="Índice dos sistemas">
+                <ul class="systems-toc-list">
+                  <li><a href="#missoes">Missões</a></li>
+                  <li><a href="#digievolucao">Digievolução</a></li>
+                  <li><a href="#rebirth">Rebirth</a></li>
+                  <li><a href="#incubacao">Incubação</a></li>
+                  <li><a href="#equipamentos">Equipamentos</a></li>
+                  <li><a href="#bosses">Bosses</a></li>
+                  <li><a href="#arena-pvp">Arena PvP</a></li>
+                  <li><a href="#clans-raid">Clãs e Raid de Clã</a></li>
+                  <li><a href="#boss-mundial">Boss Mundial</a></li>
+                </ul>
+              </nav>
+            </div>
+            <details class="systems-toc-card systems-toc-mobile">
+              <summary>Explorar sistemas</summary>
+              <nav aria-label="Índice dos sistemas">
+                <ul class="systems-toc-list">
+                  <li><a href="#missoes">Missões</a></li>
+                  <li><a href="#digievolucao">Digievolução</a></li>
+                  <li><a href="#rebirth">Rebirth</a></li>
+                  <li><a href="#incubacao">Incubação</a></li>
+                  <li><a href="#equipamentos">Equipamentos</a></li>
+                  <li><a href="#bosses">Bosses</a></li>
+                  <li><a href="#arena-pvp">Arena PvP</a></li>
+                  <li><a href="#clans-raid">Clãs e Raid de Clã</a></li>
+                  <li><a href="#boss-mundial">Boss Mundial</a></li>
+                </ul>
+              </nav>
+            </details>
+          </aside>
+          <article class="news-article">
+            <div class="article-body">
+            <section id="missoes">
               <h2>Missões</h2>
               <p>As missões têm <strong>duração real</strong> e consomem energia. Cada área possui dificuldades (Easy, Normal, Hard), requisitos de estágio e recompensas próprias de XP, Bits, itens fixos e loot aleatório.</p>
               <p>Áreas desbloqueadas por estágio: Native Forest (Baby), Gear Savanna e Factorial Town (Rookie), Freezeland (Champion), Server Desert (Ultimate) e Infinity Mountain (Mega).</p>
             </section>
 
-            <section>
+            <section id="digievolucao">
               <h2>Digievolução</h2>
-              <p>Para evoluir é preciso atingir o level mínimo e possuir os fragmentos (e eventualmente materiais) exigidos. Cada espécie pode ter uma ou mais <strong>linhas evolutivas</strong>; quando há mais de uma, o jogador escolhe o caminho.</p>
-              <p>A evolução recalcula todos os stats com o novo multiplicador de estágio e, se não houver nome customizado, atualiza o nome para a nova espécie.</p>
-            </section>
+              <p>A <strong>Digievolução</strong> leva seu Digimon para uma forma mais avançada dentro da própria linha evolutiva. Ela aumenta o potencial dos atributos, libera novas espécies e aproxima o Digimon dos estágios mais poderosos do jogo. Evoluir não é criar outro Digimon: é desenvolver o mesmo companheiro.</p>
 
-            <section>
-              <h2>Rebirth</h2>
-              <p>Digimons no level 100 em estágio Champion ou superior podem renascer. O processo consome Bits e <strong>Data Cores</strong>, marca o antigo como renascido e cria um novo Digimon Baby com:</p>
+              <h3>Como funciona</h3>
+              <p>Na tela de Evolução, o jogo mostra o Digimon ativo, o próximo estágio disponível, a espécie que será obtida, os atributos base da nova forma e todos os requisitos. Se houver mais de uma linha evolutiva possível, cada caminho aparece como uma opção separada para você escolher.</p>
+              <ol>
+                <li>Abra a tela <strong>Evolução</strong> com o Digimon que deseja desenvolver selecionado como ativo.</li>
+                <li>Compare as opções de espécie, estágio, atributo, elemento e atributos base apresentados.</li>
+                <li>Confira o nível exigido e a quantidade de cada material. A tela mostra tanto o que é necessário quanto o que você possui.</li>
+                <li>Quando todos os requisitos forem atendidos, confirme em <strong>“Evoluir!”</strong>. Se faltar nível ou material, o botão ficará bloqueado e a tela informará o motivo.</li>
+              </ol>
+              <p>A evolução é imediata e consome os materiais mostrados para aquela etapa. No fluxo atual, não há cobrança de Bits para evoluir; o custo está nos fragmentos e nos demais materiais específicos da rota.</p>
+
+              <h3>Requisitos por estágio</h3>
+              <p>As linhas atualmente cadastradas seguem estes níveis mínimos e quantidades de fragmentos. O nome exato do fragmento muda conforme a espécie que você vai obter, e algumas rotas também podem exigir materiais adicionais exibidos na tela:</p>
               <ul>
-                <li>Bônus de IV mínimo (+3 por rebirth, cap +30)</li>
-                <li>Bônus de stats (+2% por rebirth, cap +20%)</li>
-                <li>Chance de herdar a raridade anterior</li>
-                <li>Bits transferidos do Digimon anterior</li>
+                <li><strong>Baby → Baby II:</strong> level 10 e 5 fragmentos da próxima forma.</li>
+                <li><strong>Baby II → Rookie:</strong> level 15 e 10 fragmentos da próxima forma.</li>
+                <li><strong>Rookie → Champion:</strong> level 25 e 20 fragmentos da próxima forma.</li>
+                <li><strong>Champion → Ultimate:</strong> level 50 e 30 fragmentos da próxima forma.</li>
+                <li><strong>Ultimate → Mega:</strong> level 75 e 50 fragmentos da próxima forma.</li>
               </ul>
+              <p>Esses requisitos são avaliados para cada etapa, não apenas uma vez por linha. Por exemplo, chegar a Champion não libera automaticamente Ultimate: ainda será necessário alcançar o level 50 e reunir os materiais da próxima forma.</p>
+
+              <h3>Linhas evolutivas atuais</h3>
+              <p>As primeiras linhas disponíveis formam caminhos completos do estágio Baby até Mega:</p>
+              <ul>
+                <li><strong>Linha do Agumon:</strong> Botamon → Koromon → Agumon → Greymon → MetalGreymon → WarGreymon.</li>
+                <li><strong>Linha do Gabumon:</strong> Punimon → Tsunomon → Gabumon → Garurumon → WereGarurumon → MetalGarurumon.</li>
+                <li><strong>Linha do Patamon:</strong> Poyomon → Tokomon → Patamon → Angemon → MagnaAngemon → Seraphimon.</li>
+                <li><strong>Linha do Biyomon:</strong> Yuramon → Yokomon → Biyomon → Birdramon → Garudamon → Phoenixmon.</li>
+                <li><strong>Linha do Tentomon:</strong> Pabumon → Motimon → Tentomon → Kabuterimon → MegaKabuterimon → HerculesKabuterimon.</li>
+                <li><strong>Linha do Gomamon:</strong> Pichimon → Bukamon → Gomamon → Ikkakumon → Zudomon → Vikemon.</li>
+              </ul>
+              <p>O jogo pode suportar mais de um caminho para uma mesma espécie. Quando isso acontecer, escolha com atenção: a opção selecionada define a próxima espécie e também os materiais exigidos nas etapas seguintes.</p>
+
+              <h3>O que muda e o que permanece</h3>
+              <p>Ao evoluir, o Digimon passa a usar os atributos base da nova espécie, mas continua sendo o mesmo Digimon. O nível, a experiência, a raridade, os IVs, a personalidade, o trait, a contagem de Rebirth e os demais progressos permanecem. Se você tiver escolhido um nome personalizado, ele também é mantido; caso contrário, o nome acompanha a nova espécie.</p>
+              <p>Os atributos são recalculados para refletir a nova forma. Em termos simples, o jogo combina o atributo base da espécie com parte do IV atual e aplica os modificadores de raridade, estágio, personalidade, trait e Rebirth:</p>
+              <ul>
+                <li><strong>HP:</strong> usa 30% do IV de HP junto do HP base da nova espécie.</li>
+                <li><strong>ATK:</strong> usa 20% do IV de ATK junto do ATK base da nova espécie.</li>
+                <li><strong>DEF:</strong> usa 20% do IV de DEF junto da DEF base da nova espécie.</li>
+              </ul>
+              <p>Cada estágio também possui um multiplicador de poder: Baby x1,00, Baby II x1,10, Rookie x1,20, Champion x1,50, Ultimate x2,00 e Mega x2,80. Por isso, mesmo mantendo seus IVs e demais características, um Digimon evoluído tende a ficar muito mais forte.</p>
+
+              <h3>Quando chegar ao estágio Mega</h3>
+              <p>Mega é o estágio máximo das linhas atuais. Quando o Digimon não possui mais uma próxima evolução, a tela informa que ele atingiu o estágio máximo e oferece o caminho para o <strong>Rebirth</strong>. A partir daí, a escolha deixa de ser “qual é a próxima forma?” e passa a ser “vale a pena renascer para buscar uma nova geração ainda mais forte?”.</p>
             </section>
 
-            <section>
+            <section id="rebirth">
+              <h2>Rebirth</h2>
+              <p>O <strong>Rebirth</strong> é um renascimento estratégico. Em vez de continuar subindo de estágio, um Digimon avançado retorna ao estágio Baby como uma nova geração, com nível reiniciado, novos sorteios e bônus acumulados que tornam os próximos ciclos cada vez mais valiosos.</p>
+              <p>O objetivo não é simplesmente voltar ao começo. O novo Digimon nasce com um novo conjunto de características, mas recebe proteção e bônus baseados na história do Digimon anterior. Com vários Rebirths, você pode buscar uma raridade melhor, IVs mais fortes, traits úteis e um multiplicador permanente de atributos.</p>
+
+              <h3>Quem pode fazer Rebirth</h3>
+              <p>Para realizar o Rebirth, o Digimon precisa atender a todos os requisitos abaixo:</p>
+              <ul>
+                <li>Estar no <strong>level 100</strong>.</li>
+                <li>Estar no estágio <strong>Champion, Ultimate ou Mega</strong>.</li>
+                <li>Estar com status ativo. Um Digimon que já renasceu não pode ser renascido novamente; o novo Digimon criado será usado para os próximos ciclos.</li>
+                <li>Não estar participando de uma missão em andamento.</li>
+                <li>Ter Bits suficientes no próprio Digimon.</li>
+                <li>Ter Data Cores suficientes no inventário vinculado ao Digimon.</li>
+              </ul>
+              <p>A tela de Rebirth verifica tudo antes da confirmação e mostra exatamente o que está faltando. Se algum requisito não for atendido, o botão <strong>“Renascer!”</strong> fica bloqueado.</p>
+
+              <h3>Custos progressivos</h3>
+              <p>O custo aumenta conforme o número do próximo Rebirth. O primeiro renascimento custa 10.000 Bits e 1 Data Core; o segundo custa 20.000 Bits e 2 Data Cores; o terceiro custa 30.000 Bits e 3 Data Cores, e assim por diante.</p>
+              <ul>
+                <li><strong>Bits:</strong> 10.000 × o número do Rebirth que será realizado.</li>
+                <li><strong>Data Cores:</strong> quantidade igual ao número do Rebirth que será realizado.</li>
+              </ul>
+              <p>Os Bits são descontados do Digimon antigo. O saldo que sobrar é transferido para o novo Digimon, e a prévia mostra quanto restará depois do processo. Os Data Cores são retirados do inventário. O custo continua aumentando mesmo depois do limite de atributos: o 11º Rebirth custa 110.000 Bits e 11 Data Cores, enquanto o 12º custa 120.000 Bits e 12 Data Cores.</p>
+
+              <h3>O que nasce depois do Rebirth</h3>
+              <p>O resultado é um novo Digimon no estágio <strong>Baby</strong>, no <strong>level 1</strong>, com zero de experiência e com a mesma linha ou tipo de origem. Se o Digimon antigo era o ativo, o novo assume automaticamente o lugar dele como Digimon ativo.</p>
+              <p>O Digimon antigo não é simplesmente apagado: ele é marcado como renascido e fica ligado ao novo como parte da linhagem. O novo Digimon recebe um novo nome de espécie Baby, uma nova personalidade, uma nova raridade sorteada ou herdada, novos IVs sorteados e a contagem de Rebirth aumentada em 1.</p>
+
+              <h3>O que melhora em cada faixa de Rebirth</h3>
+              <p>O Rebirth tem limites diferentes para cada tipo de benefício. Por isso, é importante separar o <strong>crescimento garantido</strong> dos atributos das melhorias que dependem de sorteio.</p>
+              <ul>
+                <li><strong>Do 1º ao 10º Rebirth:</strong> cada ciclo acrescenta 2% ao multiplicador de HP, ATK e DEF e 3 pontos ao bônus mínimo de IV. No 10º, o multiplicador chega a x1,20 (+20%) e o bônus mínimo de IV chega a +30.</li>
+                <li><strong>Do 11º ao 15º Rebirth:</strong> o multiplicador de HP, ATK e DEF continua crescendo de +22% até +30%. O bônus mínimo de IV já está no limite, enquanto as chances de herdar a raridade e obter trait continuam aumentando.</li>
+                <li><strong>Do 16º ao 25º Rebirth:</strong> o multiplicador continua crescendo de +32% até +50%. A herança de raridade permanece em 70%, a chance de trait continua subindo até 60% e os pesos do novo sorteio de raridade ainda melhoram até o 25º.</li>
+                <li><strong>Do 26º ao 50º Rebirth:</strong> o multiplicador continua crescendo de +52% até +100% (x2,00). Os bônus de IV, herança de raridade, trait e pesos do sorteio de raridade já estão nos limites.</li>
+                <li><strong>A partir do 51º Rebirth:</strong> o multiplicador permanece em x2,00 e não há novos aumentos garantidos nessas regras. O Digimon ainda pode renascer e receber novos sorteios, mas o custo continua aumentando.</li>
+              </ul>
+              <p><strong>Em resumo: do 1º ao 50º Rebirth ainda existe crescimento direto de HP, ATK e DEF.</strong> O multiplicador chega a x2,00 no 50º Rebirth. Depois disso, o Digimon não recebe mais aumento direto de atributos, mas ainda pode realizar novos sorteios de personalidade, raridade, trait e IV, sempre com custo crescente.</p>
+              <h4>Crescimento direto de atributos</h4>
+              <ul>
+                <li><strong>Rebirth 1:</strong> x1,02, ou +2% em HP, ATK e DEF.</li>
+                <li><strong>Rebirth 5:</strong> x1,10, ou +10% em HP, ATK e DEF.</li>
+                <li><strong>Rebirth 10:</strong> x1,20, ou +20% em HP, ATK e DEF.</li>
+                <li><strong>Rebirth 15:</strong> x1,30, ou +30% em HP, ATK e DEF.</li>
+                <li><strong>Rebirth 25:</strong> x1,50, ou +50% em HP, ATK e DEF.</li>
+                <li><strong>Rebirth 50:</strong> x2,00, ou +100% em HP, ATK e DEF.</li>
+                <li><strong>Rebirth 51 ou superior:</strong> continua em x2,00, ou +100% em HP, ATK e DEF.</li>
+              </ul>
+              <p>Por exemplo, se uma conta de atributo resultaria em 1.000 pontos antes do bônus de Rebirth, ela chegaria a 1.200 no 10º Rebirth, 1.500 no 25º e 2.000 no 50º. Do 51º em diante, continuaria em 2.000, pois o multiplicador máximo é x2,00.</p>
+              <h4>Limites dos outros benefícios</h4>
+              <ul>
+                <li><strong>Multiplicador de HP, ATK e DEF:</strong> continua crescendo até x2,00 no 50º Rebirth.</li>
+                <li><strong>Bônus mínimo de IV:</strong> chega a +30 no 10º Rebirth e não aumenta depois disso.</li>
+                <li><strong>Herança de raridade:</strong> chega a 70% no 15º Rebirth e permanece nesse valor.</li>
+                <li><strong>Obtenção de trait:</strong> continua crescendo até 60% no 25º Rebirth.</li>
+                <li><strong>Pesos do novo sorteio de raridade:</strong> continuam evoluindo até o 25º Rebirth e ficam iguais a partir do 26º.</li>
+              </ul>
+              <details class="wiki-rebirth-table">
+                <summary>Mostrar a tabela completa do 1º ao 25º Rebirth</summary>
+                <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+                  <table class="wiki-table">
+                    <caption>Progressão dos bônus e das chances por Rebirth</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">Rebirth</th>
+                        <th scope="col">HP / ATK / DEF</th>
+                        <th scope="col">Multiplicador</th>
+                        <th scope="col">IV mínimo</th>
+                        <th scope="col">Herança de raridade</th>
+                        <th scope="col">Obter trait</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><th scope="row">1º</th><td>+2%</td><td>x1,02</td><td>+3</td><td>42%</td><td>12%</td></tr>
+                      <tr><th scope="row">2º</th><td>+4%</td><td>x1,04</td><td>+6</td><td>44%</td><td>14%</td></tr>
+                      <tr><th scope="row">3º</th><td>+6%</td><td>x1,06</td><td>+9</td><td>46%</td><td>16%</td></tr>
+                      <tr><th scope="row">4º</th><td>+8%</td><td>x1,08</td><td>+12</td><td>48%</td><td>18%</td></tr>
+                      <tr><th scope="row">5º</th><td>+10%</td><td>x1,10</td><td>+15</td><td>50%</td><td>20%</td></tr>
+                      <tr><th scope="row">6º</th><td>+12%</td><td>x1,12</td><td>+18</td><td>52%</td><td>22%</td></tr>
+                      <tr><th scope="row">7º</th><td>+14%</td><td>x1,14</td><td>+21</td><td>54%</td><td>24%</td></tr>
+                      <tr><th scope="row">8º</th><td>+16%</td><td>x1,16</td><td>+24</td><td>56%</td><td>26%</td></tr>
+                      <tr><th scope="row">9º</th><td>+18%</td><td>x1,18</td><td>+27</td><td>58%</td><td>28%</td></tr>
+                      <tr><th scope="row">10º</th><td>+20%</td><td>x1,20</td><td>+30</td><td>60%</td><td>30%</td></tr>
+                      <tr><th scope="row">11º</th><td>+22%</td><td>x1,22</td><td>+30</td><td>62%</td><td>32%</td></tr>
+                      <tr><th scope="row">12º</th><td>+24%</td><td>x1,24</td><td>+30</td><td>64%</td><td>34%</td></tr>
+                      <tr><th scope="row">13º</th><td>+26%</td><td>x1,26</td><td>+30</td><td>66%</td><td>36%</td></tr>
+                      <tr><th scope="row">14º</th><td>+28%</td><td>x1,28</td><td>+30</td><td>68%</td><td>38%</td></tr>
+                      <tr><th scope="row">15º</th><td>+30%</td><td>x1,30</td><td>+30</td><td>70%</td><td>40%</td></tr>
+                      <tr><th scope="row">16º</th><td>+32%</td><td>x1,32</td><td>+30</td><td>70%</td><td>42%</td></tr>
+                      <tr><th scope="row">17º</th><td>+34%</td><td>x1,34</td><td>+30</td><td>70%</td><td>44%</td></tr>
+                      <tr><th scope="row">18º</th><td>+36%</td><td>x1,36</td><td>+30</td><td>70%</td><td>46%</td></tr>
+                      <tr><th scope="row">19º</th><td>+38%</td><td>x1,38</td><td>+30</td><td>70%</td><td>48%</td></tr>
+                      <tr><th scope="row">20º</th><td>+40%</td><td>x1,40</td><td>+30</td><td>70%</td><td>50%</td></tr>
+                      <tr><th scope="row">21º</th><td>+42%</td><td>x1,42</td><td>+30</td><td>70%</td><td>52%</td></tr>
+                      <tr><th scope="row">22º</th><td>+44%</td><td>x1,44</td><td>+30</td><td>70%</td><td>54%</td></tr>
+                      <tr><th scope="row">23º</th><td>+46%</td><td>x1,46</td><td>+30</td><td>70%</td><td>56%</td></tr>
+                      <tr><th scope="row">24º</th><td>+48%</td><td>x1,48</td><td>+30</td><td>70%</td><td>58%</td></tr>
+                      <tr><th scope="row">25º</th><td>+50%</td><td>x1,50</td><td>+30</td><td>70%</td><td>60%</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p><strong>Como ler:</strong> o bônus mínimo de IV para de crescer no 10º Rebirth; a herança de raridade permanece em 70% a partir do 15º; a chance de trait continua crescendo até 60% no 25º. O multiplicador de HP, ATK e DEF continua aumentando além do 25º e chega a x2,00 no 50º. O sorteio de uma nova raridade continua recebendo pesos melhores até o 25º, mesmo que isso não apareça como uma porcentagem única nesta tabela.</p>
+              </details>
+              <p>Esse multiplicador acompanha o Digimon nas próximas Digievoluções. Portanto, renascer não elimina o trabalho de evolução: depois de voltar ao Baby, o Digimon poderá subir novamente pelos estágios carregando o bônus acumulado.</p>
+
+              <h3>Como funcionam os IVs no novo Digimon</h3>
+              <p>O Rebirth <strong>não soma simplesmente +3 ao IV antigo</strong>. Ele define um valor mínimo protegido e, depois, sorteia o novo IV entre esse mínimo e 100. O bônus de Rebirth é de +3 no mínimo por ciclo, limitado a +30; por isso, esse bônus direto de IV também deixa de crescer depois do décimo Rebirth.</p>
+              <p>Para a maioria dos IVs, o mínimo considera três fatores: o piso da nova raridade, o bônus acumulado de Rebirth e metade do IV anterior. Na prática, o novo mínimo é protegido pelo maior desses valores. Há também duas proteções especiais:</p>
+              <ul>
+                <li>Um IV anterior de <strong>100</strong> gera uma nova faixa de 90 a 100.</li>
+                <li>Um IV anterior entre <strong>90 e 99</strong> gera uma nova faixa mínima de 75 a 100.</li>
+                <li>Nos demais casos, o jogo escolhe o maior valor entre o piso da raridade mais o bônus de Rebirth e metade do IV anterior.</li>
+              </ul>
+              <p>Exemplo: se um atributo tinha IV 70 e o novo Digimon receber uma raridade cujo piso é 25, no primeiro Rebirth o bônus de Rebirth é +3. O mínimo será o maior valor entre 28 e 35, portanto o novo IV ficará entre 35 e 100. O resultado exato continua sendo sorteado.</p>
+
+              <h3>Raridade, personalidade e trait</h3>
+              <p>A raridade anterior pode ser herdada, mas isso não é garantido. A chance começa em 42% no primeiro Rebirth, aumenta 2 pontos percentuais por ciclo e chega ao limite de 70% a partir do décimo quinto Rebirth. Se a raridade não for herdada, o jogo faz um novo sorteio com pesos que ficam gradualmente mais favoráveis conforme a quantidade de Rebirths aumenta.</p>
+              <ul>
+                <li><strong>Common:</strong> multiplicador de atributos x1,00 e IV mínimo 0.</li>
+                <li><strong>Rare:</strong> multiplicador de atributos x1,10 e IV mínimo 25.</li>
+                <li><strong>Epic:</strong> multiplicador de atributos x1,25 e IV mínimo 50.</li>
+                <li><strong>Legendary:</strong> multiplicador de atributos x1,50 e IV mínimo 75.</li>
+              </ul>
+              <p>A personalidade é sorteada novamente. Ela pode favorecer uma área específica:</p>
+              <ul>
+                <li><strong>Durable:</strong> +10% HP.</li>
+                <li><strong>Fighter:</strong> +10% ATK.</li>
+                <li><strong>Brainy:</strong> +5% ATK e +5% XP.</li>
+                <li><strong>Nimble:</strong> +5% ATK e +5% DEF.</li>
+                <li><strong>Defender:</strong> +10% DEF.</li>
+                <li><strong>Lively:</strong> +10% XP.</li>
+              </ul>
+              <p>O trait também pode ser obtido no Rebirth. A chance começa em 12% no primeiro ciclo, aumenta 2 pontos percentuais por Rebirth e chega ao limite de 40%. Quando um trait é sorteado, ele pode trazer um dos efeitos abaixo:</p>
+              <ul>
+                <li><strong>Fast Learner:</strong> +10% XP.</li>
+                <li><strong>Vitality:</strong> +10% HP.</li>
+                <li><strong>Berserker:</strong> +10% ATK.</li>
+                <li><strong>Iron Body:</strong> +10% DEF.</li>
+                <li><strong>Energetic:</strong> +5 de energia máxima.</li>
+              </ul>
+
+              <h3>Como os atributos do renascido são calculados</h3>
+              <p>O novo Digimon começa no estágio Baby, então seus atributos são recalculados a partir da espécie Baby da linha, dos novos IVs e dos resultados sorteados. Em linguagem simples, a conta segue esta lógica:</p>
+              <ul>
+                <li><strong>HP novo:</strong> HP base da forma Baby mais 30% do IV de HP, multiplicado pela raridade, personalidade, trait e bônus de Rebirth.</li>
+                <li><strong>ATK novo:</strong> ATK base da forma Baby mais 20% do IV de ATK, multiplicado pela raridade, personalidade, trait e bônus de Rebirth.</li>
+                <li><strong>DEF novo:</strong> DEF base da forma Baby mais 20% do IV de DEF, multiplicado pela raridade, personalidade, trait e bônus de Rebirth.</li>
+              </ul>
+              <p>O novo Digimon começa com 20 de energia máxima. Se nascer com o trait <strong>Energetic</strong>, recebe mais 5 de energia máxima. O valor final é arredondado para baixo, por isso pequenas diferenças nos IVs e nos multiplicadores podem alterar os atributos exibidos.</p>
+
+              <h3>Checklist antes de confirmar</h3>
+              <ul>
+                <li>Confira se o Digimon está no level 100 e em Champion, Ultimate ou Mega.</li>
+                <li>Veja se ele não está ocupado em uma missão.</li>
+                <li>Confirme o custo de Bits e Data Cores do próximo Rebirth.</li>
+                <li>Analise as faixas de IV que a prévia apresenta para HP, ATK e DEF.</li>
+                <li>Lembre-se de que raridade, personalidade, trait e IVs podem mudar; o sistema oferece proteções, mas não garante que todos os resultados serão superiores.</li>
+                <li>Se o Digimon for o ativo, saiba que o novo Baby assumirá o lugar dele automaticamente.</li>
+              </ul>
+              <p>O Rebirth é uma decisão de longo prazo: você abre mão do level e da forma atual para ganhar uma nova oportunidade de crescimento. Quanto melhor for o planejamento dos custos, dos IVs e dos bônus desejados, mais proveitoso será cada novo ciclo.</p>
+            </section>
+
+            <section id="incubacao">
               <h2>Incubação</h2>
               <p>Após escolher uma Digitama, o jogador usa uma incubadora para iniciar o processo. Cada incubadora tem um tempo de espera: Common (5 min), Rare (2 min) e Epic (30 s). O resgate cria o Digimon com raridade, personalidade, trait e IVs sorteados.</p>
               <p>O resgate só é permitido se houver espaço nos slots ativos (máximo 3).</p>
             </section>
 
-            <section>
+            <section id="equipamentos">
               <h2>Equipamentos</h2>
               <p>Cada Digimon pode equipar uma arma, uma armadura e um acessório. Os equipamentos possuem tier (1-10), refinamento (+0 a +10) e raridade (Common, Rare, Epic, Legendary).</p>
               <p>Completar 2 ou 3 peças do mesmo <strong>set</strong> ativa bônus extras:</p>
@@ -88,7 +321,7 @@
               <p>Refinar consome Bits e <strong>Refinement Stones</strong>. Cada nível aumenta os stats base em +2 e a taxa de sucesso diminui conforme sobe.</p>
             </section>
 
-            <section>
+            <section id="bosses">
               <h2>Bosses</h2>
               <p>Bosses são desafios por estágio que consomem energia e têm cooldown individual. A chance de vitória depende do poder do Digimon contra o poder do boss:</p>
               <pre><code>Power = HP * 0,30 + ATK * 1,50 + DEF * 1,00
@@ -97,7 +330,7 @@ WinChance = clamp(round(digimonPower / bossPower * 100), 5, 95)</code></pre>
               <p>Bosses diários sofrem rotação por estágio todos os dias, garantindo variedade sem repetição.</p>
             </section>
 
-            <section>
+            <section id="arena-pvp">
               <h2>Arena PvP</h2>
               <p>A Arena é <strong>assíncrona</strong>: o jogador desafia o Digimon ativo de outro jogador e o servidor resolve comparando o poder efetivo, com um fator de aleatoriedade.</p>
               <ul>
@@ -109,7 +342,7 @@ WinChance = clamp(round(digimonPower / bossPower * 100), 5, 95)</code></pre>
               </ul>
             </section>
 
-            <section>
+            <section id="clans-raid">
               <h2>Clãs e Raid de Clã</h2>
               <p>Clãs são grupos de jogadores que acumulam <strong>Honor Marks</strong> — moeda coletiva obtida através de missões diárias. O líder pode gastar Honor Marks em upgrades:</p>
               <ul>
@@ -121,8 +354,88 @@ WinChance = clamp(round(digimonPower / bossPower * 100), 5, 95)</code></pre>
               <p>Cada membro pode fazer <strong>missões diárias individuais</strong> uma vez por dia. Existe também um <strong>ranking de contribuição</strong> de Honor Marks.</p>
               <p>A <strong>Raid de Clã</strong> é um boss compartilhado pelo clã com HP coletivo. Cada membro pode atacar até 3 vezes por dia gastando energia. O dano é acumulado e, ao derrotar o boss, o clã recebe Honor Marks e XP. O ranking de dano mostra quem mais contribuiu.</p>
             </section>
-          </div>
-        </article>
+
+            <section id="boss-mundial">
+              <h2>Boss Mundial</h2>
+              <p>O <strong>Boss Mundial</strong> é uma batalha coletiva que reúne todos os jogadores do servidor contra o mesmo inimigo. Diferentemente de um boss comum, você não enfrenta uma cópia separada: cada ataque reduz o <strong>HP global</strong> e ajuda toda a comunidade. Se outro jogador atacar antes de você, você verá o resultado desse esforço na mesma barra de vida.</p>
+
+              <h3>Como participar</h3>
+              <p>Abra a aba <strong>“Mais”</strong> no menu do jogo e escolha <strong>“Boss Mundial”</strong>. Para atacar, é necessário ter um Digimon ativo. O Digimon selecionado é o responsável pelo ataque, portanto escolha aquele que estiver mais bem preparado.</p>
+              <p>O Apocalymon, primeiro Boss Mundial disponível, pode ser enfrentado por Digimons a partir do estágio Baby, no level 1 e sem exigência de rebirth. Bosses futuros podem ter requisitos diferentes; quando isso acontecer, eles serão informados na própria tela do evento.</p>
+
+              <h3>Uma única batalha para todo o servidor</h3>
+              <p>A barra de HP exibida na tela representa a vida do boss para <strong>todos os jogadores</strong>. Cada ataque reduz essa mesma barra, e o dano causado fica registrado na contribuição do jogador. Quando o HP chega a zero, o boss é considerado derrotado para o servidor inteiro.</p>
+              <p>O boss do dia permanece disponível até ser derrotado ou até a virada diária. Depois disso, uma nova batalha é iniciada no próximo ciclo. Se a tela mostrar <strong>“Boss Mundial derrotado hoje!”</strong>, não será possível realizar novos ataques até o próximo dia.</p>
+
+              <h3>Limite de ataques e custo de energia</h3>
+              <p>Cada jogador pode realizar <strong>até 3 ataques por dia</strong>. As tentativas são individuais: o ataque de outro jogador não consome as suas. As tentativas também não são compartilhadas entre seus Digimons e não se acumulam para o dia seguinte.</p>
+              <p>Cada ataque consome energia. No Apocalymon, o custo normal é de <strong>20 de energia por ataque</strong>. Bônus do seu clã que reduzem o custo de energia podem diminuir esse valor. Se você não tiver energia suficiente, o ataque não será realizado e a tentativa diária não será consumida.</p>
+              <p>A tela informa quantos ataques você já usou, quantos ainda estão disponíveis e quanto dano você acumulou no boss atual. Depois de usar as três tentativas, o botão de ataque é substituído pelo aviso <strong>“Limite diário de ataques atingido. Volte amanhã.”</strong></p>
+
+              <h3>Como o dano é definido</h3>
+              <p>O dano depende principalmente da força do seu Digimon em comparação com a força do boss. HP, ATK e DEF do Digimon entram nessa comparação, assim como os bônus dos equipamentos equipados e os bônus de atributos concedidos pelo clã. Equipar, evoluir e fortalecer o Digimon aumenta suas chances de causar golpes mais fortes.</p>
+              <p>O jogo transforma essa comparação em uma <strong>chance de vitória</strong>, exibida no resultado do ataque. Essa porcentagem varia de 5% a 95% e não significa que o ataque pode simplesmente errar ou deixar de causar dano. No Boss Mundial, ela funciona como um indicador da sua vantagem e influencia o tamanho do golpe: quanto maior a chance, maior pode ser o dano.</p>
+              <p>Mesmo com uma chance baixa, o ataque ainda causa dano. O valor final é sorteado dentro de uma faixa proporcional à sua chance, por isso dois ataques do mesmo Digimon podem causar números diferentes. O cálculo utiliza o <strong>HP máximo original do boss</strong>, e não apenas o HP que restou naquele momento; assim, o dano não diminui automaticamente só porque a batalha está perto do fim.</p>
+
+              <h3>Fórmula do dano, passo a passo</h3>
+              <p>Para entender o dano, basta acompanhar cinco etapas. A ideia é comparar a força do seu Digimon com a força do boss e, depois, transformar essa comparação em uma faixa de dano possível.</p>
+              <ol>
+                <li><strong>Encontrar os atributos usados no ataque:</strong> o jogo considera o HP, o ATK e a DEF do seu Digimon depois dos bônus dos equipamentos e do clã. Esses são os valores que representam a força atual do Digimon.</li>
+                <li><strong>Calcular o poder do Digimon:</strong> cada atributo possui um peso diferente. A fórmula é <strong>Poder do Digimon = (HP × 0,30) + (ATK × 1,50) + (DEF × 1,00)</strong>. Isso significa que, mantendo os outros atributos iguais, um aumento de ATK pesa mais nessa comparação do que o mesmo aumento de DEF ou HP.</li>
+                <li><strong>Calcular o poder do boss:</strong> o boss também possui HP, ATK e DEF. A conta é <strong>Poder do Boss = (HP do Boss × 0,30) + (ATK do Boss × 1,50) + (DEF do Boss × 1,00)</strong>.</li>
+                <li><strong>Encontrar a chance de vitória:</strong> o poder do Digimon é dividido pelo poder do boss e convertido em porcentagem. A conta é <strong>Chance = arredondar((Poder do Digimon ÷ Poder do Boss) × 100)</strong>. O resultado fica sempre entre 5% e 95%: valores menores viram 5%, e valores maiores viram 95%.</li>
+                <li><strong>Sortear o dano:</strong> todo ataque pode causar pelo menos 0,05% do HP máximo do boss. O limite superior da faixa é a sua chance multiplicada por 0,05. Assim, com 50% de chance, o jogo sorteia um golpe entre 0,05% e aproximadamente 2,50% do HP máximo do boss.</li>
+              </ol>
+              <p>Depois do sorteio, o dano é obtido multiplicando o <strong>HP máximo do boss</strong> pelo percentual escolhido e dividindo por 100. O resultado é arredondado para um número inteiro. Se existir um bônus global de dano ativo no servidor, ele é aplicado depois dessa conta; sem bônus global, o valor permanece o mesmo.</p>
+              <p><strong>Resumo da conta:</strong> Dano aplicado = menor valor entre <strong>(dano sorteado × bônus global)</strong> e o <strong>HP restante do boss</strong>. Quando não há bônus global ativo, o bônus vale 1 e não altera o dano sorteado.</p>
+              <p>Por fim, o jogo compara o dano calculado com o HP que ainda resta. O dano aplicado é sempre o menor dos dois valores, para que o boss nunca fique com HP negativo. Por isso, se o golpe calcular 18.000 de dano, mas o boss tiver apenas 12.000 de HP, o ataque removerá somente os 12.000 restantes.</p>
+
+              <h3>Exemplo completo de um ataque</h3>
+              <p>Considere o Apocalymon atual, que possui <strong>1.000.000 de HP</strong> e um poder de boss de <strong>311.500</strong>. Se o seu Digimon tiver um poder de <strong>155.750</strong>, a comparação será:</p>
+              <ol>
+                <li><strong>Chance de vitória:</strong> 155.750 ÷ 311.500 × 100 = 50%.</li>
+                <li><strong>Faixa possível do golpe:</strong> de 0,05% até aproximadamente 2,50% do HP máximo do Apocalymon.</li>
+                <li><strong>Conversão para dano:</strong> como o boss tem 1.000.000 de HP, um sorteio de 1,80% representaria 18.000 de dano.</li>
+                <li><strong>Aplicação no boss:</strong> se o Apocalymon tiver mais de 18.000 de HP, ele perderá 18.000. Se tiver somente 12.000, perderá apenas os 12.000 restantes.</li>
+              </ol>
+              <p>Esse exemplo também mostra por que dois jogadores podem causar danos diferentes e por que o mesmo jogador pode obter resultados diferentes em seus três ataques. A força do Digimon define a faixa possível, mas o valor exato do golpe é sorteado a cada tentativa.</p>
+
+              <h3>Exemplos de dano contra o Apocalymon</h3>
+              <p>O Apocalymon possui 1.000.000 de HP. Na configuração atual, os valores abaixo mostram a faixa aproximada de dano normal antes de qualquer efeito especial:</p>
+              <ul>
+                <li>Com <strong>5% de chance</strong>, o golpe fica aproximadamente entre 500 e 2.500 de dano.</li>
+                <li>Com <strong>30% de chance</strong>, o golpe fica aproximadamente entre 500 e 15.000 de dano.</li>
+                <li>Com <strong>50% de chance</strong>, o golpe fica aproximadamente entre 500 e 25.000 de dano.</li>
+                <li>Com <strong>95% de chance</strong>, o golpe fica aproximadamente entre 500 e 47.500 de dano.</li>
+              </ul>
+              <p>Esses valores são referências, não uma promessa de dano fixo. O jogo sorteia o resultado a cada ataque e arredonda o número final. Além disso, se o boss tiver menos HP do que o dano do golpe, o ataque apenas remove o HP restante e não ultrapassa zero.</p>
+
+              <h3>Recompensas por participação</h3>
+              <p>Todo ataque bem-sucedido concede recompensas imediatamente, independentemente de você estar ou não no topo do ranking. No Apocalymon atual, cada hit concede <strong>250 XP e 10 Bits</strong>. Esses valores podem ser diferentes em outros Bosses Mundiais.</p>
+              <p>O jogador que aplicar o <strong>golpe final</strong>, isto é, o ataque que reduzir o HP do boss a zero, recebe também um bônus adicional de <strong>5.000 XP e 200 Bits</strong>. Esse bônus é somado à recompensa normal do ataque final; ele não substitui os 250 XP e 10 Bits recebidos pelo hit.</p>
+
+              <h3>Ranking global e últimos ataques</h3>
+              <p>O <strong>Ranking de Dano Global</strong> organiza os jogadores pela soma de todo o dano causado no boss do dia. Cada um dos seus três ataques pode aumentar sua posição, e o ranking pode mudar a qualquer momento conforme outros jogadores participam.</p>
+              <p>A seção <strong>“Últimos ataques”</strong> mostra as contribuições mais recentes do servidor. Use-a para acompanhar o ritmo da batalha, descobrir se o boss está recebendo dano e verificar quando a comunidade está próxima da vitória. O ranking mede contribuição de dano, não a quantidade de ataques realizados.</p>
+
+              <h3>O que aparece no resultado do ataque</h3>
+              <p>Depois de atacar, o jogo abre a janela <strong>“Resultado do Ataque”</strong>. Ela mostra o dano causado, a quantidade de XP e Bits recebida, sua chance de vitória naquele golpe e o HP restante do boss. Se o ataque tiver sido o final, a mesma janela destaca o bônus extra de derrota.</p>
+              <p>Ao fechar o resultado, a tela atualiza a barra de HP, suas tentativas restantes, seu dano acumulado, o ranking global e a lista de ataques recentes.</p>
+
+              <h3>Como aproveitar melhor suas tentativas</h3>
+              <ul>
+                <li>Use seu Digimon mais forte e mantenha-o como Digimon ativo antes de abrir a tela do boss.</li>
+                <li>Equipe armas, armaduras e acessórios que aumentem seus atributos antes de atacar.</li>
+                <li>Considere os bônus de HP, ATK e DEF do seu clã, pois eles também ajudam na comparação contra o boss.</li>
+                <li>Reserve energia suficiente para aproveitar as três tentativas do dia.</li>
+                <li>Não espere necessariamente o golpe final: todos os ataques concedem XP, Bits e pontos para o ranking.</li>
+                <li>Acompanhe o HP restante e os últimos ataques para saber como a batalha está evoluindo.</li>
+              </ul>
+              <p>O Boss Mundial é uma oportunidade diária de contribuir com o servidor, receber recompensas e disputar posições no ranking. Volte todos os dias, fortaleça seu Digimon e ajude a comunidade a derrotar o próximo desafio.</p>
+            </section>
+            </div>
+          </article>
+        </div>
       </div>
     </section>
   </main>
@@ -149,6 +462,6 @@ WinChance = clamp(round(digimonPower / bossPower * 100), 5, 95)</code></pre>
     </div>
   </div>
 
-  <script src="../assets/js/site.js?v=4"></script>
+  <script src="../assets/js/site.js?v=5"></script>
 </body>
 </html>

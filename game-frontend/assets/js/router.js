@@ -21,6 +21,7 @@ const routes = {
   storage: renderStoragePage,
   clans: renderClansPage,
   "clan-ranking": renderClanRanking,
+  "world-boss": renderWorldBossPage,
   more: renderMorePage,
   settings: renderSettingsPage
 };

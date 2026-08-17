@@ -42,11 +42,11 @@ public class RebirthRules {
     /*
      * Limite máximo do bônus percentual de status.
      *
-     * Com esse cap, o bônus direto de status para em +20%.
-     * Ou seja, após 10 Rebirths o Digimon continua podendo renascer,
-     * mas não ganha mais bônus direto de status por Rebirth.
+     * Com esse cap, o bônus direto de status chega a +100%,
+     * equivalente ao multiplicador final x2,00.
+     * Como cada Rebirth concede +2%, o limite é alcançado no 50º Rebirth.
      */
-    private static final double MAX_STAT_BONUS = 0.20;
+    private static final double MAX_STAT_BONUS = 1.00;
 
     /*
      * Calcula o bônus de IV mínimo obtido pela quantidade de Rebirths.
@@ -72,17 +72,19 @@ public class RebirthRules {
     /*
      * Calcula o multiplicador final de status vindo do Rebirth.
      *
-     * Cada Rebirth concede +2% de status, limitado a +20%.
+     * Cada Rebirth concede +2% de status, limitado ao multiplicador x2,00.
      *
      * Fórmula:
-     * 1.0 + min(rebirthCount * 0.02, 0.20)
+     * 1.0 + min(rebirthCount * 0.02, 1.00)
      *
      * Exemplo:
      * rebirthCount = 0  -> 1.00
      * rebirthCount = 1  -> 1.02
      * rebirthCount = 5  -> 1.10
      * rebirthCount = 10 -> 1.20
-     * rebirthCount = 20 -> 1.20
+     * rebirthCount = 25 -> 1.50
+     * rebirthCount = 50 -> 2.00
+     * rebirthCount = 60 -> 2.00
      */
     public static double calculateStatMultiplier(int rebirthCount) {
         double bonus = Math.min(
