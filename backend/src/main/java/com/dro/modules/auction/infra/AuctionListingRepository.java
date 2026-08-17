@@ -23,10 +23,10 @@ public interface AuctionListingRepository extends JpaRepository<AuctionListing, 
                     WHERE listing.status = :status
                       AND listing.remainingQuantity > 0
                       AND listing.expiresAt > :now
-                      AND (:search IS NULL OR LOWER(item.name) LIKE LOWER(CONCAT('%', :search, '%'))
+                      AND (:search = '' OR LOWER(item.name) LIKE LOWER(CONCAT('%', :search, '%'))
                            OR LOWER(item.code) LIKE LOWER(CONCAT('%', :search, '%')))
-                      AND (:category IS NULL OR item.category = :category)
-                      AND (:rarity IS NULL OR item.rarity = :rarity)
+                      AND (:category = '' OR item.category = :category)
+                      AND (:rarity = '' OR item.rarity = :rarity)
                     """,
             countQuery = """
                     SELECT COUNT(listing) FROM AuctionListing listing
@@ -34,10 +34,10 @@ public interface AuctionListingRepository extends JpaRepository<AuctionListing, 
                     WHERE listing.status = :status
                       AND listing.remainingQuantity > 0
                       AND listing.expiresAt > :now
-                      AND (:search IS NULL OR LOWER(item.name) LIKE LOWER(CONCAT('%', :search, '%'))
+                      AND (:search = '' OR LOWER(item.name) LIKE LOWER(CONCAT('%', :search, '%'))
                            OR LOWER(item.code) LIKE LOWER(CONCAT('%', :search, '%')))
-                      AND (:category IS NULL OR item.category = :category)
-                      AND (:rarity IS NULL OR item.rarity = :rarity)
+                      AND (:category = '' OR item.category = :category)
+                      AND (:rarity = '' OR item.rarity = :rarity)
                     """
     )
     Page<AuctionListing> searchActive(

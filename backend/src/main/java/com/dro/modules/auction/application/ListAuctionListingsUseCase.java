@@ -64,6 +64,6 @@ public class ListAuctionListingsUseCase {
     }
 
     private String normalize(String value) {
-        return value == null || value.isBlank() ? null : value.trim();
+        return value == null || value.isBlank() ? "" : value.trim();
     }
 }
