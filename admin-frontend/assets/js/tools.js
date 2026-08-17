@@ -113,6 +113,11 @@ async function renderToolsPage() {
           <button onclick="adminCompleteClanMissions()" class="btn-primary w-full py-2">Completar Missões</button>
           <div id="admin-complete-missions-result" class="text-sm mt-2"></div>
         </div>
+        <div class="bg-slate-900 rounded-lg p-4 border border-slate-800">
+          <p class="text-sm text-slate-300 mb-2">Resetar tentativas do Boss Mundial (servidor)</p>
+          <button onclick="adminResetWorldBoss()" class="btn-primary w-full py-2">Resetar Boss Mundial</button>
+          <div id="admin-reset-world-boss-result" class="text-sm mt-2"></div>
+        </div>
       </div>
     </div>
   `;
@@ -353,6 +358,17 @@ async function adminResetClanRaid() {
       `<span class="text-green-400">${result.message} (${result.raidsReset} raids)</span>`;
   } catch (err) {
     document.getElementById("admin-reset-raid-result").innerHTML =
+      `<span class="text-red-400">${err.message}</span>`;
+  }
+}
+
+async function adminResetWorldBoss() {
+  try {
+    const result = await apiPost("/admin/tools/reset-world-boss-daily");
+    document.getElementById("admin-reset-world-boss-result").innerHTML =
+      `<span class="text-green-400">${result.message} (${result.instancesReset} instância)</span>`;
+  } catch (err) {
+    document.getElementById("admin-reset-world-boss-result").innerHTML =
       `<span class="text-red-400">${err.message}</span>`;
   }
 }

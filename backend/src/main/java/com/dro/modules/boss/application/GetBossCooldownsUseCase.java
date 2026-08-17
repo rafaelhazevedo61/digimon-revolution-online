@@ -2,6 +2,7 @@ package com.dro.modules.boss.application;
 
 import com.dro.modules.boss.api.dto.response.BossCooldownResponse;
 import com.dro.modules.boss.domain.BossDefinitionEntity;
+import com.dro.modules.boss.domain.BossType;
 import com.dro.modules.boss.infra.BossAttemptRepository;
 import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.shared.util.TokenExtractor;
@@ -24,7 +25,9 @@ public class GetBossCooldownsUseCase {
 
         UUID playerId = TokenExtractor.extractPlayerId(token);
 
-        List<BossDefinitionEntity> bosses = bossDefinitionRepository.findAllActive();
+        List<BossDefinitionEntity> bosses = bossDefinitionRepository.findAllActive().stream()
+                .filter(boss -> boss.getBossType() != BossType.CLAN && boss.getBossType() != BossType.WORLD)
+                .toList();
 
         return bosses.stream().map(boss -> {
             var lastAttempt = bossAttemptRepository

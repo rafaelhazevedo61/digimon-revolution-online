@@ -51,7 +51,9 @@ public class GetAvailableBossesUseCase {
         int totalDef = digimon.getDefense() + EquipmentRules.totalBonusDefense(equippedItems);
         double digimonPower = BossCombatRules.calculatePower(totalHp, totalAtk, totalDef);
 
-        List<BossDefinitionEntity> bosses = bossDefinitionRepository.findAllActive();
+        List<BossDefinitionEntity> bosses = bossDefinitionRepository.findAllActive().stream()
+                .filter(boss -> boss.getBossType() != BossType.CLAN && boss.getBossType() != BossType.WORLD)
+                .toList();
 
         Set<Long> todaysDailyBossIds = getTodaysDailyBossIds(bosses);
 
