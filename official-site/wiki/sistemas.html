@@ -124,15 +124,58 @@ WinChance = clamp(round(digimonPower / bossPower * 100), 5, 95)</code></pre>
 
             <section>
               <h2>Boss Mundial</h2>
-              <p>O <strong>Boss Mundial</strong> é um desafio compartilhado por todo o servidor. Qualquer Digimon pode participar, independente de estágio, level ou rebirths.</p>
+              <p>O <strong>Boss Mundial</strong> é uma batalha coletiva que reúne todos os jogadores do servidor contra o mesmo inimigo. Diferentemente de um boss comum, você não enfrenta uma cópia separada: cada ataque reduz o <strong>HP global</strong> e ajuda toda a comunidade. Se outro jogador atacar antes de você, você verá o resultado desse esforço na mesma barra de vida.</p>
+
+              <h3>Como participar</h3>
+              <p>Abra a aba <strong>“Mais”</strong> no menu do jogo e escolha <strong>“Boss Mundial”</strong>. Para atacar, é necessário ter um Digimon ativo. O Digimon selecionado é o responsável pelo ataque, portanto escolha aquele que estiver mais bem preparado.</p>
+              <p>O Apocalymon, primeiro Boss Mundial disponível, pode ser enfrentado por Digimons a partir do estágio Baby, no level 1 e sem exigência de rebirth. Bosses futuros podem ter requisitos diferentes; quando isso acontecer, eles serão informados na própria tela do evento.</p>
+
+              <h3>Uma única batalha para todo o servidor</h3>
+              <p>A barra de HP exibida na tela representa a vida do boss para <strong>todos os jogadores</strong>. Cada ataque reduz essa mesma barra, e o dano causado fica registrado na contribuição do jogador. Quando o HP chega a zero, o boss é considerado derrotado para o servidor inteiro.</p>
+              <p>O boss do dia permanece disponível até ser derrotado ou até a virada diária. Depois disso, uma nova batalha é iniciada no próximo ciclo. Se a tela mostrar <strong>“Boss Mundial derrotado hoje!”</strong>, não será possível realizar novos ataques até o próximo dia.</p>
+
+              <h3>Limite de ataques e custo de energia</h3>
+              <p>Cada jogador pode realizar <strong>até 3 ataques por dia</strong>. As tentativas são individuais: o ataque de outro jogador não consome as suas. As tentativas também não são compartilhadas entre seus Digimons e não se acumulam para o dia seguinte.</p>
+              <p>Cada ataque consome energia. No Apocalymon, o custo normal é de <strong>20 de energia por ataque</strong>. Bônus do seu clã que reduzem o custo de energia podem diminuir esse valor. Se você não tiver energia suficiente, o ataque não será realizado e a tentativa diária não será consumida.</p>
+              <p>A tela informa quantos ataques você já usou, quantos ainda estão disponíveis e quanto dano você acumulou no boss atual. Depois de usar as três tentativas, o botão de ataque é substituído pelo aviso <strong>“Limite diário de ataques atingido. Volte amanhã.”</strong></p>
+
+              <h3>Como o dano é definido</h3>
+              <p>O dano depende principalmente da força do seu Digimon em comparação com a força do boss. HP, ATK e DEF do Digimon entram nessa comparação, assim como os bônus dos equipamentos equipados e os bônus de atributos concedidos pelo clã. Equipar, evoluir e fortalecer o Digimon aumenta suas chances de causar golpes mais fortes.</p>
+              <p>O jogo transforma essa comparação em uma <strong>chance de vitória</strong>, exibida no resultado do ataque. Essa porcentagem varia de 5% a 95% e não significa que o ataque pode simplesmente errar ou deixar de causar dano. No Boss Mundial, ela funciona como um indicador da sua vantagem e influencia o tamanho do golpe: quanto maior a chance, maior pode ser o dano.</p>
+              <p>Mesmo com uma chance baixa, o ataque ainda causa dano. O valor final é sorteado dentro de uma faixa proporcional à sua chance, por isso dois ataques do mesmo Digimon podem causar números diferentes. O cálculo utiliza o <strong>HP máximo original do boss</strong>, e não apenas o HP que restou naquele momento; assim, o dano não diminui automaticamente só porque a batalha está perto do fim.</p>
+
+              <h3>Exemplos de dano contra o Apocalymon</h3>
+              <p>O Apocalymon possui 1.000.000 de HP. Na configuração atual, os valores abaixo mostram a faixa aproximada de dano normal antes de qualquer efeito especial:</p>
               <ul>
-                <li>HP coletivo reduzido por todos os jogadores do servidor</li>
-                <li>Limite de 3 ataques por dia, consumindo energia</li>
-                <li>Ranking global de dano com os maiores contribuidores</li>
-                <li>Recompensas de XP e Bits a cada hit</li>
-                <li>Bônus extra de XP e Bits no golpe final que derrota o boss</li>
+                <li>Com <strong>5% de chance</strong>, o golpe fica aproximadamente entre 500 e 2.500 de dano.</li>
+                <li>Com <strong>30% de chance</strong>, o golpe fica aproximadamente entre 500 e 15.000 de dano.</li>
+                <li>Com <strong>50% de chance</strong>, o golpe fica aproximadamente entre 500 e 25.000 de dano.</li>
+                <li>Com <strong>95% de chance</strong>, o golpe fica aproximadamente entre 500 e 47.500 de dano.</li>
               </ul>
-              <p>Acesse pela aba “Mais” do jogo. O boss reseta diariamente, então volte todos os dias para subir no ranking.</p>
+              <p>Esses valores são referências, não uma promessa de dano fixo. O jogo sorteia o resultado a cada ataque e arredonda o número final. Além disso, se o boss tiver menos HP do que o dano do golpe, o ataque apenas remove o HP restante e não ultrapassa zero.</p>
+
+              <h3>Recompensas por participação</h3>
+              <p>Todo ataque bem-sucedido concede recompensas imediatamente, independentemente de você estar ou não no topo do ranking. No Apocalymon atual, cada hit concede <strong>250 XP e 10 Bits</strong>. Esses valores podem ser diferentes em outros Bosses Mundiais.</p>
+              <p>O jogador que aplicar o <strong>golpe final</strong>, isto é, o ataque que reduzir o HP do boss a zero, recebe também um bônus adicional de <strong>5.000 XP e 200 Bits</strong>. Esse bônus é somado à recompensa normal do ataque final; ele não substitui os 250 XP e 10 Bits recebidos pelo hit.</p>
+
+              <h3>Ranking global e últimos ataques</h3>
+              <p>O <strong>Ranking de Dano Global</strong> organiza os jogadores pela soma de todo o dano causado no boss do dia. Cada um dos seus três ataques pode aumentar sua posição, e o ranking pode mudar a qualquer momento conforme outros jogadores participam.</p>
+              <p>A seção <strong>“Últimos ataques”</strong> mostra as contribuições mais recentes do servidor. Use-a para acompanhar o ritmo da batalha, descobrir se o boss está recebendo dano e verificar quando a comunidade está próxima da vitória. O ranking mede contribuição de dano, não a quantidade de ataques realizados.</p>
+
+              <h3>O que aparece no resultado do ataque</h3>
+              <p>Depois de atacar, o jogo abre a janela <strong>“Resultado do Ataque”</strong>. Ela mostra o dano causado, a quantidade de XP e Bits recebida, sua chance de vitória naquele golpe e o HP restante do boss. Se o ataque tiver sido o final, a mesma janela destaca o bônus extra de derrota.</p>
+              <p>Ao fechar o resultado, a tela atualiza a barra de HP, suas tentativas restantes, seu dano acumulado, o ranking global e a lista de ataques recentes.</p>
+
+              <h3>Como aproveitar melhor suas tentativas</h3>
+              <ul>
+                <li>Use seu Digimon mais forte e mantenha-o como Digimon ativo antes de abrir a tela do boss.</li>
+                <li>Equipe armas, armaduras e acessórios que aumentem seus atributos antes de atacar.</li>
+                <li>Considere os bônus de HP, ATK e DEF do seu clã, pois eles também ajudam na comparação contra o boss.</li>
+                <li>Reserve energia suficiente para aproveitar as três tentativas do dia.</li>
+                <li>Não espere necessariamente o golpe final: todos os ataques concedem XP, Bits e pontos para o ranking.</li>
+                <li>Acompanhe o HP restante e os últimos ataques para saber como a batalha está evoluindo.</li>
+              </ul>
+              <p>O Boss Mundial é uma oportunidade diária de contribuir com o servidor, receber recompensas e disputar posições no ranking. Volte todos os dias, fortaleça seu Digimon e ajude a comunidade a derrotar o próximo desafio.</p>
             </section>
           </div>
         </article>
