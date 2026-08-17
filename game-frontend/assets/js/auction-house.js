@@ -86,8 +86,8 @@ async function auctionRenderMarket() {
   const cards = (listings.content || []).map(auctionListingCard).join("");
   content.innerHTML = `
     <div class="card space-y-3">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[minmax(14rem,1fr)_12rem_11rem_7.5rem] gap-2">
-        <label class="min-w-0 sm:col-span-2 lg:col-span-1">
+      <div class="grid grid-cols-2 gap-2">
+        <label class="min-w-0 col-span-2">
           <span class="sr-only">Buscar item por nome ou código</span>
           <input id="auction-search" class="input min-w-0" placeholder="Buscar por nome ou código..." value="${escapeHtml(auctionState.search)}" />
         </label>
