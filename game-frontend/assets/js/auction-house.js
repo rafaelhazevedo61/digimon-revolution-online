@@ -23,10 +23,10 @@ async function renderAuctionHousePage() {
         <div id="auction-bits" class="card-sm text-right text-xs text-amber-300">Carregando Bits...</div>
       </div>
 
-      <div class="flex gap-2 mb-4 overflow-x-auto">
-        <button id="auction-tab-market" class="btn-primary text-sm whitespace-nowrap" onclick="auctionSetMode('market')">Mercado</button>
-        <button id="auction-tab-mine" class="btn-secondary text-sm whitespace-nowrap" onclick="auctionSetMode('mine')">Meus anúncios</button>
-        <button id="auction-tab-history" class="btn-secondary text-sm whitespace-nowrap" onclick="auctionSetMode('history')">Histórico</button>
+      <div class="flex gap-2 mb-4 w-full">
+        <button id="auction-tab-market" class="btn-primary flex-1 min-w-0 text-sm text-center whitespace-nowrap" onclick="auctionSetMode('market')">Mercado</button>
+        <button id="auction-tab-mine" class="btn-secondary flex-1 min-w-0 text-sm text-center whitespace-nowrap" onclick="auctionSetMode('mine')">Meus anúncios</button>
+        <button id="auction-tab-history" class="btn-secondary flex-1 min-w-0 text-sm text-center whitespace-nowrap" onclick="auctionSetMode('history')">Histórico</button>
       </div>
 
       <div id="auction-content" class="space-y-3">
@@ -56,8 +56,8 @@ async function auctionSetMode(mode) {
   auctionState.page = 0;
   document.querySelectorAll("[id^='auction-tab-']").forEach(button => {
     button.className = button.id === `auction-tab-${mode}`
-      ? "btn-primary text-sm whitespace-nowrap"
-      : "btn-secondary text-sm whitespace-nowrap";
+      ? "btn-primary flex-1 min-w-0 text-sm text-center whitespace-nowrap"
+      : "btn-secondary flex-1 min-w-0 text-sm text-center whitespace-nowrap";
   });
 
   const content = document.getElementById("auction-content");
