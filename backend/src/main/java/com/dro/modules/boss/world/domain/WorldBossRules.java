@@ -9,8 +9,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public class WorldBossRules {
 
     public static final int DAILY_ATTACK_LIMIT = 3;
-    public static final double DAMAGE_PERCENT_PER_WIN_CHANCE = 0.15;
-    public static final int MIN_DAMAGE_PERCENT = 1;
+    public static final double DAMAGE_PERCENT_PER_WIN_CHANCE = 0.05;
+    public static final double MIN_DAMAGE_PERCENT = 0.05;
 
     public static int dailyAttacksRemaining(long usedToday) {
         long remaining = DAILY_ATTACK_LIMIT - usedToday;
@@ -22,10 +22,13 @@ public class WorldBossRules {
     }
 
     public static int calculateDamage(int maxHp, int winChance) {
-        int maxPercent = Math.max(MIN_DAMAGE_PERCENT,
-                (int) Math.round(winChance * DAMAGE_PERCENT_PER_WIN_CHANCE));
+        double maxPercent = Math.max(MIN_DAMAGE_PERCENT,
+                winChance * DAMAGE_PERCENT_PER_WIN_CHANCE);
 
-        int percent = ThreadLocalRandom.current().nextInt(MIN_DAMAGE_PERCENT, maxPercent + 1);
+        double percent = maxPercent <= MIN_DAMAGE_PERCENT
+                ? MIN_DAMAGE_PERCENT
+                : ThreadLocalRandom.current().nextDouble(MIN_DAMAGE_PERCENT, maxPercent);
+
         return (int) Math.max(1, Math.round(maxHp * percent / 100.0));
     }
 
