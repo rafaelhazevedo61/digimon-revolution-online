@@ -82,9 +82,12 @@ public class AttackClanRaidUseCase {
         Instant startOfDay = LocalDate.now(ZoneId.systemDefault())
                 .atStartOfDay(ZoneId.systemDefault())
                 .toInstant();
+        Instant resetCutoff = raid.getDailyResetAt() != null && raid.getDailyResetAt().isAfter(startOfDay)
+                ? raid.getDailyResetAt()
+                : startOfDay;
 
         long usedToday = clanRaidAttackRepository
-                .countByClanRaidIdAndPlayerIdAndCreatedAtGreaterThanEqual(raid.getId(), playerId, startOfDay);
+                .countByClanRaidIdAndPlayerIdAndCreatedAtGreaterThanEqual(raid.getId(), playerId, resetCutoff);
         if (ClanRaidRules.dailyLimitReached(usedToday)) {
             throw new BadRequestException("Daily raid attack limit reached (" + ClanRaidRules.DAILY_ATTACK_LIMIT + " per day). Come back tomorrow.");
         }

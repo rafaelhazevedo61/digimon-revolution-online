@@ -36,9 +36,12 @@ public class ClanRaidResponseMapper {
         Instant startOfDay = LocalDate.now(ZoneId.systemDefault())
                 .atStartOfDay(ZoneId.systemDefault())
                 .toInstant();
+        Instant resetCutoff = raid.getDailyResetAt() != null && raid.getDailyResetAt().isAfter(startOfDay)
+                ? raid.getDailyResetAt()
+                : startOfDay;
 
         int usedToday = (int) clanRaidAttackRepository
-                .countByClanRaidIdAndPlayerIdAndCreatedAtGreaterThanEqual(raid.getId(), viewerPlayerId, startOfDay);
+                .countByClanRaidIdAndPlayerIdAndCreatedAtGreaterThanEqual(raid.getId(), viewerPlayerId, resetCutoff);
         long myTotalDamage = clanRaidAttackRepository.findByClanRaidIdOrderByCreatedAtDesc(raid.getId()).stream()
                 .filter(a -> a.getPlayerId().equals(viewerPlayerId))
                 .mapToLong(ClanRaidAttack::getDamage)

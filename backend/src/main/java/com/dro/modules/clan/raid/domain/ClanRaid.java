@@ -43,6 +43,9 @@ public class ClanRaid {
     @Column(name = "defeated_at")
     private Instant defeatedAt;
 
+    @Column(name = "daily_reset_at")
+    private Instant dailyResetAt;
+
     @Version
     @Builder.Default
     private long version = 0;

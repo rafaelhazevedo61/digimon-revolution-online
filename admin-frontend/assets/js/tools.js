@@ -311,7 +311,7 @@ async function adminResetClanRaid() {
   try {
     const result = await apiPost("/admin/tools/reset-clan-raid-daily");
     document.getElementById("admin-reset-raid-result").innerHTML =
-      `<span class="text-green-400">${result.message} (${result.raidsReset} raids / ${result.attacksDeleted} ataques)</span>`;
+      `<span class="text-green-400">${result.message} (${result.raidsReset} raids)</span>`;
   } catch (err) {
     document.getElementById("admin-reset-raid-result").innerHTML =
       `<span class="text-red-400">${err.message}</span>`;

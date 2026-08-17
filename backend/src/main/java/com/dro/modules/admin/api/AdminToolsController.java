@@ -31,11 +31,10 @@ public class AdminToolsController {
 
     @PostMapping("/reset-clan-raid-daily")
     public ResponseEntity<Map<String, Object>> resetClanRaidDaily() {
-        AdminResetClanRaidDailyUseCase.Result result = resetClanRaidDailyUseCase.execute();
+        int raidsReset = resetClanRaidDailyUseCase.execute();
         return ResponseEntity.ok(Map.of(
                 "message", "Clan raid daily reset successfully",
-                "raidsReset", result.getRaidsReset(),
-                "attacksDeleted", result.getAttacksDeleted()
+                "raidsReset", raidsReset
         ));
     }
 

@@ -54,6 +54,7 @@ public class ClanRaidService {
                 .status(ClanRaidStatus.ACTIVE)
                 .createdAt(now)
                 .updatedAt(now)
+                .dailyResetAt(now)
                 .build();
 
         return clanRaidRepository.save(raid);
