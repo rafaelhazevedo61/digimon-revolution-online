@@ -1,5 +1,8 @@
 BEGIN;
 
+-- Garante que os IDs gerados pela sequência não colidam com os IDs explícitos inseridos em V25
+ALTER SEQUENCE IF EXISTS digimon_infos_id_seq RESTART WITH 54;
+
 INSERT INTO digimon_infos (
     name,
     stage,

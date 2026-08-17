@@ -10,7 +10,7 @@
   <meta property="og:type" content="website" />
   <title>Digimon Revolution Online — Sua jornada começa aqui</title>
   <link rel="icon" type="image/png" href="assets/img/icon-192.png" />
-  <link rel="stylesheet" href="assets/css/site.css" />
+  <link rel="stylesheet" href="assets/css/site.css?v=4" />
 </head>
 <body>
   <a class="skip-link" href="#main">Ir para o conteúdo</a>
@@ -36,10 +36,12 @@
         <a href="#roadmap">Roadmap</a>
         <a href="noticias.html">Notícias</a>
         <a href="galeria.html">Galeria</a>
+        <a href="wiki/index.html">Wiki</a>
         <a href="#faq">FAQ</a>
       </nav>
 
       <a class="button button-small button-primary header-cta" href="../game-frontend/index.html">Jogar agora</a>
+      <button class="theme-toggle" type="button" aria-label="Alternar tema" data-theme-toggle>🌙</button>
     </div>
   </header>
 
@@ -147,6 +149,7 @@
           <article class="system-card reveal"><div class="system-symbol">⌁</div><span class="system-tag">EXPEDIÇÕES</span><h3>Missões</h3><p>Administre energia e tempo para conquistar experiência, Bits e recompensas.</p></article>
           <article class="system-card reveal"><div class="system-symbol">⬡</div><span class="system-tag">ESTRATÉGIA</span><h3>Equipamentos</h3><p>Combine armas, armaduras, acessórios, sets, tiers e refinamentos.</p></article>
           <article class="system-card reveal"><div class="system-symbol">⚔</div><span class="system-tag">DESAFIOS</span><h3>Bosses e Arena</h3><p>Enfrente desafios por estágio e dispute batalhas competitivas contra outros jogadores.</p></article>
+          <article class="system-card reveal"><div class="system-symbol">◈</div><span class="system-tag">COMUNIDADE</span><h3>Clãs e Raids</h3><p>Construa um clã, acumule Honor Marks, desbloqueie upgrades e derrote bosses cooperativos.</p></article>
         </div>
       </div>
     </section>
@@ -201,7 +204,7 @@
         <div class="center-heading reveal"><span class="section-kicker">ROADMAP PÚBLICO</span><h2>O Mundo Digital continua crescendo</h2><p>Uma visão transparente das etapas de desenvolvimento.</p></div>
         <div class="roadmap-grid">
           <article class="roadmap-card complete reveal"><div class="roadmap-head"><span>01</span><small>DISPONÍVEL</small></div><h3>Fundação da jornada</h3><ul><li>Cadastro e autenticação JWT</li><li>Digitama e incubação</li><li>Missões e energia</li><li>Inventário e loja</li><li>Evolução e Rebirth</li><li>Ranking e Digidex</li></ul></article>
-          <article class="roadmap-card current reveal"><div class="roadmap-head"><span>02</span><small>EM DESENVOLVIMENTO</small></div><h3>Competição e desafios</h3><ul><li>Bosses por estágio</li><li>Arena PvP</li><li>Tutorial inicial</li><li>Expansão de equipamentos</li><li>Melhorias na experiência</li></ul></article>
+          <article class="roadmap-card current reveal"><div class="roadmap-head"><span>02</span><small>EM DESENVOLVIMENTO</small></div><h3>Competição e comunidade</h3><ul><li>Clãs, Honor Marks e upgrades</li><li>Missões e Raid de Clã</li><li>Arena PvP</li><li>Bosses por estágio</li><li>Tutorial inicial</li><li>Expansão de equipamentos</li></ul></article>
           <article class="roadmap-card future reveal"><div class="roadmap-head"><span>03</span><small>PLANEJADO</small></div><h3>Expansão do mundo</h3><ul><li>Estágios Ultimate e Mega</li><li>Guildas e recursos sociais</li><li>Eventos sazonais</li><li>Novos conteúdos e linhas</li><li>Marketplace</li></ul></article>
         </div>
       </div>
@@ -260,7 +263,7 @@
   <footer class="site-footer">
     <div class="container footer-main">
       <div class="footer-brand"><a class="brand" href="#topo"><span class="brand-mark"><span></span></span><span class="brand-copy"><strong>DIGIMON</strong><small>REVOLUTION ONLINE</small></span></a><p>Um projeto independente criado por fãs para fãs do universo Digimon.</p></div>
-      <div class="footer-links"><div><strong>Portal</strong><a href="#sobre">O jogo</a><a href="#sistemas">Sistemas</a><a href="#roadmap">Roadmap</a><a href="noticias.html">Notícias</a><a href="galeria.html">Galeria</a></div><div><strong>Jogar</strong><a href="../game-frontend/index.html">Abrir jogo</a><a href="#faq">FAQ</a><span class="muted-link">Wiki — em breve</span></div></div>
+      <div class="footer-links"><div><strong>Portal</strong><a href="#sobre">O jogo</a><a href="#sistemas">Sistemas</a><a href="#roadmap">Roadmap</a><a href="noticias.html">Notícias</a><a href="galeria.html">Galeria</a><a href="wiki/index.html">Wiki</a></div><div><strong>Jogar</strong><a href="../game-frontend/index.html">Abrir jogo</a><a href="#faq">FAQ</a></div></div>
     </div>
     <div class="container footer-bottom"><span>© <span id="current-year"></span> Digimon Revolution Online.</span><span>Projeto não oficial e sem afiliação à Bandai, Toei Animation ou detentores da marca Digimon.</span></div>
   </footer>
@@ -279,7 +282,19 @@
     </div>
   </div>
 
-  <script src="assets/js/site.js"></script>
+  <div class="cta-modal" data-cta-modal hidden>
+    <div class="cta-modal-backdrop" data-cta-modal-backdrop></div>
+    <div class="cta-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="cta-modal-title">
+      <button class="cta-modal-close" type="button" data-cta-modal-close aria-label="Fechar">×</button>
+      <div class="cta-modal-copy">
+        <span>Em breve</span>
+        <h2 id="cta-modal-title">O jogo ainda não está disponível</h2>
+        <p>O Mundo Digital está em construção. Fique ligado nas novidades para saber quando a jornada começará.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/site.js?v=4"></script>
   <script src="assets/js/news-data.js"></script>
   <script src="assets/js/news.js"></script>
   <script src="assets/js/gallery-data.js"></script>
