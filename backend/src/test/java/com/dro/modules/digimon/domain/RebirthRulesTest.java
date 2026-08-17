@@ -48,8 +48,23 @@ class RebirthRulesTest {
     }
 
     @Test
-    void calculateStatMultiplier_rebirth20_cappedAt1_20() {
-        assertEquals(1.20, RebirthRules.calculateStatMultiplier(20), 0.001);
+    void calculateStatMultiplier_rebirth20_returns1_40() {
+        assertEquals(1.40, RebirthRules.calculateStatMultiplier(20), 0.001);
+    }
+
+    @Test
+    void calculateStatMultiplier_rebirth25_returns1_50() {
+        assertEquals(1.50, RebirthRules.calculateStatMultiplier(25), 0.001);
+    }
+
+    @Test
+    void calculateStatMultiplier_rebirth50_returns2_00() {
+        assertEquals(2.00, RebirthRules.calculateStatMultiplier(50), 0.001);
+    }
+
+    @Test
+    void calculateStatMultiplier_rebirth60_cappedAt2_00() {
+        assertEquals(2.00, RebirthRules.calculateStatMultiplier(60), 0.001);
     }
 
     @Test
