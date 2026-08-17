@@ -19,13 +19,11 @@ public class AdminResetWorldBossDailyUseCase {
 
     @Transactional
     public int execute() {
-        Instant startOfDay = LocalDate.now(ZoneId.systemDefault())
-                .atStartOfDay(ZoneId.systemDefault())
-                .toInstant();
+        LocalDate todayDate = LocalDate.now(ZoneId.systemDefault());
         Instant now = Instant.now();
 
         Optional<WorldBossInstance> today = worldBossInstanceRepository
-                .findFirstByCreatedAtGreaterThanEqualOrderByCreatedAtDesc(startOfDay);
+                .findFirstByBossDateOrderByCreatedAtDesc(todayDate);
 
         if (today.isEmpty()) {
             return 0;
