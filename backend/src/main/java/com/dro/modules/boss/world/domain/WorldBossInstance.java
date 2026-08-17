@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -20,6 +21,9 @@ public class WorldBossInstance {
 
     @Column(name = "boss_id", nullable = false)
     private Long bossId;
+
+    @Column(name = "boss_date", nullable = false)
+    private LocalDate bossDate;
 
     @Column(nullable = false)
     private int maxHp;
