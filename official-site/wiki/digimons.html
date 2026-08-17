@@ -119,6 +119,87 @@
                 <li>A cada level: +2 HP, +1 ATK, +1 DEF</li>
                 <li>XP para o próximo nível: <code>nível * 100</code></li>
               </ul>
+
+              <div class="wiki-calc" data-wiki-stats-calc>
+                <h3>Calculadora de Stats</h3>
+                <div class="wiki-calc-grid">
+                  <div class="wiki-calc-field">
+                    <label for="calc-stat">Stat</label>
+                    <select id="calc-stat" data-calc-stat>
+                      <option value="HP">HP</option>
+                      <option value="ATK">ATK</option>
+                      <option value="DEF">DEF</option>
+                    </select>
+                  </div>
+                  <div class="wiki-calc-field">
+                    <label for="calc-base">Stat base</label>
+                    <input id="calc-base" type="number" min="0" value="50" data-calc-base />
+                  </div>
+                  <div class="wiki-calc-field">
+                    <label for="calc-iv">IV (0–100)</label>
+                    <input id="calc-iv" type="number" min="0" max="100" value="50" data-calc-iv />
+                  </div>
+                  <div class="wiki-calc-field">
+                    <label for="calc-level">Level</label>
+                    <input id="calc-level" type="number" min="1" max="100" value="1" data-calc-level />
+                  </div>
+                  <div class="wiki-calc-field">
+                    <label for="calc-rarity">Raridade</label>
+                    <select id="calc-rarity" data-calc-rarity>
+                      <option value="COMMON">Common</option>
+                      <option value="RARE">Rare</option>
+                      <option value="EPIC">Epic</option>
+                      <option value="LEGENDARY">Legendary</option>
+                    </select>
+                  </div>
+                  <div class="wiki-calc-field">
+                    <label for="calc-stage">Stage</label>
+                    <select id="calc-stage" data-calc-stage>
+                      <option value="BABY">Baby</option>
+                      <option value="BABY_II">Baby II</option>
+                      <option value="ROOKIE">Rookie</option>
+                      <option value="CHAMPION">Champion</option>
+                      <option value="ULTIMATE">Ultimate</option>
+                      <option value="MEGA">Mega</option>
+                    </select>
+                  </div>
+                  <div class="wiki-calc-field">
+                    <label for="calc-personality">Personalidade</label>
+                    <select id="calc-personality" data-calc-personality>
+                      <option value="DURABLE">Durable</option>
+                      <option value="FIGHTER">Fighter</option>
+                      <option value="DEFENDER">Defender</option>
+                      <option value="BRAINY">Brainy</option>
+                      <option value="NIMBLE">Nimble</option>
+                      <option value="LIVELY">Lively</option>
+                    </select>
+                  </div>
+                  <div class="wiki-calc-field">
+                    <label for="calc-trait">Trait</label>
+                    <select id="calc-trait" data-calc-trait>
+                      <option value="NONE">Nenhum</option>
+                      <option value="VITALITY">Vitality (+10% HP)</option>
+                      <option value="BERSERKER">Berserker (+10% ATK)</option>
+                      <option value="IRON_BODY">Iron Body (+10% DEF)</option>
+                      <option value="FAST_LEARNER">Fast Learner (+10% XP)</option>
+                      <option value="ENERGETIC">Energetic (+5 energia)</option>
+                    </select>
+                  </div>
+                  <div class="wiki-calc-field">
+                    <label for="calc-rebirth">Rebirths</label>
+                    <input id="calc-rebirth" type="number" min="0" value="0" data-calc-rebirth />
+                  </div>
+                  <div class="wiki-calc-field">
+                    <label for="calc-equipment">Bônus equipamento</label>
+                    <input id="calc-equipment" type="number" min="0" value="0" data-calc-equipment />
+                  </div>
+                  <div class="wiki-calc-result">
+                    <span>Stat final estimado</span>
+                    <strong data-calc-result>0</strong>
+                  </div>
+                  <div class="wiki-calc-breakdown" data-calc-desc></div>
+                </div>
+              </div>
             </section>
 
             <section>
@@ -154,5 +235,6 @@
   </div>
 
   <script src="../assets/js/site.js?v=4"></script>
+  <script src="../assets/js/wiki-stats-calc.js?v=4"></script>
 </body>
 </html>
