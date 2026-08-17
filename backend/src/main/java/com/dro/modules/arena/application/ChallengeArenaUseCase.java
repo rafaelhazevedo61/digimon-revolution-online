@@ -84,8 +84,14 @@ public class ChallengeArenaUseCase {
             Instant startOfDay = LocalDate.now(ZoneId.systemDefault())
                     .atStartOfDay(ZoneId.systemDefault())
                     .toInstant();
+            Instant dailyResetCutoff = player.getArenaDailyResetAt() != null
+                    ? player.getArenaDailyResetAt().atZone(ZoneId.systemDefault()).toInstant()
+                    : null;
+            Instant attackCutoff = dailyResetCutoff != null && dailyResetCutoff.isAfter(startOfDay)
+                    ? dailyResetCutoff
+                    : startOfDay;
             long usedToday = arenaMatchRepository
-                    .countByAttackerPlayerIdAndCreatedAtGreaterThanEqual(playerId, startOfDay);
+                    .countByAttackerPlayerIdAndCreatedAtGreaterThanEqual(playerId, attackCutoff);
             if (ArenaRules.dailyLimitReached(usedToday)) {
                 throw new BadRequestException("Daily challenge limit reached ("
                         + ArenaRules.DAILY_CHALLENGE_LIMIT + " per day). Come back tomorrow.");

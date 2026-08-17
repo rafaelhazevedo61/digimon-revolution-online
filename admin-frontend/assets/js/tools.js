@@ -300,7 +300,7 @@ async function adminResetArena() {
   try {
     const result = await apiPost("/admin/tools/reset-daily-arena-attacks");
     document.getElementById("admin-reset-arena-result").innerHTML =
-      `<span class="text-green-400">${result.message} (${result.deletedMatches} partidas removidas)</span>`;
+      `<span class="text-green-400">${result.message} (${result.playersReset} jogadores)</span>`;
   } catch (err) {
     document.getElementById("admin-reset-arena-result").innerHTML =
       `<span class="text-red-400">${err.message}</span>`;

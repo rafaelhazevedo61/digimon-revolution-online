@@ -22,10 +22,10 @@ public class AdminToolsController {
 
     @PostMapping("/reset-daily-arena-attacks")
     public ResponseEntity<Map<String, Object>> resetDailyArenaAttacks() {
-        long deleted = resetArenaDailyUseCase.execute();
+        int playersReset = resetArenaDailyUseCase.execute();
         return ResponseEntity.ok(Map.of(
                 "message", "Daily arena attacks reset successfully",
-                "deletedMatches", deleted
+                "playersReset", playersReset
         ));
     }
 

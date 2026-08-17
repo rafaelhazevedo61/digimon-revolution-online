@@ -1,25 +1,28 @@
 package com.dro.modules.arena.application;
 
-import com.dro.modules.arena.infra.ArenaMatchRepository;
+import com.dro.modules.player.domain.Player;
+import com.dro.modules.player.infra.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class AdminResetArenaDailyUseCase {
 
-    private final ArenaMatchRepository arenaMatchRepository;
+    private final PlayerRepository playerRepository;
 
     @Transactional
-    public long execute() {
-        Instant startOfDay = LocalDate.now(ZoneId.systemDefault())
-                .atStartOfDay(ZoneId.systemDefault())
-                .toInstant();
-        return arenaMatchRepository.deleteByCreatedAtGreaterThanEqual(startOfDay);
+    public int execute() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Player> players = playerRepository.findAll();
+        for (Player player : players) {
+            player.setArenaDailyResetAt(now);
+        }
+        playerRepository.saveAll(players);
+        return players.size();
     }
 }
