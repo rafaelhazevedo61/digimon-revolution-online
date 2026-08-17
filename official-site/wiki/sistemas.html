@@ -144,6 +144,29 @@ WinChance = clamp(round(digimonPower / bossPower * 100), 5, 95)</code></pre>
               <p>O jogo transforma essa comparação em uma <strong>chance de vitória</strong>, exibida no resultado do ataque. Essa porcentagem varia de 5% a 95% e não significa que o ataque pode simplesmente errar ou deixar de causar dano. No Boss Mundial, ela funciona como um indicador da sua vantagem e influencia o tamanho do golpe: quanto maior a chance, maior pode ser o dano.</p>
               <p>Mesmo com uma chance baixa, o ataque ainda causa dano. O valor final é sorteado dentro de uma faixa proporcional à sua chance, por isso dois ataques do mesmo Digimon podem causar números diferentes. O cálculo utiliza o <strong>HP máximo original do boss</strong>, e não apenas o HP que restou naquele momento; assim, o dano não diminui automaticamente só porque a batalha está perto do fim.</p>
 
+              <h3>Fórmula do dano, passo a passo</h3>
+              <p>Para entender o dano, basta acompanhar cinco etapas. A ideia é comparar a força do seu Digimon com a força do boss e, depois, transformar essa comparação em uma faixa de dano possível.</p>
+              <ol>
+                <li><strong>Encontrar os atributos usados no ataque:</strong> o jogo considera o HP, o ATK e a DEF do seu Digimon depois dos bônus dos equipamentos e do clã. Esses são os valores que representam a força atual do Digimon.</li>
+                <li><strong>Calcular o poder do Digimon:</strong> cada atributo possui um peso diferente. A fórmula é <strong>Poder do Digimon = (HP × 0,30) + (ATK × 1,50) + (DEF × 1,00)</strong>. Isso significa que, mantendo os outros atributos iguais, um aumento de ATK pesa mais nessa comparação do que o mesmo aumento de DEF ou HP.</li>
+                <li><strong>Calcular o poder do boss:</strong> o boss também possui HP, ATK e DEF. A conta é <strong>Poder do Boss = (HP do Boss × 0,30) + (ATK do Boss × 1,50) + (DEF do Boss × 1,00)</strong>.</li>
+                <li><strong>Encontrar a chance de vitória:</strong> o poder do Digimon é dividido pelo poder do boss e convertido em porcentagem. A conta é <strong>Chance = arredondar((Poder do Digimon ÷ Poder do Boss) × 100)</strong>. O resultado fica sempre entre 5% e 95%: valores menores viram 5%, e valores maiores viram 95%.</li>
+                <li><strong>Sortear o dano:</strong> todo ataque pode causar pelo menos 0,05% do HP máximo do boss. O limite superior da faixa é a sua chance multiplicada por 0,05. Assim, com 50% de chance, o jogo sorteia um golpe entre 0,05% e aproximadamente 2,50% do HP máximo do boss.</li>
+              </ol>
+              <p>Depois do sorteio, o dano é obtido multiplicando o <strong>HP máximo do boss</strong> pelo percentual escolhido e dividindo por 100. O resultado é arredondado para um número inteiro. Se existir um bônus global de dano ativo no servidor, ele é aplicado depois dessa conta; sem bônus global, o valor permanece o mesmo.</p>
+              <p><strong>Resumo da conta:</strong> Dano aplicado = menor valor entre <strong>(dano sorteado × bônus global)</strong> e o <strong>HP restante do boss</strong>. Quando não há bônus global ativo, o bônus vale 1 e não altera o dano sorteado.</p>
+              <p>Por fim, o jogo compara o dano calculado com o HP que ainda resta. O dano aplicado é sempre o menor dos dois valores, para que o boss nunca fique com HP negativo. Por isso, se o golpe calcular 18.000 de dano, mas o boss tiver apenas 12.000 de HP, o ataque removerá somente os 12.000 restantes.</p>
+
+              <h3>Exemplo completo de um ataque</h3>
+              <p>Considere o Apocalymon atual, que possui <strong>1.000.000 de HP</strong> e um poder de boss de <strong>311.500</strong>. Se o seu Digimon tiver um poder de <strong>155.750</strong>, a comparação será:</p>
+              <ol>
+                <li><strong>Chance de vitória:</strong> 155.750 ÷ 311.500 × 100 = 50%.</li>
+                <li><strong>Faixa possível do golpe:</strong> de 0,05% até aproximadamente 2,50% do HP máximo do Apocalymon.</li>
+                <li><strong>Conversão para dano:</strong> como o boss tem 1.000.000 de HP, um sorteio de 1,80% representaria 18.000 de dano.</li>
+                <li><strong>Aplicação no boss:</strong> se o Apocalymon tiver mais de 18.000 de HP, ele perderá 18.000. Se tiver somente 12.000, perderá apenas os 12.000 restantes.</li>
+              </ol>
+              <p>Esse exemplo também mostra por que dois jogadores podem causar danos diferentes e por que o mesmo jogador pode obter resultados diferentes em seus três ataques. A força do Digimon define a faixa possível, mas o valor exato do golpe é sorteado a cada tentativa.</p>
+
               <h3>Exemplos de dano contra o Apocalymon</h3>
               <p>O Apocalymon possui 1.000.000 de HP. Na configuração atual, os valores abaixo mostram a faixa aproximada de dano normal antes de qualquer efeito especial:</p>
               <ul>
