@@ -7,7 +7,7 @@
   <meta name="description" content="Notícias, atualizações, devlogs e patch notes do Digimon Revolution Online." />
   <title>Notícias e Patch Notes — Digimon Revolution Online</title>
   <link rel="icon" type="image/png" href="assets/img/icon-192.png" />
-  <link rel="stylesheet" href="assets/css/site.css" />
+  <link rel="stylesheet" href="assets/css/site.css?v=2" />
 </head>
 <body>
   <a class="skip-link" href="#main">Ir para o conteúdo</a>
@@ -29,6 +29,18 @@
     </section>
   </main>
   <footer class="site-footer"><div class="container footer-main"><div class="footer-brand"><a class="brand" href="index.html"><span class="brand-mark"><span></span></span><span class="brand-copy"><strong>DIGIMON</strong><small>REVOLUTION ONLINE</small></span></a><p>Um projeto independente criado por fãs para fãs do universo Digimon.</p></div><div class="footer-links"><div><strong>Portal</strong><a href="index.html#sobre">O jogo</a><a href="noticias.html">Notícias</a><a href="index.html#roadmap">Roadmap</a></div><div><strong>Jogar</strong><a href="../game-frontend/index.html">Abrir jogo</a><a href="index.html#faq">FAQ</a><span class="muted-link">Wiki — em breve</span></div></div></div><div class="container footer-bottom"><span>© <span id="current-year"></span> Digimon Revolution Online.</span><span>Projeto não oficial e sem afiliação à Bandai, Toei Animation ou detentores da marca Digimon.</span></div></footer>
-  <script src="assets/js/site.js"></script><script src="assets/js/news-data.js"></script><script src="assets/js/news.js"></script>
+  <div class="cta-modal" data-cta-modal hidden>
+    <div class="cta-modal-backdrop" data-cta-modal-backdrop></div>
+    <div class="cta-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="cta-modal-title">
+      <button class="cta-modal-close" type="button" data-cta-modal-close aria-label="Fechar">×</button>
+      <div class="cta-modal-copy">
+        <span>Em breve</span>
+        <h2 id="cta-modal-title">O jogo ainda não está disponível</h2>
+        <p>O Mundo Digital está em construção. Fique ligado nas novidades para saber quando a jornada começará.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/site.js?v=2"></script><script src="assets/js/news-data.js"></script><script src="assets/js/news.js"></script>
 </body>
 </html>
