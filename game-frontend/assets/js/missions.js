@@ -1,10 +1,10 @@
 const AREA_INFO = {
   NATIVE_FOREST: { name: "Floresta Nativa", emoji: "🌲", color: "from-green-900 to-green-950", border: "border-green-700" },
-  GEAR_SAVANNA: { name: "Gear Savanna", emoji: "⚙️", color: "from-amber-900 to-amber-950", border: "border-amber-700" },
-  FACTORIAL_TOWN: { name: "Factorial Town", emoji: "🏭", color: "from-slate-800 to-slate-900", border: "border-slate-600" },
-  FREEZELAND: { name: "Freezeland", emoji: "❄️", color: "from-blue-900 to-blue-950", border: "border-blue-700" },
-  SERVER_DESERT: { name: "Server Desert", emoji: "🏜️", color: "from-orange-900 to-orange-950", border: "border-orange-700" },
-  INFINITY_MOUNTAIN: { name: "Infinity Mountain", emoji: "🏔️", color: "from-purple-900 to-purple-950", border: "border-purple-700" }
+  GEAR_SAVANNA: { name: "Savana Gear", emoji: "⚙️", color: "from-amber-900 to-amber-950", border: "border-amber-700" },
+  FACTORIAL_TOWN: { name: "Cidade Fatorial", emoji: "🏭", color: "from-slate-800 to-slate-900", border: "border-slate-600" },
+  FREEZELAND: { name: "Terra Congelada", emoji: "❄️", color: "from-blue-900 to-blue-950", border: "border-blue-700" },
+  SERVER_DESERT: { name: "Deserto Server", emoji: "🏜️", color: "from-orange-900 to-orange-950", border: "border-orange-700" },
+  INFINITY_MOUNTAIN: { name: "Montanha Infinita", emoji: "🏔️", color: "from-purple-900 to-purple-950", border: "border-purple-700" }
 };
 
 const STAGE_ORDER = ["BABY", "BABY_II", "ROOKIE", "CHAMPION", "ULTIMATE", "MEGA"];
