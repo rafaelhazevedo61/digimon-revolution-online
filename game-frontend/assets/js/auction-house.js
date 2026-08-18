@@ -451,7 +451,19 @@ async function auctionRenderMine() {
         <p class="text-xs text-slate-500">Status: ${escapeHtml(listing.status)} · expira em ${new Date(listing.expiresAt).toLocaleString("pt-BR")}</p>
       </div>
       ${listing.status === "ACTIVE" && listing.remainingQuantity > 0
-        ? `<button class="btn-secondary text-sm" onclick="auctionCancel('${listing.id}')">Cancelar e devolver</button>`
+        ? `<button class="btn-secondary text-sm" onclick="auctionOpenCancelModalFromPayload('${auctionEncodedPayload({
+            id: listing.id,
+            itemName: listing.itemName,
+            itemCode: listing.itemCode,
+            rarity: listing.rarity || "Comum",
+            category: listing.category || "",
+            icon: listing.icon || "",
+            remainingQuantity: listing.remainingQuantity,
+            quantity: listing.quantity,
+            unitPrice: listing.unitPrice,
+            durationHours: listing.durationHours,
+            expiresAt: listing.expiresAt
+          })}')">Cancelar e devolver</button>`
         : `<span class="text-xs text-slate-500">Sem ações disponíveis</span>`}
     </div>
   `).join("");
@@ -462,13 +474,84 @@ async function auctionRenderMine() {
   `;
 }
 
-async function auctionCancel(listingId) {
-  if (!window.confirm("Cancelar este anúncio e devolver os itens ao inventário?")) return;
+function auctionOpenCancelModalFromPayload(encodedPayload) {
   try {
-    await apiPost(`/auction/listings/${listingId}/cancel`, {});
+    auctionOpenCancelModal(JSON.parse(decodeURIComponent(encodedPayload)));
+  } catch (error) {
+    showToast("Não foi possível abrir a confirmação do cancelamento.", "error");
+  }
+}
+
+function auctionOpenCancelModal(listing) {
+  const existing = document.getElementById("auction-cancel-modal");
+  if (existing) existing.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "auction-cancel-modal";
+  overlay.className = "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70";
+  overlay.dataset.listingId = listing.id;
+  overlay.addEventListener("click", event => {
+    if (event.target === overlay) auctionCloseCancelModal();
+  });
+  overlay.innerHTML = `
+    <div class="bg-slate-900 border border-amber-900 rounded-xl max-w-md w-full p-5 shadow-2xl">
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <p class="text-xs uppercase tracking-wide text-amber-400">Meus anúncios</p>
+          <h3 class="font-bold text-lg text-white">Cancelar anúncio</h3>
+        </div>
+        <button class="text-slate-400 text-2xl leading-none" aria-label="Fechar" onclick="auctionCloseCancelModal()">&times;</button>
+      </div>
+
+      <div class="flex items-center gap-3 rounded-xl bg-slate-800/80 p-3 mb-4">
+        <div class="w-14 h-14 rounded-xl bg-slate-700 flex items-center justify-center shrink-0">${auctionIconMarkup(listing)}</div>
+        <div class="min-w-0">
+          <p class="font-bold text-white break-words">${escapeHtml(listing.itemName)}</p>
+          <p class="text-xs text-slate-400 truncate">${escapeHtml(listing.itemCode)} · ${escapeHtml(listing.rarity || "Comum")}</p>
+          <p class="text-xs text-slate-500 mt-1">${Number(listing.unitPrice).toLocaleString("pt-BR")} Bits por unidade</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 mb-4">
+        <div class="rounded-lg bg-slate-800 p-3">
+          <p class="text-[10px] uppercase tracking-wide text-slate-500">Itens a devolver</p>
+          <p class="font-bold text-lg text-emerald-300 mt-1">${Number(listing.remainingQuantity).toLocaleString("pt-BR")}</p>
+        </div>
+        <div class="rounded-lg bg-slate-800 p-3">
+          <p class="text-[10px] uppercase tracking-wide text-slate-500">Taxa da publicação</p>
+          <p class="font-bold text-lg text-amber-300 mt-1">100 Bits</p>
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-400 mb-4">As unidades restantes serão devolvidas ao Digimon que originou este anúncio. A taxa de publicação não é reembolsada.</p>
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" class="btn-secondary w-full" onclick="auctionCloseCancelModal()">Voltar</button>
+        <button id="auction-cancel-submit" type="button" class="btn-primary w-full" onclick="auctionConfirmCancel()">Confirmar cancelamento</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+function auctionCloseCancelModal() {
+  document.getElementById("auction-cancel-modal")?.remove();
+}
+
+async function auctionConfirmCancel() {
+  const modal = document.getElementById("auction-cancel-modal");
+  const submitButton = document.getElementById("auction-cancel-submit");
+  if (!modal || !submitButton) return;
+
+  submitButton.disabled = true;
+  submitButton.textContent = "Cancelando...";
+  try {
+    await apiPost(`/auction/listings/${modal.dataset.listingId}/cancel`, {});
+    auctionCloseCancelModal();
     showToast("Anúncio cancelado e itens devolvidos.");
     await auctionRenderMine();
   } catch (error) {
+    submitButton.disabled = false;
+    submitButton.textContent = "Confirmar cancelamento";
     showToast(error.message, "error");
   }
 }
