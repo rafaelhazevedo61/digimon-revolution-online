@@ -53,24 +53,24 @@ function formatRarity(rarity) {
 function formatDigimonType(type) {
   const normalized = String(type || "UNKNOWN").toUpperCase();
   return {
-    STARTER: "Inicial",
-    BASIC: "Básico",
-    WATER: "Água",
-    FIRE: "Fogo",
-    EARTH: "Terra",
-    WIND: "Vento",
-    UNKNOWN: "Desconhecido"
+    STARTER: "Starter",
+    BASIC: "Basic",
+    WATER: "Water",
+    FIRE: "Fire",
+    EARTH: "Earth",
+    WIND: "Wind",
+    UNKNOWN: "Unknown"
   }[normalized] || type || "Desconhecido";
 }
 
 function formatAttribute(attribute) {
   const normalized = String(attribute || "UNKNOWN").toUpperCase();
   return {
-    DATA: "Dados",
-    NONE: "Nenhum",
-    VACCINE: "Vacina",
-    VIRUS: "Vírus",
-    UNKNOWN: "Desconhecido"
+    DATA: "Data",
+    NONE: "None",
+    VACCINE: "Vaccine",
+    VIRUS: "Virus",
+    UNKNOWN: "Unknown"
   }[normalized] || attribute || "Desconhecido";
 }
 

@@ -331,7 +331,7 @@ function startMissionTimers() {
 
 // Helpers
 function formatStage(stage) {
-  const map = { BABY: "Bebê", BABY_II: "Bebê II", ROOKIE: "Novato", CHAMPION: "Campeão", ULTIMATE: "Ultimate", MEGA: "Mega" };
+  const map = { BABY: "Baby", BABY_II: "Baby II", ROOKIE: "Rookie", CHAMPION: "Champion", ULTIMATE: "Ultimate", MEGA: "Mega" };
   return map[stage] || stage;
 }
 
