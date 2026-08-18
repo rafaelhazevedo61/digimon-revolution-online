@@ -22,7 +22,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/auction")
-@RequiredArgsConstructor
 public class AuctionController {
 
     private final ListAuctionListingsUseCase listAuctionListingsUseCase;
