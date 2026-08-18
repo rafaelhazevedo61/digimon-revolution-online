@@ -49,3 +49,45 @@ function formatRarity(rarity) {
     LEGENDARY: "Lendária"
   }[normalized] || rarity || "Comum";
 }
+
+function formatDigimonType(type) {
+  const normalized = String(type || "UNKNOWN").toUpperCase();
+  return {
+    STARTER: "Inicial",
+    BASIC: "Básico",
+    WATER: "Água",
+    FIRE: "Fogo",
+    EARTH: "Terra",
+    WIND: "Vento",
+    UNKNOWN: "Desconhecido"
+  }[normalized] || type || "Desconhecido";
+}
+
+function formatAttribute(attribute) {
+  const normalized = String(attribute || "UNKNOWN").toUpperCase();
+  return {
+    DATA: "Dados",
+    NONE: "Nenhum",
+    VACCINE: "Vacina",
+    VIRUS: "Vírus",
+    UNKNOWN: "Desconhecido"
+  }[normalized] || attribute || "Desconhecido";
+}
+
+function formatElement(element) {
+  const normalized = String(element || "NEUTRAL").toUpperCase();
+  return {
+    EARTH: "Terra",
+    FIRE: "Fogo",
+    ICE: "Gelo",
+    LIGHT: "Luz",
+    NEUTRAL: "Neutro",
+    PITCH_BLACK: "Negro",
+    STEEL: "Metal",
+    THUNDER: "Trovão",
+    WATER: "Água",
+    WIND: "Vento",
+    WOOD: "Madeira",
+    DARK: "Sombrio"
+  }[normalized] || element || "Neutro";
+}
