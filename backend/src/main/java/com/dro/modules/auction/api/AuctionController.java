@@ -32,6 +32,15 @@ public class AuctionController {
     private final BuyAuctionListingUseCase buyAuctionListingUseCase;
     private final CancelAuctionListingUseCase cancelAuctionListingUseCase;
 
+    public AuctionController (ListAuctionListingsUseCase listAuctionListingsUseCase, ListMyAuctionListingsUseCase listMyAuctionListingsUseCase, GetAuctionHistoryUseCase getAuctionHistoryUseCase, CreateAuctionListingUseCase createAuctionListingUseCase, BuyAuctionListingUseCase buyAuctionListingUseCase, CancelAuctionListingUseCase cancelAuctionListingUseCase) {
+        this.listAuctionListingsUseCase = listAuctionListingsUseCase;
+        this.listMyAuctionListingsUseCase = listMyAuctionListingsUseCase;
+        this.getAuctionHistoryUseCase = getAuctionHistoryUseCase;
+        this.createAuctionListingUseCase = createAuctionListingUseCase;
+        this.buyAuctionListingUseCase = buyAuctionListingUseCase;
+        this.cancelAuctionListingUseCase = cancelAuctionListingUseCase;
+    }
+
     @GetMapping("/listings")
     public ResponseEntity<AuctionListingPageResponse> list(
             @RequestHeader("Authorization") String authorization,
