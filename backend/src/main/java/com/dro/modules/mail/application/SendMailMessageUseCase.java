@@ -31,27 +31,27 @@ public class SendMailMessageUseCase {
     public MailMessageResponse execute(String token, SendMailMessageRequest request) {
         UUID senderId = TokenExtractor.extractPlayerId(token);
         Player sender = playerRepository.findById(senderId)
-                .orElseThrow(() -> new ConflictException("Sender player not found"));
+                .orElseThrow(() -> new ConflictException("Não foi possível identificar o jogador remetente. Faça login novamente."));
 
         String recipientUsername = request.recipientUsername().trim();
         Player recipient = playerRepository.findByUsernameIgnoreCase(recipientUsername)
-                .orElseThrow(() -> new BadRequestException("Recipient player not found"));
+                .orElseThrow(() -> new BadRequestException("Jogador destinatário não encontrado. Confira o nome informado e tente novamente."));
 
         if (sender.getId().equals(recipient.getId())) {
-            throw new BadRequestException("You cannot send a message to yourself");
+            throw new BadRequestException("Você não pode enviar uma mensagem para si mesmo.");
         }
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime rateWindow = now.minusMinutes(1);
         if (mailMessageRepository.countBySenderIdAndCreatedAtAfter(senderId, rateWindow)
                 >= MailRules.MAX_MESSAGES_PER_MINUTE) {
-            throw new UnprocessableException("Too many messages sent. Try again in a moment");
+            throw new UnprocessableException("Você atingiu o limite de 10 mensagens por minuto. Aguarde um momento e tente novamente.");
         }
 
         String subject = request.subject().trim();
         String body = request.body().trim();
         if (subject.isEmpty() || body.isEmpty()) {
-            throw new BadRequestException("Subject and message body cannot be empty");
+            throw new BadRequestException("O assunto e o texto da mensagem não podem ficar vazios.");
         }
 
         MailMessage message = MailMessage.builder()

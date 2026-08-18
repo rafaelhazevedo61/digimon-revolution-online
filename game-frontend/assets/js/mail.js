@@ -183,6 +183,7 @@ function mailShowMessageModal(message) {
           <p class="col-span-2">${mailFormatDate(message.createdAt)}</p>
         </div>
         <div class="rounded-lg bg-slate-900/70 border border-slate-700 p-4 text-sm text-slate-200 whitespace-pre-wrap break-words">${escapeHtml(message.body)}</div>
+        <p class="text-xs text-slate-500 mt-3">O MVP ainda não possui respostas diretas. Para escrever novamente, use “Nova mensagem”.</p>
         <div class="grid grid-cols-2 gap-2 mt-4">
           <button class="btn-sm w-full" onclick="mailCloseModal()">Fechar</button>
           <button class="btn-sm w-full text-red-300" onclick="mailAskDelete('${message.id}')">Excluir</button>
@@ -211,7 +212,8 @@ function mailOpenCompose() {
         <form onsubmit="mailSubmitCompose(event)" class="space-y-3">
           <label class="block text-sm">
             <span class="text-slate-300">Destinatário</span>
-            <input id="mail-recipient" class="w-full mt-1 px-3 py-2 rounded-lg text-sm text-white" style="background:#1e293b;border:1px solid #334155" maxlength="30" required placeholder="Nome do jogador">
+            <input id="mail-recipient" class="w-full mt-1 px-3 py-2 rounded-lg text-sm text-white" style="background:#1e293b;border:1px solid #334155" maxlength="30" required placeholder="Nome do jogador" oninput="mailClearRecipientError()">
+            <p id="mail-recipient-error" class="hidden text-xs text-red-300 mt-1" role="alert"></p>
           </label>
           <label class="block text-sm">
             <span class="text-slate-300">Assunto</span>
@@ -253,7 +255,13 @@ async function mailSubmitCompose(event) {
     showToast("Mensagem enviada!");
     if (mailFolder === "sent") mailLoadFolder();
   } catch (err) {
-    showToast(err.message, "error");
+    const message = mailTranslateError(err);
+    const recipientInput = document.getElementById("mail-recipient");
+    if (recipientInput && message.code === "recipient-not-found") {
+      mailShowRecipientError(message.text);
+      recipientInput.focus();
+    }
+    showToast(message.text, "error");
     if (button) {
       button.disabled = false;
       button.textContent = "Enviar";
@@ -294,6 +302,43 @@ async function mailDelete(messageId) {
   } catch (err) {
     showToast(err.message, "error");
   }
+}
+
+function mailShowRecipientError(message) {
+  const recipientInput = document.getElementById("mail-recipient");
+  const errorEl = document.getElementById("mail-recipient-error");
+  if (recipientInput) recipientInput.style.borderColor = "#ef4444";
+  if (errorEl) {
+    errorEl.textContent = message;
+    errorEl.classList.remove("hidden");
+  }
+}
+
+function mailClearRecipientError() {
+  const recipientInput = document.getElementById("mail-recipient");
+  const errorEl = document.getElementById("mail-recipient-error");
+  if (recipientInput) recipientInput.style.borderColor = "#334155";
+  if (errorEl) {
+    errorEl.textContent = "";
+    errorEl.classList.add("hidden");
+  }
+}
+
+function mailTranslateError(error) {
+  const rawMessage = String(error?.message || "");
+  if (/recipient player not found|jogador destinatário não encontrado/i.test(rawMessage)) {
+    return {
+      code: "recipient-not-found",
+      text: "Não encontramos esse jogador. Confira o nome exatamente como aparece no jogo e tente novamente."
+    };
+  }
+  if (/you cannot send a message to yourself|você não pode enviar uma mensagem para si mesmo/i.test(rawMessage)) {
+    return {
+      code: "self-recipient",
+      text: "Você não pode enviar uma mensagem para si mesmo."
+    };
+  }
+  return { code: "generic", text: rawMessage || "Não foi possível enviar a mensagem." };
 }
 
 function mailCloseModal() {
