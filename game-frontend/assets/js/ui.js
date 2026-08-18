@@ -39,3 +39,13 @@ function showToast(message, type = "success") {
     setTimeout(() => toast.remove(), 300);
   }, 3000);
 }
+
+function formatRarity(rarity) {
+  const normalized = String(rarity || "COMMON").toUpperCase();
+  return {
+    COMMON: "Comum",
+    RARE: "Rara",
+    EPIC: "Épica",
+    LEGENDARY: "Lendária"
+  }[normalized] || rarity || "Comum";
+}
