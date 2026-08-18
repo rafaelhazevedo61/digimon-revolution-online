@@ -39,6 +39,8 @@ function renderDashContent(data) {
       <button class="text-xs text-slate-500 hover:text-red-400" onclick="authLogout()">Sair</button>
     </div>
 
+    <div id="dash-mail-notice"></div>
+
     <div id="tutorial-card"></div>
 
     ${d ? renderDigimonCard(d) : `
@@ -94,6 +96,38 @@ function renderDashContent(data) {
   startMissionTimers();
   startIncubationTimer();
   loadTutorialCard();
+  loadDashboardMailNotice();
+}
+
+async function loadDashboardMailNotice() {
+  const notice = document.getElementById("dash-mail-notice");
+  if (!notice) return;
+
+  try {
+    const result = await apiGet("/mail/unread-count");
+    const count = Number(result?.count || 0);
+    if (count <= 0) {
+      notice.innerHTML = "";
+      return;
+    }
+
+    const label = count === 1 ? "mensagem não lida" : "mensagens não lidas";
+    const badge = count > 99 ? "99+" : String(count);
+    notice.innerHTML = `
+      <button class="card-sm w-full mb-4 text-left border-cyan-700 bg-cyan-950/30 hover:bg-cyan-950/50" onclick="navigateTo('mail')" aria-label="Abrir Correio com ${count} ${label}">
+        <div class="flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <p class="text-xs uppercase tracking-wider text-cyan-300">Correio</p>
+            <p class="font-bold text-sm text-slate-100 mt-1">Você tem ${count} ${label}</p>
+            <p class="text-xs text-slate-400 mt-1">Toque aqui para abrir sua Entrada.</p>
+          </div>
+          <span class="badge text-cyan-200 shrink-0">${badge}</span>
+        </div>
+      </button>
+    `;
+  } catch (err) {
+    notice.innerHTML = "";
+  }
 }
 
 function renderDigimonCard(d) {
