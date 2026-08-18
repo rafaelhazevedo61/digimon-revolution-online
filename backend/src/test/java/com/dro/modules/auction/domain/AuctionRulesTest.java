@@ -16,9 +16,28 @@ class AuctionRulesTest {
     }
 
     @Test
+    void calculateSellerFee_usesDurationRate() {
+        assertEquals(50, AuctionRules.calculateSellerFee(1000, 500));
+        assertEquals(75, AuctionRules.calculateSellerFee(1000, 750));
+        assertEquals(100, AuctionRules.calculateSellerFee(1000, 1000));
+    }
+
+    @Test
+    void sellerFeeRateBpsForDuration_returnsProgressiveRates() {
+        assertEquals(500, AuctionRules.sellerFeeRateBpsForDuration(24));
+        assertEquals(750, AuctionRules.sellerFeeRateBpsForDuration(48));
+        assertEquals(1000, AuctionRules.sellerFeeRateBpsForDuration(72));
+    }
+
+    @Test
     void calculateGrossAmount_rejectsOverflow() {
         assertThrows(RuntimeException.class,
                 () -> AuctionRules.calculateGrossAmount(Integer.MAX_VALUE, 2));
+    }
+
+    @Test
+    void activeListingLimit_isTen() {
+        assertEquals(10, AuctionRules.MAX_ACTIVE_LISTINGS_PER_PLAYER);
     }
 
     @Test

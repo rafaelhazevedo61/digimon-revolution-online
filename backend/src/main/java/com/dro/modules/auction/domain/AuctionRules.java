@@ -11,8 +11,10 @@ import java.util.Set;
 public class AuctionRules {
 
     public static final int LISTING_FEE = 100;
-    public static final double SELLER_FEE_RATE = 0.05;
-    public static final int MAX_ACTIVE_LISTINGS_PER_PLAYER = 20;
+    public static final int MAX_ACTIVE_LISTINGS_PER_PLAYER = 10;
+    public static final int SELLER_FEE_RATE_24_HOURS_BPS = 500;
+    public static final int SELLER_FEE_RATE_48_HOURS_BPS = 750;
+    public static final int SELLER_FEE_RATE_72_HOURS_BPS = 1000;
     public static final Set<Integer> ALLOWED_DURATIONS_HOURS = Set.of(24, 48, 72);
 
     public static void validateListing(int quantity, int unitPrice, int durationHours) {
@@ -36,7 +38,23 @@ public class AuctionRules {
     }
 
     public static int calculateSellerFee(int grossAmount) {
-        return Math.max(0, (int) Math.floor(grossAmount * SELLER_FEE_RATE));
+        return calculateSellerFee(grossAmount, SELLER_FEE_RATE_24_HOURS_BPS);
+    }
+
+    public static int calculateSellerFee(int grossAmount, int feeRateBps) {
+        if (grossAmount <= 0 || feeRateBps <= 0) {
+            return 0;
+        }
+        return (int) ((long) grossAmount * feeRateBps / 10_000);
+    }
+
+    public static int sellerFeeRateBpsForDuration(int durationHours) {
+        return switch (durationHours) {
+            case 24 -> SELLER_FEE_RATE_24_HOURS_BPS;
+            case 48 -> SELLER_FEE_RATE_48_HOURS_BPS;
+            case 72 -> SELLER_FEE_RATE_72_HOURS_BPS;
+            default -> throw new BadRequestException("Duration must be 24, 48 or 72 hours");
+        };
     }
 
     public static Instant expirationAt(Instant createdAt, int durationHours) {

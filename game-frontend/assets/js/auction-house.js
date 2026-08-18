@@ -124,6 +124,28 @@ function auctionFilterOption(value, label, selectedValue) {
   return `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(label)}</option>`;
 }
 
+function auctionFeeRateLabel(durationHours) {
+  return {
+    24: "5%",
+    48: "7,5%",
+    72: "10%"
+  }[Number(durationHours)] || "5%";
+}
+
+function auctionFeeRateLabelFromBps(feeRateBps) {
+  return {
+    500: "5%",
+    750: "7,5%",
+    1000: "10%"
+  }[Number(feeRateBps)] || "5%";
+}
+
+function auctionUpdateCreateFee() {
+  const duration = document.getElementById("auction-create-duration")?.value;
+  const element = document.getElementById("auction-create-fee");
+  if (element) element.textContent = `Comissão sobre cada venda: ${auctionFeeRateLabel(duration)}`;
+}
+
 function auctionListingCard(listing) {
   const isMine = listing.sellerPlayerId === auctionState.dashboard?.id;
   const icon = auctionIconMarkup(listing);
@@ -235,7 +257,7 @@ async function auctionShowCreateForm() {
         <div class="flex items-center justify-between">
           <div>
             <h3 class="font-bold">Publicar item</h3>
-            <p class="text-xs text-slate-400">A taxa de publicação é 100 Bits. O item ficará reservado até a venda, cancelamento ou expiração.</p>
+            <p class="text-xs text-slate-400">Publicar custa 100 Bits. Limite de 10 anúncios ativos por jogador. A comissão da venda varia conforme a duração.</p>
           </div>
           <button class="text-xs text-slate-400" onclick="auctionSetMode('market')">Fechar</button>
         </div>
@@ -249,8 +271,9 @@ async function auctionShowCreateForm() {
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <label class="block text-xs text-slate-400">Quantidade<input id="auction-create-quantity" class="input w-full mt-1" type="number" min="1" value="1" required /></label>
               <label class="block text-xs text-slate-400">Preço por unidade<input id="auction-create-price" class="input w-full mt-1" type="number" min="1" required /></label>
-              <label class="block text-xs text-slate-400">Duração<select id="auction-create-duration" class="input w-full mt-1"><option value="24">24 horas</option><option value="48" selected>48 horas</option><option value="72">72 horas</option></select></label>
+              <label class="block text-xs text-slate-400">Duração<select id="auction-create-duration" class="input w-full mt-1" onchange="auctionUpdateCreateFee()"><option value="24">24 horas</option><option value="48" selected>48 horas</option><option value="72">72 horas</option></select></label>
             </div>
+            <p id="auction-create-fee" class="text-xs text-amber-300">Comissão sobre cada venda: 7,5%</p>
             <button class="btn-primary w-full" type="submit">Publicar anúncio</button>
           </form>
         ` : `<p class="text-sm text-slate-400">Você não possui itens negociáveis disponíveis no Digimon ativo.</p>`}
@@ -424,6 +447,7 @@ async function auctionRenderMine() {
       <div>
         <p class="font-bold">${escapeHtml(listing.itemName)}</p>
         <p class="text-xs text-slate-400">${listing.remainingQuantity}/${listing.quantity} restante(s) · ${Number(listing.unitPrice).toLocaleString("pt-BR")} Bits/unidade</p>
+        <p class="text-xs text-slate-400">${listing.durationHours || "—"}h · comissão ${auctionFeeRateLabelFromBps(listing.sellerFeeRateBps)}</p>
         <p class="text-xs text-slate-500">Status: ${escapeHtml(listing.status)} · expira em ${new Date(listing.expiresAt).toLocaleString("pt-BR")}</p>
       </div>
       ${listing.status === "ACTIVE" && listing.remainingQuantity > 0

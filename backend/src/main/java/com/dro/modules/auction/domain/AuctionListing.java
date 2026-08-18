@@ -22,6 +22,9 @@ public class AuctionListing {
     @Column(name = "seller_player_id", nullable = false)
     private UUID sellerPlayerId;
 
+    @Column(name = "seller_digimon_id")
+    private UUID sellerDigimonId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_definition_id", nullable = false)
     private ItemDefinition itemDefinition;
@@ -37,6 +40,9 @@ public class AuctionListing {
 
     @Column(name = "listing_fee", nullable = false)
     private int listingFee;
+
+    @Column(name = "seller_fee_rate_bps", nullable = false)
+    private int sellerFeeRateBps;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

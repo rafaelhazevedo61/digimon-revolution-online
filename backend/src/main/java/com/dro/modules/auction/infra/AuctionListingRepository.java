@@ -81,4 +81,13 @@ public interface AuctionListingRepository extends JpaRepository<AuctionListing, 
             @Param("sellerPlayerId") UUID sellerPlayerId,
             Pageable pageable
     );
+
+    @Query("""
+            SELECT listing.id FROM AuctionListing listing
+            WHERE listing.status = com.dro.modules.auction.domain.AuctionListingStatus.ACTIVE
+              AND listing.remainingQuantity > 0
+              AND listing.expiresAt <= :now
+            ORDER BY listing.expiresAt ASC
+            """)
+    Page<UUID> findExpiredListingIds(@Param("now") Instant now, Pageable pageable);
 }

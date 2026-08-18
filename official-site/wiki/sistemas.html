@@ -339,7 +339,7 @@
                 <li>Escolha uma duração de <strong>24, 48 ou 72 horas</strong>. A duração padrão é 48 horas.</li>
                 <li>Confirme a publicação. O item será reservado e uma taxa de <strong>100 Bits</strong> será descontada do Digimon ativo.</li>
               </ol>
-              <p>Cada jogador pode manter até <strong>20 anúncios ativos</strong>. O preço é definido pelo vendedor, então vale a pena pesquisar anúncios semelhantes antes de publicar.</p>
+              <p>Cada jogador pode manter até <strong>10 anúncios ativos</strong>. Esse limite considera apenas anúncios que ainda possuem unidades disponíveis e cujo prazo não terminou. O preço é definido pelo vendedor, então vale a pena pesquisar anúncios semelhantes antes de publicar.</p>
 
               <h3>Como comprar</h3>
               <p>Use a aba <strong>Mercado</strong> para pesquisar por nome, código, categoria ou raridade. Cada anúncio mostra o vendedor, a quantidade disponível e o preço por unidade.</p>
@@ -348,13 +348,19 @@
               <p>O comprador precisa ter um Digimon ativo com Bits suficientes e espaço disponível no limite de pilha do item. Você não pode comprar o próprio anúncio.</p>
 
               <h3>Taxas e recebimento</h3>
-              <p>A Casa de Leilões cobra uma taxa de publicação de 100 Bits e uma taxa de plataforma de <strong>5% sobre cada venda</strong>. A taxa de plataforma é descontada do valor que o vendedor recebe.</p>
-              <p>Exemplo: em uma venda de 10 unidades por 1.000 Bits cada, o valor bruto é 10.000 Bits. A taxa de 5% é 500 Bits, e o vendedor recebe 9.500 Bits.</p>
+              <p>A publicação custa <strong>100 Bits</strong>, descontados no momento em que o anúncio é criado. Além disso, a Casa de Leilões desconta uma comissão do valor de cada compra realizada:</p>
+              <ul>
+                <li><strong>24 horas:</strong> comissão de 5%.</li>
+                <li><strong>48 horas:</strong> comissão de 7,5%.</li>
+                <li><strong>72 horas:</strong> comissão de 10%.</li>
+              </ul>
+              <p>A comissão é definida quando o anúncio é publicado e não muda depois. Ela é aplicada sobre cada compra parcial. Por exemplo, em uma venda de 10 unidades por 1.000 Bits cada, o valor bruto é 10.000 Bits. Com um anúncio de 48 horas, a comissão será de 750 Bits e o vendedor receberá 9.250 Bits.</p>
               <p>Como os Bits pertencem ao Digimon ativo no sistema atual, o jogador precisa ter um Digimon ativo para publicar, comprar ou receber o valor de uma venda.</p>
 
               <h3>Cancelamento e expiração</h3>
-              <p>O vendedor pode cancelar um anúncio ativo ou expirado pela aba <strong>Meus anúncios</strong>. Todas as unidades que ainda não foram vendidas retornam ao inventário do Digimon ativo. A taxa de publicação não é devolvida.</p>
-              <p>Quando o prazo termina, o anúncio deixa de aparecer no Mercado e não pode mais ser comprado. Para recuperar as unidades restantes, abra <strong>Meus anúncios</strong> e use <strong>Cancelar e devolver</strong>.</p>
+              <p>O vendedor pode cancelar um anúncio ativo pela aba <strong>Meus anúncios</strong>. As unidades que ainda não foram vendidas retornam ao inventário do Digimon que originou o anúncio. A taxa de publicação não é devolvida.</p>
+              <p>A duração começa no momento da publicação. Quando o prazo de 24, 48 ou 72 horas termina, o anúncio deixa de aparecer no Mercado e não pode mais ser comprado. O servidor marca o anúncio como expirado e devolve automaticamente as unidades restantes ao Digimon de origem.</p>
+              <p>Se a pilha do item estiver cheia no momento da devolução, o sistema aguarda espaço disponível e tenta concluir a devolução novamente. Assim, os itens não são descartados nem ficam disponíveis para compra depois do vencimento.</p>
 
               <h3>Histórico e segurança</h3>
               <p>A aba <strong>Histórico</strong> registra compras e vendas realizadas, incluindo quantidade, preço bruto, taxa e valor líquido da venda. Cada compra é processada de uma vez: o anúncio, o saldo e os inventários são bloqueados durante a operação. Assim, dois jogadores não conseguem comprar a mesma unidade e o item não pode ser duplicado por cliques simultâneos.</p>

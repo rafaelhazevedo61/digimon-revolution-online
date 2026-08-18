@@ -43,13 +43,13 @@ public class CreateAuctionListingUseCase {
         AuctionRules.validateListing(request.quantity(), request.unitPrice(), request.durationHours());
 
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        Player player = playerRepository.findById(playerId)
+        Player player = playerRepository.findByIdForUpdate(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));
 
         Instant now = Instant.now();
         if (auctionListingRepository.countActiveForSeller(playerId, now)
                 >= AuctionRules.MAX_ACTIVE_LISTINGS_PER_PLAYER) {
-            throw new ConflictException("Maximum active auction listings reached");
+            throw new ConflictException("Você já possui o limite de 10 anúncios ativos.");
         }
 
         ItemDefinition itemDefinition = itemDefinitionRepository.findById(request.itemDefinitionId())
@@ -85,14 +85,17 @@ public class CreateAuctionListingUseCase {
         sellerDigimon.setBits(sellerDigimon.getBits() - AuctionRules.LISTING_FEE);
         digimonRepository.save(sellerDigimon);
 
+        int sellerFeeRateBps = AuctionRules.sellerFeeRateBpsForDuration(request.durationHours());
         AuctionListing listing = AuctionListing.builder()
                 .id(UUID.randomUUID())
                 .sellerPlayerId(playerId)
+                .sellerDigimonId(sellerDigimon.getId())
                 .itemDefinition(itemDefinition)
                 .quantity(request.quantity())
                 .remainingQuantity(request.quantity())
                 .unitPrice(request.unitPrice())
                 .listingFee(AuctionRules.LISTING_FEE)
+                .sellerFeeRateBps(sellerFeeRateBps)
                 .status(AuctionListingStatus.ACTIVE)
                 .createdAt(now)
                 .expiresAt(AuctionRules.expirationAt(now, request.durationHours()))

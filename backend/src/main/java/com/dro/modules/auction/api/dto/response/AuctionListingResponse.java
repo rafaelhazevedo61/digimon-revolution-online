@@ -20,6 +20,8 @@ public record AuctionListingResponse(
         int unitPrice,
         int totalRemainingPrice,
         int listingFee,
+        int durationHours,
+        int sellerFeeRateBps,
         AuctionListingStatus status,
         Instant createdAt,
         Instant expiresAt

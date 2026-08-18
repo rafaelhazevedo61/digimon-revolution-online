@@ -51,7 +51,7 @@ public class CancelAuctionListingUseCase {
             throw new ConflictException("Auction listing is no longer active");
         }
 
-        Digimon sellerDigimon = findLockedActiveDigimon(player);
+        Digimon sellerDigimon = findLockedSellerDigimon(player, listing);
         ItemDefinition itemDefinition = listing.getItemDefinition();
         InventoryItem inventoryItem = inventoryRepository
                 .findByDigimonIdAndItemDefinitionIdForUpdate(
@@ -82,12 +82,28 @@ public class CancelAuctionListingUseCase {
         return AuctionListingMapper.toResponse(listing, player.getUsername());
     }
 
+    private Digimon findLockedSellerDigimon(Player player, AuctionListing listing) {
+        if (listing.getSellerDigimonId() != null) {
+            Digimon sellerDigimon = digimonRepository.findByIdForUpdate(listing.getSellerDigimonId())
+                    .orElseThrow(() -> new NotFoundException("Source Digimon not found"));
+            if (!sellerDigimon.getPlayerId().equals(player.getId())) {
+                throw new ForbiddenException("Source Digimon does not belong to seller");
+            }
+            return sellerDigimon;
+        }
+        return findLockedActiveDigimon(player);
+    }
+
     private Digimon findLockedActiveDigimon(Player player) {
         if (player.getActiveDigimonId() == null) {
             throw new BadRequestException("No active Digimon selected");
         }
-        return digimonRepository.findByIdForUpdate(player.getActiveDigimonId())
+        Digimon digimon = digimonRepository.findByIdForUpdate(player.getActiveDigimonId())
                 .orElseThrow(() -> new NotFoundException("Active Digimon not found"));
+        if (!digimon.getPlayerId().equals(player.getId())) {
+            throw new ForbiddenException("Active Digimon does not belong to player");
+        }
+        return digimon;
     }
 
     private void saveInventory(

@@ -74,7 +74,7 @@ public class BuyAuctionListingUseCase {
 
         ItemDefinition itemDefinition = listing.getItemDefinition();
         int grossAmount = AuctionRules.calculateGrossAmount(request.quantity(), listing.getUnitPrice());
-        int sellerFee = AuctionRules.calculateSellerFee(grossAmount);
+        int sellerFee = AuctionRules.calculateSellerFee(grossAmount, listing.getSellerFeeRateBps());
         int sellerNetAmount = grossAmount - sellerFee;
 
         if (buyerDigimon.getBits() < grossAmount) {

@@ -5,6 +5,7 @@ import com.dro.modules.auction.api.dto.response.AuctionListingResponse;
 import com.dro.modules.player.domain.Player;
 import org.springframework.data.domain.Page;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
@@ -54,6 +55,8 @@ public final class AuctionListingMapper {
                 listing.getUnitPrice(),
                 totalRemainingPrice,
                 listing.getListingFee(),
+                (int) Duration.between(listing.getCreatedAt(), listing.getExpiresAt()).toHours(),
+                listing.getSellerFeeRateBps(),
                 listing.getStatus(),
                 listing.getCreatedAt(),
                 listing.getExpiresAt()
