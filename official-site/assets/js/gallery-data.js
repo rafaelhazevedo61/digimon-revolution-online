@@ -1,4 +1,5 @@
 window.DRO_GALLERY = [
+  { id: 'auction-house', title: 'Casa de Leilões', category: 'Comunidade', image: 'assets/img/gallery/auction-house.png', description: 'Marketplace entre jogadores com publicação de itens, compras parciais, limite de anúncios e taxas por duração.' },
   { id: 'dashboard-v2', title: 'Dashboard do jogador', category: 'Interface', image: 'assets/img/gallery/dashboard-v2.png', description: 'Visão geral do parceiro ativo, tutorial, bits, energia, equipamentos e atalhos principais.' },
   { id: 'clan-members', title: 'Tela do Clã — Membros', category: 'Comunidade', image: 'assets/img/gallery/clan-members.png', description: 'Painel do clã com nível, Honor Marks, membros e ranking de clãs.' },
   { id: 'clan-upgrades', title: 'Melhorias de Clã', category: 'Comunidade', image: 'assets/img/gallery/clan-upgrades.png', description: 'Sistema de upgrades do clã: capacidade, bônus de atributos, energia e mais.' },

@@ -1,10 +1,10 @@
 const AREA_INFO = {
   NATIVE_FOREST: { name: "Floresta Nativa", emoji: "🌲", color: "from-green-900 to-green-950", border: "border-green-700" },
-  GEAR_SAVANNA: { name: "Gear Savanna", emoji: "⚙️", color: "from-amber-900 to-amber-950", border: "border-amber-700" },
-  FACTORIAL_TOWN: { name: "Factorial Town", emoji: "🏭", color: "from-slate-800 to-slate-900", border: "border-slate-600" },
-  FREEZELAND: { name: "Freezeland", emoji: "❄️", color: "from-blue-900 to-blue-950", border: "border-blue-700" },
-  SERVER_DESERT: { name: "Server Desert", emoji: "🏜️", color: "from-orange-900 to-orange-950", border: "border-orange-700" },
-  INFINITY_MOUNTAIN: { name: "Infinity Mountain", emoji: "🏔️", color: "from-purple-900 to-purple-950", border: "border-purple-700" }
+  GEAR_SAVANNA: { name: "Savana Gear", emoji: "⚙️", color: "from-amber-900 to-amber-950", border: "border-amber-700" },
+  FACTORIAL_TOWN: { name: "Cidade Fatorial", emoji: "🏭", color: "from-slate-800 to-slate-900", border: "border-slate-600" },
+  FREEZELAND: { name: "Terra Congelada", emoji: "❄️", color: "from-blue-900 to-blue-950", border: "border-blue-700" },
+  SERVER_DESERT: { name: "Deserto Server", emoji: "🏜️", color: "from-orange-900 to-orange-950", border: "border-orange-700" },
+  INFINITY_MOUNTAIN: { name: "Montanha Infinita", emoji: "🏔️", color: "from-purple-900 to-purple-950", border: "border-purple-700" }
 };
 
 const STAGE_ORDER = ["BABY", "BABY_II", "ROOKIE", "CHAMPION", "ULTIMATE", "MEGA"];
@@ -62,6 +62,27 @@ async function loadActiveMissions() {
   startMissionsPageTimers();
 }
 
+function formatMissionName(mission) {
+  const id = mission.id || mission.missionId;
+  const names = {
+    MISSION_ADMIN: "Missão de Teste",
+    MISSION_1: "Patrulha na Floresta Nativa",
+    MISSION_2: "Caçada na Savana Gear",
+    MISSION_3: "Investigação na Cidade Fatorial",
+    MISSION_4: "Expedição na Terra Congelada",
+    MISSION_5: "Travessia do Deserto Server",
+    MISSION_6: "Ascensão à Montanha Infinita"
+  };
+  if (names[id]) return names[id];
+
+  return String(mission.name || mission.missionName || id || "Missão")
+    .replace(/Gear Savanna/g, "Savana Gear")
+    .replace(/Factorial Town/g, "Cidade Fatorial")
+    .replace(/Freezeland/g, "Terra Congelada")
+    .replace(/Server Desert/g, "Deserto Server")
+    .replace(/Infinity Mountain/g, "Montanha Infinita");
+}
+
 function renderActiveMissionCard(m) {
   const now = Date.now();
   const endsAt = new Date(m.endsAt).getTime();
@@ -71,7 +92,7 @@ function renderActiveMissionCard(m) {
   return `
     <div class="card-sm mb-2 flex items-center justify-between" data-mp-instance="${m.missionInstanceId}" data-mp-ends-at="${m.endsAt}">
       <div class="min-w-0">
-        <p class="font-bold text-sm truncate">${escapeHtml(m.missionName || m.missionId)}</p>
+        <p class="font-bold text-sm truncate">${escapeHtml(formatMissionName(m))}</p>
         <p class="text-xs mp-timer ${done ? "text-green-400 font-bold" : "text-slate-500"}">${done ? "Concluída!" : formatTime(remaining)}</p>
       </div>
       ${done ? `
@@ -225,7 +246,7 @@ function renderMissionCards(missions, area) {
     <div class="card mb-3">
       <div class="flex justify-between items-start mb-2">
         <div class="flex-1">
-          <h3 class="font-bold text-sm">${escapeHtml(m.name)}</h3>
+          <h3 class="font-bold text-sm">${escapeHtml(formatMissionName(m))}</h3>
           <p class="text-xs text-slate-400 mt-1">${escapeHtml(m.description) || ""}</p>
         </div>
       </div>

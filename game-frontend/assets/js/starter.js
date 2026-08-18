@@ -257,7 +257,7 @@ function renderDigimonSelectCards(digimons, dashboard) {
         <h3 class="font-bold text-sm truncate">${escapeHtml(d.name)} ${isActive ? '<span class="text-cyan-400 text-xs">(Ativo)</span>' : ''}</h3>
         <div class="flex gap-2 mt-1">
           <span class="badge badge-${d.stage ? d.stage.toLowerCase() : 'baby'}">${escapeHtml(d.stage)}</span>
-          <span class="badge badge-${d.rarity ? d.rarity.toLowerCase() : 'common'}">${escapeHtml(d.rarity)}</span>
+          <span class="badge badge-${d.rarity ? d.rarity.toLowerCase() : 'common'}">${escapeHtml(formatRarity(d.rarity))}</span>
           <span class="badge-xs">Lv.${d.level}</span>
         </div>
         <div class="flex gap-3 mt-2 text-xs text-slate-400">

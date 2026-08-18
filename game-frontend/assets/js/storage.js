@@ -48,7 +48,7 @@ async function renderStoragePage() {
         <div class="card mb-2 flex items-center gap-3">
           <div class="flex-1">
             <p class="font-bold text-sm">${escapeHtml(d.name)}</p>
-            <p class="text-xs text-slate-400">Lv.${d.level} | ${d.stage} | ${d.rarity}</p>
+            <p class="text-xs text-slate-400">Lv.${d.level} | ${d.stage} | ${formatRarity(d.rarity)}</p>
             <p class="text-xs text-slate-500">HP ${d.hp} ATK ${d.attack} DEF ${d.defense}</p>
           </div>
           <button class="btn-sm ${canRetrieve ? '' : 'opacity-50 cursor-not-allowed'}"

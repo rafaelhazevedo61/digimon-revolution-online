@@ -64,12 +64,12 @@ function shopSetMode(mode) {
 function shopRenderBuyMode() {
   const content = document.getElementById("shop-content");
   content.innerHTML = `
-    <div class="flex gap-2 mb-4 overflow-x-auto pb-1" id="shop-tabs">
-      <button class="tab-btn active" data-cat="potions" onclick="shopSwitchTab('potions')">Poções</button>
-      <button class="tab-btn" data-cat="materials" onclick="shopSwitchTab('materials')">Materiais</button>
-      <button class="tab-btn" data-cat="equipments" onclick="shopSwitchTab('equipments')">Equip.</button>
-      <button class="tab-btn" data-cat="fragments" onclick="shopSwitchTab('fragments')">Fragmentos</button>
-      <button class="tab-btn" data-cat="consumables" onclick="shopSwitchTab('consumables')">Consumíveis</button>
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4" id="shop-tabs">
+      <button class="tab-btn w-full" data-cat="potions" onclick="shopSwitchTab('potions')">Poções</button>
+      <button class="tab-btn w-full" data-cat="materials" onclick="shopSwitchTab('materials')">Materiais</button>
+      <button class="tab-btn w-full" data-cat="equipments" onclick="shopSwitchTab('equipments')">Equip.</button>
+      <button class="tab-btn w-full" data-cat="fragments" onclick="shopSwitchTab('fragments')">Fragmentos</button>
+      <button class="tab-btn w-full" data-cat="consumables" onclick="shopSwitchTab('consumables')">Consumíveis</button>
     </div>
     <div id="shop-list"></div>
   `;

@@ -1,5 +1,49 @@
 window.DRO_NEWS = [
   {
+    id: 'update-auction-house',
+    type: 'ATUALIZAÇÃO',
+    title: 'Casa de Leilões — O mercado entre jogadores está disponível',
+    summary: 'Publique itens, compre recursos de outros jogadores e escolha entre anúncios de 24, 48 ou 72 horas com taxas progressivas.',
+    date: '2026-08-17',
+    version: 'Marketplace MVP',
+    featured: true,
+    content: [
+      { heading: 'Um novo espaço para negociar', paragraphs: [
+        'A Casa de Leilões chegou ao Mundo Digital como o primeiro marketplace entre jogadores. A partir de agora, itens negociáveis podem ser publicados para compra imediata por outros jogadores, sem disputa por lance e sem necessidade de combinar a negociação manualmente.',
+        'O sistema foi pensado para facilitar a circulação de materiais, fragmentos, poções e outros recursos. Os Bits continuam vinculados ao Digimon ativo: ele é usado para pagar compras, publicar anúncios e receber o valor líquido das vendas.'
+      ]},
+      { heading: 'Como publicar um anúncio', items: [
+        'Abra Mais → Casa de Leilões e escolha Publicar item.',
+        'Selecione um item empilhável e negociável do inventário do Digimon ativo.',
+        'Informe a quantidade, o preço por unidade e escolha uma duração de 24, 48 ou 72 horas.',
+        'Confirme a publicação. O sistema reserva as unidades e desconta a taxa fixa de 100 Bits.',
+        'Cada jogador pode manter até 10 anúncios ativos ao mesmo tempo.'
+      ]},
+      { heading: 'Duração e taxas', items: [
+        '24 horas: comissão de 5% sobre cada compra realizada.',
+        '48 horas: comissão de 7,5% sobre cada compra realizada.',
+        '72 horas: comissão de 10% sobre cada compra realizada.'
+      ], paragraphs: [
+        'A comissão escolhida fica registrada no anúncio no momento da publicação e não muda depois. Ela é calculada apenas quando uma compra acontece, inclusive em compras parciais. Por exemplo, uma compra de 1.000 Bits em um anúncio de 48 horas gera uma comissão de 75 Bits, e o vendedor recebe 925 Bits.'
+      ]},
+      { heading: 'Compras parciais e segurança', items: [
+        'O comprador escolhe quantas unidades deseja, respeitando a quantidade disponível.',
+        'A compra não pode ultrapassar o limite de pilha do item no inventário do comprador.',
+        'O jogador não pode comprar o próprio anúncio.',
+        'O anúncio, os Digimons, os Bits e o inventário são protegidos durante a operação para evitar duplicação ou venda da mesma unidade para duas pessoas.'
+      ]},
+      { heading: 'Cancelamento e expiração', paragraphs: [
+        'Na aba Meus anúncios, o vendedor pode abrir a confirmação de cancelamento e devolver as unidades que ainda não foram vendidas. A devolução volta para o Digimon que originou o anúncio, mesmo que o jogador tenha trocado de Digimon ativo depois. A taxa de publicação de 100 Bits não é reembolsada.',
+        'Quando o prazo termina, o anúncio deixa de aparecer no Mercado e não pode mais ser comprado. O servidor marca o anúncio como expirado e tenta devolver automaticamente as unidades restantes ao Digimon de origem. Se a pilha estiver cheia, a devolução fica pendente até existir espaço, evitando que os itens sejam descartados.'
+      ]},
+      { heading: 'Limites do MVP', items: [
+        'Equipamentos ainda não podem ser publicados. Eles possuem refinamento, tier, slot e atributos próprios e serão tratados em uma futura evolução do marketplace.',
+        'A versão atual não possui leilão por lance, troca direta entre jogadores, ordens de compra ou negociação manual.',
+        'O sistema trabalha com compra imediata e itens empilháveis e negociáveis.'
+      ]}
+    ]
+  },
+  {
     id: 'patch-0-6-0',
     type: 'PATCH NOTES',
     title: 'Patch 0.6.0 — Boss Mundial do Servidor',

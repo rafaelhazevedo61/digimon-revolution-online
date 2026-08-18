@@ -118,12 +118,12 @@ function renderDigimonCard(d) {
             <button class="text-slate-500 hover:text-slate-300 text-xs" onclick="event.stopPropagation(); openRenameModal('${d.id}', '${escapeHtml(d.name)}')" title="Renomear">✏️</button>
             <span class="text-sm font-bold text-cyan-400">Lv.${d.level}</span>
           </div>
-          <p class="text-xs text-slate-400">${escapeHtml(d.type) || "Desconhecido"}</p>
+          <p class="text-xs text-slate-400">${escapeHtml(formatDigimonType(d.type))}</p>
           <div class="flex gap-2 mt-1 flex-wrap">
-            <span class="badge badge-${d.stage.toLowerCase()}">${formatStage(d.stage)}</span>
-            <span class="badge badge-${d.rarity.toLowerCase()}">${d.rarity}</span>
-            ${d.attribute ? `<span class="badge badge-common">${escapeHtml(d.attribute)}</span>` : ""}
-            ${d.element ? `<span class="badge badge-common">${escapeHtml(d.element)}</span>` : ""}
+            <span class="badge badge-${d.stage.toLowerCase()}">${escapeHtml(formatStage(d.stage))}</span>
+            <span class="badge badge-${d.rarity.toLowerCase()}">${escapeHtml(formatRarity(d.rarity))}</span>
+            ${d.attribute ? `<span class="badge badge-common">${escapeHtml(formatAttribute(d.attribute))}</span>` : ""}
+            ${d.element ? `<span class="badge badge-common">${escapeHtml(formatElement(d.element))}</span>` : ""}
           </div>
         </div>
       </div>

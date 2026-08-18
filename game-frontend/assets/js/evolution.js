@@ -55,9 +55,9 @@ function evoRender(digimon) {
           </div>
           <div class="flex gap-2 mt-1 flex-wrap">
             <span class="badge badge-${digimon.stage.toLowerCase()}">${evoFormatStage(digimon.stage)}</span>
-            <span class="badge badge-${digimon.rarity.toLowerCase()}">${digimon.rarity}</span>
-            ${evoData.currentAttribute ? `<span class="badge badge-common">${escapeHtml(evoData.currentAttribute)}</span>` : ""}
-            ${evoData.currentElement ? `<span class="badge badge-common">${escapeHtml(evoData.currentElement)}</span>` : ""}
+            <span class="badge badge-${digimon.rarity.toLowerCase()}">${escapeHtml(formatRarity(digimon.rarity))}</span>
+            ${evoData.currentAttribute ? `<span class="badge badge-common">${escapeHtml(formatAttribute(evoData.currentAttribute))}</span>` : ""}
+            ${evoData.currentElement ? `<span class="badge badge-common">${escapeHtml(formatElement(evoData.currentElement))}</span>` : ""}
           </div>
         </div>
       </div>
@@ -147,8 +147,8 @@ function evoRenderOption(opt, digimon) {
           <p class="font-bold truncate">${escapeHtml(next.name)}</p>
           <div class="flex gap-2 mt-1 flex-wrap">
             <span class="badge ${stageBadge}">${evoFormatStage(next.stage)}</span>
-            ${next.attribute ? `<span class="badge badge-common">${escapeHtml(next.attribute)}</span>` : ""}
-            ${next.element ? `<span class="badge badge-common">${escapeHtml(next.element)}</span>` : ""}
+            ${next.attribute ? `<span class="badge badge-common">${escapeHtml(formatAttribute(next.attribute))}</span>` : ""}
+            ${next.element ? `<span class="badge badge-common">${escapeHtml(formatElement(next.element))}</span>` : ""}
           </div>
           ${statsHtml}
         </div>

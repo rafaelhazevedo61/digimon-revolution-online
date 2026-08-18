@@ -21,9 +21,9 @@ async function renderPokedexPage() {
         <div class="mb-2">
           <input type="text" id="dex-search" class="w-full px-3 py-2 rounded-lg text-sm text-white" style="background:#1e293b;border:1px solid #334155" placeholder="🔍 Buscar por nome..." oninput="dexOnSearch(this.value)">
         </div>
-        <div class="flex gap-2 flex-wrap">
-          <select id="dex-stage" class="px-2 py-1 rounded text-xs text-white" style="background:#1e293b;border:1px solid #334155" onchange="dexOnFilter()">
-            <option value="">Todos os Stages</option>
+        <div class="flex flex-col gap-2">
+          <select id="dex-stage" class="w-full px-3 py-2 rounded text-sm text-white" style="background:#1e293b;border:1px solid #334155" onchange="dexOnFilter()">
+            <option value="">Todos os estágios</option>
             <option value="BABY">Baby</option>
             <option value="BABY_II">Baby II</option>
             <option value="ROOKIE">Rookie</option>
@@ -31,27 +31,27 @@ async function renderPokedexPage() {
             <option value="ULTIMATE">Ultimate</option>
             <option value="MEGA">Mega</option>
           </select>
-          <select id="dex-attr" class="px-2 py-1 rounded text-xs text-white" style="background:#1e293b;border:1px solid #334155" onchange="dexOnFilter()">
-            <option value="">Todos Attributes</option>
+          <select id="dex-attr" class="w-full px-3 py-2 rounded text-sm text-white" style="background:#1e293b;border:1px solid #334155" onchange="dexOnFilter()">
+            <option value="">Todos os atributos</option>
             <option value="DATA">Data</option>
             <option value="VACCINE">Vaccine</option>
             <option value="VIRUS">Virus</option>
             <option value="NONE">None</option>
           </select>
-          <select id="dex-elem" class="px-2 py-1 rounded text-xs text-white" style="background:#1e293b;border:1px solid #334155" onchange="dexOnFilter()">
-            <option value="">Todos Elements</option>
-            <option value="FIRE">Fire</option>
-            <option value="WATER">Water</option>
-            <option value="ICE">Ice</option>
-            <option value="WIND">Wind</option>
-            <option value="EARTH">Earth</option>
-            <option value="THUNDER">Thunder</option>
-            <option value="LIGHT">Light</option>
-            <option value="DARK">Dark</option>
-            <option value="PITCH_BLACK">Pitch Black</option>
-            <option value="STEEL">Steel</option>
-            <option value="WOOD">Wood</option>
-            <option value="NEUTRAL">Neutral</option>
+          <select id="dex-elem" class="w-full px-3 py-2 rounded text-sm text-white" style="background:#1e293b;border:1px solid #334155" onchange="dexOnFilter()">
+            <option value="">Todos os elementos</option>
+            <option value="FIRE">Fogo</option>
+            <option value="WATER">Água</option>
+            <option value="ICE">Gelo</option>
+            <option value="WIND">Vento</option>
+            <option value="EARTH">Terra</option>
+            <option value="THUNDER">Trovão</option>
+            <option value="LIGHT">Luz</option>
+            <option value="DARK">Sombrio</option>
+            <option value="PITCH_BLACK">Negro</option>
+            <option value="STEEL">Metal</option>
+            <option value="WOOD">Madeira</option>
+            <option value="NEUTRAL">Neutro</option>
           </select>
         </div>
       </div>
@@ -149,7 +149,8 @@ function dexRender() {
           <p class="font-bold text-sm truncate">${escapeHtml(d.name)}</p>
           <div class="flex gap-1 mt-1 flex-wrap">
             <span class="badge badge-${d.stage.toLowerCase()}">${stage}</span>
-            <span class="badge badge-common">${escapeHtml(d.attribute)}</span>
+            ${d.rarity ? `<span class="badge badge-${d.rarity.toLowerCase()}">${escapeHtml(formatRarity(d.rarity))}</span>` : ""}
+            <span class="badge badge-common">${escapeHtml(formatAttribute(d.attribute))}</span>
             <span class="badge badge-common">${dexElementLabel(d.element)}</span>
           </div>
         </div>
@@ -221,7 +222,8 @@ async function dexShowDetail(infoId) {
           <h3 class="font-bold text-xl">${escapeHtml(d.name)}</h3>
           <div class="flex gap-2 mt-1 flex-wrap">
             <span class="badge badge-${d.stage.toLowerCase()}">${stage}</span>
-            <span class="badge badge-common">${escapeHtml(d.attribute)}</span>
+            ${d.rarity ? `<span class="badge badge-${d.rarity.toLowerCase()}">${escapeHtml(formatRarity(d.rarity))}</span>` : ""}
+            <span class="badge badge-common">${escapeHtml(formatAttribute(d.attribute))}</span>
             <span class="badge badge-common">${dexElementLabel(d.element)}</span>
             <span class="badge badge-common">${escapeHtml(d.specie)}</span>
           </div>
@@ -274,10 +276,10 @@ function dexStageEmoji(stage) {
 }
 
 function dexElementLabel(element) {
-  const map = {
-    FIRE: "Fire 🔥", WATER: "Water 💧", ICE: "Ice ❄️", WIND: "Wind 🌪️",
-    EARTH: "Earth 🌍", THUNDER: "Thunder ⚡", LIGHT: "Light ✨", DARK: "Dark 🌑",
-    PITCH_BLACK: "Pitch Black 🖤", STEEL: "Steel ⚙️", WOOD: "Wood 🌿", NEUTRAL: "Neutral ⚪"
-  };
-  return map[element] || element;
+  const emoji = {
+    FIRE: "🔥", WATER: "💧", ICE: "❄️", WIND: "🌪️",
+    EARTH: "🌍", THUNDER: "⚡", LIGHT: "✨", DARK: "🌑",
+    PITCH_BLACK: "🖤", STEEL: "⚙️", WOOD: "🌿", NEUTRAL: "⚪"
+  }[element] || "";
+  return `${formatElement(element)} ${emoji}`.trim();
 }

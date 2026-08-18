@@ -39,3 +39,55 @@ function showToast(message, type = "success") {
     setTimeout(() => toast.remove(), 300);
   }, 3000);
 }
+
+function formatRarity(rarity) {
+  const normalized = String(rarity || "COMMON").toUpperCase();
+  return {
+    COMMON: "Comum",
+    RARE: "Rara",
+    EPIC: "Épica",
+    LEGENDARY: "Lendária"
+  }[normalized] || rarity || "Comum";
+}
+
+function formatDigimonType(type) {
+  const normalized = String(type || "UNKNOWN").toUpperCase();
+  return {
+    STARTER: "Starter",
+    BASIC: "Basic",
+    WATER: "Water",
+    FIRE: "Fire",
+    EARTH: "Earth",
+    WIND: "Wind",
+    UNKNOWN: "Unknown"
+  }[normalized] || type || "Desconhecido";
+}
+
+function formatAttribute(attribute) {
+  const normalized = String(attribute || "UNKNOWN").toUpperCase();
+  return {
+    DATA: "Data",
+    NONE: "None",
+    VACCINE: "Vaccine",
+    VIRUS: "Virus",
+    UNKNOWN: "Unknown"
+  }[normalized] || attribute || "Desconhecido";
+}
+
+function formatElement(element) {
+  const normalized = String(element || "NEUTRAL").toUpperCase();
+  return {
+    EARTH: "Terra",
+    FIRE: "Fogo",
+    ICE: "Gelo",
+    LIGHT: "Luz",
+    NEUTRAL: "Neutro",
+    PITCH_BLACK: "Negro",
+    STEEL: "Metal",
+    THUNDER: "Trovão",
+    WATER: "Água",
+    WIND: "Vento",
+    WOOD: "Madeira",
+    DARK: "Sombrio"
+  }[normalized] || element || "Neutro";
+}
