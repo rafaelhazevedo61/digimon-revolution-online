@@ -21,8 +21,8 @@ async function renderPokedexPage() {
         <div class="mb-2">
           <input type="text" id="dex-search" class="w-full px-3 py-2 rounded-lg text-sm text-white" style="background:#1e293b;border:1px solid #334155" placeholder="🔍 Buscar por nome..." oninput="dexOnSearch(this.value)">
         </div>
-        <div class="flex gap-2 flex-wrap">
-          <select id="dex-stage" class="px-2 py-1 rounded text-xs text-white" style="background:#1e293b;border:1px solid #334155" onchange="dexOnFilter()">
+        <div class="flex flex-col gap-2">
+          <select id="dex-stage" class="w-full px-3 py-2 rounded text-sm text-white" style="background:#1e293b;border:1px solid #334155" onchange="dexOnFilter()">
             <option value="">Todos os estágios</option>
             <option value="BABY">Baby</option>
             <option value="BABY_II">Baby II</option>
@@ -31,14 +31,14 @@ async function renderPokedexPage() {
             <option value="ULTIMATE">Ultimate</option>
             <option value="MEGA">Mega</option>
           </select>
-          <select id="dex-attr" class="px-2 py-1 rounded text-xs text-white" style="background:#1e293b;border:1px solid #334155" onchange="dexOnFilter()">
+          <select id="dex-attr" class="w-full px-3 py-2 rounded text-sm text-white" style="background:#1e293b;border:1px solid #334155" onchange="dexOnFilter()">
             <option value="">Todos os atributos</option>
             <option value="DATA">Data</option>
             <option value="VACCINE">Vaccine</option>
             <option value="VIRUS">Virus</option>
             <option value="NONE">None</option>
           </select>
-          <select id="dex-elem" class="px-2 py-1 rounded text-xs text-white" style="background:#1e293b;border:1px solid #334155" onchange="dexOnFilter()">
+          <select id="dex-elem" class="w-full px-3 py-2 rounded text-sm text-white" style="background:#1e293b;border:1px solid #334155" onchange="dexOnFilter()">
             <option value="">Todos os elementos</option>
             <option value="FIRE">Fogo</option>
             <option value="WATER">Água</option>
