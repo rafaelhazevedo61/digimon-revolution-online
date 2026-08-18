@@ -146,6 +146,15 @@ function auctionUpdateCreateFee() {
   if (element) element.textContent = `Comissão sobre cada venda: ${auctionFeeRateLabel(duration)}`;
 }
 
+function auctionStatusLabel(status) {
+  return {
+    ACTIVE: "Ativo",
+    SOLD: "Vendido",
+    CANCELLED: "Cancelado",
+    EXPIRED: "Expirado"
+  }[status] || "Indisponível";
+}
+
 function auctionListingCard(listing) {
   const isMine = listing.sellerPlayerId === auctionState.dashboard?.id;
   const icon = auctionIconMarkup(listing);
@@ -448,7 +457,7 @@ async function auctionRenderMine() {
         <p class="font-bold">${escapeHtml(listing.itemName)}</p>
         <p class="text-xs text-slate-400">${listing.remainingQuantity}/${listing.quantity} restante(s) · ${Number(listing.unitPrice).toLocaleString("pt-BR")} Bits/unidade</p>
         <p class="text-xs text-slate-400">${listing.durationHours || "—"}h · comissão ${auctionFeeRateLabelFromBps(listing.sellerFeeRateBps)}</p>
-        <p class="text-xs text-slate-500">Status: ${escapeHtml(listing.status)} · expira em ${new Date(listing.expiresAt).toLocaleString("pt-BR")}</p>
+        <p class="text-xs text-slate-500">Status: ${escapeHtml(auctionStatusLabel(listing.status))} · expira em ${new Date(listing.expiresAt).toLocaleString("pt-BR")}</p>
       </div>
       ${listing.status === "ACTIVE" && listing.remainingQuantity > 0
         ? `<button class="btn-secondary text-sm" onclick="auctionOpenCancelModalFromPayload('${auctionEncodedPayload({
