@@ -155,6 +155,16 @@ function auctionStatusLabel(status) {
   }[status] || "Indisponível";
 }
 
+function auctionRarityLabel(rarity) {
+  const normalized = String(rarity || "COMMON").toUpperCase();
+  return {
+    COMMON: "Comum",
+    RARE: "Rara",
+    EPIC: "Épica",
+    LEGENDARY: "Lendária"
+  }[normalized] || rarity || "Comum";
+}
+
 function auctionListingCard(listing) {
   const isMine = listing.sellerPlayerId === auctionState.dashboard?.id;
   const icon = auctionIconMarkup(listing);
@@ -176,7 +186,7 @@ function auctionListingCard(listing) {
         <div class="w-14 h-14 rounded-xl bg-slate-800 flex items-center justify-center shrink-0">${icon}</div>
         <div class="min-w-0 self-stretch flex flex-col justify-center">
           <p class="font-bold text-sm leading-tight break-words">${escapeHtml(listing.itemName)}</p>
-          <p class="text-[11px] text-slate-400 truncate mt-1">${escapeHtml(listing.itemCode)} · ${escapeHtml(listing.rarity || "Comum")}</p>
+          <p class="text-[11px] text-slate-400 truncate mt-1">${escapeHtml(auctionRarityLabel(listing.rarity))}</p>
           <div class="flex flex-wrap gap-x-2 gap-y-0.5 mt-1 text-[11px] leading-tight">
             <span class="text-slate-500">Vendedor: ${escapeHtml(listing.sellerUsername)}</span>
             <span class="text-slate-400">${listing.remainingQuantity}/${listing.quantity} disponível(is)</span>
@@ -351,7 +361,7 @@ function auctionOpenBuyModal(listing) {
         <div class="w-14 h-14 rounded-xl bg-slate-700 flex items-center justify-center shrink-0">${auctionIconMarkup(listing)}</div>
         <div class="min-w-0">
           <p class="font-bold text-white break-words">${escapeHtml(listing.itemName)}</p>
-          <p class="text-xs text-slate-400 truncate">${escapeHtml(listing.itemCode)} · ${escapeHtml(listing.rarity || "Comum")}</p>
+          <p class="text-xs text-slate-400 truncate">${escapeHtml(auctionRarityLabel(listing.rarity))}</p>
           <p class="text-xs text-slate-500 mt-1">Vendedor: ${escapeHtml(listing.sellerUsername)}</p>
         </div>
       </div>
@@ -516,7 +526,7 @@ function auctionOpenCancelModal(listing) {
         <div class="w-14 h-14 rounded-xl bg-slate-700 flex items-center justify-center shrink-0">${auctionIconMarkup(listing)}</div>
         <div class="min-w-0">
           <p class="font-bold text-white break-words">${escapeHtml(listing.itemName)}</p>
-          <p class="text-xs text-slate-400 truncate">${escapeHtml(listing.itemCode)} · ${escapeHtml(listing.rarity || "Comum")}</p>
+          <p class="text-xs text-slate-400 truncate">${escapeHtml(auctionRarityLabel(listing.rarity))}</p>
           <p class="text-xs text-slate-500 mt-1">${Number(listing.unitPrice).toLocaleString("pt-BR")} Bits por unidade</p>
         </div>
       </div>
