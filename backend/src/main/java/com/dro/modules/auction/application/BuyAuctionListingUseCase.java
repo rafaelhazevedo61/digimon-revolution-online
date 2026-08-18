@@ -137,7 +137,7 @@ public class BuyAuctionListingUseCase {
                 listing.getRemainingQuantity(),
                 listing.getStatus(),
                 buyerDigimon.getBits(),
-                "Purchase completed successfully"
+                "Compra realizada com sucesso!"
         );
     }
 
