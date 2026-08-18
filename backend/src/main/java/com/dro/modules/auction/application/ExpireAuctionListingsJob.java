@@ -34,6 +34,7 @@ public class ExpireAuctionListingsJob {
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final InventoryRepository inventoryRepository;
+    private final AuctionMailNotificationService auctionMailNotificationService;
 
     @Scheduled(fixedDelay = RUN_INTERVAL_MILLIS)
     @Transactional
@@ -56,6 +57,10 @@ public class ExpireAuctionListingsJob {
         Digimon sourceDigimon = findSourceDigimon(listing);
         if (sourceDigimon == null) {
             log.warn("Could not expire auction listing {} because its source Digimon is unavailable", listingId);
+            auctionMailNotificationService.notifyListingReturnPending(
+                    listing,
+                    "O Digimon de origem não está disponível no momento."
+            );
             return;
         }
 
@@ -68,14 +73,20 @@ public class ExpireAuctionListingsJob {
         if (newQuantity > Integer.MAX_VALUE
                 || (itemDefinition.getMaxStack() != null && newQuantity > itemDefinition.getMaxStack())) {
             log.warn("Could not return expired auction listing {} because the inventory stack is full", listingId);
+            auctionMailNotificationService.notifyListingReturnPending(
+                    listing,
+                    "O inventário não possui espaço suficiente para receber a devolução."
+            );
             return;
         }
 
+        int returnedQuantity = listing.getRemainingQuantity();
         saveInventory(inventoryItem, sourceDigimon, itemDefinition, (int) newQuantity);
         listing.setRemainingQuantity(0);
         listing.setStatus(AuctionListingStatus.EXPIRED);
         listing.setUpdatedAt(now);
         auctionListingRepository.save(listing);
+        auctionMailNotificationService.notifyListingReturned(listing, returnedQuantity);
     }
 
     private Digimon findSourceDigimon(AuctionListing listing) {

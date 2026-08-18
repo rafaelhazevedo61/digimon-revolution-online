@@ -24,14 +24,18 @@ Os campos `source_type` e `source_id` devem permitir rastrear que a mensagem foi
 
 A Sprint 2 não deve adicionar anexos, Bits, itens resgatáveis ou ações dentro da mensagem. Nesta etapa, o Correio será apenas o canal persistente de comunicação sobre o resultado de uma operação já concluída pela Casa de Leilões.
 
+## Estado da implementação
+
+A primeira implementação da Sprint 2 cobre compra concluída, venda concluída, cancelamento, expiração e devolução pendente. As mensagens são do tipo `AUCTION`, aparecem na Entrada do destinatário e usam o remetente especial “Sistema” na interface. Elas não aparecem em Enviadas, pois não possuem um remetente jogador.
+
 ## Critérios de aceite
 
 1. Cada evento suportado gera no máximo uma mensagem correspondente por operação.
 2. A mensagem aparece na Entrada do jogador correto e incrementa o contador de não lidas.
-3. A mensagem também pode ser consultada em Enviadas quando houver um remetente de sistema definido pela implementação.
+3. A mensagem pode ser aberta, marcada como lida e excluída como qualquer outra mensagem recebida.
 4. A exclusão da mensagem continua sendo independente entre as partes, conforme o MVP do Correio.
 5. O texto é exibido em português e apresenta valores coerentes com o resultado da operação.
-6. Falhas na geração da notificação não podem confirmar uma operação financeira ou de inventário parcialmente; a estratégia transacional deve ser definida antes da implementação de cada fluxo.
+6. Falhas na geração da notificação não podem confirmar uma operação financeira ou de inventário parcialmente; a geração ocorre dentro da mesma transação do evento do marketplace.
 7. Existem testes unitários para a chave idempotente e testes focados para cada evento integrado.
 
 ## Fora do escopo

@@ -3,6 +3,7 @@ package com.dro.modules.mail.infra;
 import com.dro.modules.mail.domain.MailMessage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -37,4 +38,33 @@ public interface MailMessageRepository extends JpaRepository<MailMessage, UUID> 
     );
 
     long countBySenderIdAndCreatedAtAfter(UUID senderId, LocalDateTime createdAt);
+
+    Optional<MailMessage> findByDeliveryKey(String deliveryKey);
+
+    @Modifying
+    @Query(value = """
+            INSERT INTO mail_messages (
+                id, sender_player_id, recipient_player_id, message_type,
+                subject, body, created_at, source_type, source_id,
+                action_type, action_payload, delivery_key
+            ) VALUES (
+                :id, NULL, :recipientId, :messageType,
+                :subject, :body, :createdAt, :sourceType, :sourceId,
+                :actionType, :actionPayload, :deliveryKey
+            )
+            ON CONFLICT (delivery_key) DO NOTHING
+            """, nativeQuery = true)
+    int insertSystemMessage(
+            @Param("id") UUID id,
+            @Param("recipientId") UUID recipientId,
+            @Param("messageType") String messageType,
+            @Param("subject") String subject,
+            @Param("body") String body,
+            @Param("createdAt") LocalDateTime createdAt,
+            @Param("sourceType") String sourceType,
+            @Param("sourceId") UUID sourceId,
+            @Param("actionType") String actionType,
+            @Param("actionPayload") String actionPayload,
+            @Param("deliveryKey") String deliveryKey
+    );
 }
