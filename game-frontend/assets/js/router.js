@@ -7,6 +7,7 @@ const routes = {
   "digimon-select": renderDigimonSelectPage,
   shop: renderShopPage,
   "auction-house": renderAuctionHousePage,
+  mail: renderMailPage,
   inventory: renderInventoryPage,
   evolution: renderEvolutionPage,
   rebirth: renderRebirthPage,

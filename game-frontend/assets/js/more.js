@@ -7,6 +7,13 @@ async function renderMorePage() {
       <h2 class="text-lg font-bold mb-4 px-1">Mais</h2>
 
       <div class="flex flex-col gap-2">
+        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('mail')">
+          <span class="text-2xl">✉️</span>
+          <div class="flex-1">
+            <p class="font-bold text-sm">Correio <span id="mail-more-unread" class="badge hidden align-middle"></span></p>
+            <p class="text-xs text-slate-400">Mensagens entre jogadores e comunicados</p>
+          </div>
+        </button>
         <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('auction-house')">
           <span class="text-2xl">🏪</span>
           <div>
@@ -80,4 +87,18 @@ async function renderMorePage() {
       </div>
     </div>
   `;
+  moreLoadMailUnread();
+}
+
+async function moreLoadMailUnread() {
+  const badge = document.getElementById("mail-more-unread");
+  if (!badge) return;
+  try {
+    const result = await apiGet("/mail/unread-count");
+    const count = Number(result.count || 0);
+    badge.textContent = count > 99 ? "99+" : String(count);
+    badge.classList.toggle("hidden", count === 0);
+  } catch (err) {
+    badge.classList.add("hidden");
+  }
 }
