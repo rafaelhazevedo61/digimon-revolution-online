@@ -30,5 +30,7 @@ public interface PlayerRepository extends JpaRepository<Player, UUID>, JpaSpecif
 
     List<Player> findByClanId(UUID clanId);
 
+    List<Player> findTop100ByUsernameContainingIgnoreCaseOrderByUsernameAsc(String username);
+
     long countByClanId(UUID clanId);
 }

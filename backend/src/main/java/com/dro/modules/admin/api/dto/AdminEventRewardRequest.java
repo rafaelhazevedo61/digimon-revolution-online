@@ -1,5 +1,6 @@
 package com.dro.modules.admin.api.dto;
 
+import com.dro.modules.event.domain.EventRewardRecipientType;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -7,10 +8,17 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
+
 public record AdminEventRewardRequest(
-        @NotBlank(message = "Informe o jogador destinatário.")
+        @NotNull(message = "Informe o modo de destinatário.")
+        EventRewardRecipientType recipientType,
         @Size(max = 30, message = "O nome do jogador deve ter no máximo 30 caracteres.")
         String playerUsername,
+        @Size(max = 36, message = "O identificador do clã deve ter no máximo 36 caracteres.")
+        String clanId,
+        @Size(max = 100, message = "A lista pode conter no máximo 100 jogadores.")
+        List<@NotBlank(message = "A lista contém um nome de jogador vazio.") @Size(max = 30, message = "O nome do jogador deve ter no máximo 30 caracteres.") String> playerUsernames,
         @NotBlank(message = "Informe a origem da premiação.")
         @Size(max = 64, message = "A origem deve ter no máximo 64 caracteres.")
         String sourceType,

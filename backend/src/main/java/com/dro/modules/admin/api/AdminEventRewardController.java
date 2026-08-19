@@ -25,12 +25,13 @@ public class AdminEventRewardController {
             @RequestHeader("Authorization") String authorization,
             @RequestBody @Valid AdminEventRewardRequest request
     ) {
-        var reward = createEventRewardUseCase.execute(authorization, request);
+        var result = createEventRewardUseCase.execute(authorization, request);
         return ResponseEntity.ok(Map.of(
-                "message", "Premiação criada e enviada pelo Correio.",
-                "rewardId", reward.getId(),
-                "playerId", reward.getPlayer().getId(),
-                "expiresAt", reward.getExpiresAt()
+                "message", "Premiação processada para os destinatários.",
+                "requestedCount", result.requestedCount(),
+                "createdCount", result.createdCount(),
+                "skippedCount", result.skippedCount(),
+                "rewardIds", result.rewardIds()
         ));
     }
 }

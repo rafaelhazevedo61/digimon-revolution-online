@@ -6,19 +6,19 @@ Permitir que premiações de eventos sejam entregues pelo Correio como mensagens
 
 ## Escopo
 
-A Sprint 4 cobre premiações compostas por Bits e/ou um item do catálogo para um jogador específico. O painel Admin terá uma tela visual para preencher o destinatário, a origem, o conteúdo, os Bits, o item e a validade, com prévia e confirmação antes da criação. O prêmio também poderá ser criado por uma operação administrativa autenticada e aparecerá como uma mensagem do tipo `EVENT` na Entrada do jogador.
+A Sprint 4 cobre premiações compostas por Bits e/ou um item do catálogo para um jogador específico, todos os membros de um clã ou uma lista de até 100 jogadores. O painel Admin terá uma tela visual para escolher o modo de destinatário, preencher a origem, o conteúdo, os Bits, o item e a validade, com prévia e confirmação antes da criação. Cada destinatário receberá uma mensagem individual do tipo `EVENT` na Entrada.
 
 A mensagem terá a ação `EVENT_REWARD_CLAIM`. O jogador poderá clicar em **Resgatar prêmio**. O backend revalidará o estado do prêmio, a validade, o destinatário e a existência de Digimon ativo antes de entregar Bits ao Digimon ativo e/ou o item ao inventário. A ação será transacional e idempotente.
 
 ## Regras
 
-O prêmio terá validade configurável, com limite máximo de 30 dias. Um prêmio pendente, resgatado ou expirado não poderá ser entregue novamente. O jogador não poderá alterar o conteúdo da mensagem nem o prêmio associado à ação.
+O prêmio terá validade configurável, com limite máximo de 30 dias. Um prêmio pendente, resgatado ou expirado não poderá ser entregue novamente. O jogador não poderá alterar o conteúdo da mensagem nem o prêmio associado à ação. A combinação `sourceType + sourceId + jogador` é única, portanto reprocessar uma premiação em lote não duplica os destinatários já criados.
 
 Nesta primeira implementação, o inventário de prêmio utiliza os tipos de item já suportados pelo jogo e o saldo de Bits será entregue ao Digimon ativo do jogador. Se não houver Digimon ativo, o resgate será bloqueado sem consumir o prêmio.
 
 ## Fora do escopo
 
-A Sprint 4 não inclui ranking automático, cálculo de vencedores, anexos, troca direta, envio de Digimons, equipamentos, múltiplos itens por prêmio ou resgate parcial.
+A Sprint 4 não inclui ranking automático, cálculo de vencedores, anexos, troca direta, envio de Digimons, equipamentos, múltiplos itens por prêmio ou resgate parcial. A seleção de jogadores em lote é feita pelo painel Admin e limitada a 100 destinatários por operação.
 
 ## Critérios de aceite
 

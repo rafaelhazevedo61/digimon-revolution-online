@@ -109,6 +109,15 @@ USABLE="${USABLE:-VALOR}"
 # AdminEventRewardController.create (POST /admin/mail/event-rewards)
 # curl --fail-with-body -i -X POST "${BASE_URL}/admin/mail/event-rewards" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"playerUsername": "jogador-alvo", "sourceType": "EVENT", "sourceId": "evento-teste-001", "subject": "Premiação de teste", "body": "Você recebeu esta recompensa pelo evento.", "bitsAmount": 5000, "itemType": "TRAINING_STONE", "itemQuantity": 2, "validityDays": 7}'
 
+# AdminEventRewardRecipientController.listClans (GET /admin/mail/recipients/clans)
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/mail/recipients/clans" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+
+# AdminEventRewardRecipientController.listClanMembers (GET /admin/mail/recipients/clans/{clanId}/members)
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/mail/recipients/clans/${CLAN_ID}/members" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+
+# AdminEventRewardRecipientController.searchPlayers (GET /admin/mail/recipients/players)
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/mail/recipients/players?query=${QUERY}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+
 # AdminMissionController.list (GET /admin/missions)
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/missions?activeOnly=${ACTIVE_ONLY}&area=${AREA}&stage=${STAGE}&lootItemType=${LOOT_ITEM_TYPE}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
