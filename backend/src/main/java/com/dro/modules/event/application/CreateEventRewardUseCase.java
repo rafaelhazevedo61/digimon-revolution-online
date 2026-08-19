@@ -64,7 +64,7 @@ public class CreateEventRewardUseCase {
                     values.bitsAmount(),
                     values.itemType(),
                     values.itemQuantity(),
-                    EventRewardStatus.PENDING,
+                    EventRewardStatus.PENDING.name(),
                     now,
                     now.plusDays(request.validityDays())
             );

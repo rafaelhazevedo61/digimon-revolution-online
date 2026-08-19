@@ -50,7 +50,7 @@ public interface EventRewardRepository extends JpaRepository<EventReward, UUID> 
             @Param("bitsAmount") int bitsAmount,
             @Param("itemType") String itemType,
             @Param("itemQuantity") int itemQuantity,
-            @Param("status") EventRewardStatus status,
+            @Param("status") String status,
             @Param("createdAt") LocalDateTime createdAt,
             @Param("expiresAt") LocalDateTime expiresAt
     );
