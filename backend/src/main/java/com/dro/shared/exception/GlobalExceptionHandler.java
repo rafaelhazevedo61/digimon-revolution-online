@@ -1,5 +1,7 @@
 package com.dro.shared.exception;
 
+import com.dro.shared.audit.ErrorAuditService;
+import com.dro.shared.audit.TransactionOutcome;
 import com.dro.shared.exception.dto.ErrorResponse;
 import com.dro.shared.exception.dto.FieldErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,11 +21,24 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private final ErrorAuditService errorAuditService;
+
+    public GlobalExceptionHandler(ErrorAuditService errorAuditService) {
+        this.errorAuditService = errorAuditService;
+    }
+
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusinessException(
             BusinessException exception,
             HttpServletRequest request
     ) {
+        errorAuditService.record(
+                request,
+                exception,
+                exception.getCode(),
+                exception.getStatus().value(),
+                TransactionOutcome.REJECTED
+        );
         ErrorResponse response = ErrorResponse.of(
                 exception.getStatus().value(),
                 exception.getStatus().getReasonPhrase(),
@@ -42,6 +57,13 @@ public class GlobalExceptionHandler {
             OptimisticLockingFailureException exception,
             HttpServletRequest request
     ) {
+        errorAuditService.record(
+                request,
+                exception,
+                ApiErrorCode.CONFLICT,
+                HttpStatus.CONFLICT.value(),
+                TransactionOutcome.REJECTED
+        );
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.CONFLICT.value(),
                 HttpStatus.CONFLICT.getReasonPhrase(),
@@ -58,6 +80,13 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException exception,
             HttpServletRequest request
     ) {
+        errorAuditService.record(
+                request,
+                exception,
+                ApiErrorCode.VALIDATION_ERROR,
+                HttpStatus.BAD_REQUEST.value(),
+                TransactionOutcome.NOT_APPLICABLE
+        );
         List<FieldErrorResponse> fields = exception.getBindingResult()
                 .getFieldErrors()
                 .stream()
@@ -84,6 +113,13 @@ public class GlobalExceptionHandler {
             ConstraintViolationException exception,
             HttpServletRequest request
     ) {
+        errorAuditService.record(
+                request,
+                exception,
+                ApiErrorCode.VALIDATION_ERROR,
+                HttpStatus.BAD_REQUEST.value(),
+                TransactionOutcome.NOT_APPLICABLE
+        );
         List<FieldErrorResponse> fields = exception.getConstraintViolations()
                 .stream()
                 .map(violation -> new FieldErrorResponse(
@@ -109,6 +145,13 @@ public class GlobalExceptionHandler {
             HttpMessageNotReadableException exception,
             HttpServletRequest request
     ) {
+        errorAuditService.record(
+                request,
+                exception,
+                ApiErrorCode.BAD_REQUEST,
+                HttpStatus.BAD_REQUEST.value(),
+                TransactionOutcome.NOT_APPLICABLE
+        );
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
@@ -125,6 +168,13 @@ public class GlobalExceptionHandler {
             MethodArgumentTypeMismatchException exception,
             HttpServletRequest request
     ) {
+        errorAuditService.record(
+                request,
+                exception,
+                ApiErrorCode.BAD_REQUEST,
+                HttpStatus.BAD_REQUEST.value(),
+                TransactionOutcome.NOT_APPLICABLE
+        );
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
@@ -142,6 +192,13 @@ public class GlobalExceptionHandler {
             MissingServletRequestParameterException exception,
             HttpServletRequest request
     ) {
+        errorAuditService.record(
+                request,
+                exception,
+                ApiErrorCode.VALIDATION_ERROR,
+                HttpStatus.BAD_REQUEST.value(),
+                TransactionOutcome.NOT_APPLICABLE
+        );
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
@@ -159,6 +216,13 @@ public class GlobalExceptionHandler {
             RuntimeException exception,
             HttpServletRequest request
     ) {
+        errorAuditService.record(
+                request,
+                exception,
+                ApiErrorCode.INTERNAL_ERROR,
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                TransactionOutcome.UNKNOWN
+        );
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),

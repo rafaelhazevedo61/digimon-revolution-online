@@ -1,6 +1,7 @@
 package com.dro.shared.exception.dto;
 
 import com.dro.shared.exception.ApiErrorCode;
+import com.dro.shared.observability.CorrelationIdContext;
 
 import java.util.List;
 
@@ -11,7 +12,8 @@ public record ErrorResponse(
         ApiErrorCode code,
         String message,
         String path,
-        List<FieldErrorResponse> fields
+        List<FieldErrorResponse> fields,
+        String correlationId
 ) {
     public static ErrorResponse of(
             int status,
@@ -27,7 +29,8 @@ public record ErrorResponse(
                 code,
                 message,
                 path,
-                List.of()
+                List.of(),
+                CorrelationIdContext.current()
         );
     }
 
@@ -46,7 +49,8 @@ public record ErrorResponse(
                 code,
                 message,
                 path,
-                fields == null ? List.of() : fields
+                fields == null ? List.of() : fields,
+                CorrelationIdContext.current()
         );
     }
 }
