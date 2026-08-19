@@ -1,5 +1,34 @@
 window.DRO_NEWS = [
   {
+    id: 'update-event-reward-mail',
+    type: 'ATUALIZAÇÃO',
+    title: 'Correio — Premiações de eventos chegaram ao Mundo Digital',
+    summary: 'Receba Bits e itens pelo Correio, confira a validade e resgate a premiação uma única vez com seu Digimon ativo.',
+    date: '2026-08-19',
+    version: 'Correio Sprint 4',
+    featured: true,
+    content: [
+      { heading: 'Recompensas direto no Correio', paragraphs: [
+        'Eventos e campanhas especiais agora podem enviar premiações diretamente para a Entrada do Correio. A mensagem mostra o que está disponível antes do resgate, para que você possa conferir a recompensa com segurança.',
+        'A premiação pode conter Bits, um item ou os dois. O texto informa a quantidade, a validade e o que você precisa fazer para receber o prêmio.'
+      ]},
+      { heading: 'Como resgatar', items: [
+        'Abra Mais → Correio e entre na mensagem da premiação.',
+        'Confira os Bits, o item, a quantidade e a data limite exibidos na mensagem.',
+        'Escolha o Digimon que deverá receber o prêmio como Digimon ativo.',
+        'Clique em “Resgatar prêmio”.'
+      ], paragraphs: [
+        'Os Bits são entregues ao Digimon ativo e o item vai para o inventário dele. Sem Digimon ativo ou depois da validade, o resgate é bloqueado sem consumir a premiação.'
+      ]},
+      { heading: 'Entrega registrada e única', paragraphs: [
+        'Cada premiação só pode ser resgatada uma vez. Depois da entrega, a própria mensagem registra a quantidade de Bits, o item recebido, o Digimon que recebeu e o horário do resgate. Uma nova tentativa não duplica a recompensa.'
+      ]},
+      { heading: 'Destinatários', paragraphs: [
+        'As campanhas podem premiar um jogador específico, todos os membros de um clã ou uma lista de participantes. Cada jogador recebe sua própria mensagem no Correio.'
+      ]}
+    ]
+  },
+  {
     id: 'update-auction-house',
     type: 'ATUALIZAÇÃO',
     title: 'Casa de Leilões — O mercado entre jogadores está disponível',
