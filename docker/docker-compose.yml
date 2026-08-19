@@ -1,18 +1,49 @@
-version: '3.9'
-
 services:
   dro-postgres:
     image: postgres:16
     container_name: dro-postgres
-    restart: always
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: dro_db
-      POSTGRES_USER: dro_user
-      POSTGRES_PASSWORD: dro_pass
+      POSTGRES_DB: ${POSTGRES_DB:-dro_db}
+      POSTGRES_USER: ${POSTGRES_USER:-dro_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dro_pass}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - dro_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks:
+      - dro-network
+
+  dro-api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: dro-api
+    restart: unless-stopped
+    depends_on:
+      dro-postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://dro-postgres:5432/${POSTGRES_DB:-dro_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-dro_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-dro_pass}
+      DRO_JWT_SECRET: ${DRO_JWT_SECRET:-dro-local-development-secret-change-this-before-production-2026}
+      DRO_JWT_ISSUER: ${DRO_JWT_ISSUER:-digimon-revolution-online}
+      DRO_JWT_EXPIRATION_MINUTES: ${DRO_JWT_EXPIRATION_MINUTES:-1440}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    networks:
+      - dro-network
 
 volumes:
   dro_postgres_data:
+
+networks:
+  dro-network:
+    driver: bridge
