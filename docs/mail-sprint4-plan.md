@@ -6,7 +6,7 @@ Permitir que premiações de eventos sejam entregues pelo Correio como mensagens
 
 ## Escopo
 
-A Sprint 4 cobre premiações compostas por Bits e/ou um item do catálogo para um jogador específico. O prêmio será criado por uma operação administrativa autenticada e aparecerá como uma mensagem do tipo `EVENT` na Entrada do jogador.
+A Sprint 4 cobre premiações compostas por Bits e/ou um item do catálogo para um jogador específico. O painel Admin terá uma tela visual para preencher o destinatário, a origem, o conteúdo, os Bits, o item e a validade, com prévia e confirmação antes da criação. O prêmio também poderá ser criado por uma operação administrativa autenticada e aparecerá como uma mensagem do tipo `EVENT` na Entrada do jogador.
 
 A mensagem terá a ação `EVENT_REWARD_CLAIM`. O jogador poderá clicar em **Resgatar prêmio**. O backend revalidará o estado do prêmio, a validade, o destinatário e a existência de Digimon ativo antes de entregar Bits ao Digimon ativo e/ou o item ao inventário. A ação será transacional e idempotente.
 
@@ -22,7 +22,7 @@ A Sprint 4 não inclui ranking automático, cálculo de vencedores, anexos, troc
 
 ## Critérios de aceite
 
-1. Um administrador consegue criar um prêmio para um jogador específico.
+1. Um administrador consegue criar um prêmio para um jogador específico pela tela visual do painel Admin ou pela API autenticada.
 2. O jogador recebe uma mensagem `EVENT` com botão de resgate.
 3. O resgate entrega Bits e/ou item em uma única transação.
 4. Repetir o clique não duplica a recompensa.

@@ -8,7 +8,7 @@ Os arquivos `backend/src/main/resources/api-curl-collection.sh` e `backend/src/m
 
 No Postman, use **Import**, selecione `backend/src/main/resources/collection/DRO - MODULES.postman_collection.json` e importe a collection. Na aba **Variables**, preencha `baseUrl`, `playerToken` e `adminToken`. Os demais valores de rota e query podem ser preenchidos conforme o cenário de teste.
 
-A collection Postman possui 138 requests organizados por módulo, incluindo as rotas de Correio, Casa de Leilões, clãs, convites, ações de mensagens e comunicados administrativos. Os exemplos de corpo JSON dos principais fluxos já estão preenchidos, mas devem ser revisados antes do envio.
+A collection Postman possui 139 requests organizados por módulo, incluindo as rotas de Correio, Casa de Leilões, clãs, convites, ações de mensagens, comunicados administrativos e premiações de eventos. Os exemplos de corpo JSON dos principais fluxos já estão preenchidos, mas devem ser revisados antes do envio.
 
 ## Como configurar
 
@@ -55,6 +55,7 @@ Os fluxos adicionados recentemente também estão presentes:
 | Aceitar ou recusar convite de clã | `POST /mail/{messageId}/action` |
 | Enviar convite de clã | `POST /clans/{id}/invite` |
 | Enviar comunicado administrativo | `POST /admin/mail/announcements` |
+| Criar premiação de evento | `POST /admin/mail/event-rewards` |
 | Comprar anúncio | `POST /auction/listings/{listingId}/buy` |
 | Cancelar anúncio | `POST /auction/listings/{listingId}/cancel` |
 

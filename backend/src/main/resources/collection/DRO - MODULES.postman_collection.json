@@ -19,11 +19,39 @@
       "value": ""
     },
     {
+      "key": "active",
+      "value": ""
+    },
+    {
+      "key": "activeOnly",
+      "value": ""
+    },
+    {
+      "key": "amount",
+      "value": ""
+    },
+    {
+      "key": "area",
+      "value": ""
+    },
+    {
+      "key": "attempts",
+      "value": ""
+    },
+    {
+      "key": "attribute",
+      "value": ""
+    },
+    {
       "key": "bossCode",
       "value": ""
     },
     {
       "key": "bossId",
+      "value": ""
+    },
+    {
+      "key": "category",
       "value": ""
     },
     {
@@ -39,6 +67,14 @@
       "value": ""
     },
     {
+      "key": "element",
+      "value": ""
+    },
+    {
+      "key": "email",
+      "value": ""
+    },
+    {
       "key": "equipmentId",
       "value": ""
     },
@@ -48,6 +84,10 @@
     },
     {
       "key": "listingId",
+      "value": ""
+    },
+    {
+      "key": "lootItemType",
       "value": ""
     },
     {
@@ -63,7 +103,55 @@
       "value": ""
     },
     {
+      "key": "page",
+      "value": ""
+    },
+    {
       "key": "playerId",
+      "value": ""
+    },
+    {
+      "key": "query",
+      "value": ""
+    },
+    {
+      "key": "rarity",
+      "value": ""
+    },
+    {
+      "key": "search",
+      "value": ""
+    },
+    {
+      "key": "selectedDigitama",
+      "value": ""
+    },
+    {
+      "key": "sellable",
+      "value": ""
+    },
+    {
+      "key": "size",
+      "value": ""
+    },
+    {
+      "key": "specie",
+      "value": ""
+    },
+    {
+      "key": "stage",
+      "value": ""
+    },
+    {
+      "key": "starterSelected",
+      "value": ""
+    },
+    {
+      "key": "tradable",
+      "value": ""
+    },
+    {
+      "key": "usable",
       "value": ""
     },
     {
@@ -84,10 +172,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/bosses",
-            "description": "Gerado de AdminBossController.listAll. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminBossController.listAll. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -122,7 +224,7 @@
           "response": []
         },
         {
-          "name": "endpoint",
+          "name": "deleteDrop",
           "request": {
             "method": "DELETE",
             "header": [
@@ -133,7 +235,7 @@
               }
             ],
             "url": "{{baseUrl}}/admin/bosses/drops/{{dropId}}",
-            "description": "Gerado de AdminBossController.endpoint. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminBossController.deleteDrop. Revise IDs e valores antes de enviar."
           },
           "response": []
         },
@@ -146,15 +248,29 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/bosses/{{bossId}}/drops",
-            "description": "Gerado de AdminBossController.addDrop. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminBossController.addDrop. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
         {
-          "name": "addDrop",
+          "name": "delete",
           "request": {
             "method": "DELETE",
             "header": [
@@ -162,10 +278,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/bosses/{{id}}",
-            "description": "Gerado de AdminBossController.addDrop. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminBossController.delete. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -178,10 +308,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/bosses/{{id}}",
-            "description": "Gerado de AdminBossController.getById. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminBossController.getById. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -226,7 +370,7 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/admin/digimon/add-xp",
+            "url": "{{baseUrl}}/admin/digimon/add-xp?digimonId={{digimonId}}&amount={{amount}}",
             "description": "Gerado de AdminDigimonController.addXp. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -258,7 +402,7 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/admin/equipment-templates",
+            "url": "{{baseUrl}}/admin/equipment-templates?activeOnly={{activeOnly}}",
             "description": "Gerado de AdminEquipmentTemplateController.list. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -272,10 +416,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/admin/equipment-templates",
-            "description": "Gerado de AdminEquipmentTemplateController.create. Revise IDs e valores antes de enviar."
+            "url": "{{baseUrl}}/admin/equipment-templates?activeOnly={{activeOnly}}",
+            "description": "Gerado de AdminEquipmentTemplateController.create. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -288,10 +446,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/equipment-templates/grant",
-            "description": "Gerado de AdminEquipmentTemplateController.grant. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminEquipmentTemplateController.grant. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -304,10 +476,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/equipment-templates/{{name}}",
-            "description": "Gerado de AdminEquipmentTemplateController.getByName. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminEquipmentTemplateController.getByName. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -320,10 +506,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/equipment-templates/{{name}}",
-            "description": "Gerado de AdminEquipmentTemplateController.update. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminEquipmentTemplateController.update. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -336,10 +536,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/equipment-templates/{{name}}/toggle-active",
-            "description": "Gerado de AdminEquipmentTemplateController.toggleActive. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminEquipmentTemplateController.toggleActive. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -352,15 +566,29 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/inventory/grant",
-            "description": "Gerado de AdminInventoryController.grantItem. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminInventoryController.grantItem. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
         {
-          "name": "endpoint",
+          "name": "listItemDefinitions",
           "request": {
             "method": "GET",
             "header": [
@@ -371,12 +599,12 @@
               }
             ],
             "url": "{{baseUrl}}/admin/inventory/item-definitions",
-            "description": "Gerado de AdminInventoryController.endpoint. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminInventoryController.listItemDefinitions. Revise IDs e valores antes de enviar."
           },
           "response": []
         },
         {
-          "name": "endpoint",
+          "name": "createAnnouncement",
           "request": {
             "method": "POST",
             "header": [
@@ -392,10 +620,40 @@
               }
             ],
             "url": "{{baseUrl}}/admin/mail/announcements",
-            "description": "Gerado de AdminMailController.endpoint. Revise IDs e valores antes de enviar.",
+            "description": "Gerado de AdminMailController.createAnnouncement. Revise IDs e valores antes de enviar.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"subject\": \"Manutenção programada\",\n  \"body\": \"Comunicado de teste. Altere este texto antes de enviar.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/mail/event-rewards",
+            "description": "Gerado de AdminEventRewardController.create. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"playerUsername\": \"jogador-alvo\",\n  \"sourceType\": \"EVENT\",\n  \"sourceId\": \"evento-teste-001\",\n  \"subject\": \"Premiação de teste\",\n  \"body\": \"Você recebeu esta recompensa pelo evento.\",\n  \"bitsAmount\": 5000,\n  \"itemType\": \"TRAINING_STONE\",\n  \"itemQuantity\": 2,\n  \"validityDays\": 7\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -416,7 +674,7 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/admin/missions",
+            "url": "{{baseUrl}}/admin/missions?activeOnly={{activeOnly}}&area={{area}}&stage={{stage}}&lootItemType={{lootItemType}}",
             "description": "Gerado de AdminMissionController.list. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -430,10 +688,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/admin/missions",
-            "description": "Gerado de AdminMissionController.create. Revise IDs e valores antes de enviar."
+            "url": "{{baseUrl}}/admin/missions?activeOnly={{activeOnly}}&area={{area}}&stage={{stage}}&lootItemType={{lootItemType}}",
+            "description": "Gerado de AdminMissionController.create. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -446,10 +718,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/missions/{{id}}",
-            "description": "Gerado de AdminMissionController.getById. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminMissionController.getById. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -462,10 +748,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/missions/{{id}}",
-            "description": "Gerado de AdminMissionController.update. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminMissionController.update. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -496,7 +796,7 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/admin/players",
+            "url": "{{baseUrl}}/admin/players?username={{username}}&email={{email}}&selectedDigitama={{selectedDigitama}}&starterSelected={{starterSelected}}&page={{page}}&size={{size}}",
             "description": "Gerado de AdminPlayerController.getPlayers. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -510,10 +810,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/players/wipe",
-            "description": "Gerado de AdminPlayerController.wipe. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminPlayerController.wipe. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -526,10 +840,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/players/{{id}}/reset-password",
-            "description": "Gerado de AdminPlayerController.resetPassword. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminPlayerController.resetPassword. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -542,10 +870,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/server/damage-buff",
-            "description": "Gerado de AdminServerController.getDamageBuff. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminServerController.getDamageBuff. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -558,10 +900,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/server/damage-buff",
-            "description": "Gerado de AdminServerController.setDamageBuff. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminServerController.setDamageBuff. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -574,10 +930,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/server/damage-buff/toggle",
-            "description": "Gerado de AdminServerController.toggleDamageBuff. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminServerController.toggleDamageBuff. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -592,7 +962,7 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/admin/shop-products",
+            "url": "{{baseUrl}}/admin/shop-products?activeOnly={{activeOnly}}",
             "description": "Gerado de AdminShopProductController.list. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -606,10 +976,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/admin/shop-products",
-            "description": "Gerado de AdminShopProductController.create. Revise IDs e valores antes de enviar."
+            "url": "{{baseUrl}}/admin/shop-products?activeOnly={{activeOnly}}",
+            "description": "Gerado de AdminShopProductController.create. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -622,10 +1006,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/shop-products/{{code}}",
-            "description": "Gerado de AdminShopProductController.getByCode. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminShopProductController.getByCode. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -638,10 +1036,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{adminToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/admin/shop-products/{{code}}",
-            "description": "Gerado de AdminShopProductController.update. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminShopProductController.update. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -662,7 +1074,7 @@
           "response": []
         },
         {
-          "name": "endpoint",
+          "name": "completeClanMissions",
           "request": {
             "method": "POST",
             "header": [
@@ -673,12 +1085,12 @@
               }
             ],
             "url": "{{baseUrl}}/admin/tools/complete-clan-missions",
-            "description": "Gerado de AdminToolsController.endpoint. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminToolsController.completeClanMissions. Revise IDs e valores antes de enviar."
           },
           "response": []
         },
         {
-          "name": "endpoint",
+          "name": "resetClanRaidDaily",
           "request": {
             "method": "POST",
             "header": [
@@ -689,12 +1101,12 @@
               }
             ],
             "url": "{{baseUrl}}/admin/tools/reset-clan-raid-daily",
-            "description": "Gerado de AdminToolsController.endpoint. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminToolsController.resetClanRaidDaily. Revise IDs e valores antes de enviar."
           },
           "response": []
         },
         {
-          "name": "endpoint",
+          "name": "resetDailyArenaAttacks",
           "request": {
             "method": "POST",
             "header": [
@@ -705,12 +1117,12 @@
               }
             ],
             "url": "{{baseUrl}}/admin/tools/reset-daily-arena-attacks",
-            "description": "Gerado de AdminToolsController.endpoint. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminToolsController.resetDailyArenaAttacks. Revise IDs e valores antes de enviar."
           },
           "response": []
         },
         {
-          "name": "endpoint",
+          "name": "resetWorldBossDaily",
           "request": {
             "method": "POST",
             "header": [
@@ -721,7 +1133,7 @@
               }
             ],
             "url": "{{baseUrl}}/admin/tools/reset-world-boss-daily",
-            "description": "Gerado de AdminToolsController.endpoint. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AdminToolsController.resetWorldBossDaily. Revise IDs e valores antes de enviar."
           },
           "response": []
         }
@@ -734,9 +1146,29 @@
           "name": "challenge",
           "request": {
             "method": "POST",
-            "header": [],
-            "url": "{{baseUrl}}/arena/challenge",
-            "description": "Gerado de ArenaController.challenge. Revise IDs e valores antes de enviar."
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/arena/challenge?page={{page}}&size={{size}}",
+            "description": "Gerado de ArenaController.challenge. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -744,8 +1176,14 @@
           "name": "getHistory",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/arena/history",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/arena/history?page={{page}}&size={{size}}",
             "description": "Gerado de ArenaController.getHistory. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -754,9 +1192,29 @@
           "name": "getLobby",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/arena/lobby",
-            "description": "Gerado de ArenaController.getLobby. Revise IDs e valores antes de enviar."
+            "description": "Gerado de ArenaController.getLobby. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -764,8 +1222,14 @@
           "name": "getRanking",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/arena/ranking",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/arena/ranking?page={{page}}&size={{size}}&page={{page}}&size={{size}}",
             "description": "Gerado de ArenaController.getRanking. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -774,9 +1238,29 @@
           "name": "getShop",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/arena/shop",
-            "description": "Gerado de ArenaController.getShop. Revise IDs e valores antes de enviar."
+            "description": "Gerado de ArenaController.getShop. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -784,9 +1268,29 @@
           "name": "buyFromShop",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/arena/shop/buy",
-            "description": "Gerado de ArenaController.buyFromShop. Revise IDs e valores antes de enviar."
+            "description": "Gerado de ArenaController.buyFromShop. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         }
@@ -799,9 +1303,29 @@
           "name": "history",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/auction/history",
-            "description": "Gerado de AuctionController.history. Revise IDs e valores antes de enviar."
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/auction/history?page={{page}}&size={{size}}",
+            "description": "Gerado de AuctionController.history. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -809,8 +1333,14 @@
           "name": "list",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/auction/listings",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/auction/listings?search={{search}}&category={{category}}&rarity={{rarity}}&page={{page}}&size={{size}}",
             "description": "Gerado de AuctionController.list. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -819,9 +1349,29 @@
           "name": "create",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/auction/listings",
-            "description": "Gerado de AuctionController.create. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AuctionController.create. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -829,9 +1379,29 @@
           "name": "buy",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/auction/listings/{{listingId}}/buy",
-            "description": "Gerado de AuctionController.buy. Revise IDs e valores antes de enviar."
+            "description": "Gerado de AuctionController.buy. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -839,7 +1409,13 @@
           "name": "cancel",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/auction/listings/{{listingId}}/cancel",
             "description": "Gerado de AuctionController.cancel. Revise IDs e valores antes de enviar."
           },
@@ -849,8 +1425,14 @@
           "name": "myListings",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/auction/my-listings",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/auction/my-listings?page={{page}}&size={{size}}&page={{page}}&size={{size}}",
             "description": "Gerado de AuctionController.myListings. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -919,9 +1501,29 @@
           "name": "getAvailable",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/bosses/available",
-            "description": "Gerado de BossController.getAvailable. Revise IDs e valores antes de enviar."
+            "description": "Gerado de BossController.getAvailable. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -929,7 +1531,13 @@
           "name": "getCooldowns",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/bosses/cooldowns",
             "description": "Gerado de BossController.getCooldowns. Revise IDs e valores antes de enviar."
           },
@@ -939,8 +1547,14 @@
           "name": "getHistory",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/bosses/history",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/bosses/history?page={{page}}&size={{size}}",
             "description": "Gerado de BossController.getHistory. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -949,9 +1563,29 @@
           "name": "challenge",
           "request": {
             "method": "POST",
-            "header": [],
-            "url": "{{baseUrl}}/bosses/{{bossCode}}/challenge",
-            "description": "Gerado de BossController.challenge. Revise IDs e valores antes de enviar."
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/bosses/{{bossCode}}/challenge?page={{page}}&size={{size}}",
+            "description": "Gerado de BossController.challenge. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         }
@@ -964,7 +1598,13 @@
           "name": "getMyMission",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clan-missions/me",
             "description": "Gerado de ClanMissionController.getMyMission. Revise IDs e valores antes de enviar."
           },
@@ -974,7 +1614,13 @@
           "name": "getRanking",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clan-missions/ranking",
             "description": "Gerado de ClanMissionController.getRanking. Revise IDs e valores antes de enviar."
           },
@@ -984,7 +1630,13 @@
           "name": "accept",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clan-missions/{{id}}/accept",
             "description": "Gerado de ClanMissionController.accept. Revise IDs e valores antes de enviar."
           },
@@ -994,7 +1646,13 @@
           "name": "claim",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clan-missions/{{id}}/claim",
             "description": "Gerado de ClanMissionController.claim. Revise IDs e valores antes de enviar."
           },
@@ -1009,7 +1667,13 @@
           "name": "attack",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clan-raids/attack",
             "description": "Gerado de ClanRaidController.attack. Revise IDs e valores antes de enviar."
           },
@@ -1019,7 +1683,13 @@
           "name": "getMyClanRaid",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clan-raids/me",
             "description": "Gerado de ClanRaidController.getMyClanRaid. Revise IDs e valores antes de enviar."
           },
@@ -1034,7 +1704,13 @@
           "name": "getMyClan",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clans/me",
             "description": "Gerado de ClanController.getMyClan. Revise IDs e valores antes de enviar."
           },
@@ -1045,7 +1721,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/clans/ranking",
+            "url": "{{baseUrl}}/clans/ranking?page={{page}}&size={{size}}",
             "description": "Gerado de ClanController.getRanking. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -1054,9 +1730,29 @@
           "name": "dissolve",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clans/{{id}}",
-            "description": "Gerado de ClanController.dissolve. Revise IDs e valores antes de enviar."
+            "description": "Gerado de ClanController.dissolve. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1064,9 +1760,29 @@
           "name": "getById",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clans/{{id}}",
-            "description": "Gerado de ClanController.getById. Revise IDs e valores antes de enviar."
+            "description": "Gerado de ClanController.getById. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1074,9 +1790,29 @@
           "name": "update",
           "request": {
             "method": "PATCH",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clans/{{id}}",
-            "description": "Gerado de ClanController.update. Revise IDs e valores antes de enviar."
+            "description": "Gerado de ClanController.update. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1084,9 +1820,29 @@
           "name": "invite",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clans/{{id}}/invite",
-            "description": "Gerado de ClanController.invite. Revise IDs e valores antes de enviar."
+            "description": "Gerado de ClanController.invite. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"jogador-alvo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1094,7 +1850,13 @@
           "name": "join",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clans/{{id}}/join",
             "description": "Gerado de ClanController.join. Revise IDs e valores antes de enviar."
           },
@@ -1104,7 +1866,13 @@
           "name": "leave",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clans/{{id}}/leave",
             "description": "Gerado de ClanController.leave. Revise IDs e valores antes de enviar."
           },
@@ -1114,9 +1882,29 @@
           "name": "kick",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clans/{{id}}/members/{{username}}/kick",
-            "description": "Gerado de ClanController.kick. Revise IDs e valores antes de enviar."
+            "description": "Gerado de ClanController.kick. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1124,9 +1912,29 @@
           "name": "changeRole",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clans/{{id}}/members/{{username}}/role",
-            "description": "Gerado de ClanController.changeRole. Revise IDs e valores antes de enviar."
+            "description": "Gerado de ClanController.changeRole. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1134,7 +1942,13 @@
           "name": "transferLeadership",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clans/{{id}}/members/{{username}}/transfer",
             "description": "Gerado de ClanController.transferLeadership. Revise IDs e valores antes de enviar."
           },
@@ -1144,7 +1958,13 @@
           "name": "listUpgrades",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clans/{{id}}/upgrades",
             "description": "Gerado de ClanController.listUpgrades. Revise IDs e valores antes de enviar."
           },
@@ -1154,8 +1974,14 @@
           "name": "buyUpgrade",
           "request": {
             "method": "POST",
-            "header": [],
-            "url": "{{baseUrl}}/clans/{{id}}/upgrades/{{code}}/buy",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/clans/{{id}}/upgrades/{{code}}/buy?page={{page}}&size={{size}}",
             "description": "Gerado de ClanController.buyUpgrade. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -1166,7 +1992,7 @@
       "name": "digimon",
       "item": [
         {
-          "name": "evolutionOptions",
+          "name": "evolve",
           "request": {
             "method": "POST",
             "header": [
@@ -1182,7 +2008,7 @@
               }
             ],
             "url": "{{baseUrl}}/digimon/evolve",
-            "description": "Gerado de DigimonController.evolutionOptions. Revise IDs e valores antes de enviar.",
+            "description": "Gerado de DigimonController.evolve. Revise IDs e valores antes de enviar.",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1199,7 +2025,13 @@
           "name": "levelTable",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/digimon/level-table",
             "description": "Gerado de DigimonController.levelTable. Revise IDs e valores antes de enviar."
           },
@@ -1209,14 +2041,34 @@
           "name": "me",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/digimon/me",
-            "description": "Gerado de DigimonController.me. Revise IDs e valores antes de enviar."
+            "description": "Gerado de DigimonController.me. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
         {
-          "name": "getById",
+          "name": "rebirth",
           "request": {
             "method": "POST",
             "header": [
@@ -1232,7 +2084,7 @@
               }
             ],
             "url": "{{baseUrl}}/digimon/rebirth",
-            "description": "Gerado de DigimonController.getById. Revise IDs e valores antes de enviar.",
+            "description": "Gerado de DigimonController.rebirth. Revise IDs e valores antes de enviar.",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1246,7 +2098,7 @@
           "response": []
         },
         {
-          "name": "store",
+          "name": "rename",
           "request": {
             "method": "PUT",
             "header": [
@@ -1262,7 +2114,7 @@
               }
             ],
             "url": "{{baseUrl}}/digimon/rename",
-            "description": "Gerado de DigimonController.store. Revise IDs e valores antes de enviar.",
+            "description": "Gerado de DigimonController.rename. Revise IDs e valores antes de enviar.",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1279,9 +2131,29 @@
           "name": "select",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/digimon/select",
-            "description": "Gerado de DigimonController.select. Revise IDs e valores antes de enviar."
+            "description": "Gerado de DigimonController.select. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1289,9 +2161,29 @@
           "name": "simulateTraitHatch",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/digimon/simulator/trait-hatch",
-            "description": "Gerado de DigimonController.simulateTraitHatch. Revise IDs e valores antes de enviar."
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/digimon/simulator/trait-hatch?attempts={{attempts}}",
+            "description": "Gerado de DigimonController.simulateTraitHatch. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1299,7 +2191,13 @@
           "name": "storage",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/digimon/storage",
             "description": "Gerado de DigimonController.storage. Revise IDs e valores antes de enviar."
           },
@@ -1309,7 +2207,13 @@
           "name": "getById",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/digimon/{{digimonId}}",
             "description": "Gerado de DigimonController.getById. Revise IDs e valores antes de enviar."
           },
@@ -1319,9 +2223,29 @@
           "name": "evolutionOptions",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/digimon/{{digimonId}}/evolution-options",
-            "description": "Gerado de DigimonController.evolutionOptions. Revise IDs e valores antes de enviar."
+            "description": "Gerado de DigimonController.evolutionOptions. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1329,7 +2253,13 @@
           "name": "lineage",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/digimon/{{digimonId}}/lineage",
             "description": "Gerado de DigimonController.lineage. Revise IDs e valores antes de enviar."
           },
@@ -1339,8 +2269,14 @@
           "name": "rebirthPreview",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/digimon/{{digimonId}}/rebirth-preview",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/digimon/{{digimonId}}/rebirth-preview?attempts={{attempts}}",
             "description": "Gerado de DigimonController.rebirthPreview. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -1349,7 +2285,13 @@
           "name": "retrieve",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/digimon/{{digimonId}}/retrieve",
             "description": "Gerado de DigimonController.retrieve. Revise IDs e valores antes de enviar."
           },
@@ -1359,7 +2301,13 @@
           "name": "store",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/digimon/{{digimonId}}/store",
             "description": "Gerado de DigimonController.store. Revise IDs e valores antes de enviar."
           },
@@ -1374,7 +2322,13 @@
           "name": "hatch",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/digitama/hatch",
             "description": "Gerado de DigitamaController.hatch. Revise IDs e valores antes de enviar."
           },
@@ -1384,7 +2338,13 @@
           "name": "history",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/digitama/history",
             "description": "Gerado de DigitamaController.history. Revise IDs e valores antes de enviar."
           },
@@ -1394,9 +2354,29 @@
           "name": "select",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/digitama/select",
-            "description": "Gerado de DigitamaController.select. Revise IDs e valores antes de enviar."
+            "description": "Gerado de DigitamaController.select. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         }
@@ -1424,9 +2404,29 @@
           "name": "getDigimonEquipment",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/equipment/digimon/{{digimonId}}",
-            "description": "Gerado de EquipmentController.getDigimonEquipment. Revise IDs e valores antes de enviar."
+            "description": "Gerado de EquipmentController.getDigimonEquipment. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1434,14 +2434,20 @@
           "name": "getDigimonInventory",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/equipment/digimon/{{digimonId}}/inventory",
             "description": "Gerado de EquipmentController.getDigimonInventory. Revise IDs e valores antes de enviar."
           },
           "response": []
         },
         {
-          "name": "endpoint",
+          "name": "equip",
           "request": {
             "method": "POST",
             "header": [
@@ -1457,7 +2463,7 @@
               }
             ],
             "url": "{{baseUrl}}/equipment/equip",
-            "description": "Gerado de EquipmentController.endpoint. Revise IDs e valores antes de enviar.",
+            "description": "Gerado de EquipmentController.equip. Revise IDs e valores antes de enviar.",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1474,14 +2480,34 @@
           "name": "refine",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/equipment/refine",
-            "description": "Gerado de EquipmentController.refine. Revise IDs e valores antes de enviar."
+            "description": "Gerado de EquipmentController.refine. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
         {
-          "name": "endpoint",
+          "name": "unequip",
           "request": {
             "method": "POST",
             "header": [
@@ -1497,7 +2523,7 @@
               }
             ],
             "url": "{{baseUrl}}/equipment/unequip",
-            "description": "Gerado de EquipmentController.endpoint. Revise IDs e valores antes de enviar.",
+            "description": "Gerado de EquipmentController.unequip. Revise IDs e valores antes de enviar.",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1511,7 +2537,7 @@
           "response": []
         },
         {
-          "name": "refine",
+          "name": "unequipAll",
           "request": {
             "method": "POST",
             "header": [
@@ -1519,10 +2545,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{playerToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/equipment/unequip-all",
-            "description": "Gerado de EquipmentController.refine. Revise IDs e valores antes de enviar."
+            "description": "Gerado de EquipmentController.unequipAll. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1530,7 +2570,13 @@
           "name": "refinePreview",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/equipment/{{equipmentId}}/refine-preview",
             "description": "Gerado de EquipmentController.refinePreview. Revise IDs e valores antes de enviar."
           },
@@ -1546,7 +2592,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/evolution-lines/available",
+            "url": "{{baseUrl}}/evolution-lines/available?code={{code}}&name={{name}}&active={{active}}&page={{page}}&size={{size}}",
             "description": "Gerado de EvolutionLineController.getAvailableEvolutionLines. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -1560,7 +2606,13 @@
           "name": "claim",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/incubation/claim",
             "description": "Gerado de IncubationController.claim. Revise IDs e valores antes de enviar."
           },
@@ -1570,7 +2622,13 @@
           "name": "me",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/incubation/me",
             "description": "Gerado de IncubationController.me. Revise IDs e valores antes de enviar."
           },
@@ -1580,9 +2638,29 @@
           "name": "start",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/incubation/start",
-            "description": "Gerado de IncubationController.start. Revise IDs e valores antes de enviar."
+            "description": "Gerado de IncubationController.start. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         }
@@ -1595,9 +2673,29 @@
           "name": "useItem",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/inventory/use",
-            "description": "Gerado de InventoryController.useItem. Revise IDs e valores antes de enviar."
+            "description": "Gerado de InventoryController.useItem. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         }
@@ -1610,8 +2708,14 @@
           "name": "inbox",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/mail/inbox",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/mail/inbox?page={{page}}&size={{size}}&page={{page}}&size={{size}}",
             "description": "Gerado de MailController.inbox. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -1620,9 +2724,47 @@
           "name": "sent",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/mail/sent",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/mail/sent?page={{page}}&size={{size}}",
             "description": "Gerado de MailController.sent. Revise IDs e valores antes de enviar."
+          },
+          "response": []
+        },
+        {
+          "name": "unreadCount",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/mail/unread-count",
+            "description": "Gerado de MailController.unreadCount. Revise IDs e valores antes de enviar."
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/mail/{{messageId}}",
+            "description": "Gerado de MailController.delete. Revise IDs e valores antes de enviar."
           },
           "response": []
         },
@@ -1635,30 +2777,24 @@
                 "key": "Authorization",
                 "value": "Bearer {{playerToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/mail/unread-count",
-            "description": "Gerado de MailController.get. Revise IDs e valores antes de enviar."
-          },
-          "response": []
-        },
-        {
-          "name": "delete",
-          "request": {
-            "method": "DELETE",
-            "header": [],
             "url": "{{baseUrl}}/mail/{{messageId}}",
-            "description": "Gerado de MailController.delete. Revise IDs e valores antes de enviar."
-          },
-          "response": []
-        },
-        {
-          "name": "get",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/mail/{{messageId}}",
-            "description": "Gerado de MailController.get. Revise IDs e valores antes de enviar."
+            "description": "Gerado de MailController.get. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1666,9 +2802,29 @@
           "name": "action",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/mail/{{messageId}}/action",
-            "description": "Gerado de MailController.action. Revise IDs e valores antes de enviar."
+            "description": "Gerado de MailController.action. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"ACCEPT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1676,9 +2832,29 @@
           "name": "markRead",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/mail/{{messageId}}/read",
-            "description": "Gerado de MailController.markRead. Revise IDs e valores antes de enviar."
+            "description": "Gerado de MailController.markRead. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         }
@@ -1691,7 +2867,13 @@
           "name": "getActiveMissions",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/missions/active",
             "description": "Gerado de MissionController.getActiveMissions. Revise IDs e valores antes de enviar."
           },
@@ -1701,9 +2883,29 @@
           "name": "start",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/missions/start",
-            "description": "Gerado de MissionController.start. Revise IDs e valores antes de enviar."
+            "description": "Gerado de MissionController.start. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1711,7 +2913,13 @@
           "name": "claimMission",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/missions/{{missionInstanceId}}/claim",
             "description": "Gerado de MissionController.claimMission. Revise IDs e valores antes de enviar."
           },
@@ -1726,7 +2934,13 @@
           "name": "me",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/players/me",
             "description": "Gerado de PlayerController.me. Revise IDs e valores antes de enviar."
           },
@@ -1736,9 +2950,29 @@
           "name": "changePassword",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/players/me/change-password",
-            "description": "Gerado de PlayerController.changePassword. Revise IDs e valores antes de enviar."
+            "description": "Gerado de PlayerController.changePassword. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1746,7 +2980,13 @@
           "name": "dashboard",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/players/me/dashboard",
             "description": "Gerado de PlayerController.dashboard. Revise IDs e valores antes de enviar."
           },
@@ -1756,9 +2996,29 @@
           "name": "startup",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/players/me/startup",
-            "description": "Gerado de PlayerController.startup. Revise IDs e valores antes de enviar."
+            "description": "Gerado de PlayerController.startup. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         }
@@ -1772,7 +3032,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/ranking/grade",
+            "url": "{{baseUrl}}/ranking/grade?page={{page}}&size={{size}}&page={{page}}&size={{size}}",
             "description": "Gerado de RankingController.byGrade. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -1782,7 +3042,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/ranking/level",
+            "url": "{{baseUrl}}/ranking/level?page={{page}}&size={{size}}&page={{page}}&size={{size}}",
             "description": "Gerado de RankingController.byLevel. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -1792,7 +3052,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/ranking/rebirth",
+            "url": "{{baseUrl}}/ranking/rebirth?page={{page}}&size={{size}}",
             "description": "Gerado de RankingController.byRebirth. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -1806,7 +3066,13 @@
           "name": "getAreas",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/areas",
             "description": "Gerado de AreaController.getAreas. Revise IDs e valores antes de enviar."
           },
@@ -1816,7 +3082,13 @@
           "name": "list",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/clan-missions",
             "description": "Gerado de ClanMissionController.list. Revise IDs e valores antes de enviar."
           },
@@ -1826,8 +3098,14 @@
           "name": "list",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/clans",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/clans?query={{query}}&page={{page}}&size={{size}}",
             "description": "Gerado de ClanController.list. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -1836,9 +3114,29 @@
           "name": "create",
           "request": {
             "method": "POST",
-            "header": [],
-            "url": "{{baseUrl}}/clans",
-            "description": "Gerado de ClanController.create. Revise IDs e valores antes de enviar."
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/clans?query={{query}}&page={{page}}&size={{size}}",
+            "description": "Gerado de ClanController.create. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Clã de Teste\",\n  \"tag\": \"TEST\",\n  \"description\": \"Clã criado para testes.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1847,7 +3145,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/digimon-infos",
+            "url": "{{baseUrl}}/digimon-infos?name={{name}}&stage={{stage}}&attribute={{attribute}}&element={{element}}&specie={{specie}}&page={{page}}&size={{size}}",
             "description": "Gerado de DigimonInfoController.getDigimonInfos. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -1857,7 +3155,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/evolution-lines",
+            "url": "{{baseUrl}}/evolution-lines?code={{code}}&name={{name}}&active={{active}}&page={{page}}&size={{size}}",
             "description": "Gerado de EvolutionLineController.getEvolutionLines. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -1866,7 +3164,13 @@
           "name": "getInventory",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/inventory",
             "description": "Gerado de InventoryController.getInventory. Revise IDs e valores antes de enviar."
           },
@@ -1877,7 +3181,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/items",
+            "url": "{{baseUrl}}/items?category={{category}}&rarity={{rarity}}&usable={{usable}}&sellable={{sellable}}&tradable={{tradable}}&page={{page}}&size={{size}}",
             "description": "Gerado de ItemDefinitionController.getItems. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -1886,9 +3190,29 @@
           "name": "send",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/mail",
-            "description": "Gerado de MailController.send. Revise IDs e valores antes de enviar."
+            "description": "Gerado de MailController.send. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientUsername\": \"jogador-alvo\",\n  \"subject\": \"Mensagem de teste\",\n  \"body\": \"Conteúdo da mensagem de teste.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1896,7 +3220,13 @@
           "name": "list",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/missions",
             "description": "Gerado de MissionController.list. Revise IDs e valores antes de enviar."
           },
@@ -1906,9 +3236,29 @@
           "name": "getProducts",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/shop",
-            "description": "Gerado de ShopController.getProducts. Revise IDs e valores antes de enviar."
+            "description": "Gerado de ShopController.getProducts. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1916,7 +3266,13 @@
           "name": "getProgress",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/tutorial",
             "description": "Gerado de TutorialController.getProgress. Revise IDs e valores antes de enviar."
           },
@@ -1931,9 +3287,29 @@
           "name": "buy",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/shop/buy",
-            "description": "Gerado de ShopController.buy. Revise IDs e valores antes de enviar."
+            "description": "Gerado de ShopController.buy. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -1941,9 +3317,29 @@
           "name": "sell",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/shop/sell",
-            "description": "Gerado de ShopController.sell. Revise IDs e valores antes de enviar."
+            "description": "Gerado de ShopController.sell. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         }
@@ -1956,7 +3352,13 @@
           "name": "attack",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/world-boss/attack",
             "description": "Gerado de WorldBossController.attack. Revise IDs e valores antes de enviar."
           },
@@ -1966,7 +3368,13 @@
           "name": "getMyWorldBoss",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
             "url": "{{baseUrl}}/world-boss/me",
             "description": "Gerado de WorldBossController.getMyWorldBoss. Revise IDs e valores antes de enviar."
           },

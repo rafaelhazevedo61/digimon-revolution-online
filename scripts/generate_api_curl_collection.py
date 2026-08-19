@@ -13,7 +13,7 @@ POSTMAN_OUTPUT = ROOT / "backend" / "src" / "main" / "resources" / "collection" 
 MAPPING_RE = re.compile(r'@(Get|Post|Put|Patch|Delete)Mapping(?:\("([^\"]*)"\))?')
 REQUEST_RE = re.compile(r'@RequestMapping(?:\("([^\"]*)"\))?')
 CLASS_RE = re.compile(r'class\s+(\w+)')
-METHOD_RE = re.compile(r'public\s+[^ (]+(?:<[^>]+>)?\s+(\w+)\s*\(')
+METHOD_RE = re.compile(r'public\s+.*?\s+(\w+)\s*\(')
 PARAM_RE = re.compile(r'@RequestParam(?:\([^)]*\))?\s+(?:final\s+)?[\w<>, ?\[\]]+\s+(\w+)')
 PATH_PARAM_RE = re.compile(r'\{([^}]+)\}')
 
@@ -42,6 +42,17 @@ BODY_EXAMPLES: dict[tuple[str, str], dict[str, Any]] = {
     ("/admin/mail/announcements", "createAnnouncement"): {
         "subject": "Manutenção programada",
         "body": "Comunicado de teste. Altere este texto antes de enviar.",
+    },
+    ("/admin/mail/event-rewards", "endpoint"): {
+        "playerUsername": "jogador-alvo",
+        "sourceType": "EVENT",
+        "sourceId": "evento-teste-001",
+        "subject": "Premiação de teste",
+        "body": "Você recebeu esta recompensa pelo evento.",
+        "bitsAmount": 5000,
+        "itemType": "TRAINING_STONE",
+        "itemQuantity": 2,
+        "validityDays": 7,
     },
 }
 
@@ -90,12 +101,13 @@ def parse_controller(path: Path) -> list[dict[str, Any]]:
         endpoint_path = normalize(class_prefix, method_path)
         method_name = "endpoint"
         signature = ""
-        for following in lines[index + 1 : index + 12]:
+        method_found = False
+        for following in lines[index + 1 : index + 16]:
             signature += " " + following.strip()
             method_match = METHOD_RE.search(signature)
-            if method_match:
+            if method_match and not method_found:
                 method_name = method_match.group(1)
-                break
+                method_found = True
 
         query_params = PARAM_RE.findall(signature)
         endpoints.append({
@@ -139,7 +151,8 @@ def curl_auth(endpoint: dict[str, Any], path: str) -> str:
 def body_for(endpoint: dict[str, Any]) -> dict[str, Any] | None:
     if not endpoint["has_body"]:
         return None
-    return BODY_EXAMPLES.get((endpoint["path"], endpoint["name"]), {})
+    return BODY_EXAMPLES.get((endpoint["path"], endpoint["name"])) \
+        or BODY_EXAMPLES.get((endpoint["path"], "endpoint"), {})
 
 
 def query_suffix(endpoint: dict[str, Any], variable_style: str) -> str:
