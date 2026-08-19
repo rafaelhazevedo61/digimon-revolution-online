@@ -1,6 +1,6 @@
 # Execução local com Docker
 
-Esta pasta contém a stack local do Digimon Revolution Online. O `docker-compose.yml` sobe o PostgreSQL e o backend Spring Boot na mesma rede Docker, com persistência do banco em volume nomeado.
+Esta pasta contém a stack local do Digimon Revolution Online. O `docker-compose.yml` sobe o PostgreSQL, o MongoDB e o backend Spring Boot na mesma rede Docker, com persistência dos dois bancos em volumes nomeados.
 
 ## Primeira execução
 
@@ -16,7 +16,13 @@ Suba a stack a partir da raiz do repositório. O parâmetro `--env-file` garante
 docker compose --env-file docker/.env -f docker/docker-compose.yml up --build -d
 ```
 
-O PostgreSQL ficará exposto em `localhost:5432` e a API em `http://localhost:8080`. O backend utiliza o nome do serviço `dro-postgres` para acessar o banco dentro da rede Docker.
+O PostgreSQL ficará exposto em `localhost:5432`, o MongoDB em `localhost:27017` e a API em `http://localhost:8080`. O backend utiliza os nomes dos serviços `dro-postgres` e `dro-mongodb` para acessar os bancos dentro da rede Docker.
+
+| Serviço | Endereço local | Finalidade |
+|---|---|---|
+| PostgreSQL | `localhost:5432` | Estado oficial do jogo |
+| MongoDB | `localhost:27017` | Auditoria e logs persistentes |
+| API | `http://localhost:8080` | Backend Spring Boot |
 
 ## Verificação
 
@@ -38,7 +44,13 @@ Consulte os logs do PostgreSQL:
 docker compose --env-file docker/.env -f docker/docker-compose.yml logs -f dro-postgres
 ```
 
-O serviço da API só é iniciado depois que o healthcheck do PostgreSQL fica saudável. O Spring Boot executa as migrations Flyway durante a inicialização.
+Consulte os logs do MongoDB:
+
+```bash
+docker compose --env-file docker/.env -f docker/docker-compose.yml logs -f dro-mongodb
+```
+
+O serviço da API só é iniciado depois que os healthchecks do PostgreSQL e do MongoDB ficam saudáveis. O Spring Boot executa as migrations Flyway durante a inicialização e conecta a auditoria ao banco `dro_audit`.
 
 ## Parar e reiniciar
 
@@ -71,4 +83,4 @@ Renderize a configuração final sem iniciar os serviços:
 docker compose --env-file docker/.env -f docker/docker-compose.yml config
 ```
 
-Se a API não conectar ao banco, confirme se o healthcheck está saudável e se as variáveis `POSTGRES_DB`, `POSTGRES_USER` e `POSTGRES_PASSWORD` são iguais para os dois serviços. Não utilize credenciais de desenvolvimento em produção.
+Se a API não conectar aos bancos, confirme se os healthchecks estão saudáveis e se as variáveis `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `MONGO_ROOT_USERNAME`, `MONGO_ROOT_PASSWORD` e `MONGO_DATABASE` são consistentes. Não utilize credenciais de desenvolvimento em produção.
