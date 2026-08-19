@@ -111,7 +111,7 @@ function mailRenderSummary(message) {
   const unreadLabel = mailFolder === "inbox" && !message.read
     ? `<span class="badge text-cyan-300">Nova</span>`
     : "";
-  const actionLabel = message.actionType === "CLAN_INVITE"
+  const actionLabel = message.actionType === "CLAN_INVITE" || message.actionType === "EVENT_REWARD_CLAIM"
     ? `<span class="badge text-amber-300">Ação pendente</span>`
     : "";
 
@@ -177,6 +177,11 @@ function mailShowMessageModal(message) {
         <button class="btn-secondary w-full" onclick="mailProcessAction('${message.id}', 'DECLINE')">Recusar</button>
         <button class="btn-primary w-full" onclick="mailProcessAction('${message.id}', 'ACCEPT')">Aceitar</button>
       </div>
+    </div>
+  ` : message.actionType === "EVENT_REWARD_CLAIM" ? `
+    <div class="card-sm mt-4 border-amber-800 bg-amber-950/20">
+      <p class="text-xs text-slate-400 mb-2">Esta premiação está disponível para resgate.</p>
+      <button class="btn-primary w-full" onclick="mailProcessAction('${message.id}', 'CLAIM')">Resgatar prêmio</button>
     </div>
   ` : "";
   root.innerHTML = `
@@ -287,8 +292,11 @@ async function mailProcessAction(messageId, action) {
     const result = await apiPost(`/mail/${messageId}/action`, { action });
     mailCloseModal();
     showToast(result.message || "Ação processada.", result.completed ? "success" : "error");
-    mailLoadFolder();
-    mailRefreshUnreadCount();
+    await mailLoadFolder();
+    await mailRefreshUnreadCount();
+    if (result.completed && action === "CLAIM") {
+      await mailOpen(messageId);
+    }
   } catch (err) {
     showToast(err.message, "error");
   }

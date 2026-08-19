@@ -1,15 +1,23 @@
 package com.dro.modules.mail.application;
 
+import com.dro.modules.clan.application.ClanBonusService;
 import com.dro.modules.clan.domain.Clan;
 import com.dro.modules.clan.domain.ClanInvitation;
 import com.dro.modules.clan.domain.ClanInvitationStatus;
+import com.dro.modules.clan.domain.ClanRole;
 import com.dro.modules.clan.infra.ClanInvitationRepository;
 import com.dro.modules.clan.infra.ClanRepository;
-import com.dro.modules.clan.application.ClanBonusService;
+import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.event.domain.EventReward;
+import com.dro.modules.event.application.EventRewardMessageText;
+import com.dro.modules.event.domain.EventRewardStatus;
+import com.dro.modules.event.infra.EventRewardRepository;
+import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.mail.api.dto.response.MailActionResponse;
 import com.dro.modules.mail.domain.MailMessage;
 import com.dro.modules.mail.infra.MailMessageRepository;
-import com.dro.modules.clan.domain.ClanRole;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
@@ -32,6 +40,9 @@ public class ProcessMailActionUseCase {
     private final ClanRepository clanRepository;
     private final PlayerRepository playerRepository;
     private final ClanBonusService clanBonusService;
+    private final EventRewardRepository eventRewardRepository;
+    private final DigimonRepository digimonRepository;
+    private final AddItemUseCase addItemUseCase;
 
     @Transactional
     public MailActionResponse execute(String token, UUID messageId, String requestedAction) {
@@ -41,12 +52,26 @@ public class ProcessMailActionUseCase {
         if (!message.belongsToRecipient(playerId)) {
             throw new BadRequestException("Somente o destinatário pode executar esta ação.");
         }
+
+        if ("EVENT_REWARD".equals(message.getSourceType())
+                && "EVENT_REWARD_CLAIM".equals(message.getActionType())
+                && message.getSourceId() != null) {
+            return claimEventReward(message, playerId, requestedAction);
+        }
+
         if (!"CLAN_INVITATION".equals(message.getSourceType())
                 || !"CLAN_INVITE".equals(message.getActionType())
                 || message.getSourceId() == null) {
             throw new BadRequestException("Esta mensagem não possui uma ação disponível.");
         }
+        return processClanInvitation(message, playerId, requestedAction);
+    }
 
+    private MailActionResponse processClanInvitation(
+            MailMessage message,
+            UUID playerId,
+            String requestedAction
+    ) {
         String action = requestedAction == null ? "" : requestedAction.trim().toUpperCase();
         if (!"ACCEPT".equals(action) && !"DECLINE".equals(action)) {
             throw new BadRequestException("Ação de convite inválida.");
@@ -65,19 +90,15 @@ public class ProcessMailActionUseCase {
                 invitation.setActedAt(now);
                 clanInvitationRepository.save(invitation);
             }
-            message.setActionType(null);
-            message.setReadAt(now);
-            mailMessageRepository.save(message);
+            completeMessage(message, now);
             return new MailActionResponse(false, "Este convite não está mais disponível.");
         }
 
         if ("DECLINE".equals(action)) {
             invitation.setStatus(ClanInvitationStatus.DECLINED);
             invitation.setActedAt(now);
-            message.setActionType(null);
-            message.setReadAt(now);
             clanInvitationRepository.save(invitation);
-            mailMessageRepository.save(message);
+            completeMessage(message, now);
             return new MailActionResponse(true, "Convite recusado.");
         }
 
@@ -89,10 +110,8 @@ public class ProcessMailActionUseCase {
         if (player.getClanId() != null) {
             invitation.setStatus(ClanInvitationStatus.CANCELLED);
             invitation.setActedAt(now);
-            message.setActionType(null);
-            message.setReadAt(now);
             clanInvitationRepository.save(invitation);
-            mailMessageRepository.save(message);
+            completeMessage(message, now);
             return new MailActionResponse(false, "Você já pertence a um clã.");
         }
 
@@ -108,10 +127,78 @@ public class ProcessMailActionUseCase {
 
         invitation.setStatus(ClanInvitationStatus.ACCEPTED);
         invitation.setActedAt(now);
+        clanInvitationRepository.save(invitation);
+        completeMessage(message, now);
+        return new MailActionResponse(true, "Você entrou no clã " + clan.getName() + ".");
+    }
+
+    private MailActionResponse claimEventReward(
+            MailMessage message,
+            UUID playerId,
+            String requestedAction
+    ) {
+        if (!"CLAIM".equals(requestedAction == null ? "" : requestedAction.trim().toUpperCase())) {
+            throw new BadRequestException("Ação de premiação inválida.");
+        }
+
+        UUID rewardId = message.getSourceId();
+        EventReward reward = eventRewardRepository.findByIdAndPlayerIdForUpdate(rewardId, playerId)
+                .orElseThrow(() -> new NotFoundException("Premiação não encontrada."));
+        LocalDateTime now = LocalDateTime.now();
+        if (!reward.isPendingAt(now)) {
+            if (reward.getStatus() == EventRewardStatus.PENDING) {
+                reward.setStatus(EventRewardStatus.EXPIRED);
+                eventRewardRepository.save(reward);
+            }
+            completeMessage(message, now);
+            return new MailActionResponse(false, "Esta premiação não está mais disponível.");
+        }
+
+        Player player = playerRepository.findByIdForUpdate(playerId)
+                .orElseThrow(() -> new NotFoundException("Jogador não encontrado."));
+        if (player.getActiveDigimonId() == null) {
+            throw new ConflictException("Selecione um Digimon ativo antes de resgatar a premiação.");
+        }
+
+        Digimon digimon = digimonRepository.findByIdForUpdate(player.getActiveDigimonId())
+                .orElseThrow(() -> new NotFoundException("Digimon ativo não encontrado."));
+        if (!playerId.equals(digimon.getPlayerId())) {
+            throw new ConflictException("O Digimon ativo não pertence ao jogador atual.");
+        }
+        if ((long) digimon.getBits() + reward.getBitsAmount() > Integer.MAX_VALUE) {
+            throw new ConflictException("O saldo de Bits do Digimon não comporta esta premiação.");
+        }
+
+        if (reward.getBitsAmount() > 0) {
+            digimon.setBits(digimon.getBits() + reward.getBitsAmount());
+        }
+        if (reward.getItemQuantity() > 0) {
+            addItemUseCase.execute(
+                    digimon.getId(),
+                    ItemType.valueOf(reward.getItemType()),
+                    reward.getItemQuantity()
+            );
+        }
+        digimonRepository.save(digimon);
+        message.setBody(EventRewardMessageText.claimedBody(
+                message.getBody(),
+                reward.getBitsAmount(),
+                reward.getItemType(),
+                reward.getItemQuantity(),
+                digimon.getName(),
+                now
+        ));
+
+        reward.setStatus(EventRewardStatus.CLAIMED);
+        reward.setClaimedAt(now);
+        eventRewardRepository.save(reward);
+        completeMessage(message, now);
+        return new MailActionResponse(true, "Premiação resgatada com sucesso.");
+    }
+
+    private void completeMessage(MailMessage message, LocalDateTime now) {
         message.setActionType(null);
         message.setReadAt(now);
-        clanInvitationRepository.save(invitation);
         mailMessageRepository.save(message);
-        return new MailActionResponse(true, "Você entrou no clã " + clan.getName() + ".");
     }
 }

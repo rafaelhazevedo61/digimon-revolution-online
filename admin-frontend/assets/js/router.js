@@ -11,7 +11,8 @@ const routes = {
     bosses: renderBossesAdminPage,
     "digimon-simulator": renderDigimonSimulatorPage,
     tools: renderToolsPage,
-    "mail-announcements": renderMailAnnouncementsPage
+    "mail-announcements": renderMailAnnouncementsPage,
+    "event-rewards": renderEventRewardsPage
   };
   
   function navigateTo(route) {
