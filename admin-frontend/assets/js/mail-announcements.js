@@ -102,6 +102,65 @@ function adminShowAnnouncementResult(message, success) {
     : "mb-4 rounded-lg px-3 py-2 text-sm border border-red-800 bg-red-950/40 text-red-300";
 }
 
+function adminConfirmAnnouncement(subject, body) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.id = "admin-announcement-confirm-modal";
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="admin-announcement-confirm-title">
+        <div class="flex items-start gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-xl text-amber-300" aria-hidden="true">!</div>
+          <div class="min-w-0">
+            <h3 id="admin-announcement-confirm-title" class="text-xl font-bold">Confirmar envio global</h3>
+            <p class="text-sm text-slate-400 mt-1">Este comunicado será entregue a todos os jogadores.</p>
+          </div>
+        </div>
+
+        <div class="card mt-5 bg-slate-950/70">
+          <p class="text-xs uppercase tracking-wider text-cyan-300">Prévia do comunicado</p>
+          <p id="admin-announcement-confirm-subject" class="font-bold mt-2 break-words"></p>
+          <p id="admin-announcement-confirm-body" class="text-sm text-slate-300 mt-2 max-h-32 overflow-y-auto whitespace-pre-wrap break-words"></p>
+        </div>
+
+        <div class="mt-4 rounded-lg border border-amber-900/70 bg-amber-950/20 p-3">
+          <p class="text-sm font-semibold text-amber-200">Atenção</p>
+          <p class="text-xs text-amber-100/70 mt-1">Depois da confirmação, o envio não poderá ser desfeito.</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mt-6">
+          <button id="admin-announcement-confirm-cancel" class="btn-secondary w-full" type="button">Cancelar</button>
+          <button id="admin-announcement-confirm-submit" class="btn-primary w-full" type="button">Confirmar envio</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    document.getElementById("admin-announcement-confirm-subject").textContent = subject;
+    document.getElementById("admin-announcement-confirm-body").textContent = body;
+
+    let settled = false;
+    const finish = (confirmed) => {
+      if (settled) return;
+      settled = true;
+      overlay.remove();
+      document.removeEventListener("keydown", handleKeydown);
+      resolve(confirmed);
+    };
+    const handleKeydown = (event) => {
+      if (event.key === "Escape") finish(false);
+    };
+
+    document.getElementById("admin-announcement-confirm-cancel").addEventListener("click", () => finish(false));
+    document.getElementById("admin-announcement-confirm-submit").addEventListener("click", () => finish(true));
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) finish(false);
+    });
+    document.addEventListener("keydown", handleKeydown);
+    document.getElementById("admin-announcement-confirm-cancel").focus();
+  });
+}
+
 async function adminSubmitAnnouncement(event) {
   event.preventDefault();
   if (adminAnnouncementSubmitting) return;
@@ -113,9 +172,7 @@ async function adminSubmitAnnouncement(event) {
     return;
   }
 
-  const confirmed = confirm(
-    "Este comunicado será enviado para TODOS os jogadores e não poderá ser desfeito.\n\nDeseja continuar?"
-  );
+  const confirmed = await adminConfirmAnnouncement(subject, body);
   if (!confirmed) return;
 
   const button = document.getElementById("admin-announcement-submit");
