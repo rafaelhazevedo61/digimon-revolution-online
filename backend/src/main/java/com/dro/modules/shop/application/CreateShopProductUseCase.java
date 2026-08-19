@@ -10,6 +10,7 @@ import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ public class CreateShopProductUseCase {
     private final ShopProductRepository shopProductRepository;
     private final EquipmentTemplateRepository equipmentTemplateRepository;
 
+    @CacheEvict(cacheNames = "shopCatalog", key = "'active'")
     @Transactional
     public AdminShopProductResponse execute(CreateShopProductRequest request) {
 

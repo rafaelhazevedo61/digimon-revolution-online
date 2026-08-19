@@ -6,6 +6,7 @@ import com.dro.modules.equipment.domain.EquipmentTemplateEntity;
 import com.dro.modules.equipment.infra.EquipmentTemplateRepository;
 import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ public class UpdateEquipmentTemplateUseCase {
 
     private final EquipmentTemplateRepository equipmentTemplateRepository;
 
+    @CacheEvict(cacheNames = "equipmentTemplates", allEntries = true)
     @Transactional
     public EquipmentTemplateResponse execute(String name, UpdateEquipmentTemplateRequest request) {
 
