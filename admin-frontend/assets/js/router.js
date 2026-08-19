@@ -10,7 +10,8 @@ const routes = {
     "equipment-simulator": renderEquipmentSimulatorPage,
     bosses: renderBossesAdminPage,
     "digimon-simulator": renderDigimonSimulatorPage,
-    tools: renderToolsPage
+    tools: renderToolsPage,
+    "mail-announcements": renderMailAnnouncementsPage
   };
   
   function navigateTo(route) {
