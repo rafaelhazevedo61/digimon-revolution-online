@@ -15,6 +15,7 @@ import com.dro.modules.shop.domain.ShopProductType;
 import com.dro.modules.shop.infra.ShopProductRepository;
 import com.dro.modules.tutorial.application.TutorialService;
 import com.dro.modules.tutorial.domain.TutorialStep;
+import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnprocessableException;
@@ -23,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -43,6 +45,7 @@ public class BuyShopProductUseCase {
     private final GrantEquipmentUseCase grantEquipmentUseCase;
     private final ShopProductRepository shopProductRepository;
     private final TutorialService tutorialService;
+    private final TransactionAuditPublisher transactionAuditPublisher;
 
     /**
      * Compra a quantidade solicitada de um produto ativo.
@@ -112,6 +115,23 @@ public class BuyShopProductUseCase {
         digimonRepository.save(digimon);
 
         tutorialService.completeStep(playerId, TutorialStep.BUY_SHOP);
+        transactionAuditPublisher.success(
+                "shop-purchase:" + playerId + ":" + product.getCode() + ":" + UUID.randomUUID(),
+                "SHOP_PURCHASE_COMPLETED",
+                "ShopProduct",
+                product.getCode(),
+                Map.of(
+                        "module", "shop",
+                        "operation", "buyProduct",
+                        "actorId", playerId.toString(),
+                        "productType", product.getProductType().name(),
+                        "quantity", quantity,
+                        "totalPrice", totalPrice,
+                        "digimonId", digimon.getId().toString(),
+                        "equipmentId", equipmentId == null ? "" : equipmentId.toString(),
+                        "summary", "Shop product purchased"
+                )
+        );
 
         return new BuyShopProductResponse(
                 product.getCode(),

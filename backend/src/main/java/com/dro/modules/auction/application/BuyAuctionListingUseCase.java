@@ -18,6 +18,7 @@ import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
+import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -44,6 +46,7 @@ public class BuyAuctionListingUseCase {
     private final AuctionListingRepository auctionListingRepository;
     private final AuctionTransactionRepository auctionTransactionRepository;
     private final AuctionMailNotificationService auctionMailNotificationService;
+    private final TransactionAuditPublisher transactionAuditPublisher;
 
     /**
      * Compra uma quantidade de unidades de um anúncio ativo.
@@ -145,6 +148,23 @@ public class BuyAuctionListingUseCase {
         auctionListingRepository.save(listing);
         auctionTransactionRepository.save(transaction);
         auctionMailNotificationService.notifyPurchase(transaction);
+        transactionAuditPublisher.success(
+                "auction-purchase:" + transaction.getId(),
+                "AUCTION_PURCHASE_COMPLETED",
+                "AuctionListing",
+                String.valueOf(listing.getId()),
+                Map.of(
+                        "module", "auction",
+                        "operation", "buyListing",
+                        "actorId", buyerPlayerId.toString(),
+                        "sellerPlayerId", listing.getSellerPlayerId().toString(),
+                        "quantity", request.quantity(),
+                        "grossAmount", grossAmount,
+                        "fee", sellerFee,
+                        "itemCode", itemDefinition.getCode(),
+                        "summary", "Auction listing purchased"
+                )
+        );
 
         return new AuctionPurchaseResponse(
                 listing.getId(),

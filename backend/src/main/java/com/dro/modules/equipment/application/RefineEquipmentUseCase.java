@@ -11,6 +11,7 @@ import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ForbiddenException;
 import com.dro.shared.exception.NotFoundException;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -36,6 +38,7 @@ public class RefineEquipmentUseCase {
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
     private final InventoryRepository inventoryRepository;
+    private final TransactionAuditPublisher transactionAuditPublisher;
 
     @Transactional
     public RefineEquipmentResponse execute(String token, UUID equipmentId) {
@@ -95,6 +98,26 @@ public class RefineEquipmentUseCase {
         digimonRepository.save(digimon);
         inventoryRepository.save(stoneItem);
         equipmentRepository.save(equipment);
+        transactionAuditPublisher.success(
+                "equipment-refine:" + UUID.randomUUID(),
+                "EQUIPMENT_REFINED",
+                "Equipment",
+                equipmentId.toString(),
+                Map.ofEntries(
+                        Map.entry("module", "equipment"),
+                        Map.entry("operation", "refine"),
+                        Map.entry("actorId", playerId.toString()),
+                        Map.entry("digimonId", digimon.getId().toString()),
+                        Map.entry("equipmentId", equipmentId.toString()),
+                        Map.entry("previousLevel", currentLevel),
+                        Map.entry("newLevel", equipment.getRefinementLevel()),
+                        Map.entry("success", success),
+                        Map.entry("successRate", successRate),
+                        Map.entry("costBits", costBits),
+                        Map.entry("refinementStones", STONES_PER_REFINEMENT),
+                        Map.entry("summary", "Equipment refinement processed")
+                )
+        );
 
         String message = success
                 ? "Refinamento bem-sucedido! +" + equipment.getRefinementLevel()
