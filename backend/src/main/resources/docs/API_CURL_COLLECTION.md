@@ -1,8 +1,14 @@
 # Collection oficial de curls
 
-O arquivo `backend/src/main/resources/api-curl-collection.sh` é a collection oficial de exemplos curl do Digimon Revolution Online. Ele é gerado a partir dos controllers Java do backend e deve ser atualizado sempre que uma rota for criada, removida ou alterada.
+Os arquivos `backend/src/main/resources/api-curl-collection.sh` e `backend/src/main/resources/collection/DRO - MODULES.postman_collection.json` são as collections oficiais de API do Digimon Revolution Online. Ambos são gerados a partir dos controllers Java do backend e devem ser atualizados sempre que uma rota for criada, removida ou alterada.
 
 > **Importante:** por segurança, todos os comandos curl ficam comentados no arquivo. Descomente e execute apenas a chamada que deseja testar. Não execute a collection inteira, pois ela contém operações de criação, compra, exclusão, alteração e administração.
+
+## Importar no Postman
+
+No Postman, use **Import**, selecione `backend/src/main/resources/collection/DRO - MODULES.postman_collection.json` e importe a collection. Na aba **Variables**, preencha `baseUrl`, `playerToken` e `adminToken`. Os demais valores de rota e query podem ser preenchidos conforme o cenário de teste.
+
+A collection Postman possui 138 requests organizados por módulo, incluindo as rotas de Correio, Casa de Leilões, clãs, convites, ações de mensagens e comunicados administrativos. Os exemplos de corpo JSON dos principais fluxos já estão preenchidos, mas devem ser revisados antes do envio.
 
 ## Como configurar
 
@@ -35,7 +41,7 @@ python3 scripts/generate_api_curl_collection.py
 bash -n backend/src/main/resources/api-curl-collection.sh
 ```
 
-O gerador percorre os controllers em `backend/src/main/java`, cria um curl para cada rota encontrada e preserva a organização por grupo de endpoint. Os corpos JSON aparecem como `{}` porque os DTOs e regras de cada operação podem exigir valores específicos; substitua esse placeholder pelos campos do request correspondente antes de executar.
+O gerador percorre os controllers em `backend/src/main/java`, cria um curl e um request Postman para cada rota encontrada e preserva a organização por grupo de endpoint. Os corpos JSON dos principais endpoints possuem exemplos; os demais podem aparecer como `{}` e devem ser preenchidos conforme o DTO do request antes de executar.
 
 ## Grupos cobertos
 
