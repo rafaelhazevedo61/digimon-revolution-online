@@ -49,6 +49,14 @@ public class CreateEventRewardUseCase {
         RewardValues values = validateReward(request);
         List<Player> recipients = resolveRecipients(request);
         LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiresAt = now.plusDays(request.validityDays());
+        String messageBody = EventRewardMessageText.pendingBody(
+                request.body(),
+                values.bitsAmount(),
+                values.itemType(),
+                values.itemQuantity(),
+                expiresAt
+        );
         List<UUID> rewardIds = new ArrayList<>();
         int createdCount = 0;
 
@@ -60,13 +68,13 @@ public class CreateEventRewardUseCase {
                     request.sourceType().trim(),
                     request.sourceId().trim(),
                     request.subject().trim(),
-                    request.body().trim(),
+                    messageBody,
                     values.bitsAmount(),
                     values.itemType(),
                     values.itemQuantity(),
                     EventRewardStatus.PENDING.name(),
                     now,
-                    now.plusDays(request.validityDays())
+                    expiresAt
             );
             if (inserted == 0) {
                 eventRewardRepository.findBySourceTypeAndSourceIdAndPlayerId(
@@ -84,7 +92,7 @@ public class CreateEventRewardUseCase {
                     rewardId,
                     "EVENT_REWARD_CLAIM",
                     request.subject().trim(),
-                    request.body().trim(),
+                    messageBody,
                     "event:reward:" + rewardId
             );
         }

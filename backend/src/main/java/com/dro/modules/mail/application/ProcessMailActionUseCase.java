@@ -10,6 +10,7 @@ import com.dro.modules.clan.infra.ClanRepository;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.event.domain.EventReward;
+import com.dro.modules.event.application.EventRewardMessageText;
 import com.dro.modules.event.domain.EventRewardStatus;
 import com.dro.modules.event.infra.EventRewardRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
@@ -179,6 +180,14 @@ public class ProcessMailActionUseCase {
             );
         }
         digimonRepository.save(digimon);
+        message.setBody(EventRewardMessageText.claimedBody(
+                message.getBody(),
+                reward.getBitsAmount(),
+                reward.getItemType(),
+                reward.getItemQuantity(),
+                digimon.getName(),
+                now
+        ));
 
         reward.setStatus(EventRewardStatus.CLAIMED);
         reward.setClaimedAt(now);

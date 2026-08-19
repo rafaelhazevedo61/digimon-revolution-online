@@ -292,8 +292,11 @@ async function mailProcessAction(messageId, action) {
     const result = await apiPost(`/mail/${messageId}/action`, { action });
     mailCloseModal();
     showToast(result.message || "Ação processada.", result.completed ? "success" : "error");
-    mailLoadFolder();
-    mailRefreshUnreadCount();
+    await mailLoadFolder();
+    await mailRefreshUnreadCount();
+    if (result.completed && action === "CLAIM") {
+      await mailOpen(messageId);
+    }
   } catch (err) {
     showToast(err.message, "error");
   }
