@@ -7,6 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Casa de Leilões.
+ */
 public interface AuctionTransactionRepository extends JpaRepository<AuctionTransaction, UUID> {
 
     Page<AuctionTransaction> findByBuyerPlayerIdOrSellerPlayerIdOrderByCreatedAtDesc(

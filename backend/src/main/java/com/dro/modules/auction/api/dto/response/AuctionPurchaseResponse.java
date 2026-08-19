@@ -4,6 +4,9 @@ import com.dro.modules.auction.domain.AuctionListingStatus;
 
 import java.util.UUID;
 
+/**
+ * Contrato de dados do módulo de Casa de Leilões.
+ */
 public record AuctionPurchaseResponse(
         UUID listingId,
         String itemCode,

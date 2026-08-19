@@ -6,6 +6,9 @@ import org.springframework.data.domain.Persistable;
 
 import java.time.LocalDateTime;
 
+/**
+ * Componente da camada de modelo de domínio do módulo de Equipamentos.
+ */
 @Entity
 @Table(name = "equipment_templates")
 @Getter

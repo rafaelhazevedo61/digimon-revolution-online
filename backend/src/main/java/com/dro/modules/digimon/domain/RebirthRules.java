@@ -2,6 +2,9 @@ package com.dro.modules.digimon.domain;
 
 import com.dro.modules.digimon.domain.enums.Stage;
 
+/**
+ * Componente da camada de conjunto de regras de domínio do módulo de Digimon.
+ */
 public class RebirthRules {
 
     /*

@@ -3,6 +3,9 @@ package com.dro.modules.equipment.api.dto.response;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Contrato de dados do módulo de Equipamentos.
+ */
 public record DigimonEquipmentResponse(
         UUID digimonId,
         List<EquipmentResponse> equippedItems,

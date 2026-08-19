@@ -3,6 +3,9 @@ package com.dro.modules.digimon.domain;
 import java.util.List;
 import java.util.stream.IntStream;
 
+/**
+ * Componente da camada de conjunto de regras de domínio do módulo de Digimon.
+ */
 public class DigimonLevelRules {
 
     public static final int MAX_LEVEL = 100;

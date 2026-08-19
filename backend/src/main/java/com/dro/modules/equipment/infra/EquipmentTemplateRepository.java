@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Equipamentos.
+ */
 @Repository
 public interface EquipmentTemplateRepository extends JpaRepository<EquipmentTemplateEntity, Long> {
 

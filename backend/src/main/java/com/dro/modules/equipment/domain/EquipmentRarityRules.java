@@ -3,6 +3,9 @@ package com.dro.modules.equipment.domain;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Componente da camada de conjunto de regras de domínio do módulo de Equipamentos.
+ */
 public class EquipmentRarityRules {
 
     public record RarityProfile(int common, int rare, int epic, int legendary) {

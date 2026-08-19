@@ -7,6 +7,9 @@ import com.dro.modules.equipment.domain.EquipmentSlot;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Contrato de dados do módulo de Equipamentos.
+ */
 public record EquipmentResponse(
         UUID id,
         String name,

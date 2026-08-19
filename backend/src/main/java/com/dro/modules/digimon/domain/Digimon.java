@@ -10,6 +10,14 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Parceiro Digimon persistente e principal unidade de progressão do jogador.
+ *
+ * <p>O Digimon concentra estágio, nível, experiência, IVs, raridade,
+ * personalidade, trait, energia, Bits, Rebirth e referências aos equipamentos
+ * por slot. Inventário e operações de combate devem respeitar o vínculo entre
+ * este registro e seu {@code playerId}.</p>
+ */
 @Entity
 @Table(name = "digimons")
 @Getter
@@ -125,15 +133,25 @@ public class Digimon {
     @Column(name = "digimon_info_id")
     private Long digimonInfoId;
 
+    /** Vincula uma arma ao slot de arma do Digimon. */
     public void equipWeapon(UUID equipmentId) { this.weaponId = equipmentId; }
+
+    /** Remove a arma atualmente vinculada. */
     public void unequipWeapon() { this.weaponId = null; }
 
+    /** Vincula uma armadura ao slot de armadura do Digimon. */
     public void equipArmor(UUID equipmentId) { this.armorId = equipmentId; }
+
+    /** Remove a armadura atualmente vinculada. */
     public void unequipArmor() { this.armorId = null; }
 
+    /** Vincula um acessório ao slot de acessório do Digimon. */
     public void equipAccessory(UUID equipmentId) { this.accessoryId = equipmentId; }
+
+    /** Remove o acessório atualmente vinculado. */
     public void unequipAccessory() { this.accessoryId = null; }
 
+    /** Retorna o equipamento vinculado ao slot informado. */
     public UUID getEquipmentIdBySlot(com.dro.modules.equipment.domain.EquipmentSlot slot) {
         return switch (slot) {
             case WEAPON -> weaponId;
@@ -142,6 +160,7 @@ public class Digimon {
         };
     }
 
+    /** Define ou substitui o equipamento vinculado ao slot informado. */
     public void setEquipmentBySlot(com.dro.modules.equipment.domain.EquipmentSlot slot, UUID equipmentId) {
         switch (slot) {
             case WEAPON -> this.weaponId = equipmentId;
@@ -150,10 +169,19 @@ public class Digimon {
         }
     }
 
+    /** Limpa a referência do equipamento no slot informado. */
     public void clearSlot(com.dro.modules.equipment.domain.EquipmentSlot slot) {
         setEquipmentBySlot(slot, null);
     }
 
+    /**
+     * Adiciona experiência após aplicar os multiplicadores de raridade, personalidade e trait.
+     *
+     * <p>O método pode realizar vários level ups e nunca ultrapassa o nível máximo
+     * definido por {@link DigimonLevelRules}.</p>
+     *
+     * @param baseXp experiência base recebida pela atividade
+     */
     public void gainExperience(int baseXp) {
 
         double rarityMultiplier = RarityRules.getXpMultiplier(this.rarity);
@@ -203,10 +231,16 @@ public class Digimon {
         this.defense += 1;
     }
 
+    /** Regenera energia usando o limite máximo atual do Digimon. */
     public void regenerateEnergy() {
         regenerateEnergy(0);
     }
 
+    /**
+     * Regenera uma unidade de energia a cada cinco minutos completos.
+     *
+     * @param maxEnergyBonus bônus temporário ou de trait aplicado ao limite máximo
+     */
     public void regenerateEnergy(int maxEnergyBonus) {
 
         int effectiveMax = maxEnergy + maxEnergyBonus;
@@ -229,6 +263,12 @@ public class Digimon {
         }
     }
 
+    /**
+     * Consome energia sem permitir saldo negativo.
+     *
+     * @param amount quantidade positiva a consumir
+     * @throws UnprocessableException quando a energia disponível é insuficiente
+     */
     public void consumeEnergy(int amount) {
 
         if (energy < amount) {

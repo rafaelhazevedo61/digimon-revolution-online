@@ -12,6 +12,9 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Componente da camada de conversor entre domínio e contratos da API do módulo de Casa de Leilões.
+ */
 public final class AuctionListingMapper {
 
     private AuctionListingMapper() {

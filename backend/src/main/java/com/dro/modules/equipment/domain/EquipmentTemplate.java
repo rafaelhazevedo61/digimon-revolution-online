@@ -1,6 +1,9 @@
 package com.dro.modules.equipment.domain;
 
 
+/**
+ * Componente da camada de modelo de domínio do módulo de Equipamentos.
+ */
 public class EquipmentTemplate {
 
     private final String name;

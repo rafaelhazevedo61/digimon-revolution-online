@@ -27,6 +27,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Executa compras imediatas e parciais na Casa de Leilões.
+ *
+ * <p>A operação bloqueia o anúncio, os Digimons ativos em ordem estável e o
+ * estoque do item antes de transferir Bits e unidades. Tudo é persistido na
+ * mesma transação, incluindo a transação histórica e as notificações do Correio.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class BuyAuctionListingUseCase {
@@ -38,6 +45,18 @@ public class BuyAuctionListingUseCase {
     private final AuctionTransactionRepository auctionTransactionRepository;
     private final AuctionMailNotificationService auctionMailNotificationService;
 
+    /**
+     * Compra uma quantidade de unidades de um anúncio ativo.
+     *
+     * @param token token JWT do comprador
+     * @param listingId anúncio que será comprado
+     * @param request quantidade desejada
+     * @return resumo da compra, comissão, saldo e estoque restante
+     * @throws BadRequestException quando a quantidade é inválida ou o comprador
+     *                             tenta comprar o próprio anúncio
+     * @throws ConflictException quando o anúncio, estoque ou ownership mudou
+     * @throws UnprocessableException quando faltam Bits ou espaço na pilha
+     */
     @Transactional
     public AuctionPurchaseResponse execute(
             String token,
@@ -143,6 +162,9 @@ public class BuyAuctionListingUseCase {
         );
     }
 
+    /**
+     * Bloqueia os dois Digimons em ordem de UUID para reduzir deadlocks concorrentes.
+     */
     private LockedDigimons lockDigimonsInStableOrder(
             Player buyer,
             Player seller,

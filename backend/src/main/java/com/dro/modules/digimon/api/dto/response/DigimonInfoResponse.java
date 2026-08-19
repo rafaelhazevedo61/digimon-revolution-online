@@ -2,6 +2,9 @@ package com.dro.modules.digimon.api.dto.response;
 
 import com.dro.modules.digimon.domain.DigimonInfos;
 
+/**
+ * Contrato de dados do módulo de Digimon.
+ */
 public record DigimonInfoResponse(
         Long id,
         String name,

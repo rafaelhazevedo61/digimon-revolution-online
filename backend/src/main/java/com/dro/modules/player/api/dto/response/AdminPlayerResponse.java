@@ -5,6 +5,9 @@ import com.dro.modules.player.domain.Player;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Contrato de dados do módulo de Jogadores.
+ */
 public record AdminPlayerResponse(
         UUID id,
         String username,

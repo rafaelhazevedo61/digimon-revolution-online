@@ -6,6 +6,9 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * Contrato de dados do módulo de Equipamentos.
+ */
 public record CreateEquipmentTemplateRequest(
         @NotBlank String name,
         @NotBlank String setCode,

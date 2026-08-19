@@ -2,6 +2,9 @@ package com.dro.modules.digimon.domain;
 
 import com.dro.modules.digimon.domain.enums.Rarity;
 
+/**
+ * Componente da camada de conjunto de regras de domínio do módulo de Digimon.
+ */
 public class RarityRules {
 
     public static double getStatMultiplier(Rarity rarity) {

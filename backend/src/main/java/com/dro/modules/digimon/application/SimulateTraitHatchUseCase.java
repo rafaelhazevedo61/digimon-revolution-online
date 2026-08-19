@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Digimon.
+ */
 @Service
 public class SimulateTraitHatchUseCase {
 

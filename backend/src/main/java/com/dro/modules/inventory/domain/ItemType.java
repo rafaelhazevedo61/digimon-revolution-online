@@ -1,5 +1,8 @@
 package com.dro.modules.inventory.domain;
 
+/**
+ * Enumera estados, tipos ou classificações usados pelo módulo de Inventário.
+ */
 public enum ItemType {
 
     // Pocoes

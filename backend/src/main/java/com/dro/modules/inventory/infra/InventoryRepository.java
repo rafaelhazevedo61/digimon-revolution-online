@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Inventário.
+ */
 public interface InventoryRepository extends JpaRepository<InventoryItem, UUID> {
 
     List<InventoryItem> findByDigimonId(UUID digimonId);

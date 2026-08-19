@@ -4,6 +4,9 @@ import com.dro.modules.digimon.domain.enums.Personality;
 
 import java.util.Random;
 
+/**
+ * Componente da camada de modelo de domínio do módulo de Digimon.
+ */
 public class PersonalityRoller {
 
     private static final Random random = new Random();

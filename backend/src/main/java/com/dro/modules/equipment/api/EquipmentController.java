@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Componente da camada de controller da API do módulo de Equipamentos.
+ */
 @RestController
 @RequestMapping("/equipment")
 @RequiredArgsConstructor

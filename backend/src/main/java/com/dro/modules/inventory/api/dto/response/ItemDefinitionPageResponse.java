@@ -4,6 +4,9 @@ import org.springframework.data.domain.Page;
 
 import java.util.List;
 
+/**
+ * Contrato de dados do módulo de Inventário.
+ */
 public record ItemDefinitionPageResponse(
         int page,
         int size,

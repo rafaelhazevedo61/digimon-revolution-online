@@ -4,6 +4,9 @@ import org.springframework.data.domain.Page;
 
 import java.util.List;
 
+/**
+ * Contrato de dados do módulo de Jogadores.
+ */
 public record AdminPlayerPageResponse(
         int page,
         int size,

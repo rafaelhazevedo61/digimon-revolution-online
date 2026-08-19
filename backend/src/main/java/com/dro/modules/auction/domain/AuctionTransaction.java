@@ -7,6 +7,9 @@ import lombok.*;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Componente da camada de modelo de domínio do módulo de Casa de Leilões.
+ */
 @Entity
 @Table(name = "auction_transactions")
 @Getter

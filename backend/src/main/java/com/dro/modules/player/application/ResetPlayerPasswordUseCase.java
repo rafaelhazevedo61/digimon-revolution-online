@@ -15,6 +15,9 @@ import java.security.SecureRandom;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Jogadores.
+ */
 @Service
 @RequiredArgsConstructor
 public class ResetPlayerPasswordUseCase {

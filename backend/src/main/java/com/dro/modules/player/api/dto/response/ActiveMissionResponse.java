@@ -5,6 +5,9 @@ import com.dro.modules.mission.domain.MissionStatus;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Contrato de dados do módulo de Jogadores.
+ */
 public record ActiveMissionResponse(
         UUID instanceId,
         String missionId,

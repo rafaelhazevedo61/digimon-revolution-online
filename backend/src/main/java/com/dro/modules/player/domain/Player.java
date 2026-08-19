@@ -8,6 +8,13 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Conta persistente do jogador e raiz de acesso aos recursos do jogo.
+ *
+ * <p>O jogador mantém o Digimon ativo, o vínculo opcional com clã, limites de
+ * armazenamento e o tipo de usuário usado na autorização administrativa. Bits,
+ * inventário e equipamentos ficam vinculados aos Digimons associados.</p>
+ */
 @Entity
 @Table(name = "players")
 @Getter
@@ -72,10 +79,12 @@ public class Player {
     @Column(name = "arena_daily_reset_at")
     private LocalDateTime arenaDailyResetAt;
 
+    /** Informa se o jogador já concluiu a seleção do Digitama inicial. */
     public boolean hasSelectedStarter() {
         return starterSelected;
     }
 
+    /** Marca a seleção inicial como concluída. */
     public void markStarterAsSelected() {
         this.starterSelected = true;
     }

@@ -13,6 +13,9 @@ import org.springframework.data.jpa.repository.Lock;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Digimon.
+ */
 public interface DigimonRepository extends JpaRepository<Digimon, UUID> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

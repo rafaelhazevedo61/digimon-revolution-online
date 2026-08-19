@@ -3,6 +3,9 @@ package com.dro.modules.digimon.infra.spec;
 import com.dro.modules.digimon.domain.DigimonInfos;
 import org.springframework.data.jpa.domain.Specification;
 
+/**
+ * Componente da camada de modelo de domínio do módulo de Digimon.
+ */
 public class DigimonInfosSpecifications {
 
     private DigimonInfosSpecifications() {

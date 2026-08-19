@@ -8,6 +8,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Componente da camada de controller da API do módulo de Digimon.
+ */
 @RestController
 @RequestMapping("/digimon-infos")
 @RequiredArgsConstructor

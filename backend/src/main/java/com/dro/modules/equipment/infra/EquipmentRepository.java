@@ -6,6 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Equipamentos.
+ */
 public interface EquipmentRepository extends JpaRepository<Equipment, UUID> {
 
     List<Equipment> findByDigimonId(UUID digimonId);
