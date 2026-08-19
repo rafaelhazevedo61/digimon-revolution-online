@@ -1,12 +1,14 @@
 package com.dro.modules.clan.api;
 
 import com.dro.modules.clan.api.dto.request.ChangeRoleRequest;
+import com.dro.modules.clan.api.dto.request.ClanInviteRequest;
 import com.dro.modules.clan.api.dto.request.ClanCreateRequest;
 import com.dro.modules.clan.api.dto.request.ClanUpdateRequest;
 import com.dro.modules.clan.api.dto.response.ClanRankingEntryResponse;
 import com.dro.modules.clan.api.dto.response.ClanResponse;
 import com.dro.modules.clan.api.dto.response.ClanSummaryResponse;
 import com.dro.modules.clan.api.dto.response.ClanUpgradeResponse;
+import com.dro.modules.mail.api.dto.response.MailMessageResponse;
 import com.dro.modules.clan.application.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ public class ClanController {
     private final GetClanUseCase getClanUseCase;
     private final GetMyClanUseCase getMyClanUseCase;
     private final JoinClanUseCase joinClanUseCase;
+    private final InviteClanPlayerUseCase inviteClanPlayerUseCase;
     private final LeaveClanUseCase leaveClanUseCase;
     private final UpdateClanUseCase updateClanUseCase;
     private final KickMemberUseCase kickMemberUseCase;
@@ -87,6 +90,15 @@ public class ClanController {
     ) {
         dissolveClanUseCase.execute(authorization, id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/invite")
+    public ResponseEntity<MailMessageResponse> invite(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable UUID id,
+            @RequestBody @Valid ClanInviteRequest request
+    ) {
+        return ResponseEntity.ok(inviteClanPlayerUseCase.execute(authorization, id, request));
     }
 
     @PostMapping("/{id}/join")

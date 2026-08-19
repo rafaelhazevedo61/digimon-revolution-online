@@ -8,6 +8,7 @@ import java.util.UUID;
 public record MailMessageResponse(
         UUID id,
         MailMessageType messageType,
+        String actionType,
         String senderUsername,
         String recipientUsername,
         String subject,

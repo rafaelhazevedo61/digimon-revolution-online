@@ -1,6 +1,8 @@
 package com.dro.modules.mail.api;
 
+import com.dro.modules.mail.api.dto.request.MailActionRequest;
 import com.dro.modules.mail.api.dto.request.SendMailMessageRequest;
+import com.dro.modules.mail.api.dto.response.MailActionResponse;
 import com.dro.modules.mail.api.dto.response.MailMessagePageResponse;
 import com.dro.modules.mail.api.dto.response.MailMessageResponse;
 import com.dro.modules.mail.application.DeleteMailMessageUseCase;
@@ -8,6 +10,7 @@ import com.dro.modules.mail.application.GetMailMessageUseCase;
 import com.dro.modules.mail.application.GetUnreadMailCountUseCase;
 import com.dro.modules.mail.application.ListMailMessagesUseCase;
 import com.dro.modules.mail.application.MarkMailReadUseCase;
+import com.dro.modules.mail.application.ProcessMailActionUseCase;
 import com.dro.modules.mail.application.SendMailMessageUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,7 @@ public class MailController {
     private final MarkMailReadUseCase markMailReadUseCase;
     private final DeleteMailMessageUseCase deleteMailMessageUseCase;
     private final GetUnreadMailCountUseCase getUnreadMailCountUseCase;
+    private final ProcessMailActionUseCase processMailActionUseCase;
 
     @GetMapping("/inbox")
     public ResponseEntity<MailMessagePageResponse> inbox(
@@ -76,6 +80,16 @@ public class MailController {
             @PathVariable UUID messageId
     ) {
         return ResponseEntity.ok(markMailReadUseCase.execute(authorization, messageId));
+    }
+
+    @PostMapping("/{messageId}/action")
+    public ResponseEntity<MailActionResponse> action(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable UUID messageId,
+            @RequestBody @Valid MailActionRequest request
+    ) {
+        return ResponseEntity.ok(processMailActionUseCase.execute(
+                authorization, messageId, request.action()));
     }
 
     @DeleteMapping("/{messageId}")

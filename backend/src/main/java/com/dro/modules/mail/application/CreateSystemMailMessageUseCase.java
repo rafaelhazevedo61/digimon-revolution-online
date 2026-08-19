@@ -89,8 +89,7 @@ public class CreateSystemMailMessageUseCase {
         if (recipientId == null) {
             throw new IllegalArgumentException("System mail recipient is required");
         }
-        if (actionType == null || actionType.isBlank()
-                || actionType.length() > MailRules.ACTION_TYPE_MAX_LENGTH) {
+        if (actionType != null && actionType.length() > MailRules.ACTION_TYPE_MAX_LENGTH) {
             throw new IllegalArgumentException("Invalid system mail action type");
         }
         if (subject == null || subject.trim().isEmpty()

@@ -12,6 +12,7 @@ public final class MailMessageMapper {
         return new MailMessageSummaryResponse(
                 message.getId(),
                 message.getMessageType(),
+                message.getActionType(),
                 message.getSender() == null ? null : message.getSender().getUsername(),
                 message.getRecipient().getUsername(),
                 message.getSubject(),
@@ -25,6 +26,7 @@ public final class MailMessageMapper {
         return new MailMessageResponse(
                 message.getId(),
                 message.getMessageType(),
+                message.getActionType(),
                 message.getSender() == null ? null : message.getSender().getUsername(),
                 message.getRecipient().getUsername(),
                 message.getSubject(),

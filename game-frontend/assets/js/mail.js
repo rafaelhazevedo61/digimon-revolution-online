@@ -111,6 +111,9 @@ function mailRenderSummary(message) {
   const unreadLabel = mailFolder === "inbox" && !message.read
     ? `<span class="badge text-cyan-300">Nova</span>`
     : "";
+  const actionLabel = message.actionType === "CLAN_INVITE"
+    ? `<span class="badge text-amber-300">Ação pendente</span>`
+    : "";
 
   return `
     <button class="card-sm w-full text-left mb-2 ${unreadClass}" onclick="mailOpen('${message.id}')">
@@ -119,7 +122,7 @@ function mailRenderSummary(message) {
         <div class="min-w-0 flex-1">
           <div class="flex items-start justify-between gap-2">
             <p class="font-bold text-sm truncate">${escapeHtml(message.subject)}</p>
-            ${unreadLabel}
+            <div class="flex gap-1 flex-wrap justify-end">${unreadLabel}${actionLabel}</div>
           </div>
           <p class="text-xs text-slate-400 mt-1">${mailFolder === "inbox" ? "De" : "Para"}: ${escapeHtml(otherPlayer || "Sistema")}</p>
           <p class="text-xs text-slate-500 mt-1">${mailFormatDate(message.createdAt)}</p>
@@ -167,6 +170,15 @@ async function mailOpen(messageId) {
 function mailShowMessageModal(message) {
   const root = document.getElementById("mail-modal-root");
   if (!root) return;
+  const actionMarkup = message.actionType === "CLAN_INVITE" ? `
+    <div class="card-sm mt-4 border-cyan-800 bg-cyan-950/20">
+      <p class="text-xs text-slate-400 mb-2">Este convite ainda precisa de uma decisão.</p>
+      <div class="grid grid-cols-2 gap-2">
+        <button class="btn-secondary w-full" onclick="mailProcessAction('${message.id}', 'DECLINE')">Recusar</button>
+        <button class="btn-primary w-full" onclick="mailProcessAction('${message.id}', 'ACCEPT')">Aceitar</button>
+      </div>
+    </div>
+  ` : "";
   root.innerHTML = `
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70" id="mail-message-modal">
       <div class="card w-full max-w-lg max-h-[85vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="mail-message-title">
@@ -184,6 +196,7 @@ function mailShowMessageModal(message) {
         </div>
         <div class="rounded-lg bg-slate-900/70 border border-slate-700 p-4 text-sm text-slate-200 whitespace-pre-wrap break-words">${escapeHtml(message.body)}</div>
         <p class="text-xs text-slate-500 mt-3">O MVP ainda não possui respostas diretas. Para escrever novamente, use “Nova mensagem”.</p>
+        ${actionMarkup}
         <div class="grid grid-cols-2 gap-2 mt-4">
           <button class="btn-sm w-full" onclick="mailCloseModal()">Fechar</button>
           <button class="btn-sm w-full text-red-300" onclick="mailAskDelete('${message.id}')">Excluir</button>
@@ -266,6 +279,18 @@ async function mailSubmitCompose(event) {
       button.disabled = false;
       button.textContent = "Enviar";
     }
+  }
+}
+
+async function mailProcessAction(messageId, action) {
+  try {
+    const result = await apiPost(`/mail/${messageId}/action`, { action });
+    mailCloseModal();
+    showToast(result.message || "Ação processada.", result.completed ? "success" : "error");
+    mailLoadFolder();
+    mailRefreshUnreadCount();
+  } catch (err) {
+    showToast(err.message, "error");
   }
 }
 

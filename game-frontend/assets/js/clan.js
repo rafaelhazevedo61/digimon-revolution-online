@@ -312,7 +312,17 @@ function clanRenderMembersTab() {
     `;
   }).join("");
 
-  container.innerHTML = `<h3 class="font-bold mb-2">Membros</h3>${membersHtml}`;
+  const inviteHtml = canManage ? `
+    <form class="card-sm mb-4" onsubmit="clanInvite(event, '${clan.id}')">
+      <p class="font-bold text-sm mb-1">Convidar jogador</p>
+      <p class="text-xs text-slate-400 mb-2">O jogador receberá um convite no Correio e poderá aceitar ou recusar.</p>
+      <div class="flex gap-2">
+        <input id="clan-invite-username" class="input flex-1 min-w-0" maxlength="30" required placeholder="Nome do jogador">
+        <button class="btn-primary text-sm" type="submit">Convidar</button>
+      </div>
+    </form>
+  ` : "";
+  container.innerHTML = `${inviteHtml}<h3 class="font-bold mb-2">Membros</h3>${membersHtml}`;
 }
 
 async function clanLoadUpgrades() {
@@ -695,6 +705,21 @@ async function clanCreate() {
     const clan = await apiPost("/clans", { name, tag, description: desc || null });
     showToast("Clã criado!", "success");
     renderClanDetail(clan);
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function clanInvite(event, clanId) {
+  event.preventDefault();
+  const input = document.getElementById("clan-invite-username");
+  const username = input?.value.trim();
+  if (!username) return;
+
+  try {
+    await apiPost(`/clans/${clanId}/invite`, { username });
+    showToast("Convite enviado pelo Correio.", "success");
+    if (input) input.value = "";
   } catch (err) {
     showToast(err.message, "error");
   }

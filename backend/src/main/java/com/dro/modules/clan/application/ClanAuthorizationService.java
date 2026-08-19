@@ -58,6 +58,13 @@ public class ClanAuthorizationService {
         }
     }
 
+    public void assertCanInvite(Player player, Clan clan) {
+        assertInClan(player, clan);
+        if (!isAdmin(player) && !ClanRules.canManageClanInfo(player.getClanRole())) {
+            throw new ForbiddenException("You are not allowed to invite players to this clan");
+        }
+    }
+
     public void assertCanKick(Player actor, Clan clan, Player target) {
         assertInClan(actor, clan);
         assertInClan(target, clan);
