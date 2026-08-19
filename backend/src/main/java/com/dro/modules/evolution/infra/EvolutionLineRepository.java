@@ -8,6 +8,9 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Evolução.
+ */
 public interface EvolutionLineRepository extends JpaRepository<EvolutionLine, Long>, JpaSpecificationExecutor<EvolutionLine> {
 
     @EntityGraph(attributePaths = {

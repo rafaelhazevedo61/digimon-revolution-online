@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Clãs.
+ */
 @Service
 @RequiredArgsConstructor
 public class GetClanHonorMarksRankingUseCase {

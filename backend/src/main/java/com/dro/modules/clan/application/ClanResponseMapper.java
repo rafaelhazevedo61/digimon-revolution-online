@@ -19,6 +19,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Componente da camada de conversor entre domínio e contratos da API do módulo de Clãs.
+ */
 @Service
 @RequiredArgsConstructor
 public class ClanResponseMapper {

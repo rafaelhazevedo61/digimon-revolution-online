@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Componente da camada de controller da API do módulo de Clãs.
+ */
 @RestController
 @RequestMapping("/clans")
 @RequiredArgsConstructor

@@ -6,6 +6,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Contrato de dados do módulo de Boss Mundial.
+ */
 public record WorldBossResponse(
         UUID id,
         String bossCode,

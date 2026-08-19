@@ -5,6 +5,9 @@ import com.dro.shared.exception.BadRequestException;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Digitama.
+ */
 public class DigitamaPoolRoller {
 
     private static final Random random = new Random();

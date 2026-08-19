@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Clãs.
+ */
 @Service
 @RequiredArgsConstructor
 public class AcceptClanMissionUseCase {

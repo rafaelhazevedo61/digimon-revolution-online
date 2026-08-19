@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Boss Mundial.
+ */
 @Repository
 public interface BossAttemptRepository extends JpaRepository<BossAttemptEntity, UUID> {
 

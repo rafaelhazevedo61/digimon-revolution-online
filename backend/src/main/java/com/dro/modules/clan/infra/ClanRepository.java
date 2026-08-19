@@ -12,6 +12,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Clãs.
+ */
 public interface ClanRepository extends JpaRepository<Clan, UUID> {
 
     boolean existsByName(String name);

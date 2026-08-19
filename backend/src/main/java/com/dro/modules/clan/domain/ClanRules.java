@@ -11,6 +11,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Regras de criação, progressão, capacidade e autorização dos Clãs.
+ *
+ * <p>O clã começa com cinco vagas e pode chegar ao limite do nível 10. A
+ * experiência obtida em missões, Boss, Arena e Rebirth é definida aqui para
+ * manter a progressão consistente entre os módulos.</p>
+ */
 @UtilityClass
 public class ClanRules {
 
@@ -50,6 +57,7 @@ public class ClanRules {
         return Map.copyOf(map);
     }
 
+    /** Verifica nome com até 30 caracteres e somente símbolos permitidos. */
     public static boolean isNameValid(String name) {
         return name != null
                 && !name.isBlank()
@@ -57,6 +65,7 @@ public class ClanRules {
                 && name.matches("^[\\p{L}0-9 _-]+$");
     }
 
+    /** Verifica tag alfanumérica entre 2 e 5 caracteres. */
     public static boolean isTagValid(String tag) {
         return tag != null
                 && tag.length() >= MIN_TAG_LENGTH
@@ -64,10 +73,12 @@ public class ClanRules {
                 && tag.matches("^[A-Za-z0-9]+$");
     }
 
+    /** Verifica descrição opcional com até 280 caracteres. */
     public static boolean isDescriptionValid(String description) {
         return description == null || description.length() <= MAX_DESCRIPTION_LENGTH;
     }
 
+    /** Valida os dados de criação e lança erro quando qualquer limite é violado. */
     public static void validateCreateRequest(String name, String tag, String description) {
         if (!isNameValid(name)) {
             throw new BadRequestException("Clan name must be 1-30 characters and contain only letters, numbers, spaces, underscores or hyphens");
@@ -80,12 +91,14 @@ public class ClanRules {
         }
     }
 
+    /** Retorna a capacidade acumulada de membros para o nível informado. */
     public static int getMaxMembersForLevel(int level) {
         int capped = Math.min(level, MAX_LEVEL);
         int bonus = CUMULATIVE_MEMBERS_BONUS.getOrDefault(capped, 0);
         return INITIAL_MAX_MEMBERS + bonus;
     }
 
+    /** Calcula a experiência restante até o próximo nível do clã. */
     public static int xpToNextLevel(int currentLevel, int currentXp) {
         if (currentLevel >= MAX_LEVEL) {
             return 0;
@@ -94,6 +107,11 @@ public class ClanRules {
         return Math.max(0, next.xpRequired() - currentXp);
     }
 
+    /**
+     * Adiciona experiência e aplica todos os níveis alcançados pelo clã.
+     *
+     * @return quantidade de níveis obtidos nesta operação
+     */
     public static int addExperience(Clan clan, int xp) {
         if (xp <= 0) {
             return 0;
@@ -112,10 +130,12 @@ public class ClanRules {
         return levelsGained;
     }
 
+    /** Informa se o cargo pode editar informações do clã. */
     public static boolean canManageClanInfo(ClanRole role) {
         return role == ClanRole.LEADER || role == ClanRole.OFFICER;
     }
 
+    /** Verifica se o cargo de origem pode expulsar o cargo de destino. */
     public static boolean canKick(ClanRole actorRole, ClanRole targetRole) {
         if (actorRole == ClanRole.LEADER) {
             return targetRole != ClanRole.LEADER;
@@ -123,18 +143,22 @@ public class ClanRules {
         return actorRole == ClanRole.OFFICER && targetRole == ClanRole.MEMBER;
     }
 
+    /** Verifica se o líder pode promover um membro a oficial. */
     public static boolean canPromote(ClanRole actorRole, ClanRole targetRole) {
         return actorRole == ClanRole.LEADER && targetRole == ClanRole.MEMBER;
     }
 
+    /** Verifica se o líder pode rebaixar um oficial a membro. */
     public static boolean canDemote(ClanRole actorRole, ClanRole targetRole) {
         return actorRole == ClanRole.LEADER && targetRole == ClanRole.OFFICER;
     }
 
+    /** Somente o líder atual pode transferir a liderança. */
     public static boolean canTransferLeadership(ClanRole actorRole) {
         return actorRole == ClanRole.LEADER;
     }
 
+    /** Somente o líder atual pode dissolver o clã. */
     public static boolean canDissolve(ClanRole actorRole) {
         return actorRole == ClanRole.LEADER;
     }
@@ -152,6 +176,7 @@ public class ClanRules {
         }
     }
 
+    /** Cria um clã normalizando nome, tag e descrição antes da persistência. */
     public static Clan create(String name, String tag, String description, UUID leaderId) {
         String normalizedName = name.trim();
         String normalizedTag = tag.toUpperCase().trim();
@@ -172,9 +197,13 @@ public class ClanRules {
                 .build();
     }
 
+    /** Experiência concedida por conclusão de missão. */
     public static int experienceForMission() { return 10; }
+    /** Experiência concedida por atividade de Boss. */
     public static int experienceForBoss() { return 25; }
+    /** Experiência concedida por Arena, diferenciando vitória e derrota. */
     public static int experienceForArena(boolean victory) { return victory ? 15 : 5; }
+    /** Experiência concedida por Rebirth. */
     public static int experienceForRebirth() { return 100; }
 
     private record LevelBonus(int level, int xpRequired, int maxMembersBonus) {

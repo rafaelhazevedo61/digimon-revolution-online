@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Componente da camada de controller da API do módulo de Ranking.
+ */
 @RestController
 @RequestMapping("/ranking")
 @RequiredArgsConstructor

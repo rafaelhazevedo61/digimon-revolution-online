@@ -5,6 +5,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Conteúdo.
+ */
 @Entity
 @Table(name = "available_contents")
 @Getter

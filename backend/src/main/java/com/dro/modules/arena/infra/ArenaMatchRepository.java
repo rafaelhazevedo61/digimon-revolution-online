@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Arena.
+ */
 public interface ArenaMatchRepository extends JpaRepository<ArenaMatch, UUID> {
 
     Page<ArenaMatch> findByAttackerPlayerIdOrDefenderPlayerIdOrderByCreatedAtDesc(

@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Componente da camada de controller da API do módulo de Tutorial.
+ */
 @RestController
 @RequestMapping("/tutorial")
 @RequiredArgsConstructor

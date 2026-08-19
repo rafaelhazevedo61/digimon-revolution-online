@@ -12,6 +12,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Missões.
+ */
 @Service
 @RequiredArgsConstructor
 public class ListMissionsUseCase {

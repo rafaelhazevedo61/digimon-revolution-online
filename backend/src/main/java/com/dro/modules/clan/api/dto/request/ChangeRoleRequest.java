@@ -3,6 +3,9 @@ package com.dro.modules.clan.api.dto.request;
 import com.dro.modules.clan.domain.ClanRole;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * Contrato de dados do módulo de Clãs.
+ */
 public record ChangeRoleRequest(
         @NotNull ClanRole role
 ) {

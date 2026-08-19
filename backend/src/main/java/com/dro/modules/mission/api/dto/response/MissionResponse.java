@@ -1,5 +1,8 @@
 package com.dro.modules.mission.api.dto.response;
 
+/**
+ * Contrato de dados do módulo de Missões.
+ */
 public record MissionResponse(
         String id,
         String name,

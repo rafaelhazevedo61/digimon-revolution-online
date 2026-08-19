@@ -6,6 +6,9 @@ import lombok.*;
 
 import java.util.UUID;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Clãs.
+ */
 @Entity
 @Table(name = "clan_missions")
 @Getter

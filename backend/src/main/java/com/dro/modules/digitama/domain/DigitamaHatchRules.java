@@ -5,6 +5,9 @@ import com.dro.modules.inventory.domain.ItemType;
 
 import java.util.*;
 
+/**
+ * Componente da camada de conjunto de regras de domínio do módulo de Digitama.
+ */
 public class DigitamaHatchRules {
 
     private static final Map<ItemType, DigitamaType> ITEM_TO_DIGITAMA = Map.of(

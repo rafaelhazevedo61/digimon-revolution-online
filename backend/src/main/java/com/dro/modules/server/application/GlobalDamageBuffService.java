@@ -5,6 +5,9 @@ import org.springframework.stereotype.Service;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Componente da camada de serviço de aplicação do módulo de Servidor.
+ */
 @Service
 public class GlobalDamageBuffService {
 

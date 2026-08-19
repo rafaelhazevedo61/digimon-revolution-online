@@ -10,6 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.ZoneId;
 
+/**
+ * Componente da camada de serviço de aplicação do módulo de Boss Mundial.
+ */
 @Service
 @RequiredArgsConstructor
 public class WorldBossService {

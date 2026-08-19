@@ -29,6 +29,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.UUID;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Boss Mundial.
+ */
 @Service
 @RequiredArgsConstructor
 public class AttackWorldBossUseCase {

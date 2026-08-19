@@ -10,6 +10,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Clãs.
+ */
 @Repository
 public interface ClanRaidAttackRepository extends JpaRepository<ClanRaidAttack, UUID> {
 

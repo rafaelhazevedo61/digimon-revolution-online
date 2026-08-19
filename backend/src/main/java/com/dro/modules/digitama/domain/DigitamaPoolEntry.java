@@ -4,6 +4,9 @@ import com.dro.modules.digimon.domain.DigimonInfos;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Digitama.
+ */
 @Entity
 @Table(name = "digitama_pool_entries")
 @Getter

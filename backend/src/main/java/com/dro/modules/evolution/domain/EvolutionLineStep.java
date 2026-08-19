@@ -8,6 +8,9 @@ import lombok.*;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Evolução.
+ */
 @Entity
 @Table(name = "evolution_line_steps")
 @Getter

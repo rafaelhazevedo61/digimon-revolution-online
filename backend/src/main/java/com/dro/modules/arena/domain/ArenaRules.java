@@ -2,6 +2,13 @@ package com.dro.modules.arena.domain;
 
 import com.dro.modules.digimon.domain.enums.Stage;
 
+/**
+ * Regras competitivas da Arena, incluindo matchmaking, ELO, recompensas e limites diários.
+ *
+ * <p>A Arena restringe oponentes por estágio e janela de rating. A chance de
+ * vitória usa a força relativa entre atacante e defensor, enquanto o rating
+ * utiliza a fórmula ELO com fator {@code K = 32}.</p>
+ */
 public class ArenaRules {
 
     private ArenaRules() {

@@ -7,6 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Digitama.
+ */
 public interface DigitamaPoolRepository extends JpaRepository<DigitamaPool, Long> {
 
     @EntityGraph(attributePaths = {

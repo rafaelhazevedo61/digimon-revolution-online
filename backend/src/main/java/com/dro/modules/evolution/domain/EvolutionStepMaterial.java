@@ -3,6 +3,9 @@ package com.dro.modules.evolution.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Evolução.
+ */
 @Entity
 @Table(name = "evolution_step_materials")
 @Getter

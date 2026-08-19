@@ -6,6 +6,9 @@ import lombok.*;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Arena.
+ */
 @Entity
 @Table(name = "arena_matches")
 @Getter

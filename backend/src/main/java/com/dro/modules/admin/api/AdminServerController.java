@@ -7,6 +7,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * Componente da camada de controller da API do módulo de Administração.
+ */
 @RestController
 @RequestMapping("/admin/server")
 @RequiredArgsConstructor

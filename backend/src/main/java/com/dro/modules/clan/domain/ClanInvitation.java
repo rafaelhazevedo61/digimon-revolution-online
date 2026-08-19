@@ -12,6 +12,9 @@ import java.util.UUID;
         @Index(name = "idx_clan_invitation_invitee", columnList = "invitee_player_id, status, expires_at"),
         @Index(name = "idx_clan_invitation_clan", columnList = "clan_id, status, created_at")
 })
+/**
+ * Componente da camada de componente de domínio do módulo de Clãs.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

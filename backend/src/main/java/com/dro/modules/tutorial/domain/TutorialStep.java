@@ -2,6 +2,9 @@ package com.dro.modules.tutorial.domain;
 
 import com.dro.modules.inventory.domain.ItemType;
 
+/**
+ * Enumera estados, tipos ou classificações usados pelo módulo de Tutorial.
+ */
 public enum TutorialStep {
 
     SELECT_DIGITAMA(

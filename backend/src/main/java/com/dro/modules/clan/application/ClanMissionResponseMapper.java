@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
+/**
+ * Componente da camada de conversor entre domínio e contratos da API do módulo de Clãs.
+ */
 @Component
 public class ClanMissionResponseMapper {
 

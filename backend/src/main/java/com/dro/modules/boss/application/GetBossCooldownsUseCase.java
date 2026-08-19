@@ -14,6 +14,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Boss Mundial.
+ */
 @Service
 @RequiredArgsConstructor
 public class GetBossCooldownsUseCase {

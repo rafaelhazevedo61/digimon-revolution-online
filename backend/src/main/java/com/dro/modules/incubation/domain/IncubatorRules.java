@@ -4,6 +4,9 @@ import com.dro.modules.inventory.domain.ItemType;
 
 import java.time.Duration;
 
+/**
+ * Componente da camada de conjunto de regras de domínio do módulo de Incubação.
+ */
 public class IncubatorRules {
 
     public static Duration getIncubationTime(ItemType incubatorType) {

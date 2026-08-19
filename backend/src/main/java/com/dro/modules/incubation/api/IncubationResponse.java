@@ -5,6 +5,9 @@ import com.dro.modules.inventory.domain.ItemType;
 
 import java.time.LocalDateTime;
 
+/**
+ * Contrato de dados do módulo de Incubação.
+ */
 public record IncubationResponse(
         ItemType digitamaType,
         ItemType incubatorType,

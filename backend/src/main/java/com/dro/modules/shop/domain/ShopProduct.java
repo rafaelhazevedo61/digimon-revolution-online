@@ -3,6 +3,9 @@ package com.dro.modules.shop.domain;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.shop.domain.enums.ShopProductCategory;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Loja.
+ */
 public class ShopProduct {
 
     private final String code;

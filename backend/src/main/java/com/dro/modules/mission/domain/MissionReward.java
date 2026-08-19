@@ -2,6 +2,9 @@ package com.dro.modules.mission.domain;
 
 import com.dro.modules.inventory.domain.ItemType;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Missões.
+ */
 public class MissionReward {
 
     private final ItemType itemType;

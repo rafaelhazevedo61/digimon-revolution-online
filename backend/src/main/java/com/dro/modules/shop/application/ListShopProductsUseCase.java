@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Loja.
+ */
 @Service
 @RequiredArgsConstructor
 public class ListShopProductsUseCase {

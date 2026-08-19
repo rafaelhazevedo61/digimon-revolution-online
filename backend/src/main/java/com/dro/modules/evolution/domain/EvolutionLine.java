@@ -8,6 +8,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Evolução.
+ */
 @Entity
 @Table(name = "evolution_lines")
 @Getter

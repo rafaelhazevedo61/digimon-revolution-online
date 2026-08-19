@@ -19,6 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Arena.
+ */
 @Service
 @RequiredArgsConstructor
 public class BuyArenaShopProductUseCase {

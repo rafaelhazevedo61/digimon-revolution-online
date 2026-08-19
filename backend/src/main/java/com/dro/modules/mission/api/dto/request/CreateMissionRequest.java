@@ -10,6 +10,9 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
+/**
+ * Contrato de dados do módulo de Missões.
+ */
 public record CreateMissionRequest(
         @NotBlank String id,
         @NotBlank String name,

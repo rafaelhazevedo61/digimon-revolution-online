@@ -4,10 +4,15 @@ import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.inventory.domain.ItemType;
 
 /**
- * Componente da camada de conjunto de regras de domínio do módulo de Digimon.
+ * Regras de progressão de estágios e requisitos de Digievolução.
+ *
+ * <p>Os nomes oficiais dos estágios não são traduzidos: Baby, Rookie, Champion,
+ * Ultimate e Mega permanecem como valores de domínio. Cada transição possui um
+ * nível mínimo, um fragmento opcional e um multiplicador próprio de atributos.</p>
  */
 public class EvolutionRules {
 
+    /** Retorna o próximo estágio oficial ou {@code null} quando não há transição. */
     public static Stage nextStage(Stage current) {
         return switch (current) {
             case BABY -> Stage.BABY_II;
@@ -19,6 +24,7 @@ public class EvolutionRules {
         };
     }
 
+    /** Retorna o nível mínimo exigido para evoluir a partir do estágio informado. */
     public static int requiredLevel(Stage current) {
         return switch (current) {
             case BABY -> 10;
@@ -30,6 +36,7 @@ public class EvolutionRules {
         };
     }
 
+    /** Retorna o tipo de fragmento exigido pela próxima evolução, quando houver. */
     public static ItemType requiredFragment(Stage current) {
         return switch (current) {
             case BABY_II -> ItemType.FRAGMENT_ROOKIE;
@@ -40,6 +47,7 @@ public class EvolutionRules {
         };
     }
 
+    /** Retorna a quantidade de fragmentos exigida pela próxima evolução. */
     public static int requiredFragmentQuantity(Stage current) {
         return switch (current) {
             case BABY_II -> 5;
@@ -50,6 +58,7 @@ public class EvolutionRules {
         };
     }
 
+    /** Retorna o multiplicador de HP, ATK e DEF associado ao estágio. */
     public static double stageStatMultiplier(Stage stage) {
         return switch (stage) {
             case BABY -> 1.0;

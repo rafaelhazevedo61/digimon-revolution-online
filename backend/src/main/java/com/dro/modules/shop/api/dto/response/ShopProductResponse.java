@@ -5,6 +5,9 @@ import com.dro.modules.shop.domain.ShopProduct;
 import com.dro.modules.shop.domain.ShopProductType;
 import com.dro.modules.shop.domain.enums.ShopProductCategory;
 
+/**
+ * Contrato de dados do módulo de Loja.
+ */
 public record ShopProductResponse(
         String code,
         String name,

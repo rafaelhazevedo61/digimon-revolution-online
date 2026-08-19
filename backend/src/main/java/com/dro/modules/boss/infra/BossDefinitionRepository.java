@@ -9,6 +9,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Boss Mundial.
+ */
 @Repository
 public interface BossDefinitionRepository extends JpaRepository<BossDefinitionEntity, Long> {
 

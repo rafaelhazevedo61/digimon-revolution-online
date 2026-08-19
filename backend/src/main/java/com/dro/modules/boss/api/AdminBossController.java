@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Componente da camada de controller da API do módulo de Boss Mundial.
+ */
 @RestController
 @RequestMapping("/admin/bosses")
 @RequiredArgsConstructor
