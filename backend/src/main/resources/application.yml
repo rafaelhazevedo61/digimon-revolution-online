@@ -3,9 +3,9 @@ spring:
     active: default
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/dro_db
-    username: postgres
-    password: arisco2017
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/dro_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:change-this-local-password}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -31,6 +31,7 @@ dro:
   audit:
     outbox:
       fixed-delay-ms: ${DRO_AUDIT_OUTBOX_FIXED_DELAY_MS:5000}
+      max-attempts: ${DRO_AUDIT_OUTBOX_MAX_ATTEMPTS:5}
   cache:
     catalogs:
       maximum-size: ${DRO_CACHE_CATALOGS_MAX_SIZE:500}

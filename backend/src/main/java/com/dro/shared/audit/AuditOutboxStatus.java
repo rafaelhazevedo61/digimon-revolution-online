@@ -6,5 +6,6 @@ package com.dro.shared.audit;
 public enum AuditOutboxStatus {
     PENDING,
     PUBLISHED,
-    FAILED
+    FAILED,
+    DEAD_LETTER
 }

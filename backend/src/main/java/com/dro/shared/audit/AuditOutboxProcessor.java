@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,9 @@ public class AuditOutboxProcessor {
     private final TransactionAuditRepository transactionAuditRepository;
     private final ObjectMapper objectMapper;
 
+    @Value("${dro.audit.outbox.max-attempts:5}")
+    private int maxAttempts;
+
     /** Executa um lote pequeno de eventos prontos para publicação. */
     @Scheduled(fixedDelayString = "${dro.audit.outbox.fixed-delay-ms:5000}")
     @Transactional
@@ -47,14 +51,25 @@ public class AuditOutboxProcessor {
             event.markPublished(Instant.now());
             outboxRepository.save(event);
         } catch (RuntimeException exception) {
-            event.markFailed(exception.getMessage(), nextAttemptAt(event.getAttempts()));
+            if (event.getAttempts() >= maxAttempts) {
+                event.markDeadLetter(exception.getMessage());
+                log.error(
+                        "Audit outbox event moved to dead letter. eventId={}, attempts={}",
+                        event.getEventId(),
+                        event.getAttempts(),
+                        exception
+                );
+            } else {
+                event.markFailed(exception.getMessage(), nextAttemptAt(event.getAttempts()));
+                log.warn(
+                        "Could not publish audit outbox event; retry scheduled. eventId={}, attempts={}, maxAttempts={}",
+                        event.getEventId(),
+                        event.getAttempts(),
+                        maxAttempts,
+                        exception
+                );
+            }
             outboxRepository.save(event);
-            log.error(
-                    "Could not publish audit outbox event. eventId={}, attempts={}",
-                    event.getEventId(),
-                    event.getAttempts(),
-                    exception
-            );
         }
     }
 

@@ -125,6 +125,13 @@ public class AuditOutboxEvent {
         this.availableAt = nextAttemptAt;
     }
 
+    /** Marca falha definitiva para interromper retries automáticos infinitos. */
+    public void markDeadLetter(String error) {
+        this.status = AuditOutboxStatus.DEAD_LETTER;
+        this.attempts++;
+        this.lastError = error == null ? null : error.substring(0, Math.min(error.length(), 1_000));
+    }
+
     public UUID getId() {
         return id;
     }
