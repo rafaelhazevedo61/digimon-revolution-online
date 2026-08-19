@@ -31,6 +31,7 @@ public class AdminEventRewardController {
                 "requestedCount", result.requestedCount(),
                 "createdCount", result.createdCount(),
                 "skippedCount", result.skippedCount(),
+                "skippedUsernames", result.skippedUsernames(),
                 "rewardIds", result.rewardIds()
         ));
     }
