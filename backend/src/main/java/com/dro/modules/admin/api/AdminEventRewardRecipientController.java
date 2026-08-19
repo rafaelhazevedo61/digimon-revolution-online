@@ -20,6 +20,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Endpoints administrativos para consulta de destinatários de premiações.
+ *
+ * <p>As consultas são protegidas por {@code ADMIN} e servem apenas para
+ * alimentar o painel. A criação final da premiação resolve novamente os
+ * destinatários no backend.</p>
+ */
 @RestController
 @RequestMapping("/admin/mail/recipients")
 @RequiredArgsConstructor
@@ -28,6 +35,12 @@ public class AdminEventRewardRecipientController {
     private final PlayerRepository playerRepository;
     private final ClanRepository clanRepository;
 
+    /**
+     * Lista clãs e suas quantidades atuais de membros.
+     *
+     * @param authorization token JWT do administrador
+     * @return clãs disponíveis para seleção no painel
+     */
     @GetMapping("/clans")
     public List<Map<String, Object>> listClans(@RequestHeader("Authorization") String authorization) {
         requireAdmin(authorization);
@@ -44,6 +57,13 @@ public class AdminEventRewardRecipientController {
         return result;
     }
 
+    /**
+     * Lista os membros atuais de um clã para prévia do envio.
+     *
+     * @param authorization token JWT do administrador
+     * @param clanId identificador do clã
+     * @return jogadores vinculados ao clã
+     */
     @GetMapping("/clans/{clanId}/members")
     public List<Map<String, Object>> listClanMembers(
             @RequestHeader("Authorization") String authorization,
@@ -63,6 +83,13 @@ public class AdminEventRewardRecipientController {
         return result;
     }
 
+    /**
+     * Pesquisa até 100 jogadores por parte do username.
+     *
+     * @param authorization token JWT do administrador
+     * @param query texto parcial usado na busca
+     * @return jogadores encontrados e seus vínculos atuais de clã
+     */
     @GetMapping("/players")
     public List<Map<String, Object>> searchPlayers(
             @RequestHeader("Authorization") String authorization,
@@ -81,6 +108,7 @@ public class AdminEventRewardRecipientController {
         return result;
     }
 
+    /** Valida que o token pertence a um jogador com tipo {@code ADMIN}. */
     private void requireAdmin(String authorization) {
         UUID adminId = TokenExtractor.extractPlayerId(authorization);
         var player = playerRepository.findById(adminId)

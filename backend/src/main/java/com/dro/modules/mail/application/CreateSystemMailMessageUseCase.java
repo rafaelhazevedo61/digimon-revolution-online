@@ -11,12 +11,30 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Cria mensagens geradas por sistemas do jogo ou por operações administrativas.
+ *
+ * <p>Mensagens do sistema não possuem remetente jogador e são inseridas com uma
+ * {@code deliveryKey} única. Repetir a mesma operação não cria uma segunda
+ * mensagem para o destinatário.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class CreateSystemMailMessageUseCase {
 
     private final MailMessageRepository mailMessageRepository;
 
+    /**
+     * Cria uma notificação de Casa de Leilões usando a origem informada.
+     *
+     * @param recipientId jogador que receberá a notificação
+     * @param sourceId identificador do anúncio ou operação relacionada
+     * @param actionType ação opcional disponível na mensagem
+     * @param subject assunto da notificação
+     * @param body corpo da notificação
+     * @param deliveryKey chave única da entrega
+     * @return mensagem persistida
+     */
     @Transactional
     public MailMessage createAuctionNotification(
             UUID recipientId,
@@ -38,6 +56,20 @@ public class CreateSystemMailMessageUseCase {
         );
     }
 
+    /**
+     * Cria uma mensagem especial e a recupera pela chave de entrega.
+     *
+     * @param messageType tipo especial da mensagem, nunca {@code PLAYER}
+     * @param sourceType tipo da origem do sistema
+     * @param recipientId jogador destinatário
+     * @param sourceId identificador opcional da origem
+     * @param actionType ação opcional disponível no Correio
+     * @param subject assunto da mensagem
+     * @param body corpo da mensagem
+     * @param deliveryKey chave idempotente com até 128 caracteres
+     * @return mensagem criada ou já existente para a chave informada
+     * @throws IllegalArgumentException quando os campos não respeitam as regras do Correio
+     */
     @Transactional
     public MailMessage create(
             MailMessageType messageType,
@@ -70,6 +102,7 @@ public class CreateSystemMailMessageUseCase {
                 .orElseThrow(() -> new IllegalStateException("System mail message could not be persisted"));
     }
 
+    /** Valida os campos compartilhados por todas as mensagens do sistema. */
     private void validate(
             MailMessageType messageType,
             String sourceType,

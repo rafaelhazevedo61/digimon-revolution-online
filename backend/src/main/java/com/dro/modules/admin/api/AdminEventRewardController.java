@@ -13,6 +13,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
+/**
+ * Endpoints administrativos para criação de premiações de eventos pelo Correio.
+ *
+ * <p>As rotas delegam a validação de autorização, destinatários, conteúdo e
+ * idempotência ao caso de uso. Somente usuários com tipo {@code ADMIN} podem
+ * executar a operação.</p>
+ */
 @RestController
 @RequestMapping("/admin/mail")
 @RequiredArgsConstructor
@@ -20,6 +27,13 @@ public class AdminEventRewardController {
 
     private final CreateEventRewardUseCase createEventRewardUseCase;
 
+    /**
+     * Cria premiações individuais para os destinatários selecionados.
+     *
+     * @param authorization token JWT do administrador
+     * @param request conteúdo, validade e estratégia de destinatários
+     * @return contagem de criadas, ignoradas e IDs das premiações envolvidas
+     */
     @PostMapping("/event-rewards")
     public ResponseEntity<Map<String, Object>> create(
             @RequestHeader("Authorization") String authorization,

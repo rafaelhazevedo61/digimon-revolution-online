@@ -13,12 +13,26 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Marca mensagens recebidas como lidas.
+ *
+ * <p>O remetente pode visualizar sua cópia, mas somente o destinatário pode
+ * alterar o estado de leitura.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class MarkMailReadUseCase {
 
     private final MailMessageRepository mailMessageRepository;
 
+    /**
+     * Marca a mensagem como lida, sem alterar novamente um horário já definido.
+     *
+     * @param token token JWT do jogador
+     * @param messageId identificador da mensagem recebida
+     * @return mensagem após a atualização
+     * @throws ConflictException quando a mensagem não existe ou o jogador não é o destinatário
+     */
     @Transactional
     public MailMessageResponse execute(String token, UUID messageId) {
         UUID playerId = TokenExtractor.extractPlayerId(token);

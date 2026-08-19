@@ -10,12 +10,25 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+/**
+ * Exclui somente a cópia da mensagem pertencente ao jogador autenticado.
+ *
+ * <p>A exclusão é lógica e independente: a cópia do remetente e a cópia do
+ * destinatário podem desaparecer em momentos diferentes.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class DeleteMailMessageUseCase {
 
     private final MailMessageRepository mailMessageRepository;
 
+    /**
+     * Marca como excluída a cópia visível ao jogador.
+     *
+     * @param token token JWT do jogador
+     * @param messageId identificador da mensagem
+     * @throws ConflictException quando a mensagem não está visível para o jogador
+     */
     @Transactional
     public void execute(String token, UUID messageId) {
         UUID playerId = TokenExtractor.extractPlayerId(token);

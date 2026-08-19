@@ -20,6 +20,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Envia mensagens de texto comuns entre jogadores.
+ *
+ * <p>O fluxo valida o destinatário, impede autoenvio, aplica o limite de
+ * mensagens por minuto e persiste uma mensagem com cópias independentes para
+ * remetente e destinatário.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class SendMailMessageUseCase {
@@ -27,6 +34,16 @@ public class SendMailMessageUseCase {
     private final PlayerRepository playerRepository;
     private final MailMessageRepository mailMessageRepository;
 
+    /**
+     * Envia uma mensagem para o jogador informado.
+     *
+     * @param token token JWT do remetente
+     * @param request username, assunto e corpo da mensagem
+     * @return representação da mensagem criada
+     * @throws BadRequestException quando o destinatário não existe, é o próprio
+     *                             remetente ou o texto está vazio
+     * @throws UnprocessableException quando o rate limit foi atingido
+     */
     @Transactional
     public MailMessageResponse execute(String token, SendMailMessageRequest request) {
         UUID senderId = TokenExtractor.extractPlayerId(token);

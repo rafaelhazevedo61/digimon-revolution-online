@@ -11,12 +11,26 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+/**
+ * Recupera uma mensagem visível para o jogador autenticado.
+ *
+ * <p>A consulta aceita a cópia do remetente ou do destinatário enquanto ela não
+ * tiver sido excluída pela respectiva parte.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class GetMailMessageUseCase {
 
     private final MailMessageRepository mailMessageRepository;
 
+    /**
+     * Busca a mensagem detalhada pelo identificador.
+     *
+     * @param token token JWT do jogador
+     * @param messageId identificador da mensagem
+     * @return mensagem visível convertida para resposta da API
+     * @throws ConflictException quando a mensagem não está visível para o jogador
+     */
     @Transactional(readOnly = true)
     public MailMessageResponse execute(String token, UUID messageId) {
         UUID playerId = TokenExtractor.extractPlayerId(token);

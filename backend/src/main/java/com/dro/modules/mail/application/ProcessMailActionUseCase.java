@@ -31,6 +31,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Processa ações disponíveis em mensagens especiais do Correio.
+ *
+ * <p>O destinatário autenticado é revalidado antes de qualquer alteração. As
+ * ações de convite de clã e resgate de premiação são transacionais e atualizam
+ * simultaneamente a entidade de origem, a mensagem e os recursos do jogador.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class ProcessMailActionUseCase {
@@ -44,6 +51,17 @@ public class ProcessMailActionUseCase {
     private final DigimonRepository digimonRepository;
     private final AddItemUseCase addItemUseCase;
 
+    /**
+     * Executa a ação solicitada pelo destinatário de uma mensagem.
+     *
+     * @param token token JWT do jogador autenticado
+     * @param messageId mensagem que contém a ação
+     * @param requestedAction ação informada pelo cliente, como {@code CLAIM},
+     *                       {@code ACCEPT} ou {@code DECLINE}
+     * @return resultado da ação e mensagem apropriada para o jogador
+     * @throws NotFoundException quando a mensagem não pertence à caixa visível
+     * @throws BadRequestException quando a ação não é compatível com a mensagem
+     */
     @Transactional
     public MailActionResponse execute(String token, UUID messageId, String requestedAction) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
@@ -67,6 +85,13 @@ public class ProcessMailActionUseCase {
         return processClanInvitation(message, playerId, requestedAction);
     }
 
+    /**
+     * Revalida e processa um convite de clã.
+     *
+     * <p>A aceitação verifica novamente se o jogador continua sem clã, se o
+     * convite está pendente e se ainda existe vaga. Uma falha de capacidade
+     * mantém o convite pendente para nova tentativa.</p>
+     */
     private MailActionResponse processClanInvitation(
             MailMessage message,
             UUID playerId,
@@ -132,6 +157,14 @@ public class ProcessMailActionUseCase {
         return new MailActionResponse(true, "Você entrou no clã " + clan.getName() + ".");
     }
 
+    /**
+     * Resgata uma premiação de evento para o Digimon ativo do jogador.
+     *
+     * <p>A premiação é bloqueada pessimisticamente, a validade é revalidada e o
+     * Digimon ativo é confirmado como pertencente ao jogador. Bits, item,
+     * mensagem e status da premiação são atualizados na mesma transação. Se uma
+     * pré-condição falhar, a premiação permanece disponível.</p>
+     */
     private MailActionResponse claimEventReward(
             MailMessage message,
             UUID playerId,
@@ -196,6 +229,12 @@ public class ProcessMailActionUseCase {
         return new MailActionResponse(true, "Premiação resgatada com sucesso.");
     }
 
+    /**
+     * Finaliza uma mensagem cuja ação não deve ser executada novamente.
+     *
+     * @param message mensagem que será concluída
+     * @param now instante da conclusão
+     */
     private void completeMessage(MailMessage message, LocalDateTime now) {
         message.setActionType(null);
         message.setReadAt(now);

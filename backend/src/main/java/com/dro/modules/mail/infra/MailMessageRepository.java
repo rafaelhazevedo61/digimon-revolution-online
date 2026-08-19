@@ -12,20 +12,33 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Consultas e inserções persistentes das mensagens do Correio.
+ *
+ * <p>As consultas de Entrada e Enviadas respeitam a exclusão independente de
+ * cada parte. Mensagens geradas pelo sistema usam {@code deliveryKey} única
+ * para que o mesmo comunicado ou evento não seja entregue duas vezes.</p>
+ */
 public interface MailMessageRepository extends JpaRepository<MailMessage, UUID> {
 
+    /** Lista a Entrada do jogador em ordem decrescente de criação. */
     Page<MailMessage> findByRecipientIdAndRecipientDeletedFalseOrderByCreatedAtDesc(
             UUID recipientId,
             Pageable pageable
     );
 
+    /** Lista as mensagens enviadas pelo jogador em ordem decrescente de criação. */
     Page<MailMessage> findBySenderIdAndSenderDeletedFalseOrderByCreatedAtDesc(
             UUID senderId,
             Pageable pageable
     );
 
+    /** Conta mensagens recebidas ainda não abertas pelo jogador. */
     long countByRecipientIdAndRecipientDeletedFalseAndReadAtIsNull(UUID recipientId);
 
+    /**
+     * Busca uma mensagem visível para uma das partes sem expor cópias excluídas.
+     */
     @Query("""
             SELECT m FROM MailMessage m
             WHERE m.id = :id
@@ -37,10 +50,17 @@ public interface MailMessageRepository extends JpaRepository<MailMessage, UUID> 
             @Param("playerId") UUID playerId
     );
 
+    /** Conta mensagens comuns enviadas depois do instante usado pelo rate limit. */
     long countBySenderIdAndCreatedAtAfter(UUID senderId, LocalDateTime createdAt);
 
+    /** Localiza uma mensagem do sistema pela chave idempotente de entrega. */
     Optional<MailMessage> findByDeliveryKey(String deliveryKey);
 
+    /**
+     * Insere uma mensagem do sistema sem duplicá-la para a mesma {@code deliveryKey}.
+     *
+     * @return {@code 1} quando criada; {@code 0} quando a chave já existe
+     */
     @Modifying
     @Query(value = """
             INSERT INTO mail_messages (
