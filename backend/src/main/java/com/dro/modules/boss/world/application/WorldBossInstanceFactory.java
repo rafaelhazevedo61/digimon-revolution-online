@@ -16,6 +16,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Boss Mundial.
+ */
 @Service
 @RequiredArgsConstructor
 public class WorldBossInstanceFactory {

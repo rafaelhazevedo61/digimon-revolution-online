@@ -1,5 +1,8 @@
 package com.dro.modules.evolution.api.dto.response;
 
+/**
+ * Contrato de dados do módulo de Evolução.
+ */
 public record EvolutionNextStepResponse(
         Long digimonInfoId,
         String name,

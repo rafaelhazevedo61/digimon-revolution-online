@@ -11,6 +11,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Clãs.
+ */
 @Service
 @RequiredArgsConstructor
 public class AdminResetClanRaidDailyUseCase {

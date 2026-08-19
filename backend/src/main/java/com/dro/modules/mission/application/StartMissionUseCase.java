@@ -24,6 +24,9 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Missões.
+ */
 @Service
 @RequiredArgsConstructor
 public class StartMissionUseCase {

@@ -6,6 +6,9 @@ import com.dro.modules.clan.domain.enums.PlayerClanMissionStatus;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Contrato de dados do módulo de Clãs.
+ */
 public record PlayerClanMissionResponse(
         UUID id,
         UUID missionId,

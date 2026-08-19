@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Digitama.
+ */
 @Service
 @RequiredArgsConstructor
 public class GetAvailableDigitamaPoolsUseCase {

@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Boss Mundial.
+ */
 @Entity
 @Table(name = "boss_drops")
 @Getter

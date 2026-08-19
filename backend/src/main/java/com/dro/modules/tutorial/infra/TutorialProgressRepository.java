@@ -7,6 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Tutorial.
+ */
 public interface TutorialProgressRepository extends JpaRepository<TutorialProgress, UUID> {
 
     List<TutorialProgress> findByPlayerId(UUID playerId);

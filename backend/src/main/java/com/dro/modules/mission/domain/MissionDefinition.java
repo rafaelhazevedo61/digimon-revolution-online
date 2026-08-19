@@ -6,6 +6,9 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Missões.
+ */
 @Data
 public class MissionDefinition {
 

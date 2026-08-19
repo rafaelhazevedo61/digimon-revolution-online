@@ -3,6 +3,9 @@ package com.dro.modules.evolution.infra.spec;
 import com.dro.modules.evolution.domain.EvolutionLine;
 import org.springframework.data.jpa.domain.Specification;
 
+/**
+ * Componente da camada de especificações de consulta do módulo de Evolução.
+ */
 public class EvolutionLineSpecifications {
 
     private EvolutionLineSpecifications() {

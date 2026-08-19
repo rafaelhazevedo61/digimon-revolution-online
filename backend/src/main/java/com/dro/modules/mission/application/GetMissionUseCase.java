@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Missões.
+ */
 @Service
 @RequiredArgsConstructor
 public class GetMissionUseCase {

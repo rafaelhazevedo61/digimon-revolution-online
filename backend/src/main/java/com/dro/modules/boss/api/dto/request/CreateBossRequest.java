@@ -3,6 +3,9 @@ package com.dro.modules.boss.api.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * Contrato de dados do módulo de Boss Mundial.
+ */
 public record CreateBossRequest(
         @NotBlank String code,
         @NotBlank String name,

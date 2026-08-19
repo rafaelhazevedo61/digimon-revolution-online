@@ -12,6 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Clãs.
+ */
 @Component
 @RequiredArgsConstructor
 public class ClanMissionProgressTracker {

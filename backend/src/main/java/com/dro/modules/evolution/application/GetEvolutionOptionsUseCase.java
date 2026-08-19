@@ -24,6 +24,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Evolução.
+ */
 @Service
 @RequiredArgsConstructor
 public class GetEvolutionOptionsUseCase {

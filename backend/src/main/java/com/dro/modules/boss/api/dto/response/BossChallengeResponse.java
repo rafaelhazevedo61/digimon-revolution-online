@@ -2,6 +2,9 @@ package com.dro.modules.boss.api.dto.response;
 
 import java.util.List;
 
+/**
+ * Contrato de dados do módulo de Boss Mundial.
+ */
 public record BossChallengeResponse(
         String bossCode,
         String bossName,

@@ -7,6 +7,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Boss Mundial.
+ */
 @Entity
 @Table(name = "world_boss_instances")
 @Getter

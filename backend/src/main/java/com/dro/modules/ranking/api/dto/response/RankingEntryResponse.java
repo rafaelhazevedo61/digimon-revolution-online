@@ -5,6 +5,9 @@ import com.dro.modules.digimon.domain.enums.Stage;
 
 import java.util.UUID;
 
+/**
+ * Contrato de dados do módulo de Ranking.
+ */
 public record RankingEntryResponse(
         int position,
         String digimonName,

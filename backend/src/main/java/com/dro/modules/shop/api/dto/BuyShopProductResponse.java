@@ -4,6 +4,9 @@ import com.dro.modules.shop.domain.ShopProductType;
 
 import java.util.UUID;
 
+/**
+ * Contrato de dados do módulo de Loja.
+ */
 public record BuyShopProductResponse(
         String productCode,
         String name,

@@ -10,6 +10,9 @@ import java.util.UUID;
         name = "player_mission_progress",
         uniqueConstraints = @UniqueConstraint(columnNames = {"player_id", "mission_id"})
 )
+/**
+ * Componente da camada de componente de domínio do módulo de Missões.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

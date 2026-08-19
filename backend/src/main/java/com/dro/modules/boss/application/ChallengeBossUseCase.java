@@ -36,6 +36,9 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Boss Mundial.
+ */
 @Service
 @RequiredArgsConstructor
 public class ChallengeBossUseCase {

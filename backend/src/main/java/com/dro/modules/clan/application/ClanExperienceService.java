@@ -11,6 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+/**
+ * Componente da camada de serviço de aplicação do módulo de Clãs.
+ */
 @Service
 @RequiredArgsConstructor
 public class ClanExperienceService {

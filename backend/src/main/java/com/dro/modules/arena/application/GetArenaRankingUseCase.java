@@ -18,6 +18,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Arena.
+ */
 @Service
 @RequiredArgsConstructor
 public class GetArenaRankingUseCase {

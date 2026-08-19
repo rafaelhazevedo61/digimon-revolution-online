@@ -9,6 +9,9 @@ import com.dro.modules.mission.domain.MissionDefinitionEntity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Contrato de dados do módulo de Missões.
+ */
 public record AdminMissionResponse(
         String id,
         String name,

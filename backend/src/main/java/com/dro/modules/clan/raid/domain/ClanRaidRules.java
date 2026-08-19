@@ -5,6 +5,9 @@ import lombok.experimental.UtilityClass;
 
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Componente da camada de conjunto de regras de domínio do módulo de Clãs.
+ */
 @UtilityClass
 public class ClanRaidRules {
 

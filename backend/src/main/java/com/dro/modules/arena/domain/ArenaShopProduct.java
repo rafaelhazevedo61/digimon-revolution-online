@@ -4,6 +4,9 @@ import com.dro.modules.inventory.domain.ItemType;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Arena.
+ */
 @Entity
 @Table(name = "arena_shop_products")
 @Getter

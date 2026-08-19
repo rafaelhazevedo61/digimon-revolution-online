@@ -5,6 +5,9 @@ import com.dro.modules.digimon.domain.enums.*;
 
 import java.util.UUID;
 
+/**
+ * Contrato de dados do módulo de Digitama.
+ */
 public record HatchDigitamaResponse(
         UUID id,
         String name,

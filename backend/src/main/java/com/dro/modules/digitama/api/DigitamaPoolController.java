@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Componente da camada de controller da API do módulo de Digitama.
+ */
 @RestController
 @RequestMapping("/digitama-pools")
 @RequiredArgsConstructor

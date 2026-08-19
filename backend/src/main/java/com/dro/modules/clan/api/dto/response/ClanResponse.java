@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Contrato de dados do módulo de Clãs.
+ */
 public record ClanResponse(
         UUID id,
         String name,

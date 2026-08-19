@@ -3,6 +3,9 @@ package com.dro.modules.admin.api.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Contrato de dados do módulo de Administração.
+ */
 public record AdminAnnouncementRequest(
         @NotBlank(message = "O assunto é obrigatório.")
         @Size(max = 80, message = "O assunto deve ter no máximo 80 caracteres.")

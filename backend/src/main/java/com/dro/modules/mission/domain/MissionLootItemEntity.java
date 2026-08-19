@@ -6,6 +6,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Missões.
+ */
 @Entity
 @Table(name = "mission_loot_items")
 @Getter

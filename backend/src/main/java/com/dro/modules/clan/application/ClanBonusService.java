@@ -15,6 +15,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 
+/**
+ * Componente da camada de serviço de aplicação do módulo de Clãs.
+ */
 @Service
 @RequiredArgsConstructor
 public class ClanBonusService {

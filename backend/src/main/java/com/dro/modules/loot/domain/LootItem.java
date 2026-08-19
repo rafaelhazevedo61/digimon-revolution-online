@@ -2,6 +2,9 @@ package com.dro.modules.loot.domain;
 
 import com.dro.modules.inventory.domain.ItemType;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Loot.
+ */
 public class LootItem {
 
     private final LootRarity rarity;

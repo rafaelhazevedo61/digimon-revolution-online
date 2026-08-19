@@ -2,6 +2,9 @@ package com.dro.modules.arena.api.dto.response;
 
 import java.util.List;
 
+/**
+ * Contrato de dados do módulo de Arena.
+ */
 public record ArenaLobbyResponse(
         String digimonName,
         int rating,

@@ -3,6 +3,9 @@ package com.dro.modules.loot.domain;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Loot.
+ */
 public class LootRoller {
 
     private static final Random random = new Random();

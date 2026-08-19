@@ -1,5 +1,8 @@
 package com.dro.modules.loot.domain;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Loot.
+ */
 public class LootRarityChance {
 
     private final LootRarity rarity;

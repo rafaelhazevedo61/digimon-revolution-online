@@ -6,6 +6,9 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Clãs.
+ */
 @Entity
 @Table(name = "clan_upgrade_types")
 @Getter

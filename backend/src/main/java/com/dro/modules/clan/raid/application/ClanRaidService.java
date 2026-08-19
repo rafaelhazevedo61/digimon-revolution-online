@@ -16,6 +16,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.UUID;
 
+/**
+ * Componente da camada de serviço de aplicação do módulo de Clãs.
+ */
 @Service
 @RequiredArgsConstructor
 public class ClanRaidService {

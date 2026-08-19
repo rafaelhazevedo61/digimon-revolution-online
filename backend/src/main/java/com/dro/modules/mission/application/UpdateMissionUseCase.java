@@ -14,6 +14,9 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Missões.
+ */
 @Service
 @RequiredArgsConstructor
 public class UpdateMissionUseCase {

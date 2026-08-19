@@ -21,6 +21,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Clãs.
+ */
 @Service
 @RequiredArgsConstructor
 public class ClaimClanMissionUseCase {

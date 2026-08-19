@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Incubação.
+ */
 public interface IncubationRepository extends JpaRepository<Incubation, UUID> {
 
     Optional<Incubation> findByPlayerIdAndStatus(UUID playerId, IncubationStatus status);

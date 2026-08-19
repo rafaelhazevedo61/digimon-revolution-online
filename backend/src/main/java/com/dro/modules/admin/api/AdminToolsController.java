@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
+/**
+ * Componente da camada de controller da API do módulo de Administração.
+ */
 @RestController
 @RequestMapping("/admin/tools")
 @RequiredArgsConstructor

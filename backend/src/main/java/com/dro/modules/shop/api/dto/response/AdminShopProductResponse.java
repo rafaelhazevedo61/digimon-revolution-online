@@ -7,6 +7,9 @@ import com.dro.modules.shop.domain.enums.ShopProductCategory;
 
 import java.time.LocalDateTime;
 
+/**
+ * Contrato de dados do módulo de Loja.
+ */
 public record AdminShopProductResponse(
         String code,
         String name,

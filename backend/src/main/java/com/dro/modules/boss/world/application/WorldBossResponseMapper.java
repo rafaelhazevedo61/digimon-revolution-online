@@ -21,6 +21,9 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Componente da camada de conversor entre domínio e contratos da API do módulo de Boss Mundial.
+ */
 @Component
 @RequiredArgsConstructor
 public class WorldBossResponseMapper {

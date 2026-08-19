@@ -25,6 +25,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+/**
+ * Executa a compra de itens ou equipamentos na Loja do jogo.
+ *
+ * <p>A compra exige Digimon ativo pertencente ao jogador, verifica Bits e
+ * entrega o produto antes de debitar o saldo na mesma transação. Equipamentos
+ * são vendidos individualmente e recebem uma raridade sorteada pelo fluxo da
+ * Loja; itens podem respeitar sua quantidade empilhável.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class BuyShopProductUseCase {
@@ -36,6 +44,17 @@ public class BuyShopProductUseCase {
     private final ShopProductRepository shopProductRepository;
     private final TutorialService tutorialService;
 
+    /**
+     * Compra a quantidade solicitada de um produto ativo.
+     *
+     * @param token token JWT do jogador
+     * @param request código do produto e quantidade
+     * @return resumo do produto, total pago, saldo restante e equipamento criado
+     * @throws BadRequestException quando não há Digimon ativo, ownership é inválido
+     *                             ou a quantidade é incompatível com equipamento
+     * @throws NotFoundException quando jogador, Digimon ou produto não existe
+     * @throws UnprocessableException quando o saldo de Bits é insuficiente
+     */
     @Transactional
     public BuyShopProductResponse execute(String token, BuyShopProductRequest request) {
 

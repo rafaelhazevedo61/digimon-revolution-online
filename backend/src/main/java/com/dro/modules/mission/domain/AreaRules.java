@@ -2,6 +2,9 @@ package com.dro.modules.mission.domain;
 
 import com.dro.modules.digimon.domain.enums.Stage;
 
+/**
+ * Componente da camada de conjunto de regras de domínio do módulo de Missões.
+ */
 public class AreaRules {
 
     public static Stage requiredStage(Area area) {

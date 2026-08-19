@@ -10,6 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Componente da camada de controller da API do módulo de Incubação.
+ */
 @RestController
 @RequestMapping("/incubation")
 @RequiredArgsConstructor

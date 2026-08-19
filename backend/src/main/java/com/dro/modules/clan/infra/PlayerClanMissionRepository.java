@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Clãs.
+ */
 public interface PlayerClanMissionRepository extends JpaRepository<PlayerClanMission, UUID> {
 
     List<PlayerClanMission> findByPlayerId(UUID playerId);

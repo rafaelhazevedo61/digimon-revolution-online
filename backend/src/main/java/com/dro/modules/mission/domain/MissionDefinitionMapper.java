@@ -6,6 +6,9 @@ import com.dro.modules.loot.domain.LootTable;
 
 import java.util.List;
 
+/**
+ * Componente da camada de conversor entre domínio e contratos da API do módulo de Missões.
+ */
 public class MissionDefinitionMapper {
 
     private MissionDefinitionMapper() {

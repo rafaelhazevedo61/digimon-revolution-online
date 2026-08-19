@@ -11,6 +11,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Autenticação.
+ */
 @Service
 @RequiredArgsConstructor
 public class LoginUseCase {

@@ -2,6 +2,9 @@ package com.dro.modules.loot.domain;
 
 import java.util.List;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Loot.
+ */
 public class LootTable {
 
     private final List<LootRarityChance> rarityChances;

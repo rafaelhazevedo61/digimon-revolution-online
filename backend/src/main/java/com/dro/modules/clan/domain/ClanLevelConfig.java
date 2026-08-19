@@ -3,6 +3,9 @@ package com.dro.modules.clan.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Componente da camada de configuração compartilhada do módulo de Clãs.
+ */
 @Entity
 @Table(name = "clan_level_config")
 @Getter

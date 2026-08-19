@@ -30,6 +30,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Arena.
+ */
 @Service
 @RequiredArgsConstructor
 public class ChallengeArenaUseCase {

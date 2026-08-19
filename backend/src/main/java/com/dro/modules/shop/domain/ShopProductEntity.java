@@ -8,6 +8,9 @@ import org.springframework.data.domain.Persistable;
 
 import java.time.LocalDateTime;
 
+/**
+ * Componente da camada de componente de domínio do módulo de Loja.
+ */
 @Entity
 @Table(name = "shop_products")
 @Getter

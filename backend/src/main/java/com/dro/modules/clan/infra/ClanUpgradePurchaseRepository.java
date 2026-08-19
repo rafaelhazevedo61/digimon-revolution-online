@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Clãs.
+ */
 public interface ClanUpgradePurchaseRepository extends JpaRepository<ClanUpgradePurchase, UUID> {
 
     List<ClanUpgradePurchase> findByClanId(UUID clanId);

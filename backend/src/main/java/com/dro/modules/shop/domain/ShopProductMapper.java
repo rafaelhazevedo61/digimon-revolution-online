@@ -1,5 +1,8 @@
 package com.dro.modules.shop.domain;
 
+/**
+ * Componente da camada de conversor entre domínio e contratos da API do módulo de Loja.
+ */
 public class ShopProductMapper {
 
     private ShopProductMapper() {}
