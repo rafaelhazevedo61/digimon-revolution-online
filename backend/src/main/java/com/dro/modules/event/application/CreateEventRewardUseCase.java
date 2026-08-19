@@ -58,6 +58,7 @@ public class CreateEventRewardUseCase {
                 expiresAt
         );
         List<UUID> rewardIds = new ArrayList<>();
+        List<String> skippedUsernames = new ArrayList<>();
         int createdCount = 0;
 
         for (Player player : recipients) {
@@ -80,6 +81,7 @@ public class CreateEventRewardUseCase {
                 eventRewardRepository.findBySourceTypeAndSourceIdAndPlayerId(
                                 request.sourceType().trim(), request.sourceId().trim(), player.getId())
                         .ifPresent(existing -> rewardIds.add(existing.getId()));
+                skippedUsernames.add(player.getUsername());
                 continue;
             }
 
@@ -101,7 +103,8 @@ public class CreateEventRewardUseCase {
                 createdCount,
                 recipients.size() - createdCount,
                 recipients.size(),
-                rewardIds
+                rewardIds,
+                skippedUsernames
         );
     }
 

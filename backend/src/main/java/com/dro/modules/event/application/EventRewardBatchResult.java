@@ -7,6 +7,7 @@ public record EventRewardBatchResult(
         int createdCount,
         int skippedCount,
         int requestedCount,
-        List<UUID> rewardIds
+        List<UUID> rewardIds,
+        List<String> skippedUsernames
 ) {
 }

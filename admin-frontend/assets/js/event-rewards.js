@@ -430,7 +430,13 @@ async function adminSubmitEventReward(event) {
   try {
     const result = await apiPost("/admin/mail/event-rewards", payload);
     const skipped = Number(result.skippedCount || 0);
-    const suffix = skipped > 0 ? ` ${skipped} já existia(m) e foi(ram) ignorado(s).` : "";
+    const skippedUsernames = Array.isArray(result.skippedUsernames) ? result.skippedUsernames : [];
+    const skippedLabel = skippedUsernames.length > 0
+      ? ` Jogador(es) ignorado(s): ${skippedUsernames.join(", ")}.`
+      : "";
+    const suffix = skipped > 0
+      ? ` ${skipped} já existia(m) e foi(ram) ignorado(s).${skippedLabel}`
+      : "";
     adminShowEventRewardResult(`${result.createdCount || 0} premiação(ões) criada(s) para ${payload.recipientLabel}.${suffix}`, true);
     document.getElementById("admin-event-reward-form")?.reset();
     adminEventRewardSelectedPlayers = [];
