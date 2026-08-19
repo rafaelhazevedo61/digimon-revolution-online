@@ -21,4 +21,11 @@ class MailRulesTest {
     void messagesPerMinute_limitPreventsBasicSpam() {
         assertEquals(10, MailRules.MAX_MESSAGES_PER_MINUTE);
     }
+
+    @Test
+    void systemMessageMetadata_limitsMatchDatabaseColumns() {
+        assertEquals(64, MailRules.SOURCE_TYPE_MAX_LENGTH);
+        assertEquals(64, MailRules.ACTION_TYPE_MAX_LENGTH);
+        assertEquals(128, MailRules.DELIVERY_KEY_MAX_LENGTH);
+    }
 }

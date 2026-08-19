@@ -56,6 +56,21 @@ public class MailMessage {
     @Builder.Default
     private boolean recipientDeleted = false;
 
+    @Column(name = "source_type", length = 64)
+    private String sourceType;
+
+    @Column(name = "source_id")
+    private UUID sourceId;
+
+    @Column(name = "action_type", length = 64)
+    private String actionType;
+
+    @Column(name = "action_payload", columnDefinition = "TEXT")
+    private String actionPayload;
+
+    @Column(name = "delivery_key", length = 128, unique = true)
+    private String deliveryKey;
+
     public boolean isVisibleTo(UUID playerId) {
         if (playerId == null) return false;
         if (recipient != null && recipient.getId().equals(playerId)) return !recipientDeleted;

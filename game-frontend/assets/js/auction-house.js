@@ -448,7 +448,7 @@ async function auctionConfirmBuy(event) {
   try {
     const result = await apiPost(`/auction/listings/${modal.dataset.listingId}/buy`, { quantity });
     auctionCloseBuyModal();
-    showToast(result.message || "Compra realizada!");
+    showToast(result.message || "Compra realizada com sucesso!");
     auctionState.dashboard = await apiGet("/players/me/dashboard");
     auctionRenderBits();
     await auctionRenderMarket();

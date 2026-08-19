@@ -36,6 +36,7 @@ public class BuyAuctionListingUseCase {
     private final InventoryRepository inventoryRepository;
     private final AuctionListingRepository auctionListingRepository;
     private final AuctionTransactionRepository auctionTransactionRepository;
+    private final AuctionMailNotificationService auctionMailNotificationService;
 
     @Transactional
     public AuctionPurchaseResponse execute(
@@ -124,6 +125,7 @@ public class BuyAuctionListingUseCase {
         digimonRepository.save(sellerDigimon);
         auctionListingRepository.save(listing);
         auctionTransactionRepository.save(transaction);
+        auctionMailNotificationService.notifyPurchase(transaction);
 
         return new AuctionPurchaseResponse(
                 listing.getId(),
@@ -137,7 +139,7 @@ public class BuyAuctionListingUseCase {
                 listing.getRemainingQuantity(),
                 listing.getStatus(),
                 buyerDigimon.getBits(),
-                "Purchase completed successfully"
+                "Compra realizada com sucesso!"
         );
     }
 

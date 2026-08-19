@@ -34,6 +34,7 @@ public class CancelAuctionListingUseCase {
     private final DigimonRepository digimonRepository;
     private final InventoryRepository inventoryRepository;
     private final AuctionListingRepository auctionListingRepository;
+    private final AuctionMailNotificationService auctionMailNotificationService;
 
     @Transactional
     public AuctionListingResponse execute(String token, UUID listingId) {
@@ -78,6 +79,7 @@ public class CancelAuctionListingUseCase {
                 : AuctionListingStatus.EXPIRED);
         listing.setUpdatedAt(now);
         auctionListingRepository.save(listing);
+        auctionMailNotificationService.notifyListingReturned(listing, returnedQuantity);
 
         return AuctionListingMapper.toResponse(listing, player.getUsername());
     }
