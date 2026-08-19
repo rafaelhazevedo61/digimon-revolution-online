@@ -10,6 +10,27 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
+/**
+ * Solicitação administrativa para criar premiações de eventos em lote.
+ *
+ * <p>O modo {@code PLAYER} usa {@code playerUsername}, o modo {@code CLAN}
+ * usa {@code clanId} e o modo {@code PLAYERS} usa {@code playerUsernames}. A
+ * combinação de {@code sourceType}, {@code sourceId} e jogador define a
+ * idempotência da entrega.</p>
+ *
+ * @param recipientType estratégia de expansão dos destinatários
+ * @param playerUsername username usado no modo individual
+ * @param clanId identificador do clã usado no modo de clã
+ * @param playerUsernames lista usada no modo manual, com no máximo 100 nomes
+ * @param sourceType tipo estável da origem do evento
+ * @param sourceId identificador estável da origem do evento
+ * @param subject assunto da mensagem de Correio
+ * @param body texto personalizado da premiação
+ * @param bitsAmount quantidade de Bits, podendo ser zero
+ * @param itemType tipo do item, quando houver item
+ * @param itemQuantity quantidade do item, podendo ser zero
+ * @param validityDays validade entre 1 e 30 dias
+ */
 public record AdminEventRewardRequest(
         @NotNull(message = "Informe o modo de destinatário.")
         EventRewardRecipientType recipientType,

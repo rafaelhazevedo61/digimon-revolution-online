@@ -28,6 +28,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Cria premiações de eventos e a mensagem individual correspondente no Correio.
+ *
+ * <p>O caso de uso resolve os destinatários no momento da operação, remove
+ * duplicidades por jogador e insere cada premiação de forma idempotente. A chave
+ * {@code sourceType + sourceId + player} impede que o reprocessamento do mesmo
+ * evento entregue uma segunda recompensa ao mesmo jogador.</p>
+ *
+ * <p>A operação exige um usuário {@code ADMIN} e é transacional: a premiação e
+ * sua mensagem de Correio são criadas dentro do mesmo fluxo persistente.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class CreateEventRewardUseCase {
@@ -37,6 +48,20 @@ public class CreateEventRewardUseCase {
     private final EventRewardRepository eventRewardRepository;
     private final CreateSystemMailMessageUseCase createSystemMailMessageUseCase;
 
+    /**
+     * Cria as premiações para os destinatários definidos na solicitação.
+     *
+     * <p>Destinatários que já possuem a mesma origem são ignorados e aparecem
+     * no resultado por username. Um novo {@code sourceId} representa uma nova
+     * origem e pode gerar uma nova premiação.</p>
+     *
+     * @param token token JWT do administrador autenticado
+     * @param request conteúdo, validade e seleção dos destinatários
+     * @return contagens, identificadores criados e usernames ignorados
+     * @throws ForbiddenException quando o usuário autenticado não é {@code ADMIN}
+     * @throws NotFoundException quando o administrador, jogador ou clã não existe
+     * @throws ConflictException quando os valores ou destinatários são inválidos
+     */
     @Transactional
     public EventRewardBatchResult execute(String token, AdminEventRewardRequest request) {
         UUID adminId = TokenExtractor.extractPlayerId(token);
@@ -108,6 +133,13 @@ public class CreateEventRewardUseCase {
         );
     }
 
+    /**
+     * Valida e normaliza Bits e item antes de persistir a premiação.
+     *
+     * @param request solicitação recebida do painel administrativo
+     * @return valores normalizados para a criação da premiação
+     * @throws ConflictException quando a premiação não possui conteúdo válido
+     */
     private RewardValues validateReward(AdminEventRewardRequest request) {
         int bitsAmount = request.bitsAmount() == null ? 0 : request.bitsAmount();
         int itemQuantity = request.itemQuantity() == null ? 0 : request.itemQuantity();
@@ -132,6 +164,18 @@ public class CreateEventRewardUseCase {
         return new RewardValues(bitsAmount, itemType, itemQuantity);
     }
 
+    /**
+     * Expande o modo de destinatário em uma lista única de jogadores.
+     *
+     * <p>No modo {@code CLAN}, são considerados os membros vinculados ao clã no
+     * momento do envio. No modo {@code PLAYERS}, a lista final não pode exceder
+     * 100 jogadores.</p>
+     *
+     * @param request solicitação com o modo e os identificadores de destino
+     * @return jogadores únicos que serão processados pelo lote
+     * @throws ConflictException quando o modo, o identificador ou o limite são inválidos
+     * @throws NotFoundException quando um destinatário ou clã não existe
+     */
     private List<Player> resolveRecipients(AdminEventRewardRequest request) {
         EventRewardRecipientType type = request.recipientType();
         if (type == null) {

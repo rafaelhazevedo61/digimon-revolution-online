@@ -18,6 +18,14 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+/**
+ * Mensagem persistente do Correio, enviada por um jogador ou gerada pelo sistema.
+ *
+ * <p>A exclusão é mantida separadamente para remetente e destinatário. Assim,
+ * apagar uma cópia não remove a cópia pertencente à outra parte. Mensagens do
+ * sistema podem carregar uma origem, uma ação e uma {@code deliveryKey} para
+ * permitir processamento controlado e idempotente.</p>
+ */
 public class MailMessage {
 
     @Id
@@ -71,16 +79,41 @@ public class MailMessage {
     @Column(name = "delivery_key", length = 128, unique = true)
     private String deliveryKey;
 
+    /**
+     * Verifica se a mensagem ainda pode ser consultada pelo jogador informado.
+     *
+     * <p>O remetente e o destinatário possuem cópias independentes. A mensagem
+     * só fica invisível para uma parte quando essa parte exclui sua própria
+     * cópia.</p>
+     *
+     * @param playerId jogador que deseja consultar a mensagem
+     * @return {@code true} quando o jogador é uma das partes e sua cópia não foi excluída
+     */
     public boolean isVisibleTo(UUID playerId) {
         if (playerId == null) return false;
         if (recipient != null && recipient.getId().equals(playerId)) return !recipientDeleted;
         return sender != null && sender.getId().equals(playerId) && !senderDeleted;
     }
 
+    /**
+     * Verifica se o jogador é o destinatário da mensagem.
+     *
+     * <p>Essa verificação não considera a exclusão da cópia e é usada para
+     * autorizar ações que somente o destinatário pode executar.</p>
+     *
+     * @param playerId jogador a ser verificado
+     * @return {@code true} quando o jogador é o destinatário
+     */
     public boolean belongsToRecipient(UUID playerId) {
         return recipient != null && recipient.getId().equals(playerId);
     }
 
+    /**
+     * Verifica se o jogador é o remetente da mensagem.
+     *
+     * @param playerId jogador a ser verificado
+     * @return {@code true} quando o jogador é o remetente
+     */
     public boolean belongsToSender(UUID playerId) {
         return sender != null && sender.getId().equals(playerId);
     }

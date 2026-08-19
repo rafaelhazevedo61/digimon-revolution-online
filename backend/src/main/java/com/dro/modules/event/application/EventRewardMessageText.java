@@ -5,6 +5,13 @@ import com.dro.modules.inventory.domain.ItemType;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Formata o conteúdo legível das mensagens de premiação no Correio.
+ *
+ * <p>O texto personalizado é preservado e recebe um resumo automático antes
+ * do resgate. Depois da entrega, o resumo pendente é substituído por um
+ * registro com o conteúdo entregue, o Digimon de destino e o horário.</p>
+ */
 public final class EventRewardMessageText {
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -13,6 +20,19 @@ public final class EventRewardMessageText {
     private EventRewardMessageText() {
     }
 
+    /**
+     * Acrescenta ao texto personalizado o resumo da premiação disponível.
+     *
+     * <p>O resultado permanece dentro do limite de corpo do Correio e informa
+     * Bits, item, validade e a instrução de resgate.</p>
+     *
+     * @param customBody texto escrito pelo administrador
+     * @param bitsAmount quantidade de Bits a entregar
+     * @param itemType tipo do item ou {@code null} quando não houver item
+     * @param itemQuantity quantidade do item
+     * @param expiresAt instante limite para o resgate
+     * @return corpo pronto para ser persistido na mensagem pendente
+     */
     public static String pendingBody(
             String customBody,
             int bitsAmount,
@@ -28,6 +48,17 @@ public final class EventRewardMessageText {
         return fitWithSuffix(customBody.trim(), summary);
     }
 
+    /**
+     * Substitui o resumo pendente por um registro da entrega concluída.
+     *
+     * @param currentBody corpo atual da mensagem, possivelmente com resumo pendente
+     * @param bitsAmount quantidade de Bits entregue
+     * @param itemType tipo do item ou {@code null} quando não houver item
+     * @param itemQuantity quantidade do item entregue
+     * @param digimonName nome do Digimon que recebeu o prêmio
+     * @param claimedAt instante em que a entrega foi concluída
+     * @return corpo atualizado, limitado ao tamanho máximo do Correio
+     */
     public static String claimedBody(
             String currentBody,
             int bitsAmount,
@@ -49,6 +80,13 @@ public final class EventRewardMessageText {
         return fitWithSuffix(baseBody, summary);
     }
 
+    /**
+     * Converte o tipo e a quantidade do item para uma descrição exibível ao jogador.
+     *
+     * @param itemType valor persistido do {@link ItemType}
+     * @param itemQuantity quantidade de unidades
+     * @return descrição traduzida do item ou {@code Nenhum item}
+     */
     public static String formatItem(String itemType, int itemQuantity) {
         if (itemType == null || itemQuantity <= 0) {
             return "Nenhum item";
@@ -60,6 +98,7 @@ public final class EventRewardMessageText {
         return String.format("%,d", bitsAmount).replace(',', '.') + " Bits";
     }
 
+    /** Converte o valor persistido do item para o rótulo em Português exibido ao jogador. */
     private static String itemLabel(String itemType) {
         try {
             return switch (ItemType.valueOf(itemType)) {
@@ -85,6 +124,7 @@ public final class EventRewardMessageText {
         }
     }
 
+    /** Preserva o sufixo automático mesmo quando o texto personalizado excede 1.000 caracteres. */
     private static String fitWithSuffix(String prefix, String suffix) {
         int availablePrefixLength = MAX_BODY_LENGTH - suffix.length();
         if (availablePrefixLength <= 0) {
