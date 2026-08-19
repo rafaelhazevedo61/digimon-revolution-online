@@ -1,5 +1,8 @@
 package com.dro.modules.equipment.domain;
 
+/**
+ * Componente da camada de conversor entre domínio e contratos da API do módulo de Equipamentos.
+ */
 public class EquipmentTemplateMapper {
 
     private EquipmentTemplateMapper() {}

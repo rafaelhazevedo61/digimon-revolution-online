@@ -6,6 +6,9 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
+/**
+ * Contrato de dados do módulo de Equipamentos.
+ */
 public record GrantEquipmentRequest(
         @NotNull UUID digimonId,
         @NotBlank String templateName,

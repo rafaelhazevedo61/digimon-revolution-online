@@ -1,5 +1,8 @@
 package com.dro.modules.digimon.domain.enums;
 
+/**
+ * Enumera estados, tipos ou classificações usados pelo módulo de Digimon.
+ */
 public enum Trait {
     FAST_LEARNER, // +10% XP
     ENERGETIC,    // +5 max energy

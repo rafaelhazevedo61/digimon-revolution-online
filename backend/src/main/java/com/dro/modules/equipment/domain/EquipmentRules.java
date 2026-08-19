@@ -5,8 +5,16 @@ import com.dro.shared.exception.ConflictException;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Regras de equipamento, bônus de set e refinamento.
+ *
+ * <p>Um set ativa bônus com duas peças e bônus maiores com três peças. O
+ * refinamento vai de {@code +0} a {@code +10}; o custo aumenta conforme o nível
+ * atual e a taxa de sucesso diminui nas etapas superiores.</p>
+ */
 public class EquipmentRules {
 
+    /** Impede equipar novamente uma peça que já está vinculada a um Digimon. */
     public static void validateEquip(Equipment equipment) {
 
         if (equipment.isEquipped()) {
@@ -14,6 +22,7 @@ public class EquipmentRules {
         }
     }
 
+    /** Maior nível de refinamento permitido. */
     public static final int MAX_REFINEMENT_LEVEL = 10;
 
     // Set bonus percentages: [2-piece HP%, 2-piece ATK%, 2-piece DEF%, 3-piece HP%, 3-piece ATK%, 3-piece DEF%]
@@ -24,16 +33,19 @@ public class EquipmentRules {
             "BALANCED",   new int[]{ 5,  5,  5, 10, 10, 10}
     );
 
+    /** Calcula o bônus total de HP das peças e do set dominante. */
     public static int totalBonusHp(List<Equipment> equippedItems) {
         int base = equippedItems.stream().mapToInt(Equipment::getEffectiveBonusHp).sum();
         return base + (int) Math.round(base * getSetBonusPercent(equippedItems, 0, 3) / 100.0);
     }
 
+    /** Calcula o bônus total de ATK das peças e do set dominante. */
     public static int totalBonusAttack(List<Equipment> equippedItems) {
         int base = equippedItems.stream().mapToInt(Equipment::getEffectiveBonusAttack).sum();
         return base + (int) Math.round(base * getSetBonusPercent(equippedItems, 1, 4) / 100.0);
     }
 
+    /** Calcula o bônus total de DEF das peças e do set dominante. */
     public static int totalBonusDefense(List<Equipment> equippedItems) {
         int base = equippedItems.stream().mapToInt(Equipment::getEffectiveBonusDefense).sum();
         return base + (int) Math.round(base * getSetBonusPercent(equippedItems, 2, 5) / 100.0);
@@ -66,6 +78,7 @@ public class EquipmentRules {
                 .orElse(null);
     }
 
+    /** Retorna o set dominante, quantidade de peças e percentuais ativos. */
     public static SetBonusInfo getSetBonusInfo(List<Equipment> equippedItems) {
         String dominantSet = findDominantSet(equippedItems);
         if (dominantSet == null) return new SetBonusInfo(null, 0, 0, 0, 0);
@@ -82,8 +95,22 @@ public class EquipmentRules {
         return new SetBonusInfo(null, 0, 0, 0, 0);
     }
 
-    public record SetBonusInfo(String setCode, int pieceCount, int bonusHpPercent, int bonusAtkPercent, int bonusDefPercent) {}
+    /** Informações calculadas sobre o bônus de set atualmente ativo. */
+    public record SetBonusInfo(
+            String setCode,
+            int pieceCount,
+            int bonusHpPercent,
+            int bonusAtkPercent,
+            int bonusDefPercent
+    ) {
+    }
 
+    /**
+     * Calcula o custo de Bits para tentar o próximo nível de refinamento.
+     *
+     * @param currentLevel nível atual da peça
+     * @return custo em Bits
+     */
     public static int refinementCostBits(int currentLevel) {
         return 1000 + (currentLevel * 500);
     }
@@ -101,6 +128,12 @@ public class EquipmentRules {
          20  // +9 → +10
     };
 
+    /**
+     * Retorna a chance de sucesso da tentativa para o próximo nível.
+     *
+     * @param currentLevel nível atual da peça
+     * @return percentual entre 0 e 100; zero fora da faixa válida
+     */
     public static int refinementSuccessRate(int currentLevel) {
         if (currentLevel < 0 || currentLevel >= REFINEMENT_SUCCESS_RATE.length) {
             return 0;

@@ -9,6 +9,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Contrato de dados do módulo de Jogadores.
+ */
 public record PlayerDashboardResponse(
         UUID id,
         String username,

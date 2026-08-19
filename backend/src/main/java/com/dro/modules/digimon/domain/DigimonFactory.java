@@ -8,6 +8,9 @@ import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.UUID;
 
+/**
+ * Componente da camada de modelo de domínio do módulo de Digimon.
+ */
 public class DigimonFactory {
 
     private static final Random random = new Random();

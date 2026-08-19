@@ -18,6 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Digimon.
+ */
 @Service
 @RequiredArgsConstructor
 public class GetDigimonUseCase {

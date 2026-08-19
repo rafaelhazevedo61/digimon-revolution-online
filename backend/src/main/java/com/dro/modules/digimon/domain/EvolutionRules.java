@@ -3,6 +3,9 @@ package com.dro.modules.digimon.domain;
 import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.inventory.domain.ItemType;
 
+/**
+ * Componente da camada de conjunto de regras de domínio do módulo de Digimon.
+ */
 public class EvolutionRules {
 
     public static Stage nextStage(Stage current) {

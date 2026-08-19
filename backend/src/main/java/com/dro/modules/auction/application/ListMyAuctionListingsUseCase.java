@@ -10,6 +10,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Casa de Leilões.
+ */
 @Service
 @RequiredArgsConstructor
 public class ListMyAuctionListingsUseCase {

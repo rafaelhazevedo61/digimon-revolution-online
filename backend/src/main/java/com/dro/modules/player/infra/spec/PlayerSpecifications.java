@@ -5,6 +5,9 @@ import com.dro.modules.player.domain.Player;
 import com.dro.shared.exception.BadRequestException;
 import org.springframework.data.jpa.domain.Specification;
 
+/**
+ * Componente da camada de modelo de domínio do módulo de Jogadores.
+ */
 public class PlayerSpecifications {
 
     private PlayerSpecifications() {

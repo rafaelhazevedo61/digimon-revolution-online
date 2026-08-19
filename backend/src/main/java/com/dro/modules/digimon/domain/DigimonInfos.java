@@ -7,6 +7,9 @@ import com.dro.modules.digimon.domain.enums.Stage;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Componente da camada de modelo de domínio do módulo de Digimon.
+ */
 @Entity
 @Table(name = "digimon_infos")
 @Getter

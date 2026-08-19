@@ -42,6 +42,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Jogadores.
+ */
 @Service
 @RequiredArgsConstructor
 public class GetPlayerDashboardUseCase {

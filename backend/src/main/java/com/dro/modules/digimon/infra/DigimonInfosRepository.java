@@ -6,6 +6,9 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.Optional;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Digimon.
+ */
 public interface DigimonInfosRepository extends JpaRepository<DigimonInfos, Long>, JpaSpecificationExecutor<DigimonInfos> {
 
     Optional<DigimonInfos> findByName(String name);

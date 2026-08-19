@@ -3,6 +3,9 @@ package com.dro.modules.auction.api.dto.response;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Contrato de dados do módulo de Casa de Leilões.
+ */
 public record AuctionTransactionResponse(
         UUID id,
         UUID listingId,

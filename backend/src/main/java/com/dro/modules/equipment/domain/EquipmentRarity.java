@@ -1,5 +1,8 @@
 package com.dro.modules.equipment.domain;
 
+/**
+ * Enumera estados, tipos ou classificações usados pelo módulo de Equipamentos.
+ */
 public enum EquipmentRarity {
     COMMON(1.00),
     RARE(1.15),

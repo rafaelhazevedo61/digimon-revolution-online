@@ -7,6 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Componente da camada de serviço de aplicação do módulo de Casa de Leilões.
+ */
 @Service
 @RequiredArgsConstructor
 public class AuctionMailNotificationService {

@@ -6,6 +6,9 @@ import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Equipamentos.
+ */
 @Service
 @RequiredArgsConstructor
 public class GetEquipmentTemplateUseCase {

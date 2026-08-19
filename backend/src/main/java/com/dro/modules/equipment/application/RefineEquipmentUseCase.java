@@ -23,6 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Equipamentos.
+ */
 @Service
 @RequiredArgsConstructor
 public class RefineEquipmentUseCase {

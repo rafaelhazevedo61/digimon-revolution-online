@@ -5,6 +5,9 @@ import com.dro.modules.equipment.domain.EquipmentSlot;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * Contrato de dados do módulo de Equipamentos.
+ */
 public record UpdateEquipmentTemplateRequest(
         @NotNull EquipmentSlot slot,
         String setCode,

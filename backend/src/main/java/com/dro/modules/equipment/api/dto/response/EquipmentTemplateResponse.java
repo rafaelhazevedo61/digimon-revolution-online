@@ -6,6 +6,9 @@ import com.dro.modules.equipment.domain.EquipmentTemplateEntity;
 
 import java.time.LocalDateTime;
 
+/**
+ * Contrato de dados do módulo de Equipamentos.
+ */
 public record EquipmentTemplateResponse(
         Long id,
         String name,

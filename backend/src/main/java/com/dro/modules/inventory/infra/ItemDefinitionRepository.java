@@ -9,6 +9,9 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Inventário.
+ */
 public interface ItemDefinitionRepository extends JpaRepository<ItemDefinition, Long> {
 
     Optional<ItemDefinition> findByCode(String code);

@@ -2,6 +2,9 @@ package com.dro.modules.digimon.domain.enums;
 
 import java.awt.desktop.SystemEventListener;
 
+/**
+ * Enumera estados, tipos ou classificações usados pelo módulo de Digimon.
+ */
 public enum Element {
     EARTH,
     FIRE,

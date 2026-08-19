@@ -8,6 +8,9 @@ import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.UUID;
 
+/**
+ * Componente da camada de modelo de domínio do módulo de Casa de Leilões.
+ */
 public final class AuctionMailNotificationFactory {
 
     private static final Locale PT_BR = Locale.forLanguageTag("pt-BR");

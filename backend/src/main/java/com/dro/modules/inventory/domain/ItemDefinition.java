@@ -3,6 +3,9 @@ package com.dro.modules.inventory.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Componente da camada de modelo de domínio do módulo de Inventário.
+ */
 @Entity
 @Table(name = "item_definitions")
 @Getter

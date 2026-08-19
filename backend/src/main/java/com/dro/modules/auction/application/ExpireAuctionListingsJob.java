@@ -22,6 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Componente da camada de modelo de domínio do módulo de Casa de Leilões.
+ */
 @Service
 @RequiredArgsConstructor
 public class ExpireAuctionListingsJob {

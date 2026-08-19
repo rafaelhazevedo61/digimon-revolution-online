@@ -14,6 +14,9 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Componente da camada de repositório de persistência do módulo de Casa de Leilões.
+ */
 public interface AuctionListingRepository extends JpaRepository<AuctionListing, UUID> {
 
     @Query(

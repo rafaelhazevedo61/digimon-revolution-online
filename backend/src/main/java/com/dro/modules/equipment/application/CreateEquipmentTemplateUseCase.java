@@ -12,6 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Equipamentos.
+ */
 @Service
 @RequiredArgsConstructor
 public class CreateEquipmentTemplateUseCase {

@@ -2,6 +2,9 @@ package com.dro.modules.digimon.domain;
 
 import com.dro.modules.digimon.domain.enums.Personality;
 
+/**
+ * Componente da camada de conjunto de regras de domínio do módulo de Digimon.
+ */
 public class PersonalityRules {
 
     public static double getHpMultiplier(Personality personality) {

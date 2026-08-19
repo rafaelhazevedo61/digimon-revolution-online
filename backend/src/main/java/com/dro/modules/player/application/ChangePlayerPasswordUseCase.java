@@ -12,6 +12,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Jogadores.
+ */
 @Service
 @RequiredArgsConstructor
 public class ChangePlayerPasswordUseCase {

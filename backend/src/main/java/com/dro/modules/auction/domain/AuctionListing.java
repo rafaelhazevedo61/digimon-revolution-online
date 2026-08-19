@@ -7,6 +7,14 @@ import lombok.*;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Anúncio de um item empilhável publicado para compra imediata.
+ *
+ * <p>O anúncio reserva {@code remainingQuantity} unidades do item e mantém o
+ * Digimon de origem para que cancelamentos e expirações devolvam o estoque ao
+ * proprietário correto. A versão otimista ajuda a detectar atualizações
+ * concorrentes do mesmo anúncio.</p>
+ */
 @Entity
 @Table(name = "auction_listings")
 @Getter
@@ -62,6 +70,12 @@ public class AuctionListing {
     @Builder.Default
     private long version = 0;
 
+    /**
+     * Verifica se o anúncio ainda pode receber uma compra no instante informado.
+     *
+     * @param now instante atual usado na validação
+     * @return {@code true} somente para anúncio ativo, não esgotado e não expirado
+     */
     public boolean isActiveAt(Instant now) {
         return status == AuctionListingStatus.ACTIVE
                 && remainingQuantity > 0

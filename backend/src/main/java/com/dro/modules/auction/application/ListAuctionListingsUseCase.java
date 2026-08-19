@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Casa de Leilões.
+ */
 @Service
 @RequiredArgsConstructor
 public class ListAuctionListingsUseCase {

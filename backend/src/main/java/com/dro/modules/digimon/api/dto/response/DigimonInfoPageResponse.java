@@ -4,6 +4,9 @@ import org.springframework.data.domain.Page;
 
 import java.util.List;
 
+/**
+ * Contrato de dados do módulo de Digimon.
+ */
 public record DigimonInfoPageResponse(
         int page,
         int size,

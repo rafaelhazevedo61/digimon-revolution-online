@@ -9,6 +9,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Digimon.
+ */
 @Service
 @RequiredArgsConstructor
 public class GetDigimonInfosUseCase {
