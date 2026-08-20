@@ -32,6 +32,9 @@ public enum ItemType {
     // Materiais de evolução (diferenciados por material_code)
     EVOLUTION_MATERIAL,
 
+    // Baús temáticos — diferenciados pelo código da definição do item
+    LOOT_CHEST,
+
     // Material de refinamento
     REFINEMENT_STONE
 

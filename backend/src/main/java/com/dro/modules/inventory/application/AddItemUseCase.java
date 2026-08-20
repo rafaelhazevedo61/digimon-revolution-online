@@ -62,7 +62,7 @@ public class AddItemUseCase {
             InventoryItem item = InventoryItem.builder()
                     .id(UUID.randomUUID())
                     .digimonId(digimonId)
-                    .itemType(resolveItemType(itemDefinition.getCode()))
+                    .itemType(resolveItemType(itemDefinition))
                     .itemDefinition(itemDefinition)
                     .quantity(newQuantity)
                     .build();
@@ -71,9 +71,13 @@ public class AddItemUseCase {
         }
     }
 
-    private ItemType resolveItemType(String code) {
+    private ItemType resolveItemType(ItemDefinition itemDefinition) {
+        if ("CHEST".equalsIgnoreCase(itemDefinition.getCategory())) {
+            return ItemType.LOOT_CHEST;
+        }
+
         try {
-            return ItemType.valueOf(code);
+            return ItemType.valueOf(itemDefinition.getCode());
         } catch (IllegalArgumentException e) {
             return ItemType.EVOLUTION_MATERIAL;
         }
