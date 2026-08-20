@@ -119,7 +119,7 @@ class ClaimMissionUseCaseTest {
                 .thenReturn(Optional.of(progress));
         when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
-        when(chestDefinitionRepository.findByCodeAndActiveTrue(chestCode))
+        when(chestDefinitionRepository.findWithCatalogByCode(chestCode))
                 .thenReturn(Optional.of(chest));
 
         MissionResultResponse response = claimMissionUseCase.execute(

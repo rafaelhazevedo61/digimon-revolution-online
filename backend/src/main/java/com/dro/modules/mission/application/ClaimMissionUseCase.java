@@ -248,7 +248,7 @@ public class ClaimMissionUseCase {
     ) {
         if (mission.getChestCode() != null && !mission.getChestCode().isBlank()) {
             ChestDefinitionEntity chest = chestDefinitionRepository
-                    .findByCodeAndActiveTrue(mission.getChestCode())
+                    .findWithCatalogByCode(mission.getChestCode())
                     .orElseThrow(() -> new ConflictException(
                             "Baú da missão não encontrado ou inativo: " + mission.getChestCode()));
 
