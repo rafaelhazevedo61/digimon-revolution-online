@@ -38,6 +38,9 @@ logging:
     org.springframework.jdbc: DEBUG
 
 dro:
+  audit:
+    outbox:
+      fixed-delay-ms: ${DRO_AUDIT_OUTBOX_FIXED_DELAY_MS:5000}
   security:
     jwt:
       secret: ${DRO_JWT_SECRET:dro-local-development-secret-change-this-before-production-2026}
