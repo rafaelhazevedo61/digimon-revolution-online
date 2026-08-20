@@ -6,6 +6,7 @@ import com.dro.modules.equipment.domain.EquipmentTemplateEntity;
 import com.dro.modules.equipment.infra.EquipmentTemplateRepository;
 import com.dro.shared.exception.ConflictException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class CreateEquipmentTemplateUseCase {
 
     private final EquipmentTemplateRepository equipmentTemplateRepository;
 
+    @CacheEvict(cacheNames = "equipmentTemplates", allEntries = true)
     @Transactional
     public EquipmentTemplateResponse execute(CreateEquipmentTemplateRequest request) {
 

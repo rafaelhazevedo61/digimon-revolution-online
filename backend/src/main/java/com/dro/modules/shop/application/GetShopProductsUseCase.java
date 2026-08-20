@@ -6,6 +6,7 @@ import com.dro.modules.shop.domain.ShopProductMapper;
 import com.dro.modules.shop.domain.enums.ShopProductCategory;
 import com.dro.modules.shop.infra.ShopProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +20,7 @@ public class GetShopProductsUseCase {
 
     private final ShopProductRepository shopProductRepository;
 
+    @Cacheable(cacheNames = "shopCatalog", key = "'active'")
     public ShopCatalogResponse execute() {
         List<ShopProductResponse> products = shopProductRepository.findByActiveTrue()
                 .stream()

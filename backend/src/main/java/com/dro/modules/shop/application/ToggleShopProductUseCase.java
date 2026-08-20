@@ -5,6 +5,7 @@ import com.dro.modules.shop.domain.ShopProductEntity;
 import com.dro.modules.shop.infra.ShopProductRepository;
 import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ public class ToggleShopProductUseCase {
 
     private final ShopProductRepository shopProductRepository;
 
+    @CacheEvict(cacheNames = "shopCatalog", key = "'active'")
     @Transactional
     public AdminShopProductResponse execute(String code) {
 

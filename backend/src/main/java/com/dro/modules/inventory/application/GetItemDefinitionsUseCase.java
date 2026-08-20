@@ -5,6 +5,7 @@ import com.dro.modules.inventory.api.dto.response.ItemDefinitionResponse;
 import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ public class GetItemDefinitionsUseCase {
 
     private final ItemDefinitionRepository itemDefinitionRepository;
 
+    @Cacheable(cacheNames = "itemDefinitions")
     public ItemDefinitionPageResponse execute(
             String category,
             String rarity,
