@@ -21,6 +21,16 @@ class LootTableRulesTest {
     }
 
     @Test
+    void acceptsZeroWeightForAnInactiveRarity() {
+        assertThatCode(() -> LootTableRules.validateRarityWeights(Map.of(
+                LootRarity.COMMON, 100,
+                LootRarity.RARE, 0,
+                LootRarity.EPIC, 0,
+                LootRarity.LEGENDARY, 0
+        ))).doesNotThrowAnyException();
+    }
+
+    @Test
     void rejectsMissingOfficialRarity() {
         assertThatThrownBy(() -> LootTableRules.validateRarityWeights(Map.of(
                 LootRarity.COMMON, 70,

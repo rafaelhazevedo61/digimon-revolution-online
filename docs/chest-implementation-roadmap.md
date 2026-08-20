@@ -1,7 +1,7 @@
 # Roadmap de implementação — Baús temáticos e Loot Tables
 
 **Projeto:** Digimon Revolution Online
-**Estado:** planejamento aprovado para implementação incremental
+**Estado:** Sprint 2 em implementação — abertura transacional de baús
 **Data:** 20 de agosto de 2026
 **Branch-base de todos os PRs:** `develop`
 
@@ -122,9 +122,11 @@ Criar o `OpenChestUseCase` e os serviços de domínio necessários para:
 
 O algoritmo não poderá selecionar a mesma entrada duas vezes na mesma abertura. Se houver menos de quatro entradas elegíveis, deverá selecionar no máximo a quantidade disponível, sem inventar duplicatas.
 
+A Sprint 2 também adiciona o endpoint autenticado `POST /inventory/chests/open`, que recebe `chestCode` e `requestId`. A migration V102 persiste o intervalo de 1 a 4 tipos por loot table, e a V103 cria unicidade para itens catalogados por Digimon e definição de item, protegendo créditos concorrentes.
+
 ### Critérios de aceite
 
-Uma abertura válida consome exatamente um baú e entrega de 1 a 4 tipos diferentes. As quantidades respeitam os ranges configurados. Repetir a mesma requisição idempotente não entrega novamente os itens. Falha na entrega provoca rollback completo. Baú negociável continua negociável porque a definição do item não o vincula automaticamente ao jogador. A auditoria positiva só é criada após o commit.
+Uma abertura válida consome exatamente um baú e entrega de 1 a 4 tipos diferentes. As quantidades respeitam os ranges configurados. Repetir a mesma requisição idempotente retorna o resultado persistido sem entregar novamente os itens. Reutilizar o mesmo `requestId` para outro jogador ou baú é rejeitado. Falha na entrega provoca rollback completo. Baú negociável continua negociável porque a definição do item não o vincula automaticamente ao jogador. A auditoria positiva `CHEST_OPENED` só é criada após a persistência da operação oficial.
 
 ## 8. Sprint 3 — Integração com Missões
 
