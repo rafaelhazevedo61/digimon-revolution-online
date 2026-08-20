@@ -26,7 +26,7 @@ services:
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-dro_mongo}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-dro_mongo_pass}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-change-this-mongo-password}
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-dro_audit}
     ports:
       - "${MONGO_PORT:-27017}:27017"
@@ -59,10 +59,16 @@ services:
       DRO_JWT_SECRET: ${DRO_JWT_SECRET:-dro-local-development-secret-change-this-before-production-2026}
       DRO_JWT_ISSUER: ${DRO_JWT_ISSUER:-digimon-revolution-online}
       DRO_JWT_EXPIRATION_MINUTES: ${DRO_JWT_EXPIRATION_MINUTES:-1440}
-      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME:-dro_mongo}:${MONGO_ROOT_PASSWORD:-dro_mongo_pass}@dro-mongodb:27017/${MONGO_DATABASE:-dro_audit}?authSource=admin
-      SPRING_DATA_MONGODB_AUTO_INDEX_CREATION: ${SPRING_DATA_MONGODB_AUTO_INDEX_CREATION:-true}
+      SPRING_MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME:-dro_mongo}:${MONGO_ROOT_PASSWORD:-change-this-mongo-password}@dro-mongodb:27017/${MONGO_DATABASE:-dro_audit}?authSource=admin
+      SPRING_DATA_MONGODB_AUTO_INDEX_CREATION: ${SPRING_DATA_MONGODB_AUTO_INDEX_CREATION:-false}
     ports:
       - "${API_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent --show-error http://localhost:8080/actuator/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     networks:
       - dro-network
 
