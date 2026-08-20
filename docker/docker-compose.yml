@@ -26,7 +26,7 @@ services:
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-dro_mongo}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-dro_mongo_pass}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-change-this-mongo-password}
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-dro_audit}
     ports:
       - "${MONGO_PORT:-27017}:27017"
