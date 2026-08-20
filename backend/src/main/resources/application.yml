@@ -16,12 +16,22 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  mongodb:
+    uri: ${SPRING_MONGODB_URI:mongodb://dro_mongo:change-this-mongo-password@localhost:27017/dro_audit?authSource=admin}
   data:
     mongodb:
-      uri: ${SPRING_DATA_MONGODB_URI:mongodb://dro_mongo:dro_mongo_pass@localhost:27017/dro_audit?authSource=admin}
       auto-index-creation: ${SPRING_DATA_MONGODB_AUTO_INDEX_CREATION:false}
 server:
   port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
 
 logging:
   level:
