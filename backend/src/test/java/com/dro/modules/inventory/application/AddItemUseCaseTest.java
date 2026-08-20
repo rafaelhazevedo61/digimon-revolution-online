@@ -81,6 +81,29 @@ class AddItemUseCaseTest {
     }
 
     @Test
+    void addMaterial_resolvesChestDefinitionAsLootChest() {
+        UUID digimonId = UUID.randomUUID();
+        var chestDefinition = com.dro.modules.inventory.domain.ItemDefinition.builder()
+                .id(101L)
+                .code("CHEST_MISSION_NATIVE_FOREST")
+                .category("CHEST")
+                .maxStack(999)
+                .build();
+
+        when(repository.findByDigimonIdAndItemDefinitionId(digimonId, 101L))
+                .thenReturn(Optional.empty());
+
+        addItemUseCase.addMaterial(digimonId, chestDefinition, 1);
+
+        ArgumentCaptor<InventoryItem> captor = ArgumentCaptor.forClass(InventoryItem.class);
+        verify(repository).save(captor.capture());
+
+        assertEquals(ItemType.LOOT_CHEST, captor.getValue().getItemType());
+        assertSame(chestDefinition, captor.getValue().getItemDefinition());
+        assertEquals(1, captor.getValue().getQuantity());
+    }
+
+    @Test
     void execute_grantsFragment() {
         UUID digimonId = UUID.randomUUID();
 

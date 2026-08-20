@@ -117,6 +117,7 @@ public final class EventRewardMessageText {
                 case FRAGMENT_ULTIMATE -> "Fragmento Ultimate";
                 case FRAGMENT_MEGA -> "Fragmento Mega";
                 case EVOLUTION_MATERIAL -> "Material de evolução";
+                case LOOT_CHEST -> "Baú temático";
                 case REFINEMENT_STONE -> "Pedra de refinamento";
             };
         } catch (IllegalArgumentException exception) {

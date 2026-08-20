@@ -22,10 +22,13 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/admin/mail")
-@RequiredArgsConstructor
 public class AdminEventRewardController {
 
     private final CreateEventRewardUseCase createEventRewardUseCase;
+
+    public AdminEventRewardController (CreateEventRewardUseCase createEventRewardUseCase) {
+        this.createEventRewardUseCase = createEventRewardUseCase;
+    }
 
     /**
      * Cria premiações individuais para os destinatários selecionados.
