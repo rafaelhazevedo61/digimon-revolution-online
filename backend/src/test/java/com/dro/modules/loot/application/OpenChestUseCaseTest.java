@@ -101,6 +101,8 @@ class OpenChestUseCaseTest {
         );
 
         assertThat(response.requestId()).isEqualTo("request-1");
+        assertThat(response.replayed()).isFalse();
+        assertThat(response.message()).isEqualTo("Baú aberto com sucesso!");
         assertThat(response.chestCode()).isEqualTo(chestCode);
         assertThat(response.items()).hasSize(1);
         assertThat(response.items().get(0).itemCode()).isEqualTo("FRAGMENT_AGUMON");
@@ -141,6 +143,10 @@ class OpenChestUseCaseTest {
         );
 
         assertThat(response.requestId()).isEqualTo("request-1");
+        assertThat(response.replayed()).isTrue();
+        assertThat(response.message()).isEqualTo(
+                "Esta abertura já havia sido processada. O resultado original foi retornado."
+        );
         assertThat(response.rarity()).isEqualTo(LootRarity.COMMON);
         verifyNoInteractions(playerRepository, digimonRepository, inventoryRepository,
                 itemDefinitionRepository, chestDefinitionRepository, transactionAuditPublisher);

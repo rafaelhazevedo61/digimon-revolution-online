@@ -13,6 +13,7 @@ public record ChestOpeningResponse(
         String chestName,
         LootRarity rarity,
         List<ChestOpeningItemResponse> items,
+        boolean replayed,
         String message
 ) {
 }

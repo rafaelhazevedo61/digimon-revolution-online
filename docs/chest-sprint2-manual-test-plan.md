@@ -114,6 +114,8 @@ ORDER BY coi.id;
 
 Deve existir exatamente uma linha em `chest_openings`, mesmo depois do retry, e entre uma e quatro linhas em `chest_opening_items`.
 
+Na primeira resposta, o campo `replayed` deve ser `false` e a mensagem deve ser `Baú aberto com sucesso!`. No retry com o mesmo `requestId`, `replayed` deve ser `true` e a mensagem deve informar que o resultado original foi retornado. Os campos econômicos — baú, raridade, itens e quantidades — devem permanecer iguais.
+
 ### Inventário antes e depois
 
 ```sql
@@ -130,7 +132,7 @@ WHERE idf.category = 'CHEST'
 ORDER BY ii.digimon_id, idf.code;
 ```
 
-A primeira abertura deve reduzir o baú em exatamente uma unidade. O retry com o mesmo `requestId` não deve modificar a quantidade novamente.
+A primeira abertura deve reduzir o baú em exatamente uma unidade. O retry com o mesmo `requestId` não deve modificar a quantidade novamente, mesmo que retorne HTTP 200.
 
 ### Auditoria positiva
 

@@ -73,7 +73,7 @@ public class OpenChestUseCase {
                 .orElse(null);
         if (previousOpening != null) {
             validateRetryOwnership(previousOpening, playerId, request.chestCode());
-            return toResponse(previousOpening);
+            return toResponse(previousOpening, true);
         }
 
         Player player = playerRepository.findById(playerId)
@@ -127,7 +127,7 @@ public class OpenChestUseCase {
                 buildAuditPayload(opening, activeDigimon, roll)
         );
 
-        return toResponse(opening);
+        return toResponse(opening, false);
     }
 
     private void validateRequest(OpenChestRequest request) {
@@ -233,18 +233,22 @@ public class OpenChestUseCase {
         );
     }
 
-    private ChestOpeningResponse toResponse(ChestOpeningEntity opening) {
+    private ChestOpeningResponse toResponse(ChestOpeningEntity opening, boolean replayed) {
         List<ChestOpeningItemResponse> items = opening.getItems().stream()
                 .map(this::toItemResponse)
                 .toList();
         ChestDefinitionEntity chest = opening.getChestDefinition();
+        String message = replayed
+                ? "Esta abertura já havia sido processada. O resultado original foi retornado."
+                : "Baú aberto com sucesso!";
         return new ChestOpeningResponse(
                 opening.getRequestId(),
                 chest.getCode(),
                 chest.getName(),
                 opening.getRarity(),
                 items,
-                "Baú aberto com sucesso!"
+                replayed,
+                message
         );
     }
 
