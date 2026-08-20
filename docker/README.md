@@ -50,7 +50,9 @@ Consulte os logs do MongoDB:
 docker compose --env-file docker/.env -f docker/docker-compose.yml logs -f dro-mongodb
 ```
 
-O serviço da API só é iniciado depois que os healthchecks do PostgreSQL e do MongoDB ficam saudáveis. O Spring Boot executa as migrations Flyway durante a inicialização e conecta a auditoria ao banco `dro_audit`.
+O serviço da API só é iniciado depois que os healthchecks do PostgreSQL e do MongoDB ficam saudáveis. O Compose monta internamente a variável `SPRING_MONGODB_URI` com o hostname Docker `dro-mongodb`; não é necessário cadastrar essa URI manualmente no `.env`. O Spring Boot executa as migrations Flyway durante a inicialização e conecta a auditoria ao banco `dro_audit`.
+
+A variável `SPRING_DATA_MONGODB_AUTO_INDEX_CREATION` fica desabilitada por padrão para que uma indisponibilidade temporária do MongoDB não impeça a API de iniciar. Em um ambiente local no qual seja necessário validar a criação automática dos índices, altere explicitamente essa variável para `true` no `docker/.env`.
 
 ## Parar e reiniciar
 
@@ -83,4 +85,4 @@ Renderize a configuração final sem iniciar os serviços:
 docker compose --env-file docker/.env -f docker/docker-compose.yml config
 ```
 
-Se a API não conectar aos bancos, confirme se os healthchecks estão saudáveis e se as variáveis `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `MONGO_ROOT_USERNAME`, `MONGO_ROOT_PASSWORD` e `MONGO_DATABASE` são consistentes. Não utilize credenciais de desenvolvimento em produção.
+Se a API não conectar aos bancos, confirme se os healthchecks estão saudáveis e se as variáveis `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `MONGO_ROOT_USERNAME`, `MONGO_ROOT_PASSWORD` e `MONGO_DATABASE` são consistentes. Para confirmar a configuração efetiva da API sem expor a senha, verifique se o Compose renderiza `SPRING_MONGODB_URI` com `dro-mongodb:27017`. Não utilize credenciais de desenvolvimento em produção.
