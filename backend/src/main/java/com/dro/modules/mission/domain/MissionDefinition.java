@@ -7,7 +7,11 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * Componente da camada de componente de domínio do módulo de Missões.
+ * Definição de uma missão disponível para o jogador.
+ *
+ * <p>O loot legado continua exposto apenas para compatibilidade com dados
+ * antigos. Missões migradas para o novo sistema usam {@code chestCode} para
+ * entregar um Baú da Área.</p>
  */
 @Data
 public class MissionDefinition {
@@ -24,5 +28,5 @@ public class MissionDefinition {
     private final int durationSeconds;
     private final List<MissionReward> fixedRewards;
     private final LootTable lootTable;
-
+    private final String chestCode;
 }

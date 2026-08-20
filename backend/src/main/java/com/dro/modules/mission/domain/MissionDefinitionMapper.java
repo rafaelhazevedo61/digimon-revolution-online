@@ -41,7 +41,8 @@ public class MissionDefinitionMapper {
                 entity.getEnergyCost(),
                 entity.getDurationSeconds(),
                 rewards,
-                lootTable
+                lootTable,
+                entity.getChestDefinition() == null ? null : entity.getChestDefinition().getCode()
         );
     }
 }

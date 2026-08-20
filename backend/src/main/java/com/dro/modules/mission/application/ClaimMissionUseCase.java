@@ -3,8 +3,11 @@ package com.dro.modules.mission.application;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.loot.domain.LootItem;
 import com.dro.modules.loot.domain.LootRoller;
+import com.dro.modules.loot.domain.ChestDefinitionEntity;
+import com.dro.modules.loot.infra.ChestDefinitionRepository;
 import com.dro.modules.mission.api.dto.response.MissionResultResponse;
 import com.dro.modules.mission.api.dto.response.RewardResponse;
 import com.dro.modules.mission.domain.MissionDefinition;
@@ -25,12 +28,15 @@ import com.dro.modules.tutorial.domain.TutorialStep;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -48,6 +54,8 @@ public class ClaimMissionUseCase {
     private final ClanBonusService clanBonusService;
     private final ClanMissionProgressTracker clanMissionProgressTracker;
     private final PlayerRepository playerRepository;
+    private final ChestDefinitionRepository chestDefinitionRepository;
+    private final TransactionAuditPublisher transactionAuditPublisher;
 
     public ClaimMissionUseCase(
             MissionInstanceRepository missionInstanceRepository,
@@ -58,7 +66,9 @@ public class ClaimMissionUseCase {
             TutorialService tutorialService,
             ClanBonusService clanBonusService,
             ClanMissionProgressTracker clanMissionProgressTracker,
-            PlayerRepository playerRepository
+            PlayerRepository playerRepository,
+            ChestDefinitionRepository chestDefinitionRepository,
+            TransactionAuditPublisher transactionAuditPublisher
     ) {
         this.missionInstanceRepository = missionInstanceRepository;
         this.digimonRepository = digimonRepository;
@@ -69,6 +79,8 @@ public class ClaimMissionUseCase {
         this.clanBonusService = clanBonusService;
         this.clanMissionProgressTracker = clanMissionProgressTracker;
         this.playerRepository = playerRepository;
+        this.chestDefinitionRepository = chestDefinitionRepository;
+        this.transactionAuditPublisher = transactionAuditPublisher;
     }
 
     @Transactional
@@ -138,7 +150,7 @@ public class ClaimMissionUseCase {
                 applyFixedRewards(digimonId, mission, completionCount)
         );
 
-        applyRandomLoot(digimonId, mission, rewards);
+        applyMissionChestOrLegacyLoot(digimonId, mission, rewards);
 
         incrementProgress(progress);
 
@@ -152,6 +164,14 @@ public class ClaimMissionUseCase {
         }
 
         tutorialService.completeStep(playerId, TutorialStep.COMPLETE_MISSION);
+
+        transactionAuditPublisher.success(
+                "mission-claim:" + missionInstanceId,
+                "MISSION_CLAIMED",
+                "MissionInstance",
+                missionInstanceId.toString(),
+                buildAuditPayload(playerId, mission, xpGained, bitsGained)
+        );
 
         return new MissionResultResponse(
                 mission.getId(),
@@ -221,11 +241,27 @@ public class ClaimMissionUseCase {
         return rewards;
     }
 
-    private void applyRandomLoot(
+    private void applyMissionChestOrLegacyLoot(
             UUID digimonId,
             MissionDefinition mission,
             List<RewardResponse> rewards
     ) {
+        if (mission.getChestCode() != null && !mission.getChestCode().isBlank()) {
+            ChestDefinitionEntity chest = chestDefinitionRepository
+                    .findByCodeAndActiveTrue(mission.getChestCode())
+                    .orElseThrow(() -> new ConflictException(
+                            "Baú da missão não encontrado ou inativo: " + mission.getChestCode()));
+
+            addItemUseCase.addMaterial(digimonId, chest.getItemDefinition(), 1);
+            rewards.add(new RewardResponse(
+                    ItemType.LOOT_CHEST,
+                    1,
+                    chest.getCode(),
+                    chest.getName()
+            ));
+            return;
+        }
+
         if (mission.getLootTable() == null) {
             return;
         }
@@ -244,6 +280,28 @@ public class ClaimMissionUseCase {
                         lootItem.getQuantity()
                 )
         );
+    }
+
+    private Map<String, Object> buildAuditPayload(
+            UUID playerId,
+            MissionDefinition mission,
+            int xpGained,
+            int bitsGained
+    ) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("module", "mission");
+        payload.put("operation", "claim");
+        payload.put("playerId", playerId.toString());
+        payload.put("missionId", mission.getId());
+        payload.put("area", mission.getArea().name());
+        payload.put("xpGained", xpGained);
+        payload.put("bitsGained", bitsGained);
+        if (mission.getChestCode() != null) {
+            payload.put("chestCode", mission.getChestCode());
+            payload.put("chestQuantity", 1);
+        }
+        payload.put("summary", "Mission claimed successfully");
+        return payload;
     }
 
     private double calculateProgressMultiplier(int completionCount) {
