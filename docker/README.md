@@ -50,6 +50,14 @@ Consulte os logs do MongoDB:
 docker compose --env-file docker/.env -f docker/docker-compose.yml logs -f dro-mongodb
 ```
 
+Teste o healthcheck HTTP da API:
+
+```bash
+curl -i http://localhost:8080/actuator/health
+```
+
+A resposta esperada é HTTP `200` com status `UP`. O endpoint expõe somente o estado agregado de saúde, sem detalhes de credenciais ou conexões internas. O `docker compose ps` também deve mostrar o serviço `dro-api` como `healthy` depois da janela inicial de `start_period`.
+
 O serviço da API só é iniciado depois que os healthchecks do PostgreSQL e do MongoDB ficam saudáveis. O Compose monta internamente a variável `SPRING_MONGODB_URI` com o hostname Docker `dro-mongodb`; não é necessário cadastrar essa URI manualmente no `.env`. O Spring Boot executa as migrations Flyway durante a inicialização e conecta a auditoria ao banco `dro_audit`.
 
 A variável `SPRING_DATA_MONGODB_AUTO_INDEX_CREATION` fica desabilitada por padrão para que uma indisponibilidade temporária do MongoDB não impeça a API de iniciar. Em um ambiente local no qual seja necessário validar a criação automática dos índices, altere explicitamente essa variável para `true` no `docker/.env`.
