@@ -33,7 +33,7 @@ import java.util.Map;
 public record TransactionAuditDocument(
         @Id String id,
         @Indexed(unique = true) String eventId,
-        @Indexed Instant occurredAt,
+        @Indexed(expireAfter = "180d") Instant occurredAt,
         @Indexed String correlationId,
         @Indexed String actorId,
         @Indexed String module,

@@ -37,7 +37,7 @@ import java.util.Map;
 public record ErrorLogDocument(
         @Id String id,
         @Indexed(unique = true) String errorId,
-        @Indexed Instant occurredAt,
+        @Indexed(expireAfter = "365d") Instant occurredAt,
         @Indexed String correlationId,
         @Indexed String actorId,
         @Indexed String module,

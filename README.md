@@ -120,7 +120,186 @@ Para conhecer o padrão adotado, consulte [`docs/javadoc-guidelines.md`](docs/ja
 
 - HTML, CSS e JavaScript estáticos.
 - Tema escuro com `localStorage` e `prefers-color-scheme`.
-- Notícias, galeria, patch notes, roadmap e wiki de sistemas.
+- Notícias, galeria, patch notes, roadmap e wiki pública.
+
+## Observabilidade, resiliência e auditoria
+
+A aplicação possui uma camada de observabilidade projetada para separar o estado oficial do jogo da investigação operacional. O **PostgreSQL continua sendo a fonte oficial** de jogadores, Digimon, inventário, Bits, equipamentos, anúncios, resgates e mensagens. O MongoDB armazena somente documentos de auditoria positiva e logs de erro; ele nunca deve ser usado para reconstruir ou substituir o estado transacional do jogo.
+
+As operações críticas gravam o estado do jogo e o evento de auditoria na mesma transação PostgreSQL por meio do padrão **Transactional Outbox**. Um processador agendado entrega posteriormente a auditoria ao MongoDB. Essa separação garante que uma falha no MongoDB não desfaça uma compra, um resgate ou um refinamento que já foi confirmado pelo PostgreSQL.
+
+```text
+Transação oficial
+      |
+      +--> PostgreSQL: estado do jogo
+      +--> PostgreSQL: audit_outbox_events
+                            |
+                            v
+                  AuditOutboxProcessor
+                            |
+              +-------------+-------------+
+              |                           |
+       MongoDB disponível          MongoDB indisponível
+              |                           |
+              v                           v
+  dro_transaction_audits       FAILED + retry com backoff
+                                          |
+                              limite atingido: DEAD_LETTER
+```
+
+### Estados do Transactional Outbox
+
+| Estado | Significado operacional | Processamento automático |
+|---|---|---:|
+| `PENDING` | Evento criado junto da transação oficial e aguardando publicação | Sim |
+| `FAILED` | Tentativa de publicação falhou; o erro e a próxima tentativa foram registrados | Sim, quando `available_at` chegar |
+| `PUBLISHED` | Auditoria foi persistida no MongoDB e a entrega foi confirmada | Não |
+| `DEAD_LETTER` | Falha persistente atingiu o limite; o evento foi separado para investigação manual | Não |
+
+O ciclo normal é `PENDING → PUBLISHED`. Em uma falha transitória, o ciclo é `PENDING → FAILED → FAILED → PUBLISHED`. Se a causa persistir até o limite configurado, o ciclo termina em `DEAD_LETTER`. O processador nunca deve marcar manualmente um evento como `PUBLISHED`; essa transição só ocorre depois da persistência idempotente no MongoDB.
+
+### Retry, backoff e DEAD_LETTER
+
+O processador executa a cada cinco segundos por padrão e consulta somente eventos `PENDING` e `FAILED` cujo `available_at` já foi alcançado. O backoff cresce entre as tentativas e é limitado a cinco minutos. O limite padrão é de cinco tentativas já consumidas; quando uma nova falha ocorre com `attempts >= 5`, o evento é marcado como `DEAD_LETTER` e a falha é preservada em `last_error`. Por isso, o registro de teste que começa com `attempts = 5` passa a exibir `attempts = 6` após a falha definitiva.
+
+Para diagnosticar o Outbox no PostgreSQL:
+
+```sql
+SELECT status, COUNT(*) AS total
+FROM audit_outbox_events
+GROUP BY status
+ORDER BY status;
+```
+
+Para listar eventos que precisam de atenção:
+
+```sql
+SELECT event_id,
+       event_type,
+       aggregate_type,
+       aggregate_id,
+       correlation_id,
+       status,
+       attempts,
+       available_at,
+       published_at,
+       last_error,
+       created_at
+FROM audit_outbox_events
+WHERE status IN ('FAILED', 'DEAD_LETTER')
+ORDER BY created_at ASC
+LIMIT 100;
+```
+
+Para investigar um evento específico:
+
+```sql
+SELECT id,
+       event_id,
+       event_type,
+       aggregate_type,
+       aggregate_id,
+       correlation_id,
+       payload_json,
+       status,
+       attempts,
+       created_at,
+       available_at,
+       published_at,
+       last_error,
+       version
+FROM audit_outbox_events
+WHERE event_id = 'COLE-O-EVENT-ID-AQUI';
+```
+
+### Procedimento manual para DEAD_LETTER
+
+O reprocessamento manual deve ser feito somente depois de confirmar que o MongoDB está saudável, que a causa da falha foi corrigida e que o `payload_json` não contém segredo, token, cookie ou estrutura inválida. Primeiro faça uma cópia dos dados da linha para o registro operacional e examine `last_error`, `attempts`, `payload_json` e `correlation_id`.
+
+Nunca altere um evento diretamente para `PUBLISHED` e nunca apague a linha para fazê-la desaparecer da fila. Para reprocessar **um único evento** de forma controlada, use uma transação SQL e mantenha a condição `status = 'DEAD_LETTER'`, evitando que uma segunda pessoa reabra o mesmo evento sem perceber:
+
+```sql
+BEGIN;
+
+SELECT event_id,
+       status,
+       attempts,
+       available_at,
+       last_error,
+       payload_json
+FROM audit_outbox_events
+WHERE event_id = 'COLE-O-EVENT-ID-AQUI'
+  AND status = 'DEAD_LETTER'
+FOR UPDATE;
+
+UPDATE audit_outbox_events
+SET status = 'FAILED',
+    attempts = 0,
+    available_at = CURRENT_TIMESTAMP,
+    published_at = NULL,
+    last_error = NULL
+WHERE event_id = 'COLE-O-EVENT-ID-AQUI'
+  AND status = 'DEAD_LETTER';
+
+COMMIT;
+```
+
+Depois confirme a transição e aguarde o próximo ciclo do processador:
+
+```sql
+SELECT event_id,
+       status,
+       attempts,
+       available_at,
+       published_at,
+       last_error
+FROM audit_outbox_events
+WHERE event_id = 'COLE-O-EVENT-ID-AQUI';
+```
+
+O resultado esperado é `FAILED` imediatamente e, após a publicação bem-sucedida, `PUBLISHED` com `published_at` preenchido. Em seguida, confirme no MongoDB que existe exatamente um documento com o mesmo `eventId`:
+
+```javascript
+db.dro_transaction_audits.findOne({ eventId: "COLE-O-EVENT-ID-AQUI" })
+```
+
+Se o problema for payload inválido ou dado inconsistente, **não faça reprocessamento cego**. Preserve o evento como `DEAD_LETTER`, corrija a causa no código ou nos dados por procedimento revisado e registre a decisão operacional. O reprocessamento manual não deve ser usado para alterar o estado do jogo, somente para tentar novamente a entrega de uma auditoria já criada.
+
+### Retenção TTL
+
+As auditorias positivas são retidas por aproximadamente 180 dias e os logs de erro por aproximadamente 365 dias. Os índices são aplicados ao campo `occurredAt`:
+
+| Collection MongoDB | Campo | `expireAfterSeconds` | Retenção aproximada |
+|---|---|---:|---:|
+| `dro_transaction_audits` | `occurredAt` | `15552000` | 180 dias |
+| `dro_error_logs` | `occurredAt` | `31536000` | 365 dias |
+
+A remoção é executada de forma assíncrona pelo monitor TTL do MongoDB e não ocorre necessariamente no segundo exato do vencimento. Em ambientes operacionais, mantenha a criação automática de índices desabilitada por padrão e gerencie a criação dos índices durante a preparação do ambiente; habilite `SPRING_DATA_MONGODB_AUTO_INDEX_CREATION=true` apenas quando isso fizer parte de uma inicialização controlada.
+
+### Erros HTTP e correlação
+
+Respostas de erro incluem `X-Correlation-Id`, e o mesmo identificador é persistido em `dro_error_logs`. Para consultar um erro no MongoDB:
+
+```javascript
+db.dro_error_logs.find({ correlationId: "COLE-O-CORRELATION-ID-AQUI" })
+  .sort({ occurredAt: -1 })
+  .limit(20)
+```
+
+O documento de erro deve conter contexto suficiente para investigação, mas nunca deve persistir senha, token, cookie ou o valor completo de um header de autenticação. Mensagens e stack traces são sanitizados e limitados.
+
+### Variáveis de observabilidade
+
+| Variável | Padrão | Finalidade |
+|---|---:|---|
+| `SPRING_MONGODB_URI` | URI local | Conexão da API com o MongoDB de auditoria |
+| `SPRING_DATA_MONGODB_AUTO_INDEX_CREATION` | `false` | Criação automática dos índices MongoDB |
+| `DRO_AUDIT_OUTBOX_FIXED_DELAY_MS` | `5000` | Intervalo entre ciclos do processador |
+| `DRO_AUDIT_OUTBOX_MAX_ATTEMPTS` | `5` | Limite de tentativas antes de `DEAD_LETTER` |
+| `DRO_CACHE_CATALOGS_MAX_SIZE` | `500` | Limite de cada cache de catálogo |
+| `DRO_CACHE_CATALOGS_TTL_SECONDS` | `300` | TTL dos catálogos seguros |
+
+Para o runbook completo, incluindo diagnóstico Docker, recuperação do MongoDB e consultas de auditoria, consulte [`docs/observability-guide.md`](docs/observability-guide.md).
 
 ## Como executar localmente
 
@@ -212,6 +391,12 @@ O backend pode ser configurado sem alterar o `application.yml` por meio das vari
 | `SPRING_DATASOURCE_URL` | URL JDBC do PostgreSQL | `jdbc:postgresql://localhost:5432/dro_db` |
 | `SPRING_DATASOURCE_USERNAME` | Usuário do banco | `dro_user` |
 | `SPRING_DATASOURCE_PASSWORD` | Senha do banco | `dro_pass` |
+| `SPRING_MONGODB_URI` | URI do MongoDB de auditoria | Definida pelo ambiente local |
+| `SPRING_DATA_MONGODB_AUTO_INDEX_CREATION` | Criação automática dos índices MongoDB | `false` |
+| `DRO_AUDIT_OUTBOX_FIXED_DELAY_MS` | Intervalo do processador do Outbox | `5000` |
+| `DRO_AUDIT_OUTBOX_MAX_ATTEMPTS` | Limite antes de `DEAD_LETTER` | `5` |
+| `DRO_CACHE_CATALOGS_MAX_SIZE` | Limite de cada cache seguro | `500` |
+| `DRO_CACHE_CATALOGS_TTL_SECONDS` | TTL dos caches de catálogo | `300` |
 | `DRO_JWT_SECRET` | Chave secreta usada para assinar JWT | Definida pelo `application.yml` apenas no desenvolvimento |
 | `DRO_JWT_ISSUER` | Emissor do JWT | `digimon-revolution-online` |
 | `DRO_JWT_EXPIRATION_MINUTES` | Tempo de expiração do token | `1440` |
@@ -255,7 +440,7 @@ git diff --check
 
 ## Migrations
 
-As migrations do Flyway estão em `backend/src/main/resources/db/migration` e são executadas automaticamente pelo backend. A migration mais recente do estado atual cria a estrutura de premiações de eventos (`V99__create_event_rewards.sql`).
+As migrations do Flyway estão em `backend/src/main/resources/db/migration` e são executadas automaticamente pelo backend. A migration mais recente do estado atual cria a tabela do Transactional Outbox (`V100__create_audit_outbox_events.sql`). A tabela registra eventos junto das transações oficiais para permitir publicação assíncrona e recuperação operacional.
 
 Não edite uma migration já aplicada. Para alterar o schema, crie uma nova migration com o próximo número disponível e valide a inicialização contra PostgreSQL.
 
@@ -284,6 +469,8 @@ A collection não deve armazenar tokens reais, senhas ou dados pessoais. Preench
 | [`FUNCIONALIDADES.md`](backend/src/main/resources/docs/FUNCIONALIDADES.md) | Regras, fórmulas, endpoints e fluxos do backend |
 | [`API_CURL_COLLECTION.md`](backend/src/main/resources/docs/API_CURL_COLLECTION.md) | Uso e regeneração das collections |
 | [`javadoc-guidelines.md`](docs/javadoc-guidelines.md) | Padrão de documentação do código Java |
+| [`observability-guide.md`](docs/observability-guide.md) | Operação de PostgreSQL, MongoDB, Outbox, TTL, retry e DEAD_LETTER |
+| [`observability-manual-test-plan.md`](docs/observability-manual-test-plan.md) | Roteiro manual da cadeia de observabilidade |
 | [`official-site/README.md`](official-site/README.md) | Execução e manutenção do site oficial |
 | [Wiki de Sistemas](official-site/wiki/sistemas.html) | Explicações voltadas aos jogadores |
 
