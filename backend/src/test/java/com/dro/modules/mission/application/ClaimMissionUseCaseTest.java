@@ -13,6 +13,8 @@ import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.loot.domain.ChestDefinitionEntity;
 import com.dro.modules.loot.infra.ChestDefinitionRepository;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
+import com.dro.modules.mission.domain.MissionRewardEntity;
 import com.dro.modules.mission.api.dto.response.MissionResultResponse;
 import com.dro.modules.mission.domain.MissionDefinitionEntity;
 import com.dro.modules.mission.domain.MissionInstance;
@@ -80,6 +82,9 @@ class ClaimMissionUseCaseTest {
     private ChestDefinitionRepository chestDefinitionRepository;
 
     @Mock
+    private ItemDefinitionRepository itemDefinitionRepository;
+
+    @Mock
     private TransactionAuditPublisher transactionAuditPublisher;
 
     @InjectMocks
@@ -121,6 +126,15 @@ class ClaimMissionUseCaseTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
         when(chestDefinitionRepository.findWithCatalogByCode(chestCode))
                 .thenReturn(Optional.of(chest));
+        ItemDefinition trainingStone = ItemDefinition.builder()
+                .id(200L)
+                .code("TRAINING_STONE")
+                .name("Pedra de Treino")
+                .category("MATERIAL")
+                .maxStack(999)
+                .build();
+        when(itemDefinitionRepository.findByCode("TRAINING_STONE"))
+                .thenReturn(Optional.of(trainingStone));
 
         MissionResultResponse response = claimMissionUseCase.execute(
                 token(playerId),
@@ -137,9 +151,12 @@ class ClaimMissionUseCaseTest {
                     assertThat(reward.itemName()).isEqualTo(chest.getName());
                 });
         assertThat(response.rewards())
-                .noneMatch(reward -> reward.item() == ItemType.TRAINING_STONE
-                        || reward.item() == ItemType.DATA_CORE);
+                .anySatisfy(reward -> {
+                    assertThat(reward.item()).isEqualTo(ItemType.TRAINING_STONE);
+                    assertThat(reward.quantity()).isEqualTo(1);
+                });
 
+        verify(addItemUseCase).addMaterial(digimonId, trainingStone, 1);
         verify(addItemUseCase).addMaterial(digimonId, chest.getItemDefinition(), 1);
         verify(addItemUseCase, never()).execute(eq(digimonId), any(ItemType.class), anyInt());
         verify(missionInstanceRepository).save(instance);
@@ -172,6 +189,10 @@ class ClaimMissionUseCaseTest {
                 .createdBy("TEST")
                 .updatedBy("TEST")
                 .chestDefinition(chest)
+                .rewards(List.of(MissionRewardEntity.builder()
+                        .itemType(ItemType.TRAINING_STONE)
+                        .baseQuantity(1)
+                        .build()))
                 .build();
     }
 

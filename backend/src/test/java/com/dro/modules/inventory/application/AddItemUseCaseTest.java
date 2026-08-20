@@ -3,6 +3,7 @@ package com.dro.modules.inventory.application;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -21,6 +22,9 @@ class AddItemUseCaseTest {
 
     @Mock
     private InventoryRepository repository;
+
+    @Mock
+    private ItemDefinitionRepository itemDefinitionRepository;
 
     @InjectMocks
     private AddItemUseCase addItemUseCase;
@@ -65,6 +69,36 @@ class AddItemUseCaseTest {
     }
 
     @Test
+    void executeUsesCatalogDefinitionWhenAvailable() {
+        UUID digimonId = UUID.randomUUID();
+        var definition = com.dro.modules.inventory.domain.ItemDefinition.builder()
+                .id(202L)
+                .code("TRAINING_STONE")
+                .name("Pedra de Treino")
+                .category("MATERIAL")
+                .maxStack(999)
+                .build();
+        var existing = InventoryItem.builder()
+                .id(UUID.randomUUID())
+                .digimonId(digimonId)
+                .itemType(ItemType.TRAINING_STONE)
+                .itemDefinition(definition)
+                .quantity(9)
+                .build();
+
+        when(itemDefinitionRepository.findByCode("TRAINING_STONE"))
+                .thenReturn(Optional.of(definition));
+        when(repository.findByDigimonIdAndItemDefinitionIdForUpdate(digimonId, 202L))
+                .thenReturn(Optional.of(existing));
+
+        addItemUseCase.execute(digimonId, ItemType.TRAINING_STONE, 2);
+
+        assertEquals(11, existing.getQuantity());
+        verify(repository).save(existing);
+        verify(repository, never()).findByDigimonIdAndItemType(digimonId, ItemType.TRAINING_STONE);
+    }
+
+    @Test
     void execute_grantsDigitama() {
         UUID digimonId = UUID.randomUUID();
 
@@ -90,7 +124,7 @@ class AddItemUseCaseTest {
                 .maxStack(999)
                 .build();
 
-        when(repository.findByDigimonIdAndItemDefinitionId(digimonId, 101L))
+        when(repository.findByDigimonIdAndItemDefinitionIdForUpdate(digimonId, 101L))
                 .thenReturn(Optional.empty());
 
         addItemUseCase.addMaterial(digimonId, chestDefinition, 1);

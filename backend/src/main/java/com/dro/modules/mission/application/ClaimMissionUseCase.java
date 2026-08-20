@@ -3,11 +3,13 @@ package com.dro.modules.mission.application;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.loot.domain.LootItem;
 import com.dro.modules.loot.domain.LootRoller;
 import com.dro.modules.loot.domain.ChestDefinitionEntity;
 import com.dro.modules.loot.infra.ChestDefinitionRepository;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.mission.api.dto.response.MissionResultResponse;
 import com.dro.modules.mission.api.dto.response.RewardResponse;
 import com.dro.modules.mission.domain.MissionDefinition;
@@ -55,6 +57,7 @@ public class ClaimMissionUseCase {
     private final ClanMissionProgressTracker clanMissionProgressTracker;
     private final PlayerRepository playerRepository;
     private final ChestDefinitionRepository chestDefinitionRepository;
+    private final ItemDefinitionRepository itemDefinitionRepository;
     private final TransactionAuditPublisher transactionAuditPublisher;
 
     public ClaimMissionUseCase(
@@ -68,6 +71,7 @@ public class ClaimMissionUseCase {
             ClanMissionProgressTracker clanMissionProgressTracker,
             PlayerRepository playerRepository,
             ChestDefinitionRepository chestDefinitionRepository,
+            ItemDefinitionRepository itemDefinitionRepository,
             TransactionAuditPublisher transactionAuditPublisher
     ) {
         this.missionInstanceRepository = missionInstanceRepository;
@@ -80,6 +84,7 @@ public class ClaimMissionUseCase {
         this.clanMissionProgressTracker = clanMissionProgressTracker;
         this.playerRepository = playerRepository;
         this.chestDefinitionRepository = chestDefinitionRepository;
+        this.itemDefinitionRepository = itemDefinitionRepository;
         this.transactionAuditPublisher = transactionAuditPublisher;
     }
 
@@ -223,11 +228,19 @@ public class ClaimMissionUseCase {
             int quantity = (int) Math.floor(reward.getBaseQuantity() * multiplier);
 
             if (quantity > 0) {
-                addItemUseCase.execute(
-                        digimonId,
-                        reward.getItemType(),
-                        quantity
-                );
+                ItemDefinition itemDefinition = itemDefinitionRepository
+                        .findByCode(reward.getItemType().name())
+                        .orElse(null);
+
+                if (itemDefinition != null) {
+                    addItemUseCase.addMaterial(digimonId, itemDefinition, quantity);
+                } else {
+                    addItemUseCase.execute(
+                            digimonId,
+                            reward.getItemType(),
+                            quantity
+                    );
+                }
 
                 rewards.add(
                         new RewardResponse(

@@ -10,7 +10,7 @@ A collection correspondente é `backend/src/main/resources/collection/DRO - MISS
 
 A aplicação deve estar executando com PostgreSQL e MongoDB disponíveis. As migrations até a V104 devem estar aplicadas com sucesso. O jogador deve possuir um Digimon ativo que atenda aos requisitos da missão escolhida. Para um teste rápido, use uma missão inicial compatível, como `MISSION_1`, desde que esteja disponível para o Digimon.
 
-A migration V104 cria loot tables e baús específicos por missão. O código técnico do baú fica oculto na interface, mas pode ser consultado no banco para validação.
+As migrations V104 e V105 criam loot tables e baús específicos por missão e normalizam linhas legadas de itens catalogados. O código técnico do baú fica oculto na interface, mas pode ser consultado no banco para validação.
 
 ## Ordem recomendada
 
@@ -39,7 +39,7 @@ O claim deve marcar a instância como resgatada. Repetir o claim da mesma instâ
 ```sql
 SELECT version, description, success
 FROM flyway_schema_history
-WHERE version IN ('101', '102', '103', '104')
+WHERE version IN ('101', '102', '103', '104', '105')
 ORDER BY version;
 ```
 
@@ -134,6 +134,10 @@ ORDER BY created_at DESC;
 ```
 
 O payload deve conter o jogador, missão, área, XP, Bits e, quando a missão estiver migrada, o `chestCode` e `chestQuantity = 1`. Após o processamento do Outbox, o status esperado é `PUBLISHED` e o evento deve aparecer na coleção de auditoria do MongoDB.
+
+## Normalização do inventário
+
+A migration V105 soma linhas legadas sem `item_definition_id` à linha catalogada equivalente quando o código do item corresponde ao `item_type` e o `max_stack` permite a consolidação. A operação preserva a quantidade total e remove somente a linha legada já incorporada. Materiais nomeados de evolução, como `FRAGMENT_TOKOMON`, continuam separados por `item_definition_id`.
 
 ## Compatibilidade do legado
 
