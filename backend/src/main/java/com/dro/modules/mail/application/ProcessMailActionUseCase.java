@@ -20,6 +20,7 @@ import com.dro.modules.mail.domain.MailMessage;
 import com.dro.modules.mail.infra.MailMessageRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -50,6 +52,7 @@ public class ProcessMailActionUseCase {
     private final EventRewardRepository eventRewardRepository;
     private final DigimonRepository digimonRepository;
     private final AddItemUseCase addItemUseCase;
+    private final TransactionAuditPublisher transactionAuditPublisher;
 
     /**
      * Executa a ação solicitada pelo destinatário de uma mensagem.
@@ -226,6 +229,23 @@ public class ProcessMailActionUseCase {
         reward.setClaimedAt(now);
         eventRewardRepository.save(reward);
         completeMessage(message, now);
+        transactionAuditPublisher.success(
+                "mail-reward-claim:" + rewardId,
+                "MAIL_REWARD_CLAIMED",
+                "EventReward",
+                rewardId.toString(),
+                Map.of(
+                        "module", "mail",
+                        "operation", "claimEventReward",
+                        "actorId", playerId.toString(),
+                        "digimonId", digimon.getId().toString(),
+                        "digimonName", digimon.getName() == null ? "" : digimon.getName(),
+                        "bitsAmount", reward.getBitsAmount(),
+                        "itemType", reward.getItemType() == null ? "" : reward.getItemType(),
+                        "itemQuantity", reward.getItemQuantity(),
+                        "summary", "Event reward claimed"
+                )
+        );
         return new MailActionResponse(true, "Premiação resgatada com sucesso.");
     }
 
