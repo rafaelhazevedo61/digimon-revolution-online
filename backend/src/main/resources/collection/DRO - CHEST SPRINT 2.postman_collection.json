@@ -1,0 +1,531 @@
+{
+  "info": {
+    "_postman_id": "f1c0f3b5-54c7-4a2c-bf8e-0be3d6c0d2f1",
+    "name": "DRO - CHEST SPRINT 2",
+    "description": "Collection completa para validar a abertura transacional de baús do Digimon Revolution Online. Preencha apenas playerToken; a collection não contém JWT. Execute as pastas na ordem apresentada. O banco e as queries de auditoria estão documentados em docs/chest-sprint2-manual-test-plan.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "playerToken",
+      "value": ""
+    },
+    {
+      "key": "chestCode",
+      "value": "CHEST_MISSION_NATIVE_FOREST"
+    },
+    {
+      "key": "conflictChestCode",
+      "value": "CHEST_MISSION_GEAR_SAVANNA"
+    },
+    {
+      "key": "openingRequestId",
+      "value": ""
+    },
+    {
+      "key": "conflictRequestId",
+      "value": ""
+    },
+    {
+      "key": "invalidRequestId",
+      "value": ""
+    },
+    {
+      "key": "chestQuantityBefore",
+      "value": ""
+    },
+    {
+      "key": "openingResponse",
+      "value": ""
+    },
+    {
+      "key": "openingId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Configuração e pré-condições",
+      "description": "Execute primeiro. O JWT é a única credencial que precisa ser preenchida manualmente na variável de coleção playerToken.",
+      "item": [
+        {
+          "name": "Healthcheck da API",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Confirma que a API está disponível. Esperado: HTTP 200 e status UP."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Healthcheck retorna HTTP 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('Healthcheck está UP', function () {",
+                  "    pm.expect(body.status).to.eql('UP');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar inventário e capturar baú",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/inventory",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory"]
+            },
+            "description": "Lista o inventário do Digimon ativo. O script tenta localizar automaticamente o primeiro item cujo itemType seja LOOT_CHEST ou cuja definição tenha categoria CHEST. Se encontrar, atualiza chestCode e chestQuantityBefore."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Inventário retorna HTTP 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "const inventory = Array.isArray(body) ? body : (body.items || body.inventory || []);",
+                  "const chest = inventory.find(function (item) {",
+                  "    const definition = item.itemDefinition || {};",
+                  "    return item.itemType === 'LOOT_CHEST' || definition.category === 'CHEST' || String(definition.code || '').startsWith('CHEST_');",
+                  "});",
+                  "pm.test('Existe pelo menos um baú no inventário', function () {",
+                  "    pm.expect(chest, 'Conceda um baú ao Digimon ativo antes de continuar').to.exist;",
+                  "});",
+                  "if (chest) {",
+                  "    const code = (chest.itemDefinition || {}).code || pm.collectionVariables.get('chestCode');",
+                  "    pm.collectionVariables.set('chestCode', code);",
+                  "    pm.collectionVariables.set('chestQuantityBefore', String(chest.quantity));",
+                  "    console.log('Baú capturado:', code, 'quantidade:', chest.quantity);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 - Abertura válida",
+      "description": "Execute depois da configuração. O pre-request gera uma chave nova somente se openingRequestId estiver vazia. Não altere essa variável entre a abertura e o retry.",
+      "item": [
+        {
+          "name": "Abrir baú",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chestCode\": \"{{chestCode}}\",\n  \"requestId\": \"{{openingRequestId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/inventory/chests/open",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "chests", "open"]
+            },
+            "description": "Fluxo feliz. Esperado: HTTP 200, raridade oficial e de 1 a 4 itens diferentes."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('openingRequestId')) {",
+                  "    pm.collectionVariables.set('openingRequestId', 'postman-chest-' + Date.now());",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Abertura retorna HTTP 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('Abertura nova informa replayed=false', function () {",
+                  "    pm.expect(body.replayed).to.eql(false);",
+                  "    pm.expect(body.message).to.eql('Baú aberto com sucesso!');",
+                  "});",
+                  "pm.test('Resposta contém requestId correto', function () {",
+                  "    pm.expect(body.requestId).to.eql(pm.collectionVariables.get('openingRequestId'));",
+                  "});",
+                  "pm.test('Resposta identifica o baú', function () {",
+                  "    pm.expect(body.chestCode).to.eql(pm.collectionVariables.get('chestCode'));",
+                  "});",
+                  "pm.test('Raridade é oficial', function () {",
+                  "    pm.expect(['COMMON', 'RARE', 'EPIC', 'LEGENDARY']).to.include(body.rarity);",
+                  "});",
+                  "pm.test('Abertura entrega de 1 a 4 tipos', function () {",
+                  "    pm.expect(body.items).to.be.an('array').with.lengthOf.at.least(1);",
+                  "    pm.expect(body.items.length).to.be.at.most(4);",
+                  "});",
+                  "const keys = body.items.map(function (item) { return item.itemCode + '|' + (item.materialCode || ''); });",
+                  "pm.test('Itens não se repetem na mesma abertura', function () {",
+                  "    pm.expect(new Set(keys).size).to.eql(keys.length);",
+                  "});",
+                  "body.items.forEach(function (item) {",
+                  "    pm.test('Quantidade recebida é positiva', function () {",
+                  "        pm.expect(item.quantity).to.be.above(0);",
+                  "    });",
+                  "});",
+                  "pm.collectionVariables.set('openingResponse', JSON.stringify(body));",
+                  "if (body.openingId) { pm.collectionVariables.set('openingId', String(body.openingId)); }"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - Idempotência",
+      "description": "Execute depois de uma abertura válida, sem modificar openingRequestId. A resposta deve ser a mesma e o inventário não deve mudar novamente.",
+      "item": [
+        {
+          "name": "Repetir exatamente a mesma abertura",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chestCode\": \"{{chestCode}}\",\n  \"requestId\": \"{{openingRequestId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/inventory/chests/open",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "chests", "open"]
+            },
+            "description": "Retry idempotente. Esperado: HTTP 200 com o mesmo JSON lógico da primeira abertura."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Retry idempotente retorna HTTP 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "const previous = pm.collectionVariables.get('openingResponse');",
+                  "pm.test('Retry mantém requestId', function () {",
+                  "    pm.expect(body.requestId).to.eql(pm.collectionVariables.get('openingRequestId'));",
+                  "});",
+                  "pm.test('Retry informa replayed=true', function () {",
+                  "    pm.expect(body.replayed).to.eql(true);",
+                  "    pm.expect(body.message).to.eql('Esta abertura já havia sido processada. O resultado original foi retornado.');",
+                  "});",
+                  "pm.test('Retry mantém o mesmo resultado econômico', function () {",
+                  "    const first = JSON.parse(previous);",
+                  "    pm.expect(body.chestCode).to.eql(first.chestCode);",
+                  "    pm.expect(body.rarity).to.eql(first.rarity);",
+                  "    pm.expect(body.items).to.eql(first.items);",
+                  "});",
+                  "pm.collectionVariables.set('retryVerified', 'true');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reutilizar requestId para outro jogador ou baú",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chestCode\": \"{{conflictChestCode}}\",\n  \"requestId\": \"{{openingRequestId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/inventory/chests/open",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "chests", "open"]
+            },
+            "description": "Cenário de conflito. Esperado: HTTP 409, pois a requestId já pertence ao primeiro baú/jogador."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('RequestId reutilizado com outro baú é rejeitado', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([409, 422]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - Verificação do inventário",
+      "description": "Execute depois da abertura válida e novamente depois do retry. A quantidade do baú deve cair exatamente uma unidade no primeiro request e permanecer igual no retry.",
+      "item": [
+        {
+          "name": "Conferir consumo do baú",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/inventory",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory"]
+            },
+            "description": "Compara a quantidade atual com chestQuantityBefore. Se o baú chegou a zero, o item deixa de aparecer no inventário e a quantidade esperada é zero."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Inventário pós-abertura retorna HTTP 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "const inventory = Array.isArray(body) ? body : (body.items || body.inventory || []);",
+                  "const code = pm.collectionVariables.get('chestCode');",
+                  "const chest = inventory.find(function (item) { return ((item.itemDefinition || {}).code === code); });",
+                  "const currentQuantity = chest ? Number(chest.quantity) : 0;",
+                  "const before = Number(pm.collectionVariables.get('chestQuantityBefore'));",
+                  "pm.test('Baú foi consumido exatamente uma vez', function () {",
+                  "    pm.expect(currentQuantity).to.eql(before - 1);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 - Validações e erros esperados",
+      "description": "Cenários de erro controlado. Use requestIds diferentes dos usados no fluxo feliz.",
+      "item": [
+        {
+          "name": "Campos obrigatórios vazios",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chestCode\": \"\",\n  \"requestId\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/inventory/chests/open",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "chests", "open"]
+            },
+            "description": "Esperado: HTTP 400 por validação de @NotBlank."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Campos obrigatórios inválidos retornam HTTP 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Baú inexistente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chestCode\": \"CHEST_DOES_NOT_EXIST\",\n  \"requestId\": \"postman-invalid-chest-001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/inventory/chests/open",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "chests", "open"]
+            },
+            "description": "Esperado: HTTP 404."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Baú inexistente retorna erro de recurso não encontrado', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([404, 422]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sem JWT",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chestCode\": \"{{chestCode}}\",\n  \"requestId\": \"postman-no-token-001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/inventory/chests/open",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "chests", "open"]
+            },
+            "description": "Não envia Authorization de propósito. Esperado: HTTP 401."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ausência de JWT retorna HTTP 401', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 - Consultas SQL de verificação",
+      "description": "O Postman não executa SQL neste projeto. Use estas queries no DBeaver/psql depois da collection para confirmar a transação e o Outbox.\n\nSELECT co.id, co.request_id, co.player_id, cd.code AS chest_code, co.rarity, co.source, co.opened_at FROM chest_openings co JOIN chest_definitions cd ON cd.id = co.chest_definition_id WHERE co.request_id = '{{openingRequestId}}';\n\nSELECT coi.chest_opening_id, coi.item_type, coi.material_code, coi.quantity FROM chest_opening_items coi JOIN chest_openings co ON co.id = coi.chest_opening_id WHERE co.request_id = '{{openingRequestId}}';\n\nSELECT event_id, event_type, aggregate_type, aggregate_id, status, attempts, created_at, published_at, payload_json FROM audit_outbox_events WHERE event_type = 'CHEST_OPENED' ORDER BY created_at DESC;\n\nEsperado: uma abertura, de 1 a 4 itens, event_type CHEST_OPENED, aggregate_type ChestOpening e status PUBLISHED após o processamento do Outbox."
+    }
+  ]
+}

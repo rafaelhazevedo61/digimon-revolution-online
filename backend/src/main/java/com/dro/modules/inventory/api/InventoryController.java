@@ -2,6 +2,9 @@ package com.dro.modules.inventory.api;
 
 import com.dro.modules.inventory.api.dto.request.UseItemRequest;
 import com.dro.modules.inventory.application.UseItemUseCase;
+import com.dro.modules.loot.api.dto.request.OpenChestRequest;
+import com.dro.modules.loot.api.dto.response.ChestOpeningResponse;
+import com.dro.modules.loot.application.OpenChestUseCase;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
@@ -24,6 +27,7 @@ public class InventoryController {
 
     private final InventoryRepository repository;
     private final UseItemUseCase useItemUseCase;
+    private final OpenChestUseCase openChestUseCase;
     private final PlayerRepository playerRepository;
 
     @GetMapping
@@ -40,6 +44,14 @@ public class InventoryController {
         }
 
         return ResponseEntity.ok(repository.findByDigimonId(player.getActiveDigimonId()));
+    }
+
+    @PostMapping("/chests/open")
+    public ResponseEntity<ChestOpeningResponse> openChest(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody @Valid OpenChestRequest request
+    ) {
+        return ResponseEntity.ok(openChestUseCase.execute(authorization, request));
     }
 
     @PostMapping("/use")

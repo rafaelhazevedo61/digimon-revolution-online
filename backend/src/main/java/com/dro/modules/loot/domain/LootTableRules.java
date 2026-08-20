@@ -30,11 +30,28 @@ public final class LootTableRules {
             throw new IllegalArgumentException("All official rarities must have a configured weight");
         }
 
+        int totalWeight = 0;
         for (LootRarity rarity : OFFICIAL_RARITIES) {
             Integer weight = weights.get(rarity);
-            if (weight == null || weight <= 0) {
-                throw new IllegalArgumentException("Rarity weight must be positive for " + rarity);
+            if (weight == null || weight < 0) {
+                throw new IllegalArgumentException("Rarity weight cannot be negative for " + rarity);
             }
+            totalWeight += weight;
+        }
+        if (totalWeight <= 0) {
+            throw new IllegalArgumentException("At least one rarity weight must be positive");
+        }
+    }
+
+    /**
+     * Valida o intervalo de tipos distintos que uma abertura pode entregar.
+     *
+     * @param minItems quantidade mínima de tipos
+     * @param maxItems quantidade máxima de tipos
+     */
+    public static void validateItemCount(int minItems, int maxItems) {
+        if (minItems < 1 || maxItems < minItems || maxItems > 4) {
+            throw new IllegalArgumentException("Loot table item count must be between 1 and 4");
         }
     }
 

@@ -39,6 +39,14 @@ public class LootTableEntity {
     @Builder.Default
     private boolean active = true;
 
+    @Column(name = "min_items", nullable = false)
+    @Builder.Default
+    private int minItems = 1;
+
+    @Column(name = "max_items", nullable = false)
+    @Builder.Default
+    private int maxItems = 4;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

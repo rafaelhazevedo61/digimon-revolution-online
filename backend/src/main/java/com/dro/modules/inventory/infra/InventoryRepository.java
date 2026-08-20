@@ -30,4 +30,11 @@ public interface InventoryRepository extends JpaRepository<InventoryItem, UUID> 
             @Param("digimonId") UUID digimonId,
             @Param("itemDefinitionId") Long itemDefinitionId
     );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT item FROM InventoryItem item WHERE item.digimonId = :digimonId AND item.itemType = :itemType")
+    Optional<InventoryItem> findByDigimonIdAndItemTypeForUpdate(
+            @Param("digimonId") UUID digimonId,
+            @Param("itemType") ItemType itemType
+    );
 }
