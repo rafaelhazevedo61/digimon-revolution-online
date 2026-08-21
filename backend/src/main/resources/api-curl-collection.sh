@@ -553,3 +553,13 @@ USABLE="${USABLE:-VALOR}"
 
 # WorldBossController.getMyWorldBoss (GET /world-boss/me)
 # curl --fail-with-body -i -X GET "${BASE_URL}/world-boss/me" -H "Authorization: Bearer ${TOKEN}"
+
+# ===== ADMIN CHESTS =====
+# AdminChestController.list (GET /admin/chests)
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/chests?activeOnly=${ACTIVE_ONLY}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+# AdminChestController.get (GET /admin/chests/{code})
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/chests/${CHEST_CODE}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+# AdminChestController.update (PUT /admin/chests/{code})
+# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/chests/${CHEST_CODE}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"name":"Baú Floresta Nativa","description":"Baú entregue nas missões da Floresta Nativa.","icon":"chest-native-forest","lootTableCode":"LOOT_TEST_ADMIN","tradable":true,"active":true}'
+# AdminChestController.toggleActive (PATCH /admin/chests/{code}/toggle-active)
+# curl --fail-with-body -i -X PATCH "${BASE_URL}/admin/chests/${CHEST_CODE}/toggle-active" -H "Authorization: Bearer ${ADMIN_TOKEN}"

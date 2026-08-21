@@ -8,7 +8,7 @@ Os arquivos `backend/src/main/resources/api-curl-collection.sh` e `backend/src/m
 
 No Postman, use **Import**, selecione `backend/src/main/resources/collection/DRO - MODULES.postman_collection.json` e importe a collection. Na aba **Variables**, preencha `baseUrl`, `playerToken` e `adminToken`. Os demais valores de rota e query podem ser preenchidos conforme o cenário de teste.
 
-A collection Postman possui 149 requests organizados por módulo, incluindo as rotas de Correio, Casa de Leilões, clãs, convites, ações de mensagens, comunicados administrativos, premiações de eventos, seleção de destinatários e Loot Tables administrativas. Os exemplos de corpo JSON dos principais fluxos já estão preenchidos, mas devem ser revisados antes do envio.
+A collection Postman possui 153 requests organizados por módulo, incluindo as rotas de Correio, Casa de Leilões, clãs, convites, ações de mensagens, comunicados administrativos, premiações de eventos, seleção de destinatários, Loot Tables administrativas e Baús da Área. Os exemplos de corpo JSON dos principais fluxos já estão preenchidos, mas devem ser revisados antes do envio.
 
 ## Como configurar
 
@@ -67,7 +67,11 @@ Os fluxos adicionados recentemente também estão presentes:
 | Atualizar Loot Table | `PUT /admin/loot-tables/{code}` |
 | Ativar ou desativar Loot Table | `PATCH /admin/loot-tables/{code}/toggle-active` |
 | Listar Missões por Baú da Área | `GET /admin/missions?chestCode={chestCode}` |
-| Listar opções de Baú da Área | `GET /admin/missions/chest-options` |
+| Listar opções de Baú da Área para Missões | `GET /admin/missions/chest-options` |
+| Listar Baús da Área administrativos | `GET /admin/chests` |
+| Consultar Baú da Área | `GET /admin/chests/{code}` |
+| Atualizar vínculo do Baú | `PUT /admin/chests/{code}` |
+| Ativar ou desativar Baú | `PATCH /admin/chests/{code}/toggle-active` |
 
 A collection não armazena tokens reais nem dados pessoais. Use variáveis de ambiente ou substitua os placeholders apenas localmente.
 
@@ -104,6 +108,35 @@ curl --fail-with-body -i -X POST "$BASE_URL/admin/missions" \
 ```
 
 O painel não oferece mais edição direta de itens de loot na tela de Missões. Para alterar pesos, entradas ou quantidades, use a tela **Loot Tables**.
+
+## Baús da Área administrativos — PR #67
+
+Os endpoints abaixo exigem `Authorization: Bearer <JWT>` de um jogador com `UserType.ADMIN`. Uma Loot Table precisa estar ativa para ser vinculada a um Baú da Área ativo.
+
+```bash
+curl --fail-with-body -i -X GET "$BASE_URL/admin/chests?activeOnly=false" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+curl --fail-with-body -i -X GET "$BASE_URL/admin/chests/CHEST_AREA_NATIVE_FOREST" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+curl --fail-with-body -i -X PUT "$BASE_URL/admin/chests/CHEST_AREA_NATIVE_FOREST" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Baú Floresta Nativa",
+    "description": "Baú entregue nas missões da Floresta Nativa.",
+    "icon": "chest-native-forest",
+    "lootTableCode": "LOOT_TEST_ADMIN",
+    "tradable": true,
+    "active": true
+  }'
+
+curl --fail-with-body -i -X PATCH "$BASE_URL/admin/chests/CHEST_AREA_NATIVE_FOREST/toggle-active" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
+A tela **Baús da Área** é o ponto administrativo para alterar o vínculo `Baú → Loot Table`; a tela de Missões apenas seleciona qual baú será entregue pela missão.
 
 ## Loot Tables administrativas — PR #65
 
