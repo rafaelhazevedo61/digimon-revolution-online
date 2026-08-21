@@ -1,5 +1,6 @@
 package com.dro.modules.loot.application;
 
+import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.modules.loot.api.dto.request.AdminChestUpdateRequest;
 import com.dro.modules.loot.api.dto.response.AdminChestResponse;
 import com.dro.modules.loot.domain.ChestDefinitionEntity;
@@ -32,6 +33,7 @@ import java.util.UUID;
 public class AdminChestUseCase {
 
     private final ChestDefinitionRepository chestDefinitionRepository;
+    private final BossDefinitionRepository bossDefinitionRepository;
     private final LootTableRepository lootTableRepository;
     private final PlayerRepository playerRepository;
     private final TransactionAuditPublisher transactionAuditPublisher;
@@ -68,6 +70,9 @@ public class AdminChestUseCase {
         chest.setDescription(normalize(request.description()));
         chest.setIcon(normalize(request.icon()));
         chest.setLootTable(lootTable);
+        if (Boolean.FALSE.equals(request.active()) && chest.isActive()) {
+            ensureNotLinkedToBoss(chest);
+        }
         if (request.tradable() != null) chest.setTradable(request.tradable());
         if (request.active() != null) chest.setActive(request.active());
         chest.setUpdatedBy(admin.getUsername());
@@ -84,6 +89,8 @@ public class AdminChestUseCase {
         ChestDefinitionEntity chest = findChest(code);
         if (!chest.isActive()) {
             ensureActiveLootTable(chest.getLootTable());
+        } else {
+            ensureNotLinkedToBoss(chest);
         }
         chest.setActive(!chest.isActive());
         chest.setUpdatedBy(admin.getUsername());
@@ -108,6 +115,14 @@ public class AdminChestUseCase {
     private void ensureActiveLootTable(LootTableEntity lootTable) {
         if (lootTable == null || !lootTable.isActive()) {
             throw new ConflictException("Não é possível ativar um baú sem Loot Table ativa.");
+        }
+    }
+
+    private void ensureNotLinkedToBoss(ChestDefinitionEntity chest) {
+        if (bossDefinitionRepository.existsByChestDefinition_Id(chest.getId())) {
+            throw new ConflictException(
+                    "Não é possível desativar o Baú porque ele está vinculado a um ou mais Bosses."
+            );
         }
     }
 

@@ -21,5 +21,6 @@ public record CreateBossRequest(
         @NotNull Integer baseXpReward,
         @NotNull Integer baseBitsReward,
         Integer defeatXpPercent,
-        String imageUrl
+        String imageUrl,
+        String chestCode
 ) {}

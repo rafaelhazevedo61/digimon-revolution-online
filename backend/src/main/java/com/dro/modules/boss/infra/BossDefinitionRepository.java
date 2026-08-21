@@ -17,10 +17,15 @@ public interface BossDefinitionRepository extends JpaRepository<BossDefinitionEn
 
     Optional<BossDefinitionEntity> findByCode(String code);
 
-    @EntityGraph(attributePaths = "drops")
+    @EntityGraph(attributePaths = {"drops", "chestDefinition"})
+    Optional<BossDefinitionEntity> findWithDropsAndChestById(Long id);
+
+    boolean existsByChestDefinition_Id(Long chestDefinitionId);
+
+    @EntityGraph(attributePaths = {"drops", "chestDefinition"})
     @Query("SELECT b FROM BossDefinitionEntity b WHERE b.active = true ORDER BY b.requiredLevel ASC, b.id ASC")
     List<BossDefinitionEntity> findAllActive();
 
-    @EntityGraph(attributePaths = "drops")
+    @EntityGraph(attributePaths = {"drops", "chestDefinition"})
     List<BossDefinitionEntity> findAllByOrderByIdAsc();
 }

@@ -1,5 +1,6 @@
 package com.dro.modules.loot.application;
 
+import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.modules.loot.api.dto.request.AdminChestUpdateRequest;
 import com.dro.modules.loot.domain.ChestDefinitionEntity;
 import com.dro.modules.loot.domain.LootTableEntity;
@@ -36,6 +37,9 @@ class AdminChestUseCaseTest {
 
     @Mock
     private ChestDefinitionRepository chestDefinitionRepository;
+
+    @Mock
+    private BossDefinitionRepository bossDefinitionRepository;
 
     @Mock
     private LootTableRepository lootTableRepository;
@@ -129,6 +133,7 @@ class AdminChestUseCaseTest {
         when(playerRepository.findById(adminId)).thenReturn(Optional.of(admin));
         when(chestDefinitionRepository.findWithCatalogByCode("CHEST_AREA_TOGGLE"))
                 .thenReturn(Optional.of(chest));
+        when(bossDefinitionRepository.existsByChestDefinition_Id(9L)).thenReturn(false);
         when(chestDefinitionRepository.saveAndFlush(chest)).thenReturn(chest);
 
         var response = adminChestUseCase.toggleActive(token(adminId), "CHEST_AREA_TOGGLE");
@@ -141,6 +146,60 @@ class AdminChestUseCaseTest {
                 eq("CHEST_AREA_TOGGLE"),
                 any(Map.class)
         );
+    }
+
+    @Test
+    void rejectsToggleWhenChestIsLinkedToBoss() {
+        UUID adminId = UUID.randomUUID();
+        ChestDefinitionEntity chest = ChestDefinitionEntity.builder()
+                .id(21L)
+                .code("CHEST_BOSS_TEST")
+                .name("Baú Boss")
+                .active(true)
+                .lootTable(LootTableEntity.builder().code("LT_BOSS").active(true).build())
+                .build();
+
+        when(playerRepository.findById(adminId)).thenReturn(Optional.of(admin(adminId, UserType.ADMIN)));
+        when(chestDefinitionRepository.findWithCatalogByCode("CHEST_BOSS_TEST"))
+                .thenReturn(Optional.of(chest));
+        when(bossDefinitionRepository.existsByChestDefinition_Id(21L)).thenReturn(true);
+
+        assertThatThrownBy(() -> adminChestUseCase.toggleActive(token(adminId), "CHEST_BOSS_TEST"))
+                .isInstanceOf(com.dro.shared.exception.ConflictException.class)
+                .hasMessageContaining("vinculado a um ou mais Bosses");
+    }
+
+    @Test
+    void rejectsPutThatWouldDeactivateChestLinkedToBoss() {
+        UUID adminId = UUID.randomUUID();
+        ChestDefinitionEntity chest = ChestDefinitionEntity.builder()
+                .id(22L)
+                .code("CHEST_BOSS_PUT")
+                .name("Baú Boss PUT")
+                .active(true)
+                .lootTable(LootTableEntity.builder().code("LT_BOSS_PUT").active(true).build())
+                .build();
+
+        when(playerRepository.findById(adminId)).thenReturn(Optional.of(admin(adminId, UserType.ADMIN)));
+        when(chestDefinitionRepository.findWithCatalogByCode("CHEST_BOSS_PUT"))
+                .thenReturn(Optional.of(chest));
+        when(lootTableRepository.findByCodeAndActiveTrue("LT_BOSS_PUT"))
+                .thenReturn(Optional.of(chest.getLootTable()));
+        when(bossDefinitionRepository.existsByChestDefinition_Id(22L)).thenReturn(true);
+
+        assertThatThrownBy(() -> adminChestUseCase.update(
+                token(adminId),
+                "CHEST_BOSS_PUT",
+                new AdminChestUpdateRequest(
+                        "Baú Boss PUT",
+                        null,
+                        null,
+                        "LT_BOSS_PUT",
+                        true,
+                        false
+                )
+        )).isInstanceOf(com.dro.shared.exception.ConflictException.class)
+                .hasMessageContaining("vinculado a um ou mais Bosses");
     }
 
     private Player admin(UUID id, UserType userType) {

@@ -1,6 +1,9 @@
 package com.dro.modules.boss.domain;
 
 import com.dro.modules.digimon.domain.enums.Stage;
+import com.dro.modules.loot.domain.ChestDefinitionEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -71,6 +74,24 @@ public class BossDefinitionEntity {
 
     @Column(nullable = false)
     private boolean active;
+
+    /** Baú concedido após uma vitória elegível contra este Boss. */
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chest_definition_id")
+    private ChestDefinitionEntity chestDefinition;
+
+    @JsonProperty("chestCode")
+    @Transient
+    public String getChestCode() {
+        return chestDefinition == null ? null : chestDefinition.getCode();
+    }
+
+    @JsonProperty("chestName")
+    @Transient
+    public String getChestName() {
+        return chestDefinition == null ? null : chestDefinition.getName();
+    }
 
     @OneToMany(mappedBy = "boss", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<BossDropEntity> drops;

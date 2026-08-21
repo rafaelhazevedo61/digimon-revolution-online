@@ -152,13 +152,24 @@ function openBossDetail(bossCode) {
   const itemDrops = (boss.drops || []).filter(d => d.dropType !== "EQUIPMENT");
 
   let dropsHtml = "";
+  if (boss.chestCode && boss.chestName) {
+    dropsHtml += `
+      <div class="flex justify-between text-xs py-1 border-b border-slate-700">
+        <span class="text-cyan-400 font-semibold">🎁 ${escapeHtml(boss.chestName)}</span>
+        <span class="text-slate-400">100%</span>
+      </div>
+    `;
+  }
+
   if (equipDrops.length > 0) {
     const chance = equipDrops[0].chance;
     dropsHtml += `<div class="flex justify-between text-xs py-1 border-b border-slate-700">
-      <span class="text-cyan-300">Equipamento Aleatorio (${equipDrops.length} possiveis)</span>
+      <span class="text-purple-300">Equipamento Aleatorio (${equipDrops.length} possiveis)</span>
       <span class="text-slate-400">${chance}%</span>
     </div>`;
   }
+
+  // Itens diretos legados (se houver algum não migrado)
   dropsHtml += itemDrops.map(d => {
     const name = escapeHtml(d.itemCode || "Item");
     const qty = d.minQuantity === d.maxQuantity ? `x${d.minQuantity}` : `x${d.minQuantity}-${d.maxQuantity}`;
@@ -286,8 +297,20 @@ function renderBossResult(result) {
   const victory = result.result === "VICTORY";
 
   const rarityColor = { COMMON: "text-slate-300", RARE: "text-blue-400", EPIC: "text-purple-400", LEGENDARY: "text-yellow-400" };
-  const dropsHtml = result.drops && result.drops.length > 0
-    ? result.drops.map(d => {
+
+  let dropsHtml = "";
+  if (result.chestCode && result.chestName) {
+    dropsHtml += `
+      <div class="flex justify-between text-sm py-1.5 border-b border-slate-700">
+        <span class="text-cyan-400 font-semibold">🎁 ${escapeHtml(result.chestName)}</span>
+        <span class="text-slate-400">x1</span>
+      </div>
+    `;
+  }
+
+  if (result.drops && result.drops.length > 0) {
+    dropsHtml += result.drops.map(d => {
+      if (d.type === "CHEST") return ""; // Já exibido acima de forma destacada
       const label = d.type === "EQUIPMENT" && d.rarity
         ? `${escapeHtml(d.name || d.code)} <span class="${rarityColor[d.rarity] || 'text-slate-300'}">(${d.rarity})</span>`
         : escapeHtml(d.name || d.code);
@@ -296,8 +319,8 @@ function renderBossResult(result) {
         <span class="${d.type === "EQUIPMENT" ? "text-purple-300" : "text-slate-200"}">${label}</span>
         <span class="text-slate-400">x${d.quantity}</span>
       </div>`;
-    }).join("")
-    : "";
+    }).join("");
+  }
 
   app.innerHTML = `
     <div class="page-container flex flex-col items-center">

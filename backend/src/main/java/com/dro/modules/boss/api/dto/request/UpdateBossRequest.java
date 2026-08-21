@@ -18,5 +18,6 @@ public record UpdateBossRequest(
         Integer baseBitsReward,
         Integer defeatXpPercent,
         String imageUrl,
-        Boolean active
+        Boolean active,
+        String chestCode
 ) {}

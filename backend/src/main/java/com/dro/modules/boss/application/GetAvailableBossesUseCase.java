@@ -74,10 +74,12 @@ public class GetAvailableBossesUseCase {
             Integer winChance = meetsRequirements ? BossCombatRules.calculateWinChance(digimonPower, bossPower) : null;
 
             List<BossDropResponse> drops = boss.getDrops() != null
-                    ? boss.getDrops().stream().map(d -> new BossDropResponse(
-                    d.getDropType(), d.getItemCode(), d.getTemplateName(),
-                    d.getEquipmentRarity(), d.getChance(), d.getMinQuantity(), d.getMaxQuantity()
-            )).toList()
+                    ? boss.getDrops().stream()
+                    .filter(drop -> "EQUIPMENT".equals(drop.getDropType()))
+                    .map(d -> new BossDropResponse(
+                            d.getDropType(), d.getItemCode(), d.getTemplateName(),
+                            d.getEquipmentRarity(), d.getChance(), d.getMinQuantity(), d.getMaxQuantity()
+                    )).toList()
                     : List.of();
 
             return new BossDefinitionResponse(
@@ -99,6 +101,8 @@ public class GetAvailableBossesUseCase {
                     available,
                     cooldownRemaining != null && cooldownRemaining > 0 ? cooldownRemaining : null,
                     winChance,
+                    boss.getChestDefinition() != null ? boss.getChestDefinition().getCode() : null,
+                    boss.getChestDefinition() != null ? boss.getChestDefinition().getName() : null,
                     drops
             );
         }).toList();

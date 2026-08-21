@@ -1,5 +1,19 @@
 let adminBosses = [];
 let adminBossEditId = null;
+let adminBossChestOptions = [];
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value);
+}
 
 async function renderBossesAdminPage() {
   const app = document.getElementById("app");
@@ -23,7 +37,12 @@ async function renderBossesAdminPage() {
 
 async function loadBosses() {
   try {
-    adminBosses = await apiGet("/admin/bosses");
+    const [bosses, chests] = await Promise.all([
+      apiGet("/admin/bosses"),
+      apiGet("/admin/bosses/chest-options")
+    ]);
+    adminBosses = bosses;
+    adminBossChestOptions = chests;
     renderBossesTable();
   } catch (err) {
     document.getElementById("bosses-table-container").innerHTML = `<p class="text-red-400">${err.message}</p>`;
@@ -58,6 +77,7 @@ function renderBossesTable() {
             <th class="py-2 px-2">HP/ATK/DEF</th>
             <th class="py-2 px-2">XP</th>
             <th class="py-2 px-2">Bits</th>
+            <th class="py-2 px-2">Baú de Recompensa</th>
             <th class="py-2 px-2">Ativo</th>
             <th class="py-2 px-2">Acoes</th>
           </tr>
@@ -73,6 +93,10 @@ function renderBossesTable() {
               <td class="py-2 px-2 text-xs">${b.hp}/${b.atk}/${b.def}</td>
               <td class="py-2 px-2 text-yellow-400">${b.baseXpReward}</td>
               <td class="py-2 px-2 text-amber-400">${b.baseBitsReward}</td>
+              <td class="py-2 px-2">
+                <div class="font-semibold text-slate-300">${escapeHtml(b.chestName || "Sem Baú")}</div>
+                <div class="text-[10px] text-slate-500 font-mono">${escapeHtml(b.chestCode || "-")}</div>
+              </td>
               <td class="py-2 px-2">${b.active ? '<span class="text-green-400">Sim</span>' : '<span class="text-red-400">Nao</span>'}</td>
               <td class="py-2 px-2">
                 <div class="flex gap-1">
@@ -108,11 +132,11 @@ function openBossForm(id = null) {
         </div>
         <div>
           <label class="text-xs text-slate-400">Tipo</label>
-          <select id="bf-type" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm">
+          <select id="bf-type" onchange="updateBossChestRequirement()" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm">
             <option value="NORMAL" ${boss && boss.bossType === "NORMAL" ? "selected" : ""}>Normal</option>
-            <option value="DAILY" ${boss && boss.bossType === "DAILY" ? "selected" : ""}>Daily</option>
-            <option value="WEEKLY" ${boss && boss.bossType === "WEEKLY" ? "selected" : ""}>Weekly</option>
-            <option value="MONTHLY" ${boss && boss.bossType === "MONTHLY" ? "selected" : ""}>Monthly</option>
+            <option value="DAILY" ${boss && boss.bossType === "DAILY" ? "selected" : ""}>Diário</option>
+            <option value="WEEKLY" ${boss && boss.bossType === "WEEKLY" ? "selected" : ""}>Semanal</option>
+            <option value="MONTHLY" ${boss && boss.bossType === "MONTHLY" ? "selected" : ""}>Mensal</option>
           </select>
         </div>
         <div>
@@ -169,6 +193,14 @@ function openBossForm(id = null) {
           <label class="text-xs text-slate-400">Image URL</label>
           <input id="bf-image" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss ? (boss.imageUrl || "") : ""}">
         </div>
+        <div class="col-span-2">
+          <label class="text-xs text-slate-400">Baú de Recompensa (Vitória)</label>
+          <select id="bf-chest" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm">
+            <option value="">Selecione um baú ativo...</option>
+            ${adminBossChestOptions.map(c => `<option value="${escapeAttr(c.code)}" ${boss && boss.chestCode === c.code ? "selected" : ""}>${escapeHtml(c.name)} — ${escapeHtml(c.code)}</option>`).join("")}
+          </select>
+          <p class="text-[10px] text-slate-500 mt-1">Somente baús ativos com Loot Tables ativas aparecem aqui.</p>
+        </div>
       </div>
       <div class="flex gap-2 mt-4">
         <button class="px-4 py-2 bg-cyan-700 hover:bg-cyan-600 rounded text-sm font-bold" onclick="saveBoss()">Salvar</button>
@@ -176,6 +208,16 @@ function openBossForm(id = null) {
       </div>
     </div>
   `;
+  updateBossChestRequirement();
+}
+
+function updateBossChestRequirement() {
+  const type = document.getElementById("bf-type")?.value;
+  const chest = document.getElementById("bf-chest");
+  if (!chest) return;
+  const requiresChest = ["NORMAL", "DAILY", "WEEKLY", "MONTHLY"].includes(type);
+  chest.required = requiresChest;
+  chest.disabled = !requiresChest;
 }
 
 function closeBossForm() {
@@ -199,7 +241,8 @@ async function saveBoss() {
     baseXpReward: parseInt(document.getElementById("bf-xp").value),
     baseBitsReward: parseInt(document.getElementById("bf-bits").value),
     defeatXpPercent: parseInt(document.getElementById("bf-defeatxp").value),
-    imageUrl: document.getElementById("bf-image").value || null
+    imageUrl: document.getElementById("bf-image").value || null,
+    chestCode: document.getElementById("bf-chest").value
   };
 
   try {
