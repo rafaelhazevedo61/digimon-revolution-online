@@ -4,6 +4,7 @@ import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.shared.exception.UnprocessableException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,8 +19,17 @@ import java.util.UUID;
 public class AddItemUseCase {
 
     private final InventoryRepository repository;
+    private final ItemDefinitionRepository itemDefinitionRepository;
 
     public void execute(UUID digimonId, ItemType type, int quantity) {
+
+        ItemDefinition itemDefinition = itemDefinitionRepository
+                .findByCode(type.name())
+                .orElse(null);
+        if (itemDefinition != null) {
+            addMaterial(digimonId, itemDefinition, quantity);
+            return;
+        }
 
         var existing = repository.findByDigimonIdAndItemType(digimonId, type);
 
@@ -41,7 +51,7 @@ public class AddItemUseCase {
 
     public void addMaterial(UUID digimonId, ItemDefinition itemDefinition, int quantity) {
 
-        var existing = repository.findByDigimonIdAndItemDefinitionId(
+        var existing = repository.findByDigimonIdAndItemDefinitionIdForUpdate(
                 digimonId, itemDefinition.getId());
 
         int currentQuantity = existing.map(InventoryItem::getQuantity).orElse(0);

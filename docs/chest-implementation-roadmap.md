@@ -1,7 +1,7 @@
 # Roadmap de implementação — Baús temáticos e Loot Tables
 
 **Projeto:** Digimon Revolution Online
-**Estado:** Sprint 2 em implementação — abertura transacional de baús
+**Estado:** Sprint 3 em implementação — Baús da Área nas Missões
 **Data:** 20 de agosto de 2026
 **Branch-base de todos os PRs:** `develop`
 
@@ -136,15 +136,15 @@ Substituir o item aleatório atual por um Baú da Área, mantendo as recompensas
 
 ### Escopo do PR
 
-Alterar o `CompleteMissionUseCase` para manter XP, Bits, energia, cooldown e demais regras atuais, mas entregar o baú correspondente à área em vez de entregar diretamente um item aleatório.
+Alterar o `ClaimMissionUseCase` para manter XP, Bits, energia, cooldown e demais regras atuais, mas entregar o baú correspondente à área em vez de entregar diretamente um item aleatório.
 
-Cada área terá um Baú da Área. Cada missão poderá apontar para uma loot table própria ou compartilhar uma tabela com outra missão. A dificuldade deverá continuar influenciando a chance de raridade, usando como ponto de partida os percentuais atuais de `V56__seed_new_missions.sql`.
+Cada missão migrada terá um `chest_definition_id` apontando para um Baú da Área de código técnico próprio e uma loot table nomeada. Missões que precisarem compartilhar uma pool poderão apontar para a mesma definição de baú/loot table em configuração posterior. A migration V104 cria as pools a partir das chances legadas de `V56__seed_new_missions.sql`, remove fragmentos genéricos das novas entradas e adiciona materiais `EVOLUTION_MATERIAL` nomeados por Digimon conforme a área e o estágio da missão.
 
 A pool de cada área deverá priorizar materiais nomeados compatíveis com a progressão disponível. Por exemplo, áreas iniciais podem priorizar materiais `BABY_II` e `ROOKIE`, enquanto áreas avançadas podem incluir materiais `CHAMPION`, `ULTIMATE` e `MEGA` com pesos menores e raridades correspondentes. Essa regra deve ser configurável, não codificada com `if/else` por área.
 
 ### Critérios de aceite
 
-A conclusão de uma missão entrega XP e Bits normalmente e entrega exatamente um Baú da Área. Missões distintas podem compartilhar uma loot table. Missões difíceis possuem pesos de raridade mais favoráveis sem alterar a identidade do baú. O item aleatório antigo não é entregue em duplicidade. A operação continua transacional e auditável.
+A conclusão de uma missão entrega XP e Bits normalmente e entrega exatamente um Baú da Área. O response informa `LOOT_CHEST`, `itemCode` e `itemName`, sem revelar a pool. Missões distintas podem compartilhar uma loot table. Missões difíceis preservam os pesos de raridade migrados. O item aleatório antigo não é entregue em duplicidade para missões vinculadas. A operação continua transacional e publica `MISSION_CLAIMED` no Transactional Outbox. Missões sem vínculo ainda usam o loot legado apenas como fallback de compatibilidade.
 
 ## 9. Sprint 4 — Painel administrativo e inventário do jogador
 

@@ -1,6 +1,7 @@
 package com.dro.modules.mission.domain;
 
 import com.dro.modules.digimon.domain.enums.Stage;
+import com.dro.modules.loot.domain.ChestDefinitionEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.domain.Persistable;
@@ -68,6 +69,12 @@ public class MissionDefinitionEntity implements Persistable<String> {
 
     @Column(name = "updated_by", nullable = false)
     private String updatedBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chest_definition_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private ChestDefinitionEntity chestDefinition;
 
     @OneToMany(mappedBy = "mission", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
