@@ -51,6 +51,10 @@
       "value": ""
     },
     {
+      "key": "profileKey",
+      "value": ""
+    },
+    {
       "key": "category",
       "value": ""
     },
@@ -244,6 +248,52 @@
             ],
             "url": "{{baseUrl}}/admin/bosses/chest-options",
             "description": "Gerado de AdminBossController.chestOptions. Revise IDs e valores antes de enviar."
+          },
+          "response": []
+        },
+        {
+          "name": "listRarityProfiles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/bosses/rarity-profiles",
+            "description": "Lista os perfis persistidos de raridade de equipamentos dos Bosses."
+          },
+          "response": []
+        },
+        {
+          "name": "updateRarityProfile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/bosses/rarity-profiles/{{profileKey}}",
+            "description": "Atualiza um perfil. A soma de commonPercent, rarePercent, epicPercent e legendaryPercent deve ser exatamente 100.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"commonPercent\": 65,\n  \"rarePercent\": 22,\n  \"epicPercent\": 10,\n  \"legendaryPercent\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },

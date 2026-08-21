@@ -56,6 +56,12 @@ USABLE="${USABLE:-VALOR}"
 # AdminBossController.chestOptions (GET /admin/bosses/chest-options)
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/bosses/chest-options" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
+# AdminBossRarityProfileController.list (GET /admin/bosses/rarity-profiles)
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/bosses/rarity-profiles" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+
+# AdminBossRarityProfileController.update (PUT /admin/bosses/rarity-profiles/{profileKey})
+# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/bosses/rarity-profiles/${PROFILE_KEY}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"commonPercent":65,"rarePercent":22,"epicPercent":10,"legendaryPercent":3}'
+
 # AdminBossController.listAll (GET /admin/bosses)
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/bosses" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 

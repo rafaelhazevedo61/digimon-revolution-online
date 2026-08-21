@@ -12,7 +12,9 @@ import com.dro.modules.digimon.domain.enums.Personality;
 import com.dro.modules.digimon.domain.enums.Rarity;
 import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.equipment.application.EquipmentRarityProfileService;
 import com.dro.modules.equipment.application.GrantEquipmentUseCase;
+import com.dro.modules.equipment.domain.EquipmentRarity;
 import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.domain.ItemDefinition;
@@ -57,6 +59,7 @@ class ChallengeBossUseCaseTest {
     @Mock private AddItemUseCase addItemUseCase;
     @Mock private ChestDefinitionRepository chestDefinitionRepository;
     @Mock private GrantEquipmentUseCase grantEquipmentUseCase;
+    @Mock private EquipmentRarityProfileService equipmentRarityProfileService;
     @Mock private ClanBonusService clanBonusService;
     @Mock private ClanMissionProgressTracker clanMissionProgressTracker;
     @Mock private GlobalDamageBuffService globalDamageBuffService;
@@ -145,6 +148,7 @@ class ChallengeBossUseCaseTest {
         when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(activeDigimon(playerId, digimonId)));
         when(globalDamageBuffService.isEnabled()).thenReturn(true);
         when(globalDamageBuffService.getMultiplier()).thenReturn(1.0);
+        when(equipmentRarityProfileService.roll("BOSS_NORMAL", 0.0)).thenReturn(EquipmentRarity.COMMON);
         when(chestDefinitionRepository.findWithCatalogByCode("CHEST_EQUIP"))
                 .thenReturn(Optional.of(boss.getChestDefinition()));
 

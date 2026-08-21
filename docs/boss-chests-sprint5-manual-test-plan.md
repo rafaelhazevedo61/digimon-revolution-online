@@ -191,3 +191,30 @@ Na tela administrativa de Bosses, os botões **Editar** e **Drops** devem abrir 
 O modal de Drops deve carregar os drops existentes do Boss, permitir consultar os equipamentos legados e apresentar o formulário de novo drop. O botão **Fechar** deve remover o modal. Para Bosses normais e periódicos migrados para Baús, a tentativa de cadastrar um novo drop direto do tipo `ITEM` deve retornar conflito, pois os itens devem ser configurados na Loot Table do Baú. Drops de equipamento continuam disponíveis no fluxo legado.
 
 Após salvar o formulário de edição, a tela deve retornar à listagem atualizada. O envio do formulário não deve provocar navegação ou recarregamento completo da página. A validação JavaScript deve ser confirmada com `node --check admin-frontend/assets/js/bosses.js`.
+
+## Configuração de equipamentos e raridades
+
+Na tela administrativa de Bosses, a tabela deve exibir a coluna **Chance Equipamento**. O valor representa a chance única de entrar na pool legada de equipamentos do Boss; quando houver mais de um equipamento, a escolha posterior entre os templates permanece uniforme nesta sprint.
+
+O botão **Raridade de Equipamentos** deve abrir um modal com os perfis `BOSS_NORMAL`, `BOSS_DAILY`, `BOSS_WEEKLY` e `BOSS_MONTHLY`. Cada perfil deve exibir os percentuais `Common`, `Rare`, `Epic` e `Legendary`, cuja soma precisa ser exatamente 100%.
+
+Altere um perfil de teste, salve e recarregue o modal. A alteração deve persistir. Tente salvar percentuais cuja soma seja diferente de 100%; a tela deve bloquear o envio e a API deve retornar HTTP 400. Após a alteração, o combate contra Boss deve usar o novo perfil de raridade, enquanto a chance de cair algum equipamento continua vindo da coluna `chance` de `boss_drops`.
+
+A consulta de conferência é:
+
+```sql
+SELECT
+    profile_key,
+    display_name,
+    common_percent,
+    rare_percent,
+    epic_percent,
+    legendary_percent,
+    common_percent + rare_percent + epic_percent + legendary_percent AS total_percent,
+    updated_at,
+    updated_by
+FROM equipment_rarity_profiles
+ORDER BY profile_key;
+```
+
+O campo `total_percent` deve ser sempre 100. A atualização também deve gerar o evento de auditoria `ADMIN_EQUIPMENT_RARITY_PROFILE_UPDATED` no Transactional Outbox.

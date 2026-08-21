@@ -1,6 +1,7 @@
 let adminBosses = [];
 let adminBossEditId = null;
 let adminBossChestOptions = [];
+let adminBossRarityProfiles = [];
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -21,13 +22,20 @@ async function renderBossesAdminPage() {
   document.getElementById("page-subtitle").textContent = "Gerenciar definicoes de bosses e drops";
 
   app.innerHTML = `
-    <div class="mb-4 flex justify-between items-center">
-      <h3 class="text-lg font-bold">Boss Definitions</h3>
-      <button class="px-4 py-2 bg-cyan-700 hover:bg-cyan-600 rounded-lg text-sm font-bold" onclick="openBossForm()">+ Novo Boss</button>
+    <div class="mb-4 flex flex-wrap gap-3 justify-between items-center">
+      <div>
+        <h3 class="text-lg font-bold">Boss Definitions</h3>
+        <p class="text-sm text-slate-400">Configure Bosses, equipamentos legados e recompensas em Baús.</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-bold" onclick="openBossRarityProfiles()">Raridade de Equipamentos</button>
+        <button type="button" class="px-4 py-2 bg-cyan-700 hover:bg-cyan-600 rounded-lg text-sm font-bold" onclick="openBossForm()">+ Novo Boss</button>
+      </div>
     </div>
     <div id="bosses-table-container">
       <p class="text-slate-400">Carregando...</p>
     </div>
+    <div id="boss-rarity-modal"></div>
     <div id="boss-form-modal"></div>
     <div id="boss-drops-modal"></div>
   `;
@@ -47,6 +55,16 @@ async function loadBosses() {
   } catch (err) {
     document.getElementById("bosses-table-container").innerHTML = `<p class="text-red-400">${err.message}</p>`;
   }
+}
+
+function equipmentPoolSummary(boss) {
+  const equipmentDrops = (boss.drops || []).filter(drop => drop.dropType === "EQUIPMENT");
+  if (equipmentDrops.length === 0) {
+    return '<span class="text-slate-500">Sem equipamento</span>';
+  }
+  const poolChance = Number(equipmentDrops[0].chance || 0);
+  const optionLabel = equipmentDrops.length === 1 ? "1 opção" : `${equipmentDrops.length} opções`;
+  return `<div class="font-semibold text-purple-300">${poolChance}%</div><div class="text-[10px] text-slate-500">Pool · ${optionLabel}</div>`;
 }
 
 function renderBossesTable() {
@@ -77,6 +95,7 @@ function renderBossesTable() {
             <th class="py-2 px-2">HP/ATK/DEF</th>
             <th class="py-2 px-2">XP</th>
             <th class="py-2 px-2">Bits</th>
+            <th class="py-2 px-2">Chance Equipamento</th>
             <th class="py-2 px-2">Baú de Recompensa</th>
             <th class="py-2 px-2">Ativo</th>
             <th class="py-2 px-2">Acoes</th>
@@ -93,6 +112,7 @@ function renderBossesTable() {
               <td class="py-2 px-2 text-xs">${b.hp}/${b.atk}/${b.def}</td>
               <td class="py-2 px-2 text-yellow-400">${b.baseXpReward}</td>
               <td class="py-2 px-2 text-amber-400">${b.baseBitsReward}</td>
+              <td class="py-2 px-2">${equipmentPoolSummary(b)}</td>
               <td class="py-2 px-2">
                 <div class="font-semibold text-slate-300">${escapeHtml(b.chestName || "Sem Baú")}</div>
                 <div class="text-[10px] text-slate-500 font-mono">${escapeHtml(b.chestCode || "-")}</div>
@@ -111,6 +131,121 @@ function renderBossesTable() {
       </table>
     </div>
   `;
+}
+
+const bossRarityLabels = {
+  BOSS_NORMAL: "Boss Normal",
+  BOSS_DAILY: "Boss Diário",
+  BOSS_WEEKLY: "Boss Semanal",
+  BOSS_MONTHLY: "Boss Mensal"
+};
+
+async function openBossRarityProfiles() {
+  const root = document.getElementById("boss-rarity-modal");
+  if (!root) return;
+
+  root.innerHTML = `
+    <div class="modal-overlay" onclick="closeBossRarityProfiles()">
+      <div class="modal-content modal-wide" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-xl font-bold">Raridade de Equipamentos</h3>
+            <p class="text-sm text-slate-400 mt-1">Percentuais usados no roll de raridade após a queda do equipamento.</p>
+          </div>
+          <button type="button" class="text-slate-400 hover:text-white text-2xl" onclick="closeBossRarityProfiles()">&times;</button>
+        </div>
+        <p class="text-slate-400 text-sm">Carregando...</p>
+      </div>
+    </div>
+  `;
+
+  try {
+    adminBossRarityProfiles = await apiGet("/admin/bosses/rarity-profiles");
+    renderBossRarityProfiles();
+  } catch (err) {
+    root.innerHTML = `
+      <div class="modal-overlay" onclick="closeBossRarityProfiles()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+          <p class="text-red-400">${escapeHtml(err.message)}</p>
+          <button type="button" class="mt-4 px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-xs" onclick="closeBossRarityProfiles()">Fechar</button>
+        </div>
+      </div>
+    `;
+  }
+}
+
+function renderBossRarityProfiles() {
+  const root = document.getElementById("boss-rarity-modal");
+  if (!root) return;
+
+  root.innerHTML = `
+    <div class="modal-overlay" onclick="closeBossRarityProfiles()">
+      <div class="modal-content modal-wide" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-xl font-bold">Raridade de Equipamentos</h3>
+            <p class="text-sm text-slate-400 mt-1">A soma de cada perfil deve ser exatamente 100%.</p>
+          </div>
+          <button type="button" class="text-slate-400 hover:text-white text-2xl" onclick="closeBossRarityProfiles()">&times;</button>
+        </div>
+        <div class="space-y-4">
+          ${adminBossRarityProfiles.map(profile => `
+            <form class="p-4 bg-slate-800 rounded-xl border border-slate-700" onsubmit="saveBossRarityProfile(event, '${escapeAttr(profile.profileKey)}')">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div>
+                  <h4 class="font-bold">${escapeHtml(bossRarityLabels[profile.profileKey] || profile.displayName)}</h4>
+                  <p class="text-xs text-slate-500 font-mono">${escapeHtml(profile.profileKey)}</p>
+                </div>
+                <span class="text-xs text-slate-400">Atualizado por ${escapeHtml(profile.updatedBy || "-")}</span>
+              </div>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <label class="text-xs text-slate-400">Common %<input id="rp-${escapeAttr(profile.profileKey)}-common" type="number" min="0" max="100" class="w-full mt-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-100" value="${profile.commonPercent}" required></label>
+                <label class="text-xs text-slate-400">Rare %<input id="rp-${escapeAttr(profile.profileKey)}-rare" type="number" min="0" max="100" class="w-full mt-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-100" value="${profile.rarePercent}" required></label>
+                <label class="text-xs text-slate-400">Epic %<input id="rp-${escapeAttr(profile.profileKey)}-epic" type="number" min="0" max="100" class="w-full mt-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-100" value="${profile.epicPercent}" required></label>
+                <label class="text-xs text-slate-400">Legendary %<input id="rp-${escapeAttr(profile.profileKey)}-legendary" type="number" min="0" max="100" class="w-full mt-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-100" value="${profile.legendaryPercent}" required></label>
+              </div>
+              <div id="rp-${escapeAttr(profile.profileKey)}-error" class="hidden mt-3 p-2 rounded bg-red-950/30 border border-red-900 text-red-200 text-xs"></div>
+              <div class="flex justify-end mt-3"><button type="submit" class="px-3 py-1 bg-cyan-700 hover:bg-cyan-600 rounded text-xs font-bold">Salvar perfil</button></div>
+            </form>
+          `).join("")}
+        </div>
+        <div class="flex justify-end mt-6"><button type="button" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-xs" onclick="closeBossRarityProfiles()">Fechar</button></div>
+      </div>
+    </div>
+  `;
+}
+
+async function saveBossRarityProfile(event, profileKey) {
+  event.preventDefault();
+  const normalizedKey = profileKey.replace(/[^A-Z_]/g, "");
+  const values = {
+    commonPercent: parseInt(document.getElementById(`rp-${normalizedKey}-common`).value, 10),
+    rarePercent: parseInt(document.getElementById(`rp-${normalizedKey}-rare`).value, 10),
+    epicPercent: parseInt(document.getElementById(`rp-${normalizedKey}-epic`).value, 10),
+    legendaryPercent: parseInt(document.getElementById(`rp-${normalizedKey}-legendary`).value, 10)
+  };
+  const error = document.getElementById(`rp-${normalizedKey}-error`);
+  const total = Object.values(values).reduce((sum, value) => sum + value, 0);
+  if (total !== 100) {
+    error.textContent = `Os percentuais devem somar 100%. Soma atual: ${total}%.`;
+    error.classList.remove("hidden");
+    return;
+  }
+  error.classList.add("hidden");
+
+  try {
+    const updated = await apiPut(`/admin/bosses/rarity-profiles/${encodeURIComponent(profileKey)}`, values);
+    adminBossRarityProfiles = adminBossRarityProfiles.map(profile => profile.profileKey === updated.profileKey ? updated : profile);
+    renderBossRarityProfiles();
+  } catch (err) {
+    error.textContent = err.message;
+    error.classList.remove("hidden");
+  }
+}
+
+function closeBossRarityProfiles() {
+  const root = document.getElementById("boss-rarity-modal");
+  if (root) root.innerHTML = "";
 }
 
 function openBossForm(id = null) {

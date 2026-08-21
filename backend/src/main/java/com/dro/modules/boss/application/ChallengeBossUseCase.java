@@ -13,7 +13,7 @@ import com.dro.modules.equipment.domain.EquipmentRarity;
 import com.dro.modules.clan.application.ClanBonusService;
 import com.dro.modules.clan.application.ClanMissionProgressTracker;
 import com.dro.modules.clan.domain.enums.ClanMissionObjectiveType;
-import com.dro.modules.equipment.domain.EquipmentRarityRules;
+import com.dro.modules.equipment.application.EquipmentRarityProfileService;
 import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
@@ -55,6 +55,7 @@ public class ChallengeBossUseCase {
     private final AddItemUseCase addItemUseCase;
     private final ChestDefinitionRepository chestDefinitionRepository;
     private final GrantEquipmentUseCase grantEquipmentUseCase;
+    private final EquipmentRarityProfileService equipmentRarityProfileService;
     private final ClanBonusService clanBonusService;
     private final ClanMissionProgressTracker clanMissionProgressTracker;
     private final GlobalDamageBuffService globalDamageBuffService;
@@ -277,7 +278,7 @@ public class ChallengeBossUseCase {
         BossDropEntity picked = equipmentDrops.get(
                 ThreadLocalRandom.current().nextInt(equipmentDrops.size()));
         String profile = "BOSS_" + boss.getBossType().name();
-        EquipmentRarity rarity = EquipmentRarityRules.rollRarity(profile, dropBonusPercent);
+        EquipmentRarity rarity = equipmentRarityProfileService.roll(profile, dropBonusPercent);
         grantEquipmentUseCase.execute(digimonId, picked.getTemplateName(), rarity);
         rewards.add(new DropRewardResponse(
                 "EQUIPMENT",
