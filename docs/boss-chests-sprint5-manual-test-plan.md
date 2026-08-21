@@ -183,3 +183,11 @@ A tentativa de vitória deve possuir XP/Bits e o inventário deve possuir o Baú
 ## Limites da Sprint 5
 
 Equipamentos continuam sendo sorteados e concedidos pelo fluxo legado. Boss Mundial (`WORLD`) e Boss de Clã (`CLAN`) não recebem Baú nesta sprint; serão tratados nas sprints específicas de Boss Mundial e demais raids.
+
+## Validação dos modais administrativos de Bosses
+
+Na tela administrativa de Bosses, os botões **Editar** e **Drops** devem abrir modais sobrepostos à página, em vez de inserir formulários abaixo da tabela. O modal de edição deve permitir alterar os dados do Boss e selecionar o Baú de recompensa. O botão **Cancelar**, o botão de fechamento e o clique no overlay devem fechar o modal sem recarregar a página.
+
+O modal de Drops deve carregar os drops existentes do Boss, permitir consultar os equipamentos legados e apresentar o formulário de novo drop. O botão **Fechar** deve remover o modal. Para Bosses normais e periódicos migrados para Baús, a tentativa de cadastrar um novo drop direto do tipo `ITEM` deve retornar conflito, pois os itens devem ser configurados na Loot Table do Baú. Drops de equipamento continuam disponíveis no fluxo legado.
+
+Após salvar o formulário de edição, a tela deve retornar à listagem atualizada. O envio do formulário não deve provocar navegação ou recarregamento completo da página. A validação JavaScript deve ser confirmada com `node --check admin-frontend/assets/js/bosses.js`.

@@ -28,8 +28,8 @@ async function renderBossesAdminPage() {
     <div id="bosses-table-container">
       <p class="text-slate-400">Carregando...</p>
     </div>
-    <div id="boss-form-container"></div>
-    <div id="boss-drops-container"></div>
+    <div id="boss-form-modal"></div>
+    <div id="boss-drops-modal"></div>
   `;
 
   await loadBosses();
@@ -116,95 +116,106 @@ function renderBossesTable() {
 function openBossForm(id = null) {
   adminBossEditId = id;
   const boss = id ? adminBosses.find(b => b.id === id) : null;
-  const container = document.getElementById("boss-form-container");
+  const root = document.getElementById("boss-form-modal");
+  if (!root) return;
 
-  container.innerHTML = `
-    <div class="mt-6 p-4 bg-slate-800 rounded-xl border border-slate-700">
-      <h4 class="font-bold mb-3">${boss ? "Editar Boss" : "Novo Boss"}</h4>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div>
-          <label class="text-xs text-slate-400">Code</label>
-          <input id="bf-code" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss ? boss.code : ""}" ${boss ? "disabled" : ""}>
+  root.innerHTML = `
+    <div class="modal-overlay" onclick="closeBossForm()">
+      <div class="modal-content modal-wide" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-xl font-bold">${boss ? "Editar Boss" : "Novo Boss"}</h3>
+            <p class="text-sm text-slate-400 mt-1">Configure os dados de combate e o Baú de recompensa.</p>
+          </div>
+          <button type="button" class="text-slate-400 hover:text-white text-2xl" onclick="closeBossForm()">&times;</button>
         </div>
-        <div>
-          <label class="text-xs text-slate-400">Nome</label>
-          <input id="bf-name" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss ? boss.name : ""}">
-        </div>
-        <div>
-          <label class="text-xs text-slate-400">Tipo</label>
-          <select id="bf-type" onchange="updateBossChestRequirement()" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm">
-            <option value="NORMAL" ${boss && boss.bossType === "NORMAL" ? "selected" : ""}>Normal</option>
-            <option value="DAILY" ${boss && boss.bossType === "DAILY" ? "selected" : ""}>Diário</option>
-            <option value="WEEKLY" ${boss && boss.bossType === "WEEKLY" ? "selected" : ""}>Semanal</option>
-            <option value="MONTHLY" ${boss && boss.bossType === "MONTHLY" ? "selected" : ""}>Mensal</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-xs text-slate-400">Stage Minimo</label>
-          <select id="bf-stage" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm">
-            <option value="BABY" ${boss && boss.requiredStage === "BABY" ? "selected" : ""}>Baby</option>
-            <option value="ROOKIE" ${boss && boss.requiredStage === "ROOKIE" ? "selected" : ""}>Rookie</option>
-            <option value="CHAMPION" ${boss && boss.requiredStage === "CHAMPION" ? "selected" : ""}>Champion</option>
-            <option value="ULTIMATE" ${boss && boss.requiredStage === "ULTIMATE" ? "selected" : ""}>Ultimate</option>
-            <option value="MEGA" ${boss && boss.requiredStage === "MEGA" ? "selected" : ""}>Mega</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-xs text-slate-400">Level Minimo</label>
-          <input id="bf-level" type="number" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss ? boss.requiredLevel : 1}">
-        </div>
-        <div>
-          <label class="text-xs text-slate-400">Rebirths</label>
-          <input id="bf-rebirths" type="number" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss ? boss.requiredRebirths : 0}">
-        </div>
-        <div>
-          <label class="text-xs text-slate-400">HP</label>
-          <input id="bf-hp" type="number" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss ? boss.hp : 500}">
-        </div>
-        <div>
-          <label class="text-xs text-slate-400">ATK</label>
-          <input id="bf-atk" type="number" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss ? boss.atk : 80}">
-        </div>
-        <div>
-          <label class="text-xs text-slate-400">DEF</label>
-          <input id="bf-def" type="number" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss ? boss.def : 50}">
-        </div>
-        <div>
-          <label class="text-xs text-slate-400">Energia</label>
-          <input id="bf-energy" type="number" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss ? boss.energyCost : 5}">
-        </div>
-        <div>
-          <label class="text-xs text-slate-400">Cooldown (min)</label>
-          <input id="bf-cooldown" type="number" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss ? boss.cooldownMinutes : 360}">
-        </div>
-        <div>
-          <label class="text-xs text-slate-400">XP Reward</label>
-          <input id="bf-xp" type="number" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss ? boss.baseXpReward : 200}">
-        </div>
-        <div>
-          <label class="text-xs text-slate-400">Bits Reward</label>
-          <input id="bf-bits" type="number" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss ? boss.baseBitsReward : 100}">
-        </div>
-        <div>
-          <label class="text-xs text-slate-400">Defeat XP %</label>
-          <input id="bf-defeatxp" type="number" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss ? boss.defeatXpPercent : 10}">
-        </div>
-        <div class="col-span-2">
-          <label class="text-xs text-slate-400">Image URL</label>
-          <input id="bf-image" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss ? (boss.imageUrl || "") : ""}">
-        </div>
-        <div class="col-span-2">
-          <label class="text-xs text-slate-400">Baú de Recompensa (Vitória)</label>
-          <select id="bf-chest" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm">
-            <option value="">Selecione um baú ativo...</option>
-            ${adminBossChestOptions.map(c => `<option value="${escapeAttr(c.code)}" ${boss && boss.chestCode === c.code ? "selected" : ""}>${escapeHtml(c.name)} — ${escapeHtml(c.code)}</option>`).join("")}
-          </select>
-          <p class="text-[10px] text-slate-500 mt-1">Somente baús ativos com Loot Tables ativas aparecem aqui.</p>
-        </div>
-      </div>
-      <div class="flex gap-2 mt-4">
-        <button class="px-4 py-2 bg-cyan-700 hover:bg-cyan-600 rounded text-sm font-bold" onclick="saveBoss()">Salvar</button>
-        <button class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm" onclick="closeBossForm()">Cancelar</button>
+        <form id="boss-form" onsubmit="saveBoss(event)">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <label class="text-xs text-slate-400">Code</label>
+              <input id="bf-code" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${escapeAttr(boss?.code || "")}" ${boss ? "disabled" : ""}>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Nome</label>
+              <input id="bf-name" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${escapeAttr(boss?.name || "")}" required>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Tipo</label>
+              <select id="bf-type" onchange="updateBossChestRequirement()" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm">
+                <option value="NORMAL" ${boss?.bossType === "NORMAL" || !boss ? "selected" : ""}>Normal</option>
+                <option value="DAILY" ${boss?.bossType === "DAILY" ? "selected" : ""}>Diário</option>
+                <option value="WEEKLY" ${boss?.bossType === "WEEKLY" ? "selected" : ""}>Semanal</option>
+                <option value="MONTHLY" ${boss?.bossType === "MONTHLY" ? "selected" : ""}>Mensal</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Stage Mínimo</label>
+              <select id="bf-stage" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm">
+                <option value="BABY" ${boss?.requiredStage === "BABY" ? "selected" : ""}>Baby</option>
+                <option value="ROOKIE" ${boss?.requiredStage === "ROOKIE" || !boss ? "selected" : ""}>Rookie</option>
+                <option value="CHAMPION" ${boss?.requiredStage === "CHAMPION" ? "selected" : ""}>Champion</option>
+                <option value="ULTIMATE" ${boss?.requiredStage === "ULTIMATE" ? "selected" : ""}>Ultimate</option>
+                <option value="MEGA" ${boss?.requiredStage === "MEGA" ? "selected" : ""}>Mega</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Level Mínimo</label>
+              <input id="bf-level" type="number" min="1" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.requiredLevel ?? 1}" required>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Rebirths</label>
+              <input id="bf-rebirths" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.requiredRebirths ?? 0}" required>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">HP</label>
+              <input id="bf-hp" type="number" min="1" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.hp ?? 500}" required>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">ATK</label>
+              <input id="bf-atk" type="number" min="1" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.atk ?? 80}" required>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">DEF</label>
+              <input id="bf-def" type="number" min="1" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.def ?? 50}" required>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Energia</label>
+              <input id="bf-energy" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.energyCost ?? 5}" required>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Cooldown (min)</label>
+              <input id="bf-cooldown" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.cooldownMinutes ?? 360}" required>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">XP Reward</label>
+              <input id="bf-xp" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.baseXpReward ?? 200}" required>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Bits Reward</label>
+              <input id="bf-bits" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.baseBitsReward ?? 100}" required>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Defeat XP %</label>
+              <input id="bf-defeatxp" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.defeatXpPercent ?? 10}" required>
+            </div>
+            <div class="col-span-2">
+              <label class="text-xs text-slate-400">Image URL</label>
+              <input id="bf-image" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${escapeAttr(boss?.imageUrl || "")}" placeholder="https://...">
+            </div>
+            <div class="col-span-2">
+              <label class="text-xs text-slate-400">Baú de Recompensa (Vitória)</label>
+              <select id="bf-chest" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm">
+                <option value="">Selecione um baú ativo...</option>
+                ${adminBossChestOptions.map(c => `<option value="${escapeAttr(c.code)}" ${boss?.chestCode === c.code ? "selected" : ""}>${escapeHtml(c.name)} — ${escapeHtml(c.code)}</option>`).join("")}
+              </select>
+              <p class="text-[10px] text-slate-500 mt-1">Somente baús ativos com Loot Tables ativas aparecem aqui.</p>
+            </div>
+          </div>
+          <div class="flex gap-2 mt-6">
+            <button type="submit" class="px-4 py-2 bg-cyan-700 hover:bg-cyan-600 rounded text-sm font-bold flex-1">Salvar</button>
+            <button type="button" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm flex-1" onclick="closeBossForm()">Cancelar</button>
+          </div>
+        </form>
       </div>
     </div>
   `;
@@ -221,11 +232,13 @@ function updateBossChestRequirement() {
 }
 
 function closeBossForm() {
-  document.getElementById("boss-form-container").innerHTML = "";
+  const root = document.getElementById("boss-form-modal");
+  if (root) root.innerHTML = "";
   adminBossEditId = null;
 }
 
-async function saveBoss() {
+async function saveBoss(event) {
+  event?.preventDefault();
   const body = {
     code: document.getElementById("bf-code").value,
     name: document.getElementById("bf-name").value,
@@ -270,55 +283,89 @@ async function deleteBoss(id) {
 
 async function openBossDrops(bossId) {
   const boss = adminBosses.find(b => b.id === bossId);
-  if (!boss) return;
+  const root = document.getElementById("boss-drops-modal");
+  if (!boss || !root) return;
 
-  const container = document.getElementById("boss-drops-container");
-  container.innerHTML = `<div class="mt-6 p-4 bg-slate-800 rounded-xl border border-slate-700">
-    <h4 class="font-bold mb-3">Drops de ${boss.name}</h4>
-    <p class="text-slate-400 text-sm">Carregando...</p>
-  </div>`;
+  root.innerHTML = `
+    <div class="modal-overlay" onclick="closeBossDrops()">
+      <div class="modal-content modal-wide" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-xl font-bold">Drops de ${escapeHtml(boss.name)}</h3>
+            <p class="text-sm text-slate-400 mt-1">Equipamentos permanecem no fluxo legado; itens devem usar a Loot Table do Baú.</p>
+          </div>
+          <button type="button" class="text-slate-400 hover:text-white text-2xl" onclick="closeBossDrops()">&times;</button>
+        </div>
+        <p class="text-slate-400 text-sm">Carregando...</p>
+      </div>
+    </div>
+  `;
 
   try {
     const fullBoss = await apiGet(`/admin/bosses/${bossId}`);
     const drops = fullBoss.drops || [];
 
-    container.innerHTML = `
-      <div class="mt-6 p-4 bg-slate-800 rounded-xl border border-slate-700">
-        <div class="flex justify-between items-center mb-3">
-          <h4 class="font-bold">Drops de ${boss.name}</h4>
-          <button class="px-3 py-1 bg-cyan-700 hover:bg-cyan-600 rounded text-xs font-bold" onclick="openDropForm(${bossId})">+ Drop</button>
+    root.innerHTML = `
+      <div class="modal-overlay" onclick="closeBossDrops()">
+        <div class="modal-content modal-wide" onclick="event.stopPropagation()">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="text-xl font-bold">Drops de ${escapeHtml(boss.name)}</h3>
+              <p class="text-sm text-slate-400 mt-1">Equipamentos permanecem no fluxo legado; itens devem usar a Loot Table do Baú.</p>
+            </div>
+            <button type="button" class="text-slate-400 hover:text-white text-2xl" onclick="closeBossDrops()">&times;</button>
+          </div>
+          <div class="flex justify-end mb-3">
+            <button type="button" class="px-3 py-1 bg-cyan-700 hover:bg-cyan-600 rounded text-xs font-bold" onclick="openDropForm(${bossId})">+ Drop</button>
+          </div>
+          ${drops.length === 0 ? '<p class="text-slate-400 text-sm">Nenhum drop configurado.</p>' : `
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-slate-700 text-left text-slate-400">
+                    <th class="py-1 px-2">Tipo</th>
+                    <th class="py-1 px-2">Item/Template</th>
+                    <th class="py-1 px-2">Chance</th>
+                    <th class="py-1 px-2">Qtd</th>
+                    <th class="py-1 px-2"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${drops.map(d => `
+                    <tr class="border-b border-slate-800">
+                      <td class="py-1 px-2"><span class="px-1.5 py-0.5 rounded text-xs ${d.dropType === "EQUIPMENT" ? "bg-purple-800" : "bg-slate-700"}">${escapeHtml(d.dropType)}</span></td>
+                      <td class="py-1 px-2">${escapeHtml(d.dropType === "EQUIPMENT" ? (d.templateName || "-") : (d.itemCode || "-"))}</td>
+                      <td class="py-1 px-2">${d.chance}%</td>
+                      <td class="py-1 px-2">${d.minQuantity}-${d.maxQuantity}</td>
+                      <td class="py-1 px-2"><button type="button" class="text-red-400 text-xs hover:text-red-300" onclick="deleteDrop(${d.id}, ${bossId})">Remover</button></td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          `}
+          <div id="drop-form-${bossId}"></div>
+          <div class="flex justify-end mt-6">
+            <button type="button" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-xs" onclick="closeBossDrops()">Fechar</button>
+          </div>
         </div>
-        ${drops.length === 0 ? '<p class="text-slate-400 text-sm">Nenhum drop configurado.</p>' : `
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-slate-700 text-left text-slate-400">
-                <th class="py-1 px-2">Tipo</th>
-                <th class="py-1 px-2">Item/Template</th>
-                <th class="py-1 px-2">Chance</th>
-                <th class="py-1 px-2">Qtd</th>
-                <th class="py-1 px-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              ${drops.map(d => `
-                <tr class="border-b border-slate-800">
-                  <td class="py-1 px-2"><span class="px-1.5 py-0.5 rounded text-xs ${d.dropType === "EQUIPMENT" ? "bg-purple-800" : "bg-slate-700"}">${d.dropType}</span></td>
-                  <td class="py-1 px-2">${d.dropType === "EQUIPMENT" ? (d.templateName || "-") : (d.itemCode || "-")}</td>
-                  <td class="py-1 px-2">${d.chance}%</td>
-                  <td class="py-1 px-2">${d.minQuantity}-${d.maxQuantity}</td>
-                  <td class="py-1 px-2"><button class="text-red-400 text-xs hover:text-red-300" onclick="deleteDrop(${d.id}, ${bossId})">X</button></td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
-        `}
-        <div id="drop-form-${bossId}"></div>
-        <button class="mt-3 px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-xs" onclick="document.getElementById('boss-drops-container').innerHTML=''">Fechar</button>
       </div>
     `;
   } catch (err) {
-    container.innerHTML = `<p class="text-red-400">${err.message}</p>`;
+    root.innerHTML = `
+      <div class="modal-overlay" onclick="closeBossDrops()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+          <p class="text-red-400">${escapeHtml(err.message)}</p>
+          <button type="button" class="mt-4 px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-xs" onclick="closeBossDrops()">Fechar</button>
+        </div>
+      </div>
+    `;
   }
+}
+
+function closeBossDrops() {
+  const root = document.getElementById("boss-drops-modal");
+  if (root) root.innerHTML = "";
 }
 
 function openDropForm(bossId) {
