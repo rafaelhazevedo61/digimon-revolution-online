@@ -258,6 +258,12 @@ public class AdminLootTableUseCase {
         entity.setActive(request.active() == null || request.active());
 
         entity.getRarityWeights().clear();
+        entity.getEntries().clear();
+        if (entity.getId() != null) {
+            // O índice UNIQUE (loot_table_id, rarity) exige que os pesos antigos
+            // sejam removidos antes de inserir as novas linhas do update.
+            lootTableRepository.flush();
+        }
         configuration.weights().forEach((rarity, weight) ->
                 entity.getRarityWeights().add(LootTableRarityWeightEntity.builder()
                         .lootTable(entity)
@@ -265,7 +271,6 @@ public class AdminLootTableUseCase {
                         .weight(weight)
                         .build()));
 
-        entity.getEntries().clear();
         configuration.entries().forEach(entry ->
                 entity.getEntries().add(LootTableEntryEntity.builder()
                         .lootTable(entity)

@@ -98,6 +98,49 @@ class AdminLootTableUseCaseTest {
     }
 
     @Test
+    void updateFlushesExistingChildrenBeforeReplacingConfiguration() {
+        UUID adminId = UUID.randomUUID();
+        Player admin = Player.builder()
+                .id(adminId)
+                .username("admin")
+                .userType(UserType.ADMIN)
+                .build();
+        LootTableEntity table = LootTableEntity.builder()
+                .id(42L)
+                .code("LOOT_TEST")
+                .name("Tabela antiga")
+                .minItems(2)
+                .maxItems(4)
+                .active(true)
+                .build();
+        ItemDefinition trainingStone = ItemDefinition.builder()
+                .id(10L)
+                .code("TRAINING_STONE")
+                .name("Pedra de Treino")
+                .category("MATERIAL")
+                .rarity("COMMON")
+                .stackable(true)
+                .maxStack(999)
+                .tradable(true)
+                .build();
+
+        when(playerRepository.findById(adminId)).thenReturn(Optional.of(admin));
+        when(lootTableRepository.findByCode("LOOT_TEST")).thenReturn(Optional.of(table));
+        when(itemDefinitionRepository.findByCode("TRAINING_STONE"))
+                .thenReturn(Optional.of(trainingStone));
+        when(lootTableRepository.save(table)).thenReturn(table);
+
+        var response = adminLootTableUseCase.update(
+                token(adminId),
+                "LOOT_TEST",
+                new AdminLootTableAdminRequestFixture().request()
+        );
+
+        assertThat(response.minItems()).isEqualTo(1);
+        verify(lootTableRepository).flush();
+    }
+
+    @Test
     void toggleActiveUsesSimpleLookupAndAuditsStatusChange() {
         UUID adminId = UUID.randomUUID();
         Player admin = Player.builder()
