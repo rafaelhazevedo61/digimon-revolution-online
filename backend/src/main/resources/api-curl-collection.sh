@@ -133,6 +133,19 @@ USABLE="${USABLE:-VALOR}"
 # AdminMissionController.toggleActive (PATCH /admin/missions/{id}/toggle-active)
 # curl --fail-with-body -i -X PATCH "${BASE_URL}/admin/missions/${ID}/toggle-active" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
+# AdminLootTableController.list (GET /admin/loot-tables)
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/loot-tables?activeOnly=${ACTIVE_ONLY}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+# AdminLootTableController.catalog (GET /admin/loot-tables/catalog/items)
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/loot-tables/catalog/items?category=${CATEGORY}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+# AdminLootTableController.create (POST /admin/loot-tables)
+# curl --fail-with-body -i -X POST "${BASE_URL}/admin/loot-tables" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"code":"LOOT_TEST_ADMIN","name":"Loot Table de Teste","description":"Pool administrativa de teste.","minItems":1,"maxItems":2,"rarityWeights":[{"rarity":"COMMON","weight":70},{"rarity":"RARE","weight":20},{"rarity":"EPIC","weight":8},{"rarity":"LEGENDARY","weight":2}],"entries":[{"rarity":"COMMON","itemType":"TRAINING_STONE","materialCode":null,"weight":50,"minQuantity":1,"maxQuantity":3,"active":true},{"rarity":"RARE","itemType":"EVOLUTION_MATERIAL","materialCode":"FRAGMENT_AGUMON","weight":35,"minQuantity":1,"maxQuantity":5,"active":true}],"active":true}'
+# AdminLootTableController.get (GET /admin/loot-tables/{code})
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/loot-tables/${CODE}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+# AdminLootTableController.update (PUT /admin/loot-tables/{code})
+# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/loot-tables/${CODE}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"code":"LOOT_TEST_ADMIN","name":"Loot Table de Teste Atualizada","description":"Descrição atualizada.","minItems":1,"maxItems":2,"rarityWeights":[{"rarity":"COMMON","weight":60},{"rarity":"RARE","weight":25},{"rarity":"EPIC","weight":10},{"rarity":"LEGENDARY","weight":5}],"entries":[{"rarity":"COMMON","itemType":"DATA_CORE","materialCode":null,"weight":30,"minQuantity":1,"maxQuantity":2,"active":true},{"rarity":"RARE","itemType":"EVOLUTION_MATERIAL","materialCode":"FRAGMENT_AGUMON","weight":35,"minQuantity":1,"maxQuantity":5,"active":true}],"active":true}'
+# AdminLootTableController.toggleActive (PATCH /admin/loot-tables/{code}/toggle-active)
+# curl --fail-with-body -i -X PATCH "${BASE_URL}/admin/loot-tables/${CODE}/toggle-active" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+
 # AdminPlayerController.getPlayers (GET /admin/players)
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/players?username=${USERNAME}&email=${EMAIL}&selectedDigitama=${SELECTED_DIGITAMA}&starterSelected=${STARTER_SELECTED}&page=${PAGE}&size=${SIZE}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 

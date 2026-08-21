@@ -16,6 +16,8 @@ public interface ChestDefinitionRepository extends JpaRepository<ChestDefinition
 
     Optional<ChestDefinitionEntity> findByCodeAndActiveTrue(String code);
 
+    boolean existsByLootTable_Id(Long lootTableId);
+
     @EntityGraph(attributePaths = {"lootTable", "itemDefinition"})
     Optional<ChestDefinitionEntity> findWithCatalogByCode(String code);
 

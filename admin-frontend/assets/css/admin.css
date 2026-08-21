@@ -203,6 +203,13 @@
     color: #6ee7b7;
   }
 
+  .card-sm {
+    background: #111c31;
+    border: 1px solid #24344d;
+    border-radius: 0.75rem;
+    padding: 0.85rem;
+  }
+
   /* --- Modal --- */
 
   .modal-overlay {
