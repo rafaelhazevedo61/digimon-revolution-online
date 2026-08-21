@@ -101,6 +101,9 @@ public class AdminLootTableUseCase {
     ) {
         Player admin = requireAdmin(authorization);
         LootTableEntity entity = findTable(code);
+        if (entity.isActive() && Boolean.FALSE.equals(request.active())) {
+            ensureCanDeactivate(entity, code);
+        }
         String normalizedCode = request.code().trim();
         if (!entity.getCode().equals(normalizedCode)) {
             throw new BadRequestException("O código da Loot Table não pode ser alterado.");
@@ -119,10 +122,8 @@ public class AdminLootTableUseCase {
     public AdminLootTableResponse toggleActive(String authorization, String code) {
         Player admin = requireAdmin(authorization);
         LootTableEntity entity = findTable(code);
-        if (entity.isActive() && chestDefinitionRepository.existsByLootTable_Id(entity.getId())) {
-            throw new ConflictException(
-                    "Não é possível desativar a Loot Table " + code
-                            + " porque ela está vinculada a um ou mais Baús da Área.");
+        if (entity.isActive()) {
+            ensureCanDeactivate(entity, code);
         }
         entity.setActive(!entity.isActive());
         entity.setUpdatedBy(admin.getUsername());
@@ -300,6 +301,14 @@ public class AdminLootTableUseCase {
             itemDefinitionRepository.findByCode(code).ifPresent(definition -> catalog.put(code, definition));
         });
         return AdminLootTableResponse.from(entity, catalog);
+    }
+
+    private void ensureCanDeactivate(LootTableEntity entity, String code) {
+        if (chestDefinitionRepository.existsByLootTable_Id(entity.getId())) {
+            throw new ConflictException(
+                    "Não é possível desativar a Loot Table " + code
+                            + " porque ela está vinculada a um ou mais Baús da Área.");
+        }
     }
 
     private void publishAudit(String operation, LootTableEntity entity, Player admin) {

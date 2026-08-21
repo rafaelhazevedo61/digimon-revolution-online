@@ -216,6 +216,48 @@ class AdminLootTableUseCaseTest {
     }
 
     @Test
+    void refusesToDeactivateLinkedLootTableThroughUpdate() {
+        UUID adminId = UUID.randomUUID();
+        Player admin = Player.builder()
+                .id(adminId)
+                .username("admin")
+                .userType(UserType.ADMIN)
+                .build();
+        LootTableEntity table = LootTableEntity.builder()
+                .id(10L)
+                .code("LOOT_TEST")
+                .name("Tabela antiga")
+                .minItems(2)
+                .maxItems(4)
+                .active(true)
+                .build();
+        ItemDefinition trainingStone = ItemDefinition.builder()
+                .id(10L)
+                .code("TRAINING_STONE")
+                .name("Pedra de Treino")
+                .category("MATERIAL")
+                .rarity("COMMON")
+                .stackable(true)
+                .maxStack(999)
+                .tradable(true)
+                .build();
+
+        when(playerRepository.findById(adminId)).thenReturn(Optional.of(admin));
+        when(lootTableRepository.findByCode("LOOT_TEST")).thenReturn(Optional.of(table));
+        when(chestDefinitionRepository.existsByLootTable_Id(10L)).thenReturn(true);
+
+        assertThatThrownBy(() -> adminLootTableUseCase.update(
+                token(adminId),
+                "LOOT_TEST",
+                new AdminLootTableAdminRequestFixture().requestWithActive(false)
+        ))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("vinculada a um ou mais Baús da Área");
+        verify(lootTableRepository, never()).save(table);
+        verify(itemDefinitionRepository, never()).findByCode("TRAINING_STONE");
+    }
+
+    @Test
     void rejectsNonAdminBeforeReadingLootTable() {
         UUID playerId = UUID.randomUUID();
         Player player = Player.builder()
@@ -242,6 +284,10 @@ class AdminLootTableUseCaseTest {
 
     private static final class AdminLootTableAdminRequestFixture {
         private LootTableAdminRequest request() {
+            return requestWithActive(true);
+        }
+
+        private LootTableAdminRequest requestWithActive(Boolean active) {
             return new LootTableAdminRequest(
                     "LOOT_TEST",
                     "Tabela de Teste",
@@ -263,7 +309,7 @@ class AdminLootTableUseCaseTest {
                             3,
                             true
                     )),
-                    true
+                    active
             );
         }
     }
