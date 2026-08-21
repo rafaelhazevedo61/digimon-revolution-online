@@ -75,7 +75,10 @@ function formatMissionName(mission) {
   };
   if (names[id]) return names[id];
 
-  return String(mission.name || mission.missionName || id || "Missão")
+  const friendlyName = mission.name || mission.missionName;
+  if (!friendlyName) return "Missão";
+
+  return String(friendlyName)
     .replace(/Gear Savanna/g, "Savana Gear")
     .replace(/Factorial Town/g, "Cidade Fatorial")
     .replace(/Freezeland/g, "Terra Congelada")
@@ -150,6 +153,7 @@ function showMissionClaimModal(result) {
 
   const rewards = Array.isArray(result && result.rewards) ? result.rewards : [];
   const missionName = formatMissionName({ id: result && result.missionId });
+  const hasFriendlyMissionName = missionName !== "Missão";
   const rewardMarkup = rewards.length > 0
     ? rewards.map(reward => {
         const isChest = reward.item === "LOOT_CHEST" || String(reward.itemCode || "").startsWith("CHEST_");
@@ -178,7 +182,7 @@ function showMissionClaimModal(result) {
         <div>
           <p class="text-xs uppercase tracking-wider text-cyan-400 font-bold">Recompensa recebida</p>
           <h3 id="mission-claim-title" class="text-xl font-bold mt-1">Missão concluída!</h3>
-          <p class="text-sm text-slate-400 mt-1">${escapeHtml(missionName)}</p>
+          ${hasFriendlyMissionName ? `<p class="text-sm text-slate-400 mt-1">${escapeHtml(missionName)}</p>` : ""}
         </div>
         <button class="text-slate-400 hover:text-white text-2xl leading-none" aria-label="Fechar" onclick="document.getElementById('mission-claim-modal')?.remove()">&times;</button>
       </div>
