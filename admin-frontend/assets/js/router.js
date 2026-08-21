@@ -8,6 +8,7 @@ const routes = {
     "shop-products": renderShopProductsPage,
     missions: renderMissionsPage,
     "loot-tables": renderLootTablesPage,
+    "area-chests": renderAreaChestsPage,
     "equipment-simulator": renderEquipmentSimulatorPage,
     bosses: renderBossesAdminPage,
     "digimon-simulator": renderDigimonSimulatorPage,

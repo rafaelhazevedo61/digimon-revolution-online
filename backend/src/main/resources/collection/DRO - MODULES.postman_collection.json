@@ -3581,6 +3581,84 @@
             "description": "Alterna o status ativo sem apagar o histórico da configuração."
           },
           "response": []
+        },
+        {
+          "name": "Listar Baús da Área",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/chests?activeOnly={{activeOnly}}",
+            "description": "Lista Baús da Área e suas Loot Tables vinculadas."
+          },
+          "response": []
+        },
+        {
+          "name": "Consultar Baú da Área",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/chests/{{chestCode}}",
+            "description": "Consulta um Baú da Área pelo código."
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar vínculo do Baú",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/chests/{{chestCode}}",
+            "description": "Atualiza dados públicos, negociação, status e a Loot Table ativa vinculada.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Baú Floresta Nativa\",\n  \"description\": \"Baú entregue nas missões da Floresta Nativa.\",\n  \"icon\": \"chest-native-forest\",\n  \"lootTableCode\": \"LOOT_TABLE_TEST_ADMIN\",\n  \"tradable\": true,\n  \"active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ativar ou desativar Baú",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/chests/{{chestCode}}/toggle-active",
+            "description": "Alterna o status do baú sem apagar seu vínculo ou histórico."
+          },
+          "response": []
         }
       ]
     }
