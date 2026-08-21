@@ -179,7 +179,6 @@ function invShowChestOpeningResult(result) {
   if (existing) existing.remove();
 
   const items = Array.isArray(result && result.items) ? result.items : [];
-  const rarity = formatRarity(result && result.rarity);
   const title = result && result.replayed ? "Abertura já processada" : "Baú aberto!";
   const message = result && result.message ? result.message : "Recompensas recebidas";
 
@@ -196,14 +195,17 @@ function invShowChestOpeningResult(result) {
         <div class="text-5xl mb-2">🎁</div>
         <h3 class="text-xl font-bold">${escapeHtml(title)}</h3>
         <p class="text-sm text-slate-400 mt-1">${escapeHtml(result && result.chestName || "Baú")}</p>
-        <span class="badge badge-${String(result && result.rarity || "COMMON").toLowerCase()} mt-2">${escapeHtml(rarity)}</span>
+        <p class="text-xs text-slate-500 mt-2">Cada item possui sua própria raridade</p>
       </div>
       <div class="card-sm mb-4">
         <p class="text-xs text-slate-400 mb-2">Recompensas</p>
         ${items.length > 0 ? items.map(item => `
           <div class="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
             <div class="min-w-0">
-              <p class="font-semibold text-sm truncate">${escapeHtml(item.itemName || item.materialCode || invItemName(item.itemType))}</p>
+              <div class="flex items-center gap-2 flex-wrap">
+                <p class="font-semibold text-sm truncate">${escapeHtml(item.itemName || item.materialCode || invItemName(item.itemType))}</p>
+                ${item.rarity ? `<span class="badge badge-${String(item.rarity).toLowerCase()}">${escapeHtml(formatRarity(item.rarity))}</span>` : ""}
+              </div>
               ${item.materialCode ? `<p class="text-xs text-slate-500">Material de evolução</p>` : ""}
             </div>
             <span class="font-bold text-cyan-300 ml-3">x${item.quantity}</span>

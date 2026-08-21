@@ -21,7 +21,7 @@ Ao visualizar um item cuja definição possui categoria `CHEST`, o inventário d
 }
 ```
 
-A interface deve abrir um modal com a raridade, os itens recebidos e as quantidades. Depois da resposta, o inventário deve ser recarregado e a quantidade do baú deve diminuir uma unidade.
+A interface deve abrir um modal com os itens recebidos, suas quantidades e a raridade individual de cada item. Uma abertura pode combinar Common, Rare, Epic e Legendary. Depois da resposta, o inventário deve ser recarregado e a quantidade do baú deve diminuir uma unidade.
 
 O `requestId` é gerado para cada abertura nova. O bloqueio contra duplo clique impede duas requisições simultâneas durante o processamento.
 
@@ -40,6 +40,7 @@ O `requestId` é gerado para cada abertura nova. O bloqueio contra duplo clique 
 11. Confirme que os itens recebidos aparecem no inventário, respeitando a quantidade informada no modal.
 12. Observe a aba Network do navegador e confirme uma requisição `POST /inventory/chests/open` com `chestCode` e `requestId`.
 13. Confirme que não foi chamada a rota legada `POST /inventory/use` para o baú.
+14. Para uma Loot Table com uma entrada ativa em cada raridade e `minItems = 2`, confirme que a abertura não falha por haver apenas uma entrada em cada pool e que cada item do modal exibe sua própria raridade.
 
 ## Consultas SQL
 
@@ -60,6 +61,7 @@ ORDER BY co.opened_at DESC;
 ```sql
 SELECT
     coi.chest_opening_id,
+    coi.rarity,
     coi.item_type,
     coi.material_code,
     coi.quantity

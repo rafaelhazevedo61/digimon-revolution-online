@@ -6,6 +6,10 @@ import java.util.List;
 
 /**
  * Resultado público de uma abertura de baú.
+ *
+ * <p>O campo {@code rarity} permanece como a primeira raridade sorteada para
+ * compatibilidade com consumidores antigos. Em aberturas mistas, a raridade
+ * autoritativa está em cada item de {@code items}.</p>
  */
 public record ChestOpeningResponse(
         String requestId,

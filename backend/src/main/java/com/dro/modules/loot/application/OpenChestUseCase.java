@@ -100,6 +100,7 @@ public class OpenChestUseCase {
         for (ChestLootRoller.ChestLootItem reward : roll.items()) {
             creditReward(activeDigimon, reward);
             openingItems.add(ChestOpeningItemEntity.builder()
+                    .rarity(reward.rarity())
                     .itemType(reward.itemType())
                     .materialCode(reward.materialCode())
                     .quantity(reward.quantity())
@@ -211,6 +212,7 @@ public class OpenChestUseCase {
         List<Map<String, Object>> items = roll.items().stream()
                 .map(reward -> {
                     Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("rarity", reward.rarity().name());
                     item.put("itemType", reward.itemType().name());
                     if (reward.materialCode() != null) {
                         item.put("materialCode", reward.materialCode());
@@ -262,6 +264,7 @@ public class OpenChestUseCase {
         return new ChestOpeningItemResponse(
                 itemCode,
                 itemName,
+                item.getRarity(),
                 item.getItemType(),
                 item.getMaterialCode(),
                 item.getQuantity()

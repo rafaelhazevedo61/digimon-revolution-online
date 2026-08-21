@@ -27,6 +27,10 @@ public class ChestOpeningItemEntity {
     private ChestOpeningEntity chestOpening;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private LootRarity rarity;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "item_type", nullable = false, length = 50)
     private ItemType itemType;
 

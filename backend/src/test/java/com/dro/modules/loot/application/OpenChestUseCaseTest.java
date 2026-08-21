@@ -107,6 +107,7 @@ class OpenChestUseCaseTest {
         assertThat(response.items()).hasSize(1);
         assertThat(response.items().get(0).itemCode()).isEqualTo("FRAGMENT_AGUMON");
         assertThat(response.items().get(0).itemName()).isEqualTo("Fragmento do Agumon");
+        assertThat(response.items().get(0).rarity()).isEqualTo(LootRarity.COMMON);
         assertThat(response.items().get(0).quantity()).isBetween(1, 5);
         assertThat(chestInventory.getQuantity()).isEqualTo(1);
 
@@ -197,6 +198,7 @@ class OpenChestUseCaseTest {
                 new ChestLootRoller.ChestLootRoll(
                         LootRarity.COMMON,
                         List.of(new ChestLootRoller.ChestLootItem(
+                                LootRarity.COMMON,
                                 ItemType.EVOLUTION_MATERIAL,
                                 "FRAGMENT_AGUMON",
                                 3
@@ -239,6 +241,7 @@ class OpenChestUseCaseTest {
                 new ChestLootRoller.ChestLootRoll(
                         LootRarity.COMMON,
                         List.of(new ChestLootRoller.ChestLootItem(
+                                LootRarity.COMMON,
                                 ItemType.EVOLUTION_MATERIAL,
                                 "FRAGMENT_AGUMON",
                                 1

@@ -14,9 +14,10 @@ import java.util.random.RandomGenerator;
 /**
  * Executa o sorteio em duas etapas de uma abertura de baú.
  *
- * <p>A primeira etapa escolhe a raridade pelos pesos da tabela. A segunda etapa
- * escolhe entre uma e quatro entradas distintas, também ponderadas, e sorteia a
- * quantidade de cada entrada dentro do intervalo configurado.</p>
+ * <p>A abertura define entre uma e quatro entradas distintas. Para cada entrada,
+ * a raridade é sorteada pelos pesos das raridades que ainda possuem entradas
+ * ativas disponíveis; em seguida, a entrada é sorteada dentro da pool daquela
+ * raridade. Assim, uma abertura pode combinar Common, Rare, Epic e Legendary.</p>
  */
 @Component
 public class ChestLootRoller {
@@ -42,35 +43,36 @@ public class ChestLootRoller {
     public ChestLootRoll roll(LootTableEntity lootTable) {
         validateTable(lootTable);
 
-        LootRarity rarity = rollRarity(lootTable);
-        List<LootTableEntryEntity> eligibleEntries = lootTable.getEntries().stream()
-                .filter(LootTableEntryEntity::isActive)
-                .filter(entry -> entry.getRarity() == rarity)
-                .toList();
-
-        if (eligibleEntries.size() < lootTable.getMinItems()) {
-            throw new UnprocessableException(
-                    "Loot table does not have enough active entries for rarity " + rarity);
-        }
-
         int requestedItemCount = lootTable.getMinItems()
                 + random.nextInt(lootTable.getMaxItems() - lootTable.getMinItems() + 1);
-        int itemCount = Math.min(requestedItemCount, eligibleEntries.size());
+        List<LootTableEntryEntity> available = lootTable.getEntries().stream()
+                .filter(LootTableEntryEntity::isActive)
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        int itemCount = Math.min(requestedItemCount, available.size());
 
-        List<LootTableEntryEntity> available = new ArrayList<>(eligibleEntries);
         List<ChestLootItem> items = new ArrayList<>(itemCount);
+        LootRarity firstRarity = null;
         for (int index = 0; index < itemCount; index++) {
-            LootTableEntryEntity entry = removeWeightedEntry(available);
+            LootRarity rarity = rollRarity(lootTable, available);
+            if (firstRarity == null) {
+                firstRarity = rarity;
+            }
+            List<LootTableEntryEntity> eligibleEntries = new ArrayList<>(available.stream()
+                    .filter(entry -> entry.getRarity() == rarity)
+                    .toList());
+            LootTableEntryEntity entry = removeWeightedEntry(eligibleEntries);
+            available.remove(entry);
             int quantity = entry.getMinQuantity()
                     + random.nextInt(entry.getMaxQuantity() - entry.getMinQuantity() + 1);
             items.add(new ChestLootItem(
+                    rarity,
                     entry.getItemType(),
                     entry.getMaterialCode(),
                     quantity
             ));
         }
 
-        return new ChestLootRoll(rarity, items);
+        return new ChestLootRoll(firstRarity, items);
     }
 
     private void validateTable(LootTableEntity lootTable) {
@@ -88,19 +90,36 @@ public class ChestLootRoller {
             throw new UnprocessableException("Loot table configuration is invalid");
         }
 
-        if (lootTable.getEntries().stream().noneMatch(LootTableEntryEntity::isActive)) {
+        long activeEntryCount = lootTable.getEntries().stream()
+                .filter(LootTableEntryEntity::isActive)
+                .count();
+        if (activeEntryCount == 0) {
             throw new UnprocessableException("Loot table has no active entries");
+        }
+        if (activeEntryCount < lootTable.getMinItems()) {
+            throw new UnprocessableException("Loot table does not have enough active entries for the configured minimum");
         }
     }
 
-    private LootRarity rollRarity(LootTableEntity lootTable) {
-        long totalWeight = lootTable.getRarityWeights().stream()
+    private LootRarity rollRarity(
+            LootTableEntity lootTable,
+            List<LootTableEntryEntity> availableEntries
+    ) {
+        List<LootTableRarityWeightEntity> eligibleWeights = lootTable.getRarityWeights().stream()
+                .filter(weight -> weight.getWeight() > 0)
+                .filter(weight -> availableEntries.stream()
+                        .anyMatch(entry -> entry.getRarity() == weight.getRarity()))
+                .toList();
+        long totalWeight = eligibleWeights.stream()
                 .mapToLong(LootTableRarityWeightEntity::getWeight)
                 .sum();
+        if (totalWeight <= 0) {
+            throw new UnprocessableException("No active loot entries match the configured rarity weights");
+        }
+
         long roll = random.nextLong(totalWeight);
         long accumulated = 0;
-
-        for (LootTableRarityWeightEntity weight : lootTable.getRarityWeights()) {
+        for (LootTableRarityWeightEntity weight : eligibleWeights) {
             accumulated += weight.getWeight();
             if (roll < accumulated) {
                 return weight.getRarity();
@@ -136,7 +155,7 @@ public class ChestLootRoller {
     public record ChestLootRoll(LootRarity rarity, List<ChestLootItem> items) {
     }
 
-    /** Item sorteado com seu tipo, código opcional e quantidade. */
-    public record ChestLootItem(ItemType itemType, String materialCode, int quantity) {
+    /** Item sorteado com raridade, tipo, código opcional e quantidade. */
+    public record ChestLootItem(LootRarity rarity, ItemType itemType, String materialCode, int quantity) {
     }
 }
