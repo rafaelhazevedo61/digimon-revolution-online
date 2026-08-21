@@ -22,7 +22,13 @@ public class ListMissionsUseCase {
     private final MissionDefinitionRepository missionDefinitionRepository;
 
     @Transactional(readOnly = true)
-    public List<AdminMissionResponse> execute(Boolean activeOnly, String area, String stage, String lootItemType) {
+    public List<AdminMissionResponse> execute(
+            Boolean activeOnly,
+            String area,
+            String stage,
+            String chestCode,
+            String lootItemType
+    ) {
         var entities = Boolean.TRUE.equals(activeOnly)
                 ? missionDefinitionRepository.findByActiveTrue()
                 : missionDefinitionRepository.findAll();
@@ -38,6 +44,12 @@ public class ListMissionsUseCase {
             stream = stream.filter(e -> e.getRequiredStage().name().equals(stage));
         }
 
+        if (chestCode != null && !chestCode.isBlank()) {
+            stream = stream.filter(e -> e.getChestDefinition() != null
+                    && e.getChestDefinition().getCode().equals(chestCode));
+        }
+
+        // Compatibilidade temporária para clientes antigos do painel.
         if (lootItemType != null && !lootItemType.isBlank()) {
             stream = stream.filter(e ->
                     e.getRewards().stream().anyMatch(r -> r.getItemType().name().equals(lootItemType))

@@ -28,6 +28,7 @@ ATTRIBUTE="${ATTRIBUTE:-VALOR}"
 BOSS_CODE="${BOSS_CODE:-VALOR}"
 BOSS_ID="${BOSS_ID:-00000000-0000-0000-0000-000000000000}"
 CATEGORY="${CATEGORY:-VALOR}"
+CHEST_CODE="${CHEST_CODE:-VALOR}"
 DROP_ID="${DROP_ID:-00000000-0000-0000-0000-000000000000}"
 ELEMENT="${ELEMENT:-VALOR}"
 EMAIL="${EMAIL:-VALOR}"
@@ -119,16 +120,18 @@ USABLE="${USABLE:-VALOR}"
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/mail/recipients/players?query=${QUERY}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
 # AdminMissionController.list (GET /admin/missions)
-# curl --fail-with-body -i -X GET "${BASE_URL}/admin/missions?activeOnly=${ACTIVE_ONLY}&area=${AREA}&stage=${STAGE}&lootItemType=${LOOT_ITEM_TYPE}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/missions?activeOnly=${ACTIVE_ONLY}&area=${AREA}&stage=${STAGE}&chestCode=${CHEST_CODE}&lootItemType=${LOOT_ITEM_TYPE}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+# AdminMissionController.chestOptions (GET /admin/missions/chest-options)
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/missions/chest-options" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
 # AdminMissionController.create (POST /admin/missions)
-# curl --fail-with-body -i -X POST "${BASE_URL}/admin/missions?activeOnly=${ACTIVE_ONLY}&area=${AREA}&stage=${STAGE}&lootItemType=${LOOT_ITEM_TYPE}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
+# curl --fail-with-body -i -X POST "${BASE_URL}/admin/missions" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"id":"MISSION_ADMIN_TEST","name":"Missão Administrativa de Teste","description":"Missão vinculada a um Baú da Área.","area":"NATIVE_FOREST","requiredStage":"ROOKIE","requiredLevel":1,"baseXp":100,"baseBits":50,"energyCost":5,"durationSeconds":60,"chestCode":"CHEST_AREA_NATIVE_FOREST","rewards":[],"lootChances":[],"lootItems":[]}'
 
 # AdminMissionController.getById (GET /admin/missions/{id})
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/missions/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
 
 # AdminMissionController.update (PUT /admin/missions/{id})
-# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/missions/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
+# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/missions/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"name":"Missão Administrativa Atualizada","description":"Descrição atualizada.","area":"NATIVE_FOREST","requiredStage":"ROOKIE","requiredLevel":1,"baseXp":120,"baseBits":60,"energyCost":5,"durationSeconds":90,"chestCode":"CHEST_AREA_NATIVE_FOREST","rewards":[],"lootChances":[],"lootItems":[]}'
 
 # AdminMissionController.toggleActive (PATCH /admin/missions/{id}/toggle-active)
 # curl --fail-with-body -i -X PATCH "${BASE_URL}/admin/missions/${ID}/toggle-active" -H "Authorization: Bearer ${ADMIN_TOKEN}"

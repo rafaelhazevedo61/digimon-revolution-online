@@ -23,7 +23,8 @@ public record UpdateMissionRequest(
         @Min(0) int baseBits,
         @Min(1) int energyCost,
         @Min(1) int durationSeconds,
-        @Valid @Size(min = 1) List<RewardRequest> rewards,
+        @Size(max = 100) String chestCode,
+        @Valid List<RewardRequest> rewards,
         @Valid List<LootChanceRequest> lootChances,
         @Valid List<LootItemRequest> lootItems
 ) {}

@@ -8,7 +8,7 @@ Os arquivos `backend/src/main/resources/api-curl-collection.sh` e `backend/src/m
 
 No Postman, use **Import**, selecione `backend/src/main/resources/collection/DRO - MODULES.postman_collection.json` e importe a collection. Na aba **Variables**, preencha `baseUrl`, `playerToken` e `adminToken`. Os demais valores de rota e query podem ser preenchidos conforme o cenário de teste.
 
-A collection Postman possui 148 requests organizados por módulo, incluindo as rotas de Correio, Casa de Leilões, clãs, convites, ações de mensagens, comunicados administrativos, premiações de eventos, seleção de destinatários e Loot Tables administrativas. Os exemplos de corpo JSON dos principais fluxos já estão preenchidos, mas devem ser revisados antes do envio.
+A collection Postman possui 149 requests organizados por módulo, incluindo as rotas de Correio, Casa de Leilões, clãs, convites, ações de mensagens, comunicados administrativos, premiações de eventos, seleção de destinatários e Loot Tables administrativas. Os exemplos de corpo JSON dos principais fluxos já estão preenchidos, mas devem ser revisados antes do envio.
 
 ## Como configurar
 
@@ -66,8 +66,44 @@ Os fluxos adicionados recentemente também estão presentes:
 | Criar Loot Table | `POST /admin/loot-tables` |
 | Atualizar Loot Table | `PUT /admin/loot-tables/{code}` |
 | Ativar ou desativar Loot Table | `PATCH /admin/loot-tables/{code}/toggle-active` |
+| Listar Missões por Baú da Área | `GET /admin/missions?chestCode={chestCode}` |
+| Listar opções de Baú da Área | `GET /admin/missions/chest-options` |
 
 A collection não armazena tokens reais nem dados pessoais. Use variáveis de ambiente ou substitua os placeholders apenas localmente.
+
+## Missões administrativas com Baús da Área — PR #66
+
+O editor de Missões usa `chestCode` para vincular uma missão a um Baú da Área ativo. As recompensas fixas, `lootChances` e `lootItems` legados devem ser enviados como listas vazias; a composição do loot é mantida na Loot Table vinculada ao baú.
+
+```bash
+curl --fail-with-body -i -X GET "$BASE_URL/admin/missions/chest-options" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+curl --fail-with-body -i -X GET "$BASE_URL/admin/missions?chestCode=CHEST_AREA_NATIVE_FOREST" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+curl --fail-with-body -i -X POST "$BASE_URL/admin/missions" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "MISSION_ADMIN_TEST",
+    "name": "Missão Administrativa de Teste",
+    "description": "Missão vinculada a um Baú da Área.",
+    "area": "NATIVE_FOREST",
+    "requiredStage": "ROOKIE",
+    "requiredLevel": 1,
+    "baseXp": 100,
+    "baseBits": 50,
+    "energyCost": 5,
+    "durationSeconds": 60,
+    "chestCode": "CHEST_AREA_NATIVE_FOREST",
+    "rewards": [],
+    "lootChances": [],
+    "lootItems": []
+  }'
+```
+
+O painel não oferece mais edição direta de itens de loot na tela de Missões. Para alterar pesos, entradas ou quantidades, use a tela **Loot Tables**.
 
 ## Loot Tables administrativas — PR #65
 

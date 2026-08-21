@@ -23,6 +23,10 @@ public record AdminMissionResponse(
         int baseBits,
         int energyCost,
         int durationSeconds,
+        String chestCode,
+        String chestName,
+        String chestLootTableCode,
+        String chestLootTableName,
         boolean active,
         List<RewardDto> rewards,
         List<LootChanceDto> lootChances,
@@ -61,6 +65,12 @@ public record AdminMissionResponse(
                 entity.getBaseBits(),
                 entity.getEnergyCost(),
                 entity.getDurationSeconds(),
+                entity.getChestDefinition() != null ? entity.getChestDefinition().getCode() : null,
+                entity.getChestDefinition() != null ? entity.getChestDefinition().getName() : null,
+                entity.getChestDefinition() != null && entity.getChestDefinition().getLootTable() != null
+                        ? entity.getChestDefinition().getLootTable().getCode() : null,
+                entity.getChestDefinition() != null && entity.getChestDefinition().getLootTable() != null
+                        ? entity.getChestDefinition().getLootTable().getName() : null,
                 entity.isActive(),
                 rewards,
                 lootChances,
