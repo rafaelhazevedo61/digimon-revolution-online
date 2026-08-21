@@ -8,7 +8,7 @@ Os arquivos `backend/src/main/resources/api-curl-collection.sh` e `backend/src/m
 
 No Postman, use **Import**, selecione `backend/src/main/resources/collection/DRO - MODULES.postman_collection.json` e importe a collection. Na aba **Variables**, preencha `baseUrl`, `playerToken` e `adminToken`. Os demais valores de rota e query podem ser preenchidos conforme o cenário de teste.
 
-A collection Postman possui 142 requests organizados por módulo, incluindo as rotas de Correio, Casa de Leilões, clãs, convites, ações de mensagens, comunicados administrativos, premiações de eventos e seleção de destinatários. Os exemplos de corpo JSON dos principais fluxos já estão preenchidos, mas devem ser revisados antes do envio.
+A collection Postman possui 148 requests organizados por módulo, incluindo as rotas de Correio, Casa de Leilões, clãs, convites, ações de mensagens, comunicados administrativos, premiações de eventos, seleção de destinatários e Loot Tables administrativas. Os exemplos de corpo JSON dos principais fluxos já estão preenchidos, mas devem ser revisados antes do envio.
 
 ## Como configurar
 
@@ -61,5 +61,75 @@ Os fluxos adicionados recentemente também estão presentes:
 | Pesquisar jogadores para seleção | `GET /admin/mail/recipients/players` |
 | Comprar anúncio | `POST /auction/listings/{listingId}/buy` |
 | Cancelar anúncio | `POST /auction/listings/{listingId}/cancel` |
+| Listar Loot Tables administrativas | `GET /admin/loot-tables` |
+| Consultar catálogo de itens para Loot Tables | `GET /admin/loot-tables/catalog/items` |
+| Criar Loot Table | `POST /admin/loot-tables` |
+| Atualizar Loot Table | `PUT /admin/loot-tables/{code}` |
+| Ativar ou desativar Loot Table | `PATCH /admin/loot-tables/{code}/toggle-active` |
 
 A collection não armazena tokens reais nem dados pessoais. Use variáveis de ambiente ou substitua os placeholders apenas localmente.
+
+## Loot Tables administrativas — PR #65
+
+Os endpoints abaixo exigem `Authorization: Bearer <JWT>` de um jogador com `UserType.ADMIN`.
+
+```bash
+BASE_URL="http://localhost:8080"
+ADMIN_TOKEN="SEU_JWT_ADMIN"
+
+curl --fail-with-body -i -X GET "$BASE_URL/admin/loot-tables" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+curl --fail-with-body -i -X GET "$BASE_URL/admin/loot-tables/catalog/items" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+curl --fail-with-body -i -X POST "$BASE_URL/admin/loot-tables" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "LOOT_TEST_ADMIN",
+    "name": "Loot Table de Teste",
+    "description": "Pool criada para validar o painel.",
+    "minItems": 1,
+    "maxItems": 2,
+    "rarityWeights": [
+      {"rarity": "COMMON", "weight": 70},
+      {"rarity": "RARE", "weight": 20},
+      {"rarity": "EPIC", "weight": 8},
+      {"rarity": "LEGENDARY", "weight": 2}
+    ],
+    "entries": [
+      {"rarity": "COMMON", "itemType": "TRAINING_STONE", "materialCode": null, "weight": 50, "minQuantity": 1, "maxQuantity": 3, "active": true},
+      {"rarity": "RARE", "itemType": "EVOLUTION_MATERIAL", "materialCode": "FRAGMENT_AGUMON", "weight": 35, "minQuantity": 1, "maxQuantity": 5, "active": true}
+    ],
+    "active": true
+  }'
+
+curl --fail-with-body -i -X GET "$BASE_URL/admin/loot-tables/LOOT_TEST_ADMIN" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+curl --fail-with-body -i -X PUT "$BASE_URL/admin/loot-tables/LOOT_TEST_ADMIN" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "LOOT_TEST_ADMIN",
+    "name": "Loot Table de Teste Atualizada",
+    "description": "Descrição atualizada.",
+    "minItems": 1,
+    "maxItems": 2,
+    "rarityWeights": [
+      {"rarity": "COMMON", "weight": 60},
+      {"rarity": "RARE", "weight": 25},
+      {"rarity": "EPIC", "weight": 10},
+      {"rarity": "LEGENDARY", "weight": 5}
+    ],
+    "entries": [
+      {"rarity": "COMMON", "itemType": "DATA_CORE", "materialCode": null, "weight": 30, "minQuantity": 1, "maxQuantity": 2, "active": true},
+      {"rarity": "RARE", "itemType": "EVOLUTION_MATERIAL", "materialCode": "FRAGMENT_AGUMON", "weight": 35, "minQuantity": 1, "maxQuantity": 5, "active": true}
+    ],
+    "active": true
+  }'
+
+curl --fail-with-body -i -X PATCH "$BASE_URL/admin/loot-tables/LOOT_TEST_ADMIN/toggle-active" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+```
