@@ -2,6 +2,7 @@ let invItems = [];
 let invEquipments = [];
 let invDigimonId = null;
 let invTab = "items"; // "items" or "equipment"
+let invChestOpeningInProgress = false;
 
 async function renderInventoryPage() {
   const app = document.getElementById("app");
@@ -80,7 +81,14 @@ function invRenderItems() {
     const emoji = def ? invCategoryEmoji(def.category) : invItemEmoji(item.itemType);
     const catName = def ? invCategoryLabel(def.category) : invItemCategoryName(item.itemType);
     const catBadge = def ? invCategoryBadge(def.category) : invItemCategory(item.itemType);
+    const chestCode = def && String(def.category || "").toUpperCase() === "CHEST" ? def.code : null;
+    const isChest = item.itemType === "LOOT_CHEST" || !!chestCode;
     const usable = def ? def.usable : invIsUsable(item.itemType);
+    const action = isChest && chestCode ? `
+      <button class="btn-sm btn-primary" onclick="invOpenChest('${escapeHtml(chestCode)}')">Abrir</button>
+    ` : usable ? `
+      <button class="btn-sm btn-primary" onclick="invUseItem('${escapeHtml(item.itemType)}')">Usar</button>
+    ` : "";
 
     return `
       <div class="card-sm mb-2 flex items-center gap-3">
@@ -92,9 +100,7 @@ function invRenderItems() {
             <span class="badge badge-${catBadge}">${escapeHtml(catName)}</span>
           </div>
         </div>
-        ${usable ? `
-          <button class="btn-sm btn-primary" onclick="invUseItem('${escapeHtml(item.itemType)}')">Usar</button>
-        ` : ""}
+        ${action}
       </div>
     `;
   }).join("");
@@ -103,7 +109,7 @@ function invRenderItems() {
 function invCategoryEmoji(category) {
   const map = {
     CONSUMABLE: "🧪", MATERIAL: "🔮", FRAGMENT: "🧩",
-    EVOLUTION_MATERIAL: "⭐", DIGITAMA: "🥚", INCUBATOR: "📦"
+    EVOLUTION_MATERIAL: "⭐", DIGITAMA: "🥚", INCUBATOR: "📦", CHEST: "🎁"
   };
   return map[category] || "📦";
 }
@@ -111,7 +117,7 @@ function invCategoryEmoji(category) {
 function invCategoryLabel(category) {
   const map = {
     CONSUMABLE: "Consumível", MATERIAL: "Material", FRAGMENT: "Fragmento",
-    EVOLUTION_MATERIAL: "Evolução", DIGITAMA: "Digitama", INCUBATOR: "Incubadora"
+    EVOLUTION_MATERIAL: "Evolução", DIGITAMA: "Digitama", INCUBATOR: "Incubadora", CHEST: "Baú"
   };
   return map[category] || "Item";
 }
@@ -119,23 +125,99 @@ function invCategoryLabel(category) {
 function invCategoryBadge(category) {
   const map = {
     CONSUMABLE: "common", MATERIAL: "common", FRAGMENT: "champion",
-    EVOLUTION_MATERIAL: "legendary", DIGITAMA: "rare", INCUBATOR: "epic"
+    EVOLUTION_MATERIAL: "legendary", DIGITAMA: "rare", INCUBATOR: "epic", CHEST: "rare"
   };
   return map[category] || "common";
+}
+
+async function invReloadItems() {
+  invItems = await apiGet("/inventory") || [];
+  invRenderItems();
 }
 
 async function invUseItem(itemType) {
   try {
     await apiPost("/inventory/use", { itemType: itemType });
     showToast(`${invItemName(itemType)} usado!`);
-    // Reload inventory
-    const inventory = await apiGet("/inventory");
-    invItems = inventory || [];
-    invRenderItems();
+    await invReloadItems();
   } catch (err) {
     showToast(err.message, "error");
   }
 }
+
+function createChestRequestId() {
+  if (window.crypto && typeof window.crypto.randomUUID === "function") {
+    return window.crypto.randomUUID();
+  }
+  return `chest-open-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+async function invOpenChest(chestCode) {
+  if (!chestCode) {
+    showToast("Definição do baú não encontrada.", "error");
+    return;
+  }
+  if (invChestOpeningInProgress) return;
+
+  invChestOpeningInProgress = true;
+  try {
+    const result = await apiPost("/inventory/chests/open", {
+      chestCode,
+      requestId: createChestRequestId()
+    });
+    invShowChestOpeningResult(result);
+    await invReloadItems();
+  } catch (err) {
+    showToast(err.message, "error");
+  } finally {
+    invChestOpeningInProgress = false;
+  }
+}
+
+function invShowChestOpeningResult(result) {
+  const existing = document.getElementById("chest-opening-overlay");
+  if (existing) existing.remove();
+
+  const items = Array.isArray(result && result.items) ? result.items : [];
+  const rarity = formatRarity(result && result.rarity);
+  const title = result && result.replayed ? "Abertura já processada" : "Baú aberto!";
+  const message = result && result.message ? result.message : "Recompensas recebidas";
+
+  const overlay = document.createElement("div");
+  overlay.id = "chest-opening-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(2,6,23,.82);z-index:60;display:flex;align-items:center;justify-content:center;padding:1rem;";
+  overlay.onclick = (event) => {
+    if (event.target === overlay) overlay.remove();
+  };
+
+  overlay.innerHTML = `
+    <div class="card w-full max-w-md border-cyan-800 shadow-2xl">
+      <div class="text-center mb-4">
+        <div class="text-5xl mb-2">🎁</div>
+        <h3 class="text-xl font-bold">${escapeHtml(title)}</h3>
+        <p class="text-sm text-slate-400 mt-1">${escapeHtml(result && result.chestName || "Baú")}</p>
+        <span class="badge badge-${String(result && result.rarity || "COMMON").toLowerCase()} mt-2">${escapeHtml(rarity)}</span>
+      </div>
+      <div class="card-sm mb-4">
+        <p class="text-xs text-slate-400 mb-2">Recompensas</p>
+        ${items.length > 0 ? items.map(item => `
+          <div class="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
+            <div class="min-w-0">
+              <p class="font-semibold text-sm truncate">${escapeHtml(item.itemName || item.materialCode || invItemName(item.itemType))}</p>
+              ${item.materialCode ? `<p class="text-xs text-slate-500">Material de evolução</p>` : ""}
+            </div>
+            <span class="font-bold text-cyan-300 ml-3">x${item.quantity}</span>
+          </div>
+        `).join("") : `<p class="text-sm text-slate-400">Nenhum item foi informado.</p>`}
+      </div>
+      <p class="text-xs text-slate-400 mb-4">${escapeHtml(message)}</p>
+      <button class="btn-primary w-full" onclick="document.getElementById('chest-opening-overlay').remove()">Continuar</button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+}
+
 
 function invItemName(itemType) {
   const map = {
@@ -153,7 +235,8 @@ function invItemName(itemType) {
     FRAGMENT_CHAMPION: "Fragmento Champion",
     FRAGMENT_ULTIMATE: "Fragmento Ultimate",
     FRAGMENT_MEGA: "Fragmento Mega",
-    EVOLUTION_MATERIAL: "Material de Evolução"
+    EVOLUTION_MATERIAL: "Material de Evolução",
+    LOOT_CHEST: "Baú"
   };
   return map[itemType] || itemType;
 }
@@ -164,7 +247,8 @@ function invItemEmoji(itemType) {
     DIGITAMA_STARTER: "🥚", DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿",
     INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "📦", INCUBATOR_EPIC: "📦",
     FRAGMENT_ROOKIE: "🧩", FRAGMENT_CHAMPION: "🧩", FRAGMENT_ULTIMATE: "🧩", FRAGMENT_MEGA: "🧩",
-    EVOLUTION_MATERIAL: "⭐"
+    EVOLUTION_MATERIAL: "⭐",
+    LOOT_CHEST: "🎁"
   };
   return map[itemType] || "📦";
 }
@@ -180,6 +264,7 @@ function invItemCategory(itemType) {
   if (itemType.startsWith("INCUBATOR_")) return "epic";
   if (itemType.startsWith("FRAGMENT_")) return "champion";
   if (itemType === "EVOLUTION_MATERIAL") return "legendary";
+  if (itemType === "LOOT_CHEST") return "rare";
   return "common";
 }
 
@@ -190,6 +275,7 @@ function invItemCategoryName(itemType) {
   if (itemType.startsWith("INCUBATOR_")) return "Incubadora";
   if (itemType.startsWith("FRAGMENT_")) return "Fragmento";
   if (itemType === "EVOLUTION_MATERIAL") return "Evolução";
+  if (itemType === "LOOT_CHEST") return "Baú";
   return "Item";
 }
 
