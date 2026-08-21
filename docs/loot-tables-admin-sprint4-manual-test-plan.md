@@ -28,7 +28,8 @@ Acesse `http://localhost:3001`, informe o token administrativo e abra a opção 
 | Material nomeado | Selecionar um item de categoria `EVOLUTION_MATERIAL` | O request usa `itemType=EVOLUTION_MATERIAL` e `materialCode` igual ao código catalogado. |
 | Baú | Selecionar item de categoria `CHEST` | O request usa `itemType=LOOT_CHEST` e `materialCode` igual ao código do baú. |
 | Edição | Alterar nome, pesos, faixa de quantidade ou entradas | HTTP 200, valores atualizados aparecem no editor e `updatedBy`/`updatedAt` mudam. |
-| Desativação | Clicar em **Desativar** | O status passa para **Inativa** sem apagar a tabela ou seu histórico. |
+| Desativação | Clicar em **Desativar** em uma Loot Table sem vínculo | O status passa para **Inativa** sem apagar a tabela ou seu histórico. |
+| Desativação protegida | Tentar desativar uma Loot Table vinculada a um ou mais Baús da Área | HTTP 409, a mensagem informa o vínculo e a Loot Table permanece **Ativa**. |
 | Ativação | Clicar em **Ativar** | O status volta para **Ativa** e a tabela aparece novamente no filtro de ativas. |
 | Regras de quantidade | Informar mínimo maior que máximo, máximo maior que `max_stack` ou mínimo de tipos maior que o número de entradas | A tela bloqueia o envio ou a API retorna HTTP 400. |
 | Pesos incompletos | Remover uma raridade ou usar peso zero/negativo | A operação é rejeitada; as quatro raridades oficiais são obrigatórias. |
@@ -123,4 +124,4 @@ GROUP BY lt.id, lt.code, lt.name, lt.active, lt.min_items, lt.max_items
 ORDER BY lt.name;
 ```
 
-O teste é aprovado quando o CRUD administrativo funciona sem permitir itens fora do catálogo, as regras de domínio são respeitadas, a autorização rejeita jogadores comuns e cada alteração gera uma auditoria positiva no Transactional Outbox.
+O teste é aprovado quando o CRUD administrativo funciona sem permitir itens fora do catálogo, as regras de domínio são respeitadas, Loot Tables vinculadas a Baús não podem ser desativadas, a autorização rejeita jogadores comuns e cada alteração válida gera uma auditoria positiva no Transactional Outbox.

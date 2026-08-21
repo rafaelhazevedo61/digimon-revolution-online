@@ -11,6 +11,7 @@ import com.dro.modules.loot.domain.LootTableEntity;
 import com.dro.modules.loot.domain.LootTableEntryEntity;
 import com.dro.modules.loot.domain.LootTableRarityWeightEntity;
 import com.dro.modules.loot.domain.LootTableRules;
+import com.dro.modules.loot.infra.ChestDefinitionRepository;
 import com.dro.modules.loot.infra.LootTableRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.domain.UserType;
@@ -48,6 +49,7 @@ import java.util.UUID;
 public class AdminLootTableUseCase {
 
     private final LootTableRepository lootTableRepository;
+    private final ChestDefinitionRepository chestDefinitionRepository;
     private final ItemDefinitionRepository itemDefinitionRepository;
     private final PlayerRepository playerRepository;
     private final TransactionAuditPublisher transactionAuditPublisher;
@@ -117,6 +119,11 @@ public class AdminLootTableUseCase {
     public AdminLootTableResponse toggleActive(String authorization, String code) {
         Player admin = requireAdmin(authorization);
         LootTableEntity entity = findTable(code);
+        if (entity.isActive() && chestDefinitionRepository.existsByLootTable_Id(entity.getId())) {
+            throw new ConflictException(
+                    "Não é possível desativar a Loot Table " + code
+                            + " porque ela está vinculada a um ou mais Baús da Área.");
+        }
         entity.setActive(!entity.isActive());
         entity.setUpdatedBy(admin.getUsername());
         LootTableEntity saved = lootTableRepository.save(entity);

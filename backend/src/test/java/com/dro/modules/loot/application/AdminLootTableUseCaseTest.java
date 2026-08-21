@@ -6,11 +6,13 @@ import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.loot.api.dto.request.LootTableAdminRequest;
 import com.dro.modules.loot.domain.LootRarity;
 import com.dro.modules.loot.domain.LootTableEntity;
+import com.dro.modules.loot.infra.ChestDefinitionRepository;
 import com.dro.modules.loot.infra.LootTableRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.audit.TransactionAuditPublisher;
+import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.ForbiddenException;
 import com.dro.shared.security.JwtSettings;
 import com.dro.shared.security.JwtTokenCodec;
@@ -31,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -39,6 +42,9 @@ class AdminLootTableUseCaseTest {
 
     @Mock
     private LootTableRepository lootTableRepository;
+
+    @Mock
+    private ChestDefinitionRepository chestDefinitionRepository;
 
     @Mock
     private ItemDefinitionRepository itemDefinitionRepository;
@@ -149,6 +155,7 @@ class AdminLootTableUseCaseTest {
                 .userType(UserType.ADMIN)
                 .build();
         LootTableEntity table = LootTableEntity.builder()
+                .id(10L)
                 .code("LOOT_TABLE_TEST_ZERO")
                 .name("Tabela Zero")
                 .active(true)
@@ -157,6 +164,7 @@ class AdminLootTableUseCaseTest {
         when(playerRepository.findById(adminId)).thenReturn(Optional.of(admin));
         when(lootTableRepository.findByCode("LOOT_TABLE_TEST_ZERO"))
                 .thenReturn(Optional.of(table));
+        when(chestDefinitionRepository.existsByLootTable_Id(10L)).thenReturn(false);
         when(lootTableRepository.save(table)).thenReturn(table);
 
         var response = adminLootTableUseCase.toggleActive(
@@ -172,6 +180,38 @@ class AdminLootTableUseCaseTest {
                 eq("LootTable"),
                 eq("LOOT_TABLE_TEST_ZERO"),
                 any(Map.class)
+        );
+    }
+
+    @Test
+    void refusesToDeactivateLootTableLinkedToAreaChest() {
+        UUID adminId = UUID.randomUUID();
+        Player admin = Player.builder()
+                .id(adminId)
+                .username("admin")
+                .userType(UserType.ADMIN)
+                .build();
+        LootTableEntity table = LootTableEntity.builder()
+                .id(10L)
+                .code("LOOT_TABLE_TEST_ZERO")
+                .name("Tabela Zero")
+                .active(true)
+                .build();
+
+        when(playerRepository.findById(adminId)).thenReturn(Optional.of(admin));
+        when(lootTableRepository.findByCode("LOOT_TABLE_TEST_ZERO"))
+                .thenReturn(Optional.of(table));
+        when(chestDefinitionRepository.existsByLootTable_Id(10L)).thenReturn(true);
+
+        assertThatThrownBy(() -> adminLootTableUseCase.toggleActive(
+                token(adminId),
+                "LOOT_TABLE_TEST_ZERO"
+        ))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("vinculada a um ou mais Baús da Área");
+        verify(lootTableRepository, never()).save(table);
+        verify(transactionAuditPublisher, never()).success(
+                any(), any(), any(), any(), any(Map.class)
         );
     }
 
