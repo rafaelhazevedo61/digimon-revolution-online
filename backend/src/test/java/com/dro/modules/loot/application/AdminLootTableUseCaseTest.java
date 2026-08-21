@@ -98,6 +98,41 @@ class AdminLootTableUseCaseTest {
     }
 
     @Test
+    void toggleActiveUsesSimpleLookupAndAuditsStatusChange() {
+        UUID adminId = UUID.randomUUID();
+        Player admin = Player.builder()
+                .id(adminId)
+                .username("admin")
+                .userType(UserType.ADMIN)
+                .build();
+        LootTableEntity table = LootTableEntity.builder()
+                .code("LOOT_TABLE_TEST_ZERO")
+                .name("Tabela Zero")
+                .active(true)
+                .build();
+
+        when(playerRepository.findById(adminId)).thenReturn(Optional.of(admin));
+        when(lootTableRepository.findByCode("LOOT_TABLE_TEST_ZERO"))
+                .thenReturn(Optional.of(table));
+        when(lootTableRepository.save(table)).thenReturn(table);
+
+        var response = adminLootTableUseCase.toggleActive(
+                token(adminId),
+                "LOOT_TABLE_TEST_ZERO"
+        );
+
+        assertThat(response.active()).isFalse();
+        verify(lootTableRepository).findByCode("LOOT_TABLE_TEST_ZERO");
+        verify(transactionAuditPublisher).success(
+                argThat(value -> value.startsWith("admin-loot-table:LOOT_TABLE_TEST_ZERO:deactivated:")),
+                eq("ADMIN_LOOT_TABLE_DEACTIVATED"),
+                eq("LootTable"),
+                eq("LOOT_TABLE_TEST_ZERO"),
+                any(Map.class)
+        );
+    }
+
+    @Test
     void rejectsNonAdminBeforeReadingLootTable() {
         UUID playerId = UUID.randomUUID();
         Player player = Player.builder()

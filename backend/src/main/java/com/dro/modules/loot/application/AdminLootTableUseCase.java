@@ -140,8 +140,13 @@ public class AdminLootTableUseCase {
     }
 
     private LootTableEntity findTable(String code) {
-        return lootTableRepository.findWithWeightsAndEntriesByCode(code)
+        LootTableEntity entity = lootTableRepository.findByCode(code)
                 .orElseThrow(() -> new NotFoundException("Loot Table não encontrada: " + code));
+        // As duas coleções são bags JPA. Inicializá-las separadamente evita
+        // MultipleBagFetchException ao consultar pesos e entradas juntas.
+        entity.getRarityWeights().size();
+        entity.getEntries().size();
+        return entity;
     }
 
     private PreparedConfiguration validateAndPrepare(LootTableAdminRequest request) {
