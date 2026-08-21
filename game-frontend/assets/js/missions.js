@@ -107,12 +107,112 @@ function renderActiveMissionCard(m) {
 async function claimMissionFromList(instanceId) {
   try {
     const result = await apiPost(`/missions/${instanceId}/claim`);
-    const bitsPart = result.bitsGained > 0 ? ` +${result.bitsGained} bits` : "";
-    showToast(`+${result.xpGained} XP${bitsPart}${result.levelUp ? " — LEVEL UP!" : ""}`);
-    loadActiveMissions();
+    showMissionClaimModal(result);
+    await loadActiveMissions();
   } catch (err) {
     showToast(err.message, "error");
   }
+}
+
+function missionRewardLabel(reward) {
+  if (reward && reward.itemName) return reward.itemName;
+  if (reward && String(reward.itemCode || "").startsWith("CHEST_")) return "Baú";
+  if (reward && reward.itemCode) return reward.itemCode;
+
+  const labels = {
+    POTION_SMALL: "Poção Pequena",
+    TRAINING_STONE: "Pedra de Treino",
+    DATA_CORE: "Núcleo de Dados",
+    DIGITAMA_FIRE: "Digitama de Fogo",
+    DIGITAMA_WATER: "Digitama de Água",
+    DIGITAMA_NATURE: "Digitama de Natureza",
+    INCUBATOR_COMMON: "Incubadora Comum",
+    INCUBATOR_RARE: "Incubadora Rara",
+    INCUBATOR_EPIC: "Incubadora Épica",
+    LOOT_CHEST: "Baú"
+  };
+  return labels[reward && reward.item] || (reward && reward.item) || "Recompensa";
+}
+
+function missionRewardIcon(reward) {
+  if (reward && (reward.item === "LOOT_CHEST" || String(reward.itemCode || "").startsWith("CHEST_"))) {
+    return "🎁";
+  }
+  if (reward && String(reward.item || "").startsWith("DIGITAMA")) return "🥚";
+  if (reward && String(reward.item || "").startsWith("INCUBATOR")) return "📦";
+  if (reward && String(reward.item || "").includes("FRAGMENT")) return "🧩";
+  return "✨";
+}
+
+function showMissionClaimModal(result) {
+  const existing = document.getElementById("mission-claim-modal");
+  if (existing) existing.remove();
+
+  const rewards = Array.isArray(result && result.rewards) ? result.rewards : [];
+  const missionName = formatMissionName({ id: result && result.missionId });
+  const rewardMarkup = rewards.length > 0
+    ? rewards.map(reward => {
+        const isChest = reward.item === "LOOT_CHEST" || String(reward.itemCode || "").startsWith("CHEST_");
+        return `
+          <div class="flex items-center gap-3 rounded-lg border ${isChest ? "border-cyan-700 bg-cyan-950/40" : "border-slate-700 bg-slate-900/60"} px-3 py-3">
+            <span class="text-2xl" aria-hidden="true">${missionRewardIcon(reward)}</span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold ${isChest ? "text-cyan-200" : "text-slate-100"}">${escapeHtml(missionRewardLabel(reward))}</p>
+              ${isChest ? "<p class=\"text-xs text-cyan-400 mt-1\">Abra pelo Inventário para revelar o loot</p>" : ""}
+            </div>
+            <span class="font-bold text-cyan-300">x${Number(reward.quantity) || 0}</span>
+          </div>
+        `;
+      }).join("")
+    : `<p class="text-sm text-slate-400">Nenhuma recompensa de item foi registrada.</p>`;
+
+  const overlay = document.createElement("div");
+  overlay.id = "mission-claim-modal";
+  overlay.className = "fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/75";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-labelledby", "mission-claim-title");
+  overlay.innerHTML = `
+    <div class="card w-full max-w-lg max-h-[88vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="flex items-start justify-between gap-4 mb-5">
+        <div>
+          <p class="text-xs uppercase tracking-wider text-cyan-400 font-bold">Recompensa recebida</p>
+          <h3 id="mission-claim-title" class="text-xl font-bold mt-1">Missão concluída!</h3>
+          <p class="text-sm text-slate-400 mt-1">${escapeHtml(missionName)}</p>
+        </div>
+        <button class="text-slate-400 hover:text-white text-2xl leading-none" aria-label="Fechar" onclick="document.getElementById('mission-claim-modal')?.remove()">&times;</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-5">
+        <div class="rounded-lg border border-purple-800 bg-purple-950/40 px-3 py-3 text-center">
+          <p class="text-xs text-purple-300">Experiência</p>
+          <p class="text-xl font-bold text-purple-200 mt-1">+${Number(result && result.xpGained) || 0} XP</p>
+        </div>
+        <div class="rounded-lg border border-yellow-800 bg-yellow-950/40 px-3 py-3 text-center">
+          <p class="text-xs text-yellow-300">Bits</p>
+          <p class="text-xl font-bold text-yellow-200 mt-1">+${Number(result && result.bitsGained) || 0}</p>
+        </div>
+      </div>
+
+      ${result && result.levelUp ? `
+        <div class="rounded-lg border border-emerald-700 bg-emerald-950/40 px-3 py-3 mb-5 text-center">
+          <p class="font-bold text-emerald-300">Level Up!</p>
+          <p class="text-xs text-emerald-200 mt-1">Seu Digimon subiu de nível.</p>
+        </div>
+      ` : ""}
+
+      <div>
+        <h4 class="text-sm font-bold text-slate-300 mb-2">Itens recebidos</h4>
+        <div class="space-y-2">${rewardMarkup}</div>
+      </div>
+
+      <button class="btn-primary w-full mt-5" onclick="document.getElementById('mission-claim-modal')?.remove()">Continuar</button>
+    </div>
+  `;
+  overlay.addEventListener("click", event => {
+    if (event.target === overlay) overlay.remove();
+  });
+  document.body.appendChild(overlay);
 }
 
 let missionsPageTimerInterval = null;

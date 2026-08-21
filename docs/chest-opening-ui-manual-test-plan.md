@@ -2,7 +2,13 @@
 
 ## Objetivo
 
-Confirmar que o botão **Abrir** do inventário usa o fluxo transacional `POST /inventory/chests/open`, e não o endpoint legado `POST /inventory/use`.
+Confirmar que o botão **Abrir** do inventário usa o fluxo transacional `POST /inventory/chests/open`, e não o endpoint legado `POST /inventory/use`. O roteiro também cobre o modal específico exibido após o resgate de uma missão.
+
+## Modal de recompensa da missão
+
+Ao clicar em **Resgatar** em uma missão concluída, a interface deve abrir um modal próprio de conclusão, em vez de exibir somente um push no topo. O modal deve apresentar o nome da missão, a experiência recebida, os Bits, eventual `Level Up!` e todas as recompensas de item retornadas pelo backend. Quando a recompensa for um Baú da Área, ela deve aparecer identificada como baú, com a quantidade e a orientação para abrir o item pelo Inventário.
+
+O push de sucesso não deve substituir esse modal. Mensagens de erro continuam podendo usar o push global da aplicação.
 
 ## Fluxo esperado
 
@@ -23,15 +29,17 @@ O `requestId` é gerado para cada abertura nova. O bloqueio contra duplo clique 
 
 1. Atualize a aplicação com a branch do PR.
 2. Faça login e selecione um Digimon ativo.
-3. Garanta que o inventário possua pelo menos um baú.
-4. Abra a tela **Inventário**.
-5. Confirme que o item aparece como **Baú** e possui o botão **Abrir**.
-6. Clique em **Abrir** uma vez.
-7. Confirme que o modal mostra a raridade, o nome dos itens e as quantidades.
-8. Feche o modal e confirme que a quantidade do baú diminuiu uma unidade.
-9. Confirme que os itens recebidos aparecem no inventário, respeitando a quantidade informada no modal.
-10. Observe a aba Network do navegador e confirme uma requisição `POST /inventory/chests/open` com `chestCode` e `requestId`.
-11. Confirme que não foi chamada a rota legada `POST /inventory/use` para o baú.
+3. Conclua ou resgate uma missão disponível e confirme que aparece o modal **Missão concluída!**.
+4. No modal, confirme XP, Bits, eventual Level Up e a recompensa **Baú** com sua quantidade.
+5. Feche o modal e garanta que o inventário possua pelo menos um baú.
+6. Abra a tela **Inventário**.
+7. Confirme que o item aparece como **Baú** e possui o botão **Abrir**.
+8. Clique em **Abrir** uma vez.
+9. Confirme que o modal de abertura mostra a raridade, o nome dos itens e as quantidades.
+10. Feche o modal e confirme que a quantidade do baú diminuiu uma unidade.
+11. Confirme que os itens recebidos aparecem no inventário, respeitando a quantidade informada no modal.
+12. Observe a aba Network do navegador e confirme uma requisição `POST /inventory/chests/open` com `chestCode` e `requestId`.
+13. Confirme que não foi chamada a rota legada `POST /inventory/use` para o baú.
 
 ## Consultas SQL
 
