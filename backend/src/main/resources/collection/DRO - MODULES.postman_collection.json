@@ -161,6 +161,10 @@
     {
       "key": "username",
       "value": ""
+    },
+    {
+      "key": "chestCode",
+      "value": ""
     }
   ],
   "item": [
@@ -726,8 +730,24 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/admin/missions?activeOnly={{activeOnly}}&area={{area}}&stage={{stage}}&lootItemType={{lootItemType}}",
-            "description": "Gerado de AdminMissionController.list. Revise IDs e valores antes de enviar."
+            "url": "{{baseUrl}}/admin/missions?activeOnly={{activeOnly}}&area={{area}}&stage={{stage}}&chestCode={{chestCode}}&lootItemType={{lootItemType}}",
+            "description": "Lista missões filtrando por Baú da Área. lootItemType é mantido apenas para compatibilidade legada."
+          },
+          "response": []
+        },
+        {
+          "name": "chestOptions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/missions/chest-options",
+            "description": "Lista Baús da Área ativos e a Loot Table nomeada vinculada."
           },
           "response": []
         },
@@ -747,11 +767,11 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/admin/missions?activeOnly={{activeOnly}}&area={{area}}&stage={{stage}}&lootItemType={{lootItemType}}",
-            "description": "Gerado de AdminMissionController.create. Revise IDs e valores antes de enviar.",
+            "url": "{{baseUrl}}/admin/missions",
+            "description": "Cria missão vinculada obrigatoriamente a um Baú da Área. A Loot Table é configurada no menu próprio.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"id\": \"MISSION_ADMIN_TEST\",\n  \"name\": \"Missão Administrativa de Teste\",\n  \"description\": \"Missão vinculada a um Baú da Área.\",\n  \"area\": \"NATIVE_FOREST\",\n  \"requiredStage\": \"ROOKIE\",\n  \"requiredLevel\": 1,\n  \"baseXp\": 100,\n  \"baseBits\": 50,\n  \"energyCost\": 5,\n  \"durationSeconds\": 60,\n  \"chestCode\": \"CHEST_MISSION_MISSION_1\",\n  \"rewards\": [],\n  \"lootChances\": [],\n  \"lootItems\": []\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -808,10 +828,10 @@
               }
             ],
             "url": "{{baseUrl}}/admin/missions/{{id}}",
-            "description": "Gerado de AdminMissionController.update. Revise IDs e valores antes de enviar.",
+            "description": "Atualiza a missão e seu Baú da Área. Não envie rewards, lootChances ou lootItems legados.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"name\": \"Missão Administrativa Atualizada\",\n  \"description\": \"Descrição atualizada.\",\n  \"area\": \"NATIVE_FOREST\",\n  \"requiredStage\": \"ROOKIE\",\n  \"requiredLevel\": 1,\n  \"baseXp\": 120,\n  \"baseBits\": 60,\n  \"energyCost\": 5,\n  \"durationSeconds\": 90,\n  \"chestCode\": \"CHEST_MISSION_MISSION_1\",\n  \"rewards\": [],\n  \"lootChances\": [],\n  \"lootItems\": []\n}",
               "options": {
                 "raw": {
                   "language": "json"

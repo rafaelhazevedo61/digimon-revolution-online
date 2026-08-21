@@ -1,11 +1,17 @@
 package com.dro.modules.mission.application;
 
 import com.dro.modules.mission.api.dto.request.CreateMissionRequest;
+import com.dro.modules.mission.api.dto.request.LootChanceRequest;
+import com.dro.modules.mission.api.dto.request.LootItemRequest;
+import com.dro.modules.mission.api.dto.request.RewardRequest;
+import com.dro.modules.loot.domain.ChestDefinitionEntity;
+import com.dro.modules.loot.infra.ChestDefinitionRepository;
 import com.dro.modules.mission.api.dto.response.AdminMissionResponse;
 import com.dro.modules.mission.domain.*;
 import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
+import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -23,6 +29,7 @@ import java.util.Set;
 public class CreateMissionUseCase {
 
     private final MissionDefinitionRepository missionDefinitionRepository;
+    private final ChestDefinitionRepository chestDefinitionRepository;
 
     @Transactional
     public AdminMissionResponse execute(CreateMissionRequest request) {
@@ -31,7 +38,8 @@ public class CreateMissionUseCase {
             throw new ConflictException("Mission already exists: " + request.id());
         }
 
-        validateLootConsistency(request);
+        validateChestConfiguration(request);
+        ChestDefinitionEntity chest = resolveActiveChest(request.chestCode());
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -46,6 +54,7 @@ public class CreateMissionUseCase {
                 .baseBits(request.baseBits())
                 .energyCost(request.energyCost())
                 .durationSeconds(request.durationSeconds())
+                .chestDefinition(chest)
                 .createdAt(now)
                 .updatedAt(now)
                 .createdBy("admin")
@@ -53,7 +62,7 @@ public class CreateMissionUseCase {
                 .newEntity(true)
                 .build();
 
-        if (request.rewards() != null) {
+        if (request.rewards() != null && !request.rewards().isEmpty()) {
             request.rewards().forEach(r -> {
                 MissionRewardEntity reward = MissionRewardEntity.builder()
                         .mission(entity)
@@ -64,7 +73,7 @@ public class CreateMissionUseCase {
             });
         }
 
-        if (request.lootChances() != null) {
+        if (request.lootChances() != null && !request.lootChances().isEmpty()) {
             request.lootChances().forEach(c -> {
                 MissionLootChanceEntity chance = MissionLootChanceEntity.builder()
                         .mission(entity)
@@ -75,7 +84,7 @@ public class CreateMissionUseCase {
             });
         }
 
-        if (request.lootItems() != null) {
+        if (request.lootItems() != null && !request.lootItems().isEmpty()) {
             request.lootItems().forEach(i -> {
                 MissionLootItemEntity item = MissionLootItemEntity.builder()
                         .mission(entity)
@@ -96,26 +105,29 @@ public class CreateMissionUseCase {
         return AdminMissionResponse.from(entity);
     }
 
-    private void validateLootConsistency(CreateMissionRequest request) {
-        if (request.lootChances() == null || request.lootChances().isEmpty()) {
-            return;
+    private void validateChestConfiguration(CreateMissionRequest request) {
+        if (request.chestCode() == null || request.chestCode().isBlank()) {
+            throw new BadRequestException("chestCode é obrigatório para uma missão do novo sistema de loot.");
         }
-
-        if (request.lootItems() == null || request.lootItems().isEmpty()) {
-            throw new BadRequestException("lootItems is required when lootChances is defined");
+        if (hasLegacyLoot(request.rewards(), request.lootChances(), request.lootItems())) {
+            throw new BadRequestException(
+                    "Missões com Baú da Área não aceitam recompensas fixas ou loot legado; configure a Loot Table do baú.");
         }
+    }
 
-        Set<String> chancesRarities = new HashSet<>();
-        request.lootChances().forEach(c -> chancesRarities.add(c.rarity().name()));
+    private boolean hasLegacyLoot(
+            java.util.List<RewardRequest> rewards,
+            java.util.List<LootChanceRequest> lootChances,
+            java.util.List<LootItemRequest> lootItems
+    ) {
+        return (rewards != null && !rewards.isEmpty())
+                || (lootChances != null && !lootChances.isEmpty())
+                || (lootItems != null && !lootItems.isEmpty());
+    }
 
-        Set<String> itemsRarities = new HashSet<>();
-        request.lootItems().forEach(i -> itemsRarities.add(i.rarity().name()));
-
-        for (String rarity : chancesRarities) {
-            if (!itemsRarities.contains(rarity)) {
-                throw new BadRequestException(
-                        "lootItems must have at least one item for rarity: " + rarity);
-            }
-        }
+    private ChestDefinitionEntity resolveActiveChest(String code) {
+        String normalizedCode = code.trim();
+        return chestDefinitionRepository.findByCodeAndActiveTrue(normalizedCode)
+                .orElseThrow(() -> new NotFoundException("Baú da Área ativo não encontrado: " + normalizedCode));
     }
 }

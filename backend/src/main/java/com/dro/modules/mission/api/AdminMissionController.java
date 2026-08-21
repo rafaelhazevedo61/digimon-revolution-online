@@ -3,6 +3,7 @@ package com.dro.modules.mission.api;
 import com.dro.modules.mission.api.dto.request.CreateMissionRequest;
 import com.dro.modules.mission.api.dto.request.UpdateMissionRequest;
 import com.dro.modules.mission.api.dto.response.AdminMissionResponse;
+import com.dro.modules.mission.api.dto.response.MissionChestOptionResponse;
 import com.dro.modules.mission.application.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class AdminMissionController {
     private final GetMissionUseCase getMissionUseCase;
     private final UpdateMissionUseCase updateMissionUseCase;
     private final ToggleMissionUseCase toggleMissionUseCase;
+    private final ListMissionChestOptionsUseCase listMissionChestOptionsUseCase;
 
     @PostMapping
     public ResponseEntity<AdminMissionResponse> create(
@@ -40,9 +42,15 @@ public class AdminMissionController {
             @RequestParam(required = false) Boolean activeOnly,
             @RequestParam(required = false) String area,
             @RequestParam(required = false) String stage,
+            @RequestParam(required = false) String chestCode,
             @RequestParam(required = false) String lootItemType
     ) {
-        return ResponseEntity.ok(listMissionsUseCase.execute(activeOnly, area, stage, lootItemType));
+        return ResponseEntity.ok(listMissionsUseCase.execute(activeOnly, area, stage, chestCode, lootItemType));
+    }
+
+    @GetMapping("/chest-options")
+    public ResponseEntity<List<MissionChestOptionResponse>> chestOptions() {
+        return ResponseEntity.ok(listMissionChestOptionsUseCase.execute());
     }
 
     @GetMapping("/{id}")
