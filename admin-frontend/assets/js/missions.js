@@ -84,10 +84,25 @@ async function loadMissionOptions() {
   if (missionState.chestOptions.length > 0) return;
   try {
     missionState.chestOptions = await apiGet("/admin/missions/chest-options");
+    missionRenderChestFilter();
   } catch (error) {
     missionState.chestOptions = [];
     console.error("Não foi possível carregar os Baús da Área", error);
   }
+}
+
+function missionRenderChestFilter() {
+  const select = document.getElementById("mission-filter-chest");
+  if (!select) return;
+  select.innerHTML = `
+    <option value="">Todos</option>
+    ${missionState.chestOptions.map(chest => `
+      <option value="${missionEscapeAttr(chest.code)}" ${missionState.filterChest === chest.code ? "selected" : ""}>
+        ${missionEscapeHtml(chest.name)}
+      </option>
+    `).join("")}
+  `;
+  select.value = missionState.filterChest || "";
 }
 
 async function loadMissions() {
