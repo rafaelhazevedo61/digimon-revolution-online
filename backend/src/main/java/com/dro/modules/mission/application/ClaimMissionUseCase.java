@@ -151,9 +151,11 @@ public class ClaimMissionUseCase {
 
         UUID digimonId = instance.getDigimonId();
 
-        rewards.addAll(
-                applyFixedRewards(digimonId, mission, completionCount)
-        );
+        if (!hasMissionChest(mission)) {
+            rewards.addAll(
+                    applyFixedRewards(digimonId, mission, completionCount)
+            );
+        }
 
         applyMissionChestOrLegacyLoot(digimonId, mission, rewards);
 
@@ -214,6 +216,10 @@ public class ClaimMissionUseCase {
         return (int) Math.floor(baseBits * multiplier);
     }
 
+    private boolean hasMissionChest(MissionDefinition mission) {
+        return mission.getChestCode() != null && !mission.getChestCode().isBlank();
+    }
+
     private List<RewardResponse> applyFixedRewards(
             UUID digimonId,
             MissionDefinition mission,
@@ -259,7 +265,7 @@ public class ClaimMissionUseCase {
             MissionDefinition mission,
             List<RewardResponse> rewards
     ) {
-        if (mission.getChestCode() != null && !mission.getChestCode().isBlank()) {
+        if (hasMissionChest(mission)) {
             ChestDefinitionEntity chest = chestDefinitionRepository
                     .findWithCatalogByCode(mission.getChestCode())
                     .orElseThrow(() -> new ConflictException(

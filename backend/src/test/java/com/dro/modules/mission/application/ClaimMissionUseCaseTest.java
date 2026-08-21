@@ -91,7 +91,7 @@ class ClaimMissionUseCaseTest {
     private ClaimMissionUseCase claimMissionUseCase;
 
     @Test
-    void executeDeliversAreaChestInsteadOfLegacyRandomItemAndPreservesFixedRewards() {
+    void executeDeliversAreaChestInsteadOfLegacyRandomItemAndIgnoresLegacyFixedRewards() {
         UUID playerId = UUID.randomUUID();
         UUID digimonId = UUID.randomUUID();
         String missionId = "MISSION_1";
@@ -126,16 +126,6 @@ class ClaimMissionUseCaseTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
         when(chestDefinitionRepository.findWithCatalogByCode(chestCode))
                 .thenReturn(Optional.of(chest));
-        ItemDefinition trainingStone = ItemDefinition.builder()
-                .id(200L)
-                .code("TRAINING_STONE")
-                .name("Pedra de Treino")
-                .category("MATERIAL")
-                .maxStack(999)
-                .build();
-        when(itemDefinitionRepository.findByCode("TRAINING_STONE"))
-                .thenReturn(Optional.of(trainingStone));
-
         MissionResultResponse response = claimMissionUseCase.execute(
                 token(playerId),
                 UUID.randomUUID()
@@ -143,20 +133,13 @@ class ClaimMissionUseCaseTest {
 
         assertThat(response.xpGained()).isEqualTo(30);
         assertThat(response.bitsGained()).isEqualTo(0);
-        assertThat(response.rewards())
-                .anySatisfy(reward -> {
-                    assertThat(reward.item()).isEqualTo(ItemType.LOOT_CHEST);
-                    assertThat(reward.quantity()).isEqualTo(1);
-                    assertThat(reward.itemCode()).isEqualTo(chest.getCode());
-                    assertThat(reward.itemName()).isEqualTo(chest.getName());
-                });
-        assertThat(response.rewards())
-                .anySatisfy(reward -> {
-                    assertThat(reward.item()).isEqualTo(ItemType.TRAINING_STONE);
-                    assertThat(reward.quantity()).isEqualTo(1);
-                });
+        assertThat(response.rewards()).hasSize(1);
+        assertThat(response.rewards().get(0).item()).isEqualTo(ItemType.LOOT_CHEST);
+        assertThat(response.rewards().get(0).quantity()).isEqualTo(1);
+        assertThat(response.rewards().get(0).itemCode()).isEqualTo(chest.getCode());
+        assertThat(response.rewards().get(0).itemName()).isEqualTo(chest.getName());
 
-        verify(addItemUseCase).addMaterial(digimonId, trainingStone, 1);
+        verifyNoInteractions(itemDefinitionRepository);
         verify(addItemUseCase).addMaterial(digimonId, chest.getItemDefinition(), 1);
         verify(addItemUseCase, never()).execute(eq(digimonId), any(ItemType.class), anyInt());
         verify(missionInstanceRepository).save(instance);
