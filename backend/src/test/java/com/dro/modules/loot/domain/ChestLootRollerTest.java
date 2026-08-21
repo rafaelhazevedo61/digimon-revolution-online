@@ -28,6 +28,51 @@ class ChestLootRollerTest {
     }
 
     @Test
+    void rollSupportsOneActiveEntryPerRarityWhenOpeningMultipleItems() {
+        LootTableEntity table = baseTable(2, 4);
+        for (LootRarity rarity : LootRarity.values()) {
+            table.getEntries().add(entry(
+                    rarity,
+                    "EVOLUTION_MATERIAL",
+                    rarity.name() + "_ONLY",
+                    1,
+                    1,
+                    1
+            ));
+        }
+
+        ChestLootRoller.ChestLootRoll result = new ChestLootRoller(new Random(18)).roll(table);
+
+        assertThat(result.items()).hasSizeBetween(2, 4);
+        assertThat(result.items())
+                .extracting(ChestLootRoller.ChestLootItem::materialCode)
+                .doesNotHaveDuplicates();
+        assertThat(result.items())
+                .extracting(ChestLootRoller.ChestLootItem::rarity)
+                .doesNotHaveDuplicates();
+        assertThat(result.items())
+                .allSatisfy(item -> assertThat(item.quantity()).isEqualTo(1));
+    }
+
+    @Test
+    void rollSkipsWeightedRarityWithoutActiveEntries() {
+        LootTableEntity table = baseTable(1, 1);
+        table.getEntries().add(entry(
+                LootRarity.COMMON,
+                "TRAINING_STONE",
+                null,
+                1,
+                1,
+                1
+        ));
+
+        ChestLootRoller.ChestLootRoll result = new ChestLootRoller(new Random(19)).roll(table);
+
+        assertThat(result.items()).hasSize(1);
+        assertThat(result.items().get(0).itemType()).isEqualTo(ItemType.TRAINING_STONE);
+    }
+
+    @Test
     void rollSupportsTheConfiguredRangeFromOneToFourItems() {
         LootTableEntity table = tableWithThreeEntriesPerRarity(1, 4);
 
