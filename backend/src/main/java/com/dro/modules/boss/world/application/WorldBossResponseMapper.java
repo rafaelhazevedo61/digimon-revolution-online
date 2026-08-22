@@ -56,7 +56,8 @@ public class WorldBossResponseMapper {
         Instant nextAttackCandidate = myAttacks.isEmpty() || myAttacks.get(0).getCreatedAt() == null
                 ? null
                 : myAttacks.get(0).getCreatedAt().plus(Duration.ofMinutes(attackCooldownMinutes));
-        Instant nextAttackAvailableAt = instance.getStatus() == com.dro.modules.boss.world.domain.WorldBossStatus.ACTIVE
+        Instant nextAttackAvailableAt = boss.isCooldownEnabled()
+                && instance.getStatus() == com.dro.modules.boss.world.domain.WorldBossStatus.ACTIVE
                 && nextAttackCandidate != null
                 && nextAttackCandidate.isAfter(Instant.now())
                 ? nextAttackCandidate
@@ -81,6 +82,7 @@ public class WorldBossResponseMapper {
                 usedToday,
                 Math.max(0, WorldBossRules.DAILY_ATTACK_LIMIT - usedToday),
                 attackCooldownMinutes,
+                boss.isCooldownEnabled(),
                 nextAttackAvailableAt,
                 myTotalDamage,
                 buildRanking(instance.getId()),

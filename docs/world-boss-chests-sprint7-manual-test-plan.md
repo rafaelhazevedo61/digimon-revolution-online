@@ -50,7 +50,7 @@ Altere temporariamente o `cooldown_minutes` do Boss Mundial no painel administra
 
 Confirme que um segundo jogador pode atacar normalmente durante o cooldown do primeiro jogador. O cooldown é individual por jogador e por instância diária, não global para todos os participantes.
 
-A resposta de `GET /world-boss/me` fornece `attackCooldownMinutes` e `nextAttackAvailableAt`. Enquanto esse horário estiver no futuro, o botão deve permanecer desabilitado e mostrar a contagem regressiva em formato `MM:SS` ou `HH:MM:SS`. Quando chegar a zero, a tela deve recarregar o snapshot e habilitar o botão novamente.
+A resposta de `GET /world-boss/me` fornece `attackCooldownMinutes`, `cooldownEnabled` e `nextAttackAvailableAt`. Enquanto `cooldownEnabled` for `true` e esse horário estiver no futuro, o botão deve permanecer desabilitado e mostrar a contagem regressiva em formato `MM:SS` ou `HH:MM:SS`. Quando chegar a zero, a tela deve recarregar o snapshot e habilitar o botão novamente. Quando `cooldownEnabled` for `false`, `nextAttackAvailableAt` deve ser `null`, a tela deve mostrar **Cooldown desativado pelo administrador** e o botão deve permanecer disponível, sem contador.
 
 O card **“Suas recompensas no ciclo atual”** não deve mais aparecer na tela pública. O Baú deve ser informado no modal do ataque que o concedeu e, quando necessário, no inventário do jogador.
 
@@ -74,7 +74,7 @@ Ainda no mesmo modal, confirme que o checkbox **Ativar cooldown** está marcado 
 
 Ao desligar o checkbox, o campo de minutos deve ficar visualmente desabilitado, mas seu valor não deve ser apagado. O PUT administrativo deve enviar `cooldownEnabled: false`; ao religar, deve enviar `cooldownEnabled: true` e reutilizar os minutos preservados. Essa operação deve funcionar sem exigir o Baú legado de **Recompensa (Vitória)**, pois esse campo não é usado por Boss Mundial.
 
-Com o cooldown desligado, uma nova tentativa do mesmo jogador não deve ser bloqueada pelo intervalo. Depois de religá-lo, o intervalo configurado deve voltar a ser aplicado e a tela pública deve mostrar a contagem regressiva.
+Com o cooldown desligado, confirme no Network que `GET /world-boss/me` retorna `cooldownEnabled: false` e `nextAttackAvailableAt: null`. A tela deve mostrar **Cooldown desativado pelo administrador**, não deve iniciar contador e uma nova tentativa do mesmo jogador não deve ser bloqueada pelo intervalo. Depois de religá-lo, `cooldownEnabled` deve voltar a `true`, o intervalo configurado deve voltar a ser aplicado e a tela pública deve mostrar a contagem regressiva.
 
 Em **Loot Tables**, verifique as três tabelas `LOOT_TABLE_BOSS_WORLD_APOCALYMON_*`. Os pesos de raridade e as entradas devem ser editáveis pelo mecanismo genérico existente. A desativação de uma Loot Table deve impedir a concessão do Baú correspondente e registrar a falha da operação, sem entregar item parcialmente.
 
