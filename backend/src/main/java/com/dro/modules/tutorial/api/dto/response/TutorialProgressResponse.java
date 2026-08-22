@@ -9,6 +9,10 @@ public record TutorialProgressResponse(
         int completedSteps,
         int totalSteps,
         boolean allCompleted,
+        int claimedRewards,
+        int pendingRewards,
+        boolean canFinish,
+        boolean finished,
         List<TutorialStepResponse> steps
 ) {
 }

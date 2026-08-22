@@ -30,4 +30,7 @@ public class TutorialProgress {
 
     @Column(name = "completed_at", nullable = false)
     private LocalDateTime completedAt;
+
+    @Column(name = "reward_claimed_at")
+    private LocalDateTime rewardClaimedAt;
 }

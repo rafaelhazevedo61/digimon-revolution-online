@@ -106,4 +106,8 @@ public enum TutorialStep {
     public boolean hasItemReward() {
         return rewardItem != null && rewardItemQuantity > 0;
     }
+
+    public boolean hasReward() {
+        return rewardBits > 0 || hasItemReward();
+    }
 }
