@@ -50,6 +50,8 @@ Altere temporariamente o `cooldown_minutes` do Boss Mundial no painel administra
 
 Confirme que um segundo jogador pode atacar normalmente durante o cooldown do primeiro jogador. O cooldown é individual por jogador e por instância diária, não global para todos os participantes.
 
+A resposta de `GET /world-boss/me` fornece `attackCooldownMinutes` e `nextAttackAvailableAt`. Enquanto esse horário estiver no futuro, o botão deve permanecer desabilitado e mostrar a contagem regressiva em formato `MM:SS` ou `HH:MM:SS`. Quando chegar a zero, a tela deve recarregar o snapshot e habilitar o botão novamente.
+
 O card **“Suas recompensas no ciclo atual”** não deve mais aparecer na tela pública. O Baú deve ser informado no modal do ataque que o concedeu e, quando necessário, no inventário do jogador.
 
 ## 3. Derrota, maior dano e golpe final

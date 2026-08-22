@@ -31,14 +31,29 @@ async function loadWorldBoss() {
   }
 }
 
+let worldBossCooldownTimer = null;
+
 function renderWorldBossContent(boss) {
   const container = document.getElementById("world-boss-content");
   if (!container) return;
 
+  clearWorldBossCooldownTimer();
   const percent = boss.maxHp > 0
     ? Math.min(100, Math.round((boss.remainingHp / boss.maxHp) * 100))
     : 100;
   const defeated = boss.status === "DEFEATED" || boss.remainingHp <= 0;
+  const cooldownMinutes = Number.isFinite(Number(boss.attackCooldownMinutes)) && Number(boss.attackCooldownMinutes) > 0
+    ? Number(boss.attackCooldownMinutes)
+    : 5;
+  const nextAttackAt = boss.nextAttackAvailableAt ? Date.parse(boss.nextAttackAvailableAt) : NaN;
+  const cooldownActive = !defeated
+    && boss.myDailyAttacksRemaining > 0
+    && Number.isFinite(nextAttackAt)
+    && nextAttackAt > Date.now();
+  const cooldownInfoHtml = `<p class="text-xs text-slate-500 mb-2 text-center">Cooldown entre ataques: ${cooldownMinutes} minuto(s)</p>`;
+  const attackButtonHtml = !defeated && boss.myDailyAttacksRemaining > 0
+    ? `${cooldownInfoHtml}<button id="world-boss-attack-button" class="btn-primary w-full" onclick="attackWorldBoss()"${cooldownActive ? " disabled" : ""}>${cooldownActive ? "Próximo ataque em <span id=\"world-boss-countdown\">--:--</span>" : "Atacar Boss Mundial"}</button>`
+    : "";
 
   let rankingHtml = "";
   if (boss.ranking && boss.ranking.length > 0) {
@@ -108,18 +123,59 @@ function renderWorldBossContent(boss) {
 
       <p class="text-xs text-slate-400 mb-3">Seus ataques hoje: <span class="text-cyan-400">${boss.myDailyAttacksUsed}/${boss.myDailyAttacksUsed + boss.myDailyAttacksRemaining}</span> · Seu dano: <span class="text-cyan-400">${boss.myTotalDamage.toLocaleString()}</span></p>
 
-      ${!defeated && boss.myDailyAttacksRemaining > 0 ? `<button class="btn-primary w-full" onclick="attackWorldBoss()">Atacar Boss Mundial</button>` : ""}
-      ${!defeated && boss.myDailyAttacksRemaining === 0 ? `<p class="text-xs text-slate-500 text-center">Limite diário de ataques atingido. Volte amanhã.</p>` : ""}
+      ${attackButtonHtml}
+      ${!defeated && boss.myDailyAttacksRemaining === 0 ? `${cooldownInfoHtml}<p class="text-xs text-slate-500 text-center">Limite diário de ataques atingido. Volte amanhã.</p>` : ""}
       ${defeated ? `<p class="text-xs text-green-400 text-center">Boss Mundial derrotado hoje! Volte amanhã.</p>` : ""}
     </div>
 
     ${rankingHtml}
     ${attacksHtml}
   `;
+
+  if (cooldownActive) {
+    startWorldBossCooldownCountdown(nextAttackAt);
+  }
+}
+
+function clearWorldBossCooldownTimer() {
+  if (worldBossCooldownTimer !== null) {
+    clearInterval(worldBossCooldownTimer);
+    worldBossCooldownTimer = null;
+  }
+}
+
+function formatWorldBossCountdown(totalSeconds) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) {
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function startWorldBossCooldownCountdown(nextAttackAt) {
+  clearWorldBossCooldownTimer();
+  const button = document.getElementById("world-boss-attack-button");
+  const countdown = document.getElementById("world-boss-countdown");
+  if (!button || !countdown || !Number.isFinite(nextAttackAt)) return;
+
+  const tick = () => {
+    const remainingSeconds = Math.max(0, Math.ceil((nextAttackAt - Date.now()) / 1000));
+    if (remainingSeconds === 0) {
+      clearWorldBossCooldownTimer();
+      loadWorldBoss();
+      return;
+    }
+    countdown.textContent = formatWorldBossCountdown(remainingSeconds);
+  };
+
+  tick();
+  worldBossCooldownTimer = setInterval(tick, 1000);
 }
 
 async function attackWorldBoss() {
-  const btn = document.querySelector('#world-boss-content button');
+  const btn = document.querySelector('#world-boss-attack-button');
   if (btn) {
     btn.disabled = true;
     btn.textContent = "Atacando...";

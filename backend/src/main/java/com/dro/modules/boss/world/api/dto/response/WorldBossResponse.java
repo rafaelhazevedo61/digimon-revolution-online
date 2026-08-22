@@ -21,6 +21,8 @@ public record WorldBossResponse(
         Instant defeatedAt,
         int myDailyAttacksUsed,
         int myDailyAttacksRemaining,
+        int attackCooldownMinutes,
+        Instant nextAttackAvailableAt,
         long myTotalDamage,
         List<WorldBossRankingEntryResponse> ranking,
         List<WorldBossAttackResponse> recentAttacks,
