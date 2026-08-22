@@ -167,7 +167,7 @@ class TutorialServiceTest {
 
         assertThatThrownBy(() -> tutorialService.finishTutorial(token))
                 .isInstanceOf(com.dro.shared.exception.BadRequestException.class)
-                .hasMessageContaining("Claim all tutorial rewards");
+                .hasMessageContaining("Resgate todas as recompensas do tutorial");
 
         verify(tutorialCompletionRepository, never()).save(any(TutorialCompletion.class));
     }

@@ -68,33 +68,33 @@ public class BuyShopProductUseCase {
         UUID playerId = TokenExtractor.extractPlayerId(token);
 
         Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
+                .orElseThrow(() -> new NotFoundException("Jogador não encontrado"));
 
         if (player.getActiveDigimonId() == null) {
-            throw new BadRequestException("No active digimon selected");
+            throw new BadRequestException("Nenhum Digimon ativo selecionado");
         }
 
         Digimon digimon = digimonRepository.findById(player.getActiveDigimonId())
-                .orElseThrow(() -> new NotFoundException("Active digimon not found"));
+                .orElseThrow(() -> new NotFoundException("Digimon ativo não encontrado"));
 
         if (!digimon.getPlayerId().equals(playerId)) {
-            throw new BadRequestException("Active digimon does not belong to this player");
+            throw new BadRequestException("O Digimon ativo não pertence a este jogador");
         }
 
         ShopProduct product = shopProductRepository.findById(request.productCode())
                 .map(ShopProductMapper::toProduct)
-                .orElseThrow(() -> new NotFoundException("Shop product not found: " + request.productCode()));
+                .orElseThrow(() -> new NotFoundException("Produto da loja não encontrado: " + request.productCode()));
 
         int quantity = request.quantity();
 
         if (product.getProductType() == ShopProductType.EQUIPMENT && quantity > 1) {
-            throw new BadRequestException("Equipment must be purchased one at a time");
+            throw new BadRequestException("Equipamentos devem ser comprados um por vez");
         }
 
         int totalPrice = product.getPrice() * quantity;
 
         if (digimon.getBits() < totalPrice) {
-            throw new UnprocessableException("Not enough bits");
+            throw new UnprocessableException("Bits insuficientes");
         }
 
         UUID equipmentId = null;
@@ -106,7 +106,7 @@ public class BuyShopProductUseCase {
                         : product.getCode();
                 ItemDefinition chestDefinition = itemDefinitionRepository.findByCode(definitionCode)
                         .filter(item -> "CHEST".equalsIgnoreCase(item.getCategory()))
-                        .orElseThrow(() -> new NotFoundException("Chest item definition not found: " + definitionCode));
+                        .orElseThrow(() -> new NotFoundException("Definição do item de baú não encontrada: " + definitionCode));
                 addItemUseCase.addMaterial(digimon.getId(), chestDefinition, quantity);
             } else {
                 addItemUseCase.execute(
@@ -143,7 +143,7 @@ public class BuyShopProductUseCase {
                         "totalPrice", totalPrice,
                         "digimonId", digimon.getId().toString(),
                         "equipmentId", equipmentId == null ? "" : equipmentId.toString(),
-                        "summary", "Shop product purchased"
+                        "summary", "Produto da loja comprado"
                 )
         );
 
@@ -155,7 +155,7 @@ public class BuyShopProductUseCase {
                 totalPrice,
                 digimon.getBits(),
                 equipmentId,
-                "Product purchased successfully"
+                "Produto comprado com sucesso"
         );
     }
 }

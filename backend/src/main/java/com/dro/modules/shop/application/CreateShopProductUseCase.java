@@ -36,7 +36,7 @@ public class CreateShopProductUseCase {
     public AdminShopProductResponse execute(CreateShopProductRequest request) {
 
         if (shopProductRepository.existsById(request.code())) {
-            throw new ConflictException("Shop product already exists: " + request.code());
+            throw new ConflictException("O produto da loja já existe: " + request.code());
         }
 
         validateProductTypeFields(request);
@@ -64,7 +64,7 @@ public class CreateShopProductUseCase {
         try {
             shopProductRepository.saveAndFlush(entity);
         } catch (DataIntegrityViolationException e) {
-            throw new ConflictException("Shop product already exists: " + request.code());
+            throw new ConflictException("O produto da loja já existe: " + request.code());
         }
 
         return AdminShopProductResponse.from(entity);
@@ -73,21 +73,21 @@ public class CreateShopProductUseCase {
     private void validateProductTypeFields(CreateShopProductRequest request) {
         if (request.productType() == ShopProductType.EQUIPMENT) {
             if (request.equipmentTemplateName() == null || request.equipmentTemplateName().isBlank()) {
-                throw new BadRequestException("equipmentTemplateName is required for EQUIPMENT products");
+                throw new BadRequestException("O modelo de equipamento é obrigatório para produtos do tipo Equipamento");
             }
             if (equipmentTemplateRepository.findByName(request.equipmentTemplateName()).isEmpty()) {
-                throw new NotFoundException("Equipment template not found: " + request.equipmentTemplateName());
+                throw new NotFoundException("Modelo de equipamento não encontrado: " + request.equipmentTemplateName());
             }
         }
 
         if (request.productType() == ShopProductType.ITEM) {
             if (request.itemType() == null) {
-                throw new BadRequestException("itemType is required for ITEM products");
+                throw new BadRequestException("O tipo do item é obrigatório para produtos do tipo Item");
             }
 
             if (request.category() == ShopProductCategory.CHEST) {
                 if (request.itemType() != ItemType.LOOT_CHEST) {
-                    throw new BadRequestException("CHEST products must use itemType LOOT_CHEST");
+                    throw new BadRequestException("Produtos da categoria Baú devem usar o tipo de item LOOT_CHEST");
                 }
 
                 String definitionCode = resolveItemDefinitionCode(
@@ -95,7 +95,7 @@ public class CreateShopProductUseCase {
                 if (itemDefinitionRepository.findByCode(definitionCode)
                         .filter(definition -> "CHEST".equalsIgnoreCase(definition.getCategory()))
                         .isEmpty()) {
-                    throw new NotFoundException("Chest item definition not found: " + definitionCode);
+                    throw new NotFoundException("Definição do item de baú não encontrada: " + definitionCode);
                 }
             }
         }

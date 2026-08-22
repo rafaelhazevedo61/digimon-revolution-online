@@ -5,6 +5,13 @@ let shopMode = "buy"; // "buy" or "sell"
 let shopInventoryItems = [];
 let shopInventoryEquipments = [];
 
+const SHOP_RARITY_LABELS = {
+  COMMON: "Comum",
+  RARE: "Rara",
+  EPIC: "Épica",
+  LEGENDARY: "Lendária"
+};
+
 async function renderShopPage() {
   const app = document.getElementById("app");
   showBottomNav("shop");
@@ -35,7 +42,7 @@ async function renderShopPage() {
     shopData = await apiGet("/shop");
     const dashboard = await apiGet("/players/me/dashboard");
     shopPlayerBits = dashboard.activeDigimon ? dashboard.activeDigimon.bits : 0;
-    document.getElementById("shop-bits").textContent = shopPlayerBits;
+    document.getElementById("shop-bits").textContent = shopFormatNumber(shopPlayerBits);
     shopMode = "buy";
     shopRenderBuyMode();
   } catch (err) {
@@ -96,8 +103,8 @@ function shopSwitchTab(cat) {
         <p class="font-bold text-sm break-words">${escapeHtml(p.name)}</p>
         <p class="text-xs text-slate-400 break-words">${escapeHtml(p.description || "")}</p>
         <div class="flex gap-2 mt-1">
-          <span class="text-xs text-yellow-400 font-bold">${p.price} Bits</span>
-          ${p.sellPrice > 0 ? `<span class="text-xs text-slate-500">Venda: ${p.sellPrice} Bits</span>` : ""}
+          <span class="text-xs text-yellow-400 font-bold">${shopFormatBits(p.price)}</span>
+          ${p.sellPrice > 0 ? `<span class="text-xs text-slate-500">Venda: ${shopFormatBits(p.sellPrice)}</span>` : ""}
         </div>
       </div>
       <button class="btn-sm btn-primary" onclick="shopOpenBuy('${escapeHtml(p.code)}')">Comprar</button>
@@ -141,7 +148,7 @@ function shopOpenBuy(code) {
       <p class="text-xs text-slate-400 mb-3">${escapeHtml(product.description || "")}</p>
       <div class="flex justify-between text-sm mb-4">
         <span class="text-slate-400">Preço unitário</span>
-        <span class="text-yellow-400 font-bold">${product.price} Bits</span>
+        <span class="text-yellow-400 font-bold">${shopFormatBits(product.price)}</span>
       </div>
       ${!isEquip ? `
       <div class="mb-4">
@@ -155,7 +162,7 @@ function shopOpenBuy(code) {
       ` : ""}
       <div class="flex justify-between text-sm mb-4">
         <span class="text-slate-400">Total</span>
-        <span class="text-yellow-400 font-bold" id="shop-total">${product.price} Bits</span>
+        <span class="text-yellow-400 font-bold" id="shop-total">${shopFormatBits(product.price)}</span>
       </div>
       <div class="flex gap-2">
         <button class="btn-primary flex-1" onclick="shopConfirmBuy('${escapeHtml(code)}', ${product.price})" id="shop-buy-btn">Confirmar</button>
@@ -186,7 +193,7 @@ function shopQtyUpdate() {
   const totalEl = document.getElementById("shop-total");
   if (!input || !totalEl) return;
   const qty = parseInt(input.value) || 1;
-  totalEl.textContent = `${qty * shopModalUnitPrice} Bits`;
+  totalEl.textContent = shopFormatBits(qty * shopModalUnitPrice);
 }
 
 async function shopConfirmBuy(code, unitPrice) {
@@ -198,9 +205,9 @@ async function shopConfirmBuy(code, unitPrice) {
   try {
     const result = await apiPost("/shop/buy", { productCode: code, quantity: qty });
     shopPlayerBits = result.remainingBits;
-    document.getElementById("shop-bits").textContent = shopPlayerBits;
+    document.getElementById("shop-bits").textContent = shopFormatNumber(shopPlayerBits);
     shopCloseModal();
-    showToast(`${escapeHtml(result.name)} x${result.quantity} comprado! -${result.totalPrice} Bits`);
+    showToast(`${escapeHtml(result.name)} x${result.quantity} comprado! -${shopFormatBits(result.totalPrice)}`);
   } catch (err) {
     showToast(err.message, "error");
     if (btn) { btn.disabled = false; btn.textContent = "Confirmar"; }
@@ -292,7 +299,7 @@ function shopRenderSellList() {
           <p class="font-bold text-sm truncate">${escapeHtml(def.name)}</p>
           <div class="flex gap-2 mt-1">
             <span class="text-xs text-slate-400">Qtd: ${item.quantity}</span>
-            <span class="text-xs text-green-400 font-bold">+${def.sellPrice} Bits/un</span>
+            <span class="text-xs text-green-400 font-bold">+${shopFormatBits(def.sellPrice)}/un.</span>
           </div>
         </div>
         <button class="btn-sm" style="background:#166534;color:#86efac" onclick="shopOpenSell('${escapeHtml(def.code)}', ${item.quantity}, ${def.sellPrice})">Vender</button>
@@ -308,8 +315,8 @@ function shopRenderSellList() {
         <div class="flex-1 min-w-0">
           <p class="font-bold text-sm truncate">${escapeHtml(eq.name)}</p>
           <div class="flex gap-2 mt-1">
-            <span class="badge badge-${eq.rarity ? eq.rarity.toLowerCase() : 'common'}">${escapeHtml(eq.rarity)}</span>
-            <span class="text-xs text-green-400 font-bold">+${eq.shopProduct.sellPrice} Bits</span>
+            <span class="badge badge-${eq.rarity ? eq.rarity.toLowerCase() : 'common'}">${escapeHtml(shopRarityLabel(eq.rarity))}</span>
+            <span class="text-xs text-green-400 font-bold">+${shopFormatBits(eq.shopProduct.sellPrice)}</span>
           </div>
         </div>
         <button class="btn-sm" style="background:#166534;color:#86efac" onclick="shopConfirmSellEquipment('${eq.id}')">Vender</button>
@@ -331,7 +338,7 @@ function shopOpenSell(itemDefCode, maxQty, sellPrice) {
       <h3 class="font-bold text-lg mb-3">Vender Item</h3>
       <div class="flex justify-between text-sm mb-4">
         <span class="text-slate-400">Preço unitário</span>
-        <span class="text-green-400 font-bold">+${sellPrice} Bits</span>
+        <span class="text-green-400 font-bold">+${shopFormatBits(sellPrice)}</span>
       </div>
       <div class="mb-4">
         <label class="label">Quantidade (máx: ${maxQty})</label>
@@ -343,7 +350,7 @@ function shopOpenSell(itemDefCode, maxQty, sellPrice) {
       </div>
       <div class="flex justify-between text-sm mb-4">
         <span class="text-slate-400">Total</span>
-        <span class="text-green-400 font-bold" id="shop-total">+${sellPrice} Bits</span>
+        <span class="text-green-400 font-bold" id="shop-total">+${shopFormatBits(sellPrice)}</span>
       </div>
       <div class="flex gap-2">
         <button class="flex-1 btn-sm" style="background:#166534;color:#86efac;padding:0.6rem" onclick="shopConfirmSellItem('${escapeHtml(itemDefCode)}')" id="shop-sell-btn">Confirmar Venda</button>
@@ -362,7 +369,7 @@ function shopSellQtyUpdate(sellPrice) {
   let qty = parseInt(input.value) || 0;
   qty = Math.max(1, qty);
   input.value = qty;
-  totalEl.textContent = `+${qty * sellPrice} Bits`;
+  totalEl.textContent = `+${shopFormatBits(qty * sellPrice)}`;
 }
 
 async function shopConfirmSellItem(itemDefCode) {
@@ -374,9 +381,9 @@ async function shopConfirmSellItem(itemDefCode) {
   try {
     const result = await apiPost("/shop/sell", { itemType: itemDefCode, quantity: qty });
     shopPlayerBits = result.remainingBits;
-    document.getElementById("shop-bits").textContent = shopPlayerBits;
+    document.getElementById("shop-bits").textContent = shopFormatNumber(shopPlayerBits);
     shopCloseModal();
-    showToast(`${escapeHtml(result.name)} x${result.quantity} vendido! +${result.totalSellPrice} Bits`);
+    showToast(`${escapeHtml(result.name)} x${result.quantity} vendido! +${shopFormatBits(result.totalSellPrice)}`);
     shopRenderSellMode();
   } catch (err) {
     showToast(err.message, "error");
@@ -384,12 +391,25 @@ async function shopConfirmSellItem(itemDefCode) {
   }
 }
 
+function shopRarityLabel(value) {
+  const normalized = String(value || "COMMON").toUpperCase();
+  return SHOP_RARITY_LABELS[normalized] || value || "Comum";
+}
+
+function shopFormatNumber(value) {
+  return Number(value || 0).toLocaleString("pt-BR");
+}
+
+function shopFormatBits(value) {
+  return `${shopFormatNumber(value)} Bits`;
+}
+
 async function shopConfirmSellEquipment(equipmentId) {
   try {
     const result = await apiPost("/shop/sell", { equipmentId: equipmentId, quantity: 1 });
     shopPlayerBits = result.remainingBits;
-    document.getElementById("shop-bits").textContent = shopPlayerBits;
-    showToast(`${escapeHtml(result.name)} vendido! +${result.totalSellPrice} Bits`);
+    document.getElementById("shop-bits").textContent = shopFormatNumber(shopPlayerBits);
+    showToast(`${escapeHtml(result.name)} vendido! +${shopFormatBits(result.totalSellPrice)}`);
     shopRenderSellMode();
   } catch (err) {
     showToast(err.message, "error");

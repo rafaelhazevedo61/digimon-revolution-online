@@ -34,18 +34,18 @@ public class UpdateItemDefinitionUseCase {
     @Transactional
     public ItemDefinitionResponse execute(Long id, UpdateItemDefinitionRequest request) {
         ItemDefinition item = itemDefinitionRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Item definition not found: " + id));
+                .orElseThrow(() -> new NotFoundException("Definição de item não encontrada: " + id));
 
-        String name = normalizeNameRequired(request.name(), "name");
-        String category = normalizeCodeRequired(request.category(), "category");
-        String rarity = normalizeCodeRequired(request.rarity(), "rarity");
+        String name = normalizeNameRequired(request.name(), "nome");
+        String category = normalizeCodeRequired(request.category(), "categoria");
+        String rarity = normalizeCodeRequired(request.rarity(), "raridade");
         if (!OFFICIAL_RARITIES.contains(rarity)) {
-            throw new BadRequestException("Unsupported item rarity: " + rarity);
+            throw new BadRequestException("Raridade de item não suportada: " + rarity);
         }
 
         if (Boolean.TRUE.equals(request.stackable())
                 && (request.maxStack() == null || request.maxStack() < 1)) {
-            throw new BadRequestException("maxStack is required for stackable items");
+            throw new BadRequestException("O acúmulo máximo é obrigatório para itens acumuláveis");
         }
 
         item.setName(name);
@@ -66,14 +66,14 @@ public class UpdateItemDefinitionUseCase {
 
     private String normalizeNameRequired(String value, String field) {
         if (value == null || value.isBlank()) {
-            throw new BadRequestException(field + " is required");
+            throw new BadRequestException(field + " é obrigatório");
         }
         return value.trim();
     }
 
     private String normalizeCodeRequired(String value, String field) {
         if (value == null || value.isBlank()) {
-            throw new BadRequestException(field + " is required");
+            throw new BadRequestException(field + " é obrigatório");
         }
         return value.trim().toUpperCase(Locale.ROOT);
     }

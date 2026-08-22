@@ -74,7 +74,7 @@ public class TutorialService {
         TutorialProgress progress = tutorialProgressRepository.findByPlayerIdForUpdate(playerId).stream()
                 .filter(item -> item.getStep() == step)
                 .findFirst()
-                .orElseThrow(() -> new BadRequestException("Tutorial step is not completed"));
+                .orElseThrow(() -> new BadRequestException("A etapa do tutorial ainda não foi concluída"));
 
         if (progress.getRewardClaimedAt() == null) {
             grantReward(playerId, step);
@@ -99,13 +99,13 @@ public class TutorialService {
                 .collect(Collectors.toCollection(() -> EnumSet.noneOf(TutorialStep.class)));
 
         if (completed.size() < TutorialStep.values().length) {
-            throw new BadRequestException("Complete all tutorial steps before finishing the tutorial");
+            throw new BadRequestException("Conclua todas as etapas do tutorial antes de finalizá-lo");
         }
 
         boolean hasPendingReward = progress.stream()
                 .anyMatch(item -> item.getStep().hasReward() && item.getRewardClaimedAt() == null);
         if (hasPendingReward) {
-            throw new BadRequestException("Claim all tutorial rewards before finishing the tutorial");
+            throw new BadRequestException("Resgate todas as recompensas do tutorial antes de finalizá-lo");
         }
 
         tutorialCompletionRepository.save(TutorialCompletion.builder()
@@ -122,13 +122,13 @@ public class TutorialService {
         }
 
         Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
+                .orElseThrow(() -> new NotFoundException("Jogador não encontrado"));
         if (player.getActiveDigimonId() == null) {
-            throw new BadRequestException("No active digimon selected");
+            throw new BadRequestException("Nenhum Digimon ativo selecionado");
         }
 
         Digimon digimon = digimonRepository.findById(player.getActiveDigimonId())
-                .orElseThrow(() -> new NotFoundException("Active digimon not found"));
+                .orElseThrow(() -> new NotFoundException("Digimon ativo não encontrado"));
 
         if (step.getRewardBits() > 0) {
             digimon.setBits(digimon.getBits() + step.getRewardBits());
@@ -160,7 +160,7 @@ public class TutorialService {
         try {
             return TutorialStep.valueOf(stepName.toUpperCase());
         } catch (IllegalArgumentException | NullPointerException exception) {
-            throw new BadRequestException("Unknown tutorial step: " + stepName);
+            throw new BadRequestException("Etapa de tutorial desconhecida: " + stepName);
         }
     }
 

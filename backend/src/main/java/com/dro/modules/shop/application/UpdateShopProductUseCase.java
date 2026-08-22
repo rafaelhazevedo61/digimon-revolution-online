@@ -34,7 +34,7 @@ public class UpdateShopProductUseCase {
     public AdminShopProductResponse execute(String code, UpdateShopProductRequest request) {
 
         ShopProductEntity entity = shopProductRepository.findById(code)
-                .orElseThrow(() -> new NotFoundException("Shop product not found: " + code));
+                .orElseThrow(() -> new NotFoundException("Produto da loja não encontrado: " + code));
 
         validateProductTypeFields(code, request);
 
@@ -58,32 +58,32 @@ public class UpdateShopProductUseCase {
     private void validateProductTypeFields(String code, UpdateShopProductRequest request) {
         if (request.productType() == ShopProductType.EQUIPMENT) {
             if (request.equipmentTemplateName() == null || request.equipmentTemplateName().isBlank()) {
-                throw new BadRequestException("equipmentTemplateName is required for EQUIPMENT products");
+                throw new BadRequestException("O modelo de equipamento é obrigatório para produtos do tipo Equipamento");
             }
             if (equipmentTemplateRepository.findByName(request.equipmentTemplateName()).isEmpty()) {
-                throw new NotFoundException("Equipment template not found: " + request.equipmentTemplateName());
+                throw new NotFoundException("Modelo de equipamento não encontrado: " + request.equipmentTemplateName());
             }
         }
 
         if (request.productType() == ShopProductType.ITEM) {
             if (request.itemType() == null) {
-                throw new BadRequestException("itemType is required for ITEM products");
+                throw new BadRequestException("O tipo do item é obrigatório para produtos do tipo Item");
             }
 
             if (request.category() == ShopProductCategory.CHEST) {
                 if (request.itemType() != ItemType.LOOT_CHEST) {
-                    throw new BadRequestException("CHEST products must use itemType LOOT_CHEST");
+                    throw new BadRequestException("Produtos da categoria Baú devem usar o tipo de item LOOT_CHEST");
                 }
 
                 String definitionCode = resolveItemDefinitionCode(
                         code, request.itemType(), request.itemDefinitionCode());
                 if (definitionCode == null || definitionCode.isBlank()) {
-                    throw new BadRequestException("itemDefinitionCode is required for CHEST products");
+                    throw new BadRequestException("O código da definição é obrigatório para produtos da categoria Baú");
                 }
                 if (itemDefinitionRepository.findByCode(definitionCode)
                         .filter(definition -> "CHEST".equalsIgnoreCase(definition.getCategory()))
                         .isEmpty()) {
-                    throw new NotFoundException("Chest item definition not found: " + definitionCode);
+                    throw new NotFoundException("Definição do item de baú não encontrada: " + definitionCode);
                 }
             }
         }

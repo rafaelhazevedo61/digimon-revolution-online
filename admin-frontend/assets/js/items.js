@@ -1,3 +1,22 @@
+const ITEM_CATEGORY_LABELS = {
+    POTION: "Poção",
+    MATERIAL: "Material",
+    FRAGMENT: "Fragmento",
+    EVOLUTION_MATERIAL: "Material de Evolução",
+    DIGITAMA: "Digitama",
+    INCUBATOR: "Incubadora",
+    CONSUMABLE: "Consumível",
+    CHEST: "Baú",
+    EQUIPMENT: "Equipamento"
+};
+
+const ITEM_RARITY_LABELS = {
+    COMMON: "Comum",
+    RARE: "Rara",
+    EPIC: "Épica",
+    LEGENDARY: "Lendária"
+};
+
 const itemState = {
     page: 0,
     size: 20,
@@ -31,7 +50,7 @@ function renderItemsPage() {
 
           <div>
             <label class="text-sm text-slate-400">Categoria</label>
-            <input id="filter-category" class="input mt-1" placeholder="Ex: MATERIAL" value="${itemEscapeAttr(itemState.category)}" />
+            <input id="filter-category" class="input mt-1" placeholder="Ex.: CHEST" value="${itemEscapeAttr(itemState.category)}" />
           </div>
 
           <div>
@@ -152,7 +171,7 @@ function renderItemsResult(result) {
               <th>Raridade</th>
               <th>Compra</th>
               <th>Venda</th>
-              <th>Stack</th>
+              <th>Acúmulo</th>
               <th>Flags</th>
               <th>Ações</th>
             </tr>
@@ -180,11 +199,11 @@ function renderItemRow(item) {
           <div class="text-xs text-slate-500 line-clamp-1">${itemEscapeHtml(item.description || "Sem descrição")}</div>
         </td>
 
-        <td><span class="badge">${itemEscapeHtml(item.category || "-")}</span></td>
-        <td><span class="badge">${itemEscapeHtml(item.rarity || "-")}</span></td>
+        <td><span class="badge">${itemEscapeHtml(itemCategoryLabel(item.category))}</span></td>
+        <td><span class="badge">${itemEscapeHtml(itemRarityLabel(item.rarity))}</span></td>
         <td>${formatPrice(item.buyPrice)}</td>
         <td>${formatPrice(item.sellPrice)}</td>
-        <td>${item.stackable ? `Máx. ${item.maxStack ?? "-"}` : "Não stacka"}</td>
+        <td>${item.stackable ? `Máx. ${item.maxStack ?? "-"}` : "Não acumula"}</td>
         <td>
           <div class="flex flex-wrap gap-1">
             ${item.usable ? `<span class="badge">Usável</span>` : ""}
@@ -292,7 +311,7 @@ function renderItemEditModal(item) {
               </div>
 
               <div>
-                <label class="text-sm text-slate-400">Categoria</label>
+                <label class="text-sm text-slate-400">Categoria (código interno)</label>
                 <input id="item-edit-category" class="input mt-1" value="${itemEscapeAttr(item.category || "")}" required maxlength="40" />
               </div>
               <div>
@@ -316,7 +335,7 @@ function renderItemEditModal(item) {
                 <label for="item-edit-stackable" class="text-sm text-slate-300">Permite acumular no inventário</label>
               </div>
               <div>
-                <label class="text-sm text-slate-400">Stack máximo</label>
+                <label class="text-sm text-slate-400">Acúmulo máximo</label>
                 <input id="item-edit-max-stack" class="input mt-1" type="number" min="1" value="${item.maxStack ?? ""}" ${item.stackable ? "" : "disabled"} />
               </div>
               <div>
@@ -443,6 +462,14 @@ function sizeOptions(selectedValue) {
         ${size}
       </option>
     `).join("");
+}
+
+function itemCategoryLabel(value) {
+    return ITEM_CATEGORY_LABELS[value] || value || "-";
+}
+
+function itemRarityLabel(value) {
+    return ITEM_RARITY_LABELS[value] || value || "-";
 }
 
 function formatPrice(value) {

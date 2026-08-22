@@ -23,9 +23,62 @@ const ITEM_TYPES = [
   "EVOLUTION_MATERIAL", "LOOT_CHEST"
 ];
 
+const SHOP_PRODUCT_TYPE_LABELS = {
+  ITEM: "Item",
+  EQUIPMENT: "Equipamento"
+};
+
+const SHOP_PRODUCT_CATEGORY_LABELS = {
+  POTION: "Poção",
+  MATERIAL: "Material",
+  FRAGMENT: "Fragmento",
+  CONSUMABLE: "Consumível",
+  CHEST: "Baú",
+  EQUIPMENT: "Equipamento",
+  DIGITAMA: "Digitama",
+  INCUBATOR: "Incubadora",
+  EVOLUTION_MATERIAL: "Material de Evolução"
+};
+
+const SHOP_ITEM_TYPE_LABELS = {
+  POTION_SMALL: "Poção Pequena",
+  TRAINING_STONE: "Pedra de Treino",
+  DATA_CORE: "Núcleo de Dados",
+  DIGITAMA_STARTER: "Digitama Inicial",
+  DIGITAMA_FIRE: "Digitama de Fogo",
+  DIGITAMA_WATER: "Digitama de Água",
+  DIGITAMA_NATURE: "Digitama de Natureza",
+  INCUBATOR_COMMON: "Incubadora Comum",
+  INCUBATOR_RARE: "Incubadora Rara",
+  INCUBATOR_EPIC: "Incubadora Épica",
+  FRAGMENT_ROOKIE: "Fragmento Rookie",
+  FRAGMENT_CHAMPION: "Fragmento Champion",
+  FRAGMENT_ULTIMATE: "Fragmento Ultimate",
+  FRAGMENT_MEGA: "Fragmento Mega",
+  EVOLUTION_MATERIAL: "Material de Evolução",
+  LOOT_CHEST: "Baú de Recompensa",
+  CHEST_FRAGMENT_ROOKIE: "Baú de Fragmentos - Rookie",
+  CHEST_FRAGMENT_CHAMPION: "Baú de Fragmentos - Champion",
+  CHEST_FRAGMENT_ULTIMATE: "Baú de Fragmentos - Ultimate",
+  CHEST_FRAGMENT_MEGA: "Baú de Fragmentos - Mega"
+};
+
+const SHOP_RARITY_LABELS = {
+  COMMON: "Comum",
+  RARE: "Rara",
+  EPIC: "Épica",
+  LEGENDARY: "Lendária"
+};
+
+const SHOP_SLOT_LABELS = {
+  WEAPON: "Arma",
+  ARMOR: "Armadura",
+  ACCESSORY: "Acessório"
+};
+
 function renderShopProductsPage() {
   setPageHeader(
-    "Shop Products",
+    "Produtos da Loja",
     "Gerencie os produtos da loja do jogo"
   );
 
@@ -127,9 +180,9 @@ function renderShopRow(p) {
         <div class="font-semibold">${shopEscapeHtml(p.name)}</div>
         ${p.description ? `<div class="text-xs text-slate-500 line-clamp-1">${shopEscapeHtml(p.description)}</div>` : ""}
       </td>
-      <td><span class="badge">${shopEscapeHtml(p.productType)}</span></td>
-      <td><span class="badge">${shopEscapeHtml(p.category)}</span></td>
-      <td><span class="text-sm text-slate-300">${shopEscapeHtml(ref)}</span></td>
+      <td><span class="badge">${shopEscapeHtml(shopProductTypeLabel(p.productType))}</span></td>
+      <td><span class="badge">${shopEscapeHtml(shopProductCategoryLabel(p.category))}</span></td>
+      <td><span class="text-sm text-slate-300">${shopEscapeHtml(shopProductReferenceLabel(p))}</span></td>
       <td>${shopFormatBits(p.price)}</td>
       <td>${shopFormatBits(p.sellPrice)}</td>
       <td><span class="badge ${statusClass}">${statusText}</span></td>
@@ -242,14 +295,14 @@ function shopRenderModal(title, data, isEdit) {
             <div>
               <label class="text-sm text-slate-400">Tipo do Produto</label>
               <select id="shop-product-type" class="input mt-1" onchange="shopToggleTypeFields()" ${readonlyCatalogFields ? "disabled" : ""}>
-                ${shopSelectOptions(PRODUCT_TYPES, data.productType)}
+                ${shopSelectOptions(PRODUCT_TYPES, data.productType, shopProductTypeLabel)}
               </select>
             </div>
 
             <div>
               <label class="text-sm text-slate-400">Categoria</label>
               <select id="shop-category" class="input mt-1" ${readonlyCatalogFields ? "disabled" : ""}>
-                ${shopSelectOptions(PRODUCT_CATEGORIES, data.category)}
+                ${shopSelectOptions(PRODUCT_CATEGORIES, data.category, shopProductCategoryLabel)}
               </select>
             </div>
 
@@ -257,7 +310,7 @@ function shopRenderModal(title, data, isEdit) {
               <label class="text-sm text-slate-400">Tipo do item</label>
               <select id="shop-item-type" class="input mt-1" ${readonlyCatalogFields ? "disabled" : ""}>
                 <option value="">-- Selecione --</option>
-                ${shopSelectOptions(ITEM_TYPES, data.itemType)}
+                ${shopSelectOptions(ITEM_TYPES, data.itemType, shopItemTypeLabel)}
               </select>
               ${data._materialCode ? `<p class="text-xs text-amber-300 mt-1">Material específico detectado: ${shopEscapeHtml(data._materialCode)}.</p>` : ""}
             </div>
@@ -270,20 +323,20 @@ function shopRenderModal(title, data, isEdit) {
             </div>
 
             <div id="shop-eqt-name-group" class="${data.productType === 'ITEM' ? 'hidden' : ''}">
-              <label class="text-sm text-slate-400">Equipment Template</label>
+              <label class="text-sm text-slate-400">Modelo de equipamento</label>
               <select id="shop-eqt-name" class="input mt-1" ${readonlyCatalogFields ? "disabled" : ""}>
                 <option value="">-- Selecione --</option>
-                ${shopState.equipmentTemplates.map(t => `<option value="${shopEscapeAttr(t.name)}" ${t.name === data.equipmentTemplateName ? 'selected' : ''}>${shopEscapeHtml(t.name)} (${shopEscapeHtml(t.slot)} | ${shopEscapeHtml(t.rarity)})</option>`).join('')}
+                ${shopState.equipmentTemplates.map(t => `<option value="${shopEscapeAttr(t.name)}" ${t.name === data.equipmentTemplateName ? 'selected' : ''}>${shopEscapeHtml(t.name)} (${shopEscapeHtml(shopSlotLabel(t.slot))} | ${shopEscapeHtml(shopRarityLabel(t.rarity))})</option>`).join('')}
               </select>
             </div>
 
             <div>
-              <label class="text-sm text-slate-400">Preço de Compra (bits)</label>
+              <label class="text-sm text-slate-400">Preço de compra (Bits)</label>
               <input id="shop-price" type="number" min="0" class="input mt-1" value="${Number(data.price || 0)}" required autofocus />
             </div>
 
             <div>
-              <label class="text-sm text-slate-400">Preço de Venda (bits)</label>
+              <label class="text-sm text-slate-400">Preço de venda (Bits)</label>
               <input id="shop-sell-price" type="number" min="0" class="input mt-1" value="${Number(data.sellPrice || 0)}" required />
             </div>
           </div>
@@ -350,17 +403,17 @@ function shopRenderCatalogBrowser() {
               placeholder="Nome, código ou descrição" oninput="shopUpdateCatalogFilters()" />
           </div>
           <div>
-            <label class="text-xs text-slate-500">${isItems ? 'Categoria' : 'Slot'}</label>
+              <label class="text-xs text-slate-500">${isItems ? 'Categoria' : 'Posição'}</label>
             <select id="shop-catalog-category" class="input mt-1" onchange="shopUpdateCatalogFilters()">
               <option value="">Todos</option>
-              ${categories.map(v => `<option value="${shopEscapeAttr(v)}" ${shopState.catalogCategory === v ? 'selected' : ''}>${shopEscapeHtml(v)}</option>`).join('')}
+              ${categories.map(v => `<option value="${shopEscapeAttr(v)}" ${shopState.catalogCategory === v ? 'selected' : ''}>${shopEscapeHtml(isItems ? shopProductCategoryLabel(v) : shopSlotLabel(v))}</option>`).join('')}
             </select>
           </div>
           <div>
             <label class="text-xs text-slate-500">Raridade</label>
             <select id="shop-catalog-rarity" class="input mt-1" onchange="shopUpdateCatalogFilters()">
               <option value="">Todas</option>
-              ${rarities.map(v => `<option value="${shopEscapeAttr(v)}" ${shopState.catalogRarity === v ? 'selected' : ''}>${shopEscapeHtml(v)}</option>`).join('')}
+              ${rarities.map(v => `<option value="${shopEscapeAttr(v)}" ${shopState.catalogRarity === v ? 'selected' : ''}>${shopEscapeHtml(shopRarityLabel(v))}</option>`).join('')}
             </select>
           </div>
         </div>
@@ -513,8 +566,8 @@ function shopRenderItemCatalog(items) {
           <div class="flex-1 min-w-0">
             <div class="flex flex-wrap items-center gap-2">
               <span class="font-semibold text-slate-100">${shopEscapeHtml(item.name)}</span>
-              <span class="badge badge-${shopBadgeSuffix(item.rarity || 'common')}">${shopEscapeHtml(item.rarity || 'COMMON')}</span>
-              <span class="badge">${shopEscapeHtml(item.category || '-')}</span>
+              <span class="badge badge-${shopBadgeSuffix(item.rarity || 'common')}">${shopEscapeHtml(shopRarityLabel(item.rarity || 'COMMON'))}</span>
+              <span class="badge">${shopEscapeHtml(shopProductCategoryLabel(item.category || '-'))}</span>
               ${alreadyInShop ? '<span class="badge badge-success text-xs">Na loja</span>' : ''}
             </div>
             <div class="text-xs text-slate-500 mt-1 line-clamp-2">${shopEscapeHtml(item.description || 'Sem descrição')}</div>
@@ -522,7 +575,7 @@ function shopRenderItemCatalog(items) {
               <span>Código: <span class="font-mono text-cyan-400">${shopEscapeHtml(item.code)}</span></span>
               <span>Compra sugerida: ${shopFormatBits(buy)}</span>
               <span>Venda sugerida: ${shopFormatBits(sell)}</span>
-              ${item.stackable ? `<span>Stack: ${shopEscapeHtml(item.maxStack ?? '-')}</span>` : '<span>Não stacka</span>'}
+              ${item.stackable ? `<span>Acúmulo máximo: ${shopEscapeHtml(item.maxStack ?? '-')}</span>` : '<span>Não acumula</span>'}
             </div>
           </div>
           <div class="flex gap-2 md:flex-col md:items-stretch">
@@ -553,14 +606,14 @@ function shopRenderEquipmentCatalog(templates) {
           <div class="flex-1 min-w-0">
             <div class="flex flex-wrap items-center gap-2">
               <span class="font-semibold text-slate-100">${shopEscapeHtml(t.name)}</span>
-              <span class="badge badge-${shopBadgeSuffix(t.rarity)}">${shopEscapeHtml(t.rarity)}</span>
-              <span class="badge">${shopEscapeHtml(t.slot)}</span>
+              <span class="badge badge-${shopBadgeSuffix(t.rarity)}">${shopEscapeHtml(shopRarityLabel(t.rarity))}</span>
+              <span class="badge">${shopEscapeHtml(shopSlotLabel(t.slot))}</span>
               ${alreadyInShop ? '<span class="badge badge-success text-xs">Na loja</span>' : ''}
             </div>
             <div class="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-slate-400">
-              ${shopStatBadge('HP', t.bonusHp)}
-              ${shopStatBadge('ATK', t.bonusAttack)}
-              ${shopStatBadge('DEF', t.bonusDefense)}
+              ${shopStatBadge('Vida', t.bonusHp)}
+              ${shopStatBadge('Ataque', t.bonusAttack)}
+              ${shopStatBadge('Defesa', t.bonusDefense)}
               <span>Compra sugerida: ${shopFormatBits(suggestedPrice)}</span>
               <span>Venda sugerida: ${shopFormatBits(suggestedSellPrice)}</span>
             </div>
@@ -611,12 +664,12 @@ function shopShowItemDetails(itemCode) {
       </div>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4 text-xs">
         ${shopDetailCell('Código', item.code)}
-        ${shopDetailCell('Categoria', item.category || '-')}
-        ${shopDetailCell('Raridade', item.rarity || '-')}
-        ${shopDetailCell('Stack', item.stackable ? `Sim (${item.maxStack ?? '-'})` : 'Não')}
+        ${shopDetailCell('Categoria', shopProductCategoryLabel(item.category || '-'))}
+        ${shopDetailCell('Raridade', shopRarityLabel(item.rarity || '-'))}
+        ${shopDetailCell('Acúmulo máximo', item.stackable ? (item.maxStack ?? '-') : 'Não acumula')}
         ${shopDetailCell('Usável', item.usable ? 'Sim' : 'Não')}
         ${shopDetailCell('Vendável', item.sellable ? 'Sim' : 'Não')}
-        ${shopDetailCell('Trocável', item.tradable ? 'Sim' : 'Não')}
+        ${shopDetailCell('Negociável', item.tradable ? 'Sim' : 'Não')}
         ${shopDetailCell('Ícone', item.icon || '-')}
       </div>
     </div>
@@ -634,16 +687,16 @@ function shopShowTemplateDetails(templateName) {
       <div class="flex items-start justify-between gap-3">
         <div>
           <h4 class="font-bold text-cyan-200">${shopEscapeHtml(t.name)}</h4>
-          <p class="text-sm text-slate-400 mt-1">Template de equipamento ${shopEscapeHtml(t.slot)} ${shopEscapeHtml(t.rarity)}.</p>
+          <p class="text-sm text-slate-400 mt-1">Modelo de equipamento: ${shopEscapeHtml(shopSlotLabel(t.slot))} — ${shopEscapeHtml(shopRarityLabel(t.rarity))}.</p>
         </div>
         <button class="text-slate-400 hover:text-white" onclick="shopRenderCatalogBrowser()">&times;</button>
       </div>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4 text-xs">
-        ${shopDetailCell('Slot', t.slot)}
-        ${shopDetailCell('Raridade', t.rarity)}
-        ${shopDetailCell('HP', shopSignedStat(t.bonusHp))}
-        ${shopDetailCell('ATK', shopSignedStat(t.bonusAttack))}
-        ${shopDetailCell('DEF', shopSignedStat(t.bonusDefense))}
+        ${shopDetailCell('Posição', shopSlotLabel(t.slot))}
+        ${shopDetailCell('Raridade', shopRarityLabel(t.rarity))}
+        ${shopDetailCell('Vida', shopSignedStat(t.bonusHp))}
+        ${shopDetailCell('Ataque', shopSignedStat(t.bonusAttack))}
+        ${shopDetailCell('Defesa', shopSignedStat(t.bonusDefense))}
         ${shopDetailCell('Status', t.active ? 'Ativo' : 'Inativo')}
         ${shopDetailCell('Atualizado', shopFormatDate(t.updatedAt))}
         ${shopDetailCell('Por', t.updatedBy || '-')}
@@ -693,7 +746,7 @@ function shopAddFromItem(itemCode) {
       type: 'ITEM',
       title: item.name,
       subtitle: item.code,
-      badges: [item.category, item.rarity, item.stackable ? `Stack ${item.maxStack ?? '-'}` : 'Não stacka'].filter(Boolean)
+      badges: [shopProductCategoryLabel(item.category), shopRarityLabel(item.rarity), item.stackable ? `Acúmulo máximo: ${item.maxStack ?? '-'}` : 'Não acumula'].filter(Boolean)
     }
   }, false);
 }
@@ -718,8 +771,8 @@ function shopAddFromTemplate(templateName) {
     _catalogSource: {
       type: 'EQUIPMENT',
       title: template.name,
-      subtitle: `${template.slot} | ${template.rarity}`,
-      badges: [shopSignedStat(template.bonusHp, 'HP'), shopSignedStat(template.bonusAttack, 'ATK'), shopSignedStat(template.bonusDefense, 'DEF')].filter(Boolean)
+      subtitle: `${shopSlotLabel(template.slot)} | ${shopRarityLabel(template.rarity)}`,
+      badges: [shopSignedStat(template.bonusHp, 'Vida'), shopSignedStat(template.bonusAttack, 'Ataque'), shopSignedStat(template.bonusDefense, 'Defesa')].filter(Boolean)
     }
   }, false);
 }
@@ -783,8 +836,39 @@ function shopCloseModal() {
   document.getElementById("shop-modal").innerHTML = "";
 }
 
-function shopSelectOptions(options, selected) {
-  return options.map(o => `<option value="${shopEscapeAttr(o)}" ${o === selected ? "selected" : ""}>${shopEscapeHtml(o)}</option>`).join("");
+function shopSelectOptions(options, selected, labeler = shopOptionLabel) {
+  return options.map(o => `<option value="${shopEscapeAttr(o)}" ${o === selected ? "selected" : ""}>${shopEscapeHtml(labeler(o))}</option>`).join("");
+}
+
+function shopOptionLabel(value) {
+  return String(value || "-");
+}
+
+function shopProductTypeLabel(value) {
+  return SHOP_PRODUCT_TYPE_LABELS[value] || shopOptionLabel(value);
+}
+
+function shopProductCategoryLabel(value) {
+  return SHOP_PRODUCT_CATEGORY_LABELS[value] || shopOptionLabel(value);
+}
+
+function shopItemTypeLabel(value) {
+  return SHOP_ITEM_TYPE_LABELS[value] || shopOptionLabel(value);
+}
+
+function shopRarityLabel(value) {
+  return SHOP_RARITY_LABELS[value] || shopOptionLabel(value);
+}
+
+function shopSlotLabel(value) {
+  return SHOP_SLOT_LABELS[value] || shopOptionLabel(value);
+}
+
+function shopProductReferenceLabel(product) {
+  if (product.productType === "EQUIPMENT") {
+    return product.equipmentTemplateName || "-";
+  }
+  return shopItemTypeLabel(product.itemDefinitionCode || product.itemType);
 }
 
 function shopFormatDate(dateStr) {
@@ -862,11 +946,11 @@ function shopSuggestedEquipmentPrice(template) {
 
 function shopBuildEquipmentDescription(template) {
   const stats = [
-    shopSignedStat(template.bonusHp, 'HP'),
-    shopSignedStat(template.bonusAttack, 'ATK'),
-    shopSignedStat(template.bonusDefense, 'DEF')
+    shopSignedStat(template.bonusHp, 'Vida'),
+    shopSignedStat(template.bonusAttack, 'Ataque'),
+    shopSignedStat(template.bonusDefense, 'Defesa')
   ].filter(Boolean).join(', ');
-  return `${template.rarity} ${template.slot}${stats ? ` (${stats})` : ''}`;
+  return `${shopRarityLabel(template.rarity)} ${shopSlotLabel(template.slot)}${stats ? ` (${stats})` : ''}`;
 }
 
 function shopRenderSelectedCatalogSummary(source) {
@@ -874,7 +958,7 @@ function shopRenderSelectedCatalogSummary(source) {
     <div class="catalog-card border-cyan-900 bg-cyan-950/20 mb-5">
       <div class="flex items-start justify-between gap-3">
         <div>
-          <div class="text-xs text-cyan-300 uppercase tracking-wide">Origem: ${shopEscapeHtml(source.type)}</div>
+          <div class="text-xs text-cyan-300 uppercase tracking-wide">Origem: ${shopEscapeHtml(source.type === 'EQUIPMENT' ? 'Equipamento' : 'Item')}</div>
           <div class="font-bold text-slate-100 mt-1">${shopEscapeHtml(source.title)}</div>
           <div class="text-xs text-slate-500 mt-1">${shopEscapeHtml(source.subtitle || '')}</div>
         </div>
