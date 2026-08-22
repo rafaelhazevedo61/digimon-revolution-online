@@ -99,6 +99,10 @@
       "value": ""
     },
     {
+      "key": "requestId",
+      "value": "world-boss-test-request-001"
+    },
+    {
       "key": "listingId",
       "value": ""
     },
@@ -3745,10 +3749,15 @@
                 "key": "Authorization",
                 "value": "Bearer {{playerToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{requestId}}",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/world-boss/attack",
-            "description": "Gerado de WorldBossController.attack. Revise IDs e valores antes de enviar."
+            "description": "Ataque válido concede um Baú por tentativa. Repetir o mesmo requestId deve retornar o snapshot sem atacar ou conceder novos Baús."
           },
           "response": []
         },

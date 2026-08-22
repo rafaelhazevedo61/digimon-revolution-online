@@ -9,6 +9,7 @@ BASE_URL="${BASE_URL:-http://localhost:8080}"
 TOKEN="${TOKEN:-COLE_SEU_TOKEN_DE_JOGADOR_AQUI}"
 ADMIN_TOKEN="${ADMIN_TOKEN:-COLE_SEU_TOKEN_DE_ADMIN_AQUI}"
 ID="${ID:-00000000-0000-0000-0000-000000000000}"
+REQUEST_ID="${REQUEST_ID:-world-boss-test-request-001}"
 USERNAME="${USERNAME:-nome-do-jogador}"
 CODE="${CODE:-CODIGO}"
 CLAN_ID="${CLAN_ID:-00000000-0000-0000-0000-000000000000}"
@@ -582,7 +583,8 @@ USABLE="${USABLE:-VALOR}"
 # ===== WORLD-BOSS =====
 
 # WorldBossController.attack (POST /world-boss/attack)
-# curl --fail-with-body -i -X POST "${BASE_URL}/world-boss/attack" -H "Authorization: Bearer ${TOKEN}"
+# Use a new REQUEST_ID for each attack; repeat the same value only to validate idempotency.
+# curl --fail-with-body -i -X POST "${BASE_URL}/world-boss/attack" -H "Authorization: Bearer ${TOKEN}" -H "Idempotency-Key: ${REQUEST_ID}"
 
 # WorldBossController.getMyWorldBoss (GET /world-boss/me)
 # curl --fail-with-body -i -X GET "${BASE_URL}/world-boss/me" -H "Authorization: Bearer ${TOKEN}"

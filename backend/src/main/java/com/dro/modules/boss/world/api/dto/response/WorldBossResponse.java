@@ -23,6 +23,7 @@ public record WorldBossResponse(
         int myDailyAttacksRemaining,
         long myTotalDamage,
         List<WorldBossRankingEntryResponse> ranking,
-        List<WorldBossAttackResponse> recentAttacks
+        List<WorldBossAttackResponse> recentAttacks,
+        List<WorldBossRewardResponse> myRewards
 ) {
 }

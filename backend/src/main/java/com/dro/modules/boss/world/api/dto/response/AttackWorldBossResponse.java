@@ -1,5 +1,6 @@
 package com.dro.modules.boss.world.api.dto.response;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -18,6 +19,7 @@ public record AttackWorldBossResponse(
         int bitsGained,
         int defeatedRewardXp,
         int defeatedRewardBits,
-        int dailyAttacksRemaining
+        int dailyAttacksRemaining,
+        List<WorldBossRewardResponse> rewards
 ) {
 }

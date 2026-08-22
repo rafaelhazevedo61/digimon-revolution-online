@@ -31,6 +31,7 @@ public class WorldBossResponseMapper {
     private final BossDefinitionRepository bossDefinitionRepository;
     private final WorldBossAttackRepository worldBossAttackRepository;
     private final PlayerRepository playerRepository;
+    private final WorldBossRewardService worldBossRewardService;
 
     public WorldBossResponse toResponse(WorldBossInstance instance, UUID viewerPlayerId) {
         BossDefinitionEntity boss = bossDefinitionRepository.findById(instance.getBossId())
@@ -69,7 +70,8 @@ public class WorldBossResponseMapper {
                 Math.max(0, WorldBossRules.DAILY_ATTACK_LIMIT - usedToday),
                 myTotalDamage,
                 buildRanking(instance.getId()),
-                recentAttacks
+                recentAttacks,
+                worldBossRewardService.findPlayerRewards(instance.getId(), viewerPlayerId)
         );
     }
 

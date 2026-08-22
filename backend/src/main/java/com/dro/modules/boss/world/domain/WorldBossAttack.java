@@ -42,6 +42,28 @@ public class WorldBossAttack {
     @Column(name = "xp_gained", nullable = false)
     private int xpGained;
 
+    /** Chave fornecida pelo cliente para tornar o ataque idempotente. */
+    @Column(name = "request_id", length = 120)
+    private String requestId;
+
+    @Column(name = "remaining_hp_after", nullable = false)
+    private int remainingHpAfter;
+
+    @Column(name = "win_chance", nullable = false)
+    private int winChance;
+
+    @Column(nullable = false)
+    private boolean defeated;
+
+    @Column(name = "defeated_reward_xp", nullable = false)
+    private int defeatedRewardXp;
+
+    @Column(name = "defeated_reward_bits", nullable = false)
+    private int defeatedRewardBits;
+
+    @Column(name = "daily_attacks_remaining", nullable = false)
+    private int dailyAttacksRemaining;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 }

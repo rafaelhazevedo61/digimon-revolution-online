@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -15,6 +16,12 @@ import java.util.UUID;
 public interface WorldBossAttackRepository extends JpaRepository<WorldBossAttack, UUID> {
 
     long countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(UUID worldBossId, UUID playerId, Instant since);
+
+    Optional<WorldBossAttack> findByWorldBossIdAndPlayerIdAndRequestId(
+            UUID worldBossId,
+            UUID playerId,
+            String requestId
+    );
 
     List<WorldBossAttack> findByWorldBossIdOrderByCreatedAtDesc(UUID worldBossId);
 

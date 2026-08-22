@@ -71,6 +71,23 @@ function renderWorldBossContent(boss) {
     `;
   }
 
+  const rewardLabels = {
+    ATTEMPT: "Baú por tentativa",
+    TOP_DAMAGE: "Baú de maior dano acumulado",
+    FINAL_BLOW: "Baú do golpe final"
+  };
+  const myRewardsHtml = boss.myRewards && boss.myRewards.length > 0 ? `
+    <div class="card mt-4 border-amber-900">
+      <p class="font-bold mb-2 text-sm">Suas recompensas no ciclo atual</p>
+      ${boss.myRewards.map(reward => `
+        <div class="flex justify-between items-center py-1.5 border-b border-slate-800 last:border-0">
+          <span class="text-xs text-slate-400">${escapeHtml(rewardLabels[reward.rewardType] || "Baú")}</span>
+          <span class="text-sm text-amber-300 font-bold">${escapeHtml(reward.chestName)}</span>
+        </div>
+      `).join("")}
+    </div>
+  ` : "";
+
   let attacksHtml = "";
   if (boss.recentAttacks && boss.recentAttacks.length > 0) {
     attacksHtml = `
@@ -113,6 +130,7 @@ function renderWorldBossContent(boss) {
       ${defeated ? `<p class="text-xs text-green-400 text-center">Boss Mundial derrotado hoje! Volte amanhã.</p>` : ""}
     </div>
 
+    ${myRewardsHtml}
     ${rankingHtml}
     ${attacksHtml}
   `;
@@ -126,7 +144,10 @@ async function attackWorldBoss() {
   }
 
   try {
-    const result = await apiPost("/world-boss/attack");
+    const requestId = createWorldBossRequestId();
+    const result = await apiPost("/world-boss/attack", null, {
+      "Idempotency-Key": requestId
+    });
     showWorldBossAttackModal(result);
     await loadWorldBoss();
   } catch (err) {
@@ -138,13 +159,29 @@ async function attackWorldBoss() {
   }
 }
 
+function createWorldBossRequestId() {
+  if (window.crypto && typeof window.crypto.randomUUID === "function") {
+    return window.crypto.randomUUID();
+  }
+  return `world-boss-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 function showWorldBossAttackModal(result) {
   const existing = document.getElementById("world-boss-attack-modal");
   if (existing) existing.remove();
 
-  const rewardRow = result.defeated
-    ? `<p class="text-green-400 text-sm font-bold mb-1">Boss derrotado! Você ganhou um bônus final de ${result.defeatedRewardXp.toLocaleString()} XP e ${result.defeatedRewardBits.toLocaleString()} Bits.</p>`
-    : "";
+  const rewardLabels = {
+    ATTEMPT: "Baú por tentativa",
+    TOP_DAMAGE: "Baú de maior dano acumulado",
+    FINAL_BLOW: "Baú do golpe final"
+  };
+  const rewardRow = `
+    ${result.defeated ? `<p class="text-green-400 text-sm font-bold mb-2">Boss derrotado! Você ganhou um bônus final de ${result.defeatedRewardXp.toLocaleString()} XP e ${result.defeatedRewardBits.toLocaleString()} Bits.</p>` : ""}
+    ${result.rewards && result.rewards.length > 0 ? `<div class="border-t border-slate-700 pt-2 mt-2">
+      <p class="text-amber-300 text-sm font-bold mb-1">Baús recebidos</p>
+      ${result.rewards.map(reward => `<p class="text-xs text-slate-300">${escapeHtml(rewardLabels[reward.rewardType] || "Baú")}: <span class="text-amber-200 font-bold">${escapeHtml(reward.chestName)}</span></p>`).join("")}
+    </div>` : ""}
+  `;
 
   const overlay = document.createElement("div");
   overlay.id = "world-boss-attack-modal";

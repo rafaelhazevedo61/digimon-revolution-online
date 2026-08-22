@@ -28,8 +28,9 @@ public class WorldBossController {
 
     @PostMapping("/attack")
     public ResponseEntity<AttackWorldBossResponse> attack(
-            @RequestHeader("Authorization") String authorization
+            @RequestHeader("Authorization") String authorization,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey
     ) {
-        return ResponseEntity.ok(attackWorldBossUseCase.execute(authorization));
+        return ResponseEntity.ok(attackWorldBossUseCase.execute(authorization, idempotencyKey));
     }
 }
