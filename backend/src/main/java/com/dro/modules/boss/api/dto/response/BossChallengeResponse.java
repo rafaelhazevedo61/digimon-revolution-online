@@ -14,5 +14,7 @@ public record BossChallengeResponse(
         double bossPower,
         int xpGained,
         int bitsGained,
+        String chestCode,
+        String chestName,
         List<DropRewardResponse> drops
 ) {}

@@ -8,6 +8,7 @@ import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.shared.exception.UnprocessableException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -21,6 +22,7 @@ public class AddItemUseCase {
     private final InventoryRepository repository;
     private final ItemDefinitionRepository itemDefinitionRepository;
 
+    @Transactional
     public void execute(UUID digimonId, ItemType type, int quantity) {
 
         ItemDefinition itemDefinition = itemDefinitionRepository
@@ -49,6 +51,7 @@ public class AddItemUseCase {
         }
     }
 
+    @Transactional
     public void addMaterial(UUID digimonId, ItemDefinition itemDefinition, int quantity) {
 
         var existing = repository.findByDigimonIdAndItemDefinitionIdForUpdate(

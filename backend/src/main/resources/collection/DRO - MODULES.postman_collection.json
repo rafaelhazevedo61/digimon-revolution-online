@@ -51,7 +51,15 @@
       "value": ""
     },
     {
+      "key": "profileKey",
+      "value": ""
+    },
+    {
       "key": "category",
+      "value": ""
+    },
+    {
+      "key": "chestCode",
       "value": ""
     },
     {
@@ -161,10 +169,6 @@
     {
       "key": "username",
       "value": ""
-    },
-    {
-      "key": "chestCode",
-      "value": ""
     }
   ],
   "item": [
@@ -218,10 +222,72 @@
               }
             ],
             "url": "{{baseUrl}}/admin/bosses",
-            "description": "Gerado de AdminBossController.create. Revise IDs e valores antes de enviar.",
+            "description": "Cria um Boss normal/periódico vinculado a um Baú de recompensa ativo. Substitua chestCode por um valor existente.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"code\": \"BOSS_NEW\",\n  \"name\": \"Novo Boss\",\n  \"bossType\": \"DAILY\",\n  \"requiredStage\": \"ROOKIE\",\n  \"requiredLevel\": 10,\n  \"requiredRebirths\": 0,\n  \"hp\": 1000,\n  \"atk\": 100,\n  \"def\": 100,\n  \"energyCost\": 5,\n  \"cooldownMinutes\": 1440,\n  \"baseXpReward\": 500,\n  \"baseBitsReward\": 200,\n  \"defeatXpPercent\": 10,\n  \"imageUrl\": null,\n  \"chestCode\": \"CHEST_BOSS_DAILY_NEW\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "chestOptions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/bosses/chest-options",
+            "description": "Gerado de AdminBossController.chestOptions. Revise IDs e valores antes de enviar."
+          },
+          "response": []
+        },
+        {
+          "name": "listRarityProfiles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/bosses/rarity-profiles",
+            "description": "Lista os perfis persistidos de raridade de equipamentos dos Bosses."
+          },
+          "response": []
+        },
+        {
+          "name": "updateRarityProfile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/bosses/rarity-profiles/{{profileKey}}",
+            "description": "Atualiza um perfil. A soma de commonPercent, rarePercent, epicPercent e legendaryPercent deve ser exatamente 100.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"commonPercent\": 65,\n  \"rarePercent\": 22,\n  \"epicPercent\": 10,\n  \"legendaryPercent\": 3\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -354,7 +420,53 @@
               }
             ],
             "url": "{{baseUrl}}/admin/bosses/{{id}}",
-            "description": "Gerado de AdminBossController.update. Revise IDs e valores antes de enviar.",
+            "description": "Atualiza dados de um Boss. chestCode é opcional; quando informado deve apontar para um Baú ativo com Loot Table ativa.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Boss Atualizado\",\n  \"chestCode\": \"CHEST_BOSS_DAILY_NEW\",\n  \"equipmentChance\": 42\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "list",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/chests?activeOnly={{activeOnly}}",
+            "description": "Gerado de AdminChestController.list. Revise IDs e valores antes de enviar."
+          },
+          "response": []
+        },
+        {
+          "name": "get",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/chests/{{code}}",
+            "description": "Gerado de AdminChestController.get. Revise IDs e valores antes de enviar.",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -364,6 +476,52 @@
                 }
               }
             }
+          },
+          "response": []
+        },
+        {
+          "name": "update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/chests/{{code}}",
+            "description": "Gerado de AdminChestController.update. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "toggleActive",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/chests/{{code}}/toggle-active",
+            "description": "Gerado de AdminChestController.toggleActive. Revise IDs e valores antes de enviar."
           },
           "response": []
         },
@@ -612,6 +770,144 @@
           "response": []
         },
         {
+          "name": "list",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/loot-tables?activeOnly={{activeOnly}}&category={{category}}",
+            "description": "Gerado de AdminLootTableController.list. Revise IDs e valores antes de enviar."
+          },
+          "response": []
+        },
+        {
+          "name": "create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/loot-tables?activeOnly={{activeOnly}}",
+            "description": "Gerado de AdminLootTableController.create. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "catalog",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/loot-tables/catalog/items?category={{category}}",
+            "description": "Gerado de AdminLootTableController.catalog. Revise IDs e valores antes de enviar."
+          },
+          "response": []
+        },
+        {
+          "name": "get",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/loot-tables/{{code}}",
+            "description": "Gerado de AdminLootTableController.get. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/loot-tables/{{code}}",
+            "description": "Gerado de AdminLootTableController.update. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "toggleActive",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/loot-tables/{{code}}/toggle-active",
+            "description": "Gerado de AdminLootTableController.toggleActive. Revise IDs e valores antes de enviar."
+          },
+          "response": []
+        },
+        {
           "name": "createAnnouncement",
           "request": {
             "method": "POST",
@@ -731,23 +1027,7 @@
               }
             ],
             "url": "{{baseUrl}}/admin/missions?activeOnly={{activeOnly}}&area={{area}}&stage={{stage}}&chestCode={{chestCode}}&lootItemType={{lootItemType}}",
-            "description": "Lista missões filtrando por Baú da Área. lootItemType é mantido apenas para compatibilidade legada."
-          },
-          "response": []
-        },
-        {
-          "name": "chestOptions",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{adminToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/admin/missions/chest-options",
-            "description": "Lista Baús da Área ativos e a Loot Table nomeada vinculada."
+            "description": "Gerado de AdminMissionController.list. Revise IDs e valores antes de enviar."
           },
           "response": []
         },
@@ -767,11 +1047,41 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/admin/missions",
-            "description": "Cria missão vinculada obrigatoriamente a um Baú da Área. A Loot Table é configurada no menu próprio.",
+            "url": "{{baseUrl}}/admin/missions?activeOnly={{activeOnly}}&area={{area}}&stage={{stage}}&chestCode={{chestCode}}&lootItemType={{lootItemType}}",
+            "description": "Gerado de AdminMissionController.create. Revise IDs e valores antes de enviar.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"id\": \"MISSION_ADMIN_TEST\",\n  \"name\": \"Missão Administrativa de Teste\",\n  \"description\": \"Missão vinculada a um Baú da Área.\",\n  \"area\": \"NATIVE_FOREST\",\n  \"requiredStage\": \"ROOKIE\",\n  \"requiredLevel\": 1,\n  \"baseXp\": 100,\n  \"baseBits\": 50,\n  \"energyCost\": 5,\n  \"durationSeconds\": 60,\n  \"chestCode\": \"CHEST_MISSION_MISSION_1\",\n  \"rewards\": [],\n  \"lootChances\": [],\n  \"lootItems\": []\n}",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "chestOptions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/missions/chest-options",
+            "description": "Gerado de AdminMissionController.chestOptions. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -828,10 +1138,10 @@
               }
             ],
             "url": "{{baseUrl}}/admin/missions/{{id}}",
-            "description": "Atualiza a missão e seu Baú da Área. Não envie rewards, lootChances ou lootItems legados.",
+            "description": "Gerado de AdminMissionController.update. Revise IDs e valores antes de enviar.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Missão Administrativa Atualizada\",\n  \"description\": \"Descrição atualizada.\",\n  \"area\": \"NATIVE_FOREST\",\n  \"requiredStage\": \"ROOKIE\",\n  \"requiredLevel\": 1,\n  \"baseXp\": 120,\n  \"baseBits\": 60,\n  \"energyCost\": 5,\n  \"durationSeconds\": 90,\n  \"chestCode\": \"CHEST_MISSION_MISSION_1\",\n  \"rewards\": [],\n  \"lootChances\": [],\n  \"lootItems\": []\n}",
+              "raw": "{}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2742,6 +3052,36 @@
       "name": "inventory",
       "item": [
         {
+          "name": "openChest",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/inventory/chests/open",
+            "description": "Gerado de InventoryController.openChest. Revise IDs e valores antes de enviar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
           "name": "useItem",
           "request": {
             "method": "POST",
@@ -2787,7 +3127,7 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/mail/inbox?page={{page}}&size={{size}}&page={{page}}&size={{size}}",
+            "url": "{{baseUrl}}/mail/inbox?page={{page}}&size={{size}}",
             "description": "Gerado de MailController.inbox. Revise IDs e valores antes de enviar."
           },
           "response": []
@@ -2849,24 +3189,10 @@
                 "key": "Authorization",
                 "value": "Bearer {{playerToken}}",
                 "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/mail/{{messageId}}",
-            "description": "Gerado de MailController.get. Revise IDs e valores antes de enviar.",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
+            "description": "Gerado de MailController.get. Revise IDs e valores antes de enviar."
           },
           "response": []
         },
@@ -2909,24 +3235,10 @@
                 "key": "Authorization",
                 "value": "Bearer {{playerToken}}",
                 "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/mail/{{messageId}}/read",
-            "description": "Gerado de MailController.markRead. Revise IDs e valores antes de enviar.",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
+            "description": "Gerado de MailController.markRead. Revise IDs e valores antes de enviar."
           },
           "response": []
         }
@@ -3449,214 +3761,6 @@
             ],
             "url": "{{baseUrl}}/world-boss/me",
             "description": "Gerado de WorldBossController.getMyWorldBoss. Revise IDs e valores antes de enviar."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "admin-loot-tables",
-      "description": "CRUD administrativo de Loot Tables nomeadas. Use adminToken de um jogador com UserType ADMIN.",
-      "item": [
-        {
-          "name": "Listar Loot Tables",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{adminToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/admin/loot-tables",
-            "description": "Lista todas as Loot Tables. Use activeOnly=true para listar somente as ativas."
-          },
-          "response": []
-        },
-        {
-          "name": "Listar catálogo de itens",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{adminToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/admin/loot-tables/catalog/items",
-            "description": "Retorna os itens catalogados que podem ser selecionados no editor administrativo."
-          },
-          "response": []
-        },
-        {
-          "name": "Criar Loot Table",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{adminToken}}",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/admin/loot-tables",
-            "description": "Cria uma tabela com as quatro raridades oficiais e entradas apontando para o catálogo.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"LOOT_TEST_ADMIN\",\n  \"name\": \"Loot Table de Teste\",\n  \"description\": \"Configuração criada para validar o painel administrativo.\",\n  \"minItems\": 1,\n  \"maxItems\": 2,\n  \"rarityWeights\": [\n    {\n      \"rarity\": \"COMMON\",\n      \"weight\": 70\n    },\n    {\n      \"rarity\": \"RARE\",\n      \"weight\": 20\n    },\n    {\n      \"rarity\": \"EPIC\",\n      \"weight\": 8\n    },\n    {\n      \"rarity\": \"LEGENDARY\",\n      \"weight\": 2\n    }\n  ],\n  \"entries\": [\n    {\n      \"rarity\": \"COMMON\",\n      \"itemType\": \"TRAINING_STONE\",\n      \"materialCode\": null,\n      \"weight\": 50,\n      \"minQuantity\": 1,\n      \"maxQuantity\": 3,\n      \"active\": true\n    },\n    {\n      \"rarity\": \"RARE\",\n      \"itemType\": \"EVOLUTION_MATERIAL\",\n      \"materialCode\": \"FRAGMENT_AGUMON\",\n      \"weight\": 35,\n      \"minQuantity\": 1,\n      \"maxQuantity\": 5,\n      \"active\": true\n    }\n  ],\n  \"active\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Consultar Loot Table",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{adminToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/admin/loot-tables/{{code}}",
-            "description": "Consulta uma Loot Table pelo código."
-          },
-          "response": []
-        },
-        {
-          "name": "Atualizar Loot Table",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{adminToken}}",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/admin/loot-tables/{{code}}",
-            "description": "Atualiza metadados, pesos, entradas e status. O code do body deve ser igual ao da URL.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"LOOT_TEST_ADMIN\",\n  \"name\": \"Loot Table de Teste Atualizada\",\n  \"description\": \"Descrição atualizada pelo painel.\",\n  \"minItems\": 1,\n  \"maxItems\": 2,\n  \"rarityWeights\": [\n    {\n      \"rarity\": \"COMMON\",\n      \"weight\": 60\n    },\n    {\n      \"rarity\": \"RARE\",\n      \"weight\": 25\n    },\n    {\n      \"rarity\": \"EPIC\",\n      \"weight\": 10\n    },\n    {\n      \"rarity\": \"LEGENDARY\",\n      \"weight\": 5\n    }\n  ],\n  \"entries\": [\n    {\n      \"rarity\": \"COMMON\",\n      \"itemType\": \"DATA_CORE\",\n      \"materialCode\": null,\n      \"weight\": 30,\n      \"minQuantity\": 1,\n      \"maxQuantity\": 2,\n      \"active\": true\n    },\n    {\n      \"rarity\": \"RARE\",\n      \"itemType\": \"EVOLUTION_MATERIAL\",\n      \"materialCode\": \"FRAGMENT_AGUMON\",\n      \"weight\": 35,\n      \"minQuantity\": 1,\n      \"maxQuantity\": 5,\n      \"active\": true\n    }\n  ],\n  \"active\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Ativar ou desativar Loot Table",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{adminToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/admin/loot-tables/{{code}}/toggle-active",
-            "description": "Alterna o status ativo sem apagar o histórico da configuração."
-          },
-          "response": []
-        },
-        {
-          "name": "Listar Baús da Área",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{adminToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/admin/chests?activeOnly={{activeOnly}}",
-            "description": "Lista Baús da Área e suas Loot Tables vinculadas."
-          },
-          "response": []
-        },
-        {
-          "name": "Consultar Baú da Área",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{adminToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/admin/chests/{{chestCode}}",
-            "description": "Consulta um Baú da Área pelo código."
-          },
-          "response": []
-        },
-        {
-          "name": "Atualizar vínculo do Baú",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{adminToken}}",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/admin/chests/{{chestCode}}",
-            "description": "Atualiza dados públicos, negociação, status e a Loot Table ativa vinculada.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Baú Floresta Nativa\",\n  \"description\": \"Baú entregue nas missões da Floresta Nativa.\",\n  \"icon\": \"chest-native-forest\",\n  \"lootTableCode\": \"LOOT_TABLE_TEST_ADMIN\",\n  \"tradable\": true,\n  \"active\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Ativar ou desativar Baú",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{adminToken}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/admin/chests/{{chestCode}}/toggle-active",
-            "description": "Alterna o status do baú sem apagar seu vínculo ou histórico."
           },
           "response": []
         }

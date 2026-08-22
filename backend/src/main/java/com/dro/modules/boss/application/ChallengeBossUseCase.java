@@ -13,15 +13,19 @@ import com.dro.modules.equipment.domain.EquipmentRarity;
 import com.dro.modules.clan.application.ClanBonusService;
 import com.dro.modules.clan.application.ClanMissionProgressTracker;
 import com.dro.modules.clan.domain.enums.ClanMissionObjectiveType;
-import com.dro.modules.equipment.domain.EquipmentRarityRules;
+import com.dro.modules.equipment.application.EquipmentRarityProfileService;
 import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.loot.domain.ChestDefinitionEntity;
+import com.dro.modules.loot.infra.ChestDefinitionRepository;
 import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.server.application.GlobalDamageBuffService;
+import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
@@ -49,10 +53,13 @@ public class ChallengeBossUseCase {
     private final PlayerRepository playerRepository;
     private final EquipmentRepository equipmentRepository;
     private final AddItemUseCase addItemUseCase;
+    private final ChestDefinitionRepository chestDefinitionRepository;
     private final GrantEquipmentUseCase grantEquipmentUseCase;
+    private final EquipmentRarityProfileService equipmentRarityProfileService;
     private final ClanBonusService clanBonusService;
     private final ClanMissionProgressTracker clanMissionProgressTracker;
     private final GlobalDamageBuffService globalDamageBuffService;
+    private final TransactionAuditPublisher transactionAuditPublisher;
 
     @Transactional
     public BossChallengeResponse execute(String token, String bossCode, UUID digimonId) {
@@ -134,13 +141,25 @@ public class ChallengeBossUseCase {
 
         int xpGained;
         int bitsGained;
+        ChestDefinitionEntity rewardChest = null;
         List<DropRewardResponse> drops = new ArrayList<>();
 
         if (victory) {
+            rewardChest = resolveRewardChest(boss);
             xpGained = boss.getBaseXpReward();
             double bitsMultiplier = clanId != null ? clanBonusService.getMissionBitsMultiplier(clanId) : 1.0;
             bitsGained = (int) Math.floor(boss.getBaseBitsReward() * bitsMultiplier);
-            drops = rollDrops(boss, digimon.getId(), clanId);
+
+            addItemUseCase.addMaterial(digimon.getId(), rewardChest.getItemDefinition(), 1);
+            drops.add(new DropRewardResponse(
+                    "CHEST",
+                    rewardChest.getCode(),
+                    rewardChest.getName(),
+                    1,
+                    null
+            ));
+            drops.addAll(rollLegacyEquipmentDrops(boss, digimon.getId(), clanId));
+
             if (clanId != null) {
                 clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.BOSSES_DEFEATED);
             }
@@ -166,6 +185,13 @@ public class ChallengeBossUseCase {
                 .build();
 
         bossAttemptRepository.save(attempt);
+        transactionAuditPublisher.success(
+                "boss-challenge:" + attempt.getId(),
+                "BOSS_CHALLENGED",
+                "BossAttempt",
+                attempt.getId().toString(),
+                buildAuditPayload(playerId, boss, attempt, rewardChest, drops)
+        );
 
         return new BossChallengeResponse(
                 boss.getCode(),
@@ -176,6 +202,8 @@ public class ChallengeBossUseCase {
                 bossPower,
                 xpGained,
                 bitsGained,
+                rewardChest != null ? rewardChest.getCode() : null,
+                rewardChest != null ? rewardChest.getName() : null,
                 drops
         );
     }
@@ -227,56 +255,85 @@ public class ChallengeBossUseCase {
         }
     }
 
-    private List<DropRewardResponse> rollDrops(BossDefinitionEntity boss, UUID digimonId, UUID clanId) {
+    private List<DropRewardResponse> rollLegacyEquipmentDrops(
+            BossDefinitionEntity boss,
+            UUID digimonId,
+            UUID clanId
+    ) {
         List<DropRewardResponse> rewards = new ArrayList<>();
-
         if (boss.getDrops() == null) return rewards;
 
         double dropBonusPercent = clanId != null ? clanBonusService.getBossDropBonusPercent(clanId) : 0.0;
         int dropBonusPoints = (int) Math.round(dropBonusPercent * 100);
+        List<BossDropEntity> equipmentDrops = boss.getDrops().stream()
+                .filter(drop -> "EQUIPMENT".equals(drop.getDropType()))
+                .toList();
 
-        List<BossDropEntity> equipDrops = new ArrayList<>();
-        List<BossDropEntity> itemDrops = new ArrayList<>();
+        if (equipmentDrops.isEmpty()) return rewards;
 
-        for (BossDropEntity drop : boss.getDrops()) {
-            if ("EQUIPMENT".equals(drop.getDropType())) {
-                equipDrops.add(drop);
-            } else {
-                itemDrops.add(drop);
-            }
-        }
+        int poolChance = Math.min(100, equipmentDrops.get(0).getChance() + dropBonusPoints);
+        int roll = ThreadLocalRandom.current().nextInt(1, 101);
+        if (roll > poolChance) return rewards;
 
-        if (!equipDrops.isEmpty()) {
-            int poolChance = Math.min(100, equipDrops.get(0).getChance() + dropBonusPoints);
-            int roll = ThreadLocalRandom.current().nextInt(1, 101);
-            if (roll <= poolChance) {
-                BossDropEntity picked = equipDrops.get(
-                        ThreadLocalRandom.current().nextInt(equipDrops.size()));
-                String profile = "BOSS_" + boss.getBossType().name();
-                EquipmentRarity rarity = EquipmentRarityRules.rollRarity(profile, dropBonusPercent);
-                grantEquipmentUseCase.execute(digimonId, picked.getTemplateName(), rarity);
-                rewards.add(new DropRewardResponse("EQUIPMENT", picked.getTemplateName(), picked.getTemplateName(), 1, rarity.name()));
-            }
-        }
-
-        for (BossDropEntity drop : itemDrops) {
-            int roll = ThreadLocalRandom.current().nextInt(1, 101);
-            if (roll > Math.min(100, drop.getChance() + dropBonusPoints)) continue;
-
-            int quantity = drop.getMinQuantity();
-            if (drop.getMaxQuantity() > drop.getMinQuantity()) {
-                quantity = ThreadLocalRandom.current().nextInt(drop.getMinQuantity(), drop.getMaxQuantity() + 1);
-            }
-
-            try {
-                ItemType itemType = ItemType.valueOf(drop.getItemCode());
-                addItemUseCase.execute(digimonId, itemType, quantity);
-                rewards.add(new DropRewardResponse("ITEM", drop.getItemCode(), drop.getItemCode(), quantity, null));
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
-
+        BossDropEntity picked = equipmentDrops.get(
+                ThreadLocalRandom.current().nextInt(equipmentDrops.size()));
+        String profile = "BOSS_" + boss.getBossType().name();
+        EquipmentRarity rarity = equipmentRarityProfileService.roll(profile, dropBonusPercent);
+        grantEquipmentUseCase.execute(digimonId, picked.getTemplateName(), rarity);
+        rewards.add(new DropRewardResponse(
+                "EQUIPMENT",
+                picked.getTemplateName(),
+                picked.getTemplateName(),
+                1,
+                rarity.name()
+        ));
         return rewards;
+    }
+
+    private ChestDefinitionEntity resolveRewardChest(BossDefinitionEntity boss) {
+        ChestDefinitionEntity configuredChest = boss.getChestDefinition();
+        if (configuredChest == null) {
+            throw new ConflictException("Boss não possui Baú de recompensa configurado: " + boss.getCode());
+        }
+
+        ChestDefinitionEntity chest = chestDefinitionRepository
+                .findWithCatalogByCode(configuredChest.getCode())
+                .orElseThrow(() -> new ConflictException(
+                        "Baú de recompensa do Boss não encontrado: " + configuredChest.getCode()));
+        if (!chest.isActive()) {
+            throw new ConflictException("Baú de recompensa do Boss está inativo: " + chest.getCode());
+        }
+        if (chest.getLootTable() == null || !chest.getLootTable().isActive()) {
+            throw new ConflictException("Loot Table do Baú de recompensa do Boss está inativa: " + chest.getCode());
+        }
+        return chest;
+    }
+
+    private Map<String, Object> buildAuditPayload(
+            UUID playerId,
+            BossDefinitionEntity boss,
+            BossAttemptEntity attempt,
+            ChestDefinitionEntity rewardChest,
+            List<DropRewardResponse> drops
+    ) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("module", "boss");
+        payload.put("operation", "challenge");
+        payload.put("playerId", playerId.toString());
+        payload.put("bossCode", boss.getCode());
+        payload.put("bossType", boss.getBossType().name());
+        payload.put("status", attempt.getStatus().name());
+        payload.put("damageDealt", attempt.getDamageDealt());
+        payload.put("xpGained", attempt.getXpGained());
+        payload.put("bitsGained", attempt.getBitsGained());
+        payload.put("chestCode", rewardChest != null ? rewardChest.getCode() : null);
+        payload.put("drops", drops.stream().map(drop -> Map.of(
+                "type", drop.type(),
+                "code", drop.code(),
+                "quantity", drop.quantity(),
+                "rarity", drop.rarity() == null ? "" : drop.rarity()
+        )).toList());
+        return payload;
     }
 
     private int applyBonus(int base, double percent) {

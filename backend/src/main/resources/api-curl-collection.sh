@@ -26,7 +26,8 @@ AREA="${AREA:-VALOR}"
 ATTEMPTS="${ATTEMPTS:-VALOR}"
 ATTRIBUTE="${ATTRIBUTE:-VALOR}"
 BOSS_CODE="${BOSS_CODE:-VALOR}"
-BOSS_ID="${BOSS_ID:-00000000-0000-0000-0000-000000000000}"
+BOSS_ID="${BOSS_ID:-1}"
+PROFILE_KEY="${PROFILE_KEY:-BOSS_NORMAL}"
 CATEGORY="${CATEGORY:-VALOR}"
 CHEST_CODE="${CHEST_CODE:-VALOR}"
 DROP_ID="${DROP_ID:-00000000-0000-0000-0000-000000000000}"
@@ -53,11 +54,20 @@ USABLE="${USABLE:-VALOR}"
 
 # ===== ADMIN =====
 
+# AdminBossController.chestOptions (GET /admin/bosses/chest-options)
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/bosses/chest-options" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+
+# AdminBossRarityProfileController.list (GET /admin/bosses/rarity-profiles)
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/bosses/rarity-profiles" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+
+# AdminBossRarityProfileController.update (PUT /admin/bosses/rarity-profiles/{profileKey})
+# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/bosses/rarity-profiles/${PROFILE_KEY}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"commonPercent":65,"rarePercent":22,"epicPercent":10,"legendaryPercent":3}'
+
 # AdminBossController.listAll (GET /admin/bosses)
-# curl --fail-with-body -i -X GET "${BASE_URL}/admin/bosses" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/bosses" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
 # AdminBossController.create (POST /admin/bosses)
-# curl --fail-with-body -i -X POST "${BASE_URL}/admin/bosses" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
+# curl --fail-with-body -i -X POST "${BASE_URL}/admin/bosses" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"code":"BOSS_NEW","name":"Novo Boss","bossType":"DAILY","requiredStage":"ROOKIE","requiredLevel":10,"requiredRebirths":0,"hp":1000,"atk":100,"def":100,"energyCost":5,"cooldownMinutes":1440,"baseXpReward":500,"baseBitsReward":200,"defeatXpPercent":10,"imageUrl":null,"chestCode":"CHEST_BOSS_DAILY_NEW"}'
 
 # AdminBossController.deleteDrop (DELETE /admin/bosses/drops/{dropId})
 # curl --fail-with-body -i -X DELETE "${BASE_URL}/admin/bosses/drops/${DROP_ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
@@ -72,7 +82,19 @@ USABLE="${USABLE:-VALOR}"
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/bosses/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
 
 # AdminBossController.update (PUT /admin/bosses/{id})
-# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/bosses/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
+# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/bosses/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"name":"Boss Atualizado","chestCode":"CHEST_BOSS_DAILY_NEW","equipmentChance":42}'
+
+# AdminChestController.list (GET /admin/chests)
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/chests?activeOnly=${ACTIVE_ONLY}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+
+# AdminChestController.get (GET /admin/chests/{code})
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/chests/${CODE}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
+
+# AdminChestController.update (PUT /admin/chests/{code})
+# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/chests/${CODE}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
+
+# AdminChestController.toggleActive (PATCH /admin/chests/{code}/toggle-active)
+# curl --fail-with-body -i -X PATCH "${BASE_URL}/admin/chests/${CODE}/toggle-active" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
 # AdminDigimonController.addXp (POST /admin/digimon/add-xp)
 # curl --fail-with-body -i -X POST "${BASE_URL}/admin/digimon/add-xp?digimonId=${DIGIMON_ID}&amount=${AMOUNT}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
@@ -104,6 +126,24 @@ USABLE="${USABLE:-VALOR}"
 # AdminInventoryController.listItemDefinitions (GET /admin/inventory/item-definitions)
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/inventory/item-definitions" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
+# AdminLootTableController.list (GET /admin/loot-tables)
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/loot-tables?activeOnly=${ACTIVE_ONLY}&category=${CATEGORY}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+
+# AdminLootTableController.create (POST /admin/loot-tables)
+# curl --fail-with-body -i -X POST "${BASE_URL}/admin/loot-tables?activeOnly=${ACTIVE_ONLY}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
+
+# AdminLootTableController.catalog (GET /admin/loot-tables/catalog/items)
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/loot-tables/catalog/items?category=${CATEGORY}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+
+# AdminLootTableController.get (GET /admin/loot-tables/{code})
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/loot-tables/${CODE}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
+
+# AdminLootTableController.update (PUT /admin/loot-tables/{code})
+# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/loot-tables/${CODE}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
+
+# AdminLootTableController.toggleActive (PATCH /admin/loot-tables/{code}/toggle-active)
+# curl --fail-with-body -i -X PATCH "${BASE_URL}/admin/loot-tables/${CODE}/toggle-active" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+
 # AdminMailController.createAnnouncement (POST /admin/mail/announcements)
 # curl --fail-with-body -i -X POST "${BASE_URL}/admin/mail/announcements" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"subject": "Manutenção programada", "body": "Comunicado de teste. Altere este texto antes de enviar."}'
 
@@ -121,33 +161,21 @@ USABLE="${USABLE:-VALOR}"
 
 # AdminMissionController.list (GET /admin/missions)
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/missions?activeOnly=${ACTIVE_ONLY}&area=${AREA}&stage=${STAGE}&chestCode=${CHEST_CODE}&lootItemType=${LOOT_ITEM_TYPE}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
-# AdminMissionController.chestOptions (GET /admin/missions/chest-options)
-# curl --fail-with-body -i -X GET "${BASE_URL}/admin/missions/chest-options" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
 # AdminMissionController.create (POST /admin/missions)
-# curl --fail-with-body -i -X POST "${BASE_URL}/admin/missions" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"id":"MISSION_ADMIN_TEST","name":"Missão Administrativa de Teste","description":"Missão vinculada a um Baú da Área.","area":"NATIVE_FOREST","requiredStage":"ROOKIE","requiredLevel":1,"baseXp":100,"baseBits":50,"energyCost":5,"durationSeconds":60,"chestCode":"CHEST_AREA_NATIVE_FOREST","rewards":[],"lootChances":[],"lootItems":[]}'
+# curl --fail-with-body -i -X POST "${BASE_URL}/admin/missions?activeOnly=${ACTIVE_ONLY}&area=${AREA}&stage=${STAGE}&chestCode=${CHEST_CODE}&lootItemType=${LOOT_ITEM_TYPE}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
+
+# AdminMissionController.chestOptions (GET /admin/missions/chest-options)
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/missions/chest-options" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
 
 # AdminMissionController.getById (GET /admin/missions/{id})
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/missions/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
 
 # AdminMissionController.update (PUT /admin/missions/{id})
-# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/missions/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"name":"Missão Administrativa Atualizada","description":"Descrição atualizada.","area":"NATIVE_FOREST","requiredStage":"ROOKIE","requiredLevel":1,"baseXp":120,"baseBits":60,"energyCost":5,"durationSeconds":90,"chestCode":"CHEST_AREA_NATIVE_FOREST","rewards":[],"lootChances":[],"lootItems":[]}'
+# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/missions/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
 
 # AdminMissionController.toggleActive (PATCH /admin/missions/{id}/toggle-active)
 # curl --fail-with-body -i -X PATCH "${BASE_URL}/admin/missions/${ID}/toggle-active" -H "Authorization: Bearer ${ADMIN_TOKEN}"
-
-# AdminLootTableController.list (GET /admin/loot-tables)
-# curl --fail-with-body -i -X GET "${BASE_URL}/admin/loot-tables?activeOnly=${ACTIVE_ONLY}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
-# AdminLootTableController.catalog (GET /admin/loot-tables/catalog/items)
-# curl --fail-with-body -i -X GET "${BASE_URL}/admin/loot-tables/catalog/items?category=${CATEGORY}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
-# AdminLootTableController.create (POST /admin/loot-tables)
-# curl --fail-with-body -i -X POST "${BASE_URL}/admin/loot-tables" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"code":"LOOT_TEST_ADMIN","name":"Loot Table de Teste","description":"Pool administrativa de teste.","minItems":1,"maxItems":2,"rarityWeights":[{"rarity":"COMMON","weight":70},{"rarity":"RARE","weight":20},{"rarity":"EPIC","weight":8},{"rarity":"LEGENDARY","weight":2}],"entries":[{"rarity":"COMMON","itemType":"TRAINING_STONE","materialCode":null,"weight":50,"minQuantity":1,"maxQuantity":3,"active":true},{"rarity":"RARE","itemType":"EVOLUTION_MATERIAL","materialCode":"FRAGMENT_AGUMON","weight":35,"minQuantity":1,"maxQuantity":5,"active":true}],"active":true}'
-# AdminLootTableController.get (GET /admin/loot-tables/{code})
-# curl --fail-with-body -i -X GET "${BASE_URL}/admin/loot-tables/${CODE}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
-# AdminLootTableController.update (PUT /admin/loot-tables/{code})
-# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/loot-tables/${CODE}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"code":"LOOT_TEST_ADMIN","name":"Loot Table de Teste Atualizada","description":"Descrição atualizada.","minItems":1,"maxItems":2,"rarityWeights":[{"rarity":"COMMON","weight":60},{"rarity":"RARE","weight":25},{"rarity":"EPIC","weight":10},{"rarity":"LEGENDARY","weight":5}],"entries":[{"rarity":"COMMON","itemType":"DATA_CORE","materialCode":null,"weight":30,"minQuantity":1,"maxQuantity":2,"active":true},{"rarity":"RARE","itemType":"EVOLUTION_MATERIAL","materialCode":"FRAGMENT_AGUMON","weight":35,"minQuantity":1,"maxQuantity":5,"active":true}],"active":true}'
-# AdminLootTableController.toggleActive (PATCH /admin/loot-tables/{code}/toggle-active)
-# curl --fail-with-body -i -X PATCH "${BASE_URL}/admin/loot-tables/${CODE}/toggle-active" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
 # AdminPlayerController.getPlayers (GET /admin/players)
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/players?username=${USERNAME}&email=${EMAIL}&selectedDigitama=${SELECTED_DIGITAMA}&starterSelected=${STARTER_SELECTED}&page=${PAGE}&size=${SIZE}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
@@ -453,6 +481,9 @@ USABLE="${USABLE:-VALOR}"
 
 # ===== INVENTORY =====
 
+# InventoryController.openChest (POST /inventory/chests/open)
+# curl --fail-with-body -i -X POST "${BASE_URL}/inventory/chests/open" -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" -d '{}'
+
 # InventoryController.useItem (POST /inventory/use)
 # curl --fail-with-body -i -X POST "${BASE_URL}/inventory/use" -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" -d '{}'
 
@@ -467,7 +498,7 @@ USABLE="${USABLE:-VALOR}"
 # ===== MAIL =====
 
 # MailController.inbox (GET /mail/inbox)
-# curl --fail-with-body -i -X GET "${BASE_URL}/mail/inbox?page=${PAGE}&size=${SIZE}&page=${PAGE}&size=${SIZE}" -H "Authorization: Bearer ${TOKEN}"
+# curl --fail-with-body -i -X GET "${BASE_URL}/mail/inbox?page=${PAGE}&size=${SIZE}" -H "Authorization: Bearer ${TOKEN}"
 
 # MailController.sent (GET /mail/sent)
 # curl --fail-with-body -i -X GET "${BASE_URL}/mail/sent?page=${PAGE}&size=${SIZE}" -H "Authorization: Bearer ${TOKEN}"
@@ -479,13 +510,13 @@ USABLE="${USABLE:-VALOR}"
 # curl --fail-with-body -i -X DELETE "${BASE_URL}/mail/${MESSAGE_ID}" -H "Authorization: Bearer ${TOKEN}"
 
 # MailController.get (GET /mail/{messageId})
-# curl --fail-with-body -i -X GET "${BASE_URL}/mail/${MESSAGE_ID}" -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" -d '{}'
+# curl --fail-with-body -i -X GET "${BASE_URL}/mail/${MESSAGE_ID}" -H "Authorization: Bearer ${TOKEN}"
 
 # MailController.action (POST /mail/{messageId}/action)
 # curl --fail-with-body -i -X POST "${BASE_URL}/mail/${MESSAGE_ID}/action" -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" -d '{"action": "ACCEPT"}'
 
 # MailController.markRead (POST /mail/{messageId}/read)
-# curl --fail-with-body -i -X POST "${BASE_URL}/mail/${MESSAGE_ID}/read" -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" -d '{}'
+# curl --fail-with-body -i -X POST "${BASE_URL}/mail/${MESSAGE_ID}/read" -H "Authorization: Bearer ${TOKEN}"
 
 # ===== ROOT =====
 
@@ -553,13 +584,3 @@ USABLE="${USABLE:-VALOR}"
 
 # WorldBossController.getMyWorldBoss (GET /world-boss/me)
 # curl --fail-with-body -i -X GET "${BASE_URL}/world-boss/me" -H "Authorization: Bearer ${TOKEN}"
-
-# ===== ADMIN CHESTS =====
-# AdminChestController.list (GET /admin/chests)
-# curl --fail-with-body -i -X GET "${BASE_URL}/admin/chests?activeOnly=${ACTIVE_ONLY}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
-# AdminChestController.get (GET /admin/chests/{code})
-# curl --fail-with-body -i -X GET "${BASE_URL}/admin/chests/${CHEST_CODE}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
-# AdminChestController.update (PUT /admin/chests/{code})
-# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/chests/${CHEST_CODE}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"name":"Baú Floresta Nativa","description":"Baú entregue nas missões da Floresta Nativa.","icon":"chest-native-forest","lootTableCode":"LOOT_TEST_ADMIN","tradable":true,"active":true}'
-# AdminChestController.toggleActive (PATCH /admin/chests/{code}/toggle-active)
-# curl --fail-with-body -i -X PATCH "${BASE_URL}/admin/chests/${CHEST_CODE}/toggle-active" -H "Authorization: Bearer ${ADMIN_TOKEN}"

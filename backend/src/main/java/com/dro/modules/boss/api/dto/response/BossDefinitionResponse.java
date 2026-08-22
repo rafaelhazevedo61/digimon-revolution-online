@@ -24,5 +24,7 @@ public record BossDefinitionResponse(
         boolean available,
         Long cooldownRemainingSeconds,
         Integer winChance,
+        String chestCode,
+        String chestName,
         List<BossDropResponse> drops
 ) {}
