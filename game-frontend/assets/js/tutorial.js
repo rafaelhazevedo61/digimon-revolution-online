@@ -112,17 +112,17 @@ function renderTutorialStep(step, isNext) {
         : "";
 
   return `
-    <div class="flex items-center gap-3 px-2 py-2 rounded-lg ${highlight}" ${clickable}>
-      ${stateIcon}
-      <div class="text-xl">${icon}</div>
+    <div class="flex items-start gap-3 px-2 py-2 rounded-lg ${highlight}" ${clickable}>
+      <span class="shrink-0 mt-0.5">${stateIcon}</span>
+      <div class="text-xl shrink-0">${icon}</div>
       <div class="flex-1 min-w-0">
-        <p class="text-sm font-bold ${titleClass} truncate">${escapeHtml(step.title)}</p>
-        ${!completed || !claimed ? `<p class="text-xs text-slate-400 truncate">${escapeHtml(step.description)}</p>` : ""}
-        ${!completed && reward ? `<p class="text-xs text-yellow-500 mt-0.5">Recompensa: ${reward}</p>` : ""}
-        ${completed && !claimed && reward ? `<p class="text-xs text-yellow-400 mt-0.5">Recompensa pendente: ${reward}</p>` : ""}
+        <p class="text-sm font-bold leading-snug break-words ${titleClass}">${escapeHtml(step.title)}</p>
+        ${!completed || !claimed ? `<p class="text-xs text-slate-400 leading-snug whitespace-normal break-words">${escapeHtml(step.description)}</p>` : ""}
+        ${!completed && reward ? `<p class="text-xs text-yellow-500 mt-0.5 leading-snug whitespace-normal break-words">Recompensa: ${reward}</p>` : ""}
+        ${completed && !claimed && reward ? `<p class="text-xs text-yellow-400 mt-0.5 leading-snug whitespace-normal break-words">Recompensa pendente: ${reward}</p>` : ""}
       </div>
       ${rewardAction}
-      ${!completed && isNext ? `<span class="text-cyan-400 text-lg">›</span>` : ""}
+      ${!completed && isNext ? `<span class="text-cyan-400 text-lg shrink-0 mt-0.5">›</span>` : ""}
     </div>
   `;
 }

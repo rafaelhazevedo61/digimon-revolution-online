@@ -59,7 +59,7 @@ async function starterSelect(type) {
   errorDiv.classList.add("hidden");
 
   try {
-    await apiPost("/digitama/select", { type: "STARTER" });
+    await apiPost("/digitama/select", { type });
     const hatched = await apiGet("/digitama/hatch");
     renderHatchingAnimation(hatched);
   } catch (err) {
@@ -122,6 +122,7 @@ function renderHatchingAnimation(digimon) {
           <button id="hatch-confirm-btn" type="button" class="btn-primary w-full mt-6" onclick="hatchConfirm('${digimon.id}')">
             Começar Jornada!
           </button>
+          <div id="hatch-error" class="hidden mt-3 p-3 rounded-lg bg-red-950/50 border border-red-900 text-red-300 text-sm" role="alert"></div>
         </div>
       </div>
     </div>
@@ -157,6 +158,12 @@ function runHatchSequence() {
 
 async function hatchConfirm(digimonId) {
   const btn = document.getElementById("hatch-confirm-btn");
+  const errorDiv = document.getElementById("hatch-error");
+
+  if (errorDiv) {
+    errorDiv.textContent = "";
+    errorDiv.classList.add("hidden");
+  }
 
   if (!digimonId || digimonId === "undefined" || digimonId === "null") {
     console.error("hatchConfirm: digimonId inválido", digimonId);
@@ -178,7 +185,12 @@ async function hatchConfirm(digimonId) {
     window.location.hash = "dashboard";
   } catch (err) {
     console.error("hatchConfirm: erro", err);
-    showToast(err.message, "error");
+    const message = err && err.message ? err.message : "Não foi possível iniciar a jornada.";
+    showToast(message, "error");
+    if (errorDiv) {
+      errorDiv.textContent = message;
+      errorDiv.classList.remove("hidden");
+    }
 
     if (btn) {
       btn.disabled = false;
