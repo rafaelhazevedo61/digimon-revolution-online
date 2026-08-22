@@ -5,6 +5,8 @@ import com.dro.modules.tutorial.domain.TutorialStep;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,7 +19,8 @@ public interface TutorialProgressRepository extends JpaRepository<TutorialProgre
     List<TutorialProgress> findByPlayerId(UUID playerId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    List<TutorialProgress> findByPlayerIdForUpdate(UUID playerId);
+    @Query("select progress from TutorialProgress progress where progress.playerId = :playerId")
+    List<TutorialProgress> findByPlayerIdForUpdate(@Param("playerId") UUID playerId);
 
     boolean existsByPlayerIdAndStep(UUID playerId, TutorialStep step);
 }
