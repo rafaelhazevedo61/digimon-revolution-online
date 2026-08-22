@@ -207,6 +207,10 @@ function renderArenaResult(result) {
           <span class="text-slate-400 text-xs">Moedas de Arena</span>
           <span class="text-amber-300 font-bold">🪙 +${result.arenaCoinsGained} (${result.arenaCoinsBalance})</span>
         </div>` : ""}
+        ${victory && result.rewardChestName ? `<div class="flex items-center justify-between text-sm mt-2 pt-2 border-t border-slate-700">
+          <span class="text-slate-400 text-xs">Baú recebido</span>
+          <span class="text-cyan-300 font-bold">${escapeHtml(result.rewardChestName)}</span>
+        </div>` : ""}
       </div>
 
       <div class="flex gap-2 w-full">

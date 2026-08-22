@@ -75,6 +75,10 @@
       "value": ""
     },
     {
+      "key": "opponentDigimonId",
+      "value": ""
+    },
+    {
       "key": "dropId",
       "value": ""
     },
@@ -1540,11 +1544,11 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/arena/challenge?page={{page}}&size={{size}}",
-            "description": "Gerado de ArenaController.challenge. Revise IDs e valores antes de enviar.",
+            "url": "{{baseUrl}}/arena/challenge",
+            "description": "Desafia um Digimon. Em caso de vitória, a resposta inclui rewardChestCode e rewardChestName; a pool do Baú não é exposta.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"opponentDigimonId\": \"{{opponentDigimonId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

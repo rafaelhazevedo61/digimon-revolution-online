@@ -17,6 +17,7 @@ MISSION_ID="${MISSION_ID:-00000000-0000-0000-0000-000000000000}"
 INSTANCE_ID="${INSTANCE_ID:-00000000-0000-0000-0000-000000000000}"
 LISTING_ID="${LISTING_ID:-00000000-0000-0000-0000-000000000000}"
 DIGIMON_ID="${DIGIMON_ID:-00000000-0000-0000-0000-000000000000}"
+OPPONENT_DIGIMON_ID="${OPPONENT_DIGIMON_ID:-00000000-0000-0000-0000-000000000000}"
 EQUIPMENT_ID="${EQUIPMENT_ID:-00000000-0000-0000-0000-000000000000}"
 PLAYER_ID="${PLAYER_ID:-00000000-0000-0000-0000-000000000000}"
 ACTIVE="${ACTIVE:-VALOR}"
@@ -230,7 +231,8 @@ USABLE="${USABLE:-VALOR}"
 # ===== ARENA =====
 
 # ArenaController.challenge (POST /arena/challenge)
-# curl --fail-with-body -i -X POST "${BASE_URL}/arena/challenge?page=${PAGE}&size=${SIZE}" -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" -d '{}'
+# Em caso de vitória, o retorno inclui rewardChestCode e rewardChestName; a pool não é exposta.
+# curl --fail-with-body -i -X POST "${BASE_URL}/arena/challenge" -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" -d '{"opponentDigimonId":"'"${OPPONENT_DIGIMON_ID}"'"}'
 
 # ArenaController.getHistory (GET /arena/history)
 # curl --fail-with-body -i -X GET "${BASE_URL}/arena/history?page=${PAGE}&size=${SIZE}" -H "Authorization: Bearer ${TOKEN}"

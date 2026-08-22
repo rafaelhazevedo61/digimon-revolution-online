@@ -11,9 +11,15 @@ import com.dro.modules.digimon.domain.enums.Personality;
 import com.dro.modules.digimon.domain.enums.Rarity;
 import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.loot.domain.ChestDefinitionEntity;
+import com.dro.modules.loot.domain.LootTableEntity;
+import com.dro.modules.loot.infra.ChestDefinitionRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.domain.UserType;
+import com.dro.modules.server.application.GlobalDamageBuffService;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.security.JwtSettings;
@@ -57,6 +63,24 @@ class ChallengeArenaUseCaseTest {
     @Mock
     private DigimonPowerService digimonPowerService;
 
+    @Mock
+    private AddItemUseCase addItemUseCase;
+
+    @Mock
+    private ChestDefinitionRepository chestDefinitionRepository;
+
+    @Mock
+    private TransactionAuditPublisher transactionAuditPublisher;
+
+    @Mock
+    private GlobalDamageBuffService globalDamageBuffService;
+
+    @Mock
+    private ChestDefinitionEntity rewardChest;
+
+    @Mock
+    private LootTableEntity rewardLootTable;
+
     @InjectMocks
     private ChallengeArenaUseCase useCase;
 
@@ -89,6 +113,15 @@ class ChallengeArenaUseCaseTest {
 
         attacker = digimon(attackerId, playerId, 1000, Stage.ROOKIE, false);
         defender = digimon(defenderId, opponentPlayerId, 1000, Stage.ROOKIE, false);
+
+        lenient().when(globalDamageBuffService.getMultiplier()).thenReturn(1.0);
+        lenient().when(globalDamageBuffService.isEnabled()).thenReturn(false);
+        lenient().when(chestDefinitionRepository.findWithCatalogByCode(anyString())).thenReturn(Optional.of(rewardChest));
+        lenient().when(rewardChest.isActive()).thenReturn(true);
+        lenient().when(rewardChest.getLootTable()).thenReturn(rewardLootTable);
+        lenient().when(rewardLootTable.isActive()).thenReturn(true);
+        lenient().when(rewardChest.getCode()).thenReturn("CHEST_ARENA_PRATA");
+        lenient().when(rewardChest.getName()).thenReturn("Baú Arena Prata");
     }
 
     private static String createToken(UUID subject) {
@@ -163,6 +196,37 @@ class ChallengeArenaUseCaseTest {
         assertEquals(ArenaRules.winBits(1000, 1000), response.bitsGained());
         verify(digimonRepository).save(attacker);
         verify(arenaMatchRepository).save(any(ArenaMatch.class));
+        verify(addItemUseCase).addMaterial(attackerId, rewardChest.getItemDefinition(), 1);
+        verify(chestDefinitionRepository).findWithCatalogByCode("CHEST_ARENA_PRATA");
+        verify(transactionAuditPublisher).success(
+                anyString(), eq("ARENA_CHALLENGED"), eq("ArenaMatch"), anyString(), anyMap());
+        assertEquals("CHEST_ARENA_PRATA", response.rewardChestCode());
+        assertEquals("Baú Arena Prata", response.rewardChestName());
+    }
+
+    @Test
+    void victoryFailsWithoutConfiguredRewardChest() {
+        stubDigimons();
+        stubPowers(1000.0, 100.0);
+        when(chestDefinitionRepository.findWithCatalogByCode("CHEST_ARENA_PRATA"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(ConflictException.class, () -> challengeWithRoll(1));
+
+        verify(addItemUseCase, never()).addMaterial(any(), any(), anyInt());
+        verify(arenaMatchRepository, never()).save(any());
+    }
+
+    @Test
+    void victoryPersistsRewardChestReferenceOnMatch() {
+        stubDigimons();
+        stubPowers(1000.0, 100.0);
+
+        challengeWithRoll(1);
+
+        ArgumentCaptor<ArenaMatch> captor = ArgumentCaptor.forClass(ArenaMatch.class);
+        verify(arenaMatchRepository).save(captor.capture());
+        assertSame(rewardChest, captor.getValue().getRewardChest());
     }
 
     @Test
@@ -178,6 +242,9 @@ class ChallengeArenaUseCaseTest {
         assertTrue(attacker.getArenaRating() < 1000);
         assertEquals(0, attacker.getBits());
         assertEquals(0, response.bitsGained());
+        verify(addItemUseCase, never()).addMaterial(any(), any(), anyInt());
+        assertNull(response.rewardChestCode());
+        assertNull(response.rewardChestName());
     }
 
     @Test

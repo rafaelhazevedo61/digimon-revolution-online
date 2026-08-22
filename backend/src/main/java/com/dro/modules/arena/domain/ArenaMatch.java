@@ -1,5 +1,7 @@
 package com.dro.modules.arena.domain;
 
+import com.dro.modules.loot.domain.ChestDefinitionEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -59,6 +61,13 @@ public class ArenaMatch {
 
     @Column(name = "bits_gained", nullable = false)
     private int bitsGained;
+
+    /** Baú concedido ao atacante quando a partida terminou em vitória. */
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reward_chest_definition_id")
+    @ToString.Exclude
+    private ChestDefinitionEntity rewardChest;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
