@@ -212,26 +212,47 @@ function showWorldBossAttackModal(result) {
   const existing = document.getElementById("world-boss-attack-modal");
   if (existing) existing.remove();
 
-  const rewardLabels = {
-    ATTEMPT: "Baú por tentativa",
-    TOP_DAMAGE: "Baú de maior dano acumulado",
-    FINAL_BLOW: "Baú do golpe final"
+  const rewardMeta = {
+    ATTEMPT: { label: "Baú por tentativa", tone: "text-cyan-300" },
+    TOP_DAMAGE: { label: "Baú de maior dano acumulado", tone: "text-amber-300" },
+    FINAL_BLOW: { label: "Baú do golpe final", tone: "text-rose-300" }
   };
-  const rewardRow = `
-    ${result.defeated ? `<p class="text-green-400 text-sm font-bold mb-2">Boss derrotado! Você ganhou um bônus final de ${result.defeatedRewardXp.toLocaleString()} XP e ${result.defeatedRewardBits.toLocaleString()} Bits.</p>` : ""}
-    ${result.rewards && result.rewards.length > 0 ? `<div class="border-t border-slate-700 pt-2 mt-2">
-      <p class="text-amber-300 text-sm font-bold mb-1">Baús recebidos</p>
-      ${result.rewards.map(reward => `<p class="text-xs text-slate-300">${escapeHtml(rewardLabels[reward.rewardType] || "Baú")}: <span class="text-amber-200 font-bold">${escapeHtml(reward.chestName)}</span></p>`).join("")}
-    </div>` : ""}
-  `;
+  const rewards = Array.isArray(result.rewards) ? result.rewards : [];
+  const rewardRows = rewards.map((reward, index) => {
+    const meta = rewardMeta[reward.rewardType] || { label: "Baú recebido", tone: "text-amber-300" };
+    return `
+      <div class="flex items-start gap-3 rounded-lg border border-slate-700 bg-slate-800/70 p-3">
+        <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-700 text-xs font-bold text-slate-300">${index + 1}</div>
+        <div class="min-w-0 flex-1">
+          <p class="text-[11px] font-semibold uppercase tracking-wide ${meta.tone}">${meta.label}</p>
+          <p class="mt-1 break-words text-sm font-bold leading-snug text-white">${escapeHtml(reward.chestName || "Baú")}</p>
+        </div>
+      </div>
+    `;
+  }).join("");
+  const rewardSectionHtml = rewards.length > 0 ? `
+    <section class="mt-4 border-t border-slate-700 pt-4" aria-label="Baús recebidos">
+      <div class="mb-2 flex items-center justify-between gap-2">
+        <p class="text-sm font-bold text-amber-300">Baús recebidos</p>
+        <span class="text-[11px] text-slate-500">${rewards.length} ${rewards.length === 1 ? "recompensa" : "recompensas"}</span>
+      </div>
+      <div class="space-y-2">${rewardRows}</div>
+    </section>
+  ` : "";
+  const defeatBonusHtml = result.defeated ? `
+    <div class="mt-4 rounded-lg border border-green-800/70 bg-green-950/30 p-3">
+      <p class="text-sm font-bold text-green-300">Boss derrotado</p>
+      <p class="mt-1 text-xs leading-relaxed text-green-200">Bônus final: <strong>${result.defeatedRewardXp.toLocaleString()} XP</strong> e <strong>${result.defeatedRewardBits.toLocaleString()} Bits</strong>.</p>
+    </div>
+  ` : "";
 
   const overlay = document.createElement("div");
   overlay.id = "world-boss-attack-modal";
   overlay.className = "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70";
   overlay.innerHTML = `
-    <div class="bg-slate-900 border border-cyan-900 rounded-xl max-w-sm w-full p-5 shadow-2xl">
+    <div role="dialog" aria-modal="true" aria-labelledby="world-boss-result-title" class="bg-slate-900 border border-cyan-900 rounded-xl max-w-md max-h-[90vh] w-full overflow-y-auto p-5 shadow-2xl">
       <div class="flex justify-between items-center mb-3">
-        <h3 class="font-bold text-lg text-cyan-400">Resultado do Ataque</h3>
+        <h3 id="world-boss-result-title" class="font-bold text-lg text-cyan-400">Resultado do Ataque</h3>
         <button class="text-slate-400 text-2xl" onclick="document.getElementById('world-boss-attack-modal').remove()">&times;</button>
       </div>
       <div class="text-center mb-4">
@@ -248,8 +269,18 @@ function showWorldBossAttackModal(result) {
           <p class="text-xs text-slate-400">Bits</p>
         </div>
       </div>
-      ${rewardRow}
-      <p class="text-xs text-slate-500 mb-3">Chance de vitória: ${result.winChance}% · HP restante: ${result.remainingHp.toLocaleString()} / ${result.maxHp.toLocaleString()}</p>
+      ${defeatBonusHtml}
+      ${rewardSectionHtml}
+      <section class="mt-4 grid grid-cols-2 gap-2 border-t border-slate-800 pt-3" aria-label="Detalhes do ataque">
+        <div class="rounded-lg bg-slate-800/60 p-2 text-center">
+          <p class="text-[10px] uppercase tracking-wide text-slate-500">Chance de vitória</p>
+          <p class="mt-1 text-sm font-bold text-slate-200">${result.winChance}%</p>
+        </div>
+        <div class="rounded-lg bg-slate-800/60 p-2 text-center">
+          <p class="text-[10px] uppercase tracking-wide text-slate-500">HP restante</p>
+          <p class="mt-1 break-words text-sm font-bold text-slate-200">${result.remainingHp.toLocaleString()} / ${result.maxHp.toLocaleString()}</p>
+        </div>
+      </section>
       <button class="btn-primary w-full" onclick="document.getElementById('world-boss-attack-modal').remove()">Fechar</button>
     </div>
   `;
