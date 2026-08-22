@@ -584,6 +584,14 @@ USABLE="${USABLE:-VALOR}"
 # TutorialController.getProgress (GET /tutorial)
 # curl --fail-with-body -i -X GET "${BASE_URL}/tutorial" -H "Authorization: Bearer ${TOKEN}"
 
+# TutorialController.claimReward (POST /tutorial/steps/{step}/claim)
+# Set TUTORIAL_STEP to a completed step, for example COMPLETE_MISSION.
+# curl --fail-with-body -i -X POST "${BASE_URL}/tutorial/steps/${TUTORIAL_STEP}/claim" -H "Authorization: Bearer ${TOKEN}"
+
+# TutorialController.finishTutorial (POST /tutorial/finish)
+# Requires all tutorial steps completed and all rewards claimed.
+# curl --fail-with-body -i -X POST "${BASE_URL}/tutorial/finish" -H "Authorization: Bearer ${TOKEN}"
+
 # ===== WORLD-BOSS =====
 
 # WorldBossController.attack (POST /world-boss/attack)

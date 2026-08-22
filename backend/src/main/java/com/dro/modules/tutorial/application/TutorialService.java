@@ -7,9 +7,13 @@ import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.tutorial.api.dto.response.TutorialProgressResponse;
 import com.dro.modules.tutorial.api.dto.response.TutorialStepResponse;
+import com.dro.modules.tutorial.domain.TutorialCompletion;
 import com.dro.modules.tutorial.domain.TutorialProgress;
 import com.dro.modules.tutorial.domain.TutorialStep;
+import com.dro.modules.tutorial.infra.TutorialCompletionRepository;
 import com.dro.modules.tutorial.infra.TutorialProgressRepository;
+import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,20 +26,22 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class TutorialService {
 
     private final TutorialProgressRepository tutorialProgressRepository;
+    private final TutorialCompletionRepository tutorialCompletionRepository;
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final AddItemUseCase addItemUseCase;
 
     /**
-     * Marca um step do tutorial como concluído e concede a recompensa.
-     * Idempotente: se o step já foi concluído, nada acontece (sem recompensa dupla).
-     * Nunca lança exceção que interrompa o fluxo principal do jogador.
+     * Marca uma etapa como concluída, mas deixa sua recompensa pendente de resgate.
+     * Etapas sem recompensa são consideradas resgatadas no próprio momento da conclusão.
+     * Falhas no tutorial não interrompem a ação principal que o jogador realizou.
      */
     @Transactional
     public void completeStep(UUID playerId, TutorialStep step) {
@@ -44,33 +50,82 @@ public class TutorialService {
                 return;
             }
 
+            LocalDateTime completedAt = LocalDateTime.now();
             tutorialProgressRepository.save(TutorialProgress.builder()
                     .id(UUID.randomUUID())
                     .playerId(playerId)
                     .step(step)
-                    .completedAt(LocalDateTime.now())
+                    .completedAt(completedAt)
+                    .rewardClaimedAt(step.hasReward() ? null : completedAt)
                     .build());
-
-            grantReward(playerId, step);
         } catch (RuntimeException ignored) {
             // O tutorial é um bônus; falhas aqui não devem quebrar a ação principal.
         }
     }
 
+    @Transactional
+    public TutorialProgressResponse claimReward(String token, String stepName) {
+        UUID playerId = TokenExtractor.extractPlayerId(token);
+        TutorialStep step = parseStep(stepName);
+
+        TutorialProgress progress = tutorialProgressRepository.findByPlayerIdForUpdate(playerId).stream()
+                .filter(item -> item.getStep() == step)
+                .findFirst()
+                .orElseThrow(() -> new BadRequestException("Tutorial step is not completed"));
+
+        if (progress.getRewardClaimedAt() == null) {
+            grantReward(playerId, step);
+            progress.setRewardClaimedAt(LocalDateTime.now());
+            tutorialProgressRepository.save(progress);
+        }
+
+        return getProgress(token);
+    }
+
+    @Transactional
+    public TutorialProgressResponse finishTutorial(String token) {
+        UUID playerId = TokenExtractor.extractPlayerId(token);
+
+        if (tutorialCompletionRepository.existsById(playerId)) {
+            return getProgress(token);
+        }
+
+        List<TutorialProgress> progress = tutorialProgressRepository.findByPlayerIdForUpdate(playerId);
+        Set<TutorialStep> completed = progress.stream()
+                .map(TutorialProgress::getStep)
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(TutorialStep.class)));
+
+        if (completed.size() < TutorialStep.values().length) {
+            throw new BadRequestException("Complete all tutorial steps before finishing the tutorial");
+        }
+
+        boolean hasPendingReward = progress.stream()
+                .anyMatch(item -> item.getStep().hasReward() && item.getRewardClaimedAt() == null);
+        if (hasPendingReward) {
+            throw new BadRequestException("Claim all tutorial rewards before finishing the tutorial");
+        }
+
+        tutorialCompletionRepository.save(TutorialCompletion.builder()
+                .playerId(playerId)
+                .finishedAt(LocalDateTime.now())
+                .build());
+
+        return getProgress(token);
+    }
+
     private void grantReward(UUID playerId, TutorialStep step) {
-        if (step.getRewardBits() <= 0 && !step.hasItemReward()) {
+        if (!step.hasReward()) {
             return;
         }
 
-        Player player = playerRepository.findById(playerId).orElse(null);
-        if (player == null || player.getActiveDigimonId() == null) {
-            return;
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new NotFoundException("Player not found"));
+        if (player.getActiveDigimonId() == null) {
+            throw new BadRequestException("No active digimon selected");
         }
 
-        Digimon digimon = digimonRepository.findById(player.getActiveDigimonId()).orElse(null);
-        if (digimon == null) {
-            return;
-        }
+        Digimon digimon = digimonRepository.findById(player.getActiveDigimonId())
+                .orElseThrow(() -> new NotFoundException("Active digimon not found"));
 
         if (step.getRewardBits() > 0) {
             digimon.setBits(digimon.getBits() + step.getRewardBits());
@@ -82,13 +137,27 @@ public class TutorialService {
         }
     }
 
+    private TutorialStep parseStep(String stepName) {
+        try {
+            return TutorialStep.valueOf(stepName.toUpperCase());
+        } catch (IllegalArgumentException | NullPointerException exception) {
+            throw new BadRequestException("Unknown tutorial step: " + stepName);
+        }
+    }
+
     @Transactional(readOnly = true)
     public TutorialProgressResponse getProgress(String token) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
+        List<TutorialProgress> progress = tutorialProgressRepository.findByPlayerId(playerId);
 
-        Set<TutorialStep> completed = tutorialProgressRepository.findByPlayerId(playerId).stream()
+        Set<TutorialStep> completed = progress.stream()
                 .map(TutorialProgress::getStep)
-                .collect(java.util.stream.Collectors.toCollection(() -> EnumSet.noneOf(TutorialStep.class)));
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(TutorialStep.class)));
+
+        Set<TutorialStep> claimed = progress.stream()
+                .filter(item -> item.getRewardClaimedAt() != null)
+                .map(TutorialProgress::getStep)
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(TutorialStep.class)));
 
         List<TutorialStepResponse> steps = Arrays.stream(TutorialStep.values())
                 .sorted(Comparator.comparingInt(TutorialStep::getOrder))
@@ -100,13 +169,33 @@ public class TutorialService {
                         step.getRewardBits(),
                         step.hasItemReward() ? step.getRewardItem().name() : null,
                         step.getRewardItemQuantity(),
-                        completed.contains(step)
+                        completed.contains(step),
+                        claimed.contains(step)
                 ))
                 .toList();
 
         int total = TutorialStep.values().length;
-        int done = completed.size();
+        int completedSteps = completed.size();
+        int rewardSteps = (int) Arrays.stream(TutorialStep.values()).filter(TutorialStep::hasReward).count();
+        int claimedRewards = (int) progress.stream()
+                .filter(item -> item.getStep().hasReward() && item.getRewardClaimedAt() != null)
+                .count();
+        int pendingRewards = (int) progress.stream()
+                .filter(item -> item.getStep().hasReward() && item.getRewardClaimedAt() == null)
+                .count();
+        boolean allCompleted = completedSteps >= total;
+        boolean finished = tutorialCompletionRepository.existsById(playerId);
+        boolean canFinish = allCompleted && claimedRewards >= rewardSteps && !finished;
 
-        return new TutorialProgressResponse(done, total, done >= total, steps);
+        return new TutorialProgressResponse(
+                completedSteps,
+                total,
+                allCompleted,
+                claimedRewards,
+                pendingRewards,
+                canFinish,
+                finished,
+                steps
+        );
     }
 }

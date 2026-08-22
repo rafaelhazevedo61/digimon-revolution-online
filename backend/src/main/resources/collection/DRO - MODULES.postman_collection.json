@@ -3685,6 +3685,38 @@
             "description": "Gerado de TutorialController.getProgress. Revise IDs e valores antes de enviar."
           },
           "response": []
+        },
+        {
+          "name": "claimReward",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/tutorial/steps/{{tutorialStep}}/claim",
+            "description": "Resgata a recompensa da etapa concluída indicada em tutorialStep."
+          },
+          "response": []
+        },
+        {
+          "name": "finishTutorial",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/tutorial/finish",
+            "description": "Finaliza o tutorial somente após concluir todas as etapas e resgatar todas as recompensas."
+          },
+          "response": []
         }
       ]
     },
