@@ -10,7 +10,6 @@ import com.dro.modules.boss.world.infra.WorldBossAttackRepository;
 import com.dro.modules.boss.world.infra.WorldBossRewardRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.loot.domain.ChestDefinitionEntity;
-import com.dro.modules.loot.infra.ChestDefinitionRepository;
 import com.dro.shared.exception.ConflictException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -40,7 +39,6 @@ public class WorldBossRewardService {
 
     private final WorldBossAttackRepository worldBossAttackRepository;
     private final WorldBossRewardRepository worldBossRewardRepository;
-    private final ChestDefinitionRepository chestDefinitionRepository;
     private final AddItemUseCase addItemUseCase;
 
     /**
@@ -155,20 +153,23 @@ public class WorldBossRewardService {
     }
 
     private ChestDefinitionEntity resolveChest(BossDefinitionEntity boss, WorldBossRewardType rewardType) {
-        String bossSuffix = boss.getCode().startsWith("WORLD_BOSS_")
-                ? boss.getCode().substring("WORLD_BOSS_".length())
-                : boss.getCode();
-        String chestCode = "CHEST_BOSS_WORLD_" + bossSuffix + "_" + rewardType.getCode();
-
-        ChestDefinitionEntity chest = chestDefinitionRepository.findWithCatalogByCode(chestCode)
-                .orElseThrow(() -> new ConflictException(
-                        "Baú de recompensa do Boss Mundial não encontrado: " + chestCode));
+        ChestDefinitionEntity chest = boss.chestForWorldReward(rewardType);
+        String rewardLabel = switch (rewardType) {
+            case ATTEMPT -> "tentativa";
+            case TOP_DAMAGE -> "maior dano acumulado";
+            case FINAL_BLOW -> "golpe final";
+        };
+        if (chest == null) {
+            throw new ConflictException(
+                    "Boss Mundial não possui Baú configurado para " + rewardLabel + ".");
+        }
         if (!chest.isActive()) {
-            throw new ConflictException("Baú de recompensa do Boss Mundial está inativo: " + chestCode);
+            throw new ConflictException(
+                    "Baú de recompensa do Boss Mundial está inativo: " + chest.getCode());
         }
         if (chest.getLootTable() == null || !chest.getLootTable().isActive()) {
             throw new ConflictException(
-                    "Loot Table do Baú de recompensa do Boss Mundial está inativa: " + chestCode);
+                    "Loot Table do Baú de recompensa do Boss Mundial está inativa: " + chest.getCode());
         }
         return chest;
     }

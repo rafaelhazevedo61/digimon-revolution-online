@@ -1,5 +1,6 @@
 package com.dro.modules.boss.domain;
 
+import com.dro.modules.boss.world.domain.WorldBossRewardType;
 import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.loot.domain.ChestDefinitionEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -80,11 +81,29 @@ public class BossDefinitionEntity {
     @Column(nullable = false)
     private boolean active;
 
-    /** Baú concedido após uma vitória elegível contra este Boss. */
+    /** Baú concedido após uma vitória elegível contra um Boss normal/periódico. */
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chest_definition_id")
     private ChestDefinitionEntity chestDefinition;
+
+    /** Baú concedido por cada tentativa válida de Boss Mundial. */
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "world_attempt_chest_definition_id")
+    private ChestDefinitionEntity worldAttemptChestDefinition;
+
+    /** Baú concedido ao participante com maior dano acumulado na derrota. */
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "world_top_damage_chest_definition_id")
+    private ChestDefinitionEntity worldTopDamageChestDefinition;
+
+    /** Baú concedido ao jogador que desferiu o golpe final. */
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "world_final_blow_chest_definition_id")
+    private ChestDefinitionEntity worldFinalBlowChestDefinition;
 
     @JsonProperty("chestCode")
     @Transient
@@ -96,6 +115,50 @@ public class BossDefinitionEntity {
     @Transient
     public String getChestName() {
         return chestDefinition == null ? null : chestDefinition.getName();
+    }
+
+    @JsonProperty("worldAttemptChestCode")
+    @Transient
+    public String getWorldAttemptChestCode() {
+        return worldAttemptChestDefinition == null ? null : worldAttemptChestDefinition.getCode();
+    }
+
+    @JsonProperty("worldAttemptChestName")
+    @Transient
+    public String getWorldAttemptChestName() {
+        return worldAttemptChestDefinition == null ? null : worldAttemptChestDefinition.getName();
+    }
+
+    @JsonProperty("worldTopDamageChestCode")
+    @Transient
+    public String getWorldTopDamageChestCode() {
+        return worldTopDamageChestDefinition == null ? null : worldTopDamageChestDefinition.getCode();
+    }
+
+    @JsonProperty("worldTopDamageChestName")
+    @Transient
+    public String getWorldTopDamageChestName() {
+        return worldTopDamageChestDefinition == null ? null : worldTopDamageChestDefinition.getName();
+    }
+
+    @JsonProperty("worldFinalBlowChestCode")
+    @Transient
+    public String getWorldFinalBlowChestCode() {
+        return worldFinalBlowChestDefinition == null ? null : worldFinalBlowChestDefinition.getCode();
+    }
+
+    @JsonProperty("worldFinalBlowChestName")
+    @Transient
+    public String getWorldFinalBlowChestName() {
+        return worldFinalBlowChestDefinition == null ? null : worldFinalBlowChestDefinition.getName();
+    }
+
+    public ChestDefinitionEntity chestForWorldReward(WorldBossRewardType rewardType) {
+        return switch (rewardType) {
+            case ATTEMPT -> worldAttemptChestDefinition;
+            case TOP_DAMAGE -> worldTopDamageChestDefinition;
+            case FINAL_BLOW -> worldFinalBlowChestDefinition;
+        };
     }
 
     @OneToMany(mappedBy = "boss", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

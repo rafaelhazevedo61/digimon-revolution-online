@@ -24,5 +24,8 @@ public record UpdateBossRequest(
         String imageUrl,
         Boolean active,
         String chestCode,
-        @Min(0) @Max(100) Integer equipmentChance
+        @Min(0) @Max(100) Integer equipmentChance,
+        String worldAttemptChestCode,
+        String worldTopDamageChestCode,
+        String worldFinalBlowChestCode
 ) {}

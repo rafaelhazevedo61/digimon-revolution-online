@@ -78,6 +78,27 @@ function equipmentPoolSummary(boss) {
   return `<div class="font-semibold text-purple-300">${poolChance}%</div><div class="text-[10px] text-slate-500">Pool · ${optionLabel}</div>`;
 }
 
+function bossChestSummary(boss) {
+  if (boss.bossType === "WORLD") {
+    const entries = [
+      ["Tentativa", boss.worldAttemptChestName, boss.worldAttemptChestCode],
+      ["Maior dano", boss.worldTopDamageChestName, boss.worldTopDamageChestCode],
+      ["Golpe final", boss.worldFinalBlowChestName, boss.worldFinalBlowChestCode]
+    ];
+    return entries.map(([label, name, code]) => `
+      <div class="mb-1">
+        <span class="text-[10px] uppercase text-slate-500">${label}</span>
+        <div class="font-semibold text-slate-300">${escapeHtml(name || "Sem Baú")}</div>
+        <div class="text-[10px] text-slate-500 font-mono">${escapeHtml(code || "-")}</div>
+      </div>
+    `).join("");
+  }
+  return `
+    <div class="font-semibold text-slate-300">${escapeHtml(boss.chestName || "Sem Baú")}</div>
+    <div class="text-[10px] text-slate-500 font-mono">${escapeHtml(boss.chestCode || "-")}</div>
+  `;
+}
+
 function renderBossesTable() {
   const container = document.getElementById("bosses-table-container");
 
@@ -90,7 +111,9 @@ function renderBossesTable() {
     NORMAL: "bg-slate-700 text-slate-200",
     DAILY: "bg-blue-700 text-blue-100",
     WEEKLY: "bg-purple-700 text-purple-100",
-    MONTHLY: "bg-yellow-700 text-yellow-100"
+    MONTHLY: "bg-yellow-700 text-yellow-100",
+    CLAN: "bg-emerald-700 text-emerald-100",
+    WORLD: "bg-red-700 text-red-100"
   };
 
   container.innerHTML = `
@@ -126,10 +149,7 @@ function renderBossesTable() {
               <td class="py-2 px-2 text-amber-400">${b.baseBitsReward}</td>
               <td class="py-2 px-2">${equipmentPoolSummary(b)}</td>
               <td class="py-2 px-2">${cooldownSummary(b)}</td>
-              <td class="py-2 px-2">
-                <div class="font-semibold text-slate-300">${escapeHtml(b.chestName || "Sem Baú")}</div>
-                <div class="text-[10px] text-slate-500 font-mono">${escapeHtml(b.chestCode || "-")}</div>
-              </td>
+              <td class="py-2 px-2">${bossChestSummary(b)}</td>
               <td class="py-2 px-2">${b.active ? '<span class="text-green-400">Sim</span>' : '<span class="text-red-400">Nao</span>'}</td>
               <td class="py-2 px-2">
                 <div class="flex gap-1">
@@ -261,6 +281,14 @@ function closeBossRarityProfiles() {
   if (root) root.innerHTML = "";
 }
 
+function chestOptionsHtml(selectedCode) {
+  return adminBossChestOptions.map(c => `
+    <option value="${escapeAttr(c.code)}" ${selectedCode === c.code ? "selected" : ""}>
+      ${escapeHtml(c.name)} — ${escapeHtml(c.code)}
+    </option>
+  `).join("");
+}
+
 function openBossForm(id = null) {
   adminBossEditId = id;
   const boss = id ? adminBosses.find(b => b.id === id) : null;
@@ -295,6 +323,8 @@ function openBossForm(id = null) {
                 <option value="DAILY" ${boss?.bossType === "DAILY" ? "selected" : ""}>Diário</option>
                 <option value="WEEKLY" ${boss?.bossType === "WEEKLY" ? "selected" : ""}>Semanal</option>
                 <option value="MONTHLY" ${boss?.bossType === "MONTHLY" ? "selected" : ""}>Mensal</option>
+                <option value="CLAN" ${boss?.bossType === "CLAN" ? "selected" : ""}>Clã</option>
+                <option value="WORLD" ${boss?.bossType === "WORLD" ? "selected" : ""}>Mundial</option>
               </select>
             </div>
             <div>
@@ -363,13 +393,39 @@ function openBossForm(id = null) {
               <label class="text-xs text-slate-400">Image URL</label>
               <input id="bf-image" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${escapeAttr(boss?.imageUrl || "")}" placeholder="https://...">
             </div>
-            <div class="col-span-2">
+            <div id="bf-standard-chest-container" class="col-span-2">
               <label class="text-xs text-slate-400">Baú de Recompensa (Vitória)</label>
               <select id="bf-chest" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm">
                 <option value="">Selecione um baú ativo...</option>
-                ${adminBossChestOptions.map(c => `<option value="${escapeAttr(c.code)}" ${boss?.chestCode === c.code ? "selected" : ""}>${escapeHtml(c.name)} — ${escapeHtml(c.code)}</option>`).join("")}
+                ${chestOptionsHtml(boss?.chestCode)}
               </select>
-              <p class="text-[10px] text-slate-500 mt-1">Somente baús ativos com Loot Tables ativas aparecem aqui.</p>
+              <p class="text-[10px] text-slate-500 mt-1">Usado por Bosses normais e periódicos. Somente baús ativos com Loot Tables ativas aparecem aqui.</p>
+            </div>
+            <div id="bf-world-chests-container" class="col-span-2 hidden">
+              <div class="mb-3">
+                <p class="text-sm font-semibold text-slate-200">Baús do Boss Mundial</p>
+                <p class="text-[10px] text-slate-500 mt-1">Cada situação deve apontar para um Baú próprio com sua Loot Table. Os três Baús precisam ser diferentes.</p>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <label class="text-xs text-slate-400">Baú por tentativa
+                  <select id="bf-world-attempt-chest" class="w-full mt-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm">
+                    <option value="">Selecione um baú ativo...</option>
+                    ${chestOptionsHtml(boss?.worldAttemptChestCode)}
+                  </select>
+                </label>
+                <label class="text-xs text-slate-400">Baú de maior dano
+                  <select id="bf-world-top-damage-chest" class="w-full mt-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm">
+                    <option value="">Selecione um baú ativo...</option>
+                    ${chestOptionsHtml(boss?.worldTopDamageChestCode)}
+                  </select>
+                </label>
+                <label class="text-xs text-slate-400">Baú do golpe final
+                  <select id="bf-world-final-blow-chest" class="w-full mt-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm">
+                    <option value="">Selecione um baú ativo...</option>
+                    ${chestOptionsHtml(boss?.worldFinalBlowChestCode)}
+                  </select>
+                </label>
+              </div>
             </div>
           </div>
           <div class="flex gap-2 mt-6">
@@ -396,10 +452,26 @@ function updateBossCooldownControls() {
 function updateBossChestRequirement() {
   const type = document.getElementById("bf-type")?.value;
   const chest = document.getElementById("bf-chest");
-  if (!chest) return;
-  const requiresChest = ["NORMAL", "DAILY", "WEEKLY", "MONTHLY"].includes(type);
-  chest.required = requiresChest;
-  chest.disabled = !requiresChest;
+  const standardContainer = document.getElementById("bf-standard-chest-container");
+  const worldContainer = document.getElementById("bf-world-chests-container");
+  if (!chest || !standardContainer || !worldContainer) return;
+
+  const requiresStandardChest = ["NORMAL", "DAILY", "WEEKLY", "MONTHLY"].includes(type);
+  const isWorldBoss = type === "WORLD";
+  standardContainer.classList.toggle("hidden", !requiresStandardChest);
+  worldContainer.classList.toggle("hidden", !isWorldBoss);
+  chest.required = requiresStandardChest;
+  chest.disabled = !requiresStandardChest;
+
+  [
+    document.getElementById("bf-world-attempt-chest"),
+    document.getElementById("bf-world-top-damage-chest"),
+    document.getElementById("bf-world-final-blow-chest")
+  ].forEach(worldChest => {
+    if (!worldChest) return;
+    worldChest.required = isWorldBoss;
+    worldChest.disabled = !isWorldBoss;
+  });
 }
 
 function closeBossForm() {
@@ -427,8 +499,27 @@ async function saveBoss(event) {
     baseBitsReward: parseInt(document.getElementById("bf-bits").value),
     defeatXpPercent: parseInt(document.getElementById("bf-defeatxp").value),
     imageUrl: document.getElementById("bf-image").value || null,
-    chestCode: document.getElementById("bf-chest").value
+    chestCode: document.getElementById("bf-chest").value || null,
+    worldAttemptChestCode: document.getElementById("bf-world-attempt-chest")?.value || null,
+    worldTopDamageChestCode: document.getElementById("bf-world-top-damage-chest")?.value || null,
+    worldFinalBlowChestCode: document.getElementById("bf-world-final-blow-chest")?.value || null
   };
+
+  if (body.bossType === "WORLD") {
+    const worldChestCodes = [
+      body.worldAttemptChestCode,
+      body.worldTopDamageChestCode,
+      body.worldFinalBlowChestCode
+    ];
+    if (worldChestCodes.some(code => !code)) {
+      alert("Selecione os Baús de tentativa, maior dano e golpe final.");
+      return;
+    }
+    if (new Set(worldChestCodes).size !== worldChestCodes.length) {
+      alert("Os três Baús do Boss Mundial devem ser diferentes.");
+      return;
+    }
+  }
   const equipmentChanceField = document.getElementById("bf-equipment-chance");
   if (equipmentChanceField && !equipmentChanceField.disabled && equipmentChanceField.value !== "") {
     body.equipmentChance = parseInt(equipmentChanceField.value, 10);

@@ -12,7 +12,6 @@ import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.loot.domain.ChestDefinitionEntity;
 import com.dro.modules.loot.domain.LootTableEntity;
-import com.dro.modules.loot.infra.ChestDefinitionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,9 +40,6 @@ class WorldBossRewardServiceTest {
 
     @Mock
     private WorldBossRewardRepository worldBossRewardRepository;
-
-    @Mock
-    private ChestDefinitionRepository chestDefinitionRepository;
 
     @Mock
     private AddItemUseCase addItemUseCase;
@@ -88,19 +84,12 @@ class WorldBossRewardServiceTest {
                 .remainingHp(0)
                 .build();
 
-        attemptChest = chest("CHEST_BOSS_WORLD_APOCALYMON_ATTEMPT", "Baú por tentativa");
-        topDamageChest = chest("CHEST_BOSS_WORLD_APOCALYMON_TOP_DAMAGE", "Baú de maior dano");
-        finalBlowChest = chest("CHEST_BOSS_WORLD_APOCALYMON_FINAL_BLOW", "Baú do golpe final");
-
-        lenient().when(chestDefinitionRepository.findWithCatalogByCode(anyString())).thenAnswer(invocation -> {
-            String code = invocation.getArgument(0);
-            return switch (code) {
-                case "CHEST_BOSS_WORLD_APOCALYMON_ATTEMPT" -> Optional.of(attemptChest);
-                case "CHEST_BOSS_WORLD_APOCALYMON_TOP_DAMAGE" -> Optional.of(topDamageChest);
-                case "CHEST_BOSS_WORLD_APOCALYMON_FINAL_BLOW" -> Optional.of(finalBlowChest);
-                default -> Optional.empty();
-            };
-        });
+        attemptChest = chest("CHEST_WORLD_CUSTOM_ATTEMPT", "Baú por tentativa");
+        topDamageChest = chest("CHEST_WORLD_CUSTOM_TOP_DAMAGE", "Baú de maior dano");
+        finalBlowChest = chest("CHEST_WORLD_CUSTOM_FINAL_BLOW", "Baú do golpe final");
+        boss.setWorldAttemptChestDefinition(attemptChest);
+        boss.setWorldTopDamageChestDefinition(topDamageChest);
+        boss.setWorldFinalBlowChestDefinition(finalBlowChest);
         lenient().when(worldBossRewardRepository.findByEventKey(anyString())).thenReturn(Optional.empty());
         lenient().when(worldBossRewardRepository.save(any(WorldBossReward.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -119,9 +108,9 @@ class WorldBossRewardServiceTest {
         assertEquals(List.of("ATTEMPT", "TOP_DAMAGE", "FINAL_BLOW"),
                 rewards.stream().map(WorldBossRewardResponse::rewardType).toList());
         assertEquals(List.of(
-                        "CHEST_BOSS_WORLD_APOCALYMON_ATTEMPT",
-                        "CHEST_BOSS_WORLD_APOCALYMON_TOP_DAMAGE",
-                        "CHEST_BOSS_WORLD_APOCALYMON_FINAL_BLOW"
+                        "CHEST_WORLD_CUSTOM_ATTEMPT",
+                        "CHEST_WORLD_CUSTOM_TOP_DAMAGE",
+                        "CHEST_WORLD_CUSTOM_FINAL_BLOW"
                 ), rewards.stream().map(WorldBossRewardResponse::chestCode).toList());
 
         verify(addItemUseCase, times(2)).addMaterial(digimonOne, itemDefinition, 1);

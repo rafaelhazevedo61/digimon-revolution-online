@@ -18,7 +18,7 @@ Se o mesmo jogador possuir o maior dano acumulado e aplicar o golpe final, receb
 
 ## Pré-requisitos
 
-A branch deve estar baseada na `develop` após o merge do PR #70. O backend deve iniciar para que o Flyway aplique as migrations V110 e V111. O Boss Mundial atualmente catalogado é `WORLD_BOSS_APOCALYMON`, com `cooldown_minutes` inicial de 5 minutos. O valor permanece configurável no cadastro do Boss, e os Baús seguem o padrão:
+A branch deve estar baseada na `develop` após o merge do PR #70. O backend deve iniciar para que o Flyway aplique as migrations V110, V111, V112 e V113. O Boss Mundial atualmente catalogado é `WORLD_BOSS_APOCALYMON`, com `cooldown_minutes` inicial de 5 minutos e `cooldown_enabled` ativo. O valor permanece configurável no cadastro do Boss, sem ser apagado quando o cooldown é desligado. Os três Baús seguem o padrão inicial:
 
 | Tipo | Baú | Loot Table |
 | --- | --- | --- |
@@ -26,7 +26,7 @@ A branch deve estar baseada na `develop` após o merge do PR #70. O backend deve
 | Maior dano | `CHEST_BOSS_WORLD_APOCALYMON_TOP_DAMAGE` | `LOOT_TABLE_BOSS_WORLD_APOCALYMON_TOP_DAMAGE` |
 | Golpe final | `CHEST_BOSS_WORLD_APOCALYMON_FINAL_BLOW` | `LOOT_TABLE_BOSS_WORLD_APOCALYMON_FINAL_BLOW` |
 
-As pools são conservadoras e editáveis pelo painel **Baús Temáticos → Loot Tables**. A tela pública não revela as entradas antes da abertura.
+As pools são conservadoras e editáveis pelo painel **Baús Temáticos → Loot Tables**. A tela pública não revela as entradas antes da abertura. No cadastro do Boss Mundial, cada um dos três papéis pode apontar para outro Baú ativo, e cada Baú mantém sua própria Loot Table.
 
 ## 1. Baú por tentativa
 
@@ -68,9 +68,11 @@ Tente atacar novamente após a derrota. A API deve rejeitar a operação, sem al
 
 No painel, acesse **Baús Temáticos** e selecione a origem **Boss**. Os três Baús de Apocalymon devem aparecer. Confirme os códigos, Loot Tables, status ativo e negociabilidade.
 
-Na tela **Bosses**, abra **Editar** no Boss Mundial. O modal deve exibir o checkbox **Ativar cooldown** marcado e o campo `Cooldown (min)` habilitado com o valor atual. Desmarque o checkbox, salve e confirme que a tabela mostra o cooldown como **Desligado**. O valor em minutos deve permanecer armazenado. Reabra o modal, marque o checkbox novamente e confirme que o valor anterior foi preservado.
+Na tela **Bosses**, abra **Editar** no Boss Mundial. O modal deve exibir a seção **Baús do Boss Mundial** com três seletores: **Baú por tentativa**, **Baú de maior dano** e **Baú do golpe final**. Selecione três Baús ativos diferentes e salve. A tabela deve exibir os três vínculos, e cada Baú deve continuar apontando para sua própria Loot Table. Tente repetir um mesmo Baú em duas situações; o painel deve rejeitar o envio antes de salvar e a API também deve impedir a configuração duplicada.
 
-Ao desligar o checkbox, o campo de minutos deve ficar visualmente desabilitado, mas seu valor não deve ser apagado. O PUT administrativo deve enviar `cooldownEnabled: false`; ao religar, deve enviar `cooldownEnabled: true` e reutilizar os minutos preservados.
+Ainda no mesmo modal, confirme que o checkbox **Ativar cooldown** está marcado e o campo `Cooldown (min)` habilitado com o valor atual. Desmarque o checkbox, salve e confirme que a tabela mostra o cooldown como **Desligado**. O valor em minutos deve permanecer armazenado. Reabra o modal, marque o checkbox novamente e confirme que o valor anterior foi preservado.
+
+Ao desligar o checkbox, o campo de minutos deve ficar visualmente desabilitado, mas seu valor não deve ser apagado. O PUT administrativo deve enviar `cooldownEnabled: false`; ao religar, deve enviar `cooldownEnabled: true` e reutilizar os minutos preservados. Essa operação deve funcionar sem exigir o Baú legado de **Recompensa (Vitória)**, pois esse campo não é usado por Boss Mundial.
 
 Com o cooldown desligado, uma nova tentativa do mesmo jogador não deve ser bloqueada pelo intervalo. Depois de religá-lo, o intervalo configurado deve voltar a ser aplicado e a tela pública deve mostrar a contagem regressiva.
 
@@ -154,6 +156,53 @@ HAVING COUNT(*) > 1;
 
 Essa consulta também deve retornar zero linhas.
 
+Consultar a configuração dos Baús no Boss Mundial:
+
+```sql
+SELECT
+    b.code AS boss_code,
+    b.cooldown_minutes,
+    b.cooldown_enabled,
+    attempt_chest.code AS attempt_chest_code,
+    attempt_chest.loot_table_id AS attempt_loot_table_id,
+    top_damage_chest.code AS top_damage_chest_code,
+    top_damage_chest.loot_table_id AS top_damage_loot_table_id,
+    final_blow_chest.code AS final_blow_chest_code,
+    final_blow_chest.loot_table_id AS final_blow_loot_table_id
+FROM boss_definitions b
+LEFT JOIN chest_definitions attempt_chest
+    ON attempt_chest.id = b.world_attempt_chest_definition_id
+LEFT JOIN chest_definitions top_damage_chest
+    ON top_damage_chest.id = b.world_top_damage_chest_definition_id
+LEFT JOIN chest_definitions final_blow_chest
+    ON final_blow_chest.id = b.world_final_blow_chest_definition_id
+WHERE b.boss_type = 'WORLD'
+  AND b.code = 'WORLD_BOSS_APOCALYMON';
+```
+
+As três colunas de Baú devem estar preenchidas e apontar para códigos diferentes. Para consultar os códigos das Loot Tables associadas de forma mais legível:
+
+```sql
+SELECT
+    b.code AS boss_code,
+    role.reward_role,
+    c.code AS chest_code,
+    c.name AS chest_name,
+    lt.code AS loot_table_code,
+    lt.active AS loot_table_active
+FROM boss_definitions b
+CROSS JOIN LATERAL (
+    VALUES
+        ('ATTEMPT', b.world_attempt_chest_definition_id),
+        ('TOP_DAMAGE', b.world_top_damage_chest_definition_id),
+        ('FINAL_BLOW', b.world_final_blow_chest_definition_id)
+) AS role(reward_role, chest_id)
+JOIN chest_definitions c ON c.id = role.chest_id
+LEFT JOIN loot_tables lt ON lt.id = c.loot_table_id
+WHERE b.code = 'WORLD_BOSS_APOCALYMON'
+ORDER BY role.reward_role;
+```
+
 Consultar os Baús de um jogador:
 
 ```sql
@@ -199,6 +248,12 @@ ORDER BY idf.code;
 - [ ] A abertura dos Baús usa o fluxo transacional já existente.
 
 - [x] O painel lista e edita os três Baús do Boss Mundial.
+
+- [ ] Cada situação do Boss Mundial usa o Baú configurado para seu próprio papel e sua própria Loot Table.
+
+- [ ] A edição somente do cooldown não exige o Baú legado de Boss normal/periódico.
+
+- [ ] Baús vinculados a qualquer um dos três papéis não podem ser desativados pelo painel.
 
 - [ ] As consultas de duplicidade retornam zero linhas.
 
