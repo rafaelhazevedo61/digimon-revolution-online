@@ -16,6 +16,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class WorldBossRules {
 
     public static final int DAILY_ATTACK_LIMIT = 3;
+    public static final int DEFAULT_ATTACK_COOLDOWN_MINUTES = 5;
     public static final double DAMAGE_PERCENT_PER_WIN_CHANCE = 0.05;
     public static final double MIN_DAMAGE_PERCENT = 0.05;
 
@@ -23,6 +24,11 @@ public class WorldBossRules {
     public static int dailyAttacksRemaining(long usedToday) {
         long remaining = DAILY_ATTACK_LIMIT - usedToday;
         return (int) Math.max(0, remaining);
+    }
+
+    /** Retorna o cooldown efetivo, aplicando cinco minutos quando o cadastro não o configurou. */
+    public static int attackCooldownMinutes(int configuredMinutes) {
+        return configuredMinutes > 0 ? configuredMinutes : DEFAULT_ATTACK_COOLDOWN_MINUTES;
     }
 
     /** Verifica se o jogador já consumiu os três ataques do dia. */

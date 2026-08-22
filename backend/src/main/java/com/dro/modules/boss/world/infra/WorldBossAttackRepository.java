@@ -23,6 +23,11 @@ public interface WorldBossAttackRepository extends JpaRepository<WorldBossAttack
             String requestId
     );
 
+    Optional<WorldBossAttack> findFirstByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(
+            UUID worldBossId,
+            UUID playerId
+    );
+
     List<WorldBossAttack> findByWorldBossIdOrderByCreatedAtDesc(UUID worldBossId);
 
     List<WorldBossAttack> findByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(UUID worldBossId, UUID playerId);

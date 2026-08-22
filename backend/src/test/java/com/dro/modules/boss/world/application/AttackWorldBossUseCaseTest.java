@@ -246,6 +246,30 @@ class AttackWorldBossUseCaseTest {
     }
 
     @Test
+    void attackIsBlockedWhenConfiguredCooldownHasNotElapsed() {
+        WorldBossAttack lastAttack = WorldBossAttack.builder()
+                .id(UUID.randomUUID())
+                .worldBossId(instance.getId())
+                .playerId(playerId)
+                .digimonId(digimonId)
+                .damage(10)
+                .createdAt(Instant.now().minusSeconds(60))
+                .build();
+        when(worldBossAttackRepository.findFirstByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(
+                instance.getId(), playerId)).thenReturn(Optional.of(lastAttack));
+
+        BadRequestException exception = assertThrows(
+                BadRequestException.class,
+                () -> useCase.execute(token, "request-cooldown")
+        );
+
+        assertTrue(exception.getMessage().contains("cooldown"));
+        verify(worldBossAttackRepository, never()).save(any());
+        verify(worldBossRewardService, never()).grant(any(), any(), any(), anyBoolean());
+        verify(digimonRepository, never()).save(any());
+    }
+
+    @Test
     void attackIsBlockedAfterBossWasDefeated() {
         instance.setStatus(WorldBossStatus.DEFEATED);
         instance.setRemainingHp(0);

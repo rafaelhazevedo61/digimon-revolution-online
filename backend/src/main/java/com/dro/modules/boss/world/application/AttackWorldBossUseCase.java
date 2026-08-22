@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -103,6 +104,22 @@ public class AttackWorldBossUseCase {
                 .countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(instance.getId(), playerId, resetCutoff);
         if (WorldBossRules.dailyLimitReached(usedToday)) {
             throw new BadRequestException("Daily world boss attack limit reached (" + WorldBossRules.DAILY_ATTACK_LIMIT + " per day). Come back tomorrow.");
+        }
+
+        WorldBossAttack lastAttack = worldBossAttackRepository
+                .findFirstByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(instance.getId(), playerId)
+                .orElse(null);
+        int cooldownMinutes = WorldBossRules.attackCooldownMinutes(boss.getCooldownMinutes());
+        if (lastAttack != null && lastAttack.getCreatedAt() != null) {
+            Instant nextAttackAt = lastAttack.getCreatedAt().plus(Duration.ofMinutes(cooldownMinutes));
+            Instant now = Instant.now();
+            if (now.isBefore(nextAttackAt)) {
+                long remainingSeconds = Math.max(1, Duration.between(now, nextAttackAt).toSeconds());
+                long remainingMinutes = (remainingSeconds + 59) / 60;
+                throw new BadRequestException(
+                        "World boss attack cooldown active. Try again in "
+                                + remainingMinutes + " minute(s).");
+            }
         }
 
         UUID clanId = player.getClanId();

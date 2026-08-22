@@ -71,23 +71,6 @@ function renderWorldBossContent(boss) {
     `;
   }
 
-  const rewardLabels = {
-    ATTEMPT: "Baú por tentativa",
-    TOP_DAMAGE: "Baú de maior dano acumulado",
-    FINAL_BLOW: "Baú do golpe final"
-  };
-  const myRewardsHtml = boss.myRewards && boss.myRewards.length > 0 ? `
-    <div class="card mt-4 border-amber-900">
-      <p class="font-bold mb-2 text-sm">Suas recompensas no ciclo atual</p>
-      ${boss.myRewards.map(reward => `
-        <div class="flex justify-between items-center py-1.5 border-b border-slate-800 last:border-0">
-          <span class="text-xs text-slate-400">${escapeHtml(rewardLabels[reward.rewardType] || "Baú")}</span>
-          <span class="text-sm text-amber-300 font-bold">${escapeHtml(reward.chestName)}</span>
-        </div>
-      `).join("")}
-    </div>
-  ` : "";
-
   let attacksHtml = "";
   if (boss.recentAttacks && boss.recentAttacks.length > 0) {
     attacksHtml = `
@@ -130,7 +113,6 @@ function renderWorldBossContent(boss) {
       ${defeated ? `<p class="text-xs text-green-400 text-center">Boss Mundial derrotado hoje! Volte amanhã.</p>` : ""}
     </div>
 
-    ${myRewardsHtml}
     ${rankingHtml}
     ${attacksHtml}
   `;

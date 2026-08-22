@@ -9,7 +9,7 @@ O maior dano é calculado pela soma de todos os ataques de cada jogador na inst�
 ## Regras de recompensa
 
 | Tipo | Quando é concedido | Destinatário |
-|---|---|---|
+| --- | --- | --- |
 | `ATTEMPT` | Cada ataque válido | Jogador do ataque |
 | `TOP_DAMAGE` | Uma vez, no ataque que derrota o Boss | Jogador com maior dano acumulado na instância |
 | `FINAL_BLOW` | Uma vez, no ataque que derrota o Boss | Jogador do golpe final |
@@ -18,10 +18,10 @@ Se o mesmo jogador possuir o maior dano acumulado e aplicar o golpe final, receb
 
 ## Pré-requisitos
 
-A branch deve estar baseada na `develop` após o merge do PR #70. O backend deve iniciar para que o Flyway aplique a migration V110. O Boss Mundial atualmente catalogado é `WORLD_BOSS_APOCALYMON`, e os Baús seguem o padrão:
+A branch deve estar baseada na `develop` após o merge do PR #70. O backend deve iniciar para que o Flyway aplique a migration V110. O Boss Mundial atualmente catalogado é `WORLD_BOSS_APOCALYMON`, com `cooldown_minutes` inicial de 5 minutos. O valor permanece configurável no cadastro do Boss, e os Baús seguem o padrão:
 
 | Tipo | Baú | Loot Table |
-|---|---|---|
+| --- | --- | --- |
 | Tentativa | `CHEST_BOSS_WORLD_APOCALYMON_ATTEMPT` | `LOOT_TABLE_BOSS_WORLD_APOCALYMON_ATTEMPT` |
 | Maior dano | `CHEST_BOSS_WORLD_APOCALYMON_TOP_DAMAGE` | `LOOT_TABLE_BOSS_WORLD_APOCALYMON_TOP_DAMAGE` |
 | Golpe final | `CHEST_BOSS_WORLD_APOCALYMON_FINAL_BLOW` | `LOOT_TABLE_BOSS_WORLD_APOCALYMON_FINAL_BLOW` |
@@ -32,7 +32,9 @@ As pools são conservadoras e editáveis pelo painel **Baús Temáticos → Loot
 
 Acesse **Boss Mundial** e execute um ataque válido. O modal deve exibir o Baú por tentativa. O inventário do Digimon usado deve receber exatamente uma unidade de `CHEST_BOSS_WORLD_APOCALYMON_ATTEMPT`.
 
-Execute outro ataque válido com uma nova chave `Idempotency-Key`. Um segundo Baú por tentativa deve ser recebido, pois são ataques diferentes. O limite diário continua sendo três ataques por jogador, conforme a regra existente.
+Aguarde o cooldown configurado expirar e execute outro ataque válido com uma nova chave `Idempotency-Key`. Um segundo Baú por tentativa deve ser recebido, pois são ataques diferentes. O limite diário continua sendo três ataques por jogador, conforme a regra existente.
+
+Tente atacar novamente antes de o cooldown expirar. A API deve rejeitar a operação, informando o tempo aproximado restante, sem consumir energia, alterar o HP do Boss, conceder XP/Bits ou criar Baú.
 
 Abra um dos Baús pelo fluxo normal de `/inventory/chests/open` e confirme que o consumo, o sorteio e os registros `chest_openings` e `chest_opening_items` funcionam sem alteração.
 
@@ -41,6 +43,14 @@ Abra um dos Baús pelo fluxo normal de `/inventory/chests/open` e confirme que o
 Repita exatamente a mesma requisição usando o mesmo valor de `Idempotency-Key`. A API deve retornar o mesmo snapshot do ataque: dano, HP restante, chance, recompensas e ataques restantes. Não deve haver novo consumo de energia, novo ataque, novo ganho de XP/Bits ou novo Baú.
 
 O script cURL e a collection Postman usam `world-boss-test-request-001` como exemplo. Para realizar um ataque novo, altere o valor. Para validar reprocessamento, repita o valor sem alteração.
+
+## 2.1. Cooldown configurável
+
+Altere temporariamente o `cooldown_minutes` do Boss Mundial no painel administrativo ou diretamente no PostgreSQL para um valor curto durante o teste. Após um ataque válido, uma nova tentativa do mesmo jogador antes do intervalo deve retornar erro de cooldown. O bloqueio deve acontecer antes do consumo de energia, do cálculo de dano e da concessão de recompensas.
+
+Confirme que um segundo jogador pode atacar normalmente durante o cooldown do primeiro jogador. O cooldown é individual por jogador e por instância diária, não global para todos os participantes.
+
+O card **“Suas recompensas no ciclo atual”** não deve mais aparecer na tela pública. O Baú deve ser informado no modal do ataque que o concedeu e, quando necessário, no inventário do jogador.
 
 ## 3. Derrota, maior dano e golpe final
 
@@ -154,15 +164,34 @@ ORDER BY idf.code;
 
 ## Critérios de aceite
 
-- [ ] Cada ataque válido entrega um Baú `ATTEMPT` ao jogador atacante.
-- [ ] O mesmo `Idempotency-Key` não cria ataque, consumo ou Baú adicional.
+- [x] Cada ataque válido entrega um Baú `ATTEMPT` ao jogador atacante.
+
+- [x] O mesmo `Idempotency-Key` não cria ataque, consumo ou Baú adicional.
+
 - [ ] O maior dano usa a soma acumulada de todos os ataques da instância.
+
 - [ ] O maior dano considera somente participantes do ciclo derrotado.
+
 - [ ] O Baú `TOP_DAMAGE` é concedido uma única vez no encerramento.
+
 - [ ] O Baú `FINAL_BLOW` é concedido uma única vez ao jogador do ataque final.
+
 - [ ] Um jogador pode receber simultaneamente `TOP_DAMAGE` e `FINAL_BLOW`.
+
 - [ ] Ataques posteriores à derrota são rejeitados.
+
+- [ ] O cooldown configurável bloqueia ataques repetidos do mesmo jogador antes do prazo.
+
+- [ ] O valor padrão do cooldown é cinco minutos quando o cadastro não possui valor positivo.
+
+- [ ] O cooldown de um jogador não bloqueia os demais participantes.
+
+- [ ] O card redundante de recompensas do ciclo não aparece na tela pública.
+
 - [ ] A abertura dos Baús usa o fluxo transacional já existente.
-- [ ] O painel lista e edita os três Baús do Boss Mundial.
+
+- [x] O painel lista e edita os três Baús do Boss Mundial.
+
 - [ ] As consultas de duplicidade retornam zero linhas.
+
 - [ ] A auditoria positiva contém instância, jogador, dano, estado e Baús concedidos.
