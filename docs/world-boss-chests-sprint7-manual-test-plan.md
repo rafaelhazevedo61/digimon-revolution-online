@@ -18,7 +18,7 @@ Se o mesmo jogador possuir o maior dano acumulado e aplicar o golpe final, receb
 
 ## Pré-requisitos
 
-A branch deve estar baseada na `develop` após o merge do PR #70. O backend deve iniciar para que o Flyway aplique a migration V110. O Boss Mundial atualmente catalogado é `WORLD_BOSS_APOCALYMON`, com `cooldown_minutes` inicial de 5 minutos. O valor permanece configurável no cadastro do Boss, e os Baús seguem o padrão:
+A branch deve estar baseada na `develop` após o merge do PR #70. O backend deve iniciar para que o Flyway aplique as migrations V110 e V111. O Boss Mundial atualmente catalogado é `WORLD_BOSS_APOCALYMON`, com `cooldown_minutes` inicial de 5 minutos. O valor permanece configurável no cadastro do Boss, e os Baús seguem o padrão:
 
 | Tipo | Baú | Loot Table |
 | --- | --- | --- |

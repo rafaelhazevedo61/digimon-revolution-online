@@ -1,10 +1,5 @@
 BEGIN;
 
-UPDATE boss_definitions
-SET cooldown_minutes = 5
-WHERE code = 'WORLD_BOSS_APOCALYMON'
-  AND cooldown_minutes <= 0;
-
 ALTER TABLE world_boss_attacks
     ADD COLUMN request_id VARCHAR(120),
     ADD COLUMN remaining_hp_after INT NOT NULL DEFAULT 0,
