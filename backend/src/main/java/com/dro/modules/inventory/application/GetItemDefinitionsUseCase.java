@@ -44,7 +44,7 @@ public class GetItemDefinitionsUseCase {
 
     private String normalizeSearch(String value) {
         if (value == null || value.isBlank()) {
-            return null;
+            return "";
         }
 
         return value.trim().toUpperCase();

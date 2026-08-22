@@ -51,6 +51,23 @@ class ItemDefinitionAdminUseCaseTest {
     }
 
     @Test
+    void catalogWithoutSearchUsesTypedEmptyString() {
+        PageRequest pageRequest = PageRequest.of(0, 20);
+        when(itemDefinitionRepository.findCatalog(
+                eq(""), eq(null), eq(null), eq(null), eq(null), eq(null), eq(pageRequest)
+        )).thenReturn(new PageImpl<>(List.of(), pageRequest, 0));
+
+        ItemDefinitionPageResponse response = getItemDefinitionsUseCase.execute(
+                null, null, null, null, null, null, pageRequest
+        );
+
+        assertEquals(0, response.totalItems());
+        verify(itemDefinitionRepository).findCatalog(
+                "", null, null, null, null, null, pageRequest
+        );
+    }
+
+    @Test
     void updateChangesEditableAttributesWithoutChangingCode() {
         ItemDefinition item = baseItem();
         when(itemDefinitionRepository.findById(7L)).thenReturn(Optional.of(item));

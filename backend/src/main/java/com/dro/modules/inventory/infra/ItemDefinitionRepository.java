@@ -19,7 +19,7 @@ public interface ItemDefinitionRepository extends JpaRepository<ItemDefinition, 
     @Query("""
             SELECT item
             FROM ItemDefinition item
-            WHERE (:search IS NULL OR
+            WHERE (:search = '' OR
                        UPPER(item.code) LIKE CONCAT('%', :search, '%') OR
                        UPPER(item.name) LIKE CONCAT('%', :search, '%') OR
                        UPPER(COALESCE(item.description, '')) LIKE CONCAT('%', :search, '%'))
