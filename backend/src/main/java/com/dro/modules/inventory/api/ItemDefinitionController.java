@@ -20,6 +20,7 @@ public class ItemDefinitionController {
 
     @GetMapping
     public ResponseEntity<ItemDefinitionPageResponse> getItems(
+            @RequestParam(required = false) String search,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String rarity,
             @RequestParam(required = false) Boolean usable,
@@ -39,7 +40,8 @@ public class ItemDefinitionController {
 
         return ResponseEntity.ok(
                 getItemDefinitionsUseCase.execute(
-                        category,
+                            search,
+                            category,
                         rarity,
                         usable,
                         sellable,
