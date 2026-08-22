@@ -1,6 +1,7 @@
 package com.dro.modules.admin.api;
 
 import com.dro.modules.arena.application.AdminResetArenaDailyUseCase;
+import com.dro.modules.boss.world.application.AdminForceNewWorldBossCycleUseCase;
 import com.dro.modules.boss.world.application.AdminResetWorldBossDailyUseCase;
 import com.dro.modules.clan.application.AdminCompleteClanMissionsUseCase;
 import com.dro.modules.clan.raid.application.AdminResetClanRaidDailyUseCase;
@@ -23,6 +24,7 @@ public class AdminToolsController {
     private final AdminResetArenaDailyUseCase resetArenaDailyUseCase;
     private final AdminResetClanRaidDailyUseCase resetClanRaidDailyUseCase;
     private final AdminResetWorldBossDailyUseCase resetWorldBossDailyUseCase;
+    private final AdminForceNewWorldBossCycleUseCase forceNewWorldBossCycleUseCase;
     private final AdminCompleteClanMissionsUseCase completeClanMissionsUseCase;
 
     @PostMapping("/reset-daily-arena-attacks")
@@ -49,6 +51,17 @@ public class AdminToolsController {
         return ResponseEntity.ok(Map.of(
                 "message", "World boss daily reset successfully",
                 "instancesReset", instancesReset
+        ));
+    }
+
+    @PostMapping("/force-new-world-boss-cycle")
+    public ResponseEntity<Map<String, Object>> forceNewWorldBossCycle() {
+        var instance = forceNewWorldBossCycleUseCase.execute();
+        return ResponseEntity.ok(Map.of(
+                "message", "New world boss cycle opened successfully",
+                "instanceId", instance.getId(),
+                "cycleNumber", instance.getCycleNumber(),
+                "bossDate", instance.getBossDate()
         ));
     }
 

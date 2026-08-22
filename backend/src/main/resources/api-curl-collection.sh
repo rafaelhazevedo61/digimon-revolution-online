@@ -223,6 +223,10 @@ USABLE="${USABLE:-VALOR}"
 # AdminToolsController.resetWorldBossDaily (POST /admin/tools/reset-world-boss-daily)
 # curl --fail-with-body -i -X POST "${BASE_URL}/admin/tools/reset-world-boss-daily" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
+# AdminToolsController.forceNewWorldBossCycle (POST /admin/tools/force-new-world-boss-cycle)
+# Disponível somente após a derrota do ciclo atual; preserva o histórico anterior.
+# curl --fail-with-body -i -X POST "${BASE_URL}/admin/tools/force-new-world-boss-cycle" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+
 # ===== ROOT =====
 
 # AreaController.getAreas (GET /areas)

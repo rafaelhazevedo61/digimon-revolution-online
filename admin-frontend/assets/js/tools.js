@@ -118,6 +118,12 @@ async function renderToolsPage() {
           <button onclick="adminResetWorldBoss()" class="btn-primary w-full py-2">Resetar Boss Mundial</button>
           <div id="admin-reset-world-boss-result" class="text-sm mt-2"></div>
         </div>
+        <div class="bg-slate-900 rounded-lg p-4 border border-amber-900/60">
+          <p class="text-sm text-slate-300 mb-1">Forçar novo ciclo do Boss Mundial</p>
+          <p class="text-xs text-slate-500 mb-2">Disponível somente depois que o Boss atual for derrotado. O histórico anterior será preservado.</p>
+          <button onclick="adminForceNewWorldBossCycle()" class="btn-primary w-full py-2">Abrir novo ciclo</button>
+          <div id="admin-force-world-boss-result" class="text-sm mt-2"></div>
+        </div>
       </div>
     </div>
   `;
@@ -370,6 +376,23 @@ async function adminResetWorldBoss() {
   } catch (err) {
     document.getElementById("admin-reset-world-boss-result").innerHTML =
       `<span class="text-red-400">${err.message}</span>`;
+  }
+}
+
+async function adminForceNewWorldBossCycle() {
+  const confirmed = window.confirm(
+    "Abrir um novo ciclo do Boss Mundial agora? O ciclo atual precisa estar derrotado e o histórico será preservado."
+  );
+  if (!confirmed) return;
+
+  const resultElement = document.getElementById("admin-force-world-boss-result");
+  try {
+    const result = await apiPost("/admin/tools/force-new-world-boss-cycle");
+    resultElement.innerHTML =
+      `<span class="text-green-400">${escapeHtml(result.message)} (ciclo ${result.cycleNumber})</span>`;
+  } catch (err) {
+    resultElement.innerHTML =
+      `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
   }
 }
 
