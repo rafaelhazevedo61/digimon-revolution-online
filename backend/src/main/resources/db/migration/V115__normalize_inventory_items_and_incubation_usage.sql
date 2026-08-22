@@ -19,7 +19,7 @@ WHERE category IN ('DIGITAMA', 'INCUBATOR')
 CREATE TEMP TABLE inventory_item_consolidation ON COMMIT DROP AS
 SELECT
     inventory.digimon_id,
-    MIN(inventory.id) AS survivor_id,
+    MIN(inventory.id::text)::uuid AS survivor_id,
     definition.id AS item_definition_id,
     definition.code AS item_code,
     SUM(inventory.quantity) AS total_quantity
