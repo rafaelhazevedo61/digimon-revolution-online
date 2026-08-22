@@ -3,7 +3,9 @@ package com.dro.modules.tutorial.application;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.tutorial.domain.TutorialCompletion;
@@ -54,6 +56,9 @@ class TutorialServiceTest {
     @Mock
     private AddItemUseCase addItemUseCase;
 
+    @Mock
+    private ItemDefinitionRepository itemDefinitionRepository;
+
     @InjectMocks
     private TutorialService tutorialService;
 
@@ -70,6 +75,25 @@ class TutorialServiceTest {
                 "iss", JwtSettings.getIssuer(),
                 "exp", Instant.now().plusSeconds(3600).getEpochSecond()
         ), JwtSettings.getSecret());
+    }
+
+    @Test
+    void progressIncludesFriendlyRewardItemName() {
+        when(tutorialProgressRepository.findByPlayerId(playerId)).thenReturn(List.of());
+        when(itemDefinitionRepository.findByCode(ItemType.POTION_SMALL.name()))
+                .thenReturn(java.util.Optional.of(ItemDefinition.builder()
+                        .code(ItemType.POTION_SMALL.name())
+                        .name("Poção Pequena")
+                        .build()));
+
+        var result = tutorialService.getProgress(token);
+        var missionStep = result.steps().stream()
+                .filter(step -> step.step().equals(TutorialStep.COMPLETE_MISSION.name()))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(missionStep.rewardItem()).isEqualTo(ItemType.POTION_SMALL.name());
+        assertThat(missionStep.rewardItemName()).isEqualTo("Poção Pequena");
     }
 
     @Test

@@ -3,6 +3,8 @@ package com.dro.modules.tutorial.application;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.inventory.domain.ItemDefinition;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.tutorial.api.dto.response.TutorialProgressResponse;
@@ -37,6 +39,7 @@ public class TutorialService {
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final AddItemUseCase addItemUseCase;
+    private final ItemDefinitionRepository itemDefinitionRepository;
 
     /**
      * Marca uma etapa como concluída, mas deixa sua recompensa pendente de resgate.
@@ -137,6 +140,22 @@ public class TutorialService {
         }
     }
 
+    private String findRewardItemName(TutorialStep step) {
+        if (!step.hasItemReward()) {
+            return null;
+        }
+
+        try {
+            return itemDefinitionRepository.findByCode(step.getRewardItem().name())
+                    .map(ItemDefinition::getName)
+                    .filter(name -> name != null && !name.isBlank())
+                    .orElse(null);
+        } catch (RuntimeException ignored) {
+            // A catalog lookup is presentation-only and must not break the tutorial.
+            return null;
+        }
+    }
+
     private TutorialStep parseStep(String stepName) {
         try {
             return TutorialStep.valueOf(stepName.toUpperCase());
@@ -168,6 +187,7 @@ public class TutorialService {
                         step.getDescription(),
                         step.getRewardBits(),
                         step.hasItemReward() ? step.getRewardItem().name() : null,
+                        findRewardItemName(step),
                         step.getRewardItemQuantity(),
                         completed.contains(step),
                         claimed.contains(step)

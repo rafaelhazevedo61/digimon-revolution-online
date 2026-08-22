@@ -170,9 +170,10 @@ async function tutorialFinish() {
 
 function tutorialRewardLabel(step) {
   const parts = [];
-  if (step.rewardBits > 0) parts.push(`${step.rewardBits} bits`);
+  if (step.rewardBits > 0) parts.push(`${step.rewardBits} Bits`);
   if (step.rewardItem && step.rewardItemQuantity > 0) {
-    parts.push(`${step.rewardItemQuantity}× ${formatItemType(step.rewardItem)}`);
+    const itemName = step.rewardItemName || "Item";
+    parts.push(`${step.rewardItemQuantity}× ${escapeHtml(itemName)}`);
   }
   return parts.join(" + ");
 }
