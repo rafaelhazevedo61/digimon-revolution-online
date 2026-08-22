@@ -1,10 +1,13 @@
 package com.dro.modules.shop.application;
 
 import com.dro.modules.equipment.infra.EquipmentTemplateRepository;
+import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.shop.api.dto.request.CreateShopProductRequest;
 import com.dro.modules.shop.api.dto.response.AdminShopProductResponse;
 import com.dro.modules.shop.domain.ShopProductEntity;
 import com.dro.modules.shop.domain.ShopProductType;
+import com.dro.modules.shop.domain.enums.ShopProductCategory;
 import com.dro.modules.shop.infra.ShopProductRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
@@ -26,6 +29,7 @@ public class CreateShopProductUseCase {
 
     private final ShopProductRepository shopProductRepository;
     private final EquipmentTemplateRepository equipmentTemplateRepository;
+    private final ItemDefinitionRepository itemDefinitionRepository;
 
     @CacheEvict(cacheNames = "shopCatalog", key = "'active'")
     @Transactional
@@ -46,6 +50,7 @@ public class CreateShopProductUseCase {
                 .productType(request.productType())
                 .category(request.category())
                 .itemType(request.itemType())
+                .itemDefinitionCode(resolveItemDefinitionCode(request.code(), request.itemType(), request.itemDefinitionCode()))
                 .equipmentTemplateName(request.equipmentTemplateName())
                 .price(request.price())
                 .sellPrice(request.sellPrice())
@@ -79,6 +84,33 @@ public class CreateShopProductUseCase {
             if (request.itemType() == null) {
                 throw new BadRequestException("itemType is required for ITEM products");
             }
+
+            if (request.category() == ShopProductCategory.CHEST) {
+                if (request.itemType() != ItemType.LOOT_CHEST) {
+                    throw new BadRequestException("CHEST products must use itemType LOOT_CHEST");
+                }
+
+                String definitionCode = resolveItemDefinitionCode(
+                        request.code(), request.itemType(), request.itemDefinitionCode());
+                if (itemDefinitionRepository.findByCode(definitionCode)
+                        .filter(definition -> "CHEST".equalsIgnoreCase(definition.getCategory()))
+                        .isEmpty()) {
+                    throw new NotFoundException("Chest item definition not found: " + definitionCode);
+                }
+            }
         }
+    }
+
+    private String resolveItemDefinitionCode(String productCode, ItemType itemType, String requestedCode) {
+        if (requestedCode != null && !requestedCode.isBlank()) {
+            return requestedCode.trim();
+        }
+        if (itemType == ItemType.LOOT_CHEST) {
+            return productCode;
+        }
+        if (itemType != null && itemType != ItemType.EVOLUTION_MATERIAL) {
+            return itemType.name();
+        }
+        return null;
     }
 }

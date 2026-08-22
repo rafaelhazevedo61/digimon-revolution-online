@@ -14,13 +14,13 @@ const shopState = {
 };
 
 const PRODUCT_TYPES = ["ITEM", "EQUIPMENT"];
-const PRODUCT_CATEGORIES = ["POTION", "MATERIAL", "FRAGMENT", "CONSUMABLE", "EQUIPMENT"];
+const PRODUCT_CATEGORIES = ["POTION", "MATERIAL", "FRAGMENT", "CONSUMABLE", "CHEST", "EQUIPMENT"];
 const ITEM_TYPES = [
   "POTION_SMALL", "TRAINING_STONE", "DATA_CORE",
   "DIGITAMA_STARTER", "DIGITAMA_FIRE", "DIGITAMA_WATER", "DIGITAMA_NATURE",
   "INCUBATOR_COMMON", "INCUBATOR_RARE", "INCUBATOR_EPIC",
   "FRAGMENT_ROOKIE", "FRAGMENT_CHAMPION", "FRAGMENT_ULTIMATE", "FRAGMENT_MEGA",
-  "EVOLUTION_MATERIAL"
+  "EVOLUTION_MATERIAL", "LOOT_CHEST"
 ];
 
 function renderShopProductsPage() {
@@ -116,7 +116,9 @@ function renderShopProductsTable(products) {
 function renderShopRow(p) {
   const statusClass = p.active ? "badge-success" : "badge-danger";
   const statusText = p.active ? "Ativo" : "Inativo";
-  const ref = p.productType === "EQUIPMENT" ? p.equipmentTemplateName : (p.itemType || "-");
+  const ref = p.productType === "EQUIPMENT"
+    ? p.equipmentTemplateName
+    : (p.itemDefinitionCode || p.itemType || "-");
 
   return `
     <tr>
@@ -252,12 +254,19 @@ function shopRenderModal(title, data, isEdit) {
             </div>
 
             <div id="shop-item-type-group" class="${data.productType === 'EQUIPMENT' ? 'hidden' : ''}">
-              <label class="text-sm text-slate-400">Item Type</label>
+              <label class="text-sm text-slate-400">Tipo do item</label>
               <select id="shop-item-type" class="input mt-1" ${readonlyCatalogFields ? "disabled" : ""}>
                 <option value="">-- Selecione --</option>
                 ${shopSelectOptions(ITEM_TYPES, data.itemType)}
               </select>
-              ${data._materialCode ? `<p class="text-xs text-amber-300 mt-1">Material específico detectado: ${shopEscapeHtml(data._materialCode)}. A compra ainda usa itemType EVOLUTION_MATERIAL no backend atual.</p>` : ""}
+              ${data._materialCode ? `<p class="text-xs text-amber-300 mt-1">Material específico detectado: ${shopEscapeHtml(data._materialCode)}.</p>` : ""}
+            </div>
+
+            <div id="shop-item-definition-code-group" class="${data.productType === 'EQUIPMENT' ? 'hidden' : ''}">
+              <label class="text-sm text-slate-400">Código da definição do item</label>
+              <input id="shop-item-definition-code" class="input mt-1" value="${shopEscapeAttr(data.itemDefinitionCode || data._catalogSource?.itemDefinitionCode || '')}"
+                ${readonlyCatalogFields ? "readonly" : ""} placeholder="Ex.: CHEST_FRAGMENT_ROOKIE" />
+              <p class="text-xs text-slate-500 mt-1">Usado para itens específicos, como baús. Para itens comuns, pode acompanhar o tipo do item.</p>
             </div>
 
             <div id="shop-eqt-name-group" class="${data.productType === 'ITEM' ? 'hidden' : ''}">
@@ -295,6 +304,7 @@ function shopRenderModal(title, data, isEdit) {
 function shopToggleTypeFields() {
   const type = document.getElementById("shop-product-type").value;
   document.getElementById("shop-item-type-group").classList.toggle("hidden", type === "EQUIPMENT");
+  document.getElementById("shop-item-definition-code-group").classList.toggle("hidden", type === "EQUIPMENT");
   document.getElementById("shop-eqt-name-group").classList.toggle("hidden", type === "ITEM");
 }
 
@@ -482,6 +492,7 @@ function shopRenderItemCatalog(items) {
     .filter(p => p.productType === "ITEM")
     .forEach(p => {
       existingRefs.add(p.code);
+      if (p.itemDefinitionCode) existingRefs.add(p.itemDefinitionCode);
       if (p.code && p.code.startsWith("SHOP_")) {
         existingRefs.add(p.code.substring(5));
       }
@@ -661,7 +672,9 @@ function shopAddFromItem(itemCode) {
   shopState.editing = null;
 
   const category = shopMapItemCategoryToShopCategory(item.category);
-  const itemType = ITEM_TYPES.includes(item.code) ? item.code : 'EVOLUTION_MATERIAL';
+  const itemType = item.category === 'CHEST'
+    ? 'LOOT_CHEST'
+    : ITEM_TYPES.includes(item.code) ? item.code : 'EVOLUTION_MATERIAL';
   const materialCode = itemType === 'EVOLUTION_MATERIAL' && item.code !== 'EVOLUTION_MATERIAL' ? item.code : null;
 
   shopRenderModal("Adicionar Item à Loja", {
@@ -671,6 +684,7 @@ function shopAddFromItem(itemCode) {
     productType: 'ITEM',
     category: category,
     itemType: itemType,
+    itemDefinitionCode: item.code,
     equipmentTemplateName: '',
     price: item.buyPrice ?? 0,
     sellPrice: item.sellPrice ?? 0,
@@ -724,6 +738,7 @@ async function shopSubmitForm(event) {
     productType: productType,
     category: document.getElementById("shop-category").value,
     itemType: productType === "ITEM" ? document.getElementById("shop-item-type").value || null : null,
+    itemDefinitionCode: productType === "ITEM" ? document.getElementById("shop-item-definition-code").value.trim() || null : null,
     equipmentTemplateName: productType === "EQUIPMENT" ? document.getElementById("shop-eqt-name").value.trim() || null : null,
     price: Number(document.getElementById("shop-price").value),
     sellPrice: Number(document.getElementById("shop-sell-price").value)
@@ -815,7 +830,8 @@ function shopMapItemCategoryToShopCategory(category) {
     EQUIPMENT: 'EQUIPMENT',
     DIGITAMA: 'CONSUMABLE',
     INCUBATOR: 'CONSUMABLE',
-    EVOLUTION_MATERIAL: 'MATERIAL'
+    EVOLUTION_MATERIAL: 'MATERIAL',
+    CHEST: 'CHEST'
   };
   return categoryMap[normalized] || 'CONSUMABLE';
 }
@@ -896,7 +912,7 @@ function shopSignedStat(value, label = '') {
 
 function shopFormatBits(value) {
   const number = Number(value || 0);
-  return `${number.toLocaleString('pt-BR')} bits`;
+  return `${number.toLocaleString('pt-BR')} Bits`;
 }
 
 function shopShowFormError(errorDiv, message) {

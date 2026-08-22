@@ -5,6 +5,9 @@ import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.equipment.application.GrantEquipmentUseCase;
 import com.dro.modules.equipment.domain.EquipmentRarityRules;
 import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.inventory.domain.ItemDefinition;
+import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.shop.api.dto.BuyShopProductResponse;
@@ -42,6 +45,7 @@ public class BuyShopProductUseCase {
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final AddItemUseCase addItemUseCase;
+    private final ItemDefinitionRepository itemDefinitionRepository;
     private final GrantEquipmentUseCase grantEquipmentUseCase;
     private final ShopProductRepository shopProductRepository;
     private final TutorialService tutorialService;
@@ -96,11 +100,21 @@ public class BuyShopProductUseCase {
         UUID equipmentId = null;
 
         if (product.getProductType() == ShopProductType.ITEM) {
-            addItemUseCase.execute(
-                    digimon.getId(),
-                    product.getItemType(),
-                    quantity
-            );
+            if (product.getItemType() == ItemType.LOOT_CHEST) {
+                String definitionCode = product.getItemDefinitionCode() != null
+                        ? product.getItemDefinitionCode()
+                        : product.getCode();
+                ItemDefinition chestDefinition = itemDefinitionRepository.findByCode(definitionCode)
+                        .filter(item -> "CHEST".equalsIgnoreCase(item.getCategory()))
+                        .orElseThrow(() -> new NotFoundException("Chest item definition not found: " + definitionCode));
+                addItemUseCase.addMaterial(digimon.getId(), chestDefinition, quantity);
+            } else {
+                addItemUseCase.execute(
+                        digimon.getId(),
+                        product.getItemType(),
+                        quantity
+                );
+            }
         }
 
         if (product.getProductType() == ShopProductType.EQUIPMENT) {

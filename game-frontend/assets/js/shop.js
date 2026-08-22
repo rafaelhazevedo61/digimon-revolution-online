@@ -68,8 +68,8 @@ function shopRenderBuyMode() {
       <button class="tab-btn w-full" data-cat="potions" onclick="shopSwitchTab('potions')">Poções</button>
       <button class="tab-btn w-full" data-cat="materials" onclick="shopSwitchTab('materials')">Materiais</button>
       <button class="tab-btn w-full" data-cat="equipments" onclick="shopSwitchTab('equipments')">Equip.</button>
-      <button class="tab-btn w-full" data-cat="fragments" onclick="shopSwitchTab('fragments')">Fragmentos</button>
       <button class="tab-btn w-full" data-cat="consumables" onclick="shopSwitchTab('consumables')">Consumíveis</button>
+      <button class="tab-btn w-full" data-cat="chests" onclick="shopSwitchTab('chests')">Baús</button>
     </div>
     <div id="shop-list"></div>
   `;
@@ -93,11 +93,11 @@ function shopSwitchTab(cat) {
     <div class="card-sm mb-2 flex items-center gap-3">
       <div class="text-2xl">${shopItemEmoji(p)}</div>
       <div class="flex-1 min-w-0">
-        <p class="font-bold text-sm truncate">${escapeHtml(p.name)}</p>
-        <p class="text-xs text-slate-400 truncate">${escapeHtml(p.description || "")}</p>
+        <p class="font-bold text-sm break-words">${escapeHtml(p.name)}</p>
+        <p class="text-xs text-slate-400 break-words">${escapeHtml(p.description || "")}</p>
         <div class="flex gap-2 mt-1">
           <span class="text-xs text-yellow-400 font-bold">${p.price} Bits</span>
-          ${p.sellPrice > 0 ? `<span class="text-xs text-slate-500">Venda: ${p.sellPrice}</span>` : ""}
+          ${p.sellPrice > 0 ? `<span class="text-xs text-slate-500">Venda: ${p.sellPrice} Bits</span>` : ""}
         </div>
       </div>
       <button class="btn-sm btn-primary" onclick="shopOpenBuy('${escapeHtml(p.code)}')">Comprar</button>
@@ -112,7 +112,7 @@ function shopItemEmoji(p) {
     DIGITAMA_STARTER: "🥚", DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿",
     INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "📦", INCUBATOR_EPIC: "📦",
     FRAGMENT_ROOKIE: "🧩", FRAGMENT_CHAMPION: "🧩", FRAGMENT_ULTIMATE: "🧩", FRAGMENT_MEGA: "🧩",
-    EVOLUTION_MATERIAL: "⭐"
+    EVOLUTION_MATERIAL: "⭐", LOOT_CHEST: "🎁"
   };
   return map[p.itemType] || "📦";
 }
@@ -122,8 +122,8 @@ function shopOpenBuy(code) {
     ...(shopData.potions || []),
     ...(shopData.materials || []),
     ...(shopData.equipments || []),
-    ...(shopData.fragments || []),
-    ...(shopData.consumables || [])
+    ...(shopData.consumables || []),
+    ...(shopData.chests || [])
   ];
   const product = allItems.find(p => p.code === code);
   if (!product) return;
@@ -246,7 +246,7 @@ async function shopRenderSellMode() {
 function shopSellItemEmoji(category) {
   const map = {
     CONSUMABLE: "🧪", MATERIAL: "🔮", FRAGMENT: "🧩",
-    EVOLUTION_MATERIAL: "⭐", DIGITAMA: "🥚", INCUBATOR: "📦"
+    EVOLUTION_MATERIAL: "⭐", DIGITAMA: "🥚", INCUBATOR: "📦", CHEST: "🎁"
   };
   return map[category] || "📦";
 }
@@ -262,8 +262,8 @@ function shopRenderSellList() {
     ...(shopData.potions || []),
     ...(shopData.materials || []),
     ...(shopData.equipments || []),
-    ...(shopData.fragments || []),
-    ...(shopData.consumables || [])
+    ...(shopData.consumables || []),
+    ...(shopData.chests || [])
   ];
 
   const sellableEquipments = shopInventoryEquipments

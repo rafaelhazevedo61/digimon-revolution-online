@@ -33,7 +33,8 @@ public class GetShopProductsUseCase {
                 filterByCategory(products, ShopProductCategory.MATERIAL),
                 filterByCategory(products, ShopProductCategory.FRAGMENT),
                 filterByCategory(products, ShopProductCategory.CONSUMABLE),
-                filterByCategory(products, ShopProductCategory.EQUIPMENT)
+                filterByCategory(products, ShopProductCategory.EQUIPMENT),
+                filterByCategory(products, ShopProductCategory.CHEST)
         );
     }
 

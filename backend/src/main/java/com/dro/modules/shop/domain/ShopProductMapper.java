@@ -15,6 +15,7 @@ public class ShopProductMapper {
                 entity.getProductType(),
                 entity.getCategory(),
                 entity.getItemType(),
+                entity.getItemDefinitionCode(),
                 entity.getEquipmentTemplateName(),
                 entity.getPrice(),
                 entity.getSellPrice()

@@ -40,6 +40,9 @@ public class ShopProductEntity implements Persistable<String> {
     @Column(name = "item_type")
     private ItemType itemType;
 
+    @Column(name = "item_definition_code", length = 80)
+    private String itemDefinitionCode;
+
     @Column(name = "equipment_template_name")
     private String equipmentTemplateName;
 
