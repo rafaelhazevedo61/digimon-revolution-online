@@ -20,6 +20,7 @@ public class GetItemDefinitionsUseCase {
 
     @Cacheable(cacheNames = "itemDefinitions")
     public ItemDefinitionPageResponse execute(
+            String search,
             String category,
             String rarity,
             Boolean usable,
@@ -27,7 +28,8 @@ public class GetItemDefinitionsUseCase {
             Boolean tradable,
             Pageable pageable
     ) {
-        Page<ItemDefinitionResponse> items = itemDefinitionRepository.findCatalog(
+        Page<ItemDefinitionResponse> items =                 itemDefinitionRepository.findCatalog(
+                        normalizeSearch(search),
                         normalize(category),
                         normalize(rarity),
                         usable,
@@ -38,6 +40,14 @@ public class GetItemDefinitionsUseCase {
                 .map(ItemDefinitionResponse::from);
 
         return ItemDefinitionPageResponse.from(items);
+    }
+
+    private String normalizeSearch(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+
+        return value.trim().toUpperCase();
     }
 
     private String normalize(String value) {

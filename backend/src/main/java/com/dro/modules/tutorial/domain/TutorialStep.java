@@ -34,7 +34,7 @@ public enum TutorialStep {
     BUY_SHOP(
             4,
             "Compre na Loja",
-            "Gaste seus bits comprando algo na loja.",
+            "Gaste seus Bits comprando algo na loja.",
             0,
             ItemType.REFINEMENT_STONE,
             2
@@ -105,5 +105,9 @@ public enum TutorialStep {
 
     public boolean hasItemReward() {
         return rewardItem != null && rewardItemQuantity > 0;
+    }
+
+    public boolean hasReward() {
+        return rewardBits > 0 || hasItemReward();
     }
 }

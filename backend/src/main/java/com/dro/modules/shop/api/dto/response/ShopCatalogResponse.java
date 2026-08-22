@@ -10,6 +10,7 @@ public record ShopCatalogResponse(
         List<ShopProductResponse> materials,
         List<ShopProductResponse> fragments,
         List<ShopProductResponse> consumables,
-        List<ShopProductResponse> equipments
+        List<ShopProductResponse> equipments,
+        List<ShopProductResponse> chests
 ) {
 }

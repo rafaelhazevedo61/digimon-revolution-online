@@ -19,13 +19,18 @@ public interface ItemDefinitionRepository extends JpaRepository<ItemDefinition, 
     @Query("""
             SELECT item
             FROM ItemDefinition item
-            WHERE (:category IS NULL OR UPPER(item.category) = :category)
+            WHERE (:search = '' OR
+                       UPPER(item.code) LIKE CONCAT('%', :search, '%') OR
+                       UPPER(item.name) LIKE CONCAT('%', :search, '%') OR
+                       UPPER(COALESCE(item.description, '')) LIKE CONCAT('%', :search, '%'))
+              AND (:category IS NULL OR UPPER(item.category) = :category)
               AND (:rarity IS NULL OR UPPER(item.rarity) = :rarity)
               AND (:usable IS NULL OR item.usable = :usable)
               AND (:sellable IS NULL OR item.sellable = :sellable)
               AND (:tradable IS NULL OR item.tradable = :tradable)
             """)
     Page<ItemDefinition> findCatalog(
+            @Param("search") String search,
             @Param("category") String category,
             @Param("rarity") String rarity,
             @Param("usable") Boolean usable,

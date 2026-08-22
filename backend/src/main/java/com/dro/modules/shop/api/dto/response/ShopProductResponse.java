@@ -15,6 +15,7 @@ public record ShopProductResponse(
         ShopProductType productType,
         ShopProductCategory category,
         ItemType itemType,
+        String itemDefinitionCode,
         String equipmentTemplateName,
         int price,
         int sellPrice
@@ -27,6 +28,7 @@ public record ShopProductResponse(
                 product.getProductType(),
                 product.getCategory(),
                 product.getItemType(),
+                product.getItemDefinitionCode(),
                 product.getEquipmentTemplateName(),
                 product.getPrice(),
                 product.getSellPrice()

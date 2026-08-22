@@ -10,7 +10,9 @@ public record TutorialStepResponse(
         String description,
         int rewardBits,
         String rewardItem,
+        String rewardItemName,
         int rewardItemQuantity,
-        boolean completed
+        boolean completed,
+        boolean rewardClaimed
 ) {
 }

@@ -17,6 +17,7 @@ public record CreateShopProductRequest(
         @NotNull ShopProductType productType,
         @NotNull ShopProductCategory category,
         ItemType itemType,
+        String itemDefinitionCode,
         String equipmentTemplateName,
         @Min(0) int price,
         @Min(0) int sellPrice

@@ -51,17 +51,17 @@ public class SellShopProductUseCase {
         UUID playerId = TokenExtractor.extractPlayerId(token);
 
         Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
+                .orElseThrow(() -> new NotFoundException("Jogador não encontrado"));
 
         if (player.getActiveDigimonId() == null) {
-            throw new BadRequestException("No active digimon selected");
+            throw new BadRequestException("Nenhum Digimon ativo selecionado");
         }
 
         Digimon digimon = digimonRepository.findById(player.getActiveDigimonId())
-                .orElseThrow(() -> new NotFoundException("Active digimon not found"));
+                .orElseThrow(() -> new NotFoundException("Digimon ativo não encontrado"));
 
         if (!digimon.getPlayerId().equals(playerId)) {
-            throw new ForbiddenException("Active digimon does not belong to this player");
+            throw new ForbiddenException("O Digimon ativo não pertence a este jogador");
         }
 
         if (request.equipmentId() != null) {
@@ -76,25 +76,25 @@ public class SellShopProductUseCase {
             return sellByItemDefinition(digimon, request);
         }
 
-        throw new BadRequestException("productCode, equipmentId or itemType is required");
+        throw new BadRequestException("Informe o produto, o equipamento ou o item que deseja vender");
     }
 
     private SellShopProductResponse sellItem(Digimon digimon, SellShopProductRequest request) {
 
         if (request.quantity() <= 0) {
-            throw new BadRequestException("Quantity must be greater than zero");
+            throw new BadRequestException("A quantidade deve ser maior que zero");
         }
 
         ShopProduct product = shopProductRepository.findById(request.productCode())
                 .map(ShopProductMapper::toProduct)
-                .orElseThrow(() -> new NotFoundException("Shop product not found: " + request.productCode()));
+                .orElseThrow(() -> new NotFoundException("Produto da loja não encontrado: " + request.productCode()));
 
         if (!product.isItem()) {
-            throw new BadRequestException("Product is not an inventory item");
+            throw new BadRequestException("O produto não é um item de inventário");
         }
 
         if (product.getSellPrice() <= 0) {
-            throw new UnprocessableException("This product cannot be sold");
+            throw new UnprocessableException("Este produto não pode ser vendido");
         }
 
         int totalSellPrice = product.getSellPrice() * request.quantity();
@@ -115,29 +115,29 @@ public class SellShopProductUseCase {
                 request.quantity(),
                 totalSellPrice,
                 digimon.getBits(),
-                "Product sold successfully"
+                "Produto vendido com sucesso"
         );
     }
 
     private SellShopProductResponse sellEquipment(Digimon digimon, SellShopProductRequest request) {
 
         Equipment equipment = equipmentRepository.findById(request.equipmentId())
-                .orElseThrow(() -> new NotFoundException("Equipment not found"));
+                .orElseThrow(() -> new NotFoundException("Equipamento não encontrado"));
 
         if (!equipment.getDigimonId().equals(digimon.getId())) {
-            throw new ForbiddenException("Equipment does not belong to active digimon");
+            throw new ForbiddenException("O equipamento não pertence ao Digimon ativo");
         }
 
         if (equipment.isEquipped()) {
-            throw new ConflictException("Equipped equipment cannot be sold");
+            throw new ConflictException("Equipamentos equipados não podem ser vendidos");
         }
 
         ShopProduct product = shopProductRepository.findByEquipmentTemplateNameIgnoreCase(equipment.getName())
                 .map(ShopProductMapper::toProduct)
-                .orElseThrow(() -> new NotFoundException("Shop equipment product not found: " + equipment.getName()));
+                .orElseThrow(() -> new NotFoundException("Produto de equipamento da loja não encontrado: " + equipment.getName()));
 
         if (product.getSellPrice() <= 0) {
-            throw new UnprocessableException("This equipment cannot be sold");
+            throw new UnprocessableException("Este equipamento não pode ser vendido");
         }
 
         equipmentRepository.delete(equipment);
@@ -152,33 +152,33 @@ public class SellShopProductUseCase {
                 1,
                 product.getSellPrice(),
                 digimon.getBits(),
-                "Equipment sold successfully"
+                "Equipamento vendido com sucesso"
         );
     }
 
     private SellShopProductResponse sellByItemDefinition(Digimon digimon, SellShopProductRequest request) {
 
         if (request.quantity() <= 0) {
-            throw new BadRequestException("Quantity must be greater than zero");
+            throw new BadRequestException("A quantidade deve ser maior que zero");
         }
 
         ItemDefinition itemDef = itemDefinitionRepository.findByCode(request.itemType())
-                .orElseThrow(() -> new NotFoundException("Item definition not found: " + request.itemType()));
+                .orElseThrow(() -> new NotFoundException("Definição do item não encontrada: " + request.itemType()));
 
         if (!itemDef.isSellable()) {
-            throw new UnprocessableException("This item cannot be sold");
+            throw new UnprocessableException("Este item não pode ser vendido");
         }
 
         if (itemDef.getSellPrice() == null || itemDef.getSellPrice() <= 0) {
-            throw new UnprocessableException("This item has no sell price");
+            throw new UnprocessableException("Este item não possui preço de venda");
         }
 
         InventoryItem inventoryItem = inventoryRepository.findByDigimonIdAndItemDefinitionId(
                 digimon.getId(), itemDef.getId()
-        ).orElseThrow(() -> new NotFoundException("Item not found in inventory"));
+        ).orElseThrow(() -> new NotFoundException("Item não encontrado no inventário"));
 
         if (inventoryItem.getQuantity() < request.quantity()) {
-            throw new BadRequestException("Not enough items. You have " + inventoryItem.getQuantity());
+            throw new BadRequestException("Quantidade insuficiente. Você possui " + inventoryItem.getQuantity());
         }
 
         int totalSellPrice = itemDef.getSellPrice() * request.quantity();
@@ -199,7 +199,7 @@ public class SellShopProductUseCase {
                 request.quantity(),
                 totalSellPrice,
                 digimon.getBits(),
-                "Item sold successfully"
+                "Item vendido com sucesso"
         );
     }
 }

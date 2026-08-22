@@ -14,6 +14,7 @@ public class ShopProduct {
     private final ShopProductType productType;
     private final ShopProductCategory category;
     private final ItemType itemType;
+    private final String itemDefinitionCode;
     private final String equipmentTemplateName;
     private final int price;
     private final int sellPrice;
@@ -25,6 +26,7 @@ public class ShopProduct {
             ShopProductType productType,
             ShopProductCategory category,
             ItemType itemType,
+            String itemDefinitionCode,
             String equipmentTemplateName,
             int price,
             int sellPrice
@@ -35,6 +37,7 @@ public class ShopProduct {
         this.productType = productType;
         this.category = category;
         this.itemType = itemType;
+        this.itemDefinitionCode = itemDefinitionCode;
         this.equipmentTemplateName = equipmentTemplateName;
         this.price = price;
         this.sellPrice = sellPrice;
@@ -62,6 +65,10 @@ public class ShopProduct {
 
     public ItemType getItemType() {
         return itemType;
+    }
+
+    public String getItemDefinitionCode() {
+        return itemDefinitionCode;
     }
 
     public String getEquipmentTemplateName() {

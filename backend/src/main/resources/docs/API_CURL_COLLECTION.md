@@ -8,7 +8,7 @@ Os arquivos `backend/src/main/resources/api-curl-collection.sh` e `backend/src/m
 
 No Postman, use **Import**, selecione `backend/src/main/resources/collection/DRO - MODULES.postman_collection.json` e importe a collection. Na aba **Variables**, preencha `baseUrl`, `playerToken` e `adminToken`. Os demais valores de rota e query podem ser preenchidos conforme o cenário de teste.
 
-A collection Postman possui 153 requests organizados por módulo, incluindo as rotas de Correio, Casa de Leilões, clãs, convites, ações de mensagens, comunicados administrativos, premiações de eventos, seleção de destinatários, Loot Tables administrativas e Baús da Área. Os exemplos de corpo JSON dos principais fluxos já estão preenchidos, mas devem ser revisados antes do envio.
+A collection Postman possui 155 requests organizados por módulo, incluindo as rotas de Correio, Casa de Leilões, clãs, convites, ações de mensagens, comunicados administrativos, premiações de eventos, seleção de destinatários, Loot Tables administrativas, Baús da Área e resgate de recompensas do tutorial. Os exemplos de corpo JSON dos principais fluxos já estão preenchidos, mas devem ser revisados antes do envio.
 
 ## Como configurar
 
@@ -72,6 +72,9 @@ Os fluxos adicionados recentemente também estão presentes:
 | Consultar Baú da Área | `GET /admin/chests/{code}` |
 | Atualizar vínculo do Baú | `PUT /admin/chests/{code}` |
 | Ativar ou desativar Baú | `PATCH /admin/chests/{code}/toggle-active` |
+| Consultar progresso do tutorial | `GET /tutorial` |
+| Resgatar recompensa de etapa | `POST /tutorial/steps/{step}/claim` |
+| Finalizar tutorial | `POST /tutorial/finish` |
 
 A collection não armazena tokens reais nem dados pessoais. Use variáveis de ambiente ou substitua os placeholders apenas localmente.
 
@@ -137,6 +140,23 @@ curl --fail-with-body -i -X PATCH "$BASE_URL/admin/chests/CHEST_AREA_NATIVE_FORE
 ```
 
 A tela **Baús da Área** é o ponto administrativo para alterar o vínculo `Baú → Loot Table`; a tela de Missões apenas seleciona qual baú será entregue pela missão.
+
+## Tutorial — resgate manual e finalização
+
+As ações do jogo continuam marcando automaticamente as etapas do tutorial como concluídas, mas as recompensas deixam de ser entregues nesse momento. O jogador deve resgatar cada recompensa pelo botão exibido no card **Primeiros Passos** ou pelo endpoint correspondente. O endpoint `POST /tutorial/finish` só funciona quando todas as etapas estão concluídas e todas as recompensas foram resgatadas.
+
+```bash
+curl --fail-with-body -i -X GET "$BASE_URL/tutorial" \\
+  -H "Authorization: Bearer $TOKEN"
+
+curl --fail-with-body -i -X POST "$BASE_URL/tutorial/steps/COMPLETE_MISSION/claim" \\
+  -H "Authorization: Bearer $TOKEN"
+
+curl --fail-with-body -i -X POST "$BASE_URL/tutorial/finish" \\
+  -H "Authorization: Bearer $TOKEN"
+```
+
+O resgate é idempotente: repetir o mesmo endpoint depois do primeiro resgate não concede bits ou itens novamente. Etapas que já tinham sido concluídas antes da V116 são consideradas resgatadas para impedir a duplicação das recompensas que já foram entregues automaticamente.
 
 ## Loot Tables administrativas — PR #65
 

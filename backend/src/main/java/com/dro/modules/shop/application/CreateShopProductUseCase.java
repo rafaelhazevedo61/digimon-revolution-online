@@ -1,10 +1,13 @@
 package com.dro.modules.shop.application;
 
 import com.dro.modules.equipment.infra.EquipmentTemplateRepository;
+import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.shop.api.dto.request.CreateShopProductRequest;
 import com.dro.modules.shop.api.dto.response.AdminShopProductResponse;
 import com.dro.modules.shop.domain.ShopProductEntity;
 import com.dro.modules.shop.domain.ShopProductType;
+import com.dro.modules.shop.domain.enums.ShopProductCategory;
 import com.dro.modules.shop.infra.ShopProductRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
@@ -26,13 +29,14 @@ public class CreateShopProductUseCase {
 
     private final ShopProductRepository shopProductRepository;
     private final EquipmentTemplateRepository equipmentTemplateRepository;
+    private final ItemDefinitionRepository itemDefinitionRepository;
 
     @CacheEvict(cacheNames = "shopCatalog", key = "'active'")
     @Transactional
     public AdminShopProductResponse execute(CreateShopProductRequest request) {
 
         if (shopProductRepository.existsById(request.code())) {
-            throw new ConflictException("Shop product already exists: " + request.code());
+            throw new ConflictException("O produto da loja já existe: " + request.code());
         }
 
         validateProductTypeFields(request);
@@ -46,6 +50,7 @@ public class CreateShopProductUseCase {
                 .productType(request.productType())
                 .category(request.category())
                 .itemType(request.itemType())
+                .itemDefinitionCode(resolveItemDefinitionCode(request.code(), request.itemType(), request.itemDefinitionCode()))
                 .equipmentTemplateName(request.equipmentTemplateName())
                 .price(request.price())
                 .sellPrice(request.sellPrice())
@@ -59,7 +64,7 @@ public class CreateShopProductUseCase {
         try {
             shopProductRepository.saveAndFlush(entity);
         } catch (DataIntegrityViolationException e) {
-            throw new ConflictException("Shop product already exists: " + request.code());
+            throw new ConflictException("O produto da loja já existe: " + request.code());
         }
 
         return AdminShopProductResponse.from(entity);
@@ -68,17 +73,44 @@ public class CreateShopProductUseCase {
     private void validateProductTypeFields(CreateShopProductRequest request) {
         if (request.productType() == ShopProductType.EQUIPMENT) {
             if (request.equipmentTemplateName() == null || request.equipmentTemplateName().isBlank()) {
-                throw new BadRequestException("equipmentTemplateName is required for EQUIPMENT products");
+                throw new BadRequestException("O modelo de equipamento é obrigatório para produtos do tipo Equipamento");
             }
             if (equipmentTemplateRepository.findByName(request.equipmentTemplateName()).isEmpty()) {
-                throw new NotFoundException("Equipment template not found: " + request.equipmentTemplateName());
+                throw new NotFoundException("Modelo de equipamento não encontrado: " + request.equipmentTemplateName());
             }
         }
 
         if (request.productType() == ShopProductType.ITEM) {
             if (request.itemType() == null) {
-                throw new BadRequestException("itemType is required for ITEM products");
+                throw new BadRequestException("O tipo do item é obrigatório para produtos do tipo Item");
+            }
+
+            if (request.category() == ShopProductCategory.CHEST) {
+                if (request.itemType() != ItemType.LOOT_CHEST) {
+                    throw new BadRequestException("Produtos da categoria Baú devem usar o tipo de item LOOT_CHEST");
+                }
+
+                String definitionCode = resolveItemDefinitionCode(
+                        request.code(), request.itemType(), request.itemDefinitionCode());
+                if (itemDefinitionRepository.findByCode(definitionCode)
+                        .filter(definition -> "CHEST".equalsIgnoreCase(definition.getCategory()))
+                        .isEmpty()) {
+                    throw new NotFoundException("Definição do item de baú não encontrada: " + definitionCode);
+                }
             }
         }
+    }
+
+    private String resolveItemDefinitionCode(String productCode, ItemType itemType, String requestedCode) {
+        if (requestedCode != null && !requestedCode.isBlank()) {
+            return requestedCode.trim();
+        }
+        if (itemType == ItemType.LOOT_CHEST) {
+            return productCode;
+        }
+        if (itemType != null && itemType != ItemType.EVOLUTION_MATERIAL) {
+            return itemType.name();
+        }
+        return null;
     }
 }

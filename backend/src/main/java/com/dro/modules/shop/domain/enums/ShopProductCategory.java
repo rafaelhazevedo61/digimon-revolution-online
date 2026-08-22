@@ -8,5 +8,6 @@ public enum ShopProductCategory {
     MATERIAL,
     FRAGMENT,
     CONSUMABLE,
+    CHEST,
     EQUIPMENT
 }
