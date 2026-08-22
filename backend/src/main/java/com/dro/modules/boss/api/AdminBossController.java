@@ -81,6 +81,7 @@ public class AdminBossController {
                 .def(request.def())
                 .energyCost(request.energyCost())
                 .cooldownMinutes(request.cooldownMinutes())
+                .cooldownEnabled(request.cooldownEnabled() == null || request.cooldownEnabled())
                 .baseXpReward(request.baseXpReward())
                 .baseBitsReward(request.baseBitsReward())
                 .defeatXpPercent(request.defeatXpPercent() != null ? request.defeatXpPercent() : 10)
@@ -109,6 +110,7 @@ public class AdminBossController {
         if (request.def() != null) boss.setDef(request.def());
         if (request.energyCost() != null) boss.setEnergyCost(request.energyCost());
         if (request.cooldownMinutes() != null) boss.setCooldownMinutes(request.cooldownMinutes());
+        if (request.cooldownEnabled() != null) boss.setCooldownEnabled(request.cooldownEnabled());
         if (request.baseXpReward() != null) boss.setBaseXpReward(request.baseXpReward());
         if (request.baseBitsReward() != null) boss.setBaseBitsReward(request.baseBitsReward());
         if (request.defeatXpPercent() != null) boss.setDefeatXpPercent(request.defeatXpPercent());

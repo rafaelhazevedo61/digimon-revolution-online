@@ -18,6 +18,7 @@ public record CreateBossRequest(
         @NotNull Integer def,
         @NotNull Integer energyCost,
         @NotNull Integer cooldownMinutes,
+        Boolean cooldownEnabled,
         @NotNull Integer baseXpReward,
         @NotNull Integer baseBitsReward,
         Integer defeatXpPercent,

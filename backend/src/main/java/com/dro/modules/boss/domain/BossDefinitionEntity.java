@@ -60,6 +60,11 @@ public class BossDefinitionEntity {
     @Column(name = "cooldown_minutes", nullable = false)
     private int cooldownMinutes;
 
+    /** Indica se o cooldown entre tentativas está ativo para este Boss. */
+    @Column(name = "cooldown_enabled", nullable = false)
+    @Builder.Default
+    private boolean cooldownEnabled = true;
+
     @Column(name = "base_xp_reward", nullable = false)
     private int baseXpReward;
 

@@ -62,6 +62,12 @@ function equipmentPoolChance(boss) {
   return equipmentDrops.length > 0 ? Number(equipmentDrops[0].chance) : null;
 }
 
+function cooldownSummary(boss) {
+  return boss.cooldownEnabled === false
+    ? '<span class="text-slate-500">Desligado</span>'
+    : `<span class="text-green-400">Ativo</span><div class="text-[10px] text-slate-500">${boss.cooldownMinutes} min</div>`;
+}
+
 function equipmentPoolSummary(boss) {
   const poolChance = equipmentPoolChance(boss);
   const equipmentDrops = (boss.drops || []).filter(drop => drop.dropType === "EQUIPMENT");
@@ -101,6 +107,7 @@ function renderBossesTable() {
             <th class="py-2 px-2">XP</th>
             <th class="py-2 px-2">Bits</th>
             <th class="py-2 px-2">Chance Equipamento</th>
+            <th class="py-2 px-2">Cooldown</th>
             <th class="py-2 px-2">Baú de Recompensa</th>
             <th class="py-2 px-2">Ativo</th>
             <th class="py-2 px-2">Acoes</th>
@@ -118,6 +125,7 @@ function renderBossesTable() {
               <td class="py-2 px-2 text-yellow-400">${b.baseXpReward}</td>
               <td class="py-2 px-2 text-amber-400">${b.baseBitsReward}</td>
               <td class="py-2 px-2">${equipmentPoolSummary(b)}</td>
+              <td class="py-2 px-2">${cooldownSummary(b)}</td>
               <td class="py-2 px-2">
                 <div class="font-semibold text-slate-300">${escapeHtml(b.chestName || "Sem Baú")}</div>
                 <div class="text-[10px] text-slate-500 font-mono">${escapeHtml(b.chestCode || "-")}</div>
@@ -325,7 +333,14 @@ function openBossForm(id = null) {
             </div>
             <div>
               <label class="text-xs text-slate-400">Cooldown (min)</label>
-              <input id="bf-cooldown" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.cooldownMinutes ?? 360}" required>
+              <input id="bf-cooldown" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.cooldownMinutes ?? 5}" required>
+            </div>
+            <div class="flex flex-col justify-end">
+              <label class="flex items-center gap-2 text-sm text-slate-200 cursor-pointer">
+                <input id="bf-cooldown-enabled" type="checkbox" class="accent-cyan-500" ${!boss || boss.cooldownEnabled !== false ? "checked" : ""}>
+                Ativar cooldown
+              </label>
+              <p class="text-[10px] text-slate-500 mt-1">Desligado permite ataques sem intervalo; os minutos são preservados.</p>
             </div>
             <div>
               <label class="text-xs text-slate-400">XP Reward</label>
@@ -366,6 +381,16 @@ function openBossForm(id = null) {
     </div>
   `;
   updateBossChestRequirement();
+  updateBossCooldownControls();
+  document.getElementById("bf-cooldown-enabled")?.addEventListener("change", updateBossCooldownControls);
+}
+
+function updateBossCooldownControls() {
+  const enabled = document.getElementById("bf-cooldown-enabled")?.checked ?? true;
+  const cooldown = document.getElementById("bf-cooldown");
+  if (!cooldown) return;
+  cooldown.disabled = !enabled;
+  cooldown.required = enabled;
 }
 
 function updateBossChestRequirement() {
@@ -397,6 +422,7 @@ async function saveBoss(event) {
     def: parseInt(document.getElementById("bf-def").value),
     energyCost: parseInt(document.getElementById("bf-energy").value),
     cooldownMinutes: parseInt(document.getElementById("bf-cooldown").value),
+    cooldownEnabled: document.getElementById("bf-cooldown-enabled")?.checked ?? true,
     baseXpReward: parseInt(document.getElementById("bf-xp").value),
     baseBitsReward: parseInt(document.getElementById("bf-bits").value),
     defeatXpPercent: parseInt(document.getElementById("bf-defeatxp").value),

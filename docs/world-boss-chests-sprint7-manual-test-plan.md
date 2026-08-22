@@ -68,6 +68,12 @@ Tente atacar novamente após a derrota. A API deve rejeitar a operação, sem al
 
 No painel, acesse **Baús Temáticos** e selecione a origem **Boss**. Os três Baús de Apocalymon devem aparecer. Confirme os códigos, Loot Tables, status ativo e negociabilidade.
 
+Na tela **Bosses**, abra **Editar** no Boss Mundial. O modal deve exibir o checkbox **Ativar cooldown** marcado e o campo `Cooldown (min)` habilitado com o valor atual. Desmarque o checkbox, salve e confirme que a tabela mostra o cooldown como **Desligado**. O valor em minutos deve permanecer armazenado. Reabra o modal, marque o checkbox novamente e confirme que o valor anterior foi preservado.
+
+Ao desligar o checkbox, o campo de minutos deve ficar visualmente desabilitado, mas seu valor não deve ser apagado. O PUT administrativo deve enviar `cooldownEnabled: false`; ao religar, deve enviar `cooldownEnabled: true` e reutilizar os minutos preservados.
+
+Com o cooldown desligado, uma nova tentativa do mesmo jogador não deve ser bloqueada pelo intervalo. Depois de religá-lo, o intervalo configurado deve voltar a ser aplicado e a tela pública deve mostrar a contagem regressiva.
+
 Em **Loot Tables**, verifique as três tabelas `LOOT_TABLE_BOSS_WORLD_APOCALYMON_*`. Os pesos de raridade e as entradas devem ser editáveis pelo mecanismo genérico existente. A desativação de uma Loot Table deve impedir a concessão do Baú correspondente e registrar a falha da operação, sem entregar item parcialmente.
 
 ## 5. Queries PostgreSQL

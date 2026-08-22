@@ -69,7 +69,7 @@ USABLE="${USABLE:-VALOR}"
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/bosses" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
 # AdminBossController.create (POST /admin/bosses)
-# curl --fail-with-body -i -X POST "${BASE_URL}/admin/bosses" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"code":"BOSS_NEW","name":"Novo Boss","bossType":"DAILY","requiredStage":"ROOKIE","requiredLevel":10,"requiredRebirths":0,"hp":1000,"atk":100,"def":100,"energyCost":5,"cooldownMinutes":1440,"baseXpReward":500,"baseBitsReward":200,"defeatXpPercent":10,"imageUrl":null,"chestCode":"CHEST_BOSS_DAILY_NEW"}'
+# curl --fail-with-body -i -X POST "${BASE_URL}/admin/bosses" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"code":"BOSS_NEW","name":"Novo Boss","bossType":"DAILY","requiredStage":"ROOKIE","requiredLevel":10,"requiredRebirths":0,"hp":1000,"atk":100,"def":100,"energyCost":5,"cooldownMinutes":1440,"cooldownEnabled":true,"baseXpReward":500,"baseBitsReward":200,"defeatXpPercent":10,"imageUrl":null,"chestCode":"CHEST_BOSS_DAILY_NEW"}'
 
 # AdminBossController.deleteDrop (DELETE /admin/bosses/drops/{dropId})
 # curl --fail-with-body -i -X DELETE "${BASE_URL}/admin/bosses/drops/${DROP_ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
@@ -84,7 +84,7 @@ USABLE="${USABLE:-VALOR}"
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/bosses/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
 
 # AdminBossController.update (PUT /admin/bosses/{id})
-# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/bosses/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"name":"Boss Atualizado","chestCode":"CHEST_BOSS_DAILY_NEW","equipmentChance":42}'
+# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/bosses/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"name":"Boss Atualizado","chestCode":"CHEST_BOSS_DAILY_NEW","cooldownMinutes":5,"cooldownEnabled":false,"equipmentChance":42}'
 
 # AdminChestController.list (GET /admin/chests)
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/chests?activeOnly=${ACTIVE_ONLY}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
