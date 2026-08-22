@@ -1526,6 +1526,22 @@
             "description": "Gerado de AdminToolsController.resetWorldBossDaily. Revise IDs e valores antes de enviar."
           },
           "response": []
+        },
+        {
+          "name": "forceNewWorldBossCycle",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/tools/force-new-world-boss-cycle",
+            "description": "Abre um novo ciclo somente após o Boss Mundial atual ser derrotado; preserva o histórico e retorna HTTP 409 se já houver um ciclo ativo."
+          },
+          "response": []
         }
       ]
     },
