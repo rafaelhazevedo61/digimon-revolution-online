@@ -18,9 +18,13 @@ public record CreateBossRequest(
         @NotNull Integer def,
         @NotNull Integer energyCost,
         @NotNull Integer cooldownMinutes,
+        Boolean cooldownEnabled,
         @NotNull Integer baseXpReward,
         @NotNull Integer baseBitsReward,
         Integer defeatXpPercent,
         String imageUrl,
-        String chestCode
+        String chestCode,
+        String worldAttemptChestCode,
+        String worldTopDamageChestCode,
+        String worldFinalBlowChestCode
 ) {}

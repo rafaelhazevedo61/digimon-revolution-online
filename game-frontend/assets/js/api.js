@@ -62,8 +62,11 @@ async function apiGet(path, params = {}) {
   try { return JSON.parse(text); } catch { return text; }
 }
 
-async function apiPost(path, body = null) {
-  const opts = { method: "POST", headers: authHeaders() };
+async function apiPost(path, body = null, extraHeaders = {}) {
+  const opts = {
+    method: "POST",
+    headers: { ...authHeaders(), ...extraHeaders }
+  };
   if (body !== null) opts.body = JSON.stringify(body);
 
   const response = await fetch(`${CONFIG.API_BASE_URL}${path}`, opts);

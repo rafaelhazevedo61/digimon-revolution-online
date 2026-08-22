@@ -5,6 +5,7 @@ import com.dro.modules.boss.domain.BossCombatRules;
 import com.dro.modules.boss.domain.BossDefinitionEntity;
 import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.modules.boss.world.api.dto.response.AttackWorldBossResponse;
+import com.dro.modules.boss.world.api.dto.response.WorldBossRewardResponse;
 import com.dro.modules.boss.world.domain.WorldBossAttack;
 import com.dro.modules.boss.world.domain.WorldBossInstance;
 import com.dro.modules.boss.world.domain.WorldBossRules;
@@ -17,6 +18,7 @@ import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.server.application.GlobalDamageBuffService;
+import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
@@ -24,9 +26,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -42,12 +48,14 @@ public class AttackWorldBossUseCase {
     private final WorldBossInstanceRepository worldBossInstanceRepository;
     private final WorldBossAttackRepository worldBossAttackRepository;
     private final WorldBossService worldBossService;
+    private final WorldBossRewardService worldBossRewardService;
     private final DigimonPowerService digimonPowerService;
     private final ClanBonusService clanBonusService;
     private final GlobalDamageBuffService globalDamageBuffService;
+    private final TransactionAuditPublisher transactionAuditPublisher;
 
     @Transactional
-    public AttackWorldBossResponse execute(String token) {
+    public AttackWorldBossResponse execute(String token, String idempotencyKey) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
 
         Player player = playerRepository.findById(playerId)
@@ -65,13 +73,23 @@ public class AttackWorldBossUseCase {
         }
 
         WorldBossInstance instance = worldBossService.getOrCreateToday();
+        BossDefinitionEntity boss = bossDefinitionRepository.findById(instance.getBossId())
+                .orElseThrow(() -> new NotFoundException("Boss not found"));
+        String requestId = normalizeRequestId(idempotencyKey);
+
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            WorldBossAttack existing = worldBossAttackRepository
+                    .findByWorldBossIdAndPlayerIdAndRequestId(instance.getId(), playerId, requestId)
+                    .orElse(null);
+            if (existing != null) {
+                return toResponse(boss, instance, existing,
+                        worldBossRewardService.findBySourceAttackId(existing.getId()));
+            }
+        }
 
         if (instance.getStatus() == WorldBossStatus.DEFEATED || instance.getRemainingHp() <= 0) {
             throw new BadRequestException("The world boss has already been defeated today");
         }
-
-        BossDefinitionEntity boss = bossDefinitionRepository.findById(instance.getBossId())
-                .orElseThrow(() -> new NotFoundException("Boss not found"));
 
         validateRequirements(boss, digimon);
 
@@ -86,6 +104,22 @@ public class AttackWorldBossUseCase {
                 .countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(instance.getId(), playerId, resetCutoff);
         if (WorldBossRules.dailyLimitReached(usedToday)) {
             throw new BadRequestException("Daily world boss attack limit reached (" + WorldBossRules.DAILY_ATTACK_LIMIT + " per day). Come back tomorrow.");
+        }
+
+        WorldBossAttack lastAttack = worldBossAttackRepository
+                .findFirstByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(instance.getId(), playerId)
+                .orElse(null);
+        int cooldownMinutes = WorldBossRules.attackCooldownMinutes(boss.getCooldownMinutes());
+        if (boss.isCooldownEnabled() && lastAttack != null && lastAttack.getCreatedAt() != null) {
+            Instant nextAttackAt = lastAttack.getCreatedAt().plus(Duration.ofMinutes(cooldownMinutes));
+            Instant now = Instant.now();
+            if (now.isBefore(nextAttackAt)) {
+                long remainingSeconds = Math.max(1, Duration.between(now, nextAttackAt).toSeconds());
+                long remainingMinutes = (remainingSeconds + 59) / 60;
+                throw new BadRequestException(
+                        "World boss attack cooldown active. Try again in "
+                                + remainingMinutes + " minute(s).");
+            }
         }
 
         UUID clanId = player.getClanId();
@@ -142,27 +176,90 @@ public class AttackWorldBossUseCase {
                 .createdAt(Instant.now())
                 .build();
 
+        long remainingAttacks = WorldBossRules.dailyAttacksRemaining(usedToday + 1);
+        attack.setRequestId(requestId);
+        attack.setRemainingHpAfter(instance.getRemainingHp());
+        attack.setWinChance(winChance);
+        attack.setDefeated(defeated);
+        attack.setDefeatedRewardXp(defeatedRewardXp);
+        attack.setDefeatedRewardBits(defeatedRewardBits);
+        attack.setDailyAttacksRemaining((int) remainingAttacks);
+
         digimonRepository.save(digimon);
         worldBossInstanceRepository.save(instance);
         worldBossAttackRepository.save(attack);
 
-        long remainingAttacks = WorldBossRules.dailyAttacksRemaining(usedToday + 1);
+        List<WorldBossRewardResponse> rewards = worldBossRewardService.grant(
+                boss, instance, attack, defeated);
+        transactionAuditPublisher.success(
+                "world-boss-attack:" + attack.getId(),
+                "WORLD_BOSS_ATTACKED",
+                "WorldBossAttack",
+                attack.getId().toString(),
+                buildAuditPayload(playerId, boss, instance, attack, rewards)
+        );
 
+        return toResponse(boss, instance, attack, rewards);
+    }
+
+    private AttackWorldBossResponse toResponse(
+            BossDefinitionEntity boss,
+            WorldBossInstance instance,
+            WorldBossAttack attack,
+            List<WorldBossRewardResponse> rewards
+    ) {
+        int hitXp = Math.max(0, attack.getXpGained() - attack.getDefeatedRewardXp());
+        int hitBits = Math.max(0, attack.getBitsGained() - attack.getDefeatedRewardBits());
         return new AttackWorldBossResponse(
                 instance.getId(),
                 boss.getCode(),
                 boss.getName(),
-                actualDamage,
-                instance.getRemainingHp(),
+                attack.getDamage(),
+                attack.getRemainingHpAfter(),
                 instance.getMaxHp(),
-                defeated,
-                winChance,
-                xpGained,
-                bitsGained,
-                defeatedRewardXp,
-                defeatedRewardBits,
-                (int) remainingAttacks
+                attack.isDefeated(),
+                attack.getWinChance(),
+                hitXp,
+                hitBits,
+                attack.getDefeatedRewardXp(),
+                attack.getDefeatedRewardBits(),
+                attack.getDailyAttacksRemaining(),
+                rewards
         );
+    }
+
+    private String normalizeRequestId(String idempotencyKey) {
+        String normalized = idempotencyKey == null || idempotencyKey.isBlank()
+                ? UUID.randomUUID().toString()
+                : idempotencyKey.trim();
+        if (normalized.length() > 120) {
+            throw new BadRequestException("Idempotency-Key must have at most 120 characters");
+        }
+        return normalized;
+    }
+
+    private Map<String, Object> buildAuditPayload(
+            UUID playerId,
+            BossDefinitionEntity boss,
+            WorldBossInstance instance,
+            WorldBossAttack attack,
+            List<WorldBossRewardResponse> rewards
+    ) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("module", "world-boss");
+        payload.put("operation", "attack");
+        payload.put("playerId", playerId.toString());
+        payload.put("bossCode", boss.getCode());
+        payload.put("worldBossId", instance.getId().toString());
+        payload.put("damage", attack.getDamage());
+        payload.put("remainingHpAfter", attack.getRemainingHpAfter());
+        payload.put("defeated", attack.isDefeated());
+        payload.put("rewards", rewards.stream().map(reward -> Map.of(
+                "type", reward.rewardType(),
+                "chestCode", reward.chestCode(),
+                "chestName", reward.chestName()
+        )).toList());
+        return payload;
     }
 
     private void validateRequirements(BossDefinitionEntity boss, Digimon digimon) {

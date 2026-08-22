@@ -95,6 +95,7 @@ public class GetAvailableBossesUseCase {
                     boss.getDef(),
                     boss.getEnergyCost(),
                     boss.getCooldownMinutes(),
+                    boss.isCooldownEnabled(),
                     boss.getBaseXpReward(),
                     boss.getBaseBitsReward(),
                     boss.getImageUrl(),
@@ -129,7 +130,7 @@ public class GetAvailableBossesUseCase {
         var lastAttempt = bossAttemptRepository
                 .findFirstByPlayerIdAndBossIdOrderByCreatedAtDesc(playerId, boss.getId());
 
-        if (lastAttempt.isEmpty()) return null;
+        if (!boss.isCooldownEnabled() || lastAttempt.isEmpty()) return null;
 
         Instant lastTime = lastAttempt.get().getCreatedAt();
         Instant cooldownEnd = lastTime.plus(boss.getCooldownMinutes(), ChronoUnit.MINUTES);

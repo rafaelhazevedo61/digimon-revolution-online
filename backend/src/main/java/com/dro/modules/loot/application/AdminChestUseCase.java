@@ -119,7 +119,7 @@ public class AdminChestUseCase {
     }
 
     private void ensureNotLinkedToBoss(ChestDefinitionEntity chest) {
-        if (bossDefinitionRepository.existsByChestDefinition_Id(chest.getId())) {
+        if (bossDefinitionRepository.existsByAnyChestDefinitionId(chest.getId())) {
             throw new ConflictException(
                     "Não é possível desativar o Baú porque ele está vinculado a um ou mais Bosses."
             );

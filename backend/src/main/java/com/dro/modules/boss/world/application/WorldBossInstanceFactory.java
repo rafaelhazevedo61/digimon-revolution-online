@@ -28,6 +28,11 @@ public class WorldBossInstanceFactory {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public WorldBossInstance create(LocalDate bossDate) {
+        return create(bossDate, 1);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public WorldBossInstance create(LocalDate bossDate, int cycleNumber) {
         BossDefinitionEntity boss = bossDefinitionRepository.findAllActive().stream()
                 .filter(candidate -> candidate.getBossType() == BossType.WORLD)
                 .min((a, b) -> {
@@ -47,6 +52,7 @@ public class WorldBossInstanceFactory {
                 .id(UUID.randomUUID())
                 .bossId(boss.getId())
                 .bossDate(bossDate)
+                .cycleNumber(cycleNumber)
                 .maxHp(boss.getHp())
                 .remainingHp(boss.getHp())
                 .status(WorldBossStatus.ACTIVE)

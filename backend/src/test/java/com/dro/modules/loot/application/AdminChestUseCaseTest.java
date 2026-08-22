@@ -133,7 +133,7 @@ class AdminChestUseCaseTest {
         when(playerRepository.findById(adminId)).thenReturn(Optional.of(admin));
         when(chestDefinitionRepository.findWithCatalogByCode("CHEST_AREA_TOGGLE"))
                 .thenReturn(Optional.of(chest));
-        when(bossDefinitionRepository.existsByChestDefinition_Id(9L)).thenReturn(false);
+        when(bossDefinitionRepository.existsByAnyChestDefinitionId(9L)).thenReturn(false);
         when(chestDefinitionRepository.saveAndFlush(chest)).thenReturn(chest);
 
         var response = adminChestUseCase.toggleActive(token(adminId), "CHEST_AREA_TOGGLE");
@@ -162,7 +162,7 @@ class AdminChestUseCaseTest {
         when(playerRepository.findById(adminId)).thenReturn(Optional.of(admin(adminId, UserType.ADMIN)));
         when(chestDefinitionRepository.findWithCatalogByCode("CHEST_BOSS_TEST"))
                 .thenReturn(Optional.of(chest));
-        when(bossDefinitionRepository.existsByChestDefinition_Id(21L)).thenReturn(true);
+        when(bossDefinitionRepository.existsByAnyChestDefinitionId(21L)).thenReturn(true);
 
         assertThatThrownBy(() -> adminChestUseCase.toggleActive(token(adminId), "CHEST_BOSS_TEST"))
                 .isInstanceOf(com.dro.shared.exception.ConflictException.class)
@@ -185,7 +185,7 @@ class AdminChestUseCaseTest {
                 .thenReturn(Optional.of(chest));
         when(lootTableRepository.findByCodeAndActiveTrue("LT_BOSS_PUT"))
                 .thenReturn(Optional.of(chest.getLootTable()));
-        when(bossDefinitionRepository.existsByChestDefinition_Id(22L)).thenReturn(true);
+        when(bossDefinitionRepository.existsByAnyChestDefinitionId(22L)).thenReturn(true);
 
         assertThatThrownBy(() -> adminChestUseCase.update(
                 token(adminId),

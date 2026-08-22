@@ -17,11 +17,15 @@ public record UpdateBossRequest(
         Integer def,
         Integer energyCost,
         Integer cooldownMinutes,
+        Boolean cooldownEnabled,
         Integer baseXpReward,
         Integer baseBitsReward,
         Integer defeatXpPercent,
         String imageUrl,
         Boolean active,
         String chestCode,
-        @Min(0) @Max(100) Integer equipmentChance
+        @Min(0) @Max(100) Integer equipmentChance,
+        String worldAttemptChestCode,
+        String worldTopDamageChestCode,
+        String worldFinalBlowChestCode
 ) {}

@@ -68,6 +68,15 @@ public class AdminBossController {
         ChestDefinitionEntity rewardChest = requiresRewardChest(bossType)
                 ? resolveActiveChest(request.chestCode())
                 : null;
+        ChestDefinitionEntity worldAttemptChest = requiresWorldRewardChests(bossType)
+                ? resolveActiveChest(request.worldAttemptChestCode())
+                : null;
+        ChestDefinitionEntity worldTopDamageChest = requiresWorldRewardChests(bossType)
+                ? resolveActiveChest(request.worldTopDamageChestCode())
+                : null;
+        ChestDefinitionEntity worldFinalBlowChest = requiresWorldRewardChests(bossType)
+                ? resolveActiveChest(request.worldFinalBlowChestCode())
+                : null;
 
         BossDefinitionEntity boss = BossDefinitionEntity.builder()
                 .code(request.code())
@@ -81,11 +90,15 @@ public class AdminBossController {
                 .def(request.def())
                 .energyCost(request.energyCost())
                 .cooldownMinutes(request.cooldownMinutes())
+                .cooldownEnabled(request.cooldownEnabled() == null || request.cooldownEnabled())
                 .baseXpReward(request.baseXpReward())
                 .baseBitsReward(request.baseBitsReward())
                 .defeatXpPercent(request.defeatXpPercent() != null ? request.defeatXpPercent() : 10)
                 .imageUrl(request.imageUrl())
-                .chestDefinition(resolveActiveChest(request.chestCode()))
+                .chestDefinition(rewardChest)
+                .worldAttemptChestDefinition(worldAttemptChest)
+                .worldTopDamageChestDefinition(worldTopDamageChest)
+                .worldFinalBlowChestDefinition(worldFinalBlowChest)
                 .active(true)
                 .build();
         return ResponseEntity.ok(bossDefinitionRepository.save(boss));
@@ -109,6 +122,7 @@ public class AdminBossController {
         if (request.def() != null) boss.setDef(request.def());
         if (request.energyCost() != null) boss.setEnergyCost(request.energyCost());
         if (request.cooldownMinutes() != null) boss.setCooldownMinutes(request.cooldownMinutes());
+        if (request.cooldownEnabled() != null) boss.setCooldownEnabled(request.cooldownEnabled());
         if (request.baseXpReward() != null) boss.setBaseXpReward(request.baseXpReward());
         if (request.baseBitsReward() != null) boss.setBaseBitsReward(request.baseBitsReward());
         if (request.defeatXpPercent() != null) boss.setDefeatXpPercent(request.defeatXpPercent());
@@ -124,6 +138,18 @@ public class AdminBossController {
             }
         } else if (request.chestCode() != null && !request.chestCode().isBlank()) {
             boss.setChestDefinition(resolveActiveChest(request.chestCode()));
+        }
+        if (requiresWorldRewardChests(resultingType)) {
+            if (request.worldAttemptChestCode() != null && !request.worldAttemptChestCode().isBlank()) {
+                boss.setWorldAttemptChestDefinition(resolveActiveChest(request.worldAttemptChestCode()));
+            }
+            if (request.worldTopDamageChestCode() != null && !request.worldTopDamageChestCode().isBlank()) {
+                boss.setWorldTopDamageChestDefinition(resolveActiveChest(request.worldTopDamageChestCode()));
+            }
+            if (request.worldFinalBlowChestCode() != null && !request.worldFinalBlowChestCode().isBlank()) {
+                boss.setWorldFinalBlowChestDefinition(resolveActiveChest(request.worldFinalBlowChestCode()));
+            }
+            ensureWorldRewardChestsConfigured(boss);
         }
         if (request.equipmentChance() != null) {
             updateEquipmentPoolChance(boss, request.equipmentChance());
@@ -161,6 +187,20 @@ public class AdminBossController {
                 || bossType == BossType.DAILY
                 || bossType == BossType.WEEKLY
                 || bossType == BossType.MONTHLY;
+    }
+
+    private boolean requiresWorldRewardChests(BossType bossType) {
+        return bossType == BossType.WORLD;
+    }
+
+    private void ensureWorldRewardChestsConfigured(BossDefinitionEntity boss) {
+        if (boss.getWorldAttemptChestDefinition() == null
+                || boss.getWorldTopDamageChestDefinition() == null
+                || boss.getWorldFinalBlowChestDefinition() == null) {
+            throw new ConflictException(
+                    "Boss Mundial precisa dos Baús ativos de tentativa, maior dano e golpe final."
+            );
+        }
     }
 
     private ChestDefinitionEntity resolveActiveChest(String code) {

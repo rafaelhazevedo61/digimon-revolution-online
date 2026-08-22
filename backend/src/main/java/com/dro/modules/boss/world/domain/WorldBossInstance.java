@@ -28,6 +28,10 @@ public class WorldBossInstance {
     @Column(name = "boss_date", nullable = false)
     private LocalDate bossDate;
 
+    @Column(name = "cycle_number", nullable = false)
+    @Builder.Default
+    private int cycleNumber = 1;
+
     @Column(nullable = false)
     private int maxHp;
 

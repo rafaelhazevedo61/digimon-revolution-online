@@ -15,6 +15,7 @@ import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -31,6 +32,7 @@ public class WorldBossResponseMapper {
     private final BossDefinitionRepository bossDefinitionRepository;
     private final WorldBossAttackRepository worldBossAttackRepository;
     private final PlayerRepository playerRepository;
+    private final WorldBossRewardService worldBossRewardService;
 
     public WorldBossResponse toResponse(WorldBossInstance instance, UUID viewerPlayerId) {
         BossDefinitionEntity boss = bossDefinitionRepository.findById(instance.getBossId())
@@ -45,9 +47,21 @@ public class WorldBossResponseMapper {
 
         int usedToday = (int) worldBossAttackRepository
                 .countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(instance.getId(), viewerPlayerId, resetCutoff);
-        long myTotalDamage = worldBossAttackRepository.findByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(instance.getId(), viewerPlayerId).stream()
+        List<WorldBossAttack> myAttacks = worldBossAttackRepository
+                .findByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(instance.getId(), viewerPlayerId);
+        long myTotalDamage = myAttacks.stream()
                 .mapToLong(WorldBossAttack::getDamage)
                 .sum();
+        int attackCooldownMinutes = WorldBossRules.attackCooldownMinutes(boss.getCooldownMinutes());
+        Instant nextAttackCandidate = myAttacks.isEmpty() || myAttacks.get(0).getCreatedAt() == null
+                ? null
+                : myAttacks.get(0).getCreatedAt().plus(Duration.ofMinutes(attackCooldownMinutes));
+        Instant nextAttackAvailableAt = boss.isCooldownEnabled()
+                && instance.getStatus() == com.dro.modules.boss.world.domain.WorldBossStatus.ACTIVE
+                && nextAttackCandidate != null
+                && nextAttackCandidate.isAfter(Instant.now())
+                ? nextAttackCandidate
+                : null;
 
         List<WorldBossAttackResponse> recentAttacks = worldBossAttackRepository
                 .findByWorldBossIdOrderByCreatedAtDesc(instance.getId()).stream()
@@ -67,9 +81,13 @@ public class WorldBossResponseMapper {
                 instance.getDefeatedAt(),
                 usedToday,
                 Math.max(0, WorldBossRules.DAILY_ATTACK_LIMIT - usedToday),
+                attackCooldownMinutes,
+                boss.isCooldownEnabled(),
+                nextAttackAvailableAt,
                 myTotalDamage,
                 buildRanking(instance.getId()),
-                recentAttacks
+                recentAttacks,
+                worldBossRewardService.findPlayerRewards(instance.getId(), viewerPlayerId)
         );
     }
 

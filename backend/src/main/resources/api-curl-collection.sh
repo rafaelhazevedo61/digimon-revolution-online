@@ -9,6 +9,7 @@ BASE_URL="${BASE_URL:-http://localhost:8080}"
 TOKEN="${TOKEN:-COLE_SEU_TOKEN_DE_JOGADOR_AQUI}"
 ADMIN_TOKEN="${ADMIN_TOKEN:-COLE_SEU_TOKEN_DE_ADMIN_AQUI}"
 ID="${ID:-00000000-0000-0000-0000-000000000000}"
+REQUEST_ID="${REQUEST_ID:-world-boss-test-request-001}"
 USERNAME="${USERNAME:-nome-do-jogador}"
 CODE="${CODE:-CODIGO}"
 CLAN_ID="${CLAN_ID:-00000000-0000-0000-0000-000000000000}"
@@ -68,7 +69,7 @@ USABLE="${USABLE:-VALOR}"
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/bosses" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
 # AdminBossController.create (POST /admin/bosses)
-# curl --fail-with-body -i -X POST "${BASE_URL}/admin/bosses" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"code":"BOSS_NEW","name":"Novo Boss","bossType":"DAILY","requiredStage":"ROOKIE","requiredLevel":10,"requiredRebirths":0,"hp":1000,"atk":100,"def":100,"energyCost":5,"cooldownMinutes":1440,"baseXpReward":500,"baseBitsReward":200,"defeatXpPercent":10,"imageUrl":null,"chestCode":"CHEST_BOSS_DAILY_NEW"}'
+# curl --fail-with-body -i -X POST "${BASE_URL}/admin/bosses" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"code":"BOSS_NEW","name":"Novo Boss","bossType":"DAILY","requiredStage":"ROOKIE","requiredLevel":10,"requiredRebirths":0,"hp":1000,"atk":100,"def":100,"energyCost":5,"cooldownMinutes":1440,"cooldownEnabled":true,"baseXpReward":500,"baseBitsReward":200,"defeatXpPercent":10,"imageUrl":null,"chestCode":"CHEST_BOSS_DAILY_NEW"}'
 
 # AdminBossController.deleteDrop (DELETE /admin/bosses/drops/{dropId})
 # curl --fail-with-body -i -X DELETE "${BASE_URL}/admin/bosses/drops/${DROP_ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
@@ -83,7 +84,7 @@ USABLE="${USABLE:-VALOR}"
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/bosses/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
 
 # AdminBossController.update (PUT /admin/bosses/{id})
-# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/bosses/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"name":"Boss Atualizado","chestCode":"CHEST_BOSS_DAILY_NEW","equipmentChance":42}'
+# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/bosses/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"name":"Boss Atualizado","chestCode":"CHEST_BOSS_DAILY_NEW","cooldownMinutes":5,"cooldownEnabled":false,"equipmentChance":42}'
 
 # AdminChestController.list (GET /admin/chests)
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/chests?activeOnly=${ACTIVE_ONLY}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
@@ -222,6 +223,10 @@ USABLE="${USABLE:-VALOR}"
 
 # AdminToolsController.resetWorldBossDaily (POST /admin/tools/reset-world-boss-daily)
 # curl --fail-with-body -i -X POST "${BASE_URL}/admin/tools/reset-world-boss-daily" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+
+# AdminToolsController.forceNewWorldBossCycle (POST /admin/tools/force-new-world-boss-cycle)
+# Disponível somente após a derrota do ciclo atual; preserva o histórico anterior.
+# curl --fail-with-body -i -X POST "${BASE_URL}/admin/tools/force-new-world-boss-cycle" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
 # ===== ROOT =====
 
@@ -582,7 +587,8 @@ USABLE="${USABLE:-VALOR}"
 # ===== WORLD-BOSS =====
 
 # WorldBossController.attack (POST /world-boss/attack)
-# curl --fail-with-body -i -X POST "${BASE_URL}/world-boss/attack" -H "Authorization: Bearer ${TOKEN}"
+# Use a new REQUEST_ID for each attack; repeat the same value only to validate idempotency.
+# curl --fail-with-body -i -X POST "${BASE_URL}/world-boss/attack" -H "Authorization: Bearer ${TOKEN}" -H "Idempotency-Key: ${REQUEST_ID}"
 
 # WorldBossController.getMyWorldBoss (GET /world-boss/me)
 # curl --fail-with-body -i -X GET "${BASE_URL}/world-boss/me" -H "Authorization: Bearer ${TOKEN}"

@@ -99,6 +99,10 @@
       "value": ""
     },
     {
+      "key": "requestId",
+      "value": "world-boss-test-request-001"
+    },
+    {
       "key": "listingId",
       "value": ""
     },
@@ -229,7 +233,7 @@
             "description": "Cria um Boss normal/periódico vinculado a um Baú de recompensa ativo. Substitua chestCode por um valor existente.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"code\": \"BOSS_NEW\",\n  \"name\": \"Novo Boss\",\n  \"bossType\": \"DAILY\",\n  \"requiredStage\": \"ROOKIE\",\n  \"requiredLevel\": 10,\n  \"requiredRebirths\": 0,\n  \"hp\": 1000,\n  \"atk\": 100,\n  \"def\": 100,\n  \"energyCost\": 5,\n  \"cooldownMinutes\": 1440,\n  \"baseXpReward\": 500,\n  \"baseBitsReward\": 200,\n  \"defeatXpPercent\": 10,\n  \"imageUrl\": null,\n  \"chestCode\": \"CHEST_BOSS_DAILY_NEW\"\n}",
+              "raw": "{\n  \"code\": \"BOSS_NEW\",\n  \"name\": \"Novo Boss\",\n  \"bossType\": \"DAILY\",\n  \"requiredStage\": \"ROOKIE\",\n  \"requiredLevel\": 10,\n  \"requiredRebirths\": 0,\n  \"hp\": 1000,\n  \"atk\": 100,\n  \"def\": 100,\n  \"energyCost\": 5,\n  \"cooldownMinutes\": 1440,\n  \"cooldownEnabled\": true,\n  \"baseXpReward\": 500,\n  \"baseBitsReward\": 200,\n  \"defeatXpPercent\": 10,\n  \"imageUrl\": null,\n  \"chestCode\": \"CHEST_BOSS_DAILY_NEW\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -424,10 +428,10 @@
               }
             ],
             "url": "{{baseUrl}}/admin/bosses/{{id}}",
-            "description": "Atualiza dados de um Boss. chestCode é opcional; quando informado deve apontar para um Baú ativo com Loot Table ativa.",
+            "description": "Atualiza dados de um Boss. `cooldownEnabled` liga ou desliga o cooldown; quando desligado, `cooldownMinutes` é preservado para reativação.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Boss Atualizado\",\n  \"chestCode\": \"CHEST_BOSS_DAILY_NEW\",\n  \"equipmentChance\": 42\n}",
+              "raw": "{\n  \"name\": \"Boss Atualizado\",\n  \"chestCode\": \"CHEST_BOSS_DAILY_NEW\",\n  \"cooldownMinutes\": 5,\n  \"cooldownEnabled\": false,\n  \"equipmentChance\": 42\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1520,6 +1524,22 @@
             ],
             "url": "{{baseUrl}}/admin/tools/reset-world-boss-daily",
             "description": "Gerado de AdminToolsController.resetWorldBossDaily. Revise IDs e valores antes de enviar."
+          },
+          "response": []
+        },
+        {
+          "name": "forceNewWorldBossCycle",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/tools/force-new-world-boss-cycle",
+            "description": "Abre um novo ciclo somente após o Boss Mundial atual ser derrotado; preserva o histórico e retorna HTTP 409 se já houver um ciclo ativo."
           },
           "response": []
         }
@@ -3745,10 +3765,15 @@
                 "key": "Authorization",
                 "value": "Bearer {{playerToken}}",
                 "type": "text"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{requestId}}",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/world-boss/attack",
-            "description": "Gerado de WorldBossController.attack. Revise IDs e valores antes de enviar."
+            "description": "Ataque válido concede um Baú por tentativa. Repetir o mesmo requestId deve retornar o snapshot sem atacar ou conceder novos Baús."
           },
           "response": []
         },
