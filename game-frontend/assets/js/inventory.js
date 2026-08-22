@@ -68,7 +68,7 @@ function invSwitchTab(tab) {
 
 function invRenderItems() {
   const content = document.getElementById("inv-content");
-  const items = invItems.filter(i => i.quantity > 0);
+  const items = invSortItems(invAggregateItems(invItems).filter(i => i.quantity > 0));
 
   if (items.length === 0) {
     content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">Nenhum item no inventário.</p>`;
@@ -80,10 +80,13 @@ function invRenderItems() {
     const name = def ? def.name : invItemName(item.itemType);
     const emoji = def ? invCategoryEmoji(def.category) : invItemEmoji(item.itemType);
     const catName = def ? invCategoryLabel(def.category) : invItemCategoryName(item.itemType);
-    const catBadge = def ? invCategoryBadge(def.category) : invItemCategory(item.itemType);
-    const chestCode = def && String(def.category || "").toUpperCase() === "CHEST" ? def.code : null;
+    const category = def ? String(def.category || "").toUpperCase() : "";
+    const catBadge = def ? invCategoryBadge(category) : invItemCategory(item.itemType);
+    const chestCode = category === "CHEST" ? def.code : null;
     const isChest = item.itemType === "LOOT_CHEST" || !!chestCode;
-    const usable = def ? def.usable : invIsUsable(item.itemType);
+    const incubationOnly = category === "DIGITAMA" || category === "INCUBATOR"
+      || item.itemType.startsWith("DIGITAMA_") || item.itemType.startsWith("INCUBATOR_");
+    const usable = !incubationOnly && (def ? def.usable : invIsUsable(item.itemType));
     const action = isChest && chestCode ? `
       <button class="btn-sm btn-primary" onclick="invOpenChest('${escapeHtml(chestCode)}')">Abrir</button>
     ` : usable ? `
@@ -104,6 +107,79 @@ function invRenderItems() {
       </div>
     `;
   }).join("");
+}
+
+function invAggregateItems(items) {
+  const grouped = new Map();
+
+  for (const item of items || []) {
+    const definitionCode = item.itemDefinition && item.itemDefinition.code;
+    const key = definitionCode || item.itemType;
+    const existing = grouped.get(key);
+
+    if (!existing) {
+      grouped.set(key, { ...item });
+      continue;
+    }
+
+    existing.quantity += item.quantity || 0;
+    if (!existing.itemDefinition && item.itemDefinition) {
+      existing.itemDefinition = item.itemDefinition;
+    }
+  }
+
+  return Array.from(grouped.values());
+}
+
+function invItemCategoryOrder(item) {
+  const category = item.itemDefinition
+    ? String(item.itemDefinition.category || "").toUpperCase()
+    : String(item.itemType || "").startsWith("DIGITAMA_")
+      ? "DIGITAMA"
+      : String(item.itemType || "").startsWith("INCUBATOR_")
+        ? "INCUBATOR"
+        : String(item.itemType || "") === "LOOT_CHEST"
+          ? "CHEST"
+          : String(item.itemType || "") === "EVOLUTION_MATERIAL"
+            ? "EVOLUTION_MATERIAL"
+            : String(item.itemType || "").startsWith("FRAGMENT_")
+              ? "FRAGMENT"
+              : String(item.itemType || "") === "POTION_SMALL"
+              ? "CONSUMABLE"
+              : String(item.itemType || "") === "TRAINING_STONE" || String(item.itemType || "") === "DATA_CORE"
+                || String(item.itemType || "") === "REFINEMENT_STONE"
+                ? "MATERIAL"
+                : "OTHER";
+
+  const order = {
+    CONSUMABLE: 10,
+    MATERIAL: 20,
+    EVOLUTION_MATERIAL: 30,
+    FRAGMENT: 40,
+    DIGITAMA: 50,
+    INCUBATOR: 60,
+    CHEST: 70,
+    OTHER: 99
+  };
+  return order[category] || order.OTHER;
+}
+
+function invSortItems(items) {
+  return [...items].sort((a, b) => {
+    const categoryDifference = invItemCategoryOrder(a) - invItemCategoryOrder(b);
+    if (categoryDifference !== 0) return categoryDifference;
+
+    const aDefinition = a.itemDefinition || {};
+    const bDefinition = b.itemDefinition || {};
+    const aName = aDefinition.name || invItemName(a.itemType);
+    const bName = bDefinition.name || invItemName(b.itemType);
+    const nameDifference = aName.localeCompare(bName, "pt-BR", { sensitivity: "base" });
+    if (nameDifference !== 0) return nameDifference;
+
+    const aCode = aDefinition.code || a.itemType || "";
+    const bCode = bDefinition.code || b.itemType || "";
+    return aCode.localeCompare(bCode, "pt-BR", { sensitivity: "base" });
+  });
 }
 
 function invCategoryEmoji(category) {

@@ -154,7 +154,7 @@ async function incubRenderStart() {
 
   let inventory = [];
   try {
-    inventory = await apiGet("/inventory") || [];
+    inventory = invAggregateItems(await apiGet("/inventory") || []);
   } catch (e) {
     content.innerHTML = `<div class="card border-red-900"><p class="text-red-300">${escapeHtml(e.message)}</p></div>`;
     return;

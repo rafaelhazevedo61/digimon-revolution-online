@@ -30,6 +30,11 @@ public class UseItemUseCase {
     @Transactional
     public void execute(String token, ItemType type) {
 
+        if (isIncubationOnly(type)) {
+            throw new BadRequestException(
+                    "Digitamas e incubadoras devem ser usados pela tela de incubação");
+        }
+
         UUID playerId = TokenExtractor.extractPlayerId(token);
 
         var player = playerRepository.findById(playerId)
@@ -57,5 +62,13 @@ public class UseItemUseCase {
 
         inventoryRepository.save(item);
         digimonRepository.save(digimon);
+    }
+
+    private boolean isIncubationOnly(ItemType type) {
+        return switch (type) {
+            case DIGITAMA_STARTER, DIGITAMA_FIRE, DIGITAMA_WATER, DIGITAMA_NATURE,
+                    INCUBATOR_COMMON, INCUBATOR_RARE, INCUBATOR_EPIC -> true;
+            default -> false;
+        };
     }
 }

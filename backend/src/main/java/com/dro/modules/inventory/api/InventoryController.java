@@ -2,6 +2,8 @@ package com.dro.modules.inventory.api;
 
 import com.dro.modules.inventory.api.dto.request.UseItemRequest;
 import com.dro.modules.inventory.application.UseItemUseCase;
+import com.dro.modules.inventory.domain.InventoryItem;
+import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.loot.api.dto.request.OpenChestRequest;
 import com.dro.modules.loot.api.dto.response.ChestOpeningResponse;
 import com.dro.modules.loot.application.OpenChestUseCase;
@@ -15,7 +17,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
+
 
 /**
  * Componente da camada de controller da API do módulo de Inventário.
@@ -43,7 +48,58 @@ public class InventoryController {
             throw new BadRequestException("No active digimon selected");
         }
 
-        return ResponseEntity.ok(repository.findByDigimonId(player.getActiveDigimonId()));
+        List<InventoryItem> items = repository
+                .findByDigimonId(player.getActiveDigimonId());
+        items.sort(Comparator
+                .comparingInt(this::categoryOrder)
+                .thenComparing(this::itemName, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(this::itemCode, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(InventoryItem::getId));
+
+        return ResponseEntity.ok(items);
+    }
+
+    private int categoryOrder(InventoryItem item) {
+        String category = item.getItemDefinition() == null
+                ? legacyCategory(item.getItemType())
+                : item.getItemDefinition().getCategory();
+        return switch (category == null ? "" : category.toUpperCase()) {
+            case "CONSUMABLE" -> 10;
+            case "MATERIAL" -> 20;
+            case "EVOLUTION_MATERIAL" -> 30;
+            case "FRAGMENT" -> 40;
+            case "DIGITAMA" -> 50;
+            case "INCUBATOR" -> 60;
+            case "CHEST" -> 70;
+            default -> 99;
+        };
+    }
+
+    private String itemName(InventoryItem item) {
+        if (item.getItemDefinition() != null && item.getItemDefinition().getName() != null) {
+            return item.getItemDefinition().getName();
+        }
+        return item.getItemType() == null ? "" : item.getItemType().name();
+    }
+
+    private String itemCode(InventoryItem item) {
+        if (item.getItemDefinition() != null && item.getItemDefinition().getCode() != null) {
+            return item.getItemDefinition().getCode();
+        }
+        return item.getItemType() == null ? "" : item.getItemType().name();
+    }
+
+    private String legacyCategory(ItemType itemType) {
+        if (itemType == null) return "";
+        if (itemType.name().startsWith("DIGITAMA_")) return "DIGITAMA";
+        if (itemType.name().startsWith("INCUBATOR_")) return "INCUBATOR";
+        if (itemType == ItemType.LOOT_CHEST) return "CHEST";
+        if (itemType == ItemType.EVOLUTION_MATERIAL) return "EVOLUTION_MATERIAL";
+        if (itemType == ItemType.POTION_SMALL) return "CONSUMABLE";
+        if (itemType == ItemType.TRAINING_STONE
+                || itemType == ItemType.DATA_CORE
+                || itemType == ItemType.REFINEMENT_STONE) return "MATERIAL";
+        return "OTHER";
     }
 
     @PostMapping("/chests/open")
