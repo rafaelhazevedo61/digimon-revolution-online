@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Caso de uso administrativo para vincular Baús da Área às Loot Tables nomeadas.
+ * Caso de uso administrativo para vincular Baús temáticos às Loot Tables nomeadas.
  */
 @Service
 @RequiredArgsConstructor

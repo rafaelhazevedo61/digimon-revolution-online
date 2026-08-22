@@ -2,24 +2,34 @@ const areaChestState = {
   chests: [],
   lootTables: [],
   activeOnly: false,
+  category: "",
   editing: null
 };
 
 function renderAreaChestsPage() {
-  setPageHeader("Baús da Área", "Vincule cada baú temático à Loot Table que sorteia seu conteúdo");
+  setPageHeader("Baús Temáticos", "Vincule cada baú do jogo à Loot Table que sorteia seu conteúdo");
   const app = document.getElementById("app");
   app.innerHTML = `
     <div class="card mb-6">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h3 class="text-lg font-bold">Baús da Área</h3>
-          <p class="text-sm text-slate-400 mt-1">A missão entrega o baú; a abertura usa a Loot Table vinculada.</p>
+          <h3 class="text-lg font-bold">Baús Temáticos</h3>
+          <p class="text-sm text-slate-400 mt-1">Missões, Arena e Bosses entregam baús; a abertura usa a Loot Table vinculada.</p>
         </div>
-        <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
-          <input type="checkbox" id="area-chest-active-only" ${areaChestState.activeOnly ? "checked" : ""}
-            onchange="areaChestToggleActiveFilter()" class="accent-cyan-500" />
-          Apenas ativos
-        </label>
+          <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+            <input type="checkbox" id="area-chest-active-only" ${areaChestState.activeOnly ? "checked" : ""}
+              onchange="areaChestToggleActiveFilter()" class="accent-cyan-500" />
+            Apenas ativos
+          </label>
+          <label class="flex items-center gap-2 text-sm text-slate-400">
+            <span>Origem</span>
+            <select id="area-chest-category" class="input py-1" onchange="areaChestSetCategory(this.value)">
+              <option value="" ${areaChestState.category === "" ? "selected" : ""}>Todas</option>
+              <option value="MISSION" ${areaChestState.category === "MISSION" ? "selected" : ""}>Área / Missão</option>
+              <option value="ARENA" ${areaChestState.category === "ARENA" ? "selected" : ""}>Arena</option>
+              <option value="BOSS" ${areaChestState.category === "BOSS" ? "selected" : ""}>Boss</option>
+            </select>
+          </label>
       </div>
     </div>
     <div id="area-chest-result"></div>
@@ -48,11 +58,12 @@ async function areaChestLoadData() {
 function areaChestRenderTable() {
   const container = document.getElementById("area-chest-result");
   if (!container) return;
-  const chests = areaChestState.chests || [];
+  const allChests = areaChestState.chests || [];
+  const chests = allChests.filter(areaChestMatchesCategory);
   container.innerHTML = `
     <div class="mb-4">
       <h3 class="text-lg font-bold">Catálogo de Baús</h3>
-      <p class="text-sm text-slate-400">Total: ${chests.length}</p>
+      <p class="text-sm text-slate-400">Exibindo ${chests.length} de ${allChests.length} baú(s)</p>
     </div>
     <div class="table-wrapper">
       <table class="table">
@@ -112,6 +123,20 @@ function areaChestToggleActiveFilter() {
   areaChestLoadData();
 }
 
+function areaChestSetCategory(category) {
+  areaChestState.category = category || "";
+  areaChestRenderTable();
+}
+
+function areaChestMatchesCategory(chest) {
+  if (!areaChestState.category) return true;
+  const code = String(chest.code || "");
+  if (areaChestState.category === "MISSION") return code.startsWith("CHEST_MISSION_");
+  if (areaChestState.category === "ARENA") return code.startsWith("CHEST_ARENA_");
+  if (areaChestState.category === "BOSS") return code.startsWith("CHEST_BOSS_");
+  return true;
+}
+
 function areaChestShowEditModal(code) {
   const chest = areaChestState.chests.find(item => item.code === code);
   areaChestState.editing = code;
@@ -128,7 +153,7 @@ function areaChestShowEditModal(code) {
       <div class="modal-content modal-wide" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between mb-6">
           <div>
-            <h3 class="text-xl font-bold">Editar Baú da Área</h3>
+            <h3 class="text-xl font-bold">Editar Baú Temático</h3>
             <p class="text-sm text-slate-400 mt-1">O código e o item de inventário são somente leitura.</p>
           </div>
           <button class="text-slate-400 hover:text-white text-2xl" onclick="areaChestCloseModal()">&times;</button>

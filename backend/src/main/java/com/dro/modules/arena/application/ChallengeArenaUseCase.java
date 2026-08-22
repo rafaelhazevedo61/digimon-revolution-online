@@ -3,6 +3,7 @@ package com.dro.modules.arena.application;
 import com.dro.modules.arena.api.dto.response.ArenaMatchResponse;
 import com.dro.modules.arena.domain.ArenaMatch;
 import com.dro.modules.arena.domain.ArenaRules;
+import com.dro.modules.arena.domain.ArenaTier;
 import com.dro.modules.arena.infra.ArenaMatchRepository;
 import com.dro.modules.clan.application.ClanBonusService;
 import com.dro.modules.clan.application.ClanMissionProgressTracker;
@@ -10,12 +11,16 @@ import com.dro.modules.clan.domain.enums.ClanMissionObjectiveType;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.loot.domain.ChestDefinitionEntity;
+import com.dro.modules.loot.infra.ChestDefinitionRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.server.application.GlobalDamageBuffService;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
+import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +32,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -44,7 +51,21 @@ public class ChallengeArenaUseCase {
     private final ClanBonusService clanBonusService;
     private final ClanMissionProgressTracker clanMissionProgressTracker;
     private final GlobalDamageBuffService globalDamageBuffService;
+    private final AddItemUseCase addItemUseCase;
+    private final ChestDefinitionRepository chestDefinitionRepository;
+    private final TransactionAuditPublisher transactionAuditPublisher;
 
+    /**
+     * Executa um desafio de Arena e persiste todos os efeitos da partida.
+     *
+     * <p>Em caso de vitória, o Baú é resolvido pelo tier do atacante após a
+     * atualização do rating e creditado no inventário na mesma transação da
+     * partida e da auditoria Outbox. Derrotas não concedem Baú.</p>
+     *
+     * @param token token JWT do jogador atacante
+     * @param opponentDigimonId identificador do Digimon desafiado
+     * @return resultado da partida, incluindo o Baú quando houver vitória
+     */
     @Transactional
     public ArenaMatchResponse execute(String token, UUID opponentDigimonId) {
 
@@ -157,6 +178,9 @@ public class ChallengeArenaUseCase {
 
         int bitsGained = 0;
         int arenaCoinsGained;
+        ChestDefinitionEntity rewardChest = victory
+                ? resolveRewardChest(ArenaRules.tierFor(attackerRatingAfter))
+                : null;
         if (victory) {
             if (attackerClanId != null) {
                 clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.ARENA_WINS);
@@ -165,6 +189,7 @@ public class ChallengeArenaUseCase {
             bitsGained = ArenaRules.winBits(attackerRatingBefore, defenderRatingBefore);
             attacker.setBits(attacker.getBits() + bitsGained);
             arenaCoinsGained = ArenaRules.winArenaCoins(winChance);
+            addItemUseCase.addMaterial(attacker.getId(), rewardChest.getItemDefinition(), 1);
             if (!defenderIsBot) defender.setArenaLosses(defender.getArenaLosses() + 1);
         } else {
             attacker.setArenaLosses(attacker.getArenaLosses() + 1);
@@ -211,10 +236,18 @@ public class ChallengeArenaUseCase {
                 .defenderRatingChange(defenderRatingChange)
                 .defenderRatingAfter(defenderRatingAfter)
                 .bitsGained(bitsGained)
+                .rewardChest(rewardChest)
                 .createdAt(Instant.now())
                 .build();
 
         arenaMatchRepository.save(match);
+        transactionAuditPublisher.success(
+                "arena-challenge:" + match.getId(),
+                "ARENA_CHALLENGED",
+                "ArenaMatch",
+                match.getId().toString(),
+                buildAuditPayload(playerId, attacker, defender, match, rewardChest)
+        );
 
         return new ArenaMatchResponse(
                 victory,
@@ -227,8 +260,49 @@ public class ChallengeArenaUseCase {
                 bitsGained,
                 arenaCoinsGained,
                 player.getArenaCoins(),
-                ArenaRules.tierFor(attackerRatingAfter).getLabel()
+                ArenaRules.tierFor(attackerRatingAfter).getLabel(),
+                rewardChest != null ? rewardChest.getCode() : null,
+                rewardChest != null ? rewardChest.getName() : null
         );
+    }
+
+    private ChestDefinitionEntity resolveRewardChest(ArenaTier tier) {
+        String chestCode = "CHEST_ARENA_" + tier.name();
+        ChestDefinitionEntity chest = chestDefinitionRepository.findWithCatalogByCode(chestCode)
+                .orElseThrow(() -> new ConflictException(
+                        "Baú de recompensa da Arena não encontrado: " + chestCode));
+        if (!chest.isActive()) {
+            throw new ConflictException("Baú de recompensa da Arena está inativo: " + chestCode);
+        }
+        if (chest.getLootTable() == null || !chest.getLootTable().isActive()) {
+            throw new ConflictException("Loot Table do Baú de recompensa da Arena está inativa: " + chestCode);
+        }
+        return chest;
+    }
+
+    private Map<String, Object> buildAuditPayload(
+            UUID playerId,
+            Digimon attacker,
+            Digimon defender,
+            ArenaMatch match,
+            ChestDefinitionEntity rewardChest
+    ) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("module", "arena");
+        payload.put("operation", "challenge");
+        payload.put("playerId", playerId.toString());
+        payload.put("attackerDigimonId", attacker.getId().toString());
+        payload.put("defenderDigimonId", defender.getId().toString());
+        payload.put("victory", match.isAttackerWon());
+        payload.put("attackerRatingAfter", match.getAttackerRatingAfter());
+        payload.put("tier", ArenaRules.tierFor(match.getAttackerRatingAfter()).name());
+        payload.put("bitsGained", match.getBitsGained());
+        payload.put("rewardChestCode", rewardChest != null ? rewardChest.getCode() : null);
+        payload.put("rewardChestName", rewardChest != null ? rewardChest.getName() : null);
+        payload.put("summary", match.isAttackerWon()
+                ? "Arena victory and reward chest granted"
+                : "Arena defeat");
+        return payload;
     }
 
     private int applyCostReduction(int baseCost, double multiplier) {

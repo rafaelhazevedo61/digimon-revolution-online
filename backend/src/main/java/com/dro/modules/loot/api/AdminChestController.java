@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * API administrativa para manutenção dos Baús da Área.
+ * API administrativa para manutenção dos Baús temáticos do jogo.
  */
 @RestController
 @RequestMapping("/admin/chests")

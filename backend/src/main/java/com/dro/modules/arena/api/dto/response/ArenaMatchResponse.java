@@ -14,5 +14,7 @@ public record ArenaMatchResponse(
         int bitsGained,
         int arenaCoinsGained,
         int arenaCoinsBalance,
-        String tier
+        String tier,
+        String rewardChestCode,
+        String rewardChestName
 ) {}
