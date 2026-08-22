@@ -196,6 +196,8 @@ Após salvar o formulário de edição, a tela deve retornar à listagem atualiz
 
 Na tela administrativa de Bosses, a tabela deve exibir a coluna **Chance Equipamento**. O valor representa a chance única de entrar na pool legada de equipamentos do Boss; quando houver mais de um equipamento, a escolha posterior entre os templates permanece uniforme nesta sprint.
 
+Ao abrir o modal **Editar** de um Boss que já possui equipamentos, o campo **Chance Equipamento %** deve ser preenchido com o percentual atual. Ao salvar, o valor deve ser enviado no `PUT /admin/bosses/{id}` como `equipmentChance` e aplicado a todos os templates de equipamento da pool. Bosses sem equipamento devem exibir o campo desabilitado, orientando a adicionar um equipamento pelo modal **Drops** primeiro. Valores menores que 0% ou maiores que 100% devem ser rejeitados pela API.
+
 O botão **Raridade de Equipamentos** deve abrir um modal com os perfis `BOSS_NORMAL`, `BOSS_DAILY`, `BOSS_WEEKLY` e `BOSS_MONTHLY`. Cada perfil deve exibir os percentuais `Common`, `Rare`, `Epic` e `Legendary`, cuja soma precisa ser exatamente 100%.
 
 Altere um perfil de teste, salve e recarregue o modal. A alteração deve persistir. Tente salvar percentuais cuja soma seja diferente de 100%; a tela deve bloquear o envio e a API deve retornar HTTP 400. Após a alteração, o combate contra Boss deve usar o novo perfil de raridade, enquanto a chance de cair algum equipamento continua vindo da coluna `chance` de `boss_drops`.

@@ -1,5 +1,8 @@
 package com.dro.modules.boss.api.dto.request;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 /**
  * Contrato de dados do módulo de Boss Mundial.
  */
@@ -19,5 +22,6 @@ public record UpdateBossRequest(
         Integer defeatXpPercent,
         String imageUrl,
         Boolean active,
-        String chestCode
+        String chestCode,
+        @Min(0) @Max(100) Integer equipmentChance
 ) {}

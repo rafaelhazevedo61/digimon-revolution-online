@@ -57,12 +57,17 @@ async function loadBosses() {
   }
 }
 
-function equipmentPoolSummary(boss) {
+function equipmentPoolChance(boss) {
   const equipmentDrops = (boss.drops || []).filter(drop => drop.dropType === "EQUIPMENT");
-  if (equipmentDrops.length === 0) {
+  return equipmentDrops.length > 0 ? Number(equipmentDrops[0].chance) : null;
+}
+
+function equipmentPoolSummary(boss) {
+  const poolChance = equipmentPoolChance(boss);
+  const equipmentDrops = (boss.drops || []).filter(drop => drop.dropType === "EQUIPMENT");
+  if (poolChance === null) {
     return '<span class="text-slate-500">Sem equipamento</span>';
   }
-  const poolChance = Number(equipmentDrops[0].chance || 0);
   const optionLabel = equipmentDrops.length === 1 ? "1 opção" : `${equipmentDrops.length} opções`;
   return `<div class="font-semibold text-purple-300">${poolChance}%</div><div class="text-[10px] text-slate-500">Pool · ${optionLabel}</div>`;
 }
@@ -251,6 +256,7 @@ function closeBossRarityProfiles() {
 function openBossForm(id = null) {
   adminBossEditId = id;
   const boss = id ? adminBosses.find(b => b.id === id) : null;
+  const equipmentChance = boss ? equipmentPoolChance(boss) : null;
   const root = document.getElementById("boss-form-modal");
   if (!root) return;
 
@@ -333,6 +339,11 @@ function openBossForm(id = null) {
               <label class="text-xs text-slate-400">Defeat XP %</label>
               <input id="bf-defeatxp" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.defeatXpPercent ?? 10}" required>
             </div>
+            <div>
+              <label class="text-xs text-slate-400">Chance Equipamento %</label>
+              <input id="bf-equipment-chance" type="number" min="0" max="100" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${equipmentChance ?? ""}" ${equipmentChance === null ? "disabled" : ""}>
+              <p class="text-[10px] text-slate-500 mt-1">${equipmentChance === null ? "Adicione um equipamento no modal Drops para configurar a pool." : "Aplica-se a todos os templates de equipamento desta pool."}</p>
+            </div>
             <div class="col-span-2">
               <label class="text-xs text-slate-400">Image URL</label>
               <input id="bf-image" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${escapeAttr(boss?.imageUrl || "")}" placeholder="https://...">
@@ -392,6 +403,10 @@ async function saveBoss(event) {
     imageUrl: document.getElementById("bf-image").value || null,
     chestCode: document.getElementById("bf-chest").value
   };
+  const equipmentChanceField = document.getElementById("bf-equipment-chance");
+  if (equipmentChanceField && !equipmentChanceField.disabled && equipmentChanceField.value !== "") {
+    body.equipmentChance = parseInt(equipmentChanceField.value, 10);
+  }
 
   try {
     if (adminBossEditId) {

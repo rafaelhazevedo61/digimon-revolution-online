@@ -27,6 +27,7 @@ ATTEMPTS="${ATTEMPTS:-VALOR}"
 ATTRIBUTE="${ATTRIBUTE:-VALOR}"
 BOSS_CODE="${BOSS_CODE:-VALOR}"
 BOSS_ID="${BOSS_ID:-1}"
+PROFILE_KEY="${PROFILE_KEY:-BOSS_NORMAL}"
 CATEGORY="${CATEGORY:-VALOR}"
 CHEST_CODE="${CHEST_CODE:-VALOR}"
 DROP_ID="${DROP_ID:-00000000-0000-0000-0000-000000000000}"
@@ -81,7 +82,7 @@ USABLE="${USABLE:-VALOR}"
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/bosses/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
 
 # AdminBossController.update (PUT /admin/bosses/{id})
-# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/bosses/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"name":"Boss Atualizado","chestCode":"CHEST_BOSS_DAILY_NEW"}'
+# curl --fail-with-body -i -X PUT "${BASE_URL}/admin/bosses/${ID}" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"name":"Boss Atualizado","chestCode":"CHEST_BOSS_DAILY_NEW","equipmentChance":42}'
 
 # AdminChestController.list (GET /admin/chests)
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/chests?activeOnly=${ACTIVE_ONLY}" -H "Authorization: Bearer ${ADMIN_TOKEN}"

@@ -125,8 +125,35 @@ public class AdminBossController {
         } else if (request.chestCode() != null && !request.chestCode().isBlank()) {
             boss.setChestDefinition(resolveActiveChest(request.chestCode()));
         }
+        if (request.equipmentChance() != null) {
+            updateEquipmentPoolChance(boss, request.equipmentChance());
+        }
 
         return ResponseEntity.ok(bossDefinitionRepository.save(boss));
+    }
+
+    /**
+     * Atualiza a chance única da pool em todos os templates de equipamento do Boss.
+     *
+     * <p>O combate faz um único roll usando a chance do primeiro drop da pool e,
+     * após o sucesso, escolhe uniformemente entre os templates. Por isso, a edição
+     * administrativa mantém o mesmo percentual em todos os drops de equipamento.</p>
+     *
+     * @param boss Boss que terá a pool atualizada
+     * @param chance percentual entre zero e cem
+     */
+    private void updateEquipmentPoolChance(BossDefinitionEntity boss, int chance) {
+        List<BossDropEntity> equipmentDrops = boss.getDrops() == null
+                ? List.of()
+                : boss.getDrops().stream()
+                .filter(drop -> "EQUIPMENT".equalsIgnoreCase(drop.getDropType()))
+                .toList();
+        if (equipmentDrops.isEmpty()) {
+            throw new ConflictException(
+                    "Boss não possui drops de equipamento para configurar a chance da pool."
+            );
+        }
+        equipmentDrops.forEach(drop -> drop.setChance(chance));
     }
 
     private boolean requiresRewardChest(BossType bossType) {

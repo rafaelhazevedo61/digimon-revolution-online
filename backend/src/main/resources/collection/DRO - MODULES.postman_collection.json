@@ -423,7 +423,7 @@
             "description": "Atualiza dados de um Boss. chestCode é opcional; quando informado deve apontar para um Baú ativo com Loot Table ativa.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Boss Atualizado\",\n  \"chestCode\": \"CHEST_BOSS_DAILY_NEW\"\n}",
+              "raw": "{\n  \"name\": \"Boss Atualizado\",\n  \"chestCode\": \"CHEST_BOSS_DAILY_NEW\",\n  \"equipmentChance\": 42\n}",
               "options": {
                 "raw": {
                   "language": "json"
