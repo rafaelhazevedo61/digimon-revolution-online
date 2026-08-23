@@ -20,7 +20,7 @@ function renderEquipmentTemplatesPage() {
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div class="flex items-center gap-4 flex-wrap">
           <input type="text" id="eqt-search" class="input" placeholder="Buscar por nome..." 
-            value="${eqtState.search}" oninput="eqtOnSearch(this.value)" style="width:220px" />
+            value="${escapeAttr(eqtState.search)}" oninput="eqtOnSearch(this.value)" style="width:220px" />
           <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
             <input type="checkbox" id="eqt-active-only" ${eqtState.activeOnly ? "checked" : ""} 
               onchange="eqtToggleActiveFilter()" class="accent-cyan-500" />
@@ -56,7 +56,7 @@ async function loadEquipmentTemplates() {
     container.innerHTML = `
       <div class="card border-red-900 bg-red-950/30">
         <h3 class="font-bold text-red-300 mb-2">Erro ao carregar templates</h3>
-        <p class="text-red-200">${error.message}</p>
+        <p class="text-red-200">${escapeHtml(error.message)}</p>
       </div>
     `;
   }
@@ -149,6 +149,12 @@ function renderEquipmentTemplatesTable(templates) {
 
     ${templates.length === 0 ? '<div class="card mt-4"><p class="text-slate-400">Nenhum template encontrado.</p></div>' : ""}
   `;
+  container.querySelectorAll("[data-eqt-edit]").forEach(button => {
+    button.addEventListener("click", () => eqtShowEditModal(button.dataset.eqtEdit));
+  });
+  container.querySelectorAll("[data-eqt-toggle]").forEach(button => {
+    button.addEventListener("click", () => eqtToggleActive(button.dataset.eqtToggle));
+  });
 }
 
 function renderEqtRow(t) {
@@ -157,9 +163,9 @@ function renderEqtRow(t) {
 
   return `
     <tr>
-      <td class="font-semibold">${t.name}</td>
-      <td><span class="badge">${t.slot}</span></td>
-      <td><span class="badge">${t.setCode || '-'}</span></td>
+      <td class="font-semibold">${escapeHtml(t.name)}</td>
+      <td><span class="badge">${escapeHtml(t.slot)}</span></td>
+      <td><span class="badge">${escapeHtml(t.setCode || '-')}</span></td>
       <td>${t.tier || '-'}</td>
       <td>${t.bonusHp > 0 ? `+${t.bonusHp}` : "-"}</td>
       <td>${t.bonusAttack > 0 ? `+${t.bonusAttack}` : "-"}</td>
@@ -167,15 +173,14 @@ function renderEqtRow(t) {
       <td><span class="badge ${statusClass}">${statusText}</span></td>
       <td>
         <div class="text-xs text-slate-400">${eqtFormatDate(t.updatedAt)}</div>
-        <div class="text-xs text-slate-500">por ${t.updatedBy || "-"}</div>
+        <div class="text-xs text-slate-500">por ${escapeHtml(t.updatedBy || "-")}</div>
       </td>
       <td>
         <div class="flex gap-2">
-          <button class="btn-sm btn-secondary" onclick="eqtShowEditModal('${t.name.replace(/'/g, "\\'")}')">
+          <button class="btn-sm btn-secondary" data-eqt-edit="${escapeAttr(t.name)}">
             Editar
           </button>
-          <button class="btn-sm ${t.active ? 'btn-warning' : 'btn-success-outline'}" 
-            onclick="eqtToggleActive('${t.name.replace(/'/g, "\\'")}')">
+          <button class="btn-sm ${t.active ? 'btn-warning' : 'btn-success-outline'}" data-eqt-toggle="${escapeAttr(t.name)}">
             ${t.active ? "Desativar" : "Ativar"}
           </button>
         </div>
@@ -216,7 +221,7 @@ function eqtRenderModal(title, data, isEdit) {
     <div class="modal-overlay" onclick="eqtCloseModal()">
       <div class="modal-content" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between mb-6">
-          <h3 class="text-xl font-bold">${title}</h3>
+          <h3 class="text-xl font-bold">${escapeHtml(title)}</h3>
           <button class="text-slate-400 hover:text-white text-2xl" onclick="eqtCloseModal()">&times;</button>
         </div>
 
@@ -224,7 +229,7 @@ function eqtRenderModal(title, data, isEdit) {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="md:col-span-2">
               <label class="text-sm text-slate-400">Nome</label>
-              <input id="eqt-name" class="input mt-1" value="${data.name}" 
+              <input id="eqt-name" class="input mt-1" value="${escapeAttr(data.name)}"
                 ${isEdit ? "disabled" : ""} required />
             </div>
 

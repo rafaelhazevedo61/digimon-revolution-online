@@ -97,22 +97,22 @@ function lootTableRenderRow(table) {
   const statusLabel = table.active ? "Ativa" : "Inativa";
   return `
     <tr>
-      <td><span class="font-mono text-cyan-300">${lootTableEscapeHtml(table.code)}</span></td>
+      <td><span class="font-mono text-cyan-300">${escapeHtml(table.code)}</span></td>
       <td>
-        <div class="font-semibold">${lootTableEscapeHtml(table.name)}</div>
-        <div class="text-xs text-slate-500 line-clamp-1">${lootTableEscapeHtml(table.description || "Sem descrição")}</div>
+        <div class="font-semibold">${escapeHtml(table.name)}</div>
+        <div class="text-xs text-slate-500 line-clamp-1">${escapeHtml(table.description || "Sem descrição")}</div>
       </td>
       <td>${table.minItems}–${table.maxItems}</td>
       <td>${(table.entries || []).length}</td>
       <td><span class="badge ${statusClass}">${statusLabel}</span></td>
       <td>
         <div class="text-xs text-slate-400">${lootTableFormatDate(table.updatedAt)}</div>
-        <div class="text-xs text-slate-500">por ${lootTableEscapeHtml(table.updatedBy || "-")}</div>
+        <div class="text-xs text-slate-500">por ${escapeHtml(table.updatedBy || "-")}</div>
       </td>
       <td>
         <div class="flex flex-wrap gap-2">
-          <button type="button" class="btn-sm btn-secondary js-loot-edit" data-code="${lootTableEscapeAttr(table.code)}">Editar</button>
-          <button type="button" class="btn-sm ${table.active ? "btn-warning" : "btn-success-outline"} js-loot-toggle" data-code="${lootTableEscapeAttr(table.code)}">
+          <button type="button" class="btn-sm btn-secondary js-loot-edit" data-code="${escapeAttr(table.code)}">Editar</button>
+          <button type="button" class="btn-sm ${table.active ? "btn-warning" : "btn-success-outline"} js-loot-toggle" data-code="${escapeAttr(table.code)}">
             ${table.active ? "Desativar" : "Ativar"}
           </button>
         </div>
@@ -174,7 +174,7 @@ function lootTableRenderModal(title, data, isEdit) {
       <div class="modal-content modal-wide" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between gap-4 mb-6">
           <div>
-            <h3 class="text-xl font-bold">${lootTableEscapeHtml(title)}</h3>
+            <h3 class="text-xl font-bold">${escapeHtml(title)}</h3>
             <p class="text-sm text-slate-400 mt-1">Os itens são selecionados exclusivamente do catálogo oficial.</p>
           </div>
           <button class="text-slate-400 hover:text-white text-2xl" onclick="lootTableCloseModal()" aria-label="Fechar">&times;</button>
@@ -184,16 +184,16 @@ function lootTableRenderModal(title, data, isEdit) {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="text-sm text-slate-400">Código técnico</label>
-              <input id="loot-code" class="input mt-1 font-mono" value="${lootTableEscapeAttr(data.code || "")}" ${isEdit ? "disabled" : ""} required />
+              <input id="loot-code" class="input mt-1 font-mono" value="${escapeAttr(data.code || "")}" ${isEdit ? "disabled" : ""} required />
               <p class="text-xs text-slate-500 mt-1">Use apenas A-Z, números e underscore.</p>
             </div>
             <div>
               <label class="text-sm text-slate-400">Nome administrativo</label>
-              <input id="loot-name" class="input mt-1" value="${lootTableEscapeAttr(data.name || "")}" required />
+              <input id="loot-name" class="input mt-1" value="${escapeAttr(data.name || "")}" required />
             </div>
             <div class="md:col-span-2">
               <label class="text-sm text-slate-400">Descrição</label>
-              <textarea id="loot-description" class="input mt-1" rows="2">${lootTableEscapeHtml(data.description || "")}</textarea>
+              <textarea id="loot-description" class="input mt-1" rows="2">${escapeHtml(data.description || "")}</textarea>
             </div>
             <div>
               <label class="text-sm text-slate-400">Mínimo de tipos por abertura</label>
@@ -253,15 +253,15 @@ function lootTableRenderModal(title, data, isEdit) {
 function lootTableRenderEntryRow(entry) {
   const selectedCode = entry.itemCode || entry.materialCode || entry.itemType || "";
   return `
-    <div class="card-sm loot-entry-row" data-entry-id="${lootTableEscapeAttr(entry.id || "new")}">
+    <div class="card-sm loot-entry-row" data-entry-id="${escapeAttr(entry.id || "new")}">
       <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
         <div class="md:col-span-3">
           <label class="text-xs text-slate-500">Item catalogado</label>
           <select class="input mt-1 loot-entry-item" required>
             <option value="">Selecione um item</option>
             ${lootTableState.catalog.map(item => `
-              <option value="${lootTableEscapeAttr(item.code)}" ${item.code === selectedCode ? "selected" : ""}>
-                ${lootTableEscapeHtml(item.name)} — ${lootTableEscapeHtml(item.code)}
+              <option value="${escapeAttr(item.code)}" ${item.code === selectedCode ? "selected" : ""}>
+                ${escapeHtml(item.name)} — ${escapeHtml(item.code)}
               </option>
             `).join("")}
           </select>
@@ -436,7 +436,7 @@ function lootTableShowInlineError(message) {
 function lootTableShowInlineSuccess(message) {
   const container = document.getElementById("loot-tables-result");
   if (!container) return;
-  container.insertAdjacentHTML("afterbegin", `<div class="mb-4 rounded-lg border border-emerald-800 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-200">${lootTableEscapeHtml(message)}</div>`);
+  container.insertAdjacentHTML("afterbegin", `<div class="mb-4 rounded-lg border border-emerald-800 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-200">${escapeHtml(message)}</div>`);
 }
 
 function lootTableShowFormError(message) {
@@ -447,24 +447,11 @@ function lootTableShowFormError(message) {
 }
 
 function lootTableErrorCard(title, message) {
-  return `<div class="card border-red-900 bg-red-950/30 mb-4"><h3 class="font-bold text-red-300 mb-2">${lootTableEscapeHtml(title)}</h3><p class="text-red-200">${lootTableEscapeHtml(message)}</p></div>`;
+  return `<div class="card border-red-900 bg-red-950/30 mb-4"><h3 class="font-bold text-red-300 mb-2">${escapeHtml(title)}</h3><p class="text-red-200">${escapeHtml(message)}</p></div>`;
 }
 
 function lootTableFormatDate(value) {
   if (!value) return "-";
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("pt-BR");
-}
-
-function lootTableEscapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function lootTableEscapeAttr(value) {
-  return lootTableEscapeHtml(value);
 }

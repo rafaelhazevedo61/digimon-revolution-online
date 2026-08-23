@@ -127,7 +127,7 @@ function renderArenaLobby(lobby) {
         </div>
         <button
           class="px-3 py-2 rounded-lg text-xs font-bold ${canFight ? "btn-primary" : "bg-slate-700 text-slate-400 cursor-not-allowed"}"
-          ${canFight ? `onclick="startArenaChallenge('${o.digimonId}', '${escapeHtml(o.digimonName).replace(/'/g, "\\'")}')"` : "disabled"}>
+          ${canFight ? `data-arena-opponent-id="${escapeAttr(o.digimonId)}" data-arena-opponent-name="${escapeAttr(o.digimonName)}"` : "disabled"}>
           ${btnLabel}
         </button>
       </div>
@@ -140,6 +140,11 @@ function renderArenaLobby(lobby) {
     ${opponentsHtml}
     ${lobby.energy < lobby.energyCost ? `<p class="text-xs text-red-400 mt-2 px-1">Energia insuficiente para desafiar (recarrega com o tempo)</p>` : ""}
   `;
+  container.querySelectorAll("[data-arena-opponent-id]").forEach(button => {
+    button.addEventListener("click", () => {
+      startArenaChallenge(button.dataset.arenaOpponentId, button.dataset.arenaOpponentName);
+    });
+  });
 }
 
 async function startArenaChallenge(opponentDigimonId, opponentName) {
@@ -376,7 +381,7 @@ function renderArenaShop(shop) {
         </div>
         <button
           class="px-3 py-2 rounded-lg text-xs font-bold ${canBuy ? "btn-primary" : "bg-slate-700 text-slate-400 cursor-not-allowed"}"
-          ${canBuy ? `onclick="buyArenaShopItem('${p.code}', '${escapeHtml(p.name).replace(/'/g, "\\'")}')"` : "disabled"}>
+          ${canBuy ? `data-arena-shop-code="${escapeAttr(p.code)}" data-arena-shop-name="${escapeAttr(p.name)}"` : "disabled"}>
           Comprar
         </button>
       </div>
@@ -388,6 +393,11 @@ function renderArenaShop(shop) {
     <p class="text-xs text-slate-400 mb-2 px-1">Ganhe moedas lutando na Arena (vitória rende mais, derrota também dá).</p>
     ${productsHtml}
   `;
+  container.querySelectorAll("[data-arena-shop-code]").forEach(button => {
+    button.addEventListener("click", () => {
+      buyArenaShopItem(button.dataset.arenaShopCode, button.dataset.arenaShopName);
+    });
+  });
 }
 
 async function buyArenaShopItem(productCode, productName) {

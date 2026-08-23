@@ -3,9 +3,9 @@
   const grids = document.querySelectorAll('[data-gallery-grid]');
 
   const card = (item) => `
-    <button class="gallery-card" type="button" data-gallery-open="${item.id}" aria-label="Ampliar ${item.title}">
-      <span class="gallery-image-wrap"><img src="${item.image}" alt="${item.title}" loading="lazy" /></span>
-      <span class="gallery-card-overlay"><small>${item.category}</small><strong>${item.title}</strong><span>Visualizar imagem ↗</span></span>
+    <button class="gallery-card" type="button" data-gallery-open="${escapeAttr(item.id)}" aria-label="Ampliar ${escapeHtml(item.title)}">
+      <span class="gallery-image-wrap"><img src="${escapeAttr(item.image)}" alt="${escapeAttr(item.title)}" loading="lazy" /></span>
+      <span class="gallery-card-overlay"><small>${escapeHtml(item.category)}</small><strong>${escapeHtml(item.title)}</strong><span>Visualizar imagem ↗</span></span>
     </button>`;
 
   grids.forEach((grid) => {

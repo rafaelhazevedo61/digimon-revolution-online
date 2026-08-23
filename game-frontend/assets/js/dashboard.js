@@ -93,6 +93,12 @@ function renderDashContent(data) {
     ${data.incubation ? renderIncubation(data.incubation) : ""}
   `;
 
+  container.querySelectorAll("[data-rename-digimon-id]").forEach(button => {
+    button.addEventListener("click", event => {
+      event.stopPropagation();
+      openRenameModal(button.dataset.renameDigimonId, button.dataset.renameDigimonName);
+    });
+  });
   startMissionTimers();
   startIncubationTimer();
   loadTutorialCard();
@@ -149,7 +155,7 @@ function renderDigimonCard(d) {
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <h3 class="font-bold text-lg truncate">${escapeHtml(d.name)}</h3>
-            <button class="text-slate-500 hover:text-slate-300 text-xs" onclick="event.stopPropagation(); openRenameModal('${d.id}', '${escapeHtml(d.name)}')" title="Renomear">✏️</button>
+            <button class="text-slate-500 hover:text-slate-300 text-xs" data-rename-digimon-id="${escapeAttr(d.id)}" data-rename-digimon-name="${escapeAttr(d.name)}" title="Renomear">✏️</button>
             <span class="text-sm font-bold text-cyan-400">Lv.${d.level}</span>
           </div>
           <p class="text-xs text-slate-400">${escapeHtml(formatDigimonType(d.type))}</p>

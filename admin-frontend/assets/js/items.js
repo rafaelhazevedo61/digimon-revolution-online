@@ -44,13 +44,13 @@ function renderItemsPage() {
           <div class="md:col-span-2">
             <label class="text-sm text-slate-400">Buscar</label>
             <input id="filter-search" class="input mt-1" placeholder="Nome, código ou descrição"
-              value="${itemEscapeAttr(itemState.search)}"
+              value="${escapeAttr(itemState.search)}"
               onkeydown="if (event.key === 'Enter') applyItemFilters()" />
           </div>
 
           <div>
             <label class="text-sm text-slate-400">Categoria</label>
-            <input id="filter-category" class="input mt-1" placeholder="Ex.: CHEST" value="${itemEscapeAttr(itemState.category)}" />
+            <input id="filter-category" class="input mt-1" placeholder="Ex.: CHEST" value="${escapeAttr(itemState.category)}" />
           </div>
 
           <div>
@@ -129,7 +129,7 @@ async function loadItems() {
         container.innerHTML = `
         <div class="card border-red-900 bg-red-950/30">
           <h3 class="font-bold text-red-300 mb-2">Erro ao carregar itens</h3>
-          <p class="text-red-200">${itemEscapeHtml(error.message)}</p>
+          <p class="text-red-200">${escapeHtml(error.message)}</p>
           <p class="text-sm text-slate-400 mt-4">
             Verifique se o backend está rodando e se o CORS permite acesso deste frontend.
           </p>
@@ -190,17 +190,17 @@ function renderItemRow(item) {
     return `
       <tr>
         <td>
-          <div class="font-mono text-cyan-300">${itemEscapeHtml(item.code)}</div>
-          <div class="text-xs text-slate-500">ID ${itemEscapeHtml(item.id)}</div>
+          <div class="font-mono text-cyan-300">${escapeHtml(item.code)}</div>
+          <div class="text-xs text-slate-500">ID ${escapeHtml(item.id)}</div>
         </td>
 
         <td>
-          <div class="font-semibold">${itemEscapeHtml(item.name)}</div>
-          <div class="text-xs text-slate-500 line-clamp-1">${itemEscapeHtml(item.description || "Sem descrição")}</div>
+          <div class="font-semibold">${escapeHtml(item.name)}</div>
+          <div class="text-xs text-slate-500 line-clamp-1">${escapeHtml(item.description || "Sem descrição")}</div>
         </td>
 
-        <td><span class="badge">${itemEscapeHtml(itemCategoryLabel(item.category))}</span></td>
-        <td><span class="badge">${itemEscapeHtml(itemRarityLabel(item.rarity))}</span></td>
+        <td><span class="badge">${escapeHtml(itemCategoryLabel(item.category))}</span></td>
+        <td><span class="badge">${escapeHtml(itemRarityLabel(item.rarity))}</span></td>
         <td>${formatPrice(item.buyPrice)}</td>
         <td>${formatPrice(item.sellPrice)}</td>
         <td>${item.stackable ? `Máx. ${item.maxStack ?? "-"}` : "Não acumula"}</td>
@@ -293,26 +293,26 @@ function renderItemEditModal(item) {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="text-sm text-slate-400">Código</label>
-                <input class="input mt-1 font-mono" value="${itemEscapeAttr(item.code)}" readonly />
+                <input class="input mt-1 font-mono" value="${escapeAttr(item.code)}" readonly />
               </div>
               <div>
                 <label class="text-sm text-slate-400">ID</label>
-                <input class="input mt-1" value="${itemEscapeAttr(item.id)}" readonly />
+                <input class="input mt-1" value="${escapeAttr(item.id)}" readonly />
               </div>
 
               <div class="md:col-span-2">
                 <label class="text-sm text-slate-400">Nome exibido</label>
-                <input id="item-edit-name" class="input mt-1" value="${itemEscapeAttr(item.name)}" required maxlength="120" />
+                <input id="item-edit-name" class="input mt-1" value="${escapeAttr(item.name)}" required maxlength="120" />
               </div>
 
               <div class="md:col-span-2">
                 <label class="text-sm text-slate-400">Descrição</label>
-                <textarea id="item-edit-description" class="input mt-1 min-h-24" maxlength="2000">${itemEscapeHtml(item.description || "")}</textarea>
+                <textarea id="item-edit-description" class="input mt-1 min-h-24" maxlength="2000">${escapeHtml(item.description || "")}</textarea>
               </div>
 
               <div>
                 <label class="text-sm text-slate-400">Categoria (código interno)</label>
-                <input id="item-edit-category" class="input mt-1" value="${itemEscapeAttr(item.category || "")}" required maxlength="40" />
+                <input id="item-edit-category" class="input mt-1" value="${escapeAttr(item.category || "")}" required maxlength="40" />
               </div>
               <div>
                 <label class="text-sm text-slate-400">Raridade</label>
@@ -340,7 +340,7 @@ function renderItemEditModal(item) {
               </div>
               <div>
                 <label class="text-sm text-slate-400">Ícone</label>
-                <input id="item-edit-icon" class="input mt-1" value="${itemEscapeAttr(item.icon || "")}" maxlength="120" placeholder="Ex.: chest_fragment_rookie" />
+                <input id="item-edit-icon" class="input mt-1" value="${escapeAttr(item.icon || "")}" maxlength="120" placeholder="Ex.: chest_fragment_rookie" />
               </div>
             </div>
 
@@ -509,17 +509,4 @@ function editRarityOptions(selectedValue) {
         ${option.label}
       </option>
     `).join("");
-}
-
-function itemEscapeHtml(value) {
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-}
-
-function itemEscapeAttr(value) {
-    return itemEscapeHtml(value).replace(/\r?\n/g, "&#10;");
 }

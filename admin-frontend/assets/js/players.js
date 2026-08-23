@@ -22,12 +22,12 @@ function renderPlayersPage() {
   
           <div>
             <label class="text-sm text-slate-400">Username</label>
-            <input id="player-filter-username" class="input mt-1" placeholder="Ex: rafael" value="${playerState.username}" />
+            <input id="player-filter-username" class="input mt-1" placeholder="Ex: rafael" value="${escapeAttr(playerState.username)}" />
           </div>
   
           <div>
             <label class="text-sm text-slate-400">Email</label>
-            <input id="player-filter-email" class="input mt-1" placeholder="Ex: gmail" value="${playerState.email}" />
+            <input id="player-filter-email" class="input mt-1" placeholder="Ex: gmail" value="${escapeAttr(playerState.email)}" />
           </div>
   
           <div>
@@ -95,7 +95,7 @@ async function loadPlayers() {
     container.innerHTML = `
         <div class="card border-red-900 bg-red-950/30">
           <h3 class="font-bold text-red-300 mb-2">Erro ao carregar players</h3>
-          <p class="text-red-200">${error.message}</p>
+          <p class="text-red-200">${escapeHtml(error.message)}</p>
           <p class="text-sm text-slate-400 mt-4">
             Verifique se o backend está rodando e se o endpoint GET /admin/players existe.
           </p>
@@ -150,22 +150,28 @@ function renderPlayersResult(result) {
   
       ${items.length === 0 ? renderEmptyPlayers() : ""}
     `;
+  container.querySelectorAll("[data-player-reset]").forEach(button => {
+    button.addEventListener("click", () => {
+      const player = items.find(item => String(item.id) === button.dataset.playerReset);
+      if (player) adminResetPassword(player);
+    });
+  });
 }
 
 function renderPlayerRow(player) {
   return `
       <tr>
         <td>
-          <div class="font-semibold text-cyan-300">${player.username}</div>
-          <div class="text-xs text-slate-500 font-mono">${player.id}</div>
+          <div class="font-semibold text-cyan-300">${escapeHtml(player.username)}</div>
+          <div class="text-xs text-slate-500 font-mono">${escapeHtml(player.id)}</div>
         </td>
   
         <td>
-          <div class="text-slate-200">${player.email}</div>
+          <div class="text-slate-200">${escapeHtml(player.email)}</div>
         </td>
   
         <td>
-          ${player.selectedDigitama ? `<span class="badge">${player.selectedDigitama}</span>` : `<span class="text-slate-500">-</span>`}
+          ${player.selectedDigitama ? `<span class="badge">${escapeHtml(player.selectedDigitama)}</span>` : `<span class="text-slate-500">-</span>`}
         </td>
   
         <td>
@@ -174,7 +180,7 @@ function renderPlayerRow(player) {
   
         <td>
           ${player.activeDigimonId
-      ? `<div class="font-mono text-xs text-slate-300">${player.activeDigimonId}</div>`
+      ? `<div class="font-mono text-xs text-slate-300">${escapeHtml(player.activeDigimonId)}</div>`
       : `<span class="text-slate-500">-</span>`
     }
         </td>
@@ -188,7 +194,7 @@ function renderPlayerRow(player) {
         </td>
 
         <td>
-          <button class="btn-secondary text-xs" onclick='adminResetPassword(${JSON.stringify(player).replace(/'/g, "&#39;")})'>
+          <button class="btn-secondary text-xs" data-player-reset="${escapeAttr(player.id)}">
             Resetar senha
           </button>
         </td>

@@ -91,12 +91,12 @@ function areaChestRenderRow(chest) {
   return `
     <tr>
       <td>
-        <div class="font-semibold">${areaChestEscapeHtml(chest.name)}</div>
-        <div class="text-xs text-slate-500 font-mono">${areaChestEscapeHtml(chest.code)}</div>
+        <div class="font-semibold">${escapeHtml(chest.name)}</div>
+        <div class="text-xs text-slate-500 font-mono">${escapeHtml(chest.code)}</div>
       </td>
       <td>
-        <div class="font-semibold">${areaChestEscapeHtml(chest.lootTableName || "Sem Loot Table")}${tableStatus}</div>
-        <div class="text-xs text-slate-500 font-mono">${areaChestEscapeHtml(chest.lootTableCode || "-")}</div>
+        <div class="font-semibold">${escapeHtml(chest.lootTableName || "Sem Loot Table")}${tableStatus}</div>
+        <div class="text-xs text-slate-500 font-mono">${escapeHtml(chest.lootTableCode || "-")}</div>
       </td>
       <td>
         <span class="badge ${chest.tradable ? "badge-success" : "badge-danger"}">${chest.tradable ? "Negociável" : "Não negociável"}</span>
@@ -104,12 +104,12 @@ function areaChestRenderRow(chest) {
       <td><span class="badge ${statusClass}">${statusLabel}</span></td>
       <td>
         <div class="text-xs text-slate-400">${areaChestFormatDate(chest.updatedAt)}</div>
-        <div class="text-xs text-slate-500">por ${areaChestEscapeHtml(chest.updatedBy || "-")}</div>
+        <div class="text-xs text-slate-500">por ${escapeHtml(chest.updatedBy || "-")}</div>
       </td>
       <td>
         <div class="flex flex-wrap gap-2">
-          <button type="button" class="btn-sm btn-secondary" onclick="areaChestShowEditModal('${areaChestEscapeAttr(chest.code)}')">Editar</button>
-          <button type="button" class="btn-sm ${chest.active ? "btn-warning" : "btn-success-outline"}" onclick="areaChestToggleActive('${areaChestEscapeAttr(chest.code)}')">
+          <button type="button" class="btn-sm btn-secondary" onclick="areaChestShowEditModal('${escapeAttr(chest.code)}')">Editar</button>
+          <button type="button" class="btn-sm ${chest.active ? "btn-warning" : "btn-success-outline"}" onclick="areaChestToggleActive('${escapeAttr(chest.code)}')">
             ${chest.active ? "Desativar" : "Ativar"}
           </button>
         </div>
@@ -162,28 +162,28 @@ function areaChestShowEditModal(code) {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="text-sm text-slate-400">Código do baú</label>
-              <input class="input mt-1 font-mono" value="${areaChestEscapeAttr(chest.code)}" disabled />
+              <input class="input mt-1 font-mono" value="${escapeAttr(chest.code)}" disabled />
             </div>
             <div>
               <label class="text-sm text-slate-400">Item de inventário</label>
-              <input class="input mt-1 font-mono" value="${areaChestEscapeAttr(chest.itemCode || "-")}" disabled />
+              <input class="input mt-1 font-mono" value="${escapeAttr(chest.itemCode || "-")}" disabled />
             </div>
             <div>
               <label class="text-sm text-slate-400">Nome</label>
-              <input id="area-chest-name" class="input mt-1" value="${areaChestEscapeAttr(chest.name)}" required />
+              <input id="area-chest-name" class="input mt-1" value="${escapeAttr(chest.name)}" required />
             </div>
             <div>
               <label class="text-sm text-slate-400">Ícone</label>
-              <input id="area-chest-icon" class="input mt-1" value="${areaChestEscapeAttr(chest.icon || "")}" />
+              <input id="area-chest-icon" class="input mt-1" value="${escapeAttr(chest.icon || "")}" />
             </div>
             <div class="md:col-span-2">
               <label class="text-sm text-slate-400">Descrição</label>
-              <textarea id="area-chest-description" class="input mt-1" rows="2">${areaChestEscapeHtml(chest.description || "")}</textarea>
+              <textarea id="area-chest-description" class="input mt-1" rows="2">${escapeHtml(chest.description || "")}</textarea>
             </div>
             <div class="md:col-span-2">
               <label class="text-sm text-slate-400">Loot Table ativa</label>
               <select id="area-chest-loot-table" class="input mt-1" required>
-                ${activeTables.map(table => `<option value="${areaChestEscapeAttr(table.code)}" ${table.code === chest.lootTableCode ? "selected" : ""}>${areaChestEscapeHtml(table.name)} — ${areaChestEscapeHtml(table.code)}</option>`).join("")}
+                ${activeTables.map(table => `<option value="${escapeAttr(table.code)}" ${table.code === chest.lootTableCode ? "selected" : ""}>${escapeHtml(table.name)} — ${escapeHtml(table.code)}</option>`).join("")}
               </select>
               <p class="text-xs text-slate-500 mt-1">Somente Loot Tables ativas podem ser vinculadas a um baú ativo.</p>
             </div>
@@ -247,24 +247,11 @@ function areaChestShowInlineError(message) {
 }
 
 function areaChestErrorCard(title, message) {
-  return `<div class="card border-red-900 bg-red-950/30 mb-4"><h3 class="font-bold text-red-300 mb-2">${areaChestEscapeHtml(title)}</h3><p class="text-red-200">${areaChestEscapeHtml(message)}</p></div>`;
+  return `<div class="card border-red-900 bg-red-950/30 mb-4"><h3 class="font-bold text-red-300 mb-2">${escapeHtml(title)}</h3><p class="text-red-200">${escapeHtml(message)}</p></div>`;
 }
 
 function areaChestFormatDate(value) {
   if (!value) return "-";
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("pt-BR");
-}
-
-function areaChestEscapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function areaChestEscapeAttr(value) {
-  return areaChestEscapeHtml(value);
 }

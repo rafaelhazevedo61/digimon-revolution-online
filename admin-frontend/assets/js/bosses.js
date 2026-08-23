@@ -3,19 +3,6 @@ let adminBossEditId = null;
 let adminBossChestOptions = [];
 let adminBossRarityProfiles = [];
 
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function escapeAttr(value) {
-  return escapeHtml(value);
-}
-
 async function renderBossesAdminPage() {
   const app = document.getElementById("app");
   document.getElementById("page-title").textContent = "Bosses";
@@ -53,7 +40,7 @@ async function loadBosses() {
     adminBossChestOptions = chests;
     renderBossesTable();
   } catch (err) {
-    document.getElementById("bosses-table-container").innerHTML = `<p class="text-red-400">${err.message}</p>`;
+    document.getElementById("bosses-table-container").innerHTML = `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
   }
 }
 
@@ -140,9 +127,9 @@ function renderBossesTable() {
           ${adminBosses.map(b => `
             <tr class="border-b border-slate-800 hover:bg-slate-800/50">
               <td class="py-2 px-2 text-slate-500">${b.id}</td>
-              <td class="py-2 px-2 font-bold">${b.name}</td>
+              <td class="py-2 px-2 font-bold">${escapeHtml(b.name)}</td>
               <td class="py-2 px-2"><span class="px-2 py-0.5 rounded text-xs font-bold ${typeColors[b.bossType] || ""}">${b.bossType}</span></td>
-              <td class="py-2 px-2">${b.requiredStage}</td>
+              <td class="py-2 px-2">${escapeHtml(b.requiredStage)}</td>
               <td class="py-2 px-2">${b.requiredLevel}</td>
               <td class="py-2 px-2 text-xs">${b.hp}/${b.atk}/${b.def}</td>
               <td class="py-2 px-2 text-yellow-400">${b.baseXpReward}</td>

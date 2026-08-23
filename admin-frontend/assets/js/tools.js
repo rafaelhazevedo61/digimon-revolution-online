@@ -146,7 +146,7 @@ async function toolsSearchPlayers() {
     toolsRenderPlayerList();
   } catch (err) {
     document.getElementById("tools-player-list").innerHTML =
-      `<p class="text-red-400">${err.message}</p>`;
+      `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
   }
 }
 
@@ -160,17 +160,20 @@ function toolsRenderPlayerList() {
   container.innerHTML = toolsState.players.map(p => `
     <button class="w-full text-left px-3 py-2 rounded hover:bg-slate-800 transition-colors flex justify-between items-center
       ${toolsState.selectedPlayerId === p.id ? 'bg-slate-800 border border-cyan-500' : 'border border-slate-700'}"
-      onclick="toolsSelectPlayer('${p.id}', '${p.username}')">
+      data-player-id="${escapeAttr(p.id)}">
       <span>
-        <span class="text-cyan-300 font-medium">${p.username}</span>
-        <span class="text-slate-500 text-sm ml-2">${p.email}</span>
+        <span class="text-cyan-300 font-medium">${escapeHtml(p.username)}</span>
+        <span class="text-slate-500 text-sm ml-2">${escapeHtml(p.email)}</span>
       </span>
-      <span class="text-slate-500 text-xs">${p.id.substring(0, 8)}...</span>
+      <span class="text-slate-500 text-xs">${escapeHtml(p.id.substring(0, 8))}...</span>
     </button>
   `).join("");
+  container.querySelectorAll("[data-player-id]").forEach(button => {
+    button.addEventListener("click", () => toolsSelectPlayer(button.dataset.playerId));
+  });
 }
 
-async function toolsSelectPlayer(playerId, username) {
+async function toolsSelectPlayer(playerId) {
   toolsState.selectedPlayerId = playerId;
   toolsRenderPlayerList();
 
@@ -183,7 +186,7 @@ async function toolsSelectPlayer(playerId, username) {
     toolsRenderDigimonList();
   } catch (err) {
     document.getElementById("tools-digimon-list").innerHTML =
-      `<p class="text-red-400">${err.message}</p>`;
+      `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
   }
 }
 
@@ -197,14 +200,17 @@ function toolsRenderDigimonList() {
   container.innerHTML = toolsState.digimons.map(d => `
     <button class="w-full text-left px-3 py-2 rounded hover:bg-slate-800 transition-colors flex justify-between items-center mb-1
       ${toolsState.selectedDigimonId === d.id ? 'bg-slate-800 border border-cyan-500' : 'border border-slate-700'}"
-      onclick="toolsSelectDigimon('${d.id}')">
+      data-digimon-id="${escapeAttr(d.id)}">
       <span>
-        <span class="text-cyan-300 font-medium">${d.name}</span>
-        <span class="text-slate-500 text-sm ml-2">${d.type} | Lv.${d.level} | ${d.stage}</span>
+        <span class="text-cyan-300 font-medium">${escapeHtml(d.name)}</span>
+        <span class="text-slate-500 text-sm ml-2">${escapeHtml(d.type)} | Lv.${d.level} | ${escapeHtml(d.stage)}</span>
       </span>
-      <span class="text-xs ${d.status === 'ACTIVE' ? 'text-green-400' : 'text-slate-500'}">${d.status}</span>
+      <span class="text-xs ${d.status === 'ACTIVE' ? 'text-green-400' : 'text-slate-500'}">${escapeHtml(d.status)}</span>
     </button>
   `).join("");
+  container.querySelectorAll("[data-digimon-id]").forEach(button => {
+    button.addEventListener("click", () => toolsSelectDigimon(button.dataset.digimonId));
+  });
 }
 
 async function toolsSelectDigimon(digimonId) {
@@ -229,7 +235,7 @@ async function toolsLoadSelects() {
     }
     const templateSelect = document.getElementById("tools-equip-template");
     templateSelect.innerHTML = toolsState.equipmentTemplates.map(t =>
-      `<option value="${t.name}">${t.name} (${t.slot} | T${t.tier})</option>`
+      `<option value="${escapeAttr(t.name)}">${escapeHtml(t.name)} (${escapeHtml(t.slot)} | T${t.tier})</option>`
     ).join("");
   } catch (err) {
     console.error("Failed to load equipment templates", err);
@@ -242,7 +248,7 @@ async function toolsLoadSelects() {
     }
     const itemSelect = document.getElementById("tools-item-code");
     itemSelect.innerHTML = toolsState.itemDefinitions.map(i =>
-      `<option value="${i.code}">${i.name} (${i.category})</option>`
+      `<option value="${escapeAttr(i.code)}">${escapeHtml(i.name)} (${escapeHtml(i.category)})</option>`
     ).join("");
   } catch (err) {
     console.error("Failed to load item definitions", err);
@@ -262,7 +268,7 @@ async function toolsAddXp() {
       `<span class="text-green-400">+${amount} XP concedido com sucesso!</span>`;
   } catch (err) {
     document.getElementById("tools-xp-result").innerHTML =
-      `<span class="text-red-400">${err.message}</span>`;
+      `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
   }
 }
 
@@ -281,10 +287,10 @@ async function toolsGrantEquipment() {
 
     const result = await apiPost("/admin/equipment-templates/grant", body);
     document.getElementById("tools-equip-result").innerHTML =
-      `<span class="text-green-400">${result.message} (ID: ${result.equipmentId.substring(0, 8)}...)</span>`;
+      `<span class="text-green-400">${escapeHtml(result.message)} (ID: ${escapeHtml(result.equipmentId.substring(0, 8))}...)</span>`;
   } catch (err) {
     document.getElementById("tools-equip-result").innerHTML =
-      `<span class="text-red-400">${err.message}</span>`;
+      `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
   }
 }
 
@@ -308,10 +314,10 @@ async function toolsGrantItem() {
       quantity
     });
     document.getElementById("tools-item-result").innerHTML =
-      `<span class="text-green-400">${result.message}</span>`;
+      `<span class="text-green-400">${escapeHtml(result.message)}</span>`;
   } catch (err) {
     document.getElementById("tools-item-result").innerHTML =
-      `<span class="text-red-400">${err.message}</span>`;
+      `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
   }
 }
 
@@ -330,7 +336,7 @@ async function adminLoadDamageBuff() {
     }
   } catch (err) {
     const status = document.getElementById("admin-damage-buff-status");
-    if (status) status.innerHTML = `<span class="text-red-400">${err.message}</span>`;
+    if (status) status.innerHTML = `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
   }
 }
 
@@ -342,7 +348,7 @@ async function adminToggleDamageBuff() {
       `<span class="text-green-400">Buff ${result.enabled ? "ligado" : "desligado"} (${result.multiplier}x)</span>`;
   } catch (err) {
     document.getElementById("admin-damage-buff-result").innerHTML =
-      `<span class="text-red-400">${err.message}</span>`;
+      `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
   }
 }
 
@@ -350,10 +356,10 @@ async function adminResetArena() {
   try {
     const result = await apiPost("/admin/tools/reset-daily-arena-attacks");
     document.getElementById("admin-reset-arena-result").innerHTML =
-      `<span class="text-green-400">${result.message} (${result.playersReset} jogadores)</span>`;
+      `<span class="text-green-400">${escapeHtml(result.message)} (${result.playersReset} jogadores)</span>`;
   } catch (err) {
     document.getElementById("admin-reset-arena-result").innerHTML =
-      `<span class="text-red-400">${err.message}</span>`;
+      `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
   }
 }
 
@@ -361,10 +367,10 @@ async function adminResetClanRaid() {
   try {
     const result = await apiPost("/admin/tools/reset-clan-raid-daily");
     document.getElementById("admin-reset-raid-result").innerHTML =
-      `<span class="text-green-400">${result.message} (${result.raidsReset} raids)</span>`;
+      `<span class="text-green-400">${escapeHtml(result.message)} (${result.raidsReset} raids)</span>`;
   } catch (err) {
     document.getElementById("admin-reset-raid-result").innerHTML =
-      `<span class="text-red-400">${err.message}</span>`;
+      `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
   }
 }
 
@@ -372,10 +378,10 @@ async function adminResetWorldBoss() {
   try {
     const result = await apiPost("/admin/tools/reset-world-boss-daily");
     document.getElementById("admin-reset-world-boss-result").innerHTML =
-      `<span class="text-green-400">${result.message} (${result.instancesReset} instância)</span>`;
+      `<span class="text-green-400">${escapeHtml(result.message)} (${result.instancesReset} instância)</span>`;
   } catch (err) {
     document.getElementById("admin-reset-world-boss-result").innerHTML =
-      `<span class="text-red-400">${err.message}</span>`;
+      `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
   }
 }
 
@@ -400,9 +406,9 @@ async function adminCompleteClanMissions() {
   try {
     const result = await apiPost("/admin/tools/complete-clan-missions");
     document.getElementById("admin-complete-missions-result").innerHTML =
-      `<span class="text-green-400">${result.message} (${result.completedCount} missões)</span>`;
+      `<span class="text-green-400">${escapeHtml(result.message)} (${result.completedCount} missões)</span>`;
   } catch (err) {
     document.getElementById("admin-complete-missions-result").innerHTML =
-      `<span class="text-red-400">${err.message}</span>`;
+      `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
   }
 }

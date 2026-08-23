@@ -137,12 +137,6 @@ function adminEventRewardValue(id) {
   return document.getElementById(id)?.value?.trim() || "";
 }
 
-function adminEventRewardEscape(value) {
-  return String(value || "").replace(/[&<>"']/g, character => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
-  }[character]));
-}
-
 function adminChangeEventRewardRecipientType() {
   const type = document.getElementById("admin-event-reward-recipient-type")?.value || "PLAYER";
   const panel = document.getElementById("admin-event-reward-recipient-panel");
@@ -191,7 +185,7 @@ async function adminLoadEventRewardClans() {
     adminEventRewardClanOptions = await apiGet("/admin/mail/recipients/clans");
     const select = document.getElementById("admin-event-reward-clan");
     if (!select) return;
-    select.innerHTML = `<option value="">Selecione um clã</option>${adminEventRewardClanOptions.map(clan => `<option value="${clan.id}">[${adminEventRewardEscape(clan.tag)}] ${adminEventRewardEscape(clan.name)} (${clan.memberCount} membros)</option>`).join("")}`;
+    select.innerHTML = `<option value="">Selecione um clã</option>${adminEventRewardClanOptions.map(clan => `<option value="${escapeAttr(clan.id)}">[${escapeHtml(clan.tag)}] ${escapeHtml(clan.name)} (${clan.memberCount} membros)</option>`).join("")}`;
     adminUpdateEventRewardPreview();
   } catch (error) {
     adminShowEventRewardResult(error.message || "Não foi possível carregar os clãs.", false);
@@ -231,8 +225,14 @@ function adminSearchEventRewardPlayers() {
       const results = document.getElementById("admin-event-reward-player-results");
       if (!results) return;
       results.innerHTML = players.length
-        ? players.map(player => `<button type="button" class="card-sm w-full text-left text-sm hover:border-cyan-600" onclick="adminSelectEventRewardPlayer('${player.id}', '${adminEventRewardEscape(player.username)}')">${adminEventRewardEscape(player.username)}</button>`).join("")
+        ? players.map(player => `<button type="button" class="card-sm w-full text-left text-sm hover:border-cyan-600" data-event-reward-player-id="${escapeAttr(player.id)}">${escapeHtml(player.username)}</button>`).join("")
         : `<p class="text-xs text-slate-500">Nenhum jogador encontrado.</p>`;
+      results.querySelectorAll("[data-event-reward-player-id]").forEach(button => {
+        const player = players.find(item => String(item.id) === button.dataset.eventRewardPlayerId);
+        if (player) {
+          button.addEventListener("click", () => adminSelectEventRewardPlayer(player.id, player.username));
+        }
+      });
     } catch (error) {
       adminShowEventRewardResult(error.message || "Não foi possível pesquisar jogadores.", false);
     }
@@ -263,8 +263,11 @@ function adminRenderSelectedEventRewardPlayers() {
   if (count) count.textContent = adminEventRewardSelectedPlayers.length;
   if (selected) {
     selected.innerHTML = adminEventRewardSelectedPlayers.length
-      ? adminEventRewardSelectedPlayers.map(player => `<span class="badge badge-area">${adminEventRewardEscape(player.username)} <button type="button" class="ml-1 text-amber-200" aria-label="Remover ${adminEventRewardEscape(player.username)}" onclick="adminRemoveEventRewardPlayer('${player.id}')">×</button></span>`).join("")
+      ? adminEventRewardSelectedPlayers.map(player => `<span class="badge badge-area">${escapeHtml(player.username)} <button type="button" class="ml-1 text-amber-200" aria-label="Remover ${escapeAttr(player.username)}" data-event-reward-remove-id="${escapeAttr(player.id)}">×</button></span>`).join("")
       : `<span class="text-xs text-slate-500">Nenhum jogador selecionado.</span>`;
+    selected.querySelectorAll("[data-event-reward-remove-id]").forEach(button => {
+      button.addEventListener("click", () => adminRemoveEventRewardPlayer(button.dataset.eventRewardRemoveId));
+    });
   }
 }
 

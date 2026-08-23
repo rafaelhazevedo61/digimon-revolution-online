@@ -47,14 +47,14 @@ function renderMissionsPage() {
             <label class="text-xs text-slate-500 block mb-1">Stage</label>
             <select id="mission-filter-stage" class="input input-sm" onchange="missionApplyFilters()">
               <option value="">Todos</option>
-              ${STAGES.map(s => `<option value="${s}" ${missionState.filterStage === s ? "selected" : ""}>${STAGE_LABELS[s]}</option>`).join("")}
+              ${STAGES.map(s => `<option value="${escapeAttr(s)}" ${missionState.filterStage === s ? "selected" : ""}>${escapeHtml(STAGE_LABELS[s])}</option>`).join("")}
             </select>
           </div>
           <div>
             <label class="text-xs text-slate-500 block mb-1">Baú da Área</label>
             <select id="mission-filter-chest" class="input input-sm" onchange="missionApplyFilters()">
               <option value="">Todos</option>
-              ${missionState.chestOptions.map(chest => `<option value="${missionEscapeAttr(chest.code)}" ${missionState.filterChest === chest.code ? "selected" : ""}>${missionEscapeHtml(chest.name)}</option>`).join("")}
+              ${missionState.chestOptions.map(chest => `<option value="${escapeAttr(chest.code)}" ${missionState.filterChest === chest.code ? "selected" : ""}>${escapeHtml(chest.name)}</option>`).join("")}
             </select>
           </div>
           <div class="flex items-end h-full">
@@ -97,8 +97,8 @@ function missionRenderChestFilter() {
   select.innerHTML = `
     <option value="">Todos</option>
     ${missionState.chestOptions.map(chest => `
-      <option value="${missionEscapeAttr(chest.code)}" ${missionState.filterChest === chest.code ? "selected" : ""}>
-        ${missionEscapeHtml(chest.name)}
+      <option value="${escapeAttr(chest.code)}" ${missionState.filterChest === chest.code ? "selected" : ""}>
+        ${escapeHtml(chest.name)}
       </option>
     `).join("")}
   `;
@@ -123,7 +123,7 @@ async function loadMissions() {
     container.innerHTML = `
       <div class="card border-red-900 bg-red-950/30">
         <h3 class="font-bold text-red-300 mb-2">Erro ao carregar missões</h3>
-        <p class="text-red-200">${error.message}</p>
+        <p class="text-red-200">${escapeHtml(error.message)}</p>
       </div>
     `;
   }
@@ -177,26 +177,26 @@ function renderMissionRow(m) {
   return `
     <tr>
       <td class="text-xs font-mono text-slate-400">${m.id}</td>
-      <td class="font-semibold">${m.name}</td>
-      <td><span class="badge badge-area">${areaLabel}</span></td>
-      <td><span class="badge">${m.requiredStage}</span></td>
+      <td class="font-semibold">${escapeHtml(m.name)}</td>
+      <td><span class="badge badge-area">${escapeHtml(areaLabel)}</span></td>
+      <td><span class="badge">${escapeHtml(m.requiredStage)}</span></td>
       <td>${m.requiredLevel}</td>
       <td>${m.baseXp}</td>
       <td>${m.baseBits ?? 0}</td>
       <td>${m.energyCost}</td>
       <td>${m.durationSeconds}s</td>
       <td>
-        <div class="font-semibold">${missionEscapeHtml(chestLabel)}</div>
-        <div class="text-xs text-slate-500 font-mono">${missionEscapeHtml(m.chestCode || "-")}</div>
+        <div class="font-semibold">${escapeHtml(chestLabel)}</div>
+        <div class="text-xs text-slate-500 font-mono">${escapeHtml(m.chestCode || "-")}</div>
       </td>
       <td>
-        <div class="font-semibold">${missionEscapeHtml(m.chestLootTableName || "-")}</div>
-        <div class="text-xs text-slate-500 font-mono">${missionEscapeHtml(m.chestLootTableCode || "-")}</div>
+        <div class="font-semibold">${escapeHtml(m.chestLootTableName || "-")}</div>
+        <div class="text-xs text-slate-500 font-mono">${escapeHtml(m.chestLootTableCode || "-")}</div>
       </td>
       <td><span class="badge ${statusClass}">${statusText}</span></td>
       <td>
         <div class="text-xs text-slate-400">${missionFormatDate(m.updatedAt)}</div>
-        <div class="text-xs text-slate-500">por ${m.updatedBy || "-"}</div>
+        <div class="text-xs text-slate-500">por ${escapeHtml(m.updatedBy || "-")}</div>
       </td>
       <td>
         <div class="flex gap-2">
@@ -255,7 +255,7 @@ function missionRenderModal(title, data, isEdit) {
     <div class="modal-overlay" onclick="missionCloseModal()">
       <div class="modal-content modal-wide" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between mb-6">
-          <h3 class="text-xl font-bold">${title}</h3>
+          <h3 class="text-xl font-bold">${escapeHtml(title)}</h3>
           <button class="text-slate-400 hover:text-white text-2xl" onclick="missionCloseModal()">&times;</button>
         </div>
 
@@ -264,16 +264,16 @@ function missionRenderModal(title, data, isEdit) {
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div>
               <label class="text-sm text-slate-400">ID</label>
-              <input id="mission-id" class="input mt-1" value="${data.id}"
+              <input id="mission-id" class="input mt-1" value="${escapeAttr(data.id)}"
                 ${isEdit ? "disabled" : ""} required placeholder="EX: MISSION_8" />
             </div>
             <div class="md:col-span-2">
               <label class="text-sm text-slate-400">Nome</label>
-              <input id="mission-name" class="input mt-1" value="${data.name}" required />
+              <input id="mission-name" class="input mt-1" value="${escapeAttr(data.name)}" required />
             </div>
             <div class="md:col-span-3">
               <label class="text-sm text-slate-400">Descrição</label>
-              <textarea id="mission-desc" class="input mt-1" rows="2">${data.description || ""}</textarea>
+              <textarea id="mission-desc" class="input mt-1" rows="2">${escapeHtml(data.description || "")}</textarea>
             </div>
           </div>
 
@@ -343,12 +343,12 @@ function missionRenderModal(title, data, isEdit) {
 
 function missionRenderChestOptions(selectedCode, selectedName) {
   const options = missionState.chestOptions.map(chest => `
-    <option value="${missionEscapeAttr(chest.code)}" ${chest.code === selectedCode ? "selected" : ""}>
-      ${missionEscapeHtml(chest.name)} — ${missionEscapeHtml(chest.lootTableName || "Loot Table não informada")}
+    <option value="${escapeAttr(chest.code)}" ${chest.code === selectedCode ? "selected" : ""}>
+      ${escapeHtml(chest.name)} — ${escapeHtml(chest.lootTableName || "Loot Table não informada")}
     </option>
   `);
   if (selectedCode && !missionState.chestOptions.some(chest => chest.code === selectedCode)) {
-    options.unshift(`<option value="${missionEscapeAttr(selectedCode)}" selected>${missionEscapeHtml(selectedName || selectedCode)} — Baú atualmente vinculado</option>`);
+    options.unshift(`<option value="${escapeAttr(selectedCode)}" selected>${escapeHtml(selectedName || selectedCode)} — Baú atualmente vinculado</option>`);
   }
   return options.length > 0 ? options.join("") : '<option value="">Nenhum Baú da Área ativo disponível</option>';
 }
@@ -422,20 +422,7 @@ function missionCloseModal() {
 }
 
 function missionSelectOptions(options, selected, labels = {}) {
-  return options.map(o => `<option value="${missionEscapeAttr(o)}" ${o === selected ? "selected" : ""}>${missionEscapeHtml(labels[o] || o)}</option>`).join("");
-}
-
-function missionEscapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function missionEscapeAttr(value) {
-  return missionEscapeHtml(value);
+  return options.map(o => `<option value="${escapeAttr(o)}" ${o === selected ? "selected" : ""}>${escapeHtml(labels[o] || o)}</option>`).join("");
 }
 
 function missionFormatDate(dateStr) {

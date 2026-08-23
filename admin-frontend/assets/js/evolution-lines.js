@@ -21,12 +21,12 @@ const evolutionLineState = {
   
           <div>
             <label class="text-sm text-slate-400">Código</label>
-            <input id="evolution-filter-code" class="input mt-1" placeholder="Ex: AGUMON" value="${evolutionLineState.code}" />
+            <input id="evolution-filter-code" class="input mt-1" placeholder="Ex: AGUMON" value="${escapeAttr(evolutionLineState.code)}" />
           </div>
   
           <div>
             <label class="text-sm text-slate-400">Nome</label>
-            <input id="evolution-filter-name" class="input mt-1" placeholder="Ex: Agumon" value="${evolutionLineState.name}" />
+            <input id="evolution-filter-name" class="input mt-1" placeholder="Ex: Agumon" value="${escapeAttr(evolutionLineState.name)}" />
           </div>
   
           <div>
@@ -86,7 +86,7 @@ const evolutionLineState = {
       container.innerHTML = `
         <div class="card border-red-900 bg-red-950/30">
           <h3 class="font-bold text-red-300 mb-2">Erro ao carregar linhas evolutivas</h3>
-          <p class="text-red-200">${error.message}</p>
+          <p class="text-red-200">${escapeHtml(error.message)}</p>
           <p class="text-sm text-slate-400 mt-4">
             Verifique se o backend está rodando e se o endpoint GET /evolution-lines existe.
           </p>
@@ -133,11 +133,11 @@ const evolutionLineState = {
         <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-5">
           <div>
             <div class="flex flex-wrap gap-2 mb-2">
-              <span class="badge">${line.code}</span>
+              <span class="badge">${escapeHtml(line.code)}</span>
               ${line.active ? `<span class="badge">Ativa</span>` : `<span class="badge">Inativa</span>`}
             </div>
   
-            <h3 class="text-xl font-bold text-cyan-300">${line.name}</h3>
+            <h3 class="text-xl font-bold text-cyan-300">${escapeHtml(line.name)}</h3>
             <p class="text-sm text-slate-500">ID ${line.id}</p>
           </div>
   
@@ -160,10 +160,10 @@ const evolutionLineState = {
       <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 min-w-64">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs text-slate-500">Step ${step.stepOrder}</span>
-          <span class="badge">${step.stage}</span>
+          <span class="badge">${escapeHtml(step.stage)}</span>
         </div>
   
-        <h4 class="font-bold text-slate-100">${step.digimonName}</h4>
+        <h4 class="font-bold text-slate-100">${escapeHtml(step.digimonName)}</h4>
   
         <p class="text-xs text-slate-500 mt-1">
           DigimonInfo ID ${step.digimonInfoId}
@@ -203,11 +203,11 @@ const evolutionLineState = {
         ${materials.map(material => `
           <div class="text-xs text-slate-300 bg-slate-900 border border-slate-800 rounded-lg px-2 py-1">
             <div class="font-semibold text-slate-200">
-              ${material.itemName || "Item não encontrado"}
+              ${escapeHtml(material.itemName || "Item não encontrado")}
             </div>
   
             <div class="text-slate-500 font-mono">
-              ${material.itemCode || "-"}
+              ${escapeHtml(material.itemCode || "-")}
             </div>
   
             <div class="text-cyan-300 font-bold">
