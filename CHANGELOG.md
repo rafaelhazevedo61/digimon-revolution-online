@@ -20,6 +20,7 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Corrigido
 - **Segurança dos frontends**: helpers de escape foram centralizados, campos controlados por usuários passaram a ser tratados antes da renderização HTML e handlers inline frágeis foram substituídos por atributos e listeners seguros; cache do game frontend atualizado para `dro-game-v35`.
+- **Collections da API**: o gerador passou a delimitar corretamente as assinaturas dos controllers, derivar corpos de exemplo dos DTOs e manter as collections curl e Postman sincronizadas.
 - **Superfície administrativa**: autorização administrativa passou a consultar o `userType` atual no banco, ações destrutivas e grants passaram a gerar auditoria, e o wipe exige confirmação explícita.
 - **Proteção de ferramentas internas**: o simulador de choco de traits agora está sob `/admin/digimon/simulator/trait-hatch` e exige um usuário `ADMIN`.
 - Sessão expirada agora força retorno à tela de login: qualquer resposta 401/403 no game frontend limpa o token e redireciona para `#login`.
