@@ -1,6 +1,7 @@
 package com.dro.modules.player.api;
 
 import com.dro.modules.player.api.dto.request.ChangePasswordRequest;
+import com.dro.modules.player.api.dto.response.ChangePasswordResponse;
 import com.dro.modules.player.api.dto.response.PlayerDashboardResponse;
 import com.dro.modules.player.api.dto.response.PlayerResponse;
 import com.dro.modules.player.api.dto.response.PlayerStartupResponse;
@@ -8,6 +9,7 @@ import com.dro.modules.player.application.ChangePlayerPasswordUseCase;
 import com.dro.modules.player.application.GetPlayerDashboardUseCase;
 import com.dro.modules.player.application.GetPlayerStartupUseCase;
 import com.dro.modules.player.application.GetPlayerUseCase;
+import com.dro.modules.player.application.RevokePlayerSessionsUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +27,7 @@ public class PlayerController {
     private final GetPlayerDashboardUseCase dashboardUseCase;
     private final GetPlayerStartupUseCase startupUseCase;
     private final ChangePlayerPasswordUseCase changePlayerPasswordUseCase;
+    private final RevokePlayerSessionsUseCase revokePlayerSessionsUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<PlayerResponse> me(
@@ -48,11 +51,18 @@ public class PlayerController {
     }
 
     @PostMapping("/me/change-password")
-    public ResponseEntity<Void> changePassword(
+    public ResponseEntity<ChangePasswordResponse> changePassword(
             @RequestHeader("Authorization") String authorization,
             @RequestBody @Valid ChangePasswordRequest request
     ) {
-        changePlayerPasswordUseCase.execute(authorization, request);
+        return ResponseEntity.ok(changePlayerPasswordUseCase.execute(authorization, request));
+    }
+
+    @PostMapping("/me/logout-all")
+    public ResponseEntity<Void> logoutAll(
+            @RequestHeader("Authorization") String authorization
+    ) {
+        revokePlayerSessionsUseCase.execute(authorization);
         return ResponseEntity.ok().build();
     }
 }

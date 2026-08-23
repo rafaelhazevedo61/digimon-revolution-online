@@ -31,9 +31,15 @@ async function renderSettingsPage() {
 
           <button type="submit" class="btn-primary w-full" id="change-password-btn">Salvar senha</button>
         </form>
+
+        <button type="button" class="btn-secondary w-full mt-3" id="logout-all-btn">
+          Encerrar sessões em todos os dispositivos
+        </button>
       </div>
     </div>
   `;
+
+  document.getElementById("logout-all-btn")?.addEventListener("click", settingsLogoutAll);
 }
 
 async function settingsChangePassword(event) {
@@ -65,11 +71,12 @@ async function settingsChangePassword(event) {
   btn.textContent = "Salvando...";
 
   try {
-    await apiPost("/players/me/change-password", {
+    const result = await apiPost("/players/me/change-password", {
       currentPassword,
       newPassword
     });
 
+    if (result?.token) setToken(result.token);
     document.getElementById("change-password-form").reset();
     successDiv.textContent = "Senha alterada com sucesso.";
     successDiv.classList.remove("hidden");
@@ -79,5 +86,25 @@ async function settingsChangePassword(event) {
   } finally {
     btn.disabled = false;
     btn.textContent = "Salvar senha";
+  }
+}
+
+async function settingsLogoutAll() {
+  const errorDiv = document.getElementById("settings-error");
+  const btn = document.getElementById("logout-all-btn");
+
+  errorDiv.classList.add("hidden");
+  btn.disabled = true;
+  btn.textContent = "Encerrando sessões...";
+
+  try {
+    await apiPost("/players/me/logout-all");
+    clearAuth();
+    navigateTo("login");
+  } catch (err) {
+    errorDiv.textContent = err.message || "Erro ao encerrar sessões.";
+    errorDiv.classList.remove("hidden");
+    btn.disabled = false;
+    btn.textContent = "Encerrar sessões em todos os dispositivos";
   }
 }

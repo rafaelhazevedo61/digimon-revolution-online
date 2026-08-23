@@ -22,6 +22,7 @@ public class JwtService {
         claims.put("username", player.getUsername());
         claims.put("email", player.getEmail());
         claims.put("userType", player.getUserType().name());
+        claims.put("tokenVersion", player.getTokenVersion());
         claims.put("iat", issuedAt.getEpochSecond());
         claims.put("exp", expiresAt.getEpochSecond());
 

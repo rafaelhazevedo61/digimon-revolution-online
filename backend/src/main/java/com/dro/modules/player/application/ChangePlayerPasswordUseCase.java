@@ -2,10 +2,12 @@ package com.dro.modules.player.application;
 
 import com.dro.modules.auth.domain.exception.InvalidCredentialsException;
 import com.dro.modules.player.api.dto.request.ChangePasswordRequest;
+import com.dro.modules.player.api.dto.response.ChangePasswordResponse;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.security.JwtService;
 import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,9 +23,10 @@ public class ChangePlayerPasswordUseCase {
 
     private final PlayerRepository playerRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     @Transactional
-    public void execute(String token, ChangePasswordRequest request) {
+    public ChangePasswordResponse execute(String token, ChangePasswordRequest request) {
         if (request.currentPassword().equals(request.newPassword())) {
             throw new BadRequestException("New password must be different from current password");
         }
@@ -36,6 +39,8 @@ public class ChangePlayerPasswordUseCase {
         }
 
         player.setPassword(passwordEncoder.encode(request.newPassword()));
+        player.incrementTokenVersion();
         playerRepository.save(player);
+        return new ChangePasswordResponse(jwtService.generateToken(player));
     }
 }

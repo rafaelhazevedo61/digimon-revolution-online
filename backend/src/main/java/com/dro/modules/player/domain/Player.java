@@ -56,6 +56,10 @@ public class Player {
     @Builder.Default
     private UserType userType = UserType.PLAYER;
 
+    @Column(name = "token_version", nullable = false)
+    @Builder.Default
+    private int tokenVersion = 0;
+
     @Column(name = "max_digimon_slots", nullable = false)
     private int maxDigimonSlots = 3;
 
@@ -91,6 +95,10 @@ public class Player {
 
     public void setPassword (String password) {
         this.password = password;
+    }
+
+    public void incrementTokenVersion() {
+        this.tokenVersion++;
     }
 
     public UUID getId () {

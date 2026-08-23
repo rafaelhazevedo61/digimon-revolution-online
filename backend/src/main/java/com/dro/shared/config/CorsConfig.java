@@ -1,6 +1,7 @@
 package com.dro.shared.config;
 
 import com.dro.shared.security.AdminAuthInterceptor;
+import com.dro.shared.security.TokenVersionInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -14,12 +15,17 @@ import java.util.Arrays;
 public class CorsConfig implements WebMvcConfigurer {
 
     private final AdminAuthInterceptor adminAuthInterceptor;
+    private final TokenVersionInterceptor tokenVersionInterceptor;
 
     @Value("${dro.cors.allowed-origins}")
     private String allowedOrigins;
 
-    public CorsConfig (AdminAuthInterceptor adminAuthInterceptor) {
+    public CorsConfig (
+            AdminAuthInterceptor adminAuthInterceptor,
+            TokenVersionInterceptor tokenVersionInterceptor
+    ) {
         this.adminAuthInterceptor = adminAuthInterceptor;
+        this.tokenVersionInterceptor = tokenVersionInterceptor;
     }
 
     @Override
@@ -38,6 +44,8 @@ public class CorsConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(tokenVersionInterceptor)
+                .addPathPatterns("/**");
         registry.addInterceptor(adminAuthInterceptor)
                 .addPathPatterns("/admin/**");
     }

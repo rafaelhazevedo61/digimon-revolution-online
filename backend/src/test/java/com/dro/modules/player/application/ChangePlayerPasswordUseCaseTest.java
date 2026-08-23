@@ -33,6 +33,9 @@ class ChangePlayerPasswordUseCaseTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private JwtService jwtService;
+
     @InjectMocks
     private ChangePlayerPasswordUseCase useCase;
 
@@ -61,11 +64,15 @@ class ChangePlayerPasswordUseCaseTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
         when(passwordEncoder.matches("old-pass", "encoded-old")).thenReturn(true);
         when(passwordEncoder.encode("new-pass")).thenReturn("encoded-new");
+        when(jwtService.generateToken(player)).thenReturn("new-token");
 
-        useCase.execute(token, new ChangePasswordRequest("old-pass", "new-pass"));
+        var response = useCase.execute(token, new ChangePasswordRequest("old-pass", "new-pass"));
 
         assertEquals("encoded-new", player.getPassword());
+        assertEquals(1, player.getTokenVersion());
+        assertEquals("new-token", response.token());
         verify(playerRepository).save(player);
+        verify(jwtService).generateToken(player);
     }
 
     @Test
