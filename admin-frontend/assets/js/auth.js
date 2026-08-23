@@ -59,7 +59,7 @@ async function adminLogin(e) {
     const token = res.token;
     const payload = parseJwtPayload(token);
 
-    if (payload.userType !== "ADMIN") {
+    if (!payload || payload.userType !== "ADMIN") {
       throw new Error("Acesso negado: usuario nao e ADMIN");
     }
 
