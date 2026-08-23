@@ -428,8 +428,8 @@ USABLE="${USABLE:-VALOR}"
 
 # ===== DIGITAMA =====
 
-# DigitamaController.hatch (GET /digitama/hatch)
-# curl --fail-with-body -i -X GET "${BASE_URL}/digitama/hatch" -H "Authorization: Bearer ${TOKEN}"
+# DigitamaController.hatch (POST /digitama/hatch)
+# curl --fail-with-body -i -X POST "${BASE_URL}/digitama/hatch" -H "Authorization: Bearer ${TOKEN}"
 
 # DigitamaController.history (GET /digitama/history)
 # curl --fail-with-body -i -X GET "${BASE_URL}/digitama/history" -H "Authorization: Bearer ${TOKEN}"
