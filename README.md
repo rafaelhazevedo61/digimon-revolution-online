@@ -18,7 +18,7 @@ A documentação Javadoc do backend também foi expandida para todos os módulos
 | Site oficial | Site estático com notícias, galeria, roadmap e wiki |
 | Casa de Leilões | Anúncios de itens empilháveis, compra parcial, taxas, cancelamento e expiração |
 | Correio | Mensagens, notificações, convites, comunicados e premiações de eventos |
-| Javadoc | Cobertura de classe nos 480 arquivos Java dos módulos do backend |
+| Javadoc | Cobertura de classe nos módulos Java do backend |
 | Troca direta entre jogadores | Planejada; ainda não faz parte da versão atual |
 | Equipamentos na Casa de Leilões | Planejado; a Casa de Leilões atual negocia itens empilháveis |
 
@@ -30,7 +30,7 @@ A documentação Javadoc do backend também foi expandida para todos os módulos
 ├── game-frontend/       # SPA/PWA dos jogadores em HTML, CSS e JavaScript
 ├── admin-frontend/      # SPA do painel administrativo
 ├── official-site/       # Site oficial estático e wiki pública
-├── docker/              # Docker Compose para PostgreSQL local
+├── docker/              # Docker Compose para PostgreSQL, MongoDB e API local
 ├── docs/                # Planos, convenções e documentação de engenharia
 ├── scripts/             # Geradores e utilitários do projeto
 ├── CHANGELOG.md         # Histórico de entregas
@@ -105,7 +105,8 @@ Para conhecer o padrão adotado, consulte [`docs/javadoc-guidelines.md`](docs/ja
 - Spring MVC e Bean Validation.
 - Spring Security Crypto.
 - Flyway para migrations.
-- PostgreSQL 16.
+- PostgreSQL 16 como banco transacional principal.
+- MongoDB 7 para auditoria e logs operacionais.
 - Maven Wrapper.
 
 ### Frontends
