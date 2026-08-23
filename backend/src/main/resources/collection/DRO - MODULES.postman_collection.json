@@ -203,7 +203,7 @@
             "description": "Gerado de AdminBossController.listAll. Revise IDs e valores antes de enviar.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n    \"confirmation\": \"WIPE\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

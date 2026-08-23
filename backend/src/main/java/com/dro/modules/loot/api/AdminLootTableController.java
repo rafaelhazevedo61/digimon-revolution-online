@@ -43,26 +43,23 @@ public class AdminLootTableController {
 
     @GetMapping
     public ResponseEntity<List<AdminLootTableResponse>> list(
-            @RequestHeader("Authorization") String authorization,
             @RequestParam(required = false) Boolean activeOnly
     ) {
-        return ResponseEntity.ok(adminLootTableUseCase.list(authorization, activeOnly));
+        return ResponseEntity.ok(adminLootTableUseCase.list(activeOnly));
     }
 
     @GetMapping("/catalog/items")
     public ResponseEntity<List<AdminLootItemCatalogResponse>> catalog(
-            @RequestHeader("Authorization") String authorization,
             @RequestParam(required = false) String category
     ) {
-        return ResponseEntity.ok(adminLootTableUseCase.catalog(authorization, category));
+        return ResponseEntity.ok(adminLootTableUseCase.catalog(category));
     }
 
     @GetMapping("/{code}")
     public ResponseEntity<AdminLootTableResponse> get(
-            @RequestHeader("Authorization") String authorization,
             @PathVariable String code
     ) {
-        return ResponseEntity.ok(adminLootTableUseCase.get(authorization, code));
+        return ResponseEntity.ok(adminLootTableUseCase.get(code));
     }
 
     @PutMapping("/{code}")

@@ -8,11 +8,9 @@ import com.dro.modules.loot.domain.LootTableEntity;
 import com.dro.modules.loot.infra.ChestDefinitionRepository;
 import com.dro.modules.loot.infra.LootTableRepository;
 import com.dro.modules.player.domain.Player;
-import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.exception.ConflictException;
-import com.dro.shared.exception.ForbiddenException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnauthorizedException;
 import com.dro.shared.util.TokenExtractor;
@@ -40,8 +38,7 @@ public class AdminChestUseCase {
 
     /** Lista os baús, podendo restringir aos ativos. */
     @Transactional(readOnly = true)
-    public List<AdminChestResponse> list(String authorization, Boolean activeOnly) {
-        requireAdmin(authorization);
+    public List<AdminChestResponse> list(Boolean activeOnly) {
         List<ChestDefinitionEntity> chests = Boolean.TRUE.equals(activeOnly)
                 ? chestDefinitionRepository.findByActiveTrueOrderByNameAsc()
                 : chestDefinitionRepository.findAllByOrderByNameAsc();
@@ -50,8 +47,7 @@ public class AdminChestUseCase {
 
     /** Consulta um baú pelo código estável. */
     @Transactional(readOnly = true)
-    public AdminChestResponse get(String authorization, String code) {
-        requireAdmin(authorization);
+    public AdminChestResponse get(String code) {
         return AdminChestResponse.from(findChest(code));
     }
 
@@ -62,7 +58,7 @@ public class AdminChestUseCase {
             String code,
             AdminChestUpdateRequest request
     ) {
-        Player admin = requireAdmin(authorization);
+        Player admin = findAdmin(authorization);
         ChestDefinitionEntity chest = findChest(code);
         LootTableEntity lootTable = resolveActiveLootTable(request.lootTableCode());
 
@@ -85,7 +81,7 @@ public class AdminChestUseCase {
     /** Ativa ou desativa o baú sem apagar o vínculo ou o histórico. */
     @Transactional
     public AdminChestResponse toggleActive(String authorization, String code) {
-        Player admin = requireAdmin(authorization);
+        Player admin = findAdmin(authorization);
         ChestDefinitionEntity chest = findChest(code);
         if (!chest.isActive()) {
             ensureActiveLootTable(chest.getLootTable());
@@ -146,17 +142,13 @@ public class AdminChestUseCase {
         );
     }
 
-    private Player requireAdmin(String authorization) {
+    private Player findAdmin(String authorization) {
         if (authorization == null || authorization.isBlank()) {
             throw new UnauthorizedException("Authorization é obrigatório.");
         }
         UUID adminId = TokenExtractor.extractPlayerId(authorization);
-        Player admin = playerRepository.findById(adminId)
+        return playerRepository.findById(adminId)
                 .orElseThrow(() -> new UnauthorizedException("Administrador não encontrado."));
-        if (admin.getUserType() != UserType.ADMIN) {
-            throw new ForbiddenException("Somente administradores podem configurar Baús da Área.");
-        }
-        return admin;
     }
 
     private String normalize(String value) {

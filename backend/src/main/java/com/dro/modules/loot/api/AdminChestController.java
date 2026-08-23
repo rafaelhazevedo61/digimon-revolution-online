@@ -30,18 +30,16 @@ public class AdminChestController {
 
     @GetMapping
     public ResponseEntity<List<AdminChestResponse>> list(
-            @RequestHeader("Authorization") String authorization,
             @RequestParam(required = false) Boolean activeOnly
     ) {
-        return ResponseEntity.ok(adminChestUseCase.list(authorization, activeOnly));
+        return ResponseEntity.ok(adminChestUseCase.list(activeOnly));
     }
 
     @GetMapping("/{code}")
     public ResponseEntity<AdminChestResponse> get(
-            @RequestHeader("Authorization") String authorization,
             @PathVariable String code
     ) {
-        return ResponseEntity.ok(adminChestUseCase.get(authorization, code));
+        return ResponseEntity.ok(adminChestUseCase.get(code));
     }
 
     @PutMapping("/{code}")

@@ -14,12 +14,10 @@ import com.dro.modules.loot.domain.LootTableRules;
 import com.dro.modules.loot.infra.ChestDefinitionRepository;
 import com.dro.modules.loot.infra.LootTableRepository;
 import com.dro.modules.player.domain.Player;
-import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
-import com.dro.shared.exception.ForbiddenException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnauthorizedException;
 import com.dro.shared.util.TokenExtractor;
@@ -57,7 +55,7 @@ public class AdminLootTableUseCase {
     /** Cria uma Loot Table nova e registra a operação no Outbox. */
     @Transactional
     public AdminLootTableResponse create(String authorization, LootTableAdminRequest request) {
-        Player admin = requireAdmin(authorization);
+        Player admin = findAdmin(authorization);
         String code = request.code().trim();
         if (lootTableRepository.findByCode(code).isPresent()) {
             throw new ConflictException("Já existe uma Loot Table com o código " + code + ".");
@@ -77,8 +75,7 @@ public class AdminLootTableUseCase {
 
     /** Lista tabelas administrativas ordenadas por nome. */
     @Transactional(readOnly = true)
-    public List<AdminLootTableResponse> list(String authorization, Boolean activeOnly) {
-        requireAdmin(authorization);
+    public List<AdminLootTableResponse> list(Boolean activeOnly) {
         List<LootTableEntity> entities = Boolean.TRUE.equals(activeOnly)
                 ? lootTableRepository.findByActiveTrueOrderByNameAsc()
                 : lootTableRepository.findAllByOrderByNameAsc();
@@ -87,8 +84,7 @@ public class AdminLootTableUseCase {
 
     /** Retorna uma tabela completa pelo código estável. */
     @Transactional(readOnly = true)
-    public AdminLootTableResponse get(String authorization, String code) {
-        requireAdmin(authorization);
+    public AdminLootTableResponse get(String code) {
         return toResponse(findTable(code));
     }
 
@@ -99,7 +95,7 @@ public class AdminLootTableUseCase {
             String code,
             LootTableAdminRequest request
     ) {
-        Player admin = requireAdmin(authorization);
+        Player admin = findAdmin(authorization);
         LootTableEntity entity = findTable(code);
         if (entity.isActive() && Boolean.FALSE.equals(request.active())) {
             ensureCanDeactivate(entity, code);
@@ -120,7 +116,7 @@ public class AdminLootTableUseCase {
     /** Alterna o status ativo sem remover a configuração histórica. */
     @Transactional
     public AdminLootTableResponse toggleActive(String authorization, String code) {
-        Player admin = requireAdmin(authorization);
+        Player admin = findAdmin(authorization);
         LootTableEntity entity = findTable(code);
         if (entity.isActive()) {
             ensureCanDeactivate(entity, code);
@@ -134,8 +130,7 @@ public class AdminLootTableUseCase {
 
     /** Retorna itens catalogados para seleção na tela administrativa. */
     @Transactional(readOnly = true)
-    public List<AdminLootItemCatalogResponse> catalog(String authorization, String category) {
-        requireAdmin(authorization);
+    public List<AdminLootItemCatalogResponse> catalog(String category) {
         String normalizedCategory = category == null || category.isBlank()
                 ? null
                 : category.trim().toUpperCase();
@@ -331,17 +326,13 @@ public class AdminLootTableUseCase {
         );
     }
 
-    private Player requireAdmin(String authorization) {
+    private Player findAdmin(String authorization) {
         if (authorization == null || authorization.isBlank()) {
             throw new UnauthorizedException("Authorization é obrigatório.");
         }
         UUID adminId = TokenExtractor.extractPlayerId(authorization);
-        Player admin = playerRepository.findById(adminId)
+        return playerRepository.findById(adminId)
                 .orElseThrow(() -> new UnauthorizedException("Administrador não encontrado."));
-        if (admin.getUserType() != UserType.ADMIN) {
-            throw new ForbiddenException("Somente administradores podem configurar Loot Tables.");
-        }
-        return admin;
     }
 
     private String normalizeMaterialCode(String code) {

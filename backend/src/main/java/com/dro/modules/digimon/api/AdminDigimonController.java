@@ -5,6 +5,7 @@ import com.dro.modules.digimon.application.SimulateTraitHatchUseCase;
 import com.dro.modules.digimon.api.dto.response.TraitHatchSimulationResponse;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.shared.audit.AdminAuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ public class AdminDigimonController {
     private final AddExperienceUseCase addExperienceUseCase;
     private final SimulateTraitHatchUseCase simulateTraitHatchUseCase;
     private final DigimonRepository digimonRepository;
+    private final AdminAuditService adminAuditService;
 
     @PostMapping("/add-xp")
     public ResponseEntity<Void> addXp(
@@ -32,6 +34,15 @@ public class AdminDigimonController {
             @RequestParam int amount
     ) {
         addExperienceUseCase.executeForDigimon(digimonId, amount);
+        adminAuditService.success(
+                authorization,
+                "ADMIN_DIGIMON_ADD_XP",
+                "Digimon",
+                digimonId.toString(),
+                "add-xp",
+                "Experiência concedida ao Digimon",
+                Map.of("targetDigimonId", digimonId.toString(), "amount", amount)
+        );
         return ResponseEntity.ok().build();
     }
 

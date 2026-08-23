@@ -6,6 +6,7 @@ import com.dro.modules.equipment.api.dto.request.UpdateEquipmentTemplateRequest;
 import com.dro.modules.equipment.api.dto.response.EquipmentTemplateResponse;
 import com.dro.modules.equipment.api.dto.response.GrantEquipmentResponse;
 import com.dro.modules.equipment.application.*;
+import com.dro.shared.audit.AdminAuditService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -29,6 +31,7 @@ public class AdminEquipmentTemplateController {
     private final UpdateEquipmentTemplateUseCase updateEquipmentTemplateUseCase;
     private final ToggleEquipmentTemplateUseCase toggleEquipmentTemplateUseCase;
     private final GrantEquipmentUseCase grantEquipmentUseCase;
+    private final AdminAuditService adminAuditService;
 
     @PostMapping
     public ResponseEntity<EquipmentTemplateResponse> create(
@@ -70,10 +73,24 @@ public class AdminEquipmentTemplateController {
 
     @PostMapping("/grant")
     public ResponseEntity<GrantEquipmentResponse> grant(
+            @RequestHeader("Authorization") String authorization,
             @RequestBody @Valid GrantEquipmentRequest request
     ) {
         UUID equipmentId = grantEquipmentUseCase.execute(
                 request.digimonId(), request.templateName(), request.rarity()
+        );
+        adminAuditService.success(
+                authorization,
+                "ADMIN_EQUIPMENT_GRANT",
+                "Equipment",
+                equipmentId.toString(),
+                "grant",
+                "Equipamento concedido ao Digimon",
+                Map.of(
+                        "targetDigimonId", request.digimonId().toString(),
+                        "templateName", request.templateName(),
+                        "rarity", request.rarity() == null ? "ROLLED" : request.rarity().name()
+                )
         );
         return ResponseEntity.ok(new GrantEquipmentResponse(
                 equipmentId, "Equipment granted successfully"

@@ -183,7 +183,7 @@ USABLE="${USABLE:-VALOR}"
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/players?username=${USERNAME}&email=${EMAIL}&selectedDigitama=${SELECTED_DIGITAMA}&starterSelected=${STARTER_SELECTED}&page=${PAGE}&size=${SIZE}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
 # AdminPlayerController.wipe (POST /admin/players/wipe)
-# curl --fail-with-body -i -X POST "${BASE_URL}/admin/players/wipe" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
+# curl --fail-with-body -i -X POST "${BASE_URL}/admin/players/wipe" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"confirmation":"WIPE"}'
 
 # AdminPlayerController.resetPassword (POST /admin/players/{id}/reset-password)
 # curl --fail-with-body -i -X POST "${BASE_URL}/admin/players/${ID}/reset-password" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{}'
