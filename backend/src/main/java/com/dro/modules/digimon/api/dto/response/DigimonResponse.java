@@ -2,7 +2,6 @@ package com.dro.modules.digimon.api.dto.response;
 
 import com.dro.modules.digimon.domain.enums.*;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -34,6 +33,7 @@ public record DigimonResponse(
         Long digimonInfoId,
         String attribute,
         String element,
+        String imageUrl,
         int equipBonusHp,
         int equipBonusAttack,
         int equipBonusDefense,
@@ -52,7 +52,7 @@ public record DigimonResponse(
                 d.getGrade(), d.getRarity(), d.getPersonality(), d.getTrait(),
                 d.getEnergy(), d.getMaxEnergy(), d.getBits(),
                 d.getRebirthCount(), d.getRebornedFrom(), d.getStatus(),
-                d.getDigimonInfoId(), null, null, 0, 0, 0, 0, 0, 0, 0
+                d.getDigimonInfoId(), null, null, null, 0, 0, 0, 0, 0, 0, 0
         );
     }
 }

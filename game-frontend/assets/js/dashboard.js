@@ -151,7 +151,7 @@ function renderDigimonCard(d) {
   return `
     <div class="card ${borderClass} mb-4">
       <div class="flex items-center gap-3 mb-3">
-        <div class="text-5xl">🐉</div>
+        ${renderDigimonVisual(d.imageUrl, d.stage, "w-16 h-16", "text-5xl")}
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <h3 class="font-bold text-lg truncate">${escapeHtml(d.name)}</h3>

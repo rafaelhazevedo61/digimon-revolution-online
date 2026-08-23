@@ -1,4 +1,4 @@
-package com.dro.modules.incubation.api;
+package com.dro.modules.incubation.api.dto.request;
 
 import com.dro.modules.inventory.domain.ItemType;
 import jakarta.validation.constraints.NotNull;

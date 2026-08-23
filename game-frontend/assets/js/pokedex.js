@@ -140,11 +140,10 @@ function dexRender() {
 
   let html = dexEntries.map(d => {
     const stage = dexStageName(d.stage);
-    const emoji = dexStageEmoji(d.stage);
 
     return `
       <div class="card-sm mb-2 flex items-center gap-3 cursor-pointer" onclick="dexShowDetail(${d.id})">
-        <div class="text-2xl">${emoji}</div>
+        ${renderDigimonVisual(d.imageUrl, d.stage, "w-12 h-12", "text-2xl")}
         <div class="flex-1 min-w-0">
           <p class="font-bold text-sm truncate">${escapeHtml(d.name)}</p>
           <div class="flex gap-1 mt-1 flex-wrap">
@@ -201,7 +200,6 @@ async function dexShowDetail(infoId) {
   overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 
   const stage = dexStageName(d.stage);
-  const emoji = dexStageEmoji(d.stage);
   const total = d.baseHp + d.baseAtk + d.baseDef;
 
   const maxStat = Math.max(d.baseHp, d.baseAtk, d.baseDef, 1);
@@ -217,7 +215,7 @@ async function dexShowDetail(infoId) {
       </div>
 
       <div class="flex items-center gap-3 mb-4">
-        <div class="text-5xl">${emoji}</div>
+        ${renderDigimonVisual(d.imageUrl, d.stage, "w-20 h-20", "text-5xl")}
         <div class="flex-1 min-w-0">
           <h3 class="font-bold text-xl">${escapeHtml(d.name)}</h3>
           <div class="flex gap-2 mt-1 flex-wrap">

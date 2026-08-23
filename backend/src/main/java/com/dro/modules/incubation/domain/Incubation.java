@@ -13,8 +13,6 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "incubations")
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -64,5 +62,61 @@ public class Incubation {
         }
 
         this.status = IncubationStatus.CLAIMED;
+    }
+
+    public UUID getId () {
+        return id;
+    }
+
+    public void setId (UUID id) {
+        this.id = id;
+    }
+
+    public UUID getPlayerId () {
+        return playerId;
+    }
+
+    public void setPlayerId (UUID playerId) {
+        this.playerId = playerId;
+    }
+
+    public ItemType getDigitamaType () {
+        return digitamaType;
+    }
+
+    public void setDigitamaType (ItemType digitamaType) {
+        this.digitamaType = digitamaType;
+    }
+
+    public ItemType getIncubatorType () {
+        return incubatorType;
+    }
+
+    public void setIncubatorType (ItemType incubatorType) {
+        this.incubatorType = incubatorType;
+    }
+
+    public LocalDateTime getStartedAt () {
+        return startedAt;
+    }
+
+    public void setStartedAt (LocalDateTime startedAt) {
+        this.startedAt = startedAt;
+    }
+
+    public LocalDateTime getFinishAt () {
+        return finishAt;
+    }
+
+    public void setFinishAt (LocalDateTime finishAt) {
+        this.finishAt = finishAt;
+    }
+
+    public IncubationStatus getStatus () {
+        return status;
+    }
+
+    public void setStatus (IncubationStatus status) {
+        this.status = status;
     }
 }

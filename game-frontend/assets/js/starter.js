@@ -97,7 +97,7 @@ function renderHatchingAnimation(digimon) {
         <div id="hatch-stage-reveal" class="hatch-container hidden">
           <div class="hatch-burst"></div>
           <div class="hatch-reveal-digimon">
-            <div class="digimon-sprite">🐉</div>
+            ${renderDigimonVisual(digimon.imageUrl, digimon.stage, "w-28 h-28", "text-6xl")}
           </div>
           <h2 class="text-2xl font-bold text-cyan-400 mt-6">${escapeHtml(digimon.name)}</h2>
           <p class="text-slate-400 text-sm mt-1">${escapeHtml(digimon.type)}</p>
@@ -264,7 +264,7 @@ function renderDigimonSelectCards(digimons, dashboard) {
 
     return `
     <div class="card flex items-center gap-4 text-left ${isActive ? 'border-cyan-700' : ''}">
-      <div class="text-4xl">🐉</div>
+      ${renderDigimonVisual(d.imageUrl, d.stage, "w-14 h-14", "text-4xl")}
       <div class="flex-1 min-w-0">
         <h3 class="font-bold text-sm truncate">${escapeHtml(d.name)} ${isActive ? '<span class="text-cyan-400 text-xs">(Ativo)</span>' : ''}</h3>
         <div class="flex gap-2 mt-1">

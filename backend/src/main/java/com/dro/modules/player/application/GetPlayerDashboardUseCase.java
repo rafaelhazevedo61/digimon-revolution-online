@@ -11,7 +11,7 @@ import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.equipment.domain.EquipmentSlot;
 import com.dro.modules.equipment.infra.EquipmentRepository;
-import com.dro.modules.incubation.api.IncubationResponse;
+import com.dro.modules.incubation.api.dto.response.IncubationResponse;
 import com.dro.modules.incubation.domain.Incubation;
 import com.dro.modules.incubation.domain.IncubationStatus;
 import com.dro.modules.incubation.infra.IncubationRepository;
@@ -31,7 +31,6 @@ import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -46,7 +45,6 @@ import java.util.UUID;
  * Componente da camada de caso de uso da aplicação do módulo de Jogadores.
  */
 @Service
-@RequiredArgsConstructor
 public class GetPlayerDashboardUseCase {
 
     private final PlayerRepository playerRepository;
@@ -58,6 +56,18 @@ public class GetPlayerDashboardUseCase {
     private final IncubationRepository incubationRepository;
     private final MissionDefinitionRepository missionDefinitionRepository;
     private final ClanBonusService clanBonusService;
+
+    public GetPlayerDashboardUseCase (PlayerRepository playerRepository, DigimonRepository digimonRepository, DigimonInfosRepository digimonInfosRepository, EquipmentRepository equipmentRepository, InventoryRepository inventoryRepository, MissionInstanceRepository missionInstanceRepository, IncubationRepository incubationRepository, MissionDefinitionRepository missionDefinitionRepository, ClanBonusService clanBonusService) {
+        this.playerRepository = playerRepository;
+        this.digimonRepository = digimonRepository;
+        this.digimonInfosRepository = digimonInfosRepository;
+        this.equipmentRepository = equipmentRepository;
+        this.inventoryRepository = inventoryRepository;
+        this.missionInstanceRepository = missionInstanceRepository;
+        this.incubationRepository = incubationRepository;
+        this.missionDefinitionRepository = missionDefinitionRepository;
+        this.clanBonusService = clanBonusService;
+    }
 
     public PlayerDashboardResponse execute(String token) {
 
@@ -170,6 +180,9 @@ public class GetPlayerDashboardUseCase {
                 d.getDigimonInfoId(),
                 info != null ? info.getAttribute().name() : null,
                 info != null ? info.getElement().name() : null,
+                info != null
+                        ? info.getImageUrl()
+                        : null,
                 equipBonusHp,
                 equipBonusAttack,
                 equipBonusDefense,

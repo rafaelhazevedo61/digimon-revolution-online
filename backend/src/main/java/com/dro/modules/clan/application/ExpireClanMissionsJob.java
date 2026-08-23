@@ -1,6 +1,5 @@
 package com.dro.modules.clan.application;
 
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +16,6 @@ import java.time.ZoneId;
  * expirando missões não concluídas de dias anteriores.
  */
 @Service
-@RequiredArgsConstructor
 public class ExpireClanMissionsJob {
 
     private static final Logger log =

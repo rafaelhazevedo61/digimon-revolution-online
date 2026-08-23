@@ -1,6 +1,6 @@
 package com.dro.modules.incubation.application;
 
-import com.dro.modules.incubation.api.IncubationResponse;
+import com.dro.modules.incubation.api.dto.response.IncubationResponse;
 import com.dro.modules.incubation.domain.Incubation;
 import com.dro.modules.incubation.domain.IncubationStatus;
 import com.dro.modules.incubation.infra.IncubationRepository;

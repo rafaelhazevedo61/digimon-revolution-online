@@ -25,9 +25,14 @@ public record HatchDigitamaResponse(
         Trait trait,
         int energy,
         int maxEnergy,
-        Long digimonInfoId
+        Long digimonInfoId,
+        String imageUrl
 ) {
     public static HatchDigitamaResponse from(Digimon digimon) {
+        return from(digimon, null);
+    }
+
+    public static HatchDigitamaResponse from(Digimon digimon, String imageUrl) {
         return new HatchDigitamaResponse(
                 digimon.getId(),
                 digimon.getName(),
@@ -45,7 +50,8 @@ public record HatchDigitamaResponse(
                 digimon.getTrait(),
                 digimon.getEnergy(),
                 digimon.getMaxEnergy(),
-                digimon.getDigimonInfoId()
+                digimon.getDigimonInfoId(),
+                imageUrl
         );
     }
 }

@@ -20,8 +20,6 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "digimons")
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -276,5 +274,277 @@ public class Digimon {
         }
 
         energy -= amount;
+    }
+
+    public UUID getId () {
+        return id;
+    }
+
+    public void setId (UUID id) {
+        this.id = id;
+    }
+
+    public UUID getPlayerId () {
+        return playerId;
+    }
+
+    public void setPlayerId (UUID playerId) {
+        this.playerId = playerId;
+    }
+
+    public String getName () {
+        return name;
+    }
+
+    public void setName (String name) {
+        this.name = name;
+    }
+
+    public String getType () {
+        return type;
+    }
+
+    public void setType (String type) {
+        this.type = type;
+    }
+
+    public Stage getStage () {
+        return stage;
+    }
+
+    public void setStage (Stage stage) {
+        this.stage = stage;
+    }
+
+    public int getLevel () {
+        return level;
+    }
+
+    public void setLevel (int level) {
+        this.level = level;
+    }
+
+    public int getExperience () {
+        return experience;
+    }
+
+    public void setExperience (int experience) {
+        this.experience = experience;
+    }
+
+    public int getHp () {
+        return hp;
+    }
+
+    public void setHp (int hp) {
+        this.hp = hp;
+    }
+
+    public int getAttack () {
+        return attack;
+    }
+
+    public void setAttack (int attack) {
+        this.attack = attack;
+    }
+
+    public int getDefense () {
+        return defense;
+    }
+
+    public void setDefense (int defense) {
+        this.defense = defense;
+    }
+
+    public int getIvHp () {
+        return ivHp;
+    }
+
+    public void setIvHp (int ivHp) {
+        this.ivHp = ivHp;
+    }
+
+    public int getIvAttack () {
+        return ivAttack;
+    }
+
+    public void setIvAttack (int ivAttack) {
+        this.ivAttack = ivAttack;
+    }
+
+    public int getIvDefense () {
+        return ivDefense;
+    }
+
+    public void setIvDefense (int ivDefense) {
+        this.ivDefense = ivDefense;
+    }
+
+    public DigimonGrade getGrade () {
+        return grade;
+    }
+
+    public void setGrade (DigimonGrade grade) {
+        this.grade = grade;
+    }
+
+    public LocalDateTime getCreatedAt () {
+        return createdAt;
+    }
+
+    public void setCreatedAt (LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Rarity getRarity () {
+        return rarity;
+    }
+
+    public void setRarity (Rarity rarity) {
+        this.rarity = rarity;
+    }
+
+    public Personality getPersonality () {
+        return personality;
+    }
+
+    public void setPersonality (Personality personality) {
+        this.personality = personality;
+    }
+
+    public int getEnergy () {
+        return energy;
+    }
+
+    public void setEnergy (int energy) {
+        this.energy = energy;
+    }
+
+    public int getMaxEnergy () {
+        return maxEnergy;
+    }
+
+    public void setMaxEnergy (int maxEnergy) {
+        this.maxEnergy = maxEnergy;
+    }
+
+    public Instant getLastEnergyUpdate () {
+        return lastEnergyUpdate;
+    }
+
+    public void setLastEnergyUpdate (Instant lastEnergyUpdate) {
+        this.lastEnergyUpdate = lastEnergyUpdate;
+    }
+
+    public int getBits () {
+        return bits;
+    }
+
+    public void setBits (int bits) {
+        this.bits = bits;
+    }
+
+    public int getRebirthCount () {
+        return rebirthCount;
+    }
+
+    public void setRebirthCount (int rebirthCount) {
+        this.rebirthCount = rebirthCount;
+    }
+
+    public int getArenaRating () {
+        return arenaRating;
+    }
+
+    public void setArenaRating (int arenaRating) {
+        this.arenaRating = arenaRating;
+    }
+
+    public int getArenaWins () {
+        return arenaWins;
+    }
+
+    public void setArenaWins (int arenaWins) {
+        this.arenaWins = arenaWins;
+    }
+
+    public int getArenaLosses () {
+        return arenaLosses;
+    }
+
+    public void setArenaLosses (int arenaLosses) {
+        this.arenaLosses = arenaLosses;
+    }
+
+    public boolean isBot () {
+        return bot;
+    }
+
+    public void setBot (boolean bot) {
+        this.bot = bot;
+    }
+
+    public long getVersion () {
+        return version;
+    }
+
+    public void setVersion (long version) {
+        this.version = version;
+    }
+
+    public DigimonStatus getStatus () {
+        return status;
+    }
+
+    public void setStatus (DigimonStatus status) {
+        this.status = status;
+    }
+
+    public UUID getRebornedFrom () {
+        return rebornedFrom;
+    }
+
+    public void setRebornedFrom (UUID rebornedFrom) {
+        this.rebornedFrom = rebornedFrom;
+    }
+
+    public Trait getTrait () {
+        return trait;
+    }
+
+    public void setTrait (Trait trait) {
+        this.trait = trait;
+    }
+
+    public UUID getWeaponId () {
+        return weaponId;
+    }
+
+    public void setWeaponId (UUID weaponId) {
+        this.weaponId = weaponId;
+    }
+
+    public UUID getArmorId () {
+        return armorId;
+    }
+
+    public void setArmorId (UUID armorId) {
+        this.armorId = armorId;
+    }
+
+    public UUID getAccessoryId () {
+        return accessoryId;
+    }
+
+    public void setAccessoryId (UUID accessoryId) {
+        this.accessoryId = accessoryId;
+    }
+
+    public Long getDigimonInfoId () {
+        return digimonInfoId;
+    }
+
+    public void setDigimonInfoId (Long digimonInfoId) {
+        this.digimonInfoId = digimonInfoId;
     }
 }

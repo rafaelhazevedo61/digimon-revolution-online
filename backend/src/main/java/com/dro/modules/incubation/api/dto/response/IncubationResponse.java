@@ -1,4 +1,4 @@
-package com.dro.modules.incubation.api;
+package com.dro.modules.incubation.api.dto.response;
 
 import com.dro.modules.incubation.domain.IncubationStatus;
 import com.dro.modules.inventory.domain.ItemType;

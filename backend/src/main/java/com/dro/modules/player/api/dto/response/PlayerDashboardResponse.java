@@ -3,7 +3,7 @@ package com.dro.modules.player.api.dto.response;
 import com.dro.modules.digimon.api.dto.response.DigimonResponse;
 import com.dro.modules.equipment.api.dto.response.DigimonEquipmentResponse;
 import com.dro.modules.equipment.api.dto.response.EquipmentResponse;
-import com.dro.modules.incubation.api.IncubationResponse;
+import com.dro.modules.incubation.api.dto.response.IncubationResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;

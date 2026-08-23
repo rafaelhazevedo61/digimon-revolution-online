@@ -12,6 +12,7 @@ public record EvolutionNextStepResponse(
         String specie,
         int baseHp,
         int baseAtk,
-        int baseDef
+        int baseDef,
+        String imageUrl
 ) {
 }
