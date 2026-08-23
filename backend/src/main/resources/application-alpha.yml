@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  mongodb:
+    uri: ${SPRING_MONGODB_URI}
+
+logging:
+  level:
+    org.springframework.jdbc: INFO
+
+dro:
+  cors:
+    allowed-origins: ${DRO_ALLOWED_ORIGINS}
+
+  security:
+    jwt:
+      secret: ${DRO_JWT_SECRET}
