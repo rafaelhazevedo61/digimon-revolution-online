@@ -53,6 +53,7 @@ public class ResetPlayerPasswordUseCase {
         String encodedPassword = passwordEncoder.encode(plainPassword);
 
         player.setPassword(encodedPassword);
+        player.incrementTokenVersion();
         playerRepository.save(player);
         adminAuditService.success(
                 authorization,
@@ -64,6 +65,7 @@ public class ResetPlayerPasswordUseCase {
                 Map.of(
                         "targetPlayerId", player.getId().toString(),
                         "targetUsername", player.getUsername(),
+                        "tokenVersion", player.getTokenVersion(),
                         "generated", request.generateRandom()
                 )
         );

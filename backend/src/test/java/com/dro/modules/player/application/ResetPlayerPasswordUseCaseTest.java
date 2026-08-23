@@ -59,6 +59,7 @@ class ResetPlayerPasswordUseCaseTest {
         assertEquals("new-password", response.newPassword());
         assertFalse(response.generated());
         assertEquals("new-encoded", player.getPassword());
+        assertEquals(1, player.getTokenVersion());
         verify(playerRepository).save(player);
     }
 
@@ -84,6 +85,7 @@ class ResetPlayerPasswordUseCaseTest {
         assertTrue(response.generated());
         assertNotNull(response.newPassword());
         assertEquals(12, response.newPassword().length());
+        assertEquals(1, player.getTokenVersion());
         verify(playerRepository).save(player);
     }
 

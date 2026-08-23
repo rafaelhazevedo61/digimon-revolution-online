@@ -8,7 +8,7 @@ Os arquivos `backend/src/main/resources/api-curl-collection.sh` e `backend/src/m
 
 No Postman, use **Import**, selecione `backend/src/main/resources/collection/DRO - MODULES.postman_collection.json` e importe a collection. Na aba **Variables**, preencha `baseUrl`, `playerToken` e `adminToken`. Os demais valores de rota e query podem ser preenchidos conforme o cenário de teste.
 
-A collection Postman possui 161 requests organizados por módulo, incluindo as rotas de Correio, Casa de Leilões, clãs, convites, ações de mensagens, comunicados administrativos, premiações de eventos, seleção de destinatários, Loot Tables administrativas, Baús da Área e resgate de recompensas do tutorial. Os corpos JSON são derivados dos DTOs de request sempre que o tipo puder ser resolvido; os exemplos manuais continuam sobrescrevendo os valores gerados e todos devem ser revisados antes do envio.
+A collection Postman possui 162 requests organizados por módulo, incluindo as rotas de Correio, Casa de Leilões, clãs, convites, ações de mensagens, comunicados administrativos, premiações de eventos, seleção de destinatários, Loot Tables administrativas, Baús da Área e resgate de recompensas do tutorial. Os corpos JSON são derivados dos DTOs de request sempre que o tipo puder ser resolvido; os exemplos manuais continuam sobrescrevendo os valores gerados e todos devem ser revisados antes do envio.
 
 ## Como configurar
 

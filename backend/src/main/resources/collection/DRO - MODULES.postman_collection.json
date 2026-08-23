@@ -3079,6 +3079,22 @@
           "response": []
         },
         {
+          "name": "logoutAll",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/players/me/logout-all",
+            "description": "Gerado de PlayerController.logoutAll. Revise IDs e valores antes de enviar."
+          },
+          "response": []
+        },
+        {
           "name": "startup",
           "request": {
             "method": "GET",

@@ -552,6 +552,9 @@ USABLE="${USABLE:-VALOR}"
 # PlayerController.dashboard (GET /players/me/dashboard)
 # curl --fail-with-body -i -X GET "${BASE_URL}/players/me/dashboard" -H "Authorization: Bearer ${TOKEN}"
 
+# PlayerController.logoutAll (POST /players/me/logout-all)
+# curl --fail-with-body -i -X POST "${BASE_URL}/players/me/logout-all" -H "Authorization: Bearer ${TOKEN}"
+
 # PlayerController.startup (GET /players/me/startup)
 # curl --fail-with-body -i -X GET "${BASE_URL}/players/me/startup" -H "Authorization: Bearer ${TOKEN}"
 
