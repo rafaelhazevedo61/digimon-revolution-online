@@ -2570,7 +2570,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{playerToken}}",
+                "value": "Bearer {{adminToken}}",
                 "type": "text"
               },
               {
@@ -2579,8 +2579,8 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/digimon/simulator/trait-hatch?attempts={{attempts}}",
-            "description": "Gerado de DigimonController.simulateTraitHatch. Revise IDs e valores antes de enviar.",
+            "url": "{{baseUrl}}/admin/digimon/simulator/trait-hatch?attempts={{attempts}}",
+            "description": "Gerado de AdminDigimonController.simulateTraitHatch. Requer token de ADMIN.",
             "body": {
               "mode": "raw",
               "raw": "{}",

@@ -19,6 +19,7 @@ e o projeto segue versionamento incremental por entregas (PRs).
   - Migrations `V74` (rating/estatísticas + tabela `arena_matches`) e `V75`/`V76` (flag `is_bot`, player de sistema e seed de bots).
 
 ### Corrigido
+- **Proteção de ferramentas internas**: o simulador de choco de traits agora está sob `/admin/digimon/simulator/trait-hatch` e exige um usuário `ADMIN`.
 - Sessão expirada agora força retorno à tela de login: qualquer resposta 401/403 no game frontend limpa o token e redireciona para `#login`.
 
 ## Entregas anteriores
