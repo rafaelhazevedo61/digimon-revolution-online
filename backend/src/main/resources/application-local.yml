@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/dro_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:arisco2017}
+
+  mongodb:
+    uri: ${SPRING_MONGODB_URI:mongodb://dro_mongo:change-this-mongo-password@localhost:27017/dro_audit?authSource=admin}
+
+logging:
+  level:
+    org.springframework.jdbc: DEBUG
+
+dro:
+  cors:
+    allowed-origins: ${DRO_ALLOWED_ORIGINS:http://localhost:5500,http://127.0.0.1:5500,http://localhost:3000,http://127.0.0.1:3000}
+
+  security:
+    jwt:
+      secret: ${DRO_JWT_SECRET:dro-local-development-secret-change-this-before-production-2026}
