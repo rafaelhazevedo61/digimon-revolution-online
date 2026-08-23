@@ -397,8 +397,8 @@ USABLE="${USABLE:-VALOR}"
 # DigimonController.select (POST /digimon/select)
 # curl --fail-with-body -i -X POST "${BASE_URL}/digimon/select" -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" -d '{}'
 
-# DigimonController.simulateTraitHatch (GET /digimon/simulator/trait-hatch)
-# curl --fail-with-body -i -X GET "${BASE_URL}/digimon/simulator/trait-hatch?attempts=${ATTEMPTS}" -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" -d '{}'
+# AdminDigimonController.simulateTraitHatch (GET /admin/digimon/simulator/trait-hatch)
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/digimon/simulator/trait-hatch?attempts=${ATTEMPTS}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
 # DigimonController.storage (GET /digimon/storage)
 # curl --fail-with-body -i -X GET "${BASE_URL}/digimon/storage" -H "Authorization: Bearer ${TOKEN}"

@@ -1,6 +1,8 @@
 package com.dro.modules.digimon.api;
 
 import com.dro.modules.digimon.application.AddExperienceUseCase;
+import com.dro.modules.digimon.application.SimulateTraitHatchUseCase;
+import com.dro.modules.digimon.api.dto.response.TraitHatchSimulationResponse;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import java.util.UUID;
 public class AdminDigimonController {
 
     private final AddExperienceUseCase addExperienceUseCase;
+    private final SimulateTraitHatchUseCase simulateTraitHatchUseCase;
     private final DigimonRepository digimonRepository;
 
     @PostMapping("/add-xp")
@@ -30,6 +33,13 @@ public class AdminDigimonController {
     ) {
         addExperienceUseCase.executeForDigimon(digimonId, amount);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/simulator/trait-hatch")
+    public ResponseEntity<TraitHatchSimulationResponse> simulateTraitHatch(
+            @RequestParam(defaultValue = "1000") int attempts
+    ) {
+        return ResponseEntity.ok(simulateTraitHatchUseCase.execute(attempts));
     }
 
     @GetMapping("/by-player/{playerId}")
