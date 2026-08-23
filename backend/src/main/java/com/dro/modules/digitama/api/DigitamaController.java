@@ -19,12 +19,17 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/digitama")
-@RequiredArgsConstructor
 public class DigitamaController {
 
     private final SelectDigitamaUseCase selectDigitamaUseCase;
     private final HatchDigitamaUseCase hatchDigitamaUseCase;
     private final GetDigitamaHistoryUseCase getDigitamaHistoryUseCase;
+
+    public DigitamaController (SelectDigitamaUseCase selectDigitamaUseCase, HatchDigitamaUseCase hatchDigitamaUseCase, GetDigitamaHistoryUseCase getDigitamaHistoryUseCase) {
+        this.selectDigitamaUseCase = selectDigitamaUseCase;
+        this.hatchDigitamaUseCase = hatchDigitamaUseCase;
+        this.getDigitamaHistoryUseCase = getDigitamaHistoryUseCase;
+    }
 
     @PostMapping("/select")
     public ResponseEntity<Void> select(
@@ -35,7 +40,7 @@ public class DigitamaController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/hatch")
+    @PostMapping("/hatch")
     public ResponseEntity<HatchDigitamaResponse> hatch(
             @RequestHeader("Authorization") String authorization
     ) {
@@ -43,12 +48,10 @@ public class DigitamaController {
         return ResponseEntity.ok(HatchDigitamaResponse.from(digimon));
     }
 
-
     @GetMapping("/history")
     public ResponseEntity<List<DigitamaHistoryResponse>> history(
             @RequestHeader("Authorization") String authorization
     ) {
         return ResponseEntity.ok(getDigitamaHistoryUseCase.execute(authorization));
     }
-
 }

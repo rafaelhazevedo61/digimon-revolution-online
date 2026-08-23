@@ -2727,7 +2727,7 @@
         {
           "name": "hatch",
           "request": {
-            "method": "GET",
+            "method": "POST",
             "header": [
               {
                 "key": "Authorization",
