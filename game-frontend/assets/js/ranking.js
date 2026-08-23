@@ -199,7 +199,7 @@ function rankRenderModal(d, playerName) {
 
   body.innerHTML = `
     <div class="flex items-center gap-3 mb-4">
-      <div class="text-4xl">🐉</div>
+      ${renderDigimonVisual(d.imageUrl, d.stage, "w-16 h-16", "text-4xl")}
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2">
           <h3 class="font-bold text-lg truncate">${escapeHtml(d.name)}</h3>

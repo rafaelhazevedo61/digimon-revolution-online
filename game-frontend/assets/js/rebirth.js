@@ -49,7 +49,7 @@ function rebirthRender(digimon) {
   let html = `
     <div class="card mb-4">
       <div class="flex items-center gap-3">
-        <div class="text-4xl">🐉</div>
+        ${renderDigimonVisual(digimon.imageUrl, digimon.stage, "w-14 h-14", "text-4xl")}
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <h3 class="font-bold text-lg truncate">${escapeHtml(digimon.name)}</h3>

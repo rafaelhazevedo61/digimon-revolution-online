@@ -2,11 +2,12 @@ package com.dro.modules.incubation.api;
 
 import com.dro.modules.digitama.api.dto.response.HatchDigitamaResponse;
 import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.infra.DigimonInfosRepository;
+import com.dro.modules.incubation.api.dto.request.StartIncubationRequest;
 import com.dro.modules.incubation.application.ClaimIncubationUseCase;
 import com.dro.modules.incubation.application.GetIncubationUseCase;
 import com.dro.modules.incubation.application.StartIncubationUseCase;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,12 +16,24 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/incubation")
-@RequiredArgsConstructor
 public class IncubationController {
 
     private final StartIncubationUseCase startUseCase;
     private final ClaimIncubationUseCase claimUseCase;
     private final GetIncubationUseCase getUseCase;
+    private final DigimonInfosRepository digimonInfosRepository;
+
+    public IncubationController(
+            StartIncubationUseCase startUseCase,
+            ClaimIncubationUseCase claimUseCase,
+            GetIncubationUseCase getUseCase,
+            DigimonInfosRepository digimonInfosRepository
+    ) {
+        this.startUseCase = startUseCase;
+        this.claimUseCase = claimUseCase;
+        this.getUseCase = getUseCase;
+        this.digimonInfosRepository = digimonInfosRepository;
+    }
 
     @PostMapping("/start")
     public ResponseEntity<Void> start (
@@ -41,7 +54,10 @@ public class IncubationController {
             @RequestHeader("Authorization") String authorization
     ) {
         Digimon digimon = claimUseCase.execute(authorization);
-        return ResponseEntity.ok(HatchDigitamaResponse.from(digimon));
+        String imageUrl = digimon.getDigimonInfoId() == null ? null : digimonInfosRepository.findById(digimon.getDigimonInfoId())
+                .map(info -> info.getImageUrl())
+                .orElse(null);
+        return ResponseEntity.ok(HatchDigitamaResponse.from(digimon, imageUrl));
     }
 
     @GetMapping("/me")

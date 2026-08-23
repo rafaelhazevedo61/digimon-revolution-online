@@ -145,3 +145,22 @@ function formatElement(element) {
     DARK: "Sombrio"
   }[normalized] || element || "Neutro";
 }
+
+
+function digimonStageEmoji(stage) {
+  const map = { BABY: "🥒", BABY_II: "🐣", ROOKIE: "🐉", CHAMPION: "⚔️", ULTIMATE: "🔥", MEGA: "👑" };
+  return map[String(stage || "").toUpperCase()] || "🐉";
+}
+
+function renderDigimonVisual(imageUrl, stage, sizeClass = "w-14 h-14", emojiClass = "text-4xl") {
+  const emoji = digimonStageEmoji(stage);
+  if (!imageUrl) {
+    return `<div class="${sizeClass} flex items-center justify-center ${emojiClass}">${emoji}</div>`;
+  }
+  return `
+    <div class="${sizeClass} shrink-0 rounded-xl overflow-hidden bg-slate-900/60 flex items-center justify-center">
+      <img src="${escapeAttr(imageUrl)}" alt="Digimon" class="w-full h-full object-contain" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+      <span class="w-full h-full items-center justify-center ${emojiClass}" style="display:none">${emoji}</span>
+    </div>
+  `;
+}

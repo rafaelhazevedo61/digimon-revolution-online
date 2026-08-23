@@ -47,7 +47,7 @@ function evoRender(digimon) {
   let html = `
     <div class="card mb-4">
       <div class="flex items-center gap-3">
-        <div class="text-4xl">🐉</div>
+        ${renderDigimonVisual(digimon.imageUrl, digimon.stage, "w-14 h-14", "text-4xl")}
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <h3 class="font-bold text-lg truncate">${escapeHtml(digimon.name)}</h3>
@@ -142,7 +142,7 @@ function evoRenderOption(opt, digimon) {
   return `
     <div class="card mb-3 ${canEvolve ? 'border-cyan-800' : ''}">
       <div class="flex items-center gap-3">
-        <div class="text-3xl">🐉</div>
+        ${renderDigimonVisual(next.imageUrl, next.stage, "w-12 h-12", "text-3xl")}
         <div class="flex-1 min-w-0">
           <p class="font-bold truncate">${escapeHtml(next.name)}</p>
           <div class="flex gap-2 mt-1 flex-wrap">

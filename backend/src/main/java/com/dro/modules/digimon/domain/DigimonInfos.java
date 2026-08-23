@@ -12,8 +12,6 @@ import lombok.*;
  */
 @Entity
 @Table(name = "digimon_infos")
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -50,4 +48,87 @@ public class DigimonInfos {
 
     @Column(name = "base_def", nullable = false)
     private int baseDef;
+
+    @Column(name = "image_url", length = 1000)
+    private String imageUrl;
+
+    public Long getId () {
+        return id;
+    }
+
+    public void setId (Long id) {
+        this.id = id;
+    }
+
+    public String getName () {
+        return name;
+    }
+
+    public void setName (String name) {
+        this.name = name;
+    }
+
+    public Stage getStage () {
+        return stage;
+    }
+
+    public void setStage (Stage stage) {
+        this.stage = stage;
+    }
+
+    public Attribute getAttribute () {
+        return attribute;
+    }
+
+    public void setAttribute (Attribute attribute) {
+        this.attribute = attribute;
+    }
+
+    public Element getElement () {
+        return element;
+    }
+
+    public void setElement (Element element) {
+        this.element = element;
+    }
+
+    public Species getSpecie () {
+        return specie;
+    }
+
+    public void setSpecie (Species specie) {
+        this.specie = specie;
+    }
+
+    public int getBaseHp () {
+        return baseHp;
+    }
+
+    public void setBaseHp (int baseHp) {
+        this.baseHp = baseHp;
+    }
+
+    public int getBaseAtk () {
+        return baseAtk;
+    }
+
+    public void setBaseAtk (int baseAtk) {
+        this.baseAtk = baseAtk;
+    }
+
+    public int getBaseDef () {
+        return baseDef;
+    }
+
+    public void setBaseDef (int baseDef) {
+        this.baseDef = baseDef;
+    }
+
+    public String getImageUrl () {
+        return imageUrl;
+    }
+
+    public void setImageUrl (String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 }

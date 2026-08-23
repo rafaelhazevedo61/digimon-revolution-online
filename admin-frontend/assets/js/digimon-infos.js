@@ -143,6 +143,7 @@ const digimonInfoState = {
         <table class="table">
           <thead>
             <tr>
+              <th>Imagem</th>
               <th>ID</th>
               <th>Nome</th>
               <th>Stage</th>
@@ -152,6 +153,7 @@ const digimonInfoState = {
               <th>Base HP</th>
               <th>Base ATK</th>
               <th>Base DEF</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -167,6 +169,9 @@ const digimonInfoState = {
   function renderDigimonInfoRow(item) {
     return `
       <tr>
+        <td>
+          ${renderAdminDigimonImage(item)}
+        </td>
         <td class="font-mono text-slate-400">${item.id}</td>
   
         <td>
@@ -192,6 +197,9 @@ const digimonInfoState = {
         <td>${item.baseHp}</td>
         <td>${item.baseAtk}</td>
         <td>${item.baseDef}</td>
+        <td>
+          <button class="btn-secondary" onclick="openDigimonImageModal(${item.id})">Editar imagem</button>
+        </td>
       </tr>
     `;
   }
@@ -325,3 +333,87 @@ const digimonInfoState = {
       </option>
     `).join("");
   }
+
+function renderAdminDigimonImage(item) {
+  const fallback = `<div class="w-12 h-12 rounded-lg flex items-center justify-center text-xl bg-slate-800 border border-slate-700">🐉</div>`;
+  if (!item.imageUrl) return fallback;
+  return `
+    <div class="w-12 h-12 rounded-lg overflow-hidden bg-slate-800 border border-slate-700 flex items-center justify-center">
+      <img src="${escapeAttr(item.imageUrl)}" alt="${escapeAttr(item.name)}" class="w-full h-full object-contain" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+      <span class="w-full h-full items-center justify-center text-xl" style="display:none">🐉</span>
+    </div>
+  `;
+}
+
+function openDigimonImageModal(id) {
+  const item = (digimonInfoState.lastResult?.items || []).find(entry => Number(entry.id) === Number(id));
+  if (!item) return;
+
+  const overlay = document.createElement("div");
+  overlay.id = "digimon-image-modal";
+  overlay.className = "modal-overlay";
+  overlay.onclick = event => { if (event.target === overlay) closeDigimonImageModal(); };
+  overlay.innerHTML = `
+    <div class="modal-content max-w-2xl">
+      <div class="flex items-center justify-between gap-4 mb-5">
+        <div>
+          <h3 class="text-xl font-bold">Imagem de ${escapeHtml(item.name)}</h3>
+          <p class="text-sm text-slate-400 mt-1">Informe uma URL externa ou um caminho de asset do projeto.</p>
+        </div>
+        <button class="btn-secondary" onclick="closeDigimonImageModal()">Fechar</button>
+      </div>
+
+      <label class="text-sm text-slate-400">URL / caminho da imagem</label>
+      <input id="digimon-image-url" class="input mt-1" maxlength="1000" value="${escapeAttr(item.imageUrl || '')}" placeholder="https://... ou /assets/img/digimons/agumon.png" oninput="previewDigimonImage()" />
+
+      <div class="mt-4">
+        <p class="text-sm text-slate-400 mb-2">Pré-visualização</p>
+        <div id="digimon-image-preview" class="h-48 rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center overflow-hidden"></div>
+      </div>
+
+      <div id="digimon-image-error" class="hidden mt-4 p-3 rounded-lg border border-red-900 bg-red-950/30 text-red-300 text-sm"></div>
+
+      <div class="flex flex-wrap justify-end gap-2 mt-5">
+        <button class="btn-secondary" onclick="removeDigimonImage(${item.id})">Remover imagem</button>
+        <button class="btn-primary" onclick="saveDigimonImage(${item.id})">Salvar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  previewDigimonImage();
+}
+
+function previewDigimonImage() {
+  const input = document.getElementById("digimon-image-url");
+  const preview = document.getElementById("digimon-image-preview");
+  if (!input || !preview) return;
+  const url = input.value.trim();
+  if (!url) {
+    preview.innerHTML = `<span class="text-5xl">🐉</span>`;
+    return;
+  }
+  preview.innerHTML = `<img src="${escapeAttr(url)}" alt="Pré-visualização" class="max-w-full max-h-full object-contain" onerror="this.style.display='none';this.nextElementSibling.style.display='block'" /><span class="text-sm text-red-300" style="display:none">Não foi possível carregar esta imagem.</span>`;
+}
+
+async function saveDigimonImage(id) {
+  const input = document.getElementById("digimon-image-url");
+  const error = document.getElementById("digimon-image-error");
+  try {
+    await apiPut(`/admin/digimon-infos/${encodeURIComponent(id)}/image`, { imageUrl: input.value.trim() || null });
+    closeDigimonImageModal();
+    await loadDigimonInfos();
+  } catch (err) {
+    error.textContent = err.message;
+    error.classList.remove("hidden");
+  }
+}
+
+async function removeDigimonImage(id) {
+  const input = document.getElementById("digimon-image-url");
+  if (input) input.value = "";
+  await saveDigimonImage(id);
+}
+
+function closeDigimonImageModal() {
+  document.getElementById("digimon-image-modal")?.remove();
+}

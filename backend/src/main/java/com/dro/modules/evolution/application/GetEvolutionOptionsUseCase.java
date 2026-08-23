@@ -9,11 +9,9 @@ import com.dro.modules.evolution.domain.EvolutionLine;
 import com.dro.modules.evolution.domain.EvolutionLineStep;
 import com.dro.modules.evolution.domain.EvolutionStepMaterial;
 import com.dro.modules.evolution.infra.EvolutionLineRepository;
-import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.inventory.infra.ItemDefinitionRepository;
-import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ForbiddenException;
@@ -109,7 +107,8 @@ public class GetEvolutionOptionsUseCase {
                 nextInfo.getSpecie().name(),
                 nextInfo.getBaseHp(),
                 nextInfo.getBaseAtk(),
-                nextInfo.getBaseDef()
+                nextInfo.getBaseDef(),
+                nextInfo.getImageUrl()
         );
 
         List<EvolutionMaterialRequirementResponse> materialResponses = new ArrayList<>();

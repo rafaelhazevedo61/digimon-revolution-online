@@ -69,6 +69,7 @@ public class GetDigimonUseCase {
                             d.getDigimonInfoId(),
                             info != null ? info.getAttribute().name() : null,
                             info != null ? info.getElement().name() : null,
+                            info != null ? info.getImageUrl() : null,
                             EquipmentRules.totalBonusHp(equipped),
                             EquipmentRules.totalBonusAttack(equipped),
                             EquipmentRules.totalBonusDefense(equipped),
@@ -99,6 +100,7 @@ public class GetDigimonUseCase {
                             d.getDigimonInfoId(),
                             info != null ? info.getAttribute().name() : null,
                             info != null ? info.getElement().name() : null,
+                            info != null ? info.getImageUrl() : null,
                             0, 0, 0, 0, 0, 0, 0
                     );
                 })

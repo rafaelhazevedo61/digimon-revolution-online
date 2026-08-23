@@ -1,0 +1,39 @@
+-- Referências iniciais provenientes da Digimon Information API (ShadowSmith).
+-- URLs podem ser substituídas pelo painel administrativo sem nova migration.
+
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/botamon.jpg' WHERE name = 'Botamon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/koromon.jpg' WHERE name = 'Koromon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/agumon.jpg' WHERE name = 'Agumon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/greymon.jpg' WHERE name = 'Greymon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/metalgreymon.jpg' WHERE name = 'MetalGreymon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/wargreymon.jpg' WHERE name = 'WarGreymon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/punimon.jpg' WHERE name = 'Punimon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/tsunomon.jpg' WHERE name = 'Tsunomon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/gabumon.jpg' WHERE name = 'Gabumon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/garurumon.jpg' WHERE name = 'Garurumon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/weregarurumon.jpg' WHERE name = 'WereGarurumon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/metalgarurumon.jpg' WHERE name = 'MetalGarurumon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/poyomon.jpg' WHERE name = 'Poyomon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/tokomon.jpg' WHERE name = 'Tokomon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/patamon.jpg' WHERE name = 'Patamon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/angemon.jpg' WHERE name = 'Angemon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/magnaangemon.jpg' WHERE name = 'MagnaAngemon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/seraphimon.jpg' WHERE name = 'Seraphimon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/yuramon.jpg' WHERE name = 'Yuramon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/yokomon.jpg' WHERE name = 'Yokomon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/biyomon.jpg' WHERE name = 'Biyomon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/birdramon.jpg' WHERE name = 'Birdramon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/garudamon.jpg' WHERE name = 'Garudamon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/phoenixmon.jpg' WHERE name = 'Phoenixmon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/pabumon.jpg' WHERE name = 'Pabumon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/motimon.jpg' WHERE name = 'Motimon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/tentomon.jpg' WHERE name = 'Tentomon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/kabuterimon.jpg' WHERE name = 'Kabuterimon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/megakabuterimon.jpg' WHERE name = 'MegaKabuterimon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/herculeskabuterimon.jpg' WHERE name = 'HerculesKabuterimon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/pichimon.jpg' WHERE name = 'Pichimon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/bukamon.jpg' WHERE name = 'Bukamon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/gomamon.jpg' WHERE name = 'Gomamon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/ikkakumon.jpg' WHERE name = 'Ikkakumon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/zudomon.jpg' WHERE name = 'Zudomon';
+UPDATE digimon_infos SET image_url = 'https://digimon.shadowsmith.com/img/vikemon.jpg' WHERE name = 'Vikemon';

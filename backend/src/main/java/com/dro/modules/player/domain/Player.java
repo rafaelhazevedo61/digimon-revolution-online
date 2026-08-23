@@ -17,8 +17,6 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "players")
-@Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -61,9 +59,11 @@ public class Player {
     private int tokenVersion = 0;
 
     @Column(name = "max_digimon_slots", nullable = false)
+    @Builder.Default
     private int maxDigimonSlots = 3;
 
     @Column(name = "max_storage_slots", nullable = false)
+    @Builder.Default
     private int maxStorageSlots = 50;
 
     @Column(name = "arena_coins", nullable = false)
@@ -107,5 +107,137 @@ public class Player {
 
     public String getUsername () {
         return username;
+    }
+
+    public void setId (UUID id) {
+        this.id = id;
+    }
+
+    public void setUsername (String username) {
+        this.username = username;
+    }
+
+    public String getEmail () {
+        return email;
+    }
+
+    public void setEmail (String email) {
+        this.email = email;
+    }
+
+    public String getPassword () {
+        return password;
+    }
+
+    public LocalDateTime getCreatedAt () {
+        return createdAt;
+    }
+
+    public void setCreatedAt (LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public DigitamaType getSelectedDigitama () {
+        return selectedDigitama;
+    }
+
+    public void setSelectedDigitama (DigitamaType selectedDigitama) {
+        this.selectedDigitama = selectedDigitama;
+    }
+
+    public UUID getActiveDigimonId () {
+        return activeDigimonId;
+    }
+
+    public void setActiveDigimonId (UUID activeDigimonId) {
+        this.activeDigimonId = activeDigimonId;
+    }
+
+    public LocalDateTime getLastMissionAt () {
+        return lastMissionAt;
+    }
+
+    public void setLastMissionAt (LocalDateTime lastMissionAt) {
+        this.lastMissionAt = lastMissionAt;
+    }
+
+    public boolean isStarterSelected () {
+        return starterSelected;
+    }
+
+    public void setStarterSelected (boolean starterSelected) {
+        this.starterSelected = starterSelected;
+    }
+
+    public UserType getUserType () {
+        return userType;
+    }
+
+    public void setUserType (UserType userType) {
+        this.userType = userType;
+    }
+
+    public int getTokenVersion () {
+        return tokenVersion;
+    }
+
+    public void setTokenVersion (int tokenVersion) {
+        this.tokenVersion = tokenVersion;
+    }
+
+    public int getMaxDigimonSlots () {
+        return maxDigimonSlots;
+    }
+
+    public void setMaxDigimonSlots (int maxDigimonSlots) {
+        this.maxDigimonSlots = maxDigimonSlots;
+    }
+
+    public int getMaxStorageSlots () {
+        return maxStorageSlots;
+    }
+
+    public void setMaxStorageSlots (int maxStorageSlots) {
+        this.maxStorageSlots = maxStorageSlots;
+    }
+
+    public int getArenaCoins () {
+        return arenaCoins;
+    }
+
+    public void setArenaCoins (int arenaCoins) {
+        this.arenaCoins = arenaCoins;
+    }
+
+    public UUID getClanId () {
+        return clanId;
+    }
+
+    public void setClanId (UUID clanId) {
+        this.clanId = clanId;
+    }
+
+    public ClanRole getClanRole () {
+        return clanRole;
+    }
+
+    public void setClanRole (ClanRole clanRole) {
+        this.clanRole = clanRole;
+    }
+
+    public LocalDateTime getClanJoinedAt () {
+        return clanJoinedAt;
+    }
+
+    public void setClanJoinedAt (LocalDateTime clanJoinedAt) {
+        this.clanJoinedAt = clanJoinedAt;
+    }
+
+    public LocalDateTime getArenaDailyResetAt () {
+        return arenaDailyResetAt;
+    }
+
+    public void setArenaDailyResetAt (LocalDateTime arenaDailyResetAt) {
+        this.arenaDailyResetAt = arenaDailyResetAt;
     }
 }

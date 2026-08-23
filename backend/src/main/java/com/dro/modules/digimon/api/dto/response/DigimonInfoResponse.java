@@ -14,7 +14,8 @@ public record DigimonInfoResponse(
         String specie,
         int baseHp,
         int baseAtk,
-        int baseDef
+        int baseDef,
+        String imageUrl
 ) {
     public static DigimonInfoResponse from(DigimonInfos digimonInfo) {
         return new DigimonInfoResponse(
@@ -26,7 +27,8 @@ public record DigimonInfoResponse(
                 digimonInfo.getSpecie().name(),
                 digimonInfo.getBaseHp(),
                 digimonInfo.getBaseAtk(),
-                digimonInfo.getBaseDef()
+                digimonInfo.getBaseDef(),
+                digimonInfo.getImageUrl()
         );
     }
 }
