@@ -76,7 +76,7 @@ async function settingsChangePassword(event) {
       newPassword
     });
 
-    setToken(result.token);
+    if (result?.token) setToken(result.token);
     document.getElementById("change-password-form").reset();
     successDiv.textContent = "Senha alterada com sucesso.";
     successDiv.classList.remove("hidden");
