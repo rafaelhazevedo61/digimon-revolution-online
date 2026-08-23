@@ -42,6 +42,10 @@ public class JoinClanUseCase {
         Clan clan = clanRepository.findById(clanId)
                 .orElseThrow(() -> new NotFoundException("Clan not found"));
 
+        if (!clan.isActive()) {
+            throw new NotFoundException("Clan not found");
+        }
+
         long memberCount = playerRepository.countByClanId(clan.getId());
         if (memberCount >= clanBonusService.getEffectiveMaxMembers(clan)) {
             throw new BadRequestException("Clan is full");

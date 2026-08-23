@@ -155,7 +155,7 @@ async function tutorialClaimReward(event, stepName) {
 }
 
 async function tutorialFinish() {
-  if (!window.confirm("Finalizar o tutorial? Esta ação encerra o card de Primeiros Passos.")) {
+  if (!(await showConfirm("Finalizar o tutorial? Esta ação encerra o card de Primeiros Passos.", { title: "Finalizar Tutorial", confirmText: "Finalizar" }))) {
     return;
   }
 

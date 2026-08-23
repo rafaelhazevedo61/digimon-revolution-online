@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,6 +24,13 @@ public class DissolveClanUseCase {
     private final ClanRepository clanRepository;
     private final PlayerRepository playerRepository;
 
+    /**
+     * Dissolve o clã por exclusão lógica: a linha em {@code clans} é preservada
+     * (active = false, dissolved_at preenchido) em vez de removida. Isso evita
+     * violação de foreign key em tabelas que referenciam clan_id sem
+     * ON DELETE CASCADE (clan_upgrade_purchases, player_clan_missions,
+     * clan_raid_instances, clan_invitations) e mantém o histórico do clã.
+     */
     @Transactional
     public void execute(String token, UUID clanId) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
@@ -39,6 +47,9 @@ public class DissolveClanUseCase {
             member.setClanJoinedAt(null);
         }
         playerRepository.saveAll(members);
-        clanRepository.delete(clan);
+
+        clan.setActive(false);
+        clan.setDissolvedAt(LocalDateTime.now());
+        clanRepository.save(clan);
     }
 }

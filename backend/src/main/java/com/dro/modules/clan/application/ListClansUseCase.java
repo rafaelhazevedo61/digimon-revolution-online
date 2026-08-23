@@ -30,7 +30,7 @@ public class ListClansUseCase {
         if (query != null && !query.isBlank()) {
             clans = clanRepository.searchByNameOrTag(query.trim(), pageable);
         } else {
-            clans = clanRepository.findAll(pageable);
+            clans = clanRepository.findByActiveTrue(pageable);
         }
         return clans.map(c -> mapper.toSummary(c, (int) playerRepository.countByClanId(c.getId())));
     }

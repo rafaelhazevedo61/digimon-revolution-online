@@ -135,6 +135,14 @@ public class ProcessMailActionUseCase {
         Clan clan = clanRepository.findByIdForUpdate(invitation.getClan().getId())
                 .orElseThrow(() -> new NotFoundException("Clã não encontrado."));
 
+        if (!clan.isActive()) {
+            invitation.setStatus(ClanInvitationStatus.CANCELLED);
+            invitation.setActedAt(now);
+            clanInvitationRepository.save(invitation);
+            completeMessage(message, now);
+            return new MailActionResponse(false, "Este clã não existe mais.");
+        }
+
         if (player.getClanId() != null) {
             invitation.setStatus(ClanInvitationStatus.CANCELLED);
             invitation.setActedAt(now);

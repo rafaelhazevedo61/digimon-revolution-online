@@ -749,7 +749,7 @@ async function clanJoin(id) {
 }
 
 async function clanLeave(id) {
-  if (!confirm("Tem certeza que deseja sair do clã?")) return;
+  if (!(await showConfirm("Tem certeza que deseja sair do clã?", { title: "Sair do Clã", confirmText: "Sair", danger: true }))) return;
   try {
     await apiPost(`/clans/${id}/leave`);
     showToast("Você saiu do clã.", "success");
@@ -760,7 +760,7 @@ async function clanLeave(id) {
 }
 
 async function clanKick(id, username) {
-  if (!confirm(`Expulsar ${username} do clã?`)) return;
+  if (!(await showConfirm(`Expulsar ${username} do clã?`, { title: "Expulsar Membro", confirmText: "Expulsar", danger: true }))) return;
   try {
     const clan = await apiPost(`/clans/${id}/members/${encodeURIComponent(username)}/kick`);
     showToast("Membro expulso.", "success");
@@ -791,7 +791,7 @@ async function clanDemote(id, username) {
 }
 
 async function clanTransfer(id, username) {
-  if (!confirm(`Transferir a liderança para ${username}? Essa ação não pode ser desfeita.`)) return;
+  if (!(await showConfirm(`Transferir a liderança para ${username}? Essa ação não pode ser desfeita.`, { title: "Transferir Liderança", confirmText: "Transferir", danger: true }))) return;
   try {
     const clan = await apiPost(`/clans/${id}/members/${encodeURIComponent(username)}/transfer`);
     showToast("Liderança transferida.", "success");
@@ -802,7 +802,7 @@ async function clanTransfer(id, username) {
 }
 
 async function clanDissolve(id) {
-  if (!confirm("Tem certeza que deseja DISSOLVER o clã? Todos os membros serão removidos.")) return;
+  if (!(await showConfirm("Tem certeza que deseja DISSOLVER o clã? Todos os membros serão removidos.", { title: "Dissolver Clã", confirmText: "Dissolver", danger: true }))) return;
   try {
     await apiDelete(`/clans/${id}`);
     showToast("Clã dissolvido.", "success");

@@ -61,10 +61,10 @@ public class CreateClanUseCase {
         String normalizedTag = tag.toUpperCase().trim();
         String normalizedName = name.trim();
 
-        if (clanRepository.existsByName(normalizedName)) {
+        if (clanRepository.existsByNameAndActiveTrue(normalizedName)) {
             throw new BadRequestException("Clan name already taken");
         }
-        if (clanRepository.existsByTag(normalizedTag)) {
+        if (clanRepository.existsByTagAndActiveTrue(normalizedTag)) {
             throw new BadRequestException("Clan tag already taken");
         }
 
