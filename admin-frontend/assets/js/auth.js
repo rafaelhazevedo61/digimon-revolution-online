@@ -59,7 +59,7 @@ async function adminLogin(e) {
     const token = res.token;
     const payload = parseJwtPayload(token);
 
-    if (payload.userType !== "ADMIN") {
+    if (!payload || payload.userType !== "ADMIN") {
       throw new Error("Acesso negado: usuario nao e ADMIN");
     }
 
@@ -76,19 +76,6 @@ async function adminLogin(e) {
 function adminLogout() {
   clearAdminAuth();
   showAdminLogin();
-}
-
-function parseJwtPayload(token) {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64).split("").map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)).join("")
-    );
-    return JSON.parse(jsonPayload);
-  } catch {
-    return {};
-  }
 }
 
 function showAdminPanel() {

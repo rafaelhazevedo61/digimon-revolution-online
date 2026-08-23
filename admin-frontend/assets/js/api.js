@@ -10,8 +10,36 @@ function clearAdminAuth() {
   localStorage.removeItem("dro_admin_token");
 }
 
+function parseJwtPayload(token) {
+  try {
+    const value = token.replace(/^Bearer\s+/i, "");
+    const parts = value.split(".");
+    if (parts.length !== 3) return null;
+
+    let base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    base64 += "=".repeat((4 - base64.length % 4) % 4);
+    const jsonPayload = decodeURIComponent(
+      atob(base64).split("").map(c => `%${("00" + c.charCodeAt(0).toString(16)).slice(-2)}`).join("")
+    );
+    const payload = JSON.parse(jsonPayload);
+    return payload && typeof payload === "object" ? payload : null;
+  } catch {
+    return null;
+  }
+}
+
+function isTokenExpired(token) {
+  const payload = parseJwtPayload(token);
+  return !payload || !Number.isFinite(payload.exp) || payload.exp <= Math.floor(Date.now() / 1000);
+}
+
 function isAdminLoggedIn() {
-  return !!getAdminToken();
+  const token = getAdminToken();
+  if (!token || isTokenExpired(token)) {
+    if (token) clearAdminAuth();
+    return false;
+  }
+  return true;
 }
 
 function adminAuthHeaders() {
@@ -21,118 +49,55 @@ function adminAuthHeaders() {
   return headers;
 }
 
-async function handleAuthError(response) {
+let authRedirectScheduled = false;
+
+function handleAuthError(response) {
   if (response.status === 401 || response.status === 403) {
     clearAdminAuth();
-    showAdminLogin();
-    throw new Error("Sessao expirada ou sem permissao. Faca login novamente.");
+    if (!authRedirectScheduled) {
+      authRedirectScheduled = true;
+      setTimeout(() => {
+        authRedirectScheduled = false;
+        showAdminLogin();
+        const errorDiv = document.getElementById("admin-login-error");
+        if (errorDiv) {
+          errorDiv.textContent = "Sua sessão expirou. Faça login novamente.";
+          errorDiv.classList.remove("hidden");
+        }
+      }, 0);
+    }
+    return true;
   }
+  return false;
 }
 
-async function apiGet(path, params = {}) {
-  const url = new URL(`${CONFIG.API_BASE_URL}${path}`);
+const NETWORK_ERROR_MESSAGE = "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.";
 
+async function apiRequest(method, path, { params = {}, body, headers = {}, authenticate = true } = {}) {
+  const url = new URL(`${CONFIG.API_BASE_URL}${path}`);
   Object.entries(params).forEach(([key, value]) => {
     if (value !== null && value !== undefined && value !== "") {
       url.searchParams.append(key, value);
     }
   });
 
-  const response = await fetch(url.toString(), { headers: adminAuthHeaders() });
+  const options = {
+    method,
+    headers: { ...(authenticate ? adminAuthHeaders() : { "Content-Type": "application/json" }), ...headers }
+  };
+  if (body !== undefined) options.body = JSON.stringify(body);
 
-  if (!response.ok) {
-    await handleAuthError(response);
-    const message = await safelyReadError(response);
-    throw new Error(message || `Erro HTTP ${response.status}`);
+  let response;
+  try {
+    response = await fetch(url.toString(), options);
+  } catch {
+    throw new Error(NETWORK_ERROR_MESSAGE);
   }
 
-  return response.json();
-}
-
-async function apiPost(path, body) {
-  const response = await fetch(`${CONFIG.API_BASE_URL}${path}`, {
-    method: "POST",
-    headers: adminAuthHeaders(),
-    body: JSON.stringify(body)
-  });
-
   if (!response.ok) {
-    await handleAuthError(response);
-    const message = await safelyReadError(response);
-    throw new Error(message || `Erro HTTP ${response.status}`);
-  }
-
-  return response.json();
-}
-
-async function apiPostNoAuth(path, body) {
-  const response = await fetch(`${CONFIG.API_BASE_URL}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-
-  if (!response.ok) {
-    const message = await safelyReadError(response);
-    throw new Error(message || `Erro HTTP ${response.status}`);
-  }
-
-  return response.json();
-}
-
-async function apiPostVoid(path, body) {
-  const response = await fetch(`${CONFIG.API_BASE_URL}${path}`, {
-    method: "POST",
-    headers: adminAuthHeaders(),
-    body: body === undefined ? undefined : JSON.stringify(body)
-  });
-
-  if (!response.ok) {
-    await handleAuthError(response);
-    const message = await safelyReadError(response);
-    throw new Error(message || `Erro HTTP ${response.status}`);
-  }
-}
-
-async function apiPut(path, body) {
-  const response = await fetch(`${CONFIG.API_BASE_URL}${path}`, {
-    method: "PUT",
-    headers: adminAuthHeaders(),
-    body: JSON.stringify(body)
-  });
-
-  if (!response.ok) {
-    await handleAuthError(response);
-    const message = await safelyReadError(response);
-    throw new Error(message || `Erro HTTP ${response.status}`);
-  }
-
-  return response.json();
-}
-
-async function apiPatch(path) {
-  const response = await fetch(`${CONFIG.API_BASE_URL}${path}`, {
-    method: "PATCH",
-    headers: adminAuthHeaders()
-  });
-
-  if (!response.ok) {
-    await handleAuthError(response);
-    const message = await safelyReadError(response);
-    throw new Error(message || `Erro HTTP ${response.status}`);
-  }
-
-  return response.json();
-}
-
-async function apiDelete(path) {
-  const response = await fetch(`${CONFIG.API_BASE_URL}${path}`, {
-    method: "DELETE",
-    headers: adminAuthHeaders()
-  });
-
-  if (!response.ok) {
-    await handleAuthError(response);
+    if (handleAuthError(response)) {
+      throw new Error("Sua sessão expirou. Faça login novamente.");
+    }
     const message = await safelyReadError(response);
     throw new Error(message || `Erro HTTP ${response.status}`);
   }
@@ -140,6 +105,34 @@ async function apiDelete(path) {
   const text = await response.text();
   if (!text) return null;
   try { return JSON.parse(text); } catch { return text; }
+}
+
+async function apiGet(path, params = {}) {
+  return apiRequest("GET", path, { params });
+}
+
+async function apiPost(path, body) {
+  return apiRequest("POST", path, { body });
+}
+
+async function apiPostNoAuth(path, body) {
+  return apiRequest("POST", path, { body, authenticate: false });
+}
+
+async function apiPostVoid(path, body) {
+  await apiRequest("POST", path, { body });
+}
+
+async function apiPut(path, body) {
+  return apiRequest("PUT", path, { body });
+}
+
+async function apiPatch(path) {
+  return apiRequest("PATCH", path);
+}
+
+async function apiDelete(path) {
+  return apiRequest("DELETE", path);
 }
 
 async function safelyReadError(response) {
