@@ -275,11 +275,11 @@ function adminGetEventRewardRecipientLabel() {
   const type = document.getElementById("admin-event-reward-recipient-type")?.value || "PLAYER";
   if (type === "PLAYER") {
     const username = adminEventRewardValue("admin-event-reward-player");
-    return username ? `1 jogador: ${String(username)}` : "Nenhum jogador selecionado";
+    return username ? `1 jogador: ${username}` : "Nenhum jogador selecionado";
   }
   if (type === "CLAN") {
     const clan = adminEventRewardClanOptions.find(option => String(option.id) === adminEventRewardValue("admin-event-reward-clan"));
-    return clan ? `Clã [${String(clan.tag)}] ${String(clan.name)}: ${clan.memberCount} membros` : "Nenhum clã selecionado";
+    return clan ? `Clã [${clan.tag}] ${clan.name}: ${clan.memberCount} membros` : "Nenhum clã selecionado";
   }
   return adminEventRewardSelectedPlayers.length
     ? `${adminEventRewardSelectedPlayers.length} jogador(es) selecionado(s)`
@@ -435,7 +435,7 @@ async function adminSubmitEventReward(event) {
     const skipped = Number(result.skippedCount || 0);
     const skippedUsernames = Array.isArray(result.skippedUsernames) ? result.skippedUsernames : [];
     const skippedLabel = skippedUsernames.length > 0
-      ? ` Jogador(es) ignorado(s): ${String(skippedUsernames.join(", "))}.`
+      ? ` Jogador(es) ignorado(s): ${skippedUsernames.join(", ")}.`
       : "";
     const suffix = skipped > 0
       ? ` ${skipped} já existia(m) e foi(ram) ignorado(s).${skippedLabel}`

@@ -301,7 +301,7 @@ async function adminResetPassword(player) {
     const result = await apiPost(`/admin/players/${player.id}/reset-password`, body);
     showResetPasswordModal(result.username, result.newPassword);
   } catch (error) {
-    window.alert(`Erro ao resetar senha: ${String(error.message ?? "")}`);
+    window.alert(`Erro ao resetar senha: ${error.message}`);
   }
 }
 

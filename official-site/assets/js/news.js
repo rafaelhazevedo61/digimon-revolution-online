@@ -4,10 +4,6 @@
     day: '2-digit', month: 'long', year: 'numeric'
   }).format(new Date(`${value}T12:00:00`));
 
-  const escapeHtml = (value = '') => String(value ?? '').replace(/[&<>'"]/g, (char) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-  }[char]));
-
   const createCard = (item, featured = false) => `
     <article class="news-card${featured ? ' news-card-featured' : ''}">
       <a class="news-card-link" href="patch-notes.html?id=${encodeURIComponent(item.id)}" aria-label="Ler ${escapeHtml(item.title)}">

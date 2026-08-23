@@ -1,10 +1,6 @@
 (() => {
   const items = Array.isArray(window.DRO_GALLERY) ? window.DRO_GALLERY : [];
   const grids = document.querySelectorAll('[data-gallery-grid]');
-  const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-  }[char]));
-  const escapeAttr = escapeHtml;
 
   const card = (item) => `
     <button class="gallery-card" type="button" data-gallery-open="${escapeAttr(item.id)}" aria-label="Ampliar ${escapeHtml(item.title)}">

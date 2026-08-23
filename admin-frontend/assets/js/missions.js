@@ -359,7 +359,7 @@ function missionUpdateChestPreview() {
   if (!select || !preview) return;
   const chest = missionState.chestOptions.find(option => option.code === select.value);
   preview.textContent = chest
-    ? `${String(chest.description || "Baú da Área")} Loot Table: ${String(chest.lootTableName || chest.lootTableCode || "não informada")}.`
+    ? `${chest.description || "Baú da Área"} Loot Table: ${chest.lootTableName || chest.lootTableCode || "não informada"}.`
     : "Selecione um Baú da Área ativo.";
 }
 

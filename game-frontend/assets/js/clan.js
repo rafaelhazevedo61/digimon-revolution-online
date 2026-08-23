@@ -12,6 +12,13 @@ let clanRankingLoading = false;
 let currentClan = null;
 let currentClanTab = "members";
 
+const clanActionHandlers = {
+  promote: clanPromote,
+  demote: clanDemote,
+  kick: clanKick,
+  transfer: clanTransfer
+};
+
 function safeContent(id) {
   return document.getElementById(id);
 }
@@ -327,12 +334,7 @@ function clanRenderMembersTab() {
     const action = button.dataset.clanAction;
     const id = button.dataset.clanId;
     const username = button.dataset.clanUsername;
-    button.addEventListener("click", () => ({
-      promote: clanPromote,
-      demote: clanDemote,
-      kick: clanKick,
-      transfer: clanTransfer
-    }[action]?.(id, username)));
+    button.addEventListener("click", () => clanActionHandlers[action]?.(id, username));
   });
 }
 

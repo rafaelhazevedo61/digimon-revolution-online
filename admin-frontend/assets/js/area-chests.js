@@ -145,7 +145,7 @@ function areaChestShowEditModal(code) {
   const lootTables = areaChestState.lootTables || [];
   const activeTables = lootTables.filter(table => table.active);
   if (chest.lootTableCode && !activeTables.some(table => table.code === chest.lootTableCode)) {
-    activeTables.unshift({ code: chest.lootTableCode, name: `${String(chest.lootTableName || chest.lootTableCode)} (inativa)`, active: false });
+    activeTables.unshift({ code: chest.lootTableCode, name: `${chest.lootTableName || chest.lootTableCode} (inativa)`, active: false });
   }
 
   root.innerHTML = `
