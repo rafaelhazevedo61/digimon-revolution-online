@@ -8,7 +8,7 @@ Os arquivos `backend/src/main/resources/api-curl-collection.sh` e `backend/src/m
 
 No Postman, use **Import**, selecione `backend/src/main/resources/collection/DRO - MODULES.postman_collection.json` e importe a collection. Na aba **Variables**, preencha `baseUrl`, `playerToken` e `adminToken`. Os demais valores de rota e query podem ser preenchidos conforme o cenário de teste.
 
-A collection Postman possui 155 requests organizados por módulo, incluindo as rotas de Correio, Casa de Leilões, clãs, convites, ações de mensagens, comunicados administrativos, premiações de eventos, seleção de destinatários, Loot Tables administrativas, Baús da Área e resgate de recompensas do tutorial. Os exemplos de corpo JSON dos principais fluxos já estão preenchidos, mas devem ser revisados antes do envio.
+A collection Postman possui 161 requests organizados por módulo, incluindo as rotas de Correio, Casa de Leilões, clãs, convites, ações de mensagens, comunicados administrativos, premiações de eventos, seleção de destinatários, Loot Tables administrativas, Baús da Área e resgate de recompensas do tutorial. Os corpos JSON são derivados dos DTOs de request sempre que o tipo puder ser resolvido; os exemplos manuais continuam sobrescrevendo os valores gerados e todos devem ser revisados antes do envio.
 
 ## Como configurar
 
@@ -16,8 +16,8 @@ A collection usa `localhost:8080` como endereço padrão. É possível substitui
 
 ```bash
 BASE_URL=http://localhost:8080 \
-TOKEN='Bearer SEU_TOKEN_DE_JOGADOR' \
-ADMIN_TOKEN='Bearer SEU_TOKEN_DE_ADMIN' \
+TOKEN='SEU_TOKEN_DE_JOGADOR' \
+ADMIN_TOKEN='SEU_TOKEN_DE_ADMIN' \
 source backend/src/main/resources/api-curl-collection.sh
 ```
 
@@ -41,7 +41,7 @@ python3 scripts/generate_api_curl_collection.py
 bash -n backend/src/main/resources/api-curl-collection.sh
 ```
 
-O gerador percorre os controllers em `backend/src/main/java`, cria um curl e um request Postman para cada rota encontrada e preserva a organização por grupo de endpoint. Os corpos JSON dos principais endpoints possuem exemplos; os demais podem aparecer como `{}` e devem ser preenchidos conforme o DTO do request antes de executar.
+O gerador percorre os controllers em `backend/src/main/java`, delimita a assinatura real de cada método, cria um curl e um request Postman para cada rota encontrada e preserva a organização por grupo de endpoint. Os corpos JSON são derivados dos records de request, com exemplos manuais para fluxos que exigem valores específicos; tipos não resolvidos podem aparecer como `{}` e devem ser preenchidos antes de executar.
 
 ## Grupos cobertos
 

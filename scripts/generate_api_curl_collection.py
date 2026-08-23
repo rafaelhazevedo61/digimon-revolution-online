@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -15,7 +16,16 @@ REQUEST_RE = re.compile(r'@RequestMapping(?:\("([^\"]*)"\))?')
 CLASS_RE = re.compile(r'class\s+(\w+)')
 METHOD_RE = re.compile(r'public\s+.*?\s+(\w+)\s*\(')
 PARAM_RE = re.compile(r'@RequestParam(?:\([^)]*\))?\s+(?:final\s+)?[\w<>, ?\[\]]+\s+(\w+)')
+BODY_TYPE_RE = re.compile(
+    r'@RequestBody(?:\s*\([^)]*\))?(?:\s+@\w+(?:\([^)]*\))?)*\s+'
+    r'(?P<type>[\w.$]+(?:\s*<[^>]+>)?(?:\[\])?)\s+\w+'
+)
 PATH_PARAM_RE = re.compile(r'\{([^}]+)\}')
+RECORD_RE = re.compile(r'\brecord\s+(\w+)\s*\(')
+ENUM_RE = re.compile(r'\benum\s+(\w+)\s*\{([^}]*)\}', re.DOTALL)
+ENUM_CONSTANT_RE = re.compile(r'\b([A-Z][A-Z0-9_]*)\b')
+ANNOTATION_RE = re.compile(r'@\w+(?:\([^)]*\))?\s*')
+ZERO_UUID = "00000000-0000-0000-0000-000000000000"
 
 BODY_EXAMPLES: dict[tuple[str, str], dict[str, Any]] = {
     ("/auth/register", "register"): {
@@ -54,6 +64,7 @@ BODY_EXAMPLES: dict[tuple[str, str], dict[str, Any]] = {
         "itemQuantity": 2,
         "validityDays": 7,
     },
+    ("/admin/players/wipe", "wipe"): {"confirmation": "WIPE"},
 }
 
 
@@ -75,6 +86,49 @@ def shell_path(path: str) -> str:
 
 def postman_path(path: str) -> str:
     return re.sub(r'\{([^}]+)\}', lambda match: "{{" + match.group(1) + "}}", path)
+
+
+def balanced_end(text: str, start: int, opening: str = "(", closing: str = ")") -> int | None:
+    depth = 0
+    for index in range(start, len(text)):
+        if text[index] == opening:
+            depth += 1
+        elif text[index] == closing:
+            depth -= 1
+            if depth == 0:
+                return index
+    return None
+
+
+def method_signature(lines: list[str], mapping_index: int) -> str:
+    parts: list[str] = []
+    method_opening: int | None = None
+
+    for line in lines[mapping_index + 1:]:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        parts.append(stripped)
+        signature = " ".join(parts)
+        if method_opening is None:
+            method_match = METHOD_RE.search(signature)
+            if method_match:
+                method_opening = method_match.end() - 1
+
+        if method_opening is not None:
+            closing = balanced_end(signature, method_opening)
+            if closing is not None:
+                return signature[:closing + 1]
+
+        if stripped.startswith("@") and "Mapping" in stripped:
+            break
+
+    return " ".join(parts)
+
+
+def extract_body_type(signature: str) -> str | None:
+    match = BODY_TYPE_RE.search(signature)
+    return match.group("type").replace(" ", "") if match else None
 
 
 def parse_controller(path: Path) -> list[dict[str, Any]]:
@@ -100,14 +154,10 @@ def parse_controller(path: Path) -> list[dict[str, Any]]:
         method_path = mapping_match.group(2) or ""
         endpoint_path = normalize(class_prefix, method_path)
         method_name = "endpoint"
-        signature = ""
-        method_found = False
-        for following in lines[index + 1 : index + 16]:
-            signature += " " + following.strip()
-            method_match = METHOD_RE.search(signature)
-            if method_match and not method_found:
-                method_name = method_match.group(1)
-                method_found = True
+        signature = method_signature(lines, index)
+        method_match = METHOD_RE.search(signature)
+        if method_match:
+            method_name = method_match.group(1)
 
         query_params = PARAM_RE.findall(signature)
         endpoints.append({
@@ -118,9 +168,172 @@ def parse_controller(path: Path) -> list[dict[str, Any]]:
             "query_params": query_params,
             "auth_required": "@RequestHeader" in signature,
             "has_body": "@RequestBody" in signature,
+            "body_type": extract_body_type(signature),
         })
 
     return endpoints
+
+
+@lru_cache(maxsize=None)
+def source_text(path: str) -> str:
+    return Path(path).read_text(encoding="utf-8")
+
+
+@lru_cache(maxsize=None)
+def source_files() -> tuple[str, ...]:
+    return tuple(str(path) for path in sorted(CONTROLLERS.rglob("*.java")))
+
+
+def type_name(type_declaration: str) -> str:
+    base = type_declaration.split("<", 1)[0].strip()
+    return base.removesuffix("[]").split(".")[-1]
+
+
+def find_type_source(type_declaration: str, current_source: str | None = None) -> str | None:
+    simple_name = type_name(type_declaration)
+    if current_source:
+        source = source_text(current_source)
+        if re.search(rf"\brecord\s+{re.escape(simple_name)}\s*\(", source):
+            return current_source
+        if re.search(rf"\benum\s+{re.escape(simple_name)}\s*\{{", source):
+            return current_source
+
+    for path in source_files():
+        if Path(path).stem == simple_name:
+            return path
+    return None
+
+
+def split_top_level(text: str) -> list[str]:
+    components: list[str] = []
+    start = 0
+    angle_depth = 0
+    parenthesis_depth = 0
+    bracket_depth = 0
+    for index, character in enumerate(text):
+        if character == "<":
+            angle_depth += 1
+        elif character == ">":
+            angle_depth = max(angle_depth - 1, 0)
+        elif character == "(":
+            parenthesis_depth += 1
+        elif character == ")":
+            parenthesis_depth = max(parenthesis_depth - 1, 0)
+        elif character == "[":
+            bracket_depth += 1
+        elif character == "]":
+            bracket_depth = max(bracket_depth - 1, 0)
+        elif character == "," and not angle_depth and not parenthesis_depth and not bracket_depth:
+            components.append(text[start:index].strip())
+            start = index + 1
+    final_component = text[start:].strip()
+    if final_component:
+        components.append(final_component)
+    return components
+
+
+def record_components(source: str, name: str) -> list[tuple[str, str]] | None:
+    for match in RECORD_RE.finditer(source):
+        if match.group(1) != name:
+            continue
+        opening = source.find("(", match.start(), match.end())
+        closing = balanced_end(source, opening)
+        if closing is None:
+            return None
+        components: list[tuple[str, str]] = []
+        for component in split_top_level(source[opening + 1:closing]):
+            clean = ANNOTATION_RE.sub("", component).strip()
+            clean = re.sub(r"\bfinal\s+", "", clean)
+            field_match = re.match(r"(?P<type>.+?)\s+(?P<name>[A-Za-z_]\w*)$", clean, re.DOTALL)
+            if not field_match:
+                return None
+            components.append((
+                re.sub(r"\s+", " ", field_match.group("type").strip()),
+                field_match.group("name"),
+            ))
+        return components
+    return None
+
+
+def enum_constant(source: str, name: str) -> str | None:
+    for match in ENUM_RE.finditer(source):
+        if match.group(1) != name:
+            continue
+        constant_match = ENUM_CONSTANT_RE.search(match.group(2))
+        return constant_match.group(1) if constant_match else None
+    return None
+
+
+def value_for_type(
+        type_declaration: str,
+        component_name: str,
+        depth: int = 0,
+        current_source: str | None = None,
+) -> Any:
+    if depth > 3:
+        return None
+
+    normalized = re.sub(r"\s+", "", type_declaration)
+    if normalized.endswith("[]"):
+        element = value_for_type(normalized[:-2], component_name + "Item", depth + 1, current_source)
+        return [element] if element is not None else None
+
+    collection_match = re.fullmatch(r"(?:List|Set)<(.+)>", normalized)
+    if collection_match:
+        element = value_for_type(
+            collection_match.group(1),
+            component_name + "Item",
+            depth + 1,
+            current_source,
+        )
+        return [element] if element is not None else None
+
+    primitive_values: dict[str, Any] = {
+        "String": f"example-{component_name}",
+        "UUID": ZERO_UUID,
+        "byte": 1,
+        "Byte": 1,
+        "short": 1,
+        "Short": 1,
+        "int": 1,
+        "Integer": 1,
+        "long": 1,
+        "Long": 1,
+        "float": 1.0,
+        "Float": 1.0,
+        "double": 1.0,
+        "Double": 1.0,
+        "BigDecimal": 1.0,
+        "boolean": True,
+        "Boolean": True,
+    }
+    simple_name = type_name(normalized)
+    if simple_name in primitive_values:
+        return primitive_values[simple_name]
+
+    source = find_type_source(normalized, current_source)
+    if source is None:
+        return None
+    source_content = source_text(source)
+    enum_value = enum_constant(source_content, simple_name)
+    if enum_value is not None:
+        return enum_value
+
+    components = record_components(source_content, simple_name)
+    if components is None:
+        return None
+    result: dict[str, Any] = {}
+    for field_type, field_name in components:
+        value = value_for_type(field_type, field_name, depth + 1, source)
+        if value is None:
+            return None
+        result[field_name] = value
+    return result
+
+
+def dto_example(body_type: str) -> dict[str, Any]:
+    value = value_for_type(body_type, "value")
+    return value if isinstance(value, dict) else {}
 
 
 def collect_endpoints() -> list[dict[str, Any]]:
@@ -151,8 +364,12 @@ def curl_auth(endpoint: dict[str, Any], path: str) -> str:
 def body_for(endpoint: dict[str, Any]) -> dict[str, Any] | None:
     if not endpoint["has_body"]:
         return None
-    return BODY_EXAMPLES.get((endpoint["path"], endpoint["name"])) \
-        or BODY_EXAMPLES.get((endpoint["path"], "endpoint"), {})
+    manual = BODY_EXAMPLES.get((endpoint["path"], endpoint["name"]))
+    if manual is None:
+        manual = BODY_EXAMPLES.get((endpoint["path"], "endpoint"))
+    if manual is not None:
+        return manual
+    return dto_example(endpoint["body_type"]) if endpoint["body_type"] else {}
 
 
 def query_suffix(endpoint: dict[str, Any], variable_style: str) -> str:
@@ -173,7 +390,7 @@ def generate_curl_collection(endpoints: list[dict[str, Any]]) -> None:
         "#!/usr/bin/env bash",
         "# Collection oficial de exemplos curl do Digimon Revolution Online.",
         "# Gerada a partir dos controllers Java; execute scripts/generate_api_curl_collection.py após alterar endpoints.",
-        "# Os payloads '{}' são exemplos: revise-os antes de executar.",
+        "# Os payloads são derivados dos DTOs quando possível: revise-os antes de executar.",
         "# Por segurança, as chamadas estão comentadas: descomente apenas o curl que deseja testar.",
         "# Não execute este arquivo inteiro; ele contém operações de criação, compra, exclusão e administração.",
         "",
