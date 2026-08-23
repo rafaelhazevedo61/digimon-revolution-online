@@ -21,10 +21,10 @@ public class Clan {
     @Id
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 30)
+    @Column(nullable = false, length = 30)
     private String name;
 
-    @Column(nullable = false, unique = true, length = 5)
+    @Column(nullable = false, length = 5)
     private String tag;
 
     @Column(length = 280)
@@ -54,4 +54,11 @@ public class Clan {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean active = true;
+
+    @Column(name = "dissolved_at")
+    private LocalDateTime dissolvedAt;
 }

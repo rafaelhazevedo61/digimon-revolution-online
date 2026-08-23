@@ -27,7 +27,7 @@ public class GetClanRankingUseCase {
     private final ClanResponseMapper mapper;
 
     public Page<ClanRankingEntryResponse> execute(int page, int size) {
-        List<Clan> all = clanRepository.findAll();
+        List<Clan> all = clanRepository.findByActiveTrue();
 
         List<ClanRankingEntryResponse> ranked = all.stream()
                 .map(c -> {

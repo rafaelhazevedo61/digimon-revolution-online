@@ -2,89 +2,123 @@ async function renderMorePage() {
   const app = document.getElementById("app");
   showBottomNav("more");
 
+  const groups = [
+    {
+      label: "Combate",
+      items: [
+        {
+          route: "bosses",
+          icon: "👹",
+          title: "Bosses",
+          desc: "Desafie bosses poderosos",
+        },
+        {
+          route: "arena",
+          icon: "⚔️",
+          title: "Arena",
+          desc: "Duele contra outros jogadores",
+        },
+        {
+          route: "world-boss",
+          icon: "🌍",
+          title: "Boss Mundial",
+          desc: "Boss compartilhado do servidor",
+        },
+      ],
+    },
+    {
+      label: "Comunidade",
+      items: [
+        {
+          route: "mail",
+          icon: "✉️",
+          title: "Correio",
+          badgeId: "mail-more-unread",
+          desc: "Mensagens entre jogadores e comunicados",
+        },
+        {
+          route: "clans",
+          icon: "🛡️",
+          title: "Clãs",
+          desc: "Crie ou entre em um clã",
+        },
+        {
+          route: "ranking",
+          icon: "🏆",
+          title: "Ranking",
+          desc: "Top jogadores",
+        },
+      ],
+    },
+    {
+      label: "Mercado",
+      items: [
+        {
+          route: "auction-house",
+          icon: "🏪",
+          title: "Casa de Leilões",
+          desc: "Compre e venda itens com jogadores",
+        },
+      ],
+    },
+    {
+      label: "Digimon",
+      items: [
+        {
+          route: "incubation",
+          icon: "🥚",
+          title: "Incubação",
+          desc: "Chocar novas digitamas",
+        },
+        {
+          route: "storage",
+          icon: "📦",
+          title: "Storage",
+          desc: "Guardar e retirar Digimons",
+        },
+        {
+          route: "pokedex",
+          icon: "📖",
+          title: "Digimon Info",
+          desc: "Catálogo de todos os Digimons",
+        },
+      ],
+    },
+    {
+      label: "Conta",
+      items: [
+        {
+          route: "settings",
+          icon: "⚙️",
+          title: "Configurações",
+          desc: "Conta e preferências",
+        },
+      ],
+    },
+  ];
+
+  const renderItem = (item) => `
+        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('${item.route}')">
+          <span class="text-2xl">${item.icon}</span>
+          <div class="flex-1">
+            <p class="font-bold text-sm">${item.title}${item.badgeId ? ` <span id="${item.badgeId}" class="badge hidden align-middle"></span>` : ""}</p>
+            <p class="text-xs text-slate-400">${item.desc}</p>
+          </div>
+        </button>`;
+
+  const renderGroup = (group) => `
+      <div class="mb-4">
+        <p class="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-2 px-1">${group.label}</p>
+        <div class="flex flex-col gap-2">
+${group.items.map(renderItem).join("\n")}
+        </div>
+      </div>`;
+
   app.innerHTML = `
     <div class="page-container">
       <h2 class="text-lg font-bold mb-4 px-1">Mais</h2>
 
-      <div class="flex flex-col gap-2">
-        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('mail')">
-          <span class="text-2xl">✉️</span>
-          <div class="flex-1">
-            <p class="font-bold text-sm">Correio <span id="mail-more-unread" class="badge hidden align-middle"></span></p>
-            <p class="text-xs text-slate-400">Mensagens entre jogadores e comunicados</p>
-          </div>
-        </button>
-        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('auction-house')">
-          <span class="text-2xl">🏪</span>
-          <div>
-            <p class="font-bold text-sm">Casa de Leilões</p>
-            <p class="text-xs text-slate-400">Compre e venda itens com jogadores</p>
-          </div>
-        </button>
-        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('bosses')">
-          <span class="text-2xl">👹</span>
-          <div>
-            <p class="font-bold text-sm">Bosses</p>
-            <p class="text-xs text-slate-400">Desafie bosses poderosos</p>
-          </div>
-        </button>
-        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('arena')">
-          <span class="text-2xl">⚔️</span>
-          <div>
-            <p class="font-bold text-sm">Arena</p>
-            <p class="text-xs text-slate-400">Duele contra outros jogadores</p>
-          </div>
-        </button>
-        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('ranking')">
-          <span class="text-2xl">🏆</span>
-          <div>
-            <p class="font-bold text-sm">Ranking</p>
-            <p class="text-xs text-slate-400">Top jogadores</p>
-          </div>
-        </button>
-        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('clans')">
-          <span class="text-2xl">🛡️</span>
-          <div>
-            <p class="font-bold text-sm">Clãs</p>
-            <p class="text-xs text-slate-400">Crie ou entre em um clã</p>
-          </div>
-        </button>
-        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('world-boss')">
-          <span class="text-2xl">🌍</span>
-          <div>
-            <p class="font-bold text-sm">Boss Mundial</p>
-            <p class="text-xs text-slate-400">Boss compartilhado do servidor</p>
-          </div>
-        </button>
-        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('incubation')">
-          <span class="text-2xl">🥚</span>
-          <div>
-            <p class="font-bold text-sm">Incubação</p>
-            <p class="text-xs text-slate-400">Chocar novas digitamas</p>
-          </div>
-        </button>
-        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('storage')">
-          <span class="text-2xl">📦</span>
-          <div>
-            <p class="font-bold text-sm">Storage</p>
-            <p class="text-xs text-slate-400">Guardar e retirar Digimons</p>
-          </div>
-        </button>
-        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('pokedex')">
-          <span class="text-2xl">📖</span>
-          <div>
-            <p class="font-bold text-sm">Digimon Info</p>
-            <p class="text-xs text-slate-400">Catálogo de todos os Digimons</p>
-          </div>
-        </button>
-        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('settings')">
-          <span class="text-2xl">⚙️</span>
-          <div>
-            <p class="font-bold text-sm">Configurações</p>
-            <p class="text-xs text-slate-400">Conta e preferências</p>
-          </div>
-        </button>
-      </div>
+${groups.map(renderGroup).join("\n")}
     </div>
   `;
   moreLoadMailUnread();

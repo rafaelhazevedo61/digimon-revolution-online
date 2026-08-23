@@ -39,7 +39,7 @@ public class AdminEventRewardRecipientController {
     @GetMapping("/clans")
     public List<Map<String, Object>> listClans() {
         List<Map<String, Object>> result = new ArrayList<>();
-        clanRepository.findAll().forEach(clan -> {
+        clanRepository.findByActiveTrue().forEach(clan -> {
             Map<String, Object> item = new HashMap<>();
             item.put("id", clan.getId());
             item.put("name", clan.getName());

@@ -44,6 +44,56 @@ function showToast(message, type = "success") {
   }, 3000);
 }
 
+/**
+ * Visual replacement for window.confirm().
+ * Usage: if (!(await showConfirm("Tem certeza?"))) return;
+ * Optional second argument overrides title/button labels/danger style:
+ * showConfirm("Dissolver o clã?", { title: "Dissolver Clã", confirmText: "Dissolver", danger: true })
+ */
+function showConfirm(message, options = {}) {
+  const {
+    title = "Confirmação",
+    confirmText = "Confirmar",
+    cancelText = "Cancelar",
+    danger = false
+  } = options;
+
+  return new Promise(resolve => {
+    const existing = document.getElementById("confirm-modal-overlay");
+    if (existing) existing.remove();
+
+    const overlay = document.createElement("div");
+    overlay.id = "confirm-modal-overlay";
+    overlay.className = "shop-modal-overlay";
+    overlay.style.zIndex = "60";
+
+    const close = result => {
+      overlay.remove();
+      resolve(result);
+    };
+
+    overlay.addEventListener("click", event => {
+      if (event.target === overlay) close(false);
+    });
+
+    overlay.innerHTML = `
+      <div class="shop-modal">
+        <p class="font-bold text-base mb-2">${escapeHtml(title)}</p>
+        <p class="text-sm text-slate-300 mb-5">${escapeHtml(message)}</p>
+        <div class="flex gap-2">
+          <button class="btn-secondary flex-1" data-action="cancel">${escapeHtml(cancelText)}</button>
+          <button class="${danger ? "btn-red" : "btn-primary"} flex-1" data-action="confirm">${escapeHtml(confirmText)}</button>
+        </div>
+      </div>
+    `;
+
+    overlay.querySelector('[data-action="cancel"]').addEventListener("click", () => close(false));
+    overlay.querySelector('[data-action="confirm"]').addEventListener("click", () => close(true));
+
+    document.body.appendChild(overlay);
+  });
+}
+
 function formatRarity(rarity) {
   const normalized = String(rarity || "COMMON").toUpperCase();
   return {
