@@ -115,7 +115,7 @@ async function incubClaim() {
 
   try {
     const digimon = await apiPost("/incubation/claim", {});
-    showToast(`${digimon.name} nasceu! (${digimon.rarity})`);
+    showToast(`${String(digimon.name ?? "")} nasceu! (${String(digimon.rarity ?? "")})`);
     renderIncubationPage();
   } catch (err) {
     showToast(err.message, "error");

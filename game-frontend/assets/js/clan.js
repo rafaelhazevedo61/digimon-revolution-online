@@ -289,22 +289,22 @@ function clanRenderMembersTab() {
     let actions = "";
     if (canManage && !isSelf && m.role !== "LEADER") {
       if (isLeader && m.role === "MEMBER") {
-        actions += `<button class="text-xs text-cyan-400 ml-2" onclick="clanPromote('${clan.id}', '${escapeHtml(m.username)}')">Promover</button>`;
+        actions += `<button class="text-xs text-cyan-400 ml-2" data-clan-action="promote" data-clan-id="${escapeAttr(clan.id)}" data-clan-username="${escapeAttr(m.username)}">Promover</button>`;
       }
       if (isLeader && m.role === "OFFICER") {
-        actions += `<button class="text-xs text-amber-400 ml-2" onclick="clanDemote('${clan.id}', '${escapeHtml(m.username)}')">Rebaixar</button>`;
+        actions += `<button class="text-xs text-amber-400 ml-2" data-clan-action="demote" data-clan-id="${escapeAttr(clan.id)}" data-clan-username="${escapeAttr(m.username)}">Rebaixar</button>`;
       }
       if ((isLeader && m.role !== "LEADER") || (isOfficer && m.role === "MEMBER")) {
-        actions += `<button class="text-xs text-red-400 ml-2" onclick="clanKick('${clan.id}', '${escapeHtml(m.username)}')">Expulsar</button>`;
+        actions += `<button class="text-xs text-red-400 ml-2" data-clan-action="kick" data-clan-id="${escapeAttr(clan.id)}" data-clan-username="${escapeAttr(m.username)}">Expulsar</button>`;
       }
       if (isLeader) {
-        actions += `<button class="text-xs text-amber-300 ml-2" onclick="clanTransfer('${clan.id}', '${escapeHtml(m.username)}')">Transferir</button>`;
+        actions += `<button class="text-xs text-amber-300 ml-2" data-clan-action="transfer" data-clan-id="${escapeAttr(clan.id)}" data-clan-username="${escapeAttr(m.username)}">Transferir</button>`;
       }
     }
     return `
       <div class="card-sm mb-2 flex items-center justify-between">
         <div>
-          <p class="font-bold text-sm">${escapeHtml(m.username)} <span class="text-xs text-slate-400">(${roleLabel})</span></p>
+          <p class="font-bold text-sm">${escapeHtml(m.username)} <span class="text-xs text-slate-400">(${escapeHtml(roleLabel)})</span></p>
           ${m.activeDigimonPower ? `<p class="text-xs text-slate-500">⚔️ Poder ${m.activeDigimonPower}</p>` : ""}
         </div>
         <div class="text-right">${actions}</div>
@@ -323,6 +323,17 @@ function clanRenderMembersTab() {
     </form>
   ` : "";
   container.innerHTML = `${inviteHtml}<h3 class="font-bold mb-2">Membros</h3>${membersHtml}`;
+  container.querySelectorAll("[data-clan-action]").forEach(button => {
+    const action = button.dataset.clanAction;
+    const id = button.dataset.clanId;
+    const username = button.dataset.clanUsername;
+    button.addEventListener("click", () => ({
+      promote: clanPromote,
+      demote: clanDemote,
+      kick: clanKick,
+      transfer: clanTransfer
+    }[action]?.(id, username)));
+  });
 }
 
 async function clanLoadUpgrades() {

@@ -123,7 +123,7 @@ async function loadShopProducts() {
     container.innerHTML = `
       <div class="card border-red-900 bg-red-950/30">
         <h3 class="font-bold text-red-300 mb-2">Erro ao carregar produtos</h3>
-        <p class="text-red-200">${shopEscapeHtml(error.message)}</p>
+        <p class="text-red-200">${escapeHtml(error.message)}</p>
       </div>
     `;
   }
@@ -175,27 +175,27 @@ function renderShopRow(p) {
 
   return `
     <tr>
-      <td><span class="font-mono text-cyan-300">${shopEscapeHtml(p.code)}</span></td>
+      <td><span class="font-mono text-cyan-300">${escapeHtml(p.code)}</span></td>
       <td>
-        <div class="font-semibold">${shopEscapeHtml(p.name)}</div>
-        ${p.description ? `<div class="text-xs text-slate-500 line-clamp-1">${shopEscapeHtml(p.description)}</div>` : ""}
+        <div class="font-semibold">${escapeHtml(p.name)}</div>
+        ${p.description ? `<div class="text-xs text-slate-500 line-clamp-1">${escapeHtml(p.description)}</div>` : ""}
       </td>
-      <td><span class="badge">${shopEscapeHtml(shopProductTypeLabel(p.productType))}</span></td>
-      <td><span class="badge">${shopEscapeHtml(shopProductCategoryLabel(p.category))}</span></td>
-      <td><span class="text-sm text-slate-300">${shopEscapeHtml(shopProductReferenceLabel(p))}</span></td>
+      <td><span class="badge">${escapeHtml(shopProductTypeLabel(p.productType))}</span></td>
+      <td><span class="badge">${escapeHtml(shopProductCategoryLabel(p.category))}</span></td>
+      <td><span class="text-sm text-slate-300">${escapeHtml(shopProductReferenceLabel(p))}</span></td>
       <td>${shopFormatBits(p.price)}</td>
       <td>${shopFormatBits(p.sellPrice)}</td>
       <td><span class="badge ${statusClass}">${statusText}</span></td>
       <td>
         <div class="text-xs text-slate-400">${shopFormatDate(p.updatedAt)}</div>
-        <div class="text-xs text-slate-500">por ${shopEscapeHtml(p.updatedBy || "-")}</div>
+        <div class="text-xs text-slate-500">por ${escapeHtml(p.updatedBy || "-")}</div>
       </td>
       <td>
         <div class="flex gap-2">
-          <button type="button" class="btn-sm btn-secondary js-shop-edit" data-shop-code="${shopEscapeAttr(p.code)}">
+          <button type="button" class="btn-sm btn-secondary js-shop-edit" data-shop-code="${escapeAttr(p.code)}">
             Editar
           </button>
-          <button type="button" class="btn-sm ${p.active ? 'btn-warning' : 'btn-success-outline'} js-shop-toggle" data-shop-code="${shopEscapeAttr(p.code)}">
+          <button type="button" class="btn-sm ${p.active ? 'btn-warning' : 'btn-success-outline'} js-shop-toggle" data-shop-code="${escapeAttr(p.code)}">
             ${p.active ? "Desativar" : "Ativar"}
           </button>
         </div>
@@ -266,7 +266,7 @@ function shopRenderModal(title, data, isEdit) {
       <div class="modal-content" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between mb-6">
           <div>
-            <h3 class="text-xl font-bold">${shopEscapeHtml(title)}</h3>
+            <h3 class="text-xl font-bold">${escapeHtml(title)}</h3>
             ${!isEdit ? '<p class="text-sm text-slate-400 mt-1">Confira os dados preenchidos e informe apenas os preços da loja.</p>' : ''}
           </div>
           <button class="text-slate-400 hover:text-white text-2xl" onclick="shopCloseModal()">&times;</button>
@@ -278,18 +278,18 @@ function shopRenderModal(title, data, isEdit) {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="text-sm text-slate-400">Código</label>
-              <input id="shop-code" class="input mt-1" value="${shopEscapeAttr(data.code)}"
+              <input id="shop-code" class="input mt-1" value="${escapeAttr(data.code)}"
                 ${isEdit ? "disabled" : "readonly"} required />
             </div>
 
             <div>
               <label class="text-sm text-slate-400">Nome</label>
-              <input id="shop-name" class="input mt-1" value="${shopEscapeAttr(data.name)}" ${readonlyCatalogFields ? "readonly" : ""} required />
+              <input id="shop-name" class="input mt-1" value="${escapeAttr(data.name)}" ${readonlyCatalogFields ? "readonly" : ""} required />
             </div>
 
             <div class="md:col-span-2">
               <label class="text-sm text-slate-400">Descrição</label>
-              <input id="shop-description" class="input mt-1" value="${shopEscapeAttr(data.description || "")}" ${readonlyCatalogFields ? "readonly" : ""} />
+              <input id="shop-description" class="input mt-1" value="${escapeAttr(data.description || "")}" ${readonlyCatalogFields ? "readonly" : ""} />
             </div>
 
             <div>
@@ -312,12 +312,12 @@ function shopRenderModal(title, data, isEdit) {
                 <option value="">-- Selecione --</option>
                 ${shopSelectOptions(ITEM_TYPES, data.itemType, shopItemTypeLabel)}
               </select>
-              ${data._materialCode ? `<p class="text-xs text-amber-300 mt-1">Material específico detectado: ${shopEscapeHtml(data._materialCode)}.</p>` : ""}
+              ${data._materialCode ? `<p class="text-xs text-amber-300 mt-1">Material específico detectado: ${escapeHtml(data._materialCode)}.</p>` : ""}
             </div>
 
             <div id="shop-item-definition-code-group" class="${data.productType === 'EQUIPMENT' ? 'hidden' : ''}">
               <label class="text-sm text-slate-400">Código da definição do item</label>
-              <input id="shop-item-definition-code" class="input mt-1" value="${shopEscapeAttr(data.itemDefinitionCode || data._catalogSource?.itemDefinitionCode || '')}"
+              <input id="shop-item-definition-code" class="input mt-1" value="${escapeAttr(data.itemDefinitionCode || data._catalogSource?.itemDefinitionCode || '')}"
                 ${readonlyCatalogFields ? "readonly" : ""} placeholder="Ex.: CHEST_FRAGMENT_ROOKIE" />
               <p class="text-xs text-slate-500 mt-1">Usado para itens específicos, como baús. Para itens comuns, pode acompanhar o tipo do item.</p>
             </div>
@@ -326,7 +326,7 @@ function shopRenderModal(title, data, isEdit) {
               <label class="text-sm text-slate-400">Modelo de equipamento</label>
               <select id="shop-eqt-name" class="input mt-1" ${readonlyCatalogFields ? "disabled" : ""}>
                 <option value="">-- Selecione --</option>
-                ${shopState.equipmentTemplates.map(t => `<option value="${shopEscapeAttr(t.name)}" ${t.name === data.equipmentTemplateName ? 'selected' : ''}>${shopEscapeHtml(t.name)} (${shopEscapeHtml(shopSlotLabel(t.slot))} | ${shopEscapeHtml(shopRarityLabel(t.rarity))})</option>`).join('')}
+                ${shopState.equipmentTemplates.map(t => `<option value="${escapeAttr(t.name)}" ${t.name === data.equipmentTemplateName ? 'selected' : ''}>${escapeHtml(t.name)} (${escapeHtml(shopSlotLabel(t.slot))} | ${escapeHtml(shopRarityLabel(t.rarity))})</option>`).join('')}
               </select>
             </div>
 
@@ -399,21 +399,21 @@ function shopRenderCatalogBrowser() {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
           <div class="md:col-span-1">
             <label class="text-xs text-slate-500">Buscar</label>
-            <input id="shop-catalog-search" class="input mt-1" value="${shopEscapeAttr(shopState.catalogSearch)}"
+            <input id="shop-catalog-search" class="input mt-1" value="${escapeAttr(shopState.catalogSearch)}"
               placeholder="Nome, código ou descrição" oninput="shopUpdateCatalogFilters()" />
           </div>
           <div>
               <label class="text-xs text-slate-500">${isItems ? 'Categoria' : 'Posição'}</label>
             <select id="shop-catalog-category" class="input mt-1" onchange="shopUpdateCatalogFilters()">
               <option value="">Todos</option>
-              ${categories.map(v => `<option value="${shopEscapeAttr(v)}" ${shopState.catalogCategory === v ? 'selected' : ''}>${shopEscapeHtml(isItems ? shopProductCategoryLabel(v) : shopSlotLabel(v))}</option>`).join('')}
+              ${categories.map(v => `<option value="${escapeAttr(v)}" ${shopState.catalogCategory === v ? 'selected' : ''}>${escapeHtml(isItems ? shopProductCategoryLabel(v) : shopSlotLabel(v))}</option>`).join('')}
             </select>
           </div>
           <div>
             <label class="text-xs text-slate-500">Raridade</label>
             <select id="shop-catalog-rarity" class="input mt-1" onchange="shopUpdateCatalogFilters()">
               <option value="">Todas</option>
-              ${rarities.map(v => `<option value="${shopEscapeAttr(v)}" ${shopState.catalogRarity === v ? 'selected' : ''}>${shopEscapeHtml(shopRarityLabel(v))}</option>`).join('')}
+              ${rarities.map(v => `<option value="${escapeAttr(v)}" ${shopState.catalogRarity === v ? 'selected' : ''}>${escapeHtml(shopRarityLabel(v))}</option>`).join('')}
             </select>
           </div>
         </div>
@@ -565,23 +565,23 @@ function shopRenderItemCatalog(items) {
         <div class="flex flex-col md:flex-row md:items-start justify-between gap-3">
           <div class="flex-1 min-w-0">
             <div class="flex flex-wrap items-center gap-2">
-              <span class="font-semibold text-slate-100">${shopEscapeHtml(item.name)}</span>
-              <span class="badge badge-${shopBadgeSuffix(item.rarity || 'common')}">${shopEscapeHtml(shopRarityLabel(item.rarity || 'COMMON'))}</span>
-              <span class="badge">${shopEscapeHtml(shopProductCategoryLabel(item.category || '-'))}</span>
+              <span class="font-semibold text-slate-100">${escapeHtml(item.name)}</span>
+              <span class="badge badge-${shopBadgeSuffix(item.rarity || 'common')}">${escapeHtml(shopRarityLabel(item.rarity || 'COMMON'))}</span>
+              <span class="badge">${escapeHtml(shopProductCategoryLabel(item.category || '-'))}</span>
               ${alreadyInShop ? '<span class="badge badge-success text-xs">Na loja</span>' : ''}
             </div>
-            <div class="text-xs text-slate-500 mt-1 line-clamp-2">${shopEscapeHtml(item.description || 'Sem descrição')}</div>
+            <div class="text-xs text-slate-500 mt-1 line-clamp-2">${escapeHtml(item.description || 'Sem descrição')}</div>
             <div class="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-slate-400">
-              <span>Código: <span class="font-mono text-cyan-400">${shopEscapeHtml(item.code)}</span></span>
+              <span>Código: <span class="font-mono text-cyan-400">${escapeHtml(item.code)}</span></span>
               <span>Compra sugerida: ${shopFormatBits(buy)}</span>
               <span>Venda sugerida: ${shopFormatBits(sell)}</span>
-              ${item.stackable ? `<span>Acúmulo máximo: ${shopEscapeHtml(item.maxStack ?? '-')}</span>` : '<span>Não acumula</span>'}
+              ${item.stackable ? `<span>Acúmulo máximo: ${escapeHtml(item.maxStack ?? '-')}</span>` : '<span>Não acumula</span>'}
             </div>
           </div>
           <div class="flex gap-2 md:flex-col md:items-stretch">
-            <button type="button" class="btn-sm btn-secondary whitespace-nowrap js-shop-item-details" data-item-code="${shopEscapeAttr(item.code)}">Detalhes</button>
+            <button type="button" class="btn-sm btn-secondary whitespace-nowrap js-shop-item-details" data-item-code="${escapeAttr(item.code)}">Detalhes</button>
             <button type="button" class="btn-sm btn-primary whitespace-nowrap js-shop-item-add ${alreadyInShop ? 'opacity-50 cursor-not-allowed' : ''}"
-              ${alreadyInShop ? 'disabled' : ''} data-item-code="${shopEscapeAttr(item.code)}">
+              ${alreadyInShop ? 'disabled' : ''} data-item-code="${escapeAttr(item.code)}">
               + Adicionar
             </button>
           </div>
@@ -605,9 +605,9 @@ function shopRenderEquipmentCatalog(templates) {
         <div class="flex flex-col md:flex-row md:items-start justify-between gap-3">
           <div class="flex-1 min-w-0">
             <div class="flex flex-wrap items-center gap-2">
-              <span class="font-semibold text-slate-100">${shopEscapeHtml(t.name)}</span>
-              <span class="badge badge-${shopBadgeSuffix(t.rarity)}">${shopEscapeHtml(shopRarityLabel(t.rarity))}</span>
-              <span class="badge">${shopEscapeHtml(shopSlotLabel(t.slot))}</span>
+              <span class="font-semibold text-slate-100">${escapeHtml(t.name)}</span>
+              <span class="badge badge-${shopBadgeSuffix(t.rarity)}">${escapeHtml(shopRarityLabel(t.rarity))}</span>
+              <span class="badge">${escapeHtml(shopSlotLabel(t.slot))}</span>
               ${alreadyInShop ? '<span class="badge badge-success text-xs">Na loja</span>' : ''}
             </div>
             <div class="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-slate-400">
@@ -619,9 +619,9 @@ function shopRenderEquipmentCatalog(templates) {
             </div>
           </div>
           <div class="flex gap-2 md:flex-col md:items-stretch">
-            <button type="button" class="btn-sm btn-secondary whitespace-nowrap js-shop-template-details" data-template-name="${shopEscapeAttr(t.name)}">Detalhes</button>
+            <button type="button" class="btn-sm btn-secondary whitespace-nowrap js-shop-template-details" data-template-name="${escapeAttr(t.name)}">Detalhes</button>
             <button type="button" class="btn-sm btn-primary whitespace-nowrap js-shop-template-add ${alreadyInShop ? 'opacity-50 cursor-not-allowed' : ''}"
-              ${alreadyInShop ? 'disabled' : ''} data-template-name="${shopEscapeAttr(t.name)}">
+              ${alreadyInShop ? 'disabled' : ''} data-template-name="${escapeAttr(t.name)}">
               + Adicionar
             </button>
           </div>
@@ -657,8 +657,8 @@ function shopShowItemDetails(itemCode) {
     <div class="catalog-card border-cyan-900 bg-cyan-950/20 mb-4">
       <div class="flex items-start justify-between gap-3">
         <div>
-          <h4 class="font-bold text-cyan-200">${shopEscapeHtml(item.name)}</h4>
-          <p class="text-sm text-slate-400 mt-1">${shopEscapeHtml(item.description || 'Sem descrição')}</p>
+          <h4 class="font-bold text-cyan-200">${escapeHtml(item.name)}</h4>
+          <p class="text-sm text-slate-400 mt-1">${escapeHtml(item.description || 'Sem descrição')}</p>
         </div>
         <button class="text-slate-400 hover:text-white" onclick="shopRenderCatalogBrowser()">&times;</button>
       </div>
@@ -686,8 +686,8 @@ function shopShowTemplateDetails(templateName) {
     <div class="catalog-card border-cyan-900 bg-cyan-950/20 mb-4">
       <div class="flex items-start justify-between gap-3">
         <div>
-          <h4 class="font-bold text-cyan-200">${shopEscapeHtml(t.name)}</h4>
-          <p class="text-sm text-slate-400 mt-1">Modelo de equipamento: ${shopEscapeHtml(shopSlotLabel(t.slot))} — ${shopEscapeHtml(shopRarityLabel(t.rarity))}.</p>
+          <h4 class="font-bold text-cyan-200">${escapeHtml(t.name)}</h4>
+          <p class="text-sm text-slate-400 mt-1">Modelo de equipamento: ${escapeHtml(shopSlotLabel(t.slot))} — ${escapeHtml(shopRarityLabel(t.rarity))}.</p>
         </div>
         <button class="text-slate-400 hover:text-white" onclick="shopRenderCatalogBrowser()">&times;</button>
       </div>
@@ -837,7 +837,7 @@ function shopCloseModal() {
 }
 
 function shopSelectOptions(options, selected, labeler = shopOptionLabel) {
-  return options.map(o => `<option value="${shopEscapeAttr(o)}" ${o === selected ? "selected" : ""}>${shopEscapeHtml(labeler(o))}</option>`).join("");
+  return options.map(o => `<option value="${escapeAttr(o)}" ${o === selected ? "selected" : ""}>${escapeHtml(labeler(o))}</option>`).join("");
 }
 
 function shopOptionLabel(value) {
@@ -958,12 +958,12 @@ function shopRenderSelectedCatalogSummary(source) {
     <div class="catalog-card border-cyan-900 bg-cyan-950/20 mb-5">
       <div class="flex items-start justify-between gap-3">
         <div>
-          <div class="text-xs text-cyan-300 uppercase tracking-wide">Origem: ${shopEscapeHtml(source.type === 'EQUIPMENT' ? 'Equipamento' : 'Item')}</div>
-          <div class="font-bold text-slate-100 mt-1">${shopEscapeHtml(source.title)}</div>
-          <div class="text-xs text-slate-500 mt-1">${shopEscapeHtml(source.subtitle || '')}</div>
+          <div class="text-xs text-cyan-300 uppercase tracking-wide">Origem: ${escapeHtml(source.type === 'EQUIPMENT' ? 'Equipamento' : 'Item')}</div>
+          <div class="font-bold text-slate-100 mt-1">${escapeHtml(source.title)}</div>
+          <div class="text-xs text-slate-500 mt-1">${escapeHtml(source.subtitle || '')}</div>
         </div>
         <div class="flex flex-wrap justify-end gap-1">
-          ${(source.badges || []).map(b => `<span class="badge">${shopEscapeHtml(b)}</span>`).join('')}
+          ${(source.badges || []).map(b => `<span class="badge">${escapeHtml(b)}</span>`).join('')}
         </div>
       </div>
     </div>
@@ -977,8 +977,8 @@ function shopUniqueValues(items, key) {
 function shopDetailCell(label, value) {
   return `
     <div class="bg-slate-950/60 rounded-lg p-2 border border-slate-800">
-      <div class="text-slate-500">${shopEscapeHtml(label)}</div>
-      <div class="text-slate-200 font-semibold mt-1 break-words">${shopEscapeHtml(value)}</div>
+      <div class="text-slate-500">${escapeHtml(label)}</div>
+      <div class="text-slate-200 font-semibold mt-1 break-words">${escapeHtml(value)}</div>
     </div>
   `;
 }
@@ -1013,19 +1013,6 @@ function shopNormalize(value) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
-}
-
-function shopEscapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function shopEscapeAttr(value) {
-  return shopEscapeHtml(value);
 }
 
 function shopJsString(value) {

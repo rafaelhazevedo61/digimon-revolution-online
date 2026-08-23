@@ -118,7 +118,7 @@ async function renderDigimonSimulatorPage() {
   } catch (e) {
     app.innerHTML = `<div class="card border-red-900 bg-red-950/30">
       <p class="text-red-300 font-bold">Erro ao carregar Digimon Infos</p>
-      <p class="text-red-200 text-sm">${e.message}</p>
+      <p class="text-red-200 text-sm">${escapeHtml(e.message)}</p>
     </div>`;
     return;
   }
@@ -134,7 +134,7 @@ async function renderDigimonSimulatorPage() {
               <label class="text-xs text-slate-400">Digimon (Especie)</label>
               <select id="dsim-digimon" onchange="dsimUpdate()" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm">
                 <option value="">-- Selecione --</option>
-                ${dsimDigimonInfos.map(d => `<option value="${d.id}">${d.name} (${d.stage} | HP:${d.baseHp} ATK:${d.baseAtk} DEF:${d.baseDef})</option>`).join("")}
+                ${dsimDigimonInfos.map(d => `<option value="${escapeAttr(d.id)}">${escapeHtml(d.name)} (${escapeHtml(d.stage)} | HP:${d.baseHp} ATK:${d.baseAtk} DEF:${d.baseDef})</option>`).join("")}
               </select>
             </div>
 
@@ -269,9 +269,9 @@ function dsimUpdate() {
   resultDiv.innerHTML = `
     <div class="space-y-4">
       <div class="text-center">
-        <h3 class="text-xl font-bold text-cyan-400">${digimonInfo.name}</h3>
+        <h3 class="text-xl font-bold text-cyan-400">${escapeHtml(digimonInfo.name)}</h3>
         <div class="flex items-center justify-center gap-2 mt-2 flex-wrap">
-          <span class="text-xs px-2 py-0.5 rounded bg-slate-700">${dsimGetStage(stage).label}</span>
+          <span class="text-xs px-2 py-0.5 rounded bg-slate-700">${escapeHtml(dsimGetStage(stage).label)}</span>
           <span class="text-xs px-2 py-0.5 rounded ${dsimRarityBadge(rarity)}">${rarity}</span>
           <span class="text-sm font-bold ${dsimGradeColor(grade)}">Grade ${grade}</span>
         </div>

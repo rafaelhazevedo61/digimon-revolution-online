@@ -23,7 +23,7 @@ const digimonInfoState = {
   
           <div>
             <label class="text-sm text-slate-400">Nome</label>
-            <input id="digimon-filter-name" class="input mt-1" placeholder="Ex: Agumon" value="${digimonInfoState.name}" />
+            <input id="digimon-filter-name" class="input mt-1" placeholder="Ex: Agumon" value="${escapeAttr(digimonInfoState.name)}" />
           </div>
   
           <div>
@@ -106,7 +106,7 @@ const digimonInfoState = {
       container.innerHTML = `
         <div class="card border-red-900 bg-red-950/30">
           <h3 class="font-bold text-red-300 mb-2">Erro ao carregar Digimon Infos</h3>
-          <p class="text-red-200">${error.message}</p>
+          <p class="text-red-200">${escapeHtml(error.message)}</p>
           <p class="text-sm text-slate-400 mt-4">
             Verifique se o backend está rodando e se o endpoint GET /digimon-infos existe.
           </p>
@@ -170,11 +170,11 @@ const digimonInfoState = {
         <td class="font-mono text-slate-400">${item.id}</td>
   
         <td>
-          <div class="font-semibold text-cyan-300">${item.name}</div>
+          <div class="font-semibold text-cyan-300">${escapeHtml(item.name)}</div>
         </td>
   
         <td>
-          <span class="badge">${item.stage}</span>
+          <span class="badge">${escapeHtml(item.stage)}</span>
         </td>
   
         <td>
@@ -186,7 +186,7 @@ const digimonInfoState = {
         </td>
   
         <td>
-          <span class="badge">${item.specie}</span>
+          <span class="badge">${escapeHtml(item.specie)}</span>
         </td>
   
         <td>${item.baseHp}</td>

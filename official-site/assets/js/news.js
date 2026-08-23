@@ -4,7 +4,7 @@
     day: '2-digit', month: 'long', year: 'numeric'
   }).format(new Date(`${value}T12:00:00`));
 
-  const escapeHtml = (value = '') => value.replace(/[&<>'"]/g, (char) => ({
+  const escapeHtml = (value = '') => String(value ?? '').replace(/[&<>'"]/g, (char) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
   }[char]));
 
@@ -17,7 +17,7 @@
           <strong>DRO</strong>
         </div>
         <div class="news-card-content">
-          <div class="news-meta"><span>${escapeHtml(item.type)}</span><time datetime="${item.date}">${formatDate(item.date)}</time></div>
+          <div class="news-meta"><span>${escapeHtml(item.type)}</span><time datetime="${escapeHtml(item.date)}">${formatDate(item.date)}</time></div>
           <h3>${escapeHtml(item.title)}</h3>
           <p>${escapeHtml(item.summary)}</p>
           <span class="news-card-action">Ler publicação <b aria-hidden="true">→</b></span>
@@ -64,7 +64,7 @@
     document.title = `${item.title} — Digimon Revolution Online`;
     articleContainer.innerHTML = `
       <header class="article-header">
-        <div class="news-meta"><span>${escapeHtml(item.type)}</span><time datetime="${item.date}">${formatDate(item.date)}</time></div>
+        <div class="news-meta"><span>${escapeHtml(item.type)}</span><time datetime="${escapeHtml(item.date)}">${formatDate(item.date)}</time></div>
         <span class="article-version">${escapeHtml(item.version)}</span>
         <h1>${escapeHtml(item.title)}</h1>
         <p>${escapeHtml(item.summary)}</p>
