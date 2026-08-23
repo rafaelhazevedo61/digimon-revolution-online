@@ -11,12 +11,9 @@ import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.mail.application.CreateSystemMailMessageUseCase;
 import com.dro.modules.mail.domain.MailMessageType;
 import com.dro.modules.player.domain.Player;
-import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.ConflictException;
-import com.dro.shared.exception.ForbiddenException;
 import com.dro.shared.exception.NotFoundException;
-import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,8 +33,9 @@ import java.util.UUID;
  * {@code sourceType + sourceId + player} impede que o reprocessamento do mesmo
  * evento entregue uma segunda recompensa ao mesmo jogador.</p>
  *
- * <p>A operação exige um usuário {@code ADMIN} e é transacional: a premiação e
- * sua mensagem de Correio são criadas dentro do mesmo fluxo persistente.</p>
+ * <p>A operação exige um usuário {@code ADMIN} por meio do
+ * {@code AdminAuthInterceptor} e é transacional: a premiação e sua mensagem de
+ * Correio são criadas dentro do mesmo fluxo persistente.</p>
  */
 @Service
 @RequiredArgsConstructor
@@ -55,22 +53,13 @@ public class CreateEventRewardUseCase {
      * no resultado por username. Um novo {@code sourceId} representa uma nova
      * origem e pode gerar uma nova premiação.</p>
      *
-     * @param token token JWT do administrador autenticado
      * @param request conteúdo, validade e seleção dos destinatários
      * @return contagens, identificadores criados e usernames ignorados
-     * @throws ForbiddenException quando o usuário autenticado não é {@code ADMIN}
-     * @throws NotFoundException quando o administrador, jogador ou clã não existe
+     * @throws NotFoundException quando um jogador ou clã destinatário não existe
      * @throws ConflictException quando os valores ou destinatários são inválidos
      */
     @Transactional
-    public EventRewardBatchResult execute(String token, AdminEventRewardRequest request) {
-        UUID adminId = TokenExtractor.extractPlayerId(token);
-        var admin = playerRepository.findById(adminId)
-                .orElseThrow(() -> new NotFoundException("Administrador não encontrado."));
-        if (admin.getUserType() != UserType.ADMIN) {
-            throw new ForbiddenException("Somente administradores podem criar premiações.");
-        }
-
+    public EventRewardBatchResult execute(AdminEventRewardRequest request) {
         RewardValues values = validateReward(request);
         List<Player> recipients = resolveRecipients(request);
         LocalDateTime now = LocalDateTime.now();

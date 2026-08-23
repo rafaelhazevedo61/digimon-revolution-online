@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,10 +24,9 @@ public class AdminMailController {
 
     @PostMapping("/announcements")
     public ResponseEntity<Map<String, Object>> createAnnouncement(
-            @RequestHeader("Authorization") String authorization,
             @RequestBody @Valid AdminAnnouncementRequest request
     ) {
-        int delivered = createAdminAnnouncementUseCase.execute(authorization, request);
+        int delivered = createAdminAnnouncementUseCase.execute(request);
         return ResponseEntity.ok(Map.of(
                 "message", "Comunicado enviado pelo Correio.",
                 "delivered", delivered

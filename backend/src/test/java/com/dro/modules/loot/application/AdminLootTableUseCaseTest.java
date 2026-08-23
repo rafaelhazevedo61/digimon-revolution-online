@@ -13,7 +13,6 @@ import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.exception.ConflictException;
-import com.dro.shared.exception.ForbiddenException;
 import com.dro.shared.security.JwtSettings;
 import com.dro.shared.security.JwtTokenCodec;
 import org.junit.jupiter.api.Test;
@@ -258,17 +257,11 @@ class AdminLootTableUseCaseTest {
     }
 
     @Test
-    void rejectsNonAdminBeforeReadingLootTable() {
-        UUID playerId = UUID.randomUUID();
-        Player player = Player.builder()
-                .id(playerId)
-                .username("player")
-                .userType(UserType.PLAYER)
-                .build();
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+    void listsWithoutRevalidatingAuthorization() {
+        when(lootTableRepository.findAllByOrderByNameAsc()).thenReturn(List.of());
 
-        assertThatThrownBy(() -> adminLootTableUseCase.list(token(playerId), false))
-                .isInstanceOf(ForbiddenException.class);
+        assertThat(adminLootTableUseCase.list(false)).isEmpty();
+        verify(playerRepository, never()).findById(any());
     }
 
     private String token(UUID playerId) {

@@ -80,10 +80,11 @@ async function apiPostNoAuth(path, body) {
   return response.json();
 }
 
-async function apiPostVoid(path) {
+async function apiPostVoid(path, body) {
   const response = await fetch(`${CONFIG.API_BASE_URL}${path}`, {
     method: "POST",
-    headers: adminAuthHeaders()
+    headers: adminAuthHeaders(),
+    body: body === undefined ? undefined : JSON.stringify(body)
   });
 
   if (!response.ok) {

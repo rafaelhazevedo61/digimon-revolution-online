@@ -69,7 +69,7 @@ function renderDashboard() {
       if (!doubleConfirm) return;
 
       try {
-        await apiPostVoid("/admin/players/wipe");
+        await apiPostVoid("/admin/players/wipe", { confirmation: "WIPE" });
         alert("Wipe executado com sucesso! Todos os dados de jogadores foram removidos.");
       } catch (err) {
         alert("Erro ao executar wipe: " + err.message);

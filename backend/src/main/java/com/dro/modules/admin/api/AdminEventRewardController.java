@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,16 +32,14 @@ public class AdminEventRewardController {
     /**
      * Cria premiações individuais para os destinatários selecionados.
      *
-     * @param authorization token JWT do administrador
      * @param request conteúdo, validade e estratégia de destinatários
      * @return contagem de criadas, ignoradas e IDs das premiações envolvidas
      */
     @PostMapping("/event-rewards")
     public ResponseEntity<Map<String, Object>> create(
-            @RequestHeader("Authorization") String authorization,
             @RequestBody @Valid AdminEventRewardRequest request
     ) {
-        var result = createEventRewardUseCase.execute(authorization, request);
+        var result = createEventRewardUseCase.execute(request);
         return ResponseEntity.ok(Map.of(
                 "message", "Premiação processada para os destinatários.",
                 "requestedCount", result.requestedCount(),

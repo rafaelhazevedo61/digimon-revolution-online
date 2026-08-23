@@ -4,6 +4,7 @@ import com.dro.modules.player.api.dto.request.ResetPlayerPasswordRequest;
 import com.dro.modules.player.api.dto.response.ResetPlayerPasswordResponse;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.audit.AdminAuditService;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,14 +28,24 @@ public class ResetPlayerPasswordUseCase {
 
     private final PlayerRepository playerRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AdminAuditService adminAuditService;
 
-    public ResetPlayerPasswordUseCase (PlayerRepository playerRepository, PasswordEncoder passwordEncoder) {
+    public ResetPlayerPasswordUseCase(
+            PlayerRepository playerRepository,
+            PasswordEncoder passwordEncoder,
+            AdminAuditService adminAuditService
+    ) {
         this.playerRepository = playerRepository;
         this.passwordEncoder = passwordEncoder;
+        this.adminAuditService = adminAuditService;
     }
 
     @Transactional
-    public ResetPlayerPasswordResponse execute(UUID playerId, ResetPlayerPasswordRequest request) {
+    public ResetPlayerPasswordResponse execute(
+            String authorization,
+            UUID playerId,
+            ResetPlayerPasswordRequest request
+    ) {
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));
 
@@ -42,6 +54,19 @@ public class ResetPlayerPasswordUseCase {
 
         player.setPassword(encodedPassword);
         playerRepository.save(player);
+        adminAuditService.success(
+                authorization,
+                "ADMIN_PLAYER_PASSWORD_RESET",
+                "Player",
+                player.getId().toString(),
+                "reset-password",
+                "Senha de jogador redefinida",
+                Map.of(
+                        "targetPlayerId", player.getId().toString(),
+                        "targetUsername", player.getUsername(),
+                        "generated", request.generateRandom()
+                )
+        );
 
         return new ResetPlayerPasswordResponse(
                 player.getId(),

@@ -1,6 +1,7 @@
 package com.dro.modules.admin.api;
 
 import com.dro.modules.server.application.GlobalDamageBuffService;
+import com.dro.shared.audit.AdminAuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,7 @@ import java.util.Map;
 public class AdminServerController {
 
     private final GlobalDamageBuffService globalDamageBuffService;
+    private final AdminAuditService adminAuditService;
 
     @GetMapping("/damage-buff")
     public ResponseEntity<GlobalDamageBuffService.State> getDamageBuff() {
@@ -23,12 +25,17 @@ public class AdminServerController {
     }
 
     @PostMapping("/damage-buff/toggle")
-    public ResponseEntity<GlobalDamageBuffService.State> toggleDamageBuff() {
-        return ResponseEntity.ok(globalDamageBuffService.toggle());
+    public ResponseEntity<GlobalDamageBuffService.State> toggleDamageBuff(
+            @RequestHeader("Authorization") String authorization
+    ) {
+        GlobalDamageBuffService.State state = globalDamageBuffService.toggle();
+        audit(authorization, "ADMIN_DAMAGE_BUFF_TOGGLE", "toggle", state);
+        return ResponseEntity.ok(state);
     }
 
     @PostMapping("/damage-buff")
     public ResponseEntity<GlobalDamageBuffService.State> setDamageBuff(
+            @RequestHeader("Authorization") String authorization,
             @RequestBody Map<String, Object> body
     ) {
         boolean enabled = Boolean.TRUE.equals(body.get("enabled"));
@@ -39,6 +46,25 @@ public class AdminServerController {
             } catch (NumberFormatException ignored) {
             }
         }
-        return ResponseEntity.ok(globalDamageBuffService.set(enabled, multiplier));
+        GlobalDamageBuffService.State state = globalDamageBuffService.set(enabled, multiplier);
+        audit(authorization, "ADMIN_DAMAGE_BUFF_SET", "set", state);
+        return ResponseEntity.ok(state);
+    }
+
+    private void audit(
+            String authorization,
+            String eventType,
+            String operation,
+            GlobalDamageBuffService.State state
+    ) {
+        adminAuditService.success(
+                authorization,
+                eventType,
+                "Server",
+                "damage-buff",
+                operation,
+                "Configuração global de dano alterada",
+                Map.of("enabled", state.enabled(), "multiplier", state.multiplier())
+        );
     }
 }

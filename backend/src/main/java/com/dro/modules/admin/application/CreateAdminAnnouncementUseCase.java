@@ -3,11 +3,7 @@ package com.dro.modules.admin.application;
 import com.dro.modules.admin.api.dto.AdminAnnouncementRequest;
 import com.dro.modules.mail.application.CreateSystemMailMessageUseCase;
 import com.dro.modules.mail.domain.MailMessageType;
-import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
-import com.dro.shared.exception.ForbiddenException;
-import com.dro.shared.exception.NotFoundException;
-import com.dro.shared.util.TokenExtractor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,15 +20,17 @@ public class CreateAdminAnnouncementUseCase {
     private final PlayerRepository playerRepository;
     private final CreateSystemMailMessageUseCase createSystemMailMessageUseCase;
 
+    /**
+     * Envia uma mensagem administrativa a todos os jogadores persistidos.
+     *
+     * <p>A autorização {@code ADMIN} é aplicada pelo
+     * {@code AdminAuthInterceptor} antes da entrada no controller.</p>
+     *
+     * @param request assunto e conteúdo do comunicado
+     * @return quantidade de jogadores que receberam a mensagem
+     */
     @Transactional
-    public int execute(String token, AdminAnnouncementRequest request) {
-        UUID adminId = TokenExtractor.extractPlayerId(token);
-        var admin = playerRepository.findById(adminId)
-                .orElseThrow(() -> new NotFoundException("Administrador não encontrado."));
-        if (admin.getUserType() != UserType.ADMIN) {
-            throw new ForbiddenException("Somente administradores podem enviar comunicados.");
-        }
-
+    public int execute(AdminAnnouncementRequest request) {
         UUID announcementId = UUID.randomUUID();
         int delivered = 0;
         for (var player : playerRepository.findAll()) {

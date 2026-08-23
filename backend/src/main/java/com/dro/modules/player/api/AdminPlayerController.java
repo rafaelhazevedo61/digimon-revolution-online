@@ -1,6 +1,7 @@
 package com.dro.modules.player.api;
 
 import com.dro.modules.player.api.dto.request.ResetPlayerPasswordRequest;
+import com.dro.modules.player.api.dto.request.WipePlayersRequest;
 import com.dro.modules.player.api.dto.response.AdminPlayerPageResponse;
 import com.dro.modules.player.api.dto.response.ResetPlayerPasswordResponse;
 import com.dro.modules.player.application.GetAdminPlayersUseCase;
@@ -57,17 +58,21 @@ public class AdminPlayerController {
     }
 
     @PostMapping("/wipe")
-    public ResponseEntity<Void> wipe() {
-        wipePlayerDataUseCase.execute();
+    public ResponseEntity<Void> wipe(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody WipePlayersRequest request
+    ) {
+        wipePlayerDataUseCase.execute(authorization, request);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/reset-password")
     public ResponseEntity<ResetPlayerPasswordResponse> resetPassword(
+            @RequestHeader("Authorization") String authorization,
             @PathVariable UUID id,
             @RequestBody @Valid ResetPlayerPasswordRequest request
     ) {
-        return ResponseEntity.ok(resetPlayerPasswordUseCase.execute(id, request));
+        return ResponseEntity.ok(resetPlayerPasswordUseCase.execute(authorization, id, request));
     }
 
     private int normalizePageSize(int size) {

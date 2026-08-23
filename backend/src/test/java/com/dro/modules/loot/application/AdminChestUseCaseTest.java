@@ -10,7 +10,6 @@ import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.audit.TransactionAuditPublisher;
-import com.dro.shared.exception.ForbiddenException;
 import com.dro.shared.security.JwtSettings;
 import com.dro.shared.security.JwtTokenCodec;
 import org.junit.jupiter.api.Test;
@@ -105,12 +104,11 @@ class AdminChestUseCaseTest {
     }
 
     @Test
-    void rejectsNonAdminBeforeReadingChest() {
-        UUID playerId = UUID.randomUUID();
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(admin(playerId, UserType.PLAYER)));
+    void listsWithoutRevalidatingAuthorization() {
+        when(chestDefinitionRepository.findAllByOrderByNameAsc()).thenReturn(java.util.List.of());
 
-        assertThatThrownBy(() -> adminChestUseCase.list(token(playerId), false))
-                .isInstanceOf(ForbiddenException.class);
+        assertThat(adminChestUseCase.list(false)).isEmpty();
+        verify(playerRepository, org.mockito.Mockito.never()).findById(any());
     }
 
     @Test

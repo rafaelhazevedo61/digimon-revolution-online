@@ -4,6 +4,7 @@ import com.dro.modules.player.api.dto.request.ResetPlayerPasswordRequest;
 import com.dro.modules.player.api.dto.response.ResetPlayerPasswordResponse;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.audit.AdminAuditService;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,9 @@ class ResetPlayerPasswordUseCaseTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private AdminAuditService adminAuditService;
+
     @InjectMocks
     private ResetPlayerPasswordUseCase useCase;
 
@@ -45,6 +49,7 @@ class ResetPlayerPasswordUseCaseTest {
         when(passwordEncoder.encode("new-password")).thenReturn("new-encoded");
 
         ResetPlayerPasswordResponse response = useCase.execute(
+                "Bearer token",
                 playerId,
                 new ResetPlayerPasswordRequest("new-password", false)
         );
@@ -70,6 +75,7 @@ class ResetPlayerPasswordUseCaseTest {
         when(passwordEncoder.encode(any(String.class))).thenReturn("generated-encoded");
 
         ResetPlayerPasswordResponse response = useCase.execute(
+                "Bearer token",
                 playerId,
                 new ResetPlayerPasswordRequest(null, true)
         );
@@ -87,6 +93,7 @@ class ResetPlayerPasswordUseCaseTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> useCase.execute(
+                "Bearer token",
                 playerId,
                 new ResetPlayerPasswordRequest("new-password", false)
         ));
@@ -104,6 +111,7 @@ class ResetPlayerPasswordUseCaseTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
 
         assertThrows(BadRequestException.class, () -> useCase.execute(
+                "Bearer token",
                 playerId,
                 new ResetPlayerPasswordRequest("abc", false)
         ));
@@ -121,6 +129,7 @@ class ResetPlayerPasswordUseCaseTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
 
         assertThrows(BadRequestException.class, () -> useCase.execute(
+                "Bearer token",
                 playerId,
                 new ResetPlayerPasswordRequest(null, false)
         ));
