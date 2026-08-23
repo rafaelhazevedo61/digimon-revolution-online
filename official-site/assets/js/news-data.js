@@ -1,5 +1,51 @@
 window.DRO_NEWS = [
   {
+    id: 'patch-0-7-0',
+    type: 'PATCH NOTES',
+    title: 'Patch 0.7.0 — Baús, recompensas e melhorias da Alpha',
+    summary: 'Novos baús e Loot Tables ampliam as recompensas de missões, bosses, Arena e Boss Mundial, acompanhados por melhorias no tutorial, inventário, segurança e sessões.',
+    date: '2026-08-23',
+    version: '0.7.0',
+    featured: true,
+    content: [
+      { heading: 'Baús e Loot Tables', items: [
+        'Novo sistema reutilizável de Loot Tables e definições de baús para organizar recompensas de diferentes atividades.',
+        'Missões podem entregar baús de área, com abertura e exibição das recompensas diretamente no fluxo do jogador.',
+        'Bosses regulares passam a contar com baús de recompensa configuráveis.',
+        'A Arena recebeu baús de recompensa associados às faixas competitivas.',
+        'O Boss Mundial passa a utilizar baús de recompensa configuráveis de acordo com o resultado do ciclo.',
+        'A loja passa a utilizar baús de fragmentos no lugar de fragmentos legados em pontos preparados para esse novo fluxo.'
+      ]},
+      { heading: 'Boss Mundial', items: [
+        'Adicionado tempo de recarga configurável entre ataques, com contagem regressiva visível para o jogador.',
+        'Melhor organização do resultado dos ataques e das recompensas recebidas.',
+        'Recompensas de conclusão passam a utilizar o novo sistema de baús.',
+        'Ciclos podem ser reiniciados administrativamente quando necessário.'
+      ]},
+      { heading: 'Tutorial e experiência da Alpha', items: [
+        'Recompensas do tutorial agora podem ser resgatadas manualmente nos passos correspondentes.',
+        'Nomes amigáveis dos itens são exibidos nas recompensas em vez de identificadores técnicos.',
+        'Textos e feedbacks do tutorial foram ajustados para melhorar a leitura e a compreensão do fluxo inicial.',
+        'Inventário recebeu normalização e ordenação para apresentar itens de forma mais consistente.',
+        'Recompensas de missões passaram a ser apresentadas em modal após o resgate.'
+      ]},
+      { heading: 'Segurança e sessões', items: [
+        'Política de senha foi padronizada entre os fluxos da aplicação.',
+        'Sessões antigas podem ser invalidadas de forma segura através da versão do token.',
+        'A troca de senha passou a proteger também a atualização do token da sessão atual.',
+        'Sessões inválidas são redirecionadas corretamente para autenticação.',
+        'Origens permitidas pelo CORS e configurações sensíveis do ambiente foram reforçadas.',
+        'Tratamento de conteúdo exibido no frontend e no site oficial recebeu proteção adicional contra injeção de HTML.'
+      ]},
+      { heading: 'Administração e estabilidade', items: [
+        'Ferramentas internas e simuladores foram reforçados dentro do namespace administrativo.',
+        'Autorização e auditoria das operações administrativas foram centralizadas.',
+        'Catálogo de itens recebeu melhorias de busca e edição no painel administrativo.',
+        'Abertura de baús e concessão de itens receberam proteções transacionais e de idempotência para evitar recompensas duplicadas em novas tentativas.'
+      ]}
+    ]
+  },
+  {
     id: 'update-event-reward-mail',
     type: 'ATUALIZAÇÃO',
     title: 'Correio — Premiações de eventos chegaram ao Mundo Digital',
