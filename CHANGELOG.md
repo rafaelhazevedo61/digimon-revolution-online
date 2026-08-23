@@ -24,7 +24,7 @@ e o projeto segue versionamento incremental por entregas (PRs).
 - **Collections da API**: o gerador passou a delimitar corretamente as assinaturas dos controllers, derivar corpos de exemplo dos DTOs e manter as collections curl e Postman sincronizadas.
 - **Superfície administrativa**: autorização administrativa passou a consultar o `userType` atual no banco, ações destrutivas e grants passaram a gerar auditoria, e o wipe exige confirmação explícita.
 - **Proteção de ferramentas internas**: o simulador de choco de traits agora está sob `/admin/digimon/simulator/trait-hatch` e exige um usuário `ADMIN`.
-- Sessão expirada agora força retorno à tela de login: qualquer resposta 401/403 no game frontend limpa o token e redireciona para `#login`.
+- **Sessão expirada**: o game e o admin agora validam a expiração do JWT antes de carregar telas protegidas, redirecionam após 401/403 com aviso e distinguem falhas de rede; cache do game frontend atualizado para `dro-game-v37`.
 
 ## Entregas anteriores
 
