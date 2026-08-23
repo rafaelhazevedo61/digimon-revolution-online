@@ -15,18 +15,18 @@ async function renderSettingsPage() {
         <form id="change-password-form" onsubmit="settingsChangePassword(event)">
           <div class="mb-4">
             <label class="label">Senha atual</label>
-            <input id="current-password" type="password" class="input" placeholder="••••••••" required minlength="4" />
+            <input id="current-password" type="password" class="input" placeholder="••••••••" required/>
           </div>
 
           <div class="mb-4">
             <label class="label">Nova senha</label>
-            <input id="new-password" type="password" class="input" placeholder="••••••••" required minlength="4" maxlength="60" />
+            <input id="new-password" type="password" class="input" placeholder="••••••••" required minlength="8" maxlength="60" />
             <p class="text-xs text-slate-500 mt-1">Mínimo 4 caracteres.</p>
           </div>
 
           <div class="mb-6">
             <label class="label">Confirmar nova senha</label>
-            <input id="confirm-new-password" type="password" class="input" placeholder="••••••••" required minlength="4" />
+            <input id="confirm-new-password" type="password" class="input" placeholder="••••••••" required minlength="8" maxlength="60" />
           </div>
 
           <button type="submit" class="btn-primary w-full" id="change-password-btn">Salvar senha</button>
@@ -55,8 +55,8 @@ async function settingsChangePassword(event) {
     return;
   }
 
-  if (newPassword.length < 4 || newPassword.length > 60) {
-    errorDiv.textContent = "A nova senha deve ter entre 4 e 60 caracteres.";
+  if (newPassword.length < 8 || newPassword.length > 60) {
+    errorDiv.textContent = "A nova senha deve ter entre 8 e 60 caracteres.";
     errorDiv.classList.remove("hidden");
     return;
   }

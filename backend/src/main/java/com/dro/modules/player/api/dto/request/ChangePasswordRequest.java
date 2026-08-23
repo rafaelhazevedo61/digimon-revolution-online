@@ -12,7 +12,11 @@ public record ChangePasswordRequest(
         String currentPassword,
 
         @NotBlank
-        @Size(min = 4, max = 60)
+        @Size(
+                min = 8,
+                max = 60,
+                message = "A nova senha deve ter entre 8 e 60 caracteres."
+        )
         String newPassword
 
 ) {}

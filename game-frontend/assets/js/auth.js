@@ -44,7 +44,8 @@ function renderLoginPage() {
             </div>
             <div class="mb-6">
               <label class="label">Senha</label>
-              <input id="reg-password" type="password" class="input" placeholder="••••••••" required minlength="6" />
+              <input id="reg-password" type="password" class="input" placeholder="••••••••" required minlength="8" maxlength="60" />
+                <p class="text-xs text-slate-500 mt-1"> A senha deve ter entre 8 e 60 caracteres.</p>
             </div>
             <button type="submit" class="btn-primary w-full" id="reg-btn">Criar Conta</button>
           </form>
@@ -103,23 +104,35 @@ async function authLogin(e) {
 
 async function authRegister(e) {
   e.preventDefault();
+
   const btn = document.getElementById("reg-btn");
   const errorDiv = document.getElementById("auth-error");
+
+  const username = document.getElementById("reg-username").value;
+  const email = document.getElementById("reg-email").value;
+  const password = document.getElementById("reg-password").value;
+
   errorDiv.classList.add("hidden");
+
+  if (password.length < 8 || password.length > 60) {
+    errorDiv.textContent = "A senha deve ter entre 8 e 60 caracteres.";
+    errorDiv.classList.remove("hidden");
+    return;
+  }
+
   btn.disabled = true;
   btn.textContent = "Criando...";
 
   try {
     await apiPost("/auth/register", {
-      username: document.getElementById("reg-username").value,
-      email: document.getElementById("reg-email").value,
-      password: document.getElementById("reg-password").value
+      username,
+      email,
+      password
     });
 
-    // Auto-login after register
     const res = await apiPost("/auth/login", {
-      email: document.getElementById("reg-email").value,
-      password: document.getElementById("reg-password").value
+      email,
+      password
     });
 
     setToken(res.token);
