@@ -5,7 +5,7 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:arisco2017}
 
   mongodb:
-    uri: ${SPRING_MONGODB_URI:mongodb://dro_mongo:change-this-mongo-password@localhost:27017/dro_audit?authSource=admin}
+    uri: ${SPRING_MONGODB_URI:mongodb://dro_mongo:arisco2017@localhost:27017/dro_audit?authSource=admin}
 
 logging:
   level:
@@ -13,7 +13,7 @@ logging:
 
 dro:
   cors:
-    allowed-origins: ${DRO_ALLOWED_ORIGINS:http://localhost:5500,http://127.0.0.1:5500,http://localhost:3000,http://127.0.0.1:3000}
+    allowed-origins: ${DRO_ALLOWED_ORIGINS:http://localhost:8080,http://localhost:3000,http://localhost:27017,http://127.0.0.1:5500,http://127.0.0.1:59527}
 
   security:
     jwt:

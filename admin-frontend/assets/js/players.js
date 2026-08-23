@@ -1,22 +1,22 @@
 const playerState = {
-    page: 0,
-    size: 20,
-    username: "",
-    email: "",
-    selectedDigitama: "",
-    starterSelected: "",
-    lastResult: null
-  };
-  
-  function renderPlayersPage() {
-    setPageHeader(
-      "Players",
-      "Consulte os jogadores cadastrados e dados principais da conta"
-    );
-  
-    const app = document.getElementById("app");
-  
-    app.innerHTML = `
+  page: 0,
+  size: 20,
+  username: "",
+  email: "",
+  selectedDigitama: "",
+  starterSelected: "",
+  lastResult: null
+};
+
+function renderPlayersPage() {
+  setPageHeader(
+    "Players",
+    "Consulte os jogadores cadastrados e dados principais da conta"
+  );
+
+  const app = document.getElementById("app");
+
+  app.innerHTML = `
       <div class="card mb-6">
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
   
@@ -66,33 +66,33 @@ const playerState = {
   
       <div id="players-result"></div>
     `;
-  
-    loadPlayers();
-  }
-  
-  async function loadPlayers() {
-    const container = document.getElementById("players-result");
-  
-    container.innerHTML = `
+
+  loadPlayers();
+}
+
+async function loadPlayers() {
+  const container = document.getElementById("players-result");
+
+  container.innerHTML = `
       <div class="card">
         <p class="text-slate-400">Carregando players...</p>
       </div>
     `;
-  
-    try {
-      const result = await apiGet("/admin/players", {
-        page: playerState.page,
-        size: playerState.size,
-        username: playerState.username,
-        email: playerState.email,
-        selectedDigitama: playerState.selectedDigitama,
-        starterSelected: playerState.starterSelected
-      });
-  
-      playerState.lastResult = result;
-      renderPlayersResult(result);
-    } catch (error) {
-      container.innerHTML = `
+
+  try {
+    const result = await apiGet("/admin/players", {
+      page: playerState.page,
+      size: playerState.size,
+      username: playerState.username,
+      email: playerState.email,
+      selectedDigitama: playerState.selectedDigitama,
+      starterSelected: playerState.starterSelected
+    });
+
+    playerState.lastResult = result;
+    renderPlayersResult(result);
+  } catch (error) {
+    container.innerHTML = `
         <div class="card border-red-900 bg-red-950/30">
           <h3 class="font-bold text-red-300 mb-2">Erro ao carregar players</h3>
           <p class="text-red-200">${error.message}</p>
@@ -101,14 +101,14 @@ const playerState = {
           </p>
         </div>
       `;
-    }
   }
-  
-  function renderPlayersResult(result) {
-    const container = document.getElementById("players-result");
-    const items = result.items || [];
-  
-    container.innerHTML = `
+}
+
+function renderPlayersResult(result) {
+  const container = document.getElementById("players-result");
+  const items = result.items || [];
+
+  container.innerHTML = `
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
         <div>
           <h3 class="text-lg font-bold">Players encontrados</h3>
@@ -150,10 +150,10 @@ const playerState = {
   
       ${items.length === 0 ? renderEmptyPlayers() : ""}
     `;
-  }
-  
-  function renderPlayerRow(player) {
-    return `
+}
+
+function renderPlayerRow(player) {
+  return `
       <tr>
         <td>
           <div class="font-semibold text-cyan-300">${player.username}</div>
@@ -173,10 +173,10 @@ const playerState = {
         </td>
   
         <td>
-          ${player.activeDigimonId 
-            ? `<div class="font-mono text-xs text-slate-300">${player.activeDigimonId}</div>` 
-            : `<span class="text-slate-500">-</span>`
-          }
+          ${player.activeDigimonId
+      ? `<div class="font-mono text-xs text-slate-300">${player.activeDigimonId}</div>`
+      : `<span class="text-slate-500">-</span>`
+    }
         </td>
   
         <td>
@@ -194,119 +194,119 @@ const playerState = {
         </td>
       </tr>
     `;
-  }
-  
-  function renderEmptyPlayers() {
-    return `
+}
+
+function renderEmptyPlayers() {
+  return `
       <div class="card mt-4">
         <p class="text-slate-400">Nenhum player encontrado com os filtros atuais.</p>
       </div>
     `;
-  }
-  
-  function applyPlayerFilters() {
-    playerState.username = document.getElementById("player-filter-username").value;
-    playerState.email = document.getElementById("player-filter-email").value;
-    playerState.selectedDigitama = document.getElementById("player-filter-selected-digitama").value;
-    playerState.starterSelected = document.getElementById("player-filter-starter-selected").value;
-    playerState.size = Number(document.getElementById("player-filter-size").value);
-    playerState.page = 0;
-  
+}
+
+function applyPlayerFilters() {
+  playerState.username = document.getElementById("player-filter-username").value;
+  playerState.email = document.getElementById("player-filter-email").value;
+  playerState.selectedDigitama = document.getElementById("player-filter-selected-digitama").value;
+  playerState.starterSelected = document.getElementById("player-filter-starter-selected").value;
+  playerState.size = Number(document.getElementById("player-filter-size").value);
+  playerState.page = 0;
+
+  loadPlayers();
+}
+
+function clearPlayerFilters() {
+  playerState.page = 0;
+  playerState.size = 20;
+  playerState.username = "";
+  playerState.email = "";
+  playerState.selectedDigitama = "";
+  playerState.starterSelected = "";
+
+  renderPlayersPage();
+}
+
+function previousPlayerPage() {
+  if (playerState.page > 0) {
+    playerState.page--;
     loadPlayers();
   }
-  
-  function clearPlayerFilters() {
-    playerState.page = 0;
-    playerState.size = 20;
-    playerState.username = "";
-    playerState.email = "";
-    playerState.selectedDigitama = "";
-    playerState.starterSelected = "";
-  
-    renderPlayersPage();
+}
+
+function nextPlayerPage() {
+  if (playerState.lastResult?.hasNext) {
+    playerState.page++;
+    loadPlayers();
   }
-  
-  function previousPlayerPage() {
-    if (playerState.page > 0) {
-      playerState.page--;
-      loadPlayers();
-    }
-  }
-  
-  function nextPlayerPage() {
-    if (playerState.lastResult?.hasNext) {
-      playerState.page++;
-      loadPlayers();
-    }
-  }
-  
-  function digitamaOptions(selectedValue) {
-    const options = [
-      { label: "Todos", value: "" },
-      { label: "Starter", value: "STARTER" },
-      { label: "Fire", value: "FIRE" },
-      { label: "Water", value: "WATER" },
-      { label: "Nature", value: "NATURE" }
-    ];
-  
-    return options.map(option => `
+}
+
+function digitamaOptions(selectedValue) {
+  const options = [
+    { label: "Todos", value: "" },
+    { label: "Starter", value: "STARTER" },
+    { label: "Fire", value: "FIRE" },
+    { label: "Water", value: "WATER" },
+    { label: "Nature", value: "NATURE" }
+  ];
+
+  return options.map(option => `
       <option value="${option.value}" ${String(selectedValue) === option.value ? "selected" : ""}>
         ${option.label}
       </option>
     `).join("");
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return `<span class="text-slate-500">-</span>`;
   }
-  
-  function formatDateTime(value) {
-    if (!value) {
-      return `<span class="text-slate-500">-</span>`;
-    }
-  
-    const date = new Date(value);
-  
-    if (Number.isNaN(date.getTime())) {
-      return `<span class="text-slate-400">${value}</span>`;
-    }
-  
-    return `
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return `<span class="text-slate-400">${value}</span>`;
+  }
+
+  return `
       <span class="text-slate-300">
         ${date.toLocaleString("pt-BR")}
       </span>
     `;
+}
+
+async function adminResetPassword(player) {
+  const generateRandom = window.confirm(
+    `Gerar senha aleatória para ${player.username}?\n\nClique OK para gerar automática.\nClique Cancelar para digitar uma senha manual.`
+  );
+
+  let body = { generateRandom };
+
+  if (!generateRandom) {
+    const newPassword = window.prompt(`Nova senha para ${player.username}:`);
+    if (newPassword === null) return;
+    if (newPassword.length < 8 || newPassword.length > 60) {
+      window.alert("A senha deve ter entre 8 e 60 caracteres.");
+      return;
+    }
+    body.newPassword = newPassword;
   }
 
-  async function adminResetPassword(player) {
-    const generateRandom = window.confirm(
-      `Gerar senha aleatória para ${player.username}?\n\nClique OK para gerar automática.\nClique Cancelar para digitar uma senha manual.`
-    );
-
-    let body = { generateRandom };
-
-    if (!generateRandom) {
-      const newPassword = window.prompt(`Nova senha para ${player.username}:`);
-      if (newPassword === null) return;
-      if (newPassword.length < 4 || newPassword.length > 60) {
-        window.alert("A senha deve ter entre 4 e 60 caracteres.");
-        return;
-      }
-      body.newPassword = newPassword;
-    }
-
-    try {
-      const result = await apiPost(`/admin/players/${player.id}/reset-password`, body);
-      showResetPasswordModal(result.username, result.newPassword);
-    } catch (error) {
-      window.alert(`Erro ao resetar senha: ${error.message}`);
-    }
+  try {
+    const result = await apiPost(`/admin/players/${player.id}/reset-password`, body);
+    showResetPasswordModal(result.username, result.newPassword);
+  } catch (error) {
+    window.alert(`Erro ao resetar senha: ${error.message}`);
   }
+}
 
-  function showResetPasswordModal(username, password) {
-    const existing = document.getElementById("reset-password-modal");
-    if (existing) existing.remove();
+function showResetPasswordModal(username, password) {
+  const existing = document.getElementById("reset-password-modal");
+  if (existing) existing.remove();
 
-    const modal = document.createElement("div");
-    modal.id = "reset-password-modal";
-    modal.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4";
-    modal.innerHTML = `
+  const modal = document.createElement("div");
+  modal.id = "reset-password-modal";
+  modal.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4";
+  modal.innerHTML = `
       <div class="card w-full max-w-md">
         <h3 class="text-lg font-bold mb-2">Senha redefinida</h3>
         <p class="text-sm text-slate-400 mb-4">Player: <span id="reset-password-username" class="text-cyan-300"></span></p>
@@ -323,28 +323,28 @@ const playerState = {
       </div>
     `;
 
-    document.body.appendChild(modal);
+  document.body.appendChild(modal);
 
-    modal.querySelector("#reset-password-username").textContent = username;
-    const input = modal.querySelector("#reset-password-value");
-    input.value = password;
-    input.focus();
-    input.select();
+  modal.querySelector("#reset-password-username").textContent = username;
+  const input = modal.querySelector("#reset-password-value");
+  input.value = password;
+  input.focus();
+  input.select();
 
-    modal.querySelector("#reset-password-copy").addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(input.value);
-        window.alert("Senha copiada para a área de transferência.");
-      } catch {
-        input.select();
-        document.execCommand("copy");
-        window.alert("Senha selecionada. Use Ctrl+C para copiar.");
-      }
-    });
+  modal.querySelector("#reset-password-copy").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(input.value);
+      window.alert("Senha copiada para a área de transferência.");
+    } catch {
+      input.select();
+      document.execCommand("copy");
+      window.alert("Senha selecionada. Use Ctrl+C para copiar.");
+    }
+  });
 
-    modal.querySelector("#reset-password-close").addEventListener("click", () => modal.remove());
+  modal.querySelector("#reset-password-close").addEventListener("click", () => modal.remove());
 
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) modal.remove();
-    });
-  }
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}

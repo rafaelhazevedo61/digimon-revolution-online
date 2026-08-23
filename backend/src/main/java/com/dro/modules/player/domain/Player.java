@@ -19,7 +19,7 @@ import java.util.UUID;
 @Table(name = "players")
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 public class Player {
@@ -89,4 +89,15 @@ public class Player {
         this.starterSelected = true;
     }
 
+    public void setPassword (String password) {
+        this.password = password;
+    }
+
+    public UUID getId () {
+        return id;
+    }
+
+    public String getUsername () {
+        return username;
+    }
 }

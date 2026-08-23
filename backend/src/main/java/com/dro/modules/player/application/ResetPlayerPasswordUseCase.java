@@ -19,7 +19,6 @@ import java.util.UUID;
  * Componente da camada de caso de uso da aplicação do módulo de Jogadores.
  */
 @Service
-@RequiredArgsConstructor
 public class ResetPlayerPasswordUseCase {
 
     private static final String RANDOM_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
@@ -27,6 +26,11 @@ public class ResetPlayerPasswordUseCase {
 
     private final PlayerRepository playerRepository;
     private final PasswordEncoder passwordEncoder;
+
+    public ResetPlayerPasswordUseCase (PlayerRepository playerRepository, PasswordEncoder passwordEncoder) {
+        this.playerRepository = playerRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Transactional
     public ResetPlayerPasswordResponse execute(UUID playerId, ResetPlayerPasswordRequest request) {
@@ -53,11 +57,15 @@ public class ResetPlayerPasswordUseCase {
         }
 
         if (request.newPassword() == null || request.newPassword().isBlank()) {
-            throw new BadRequestException("New password is required when not generating a random password");
+            throw new BadRequestException(
+                    "A nova senha é obrigatória quando a geração automática não estiver habilitada."
+            );
         }
 
-        if (request.newPassword().length() < 4 || request.newPassword().length() > 60) {
-            throw new BadRequestException("Password must be between 4 and 60 characters");
+        if (request.newPassword().length() < 8 || request.newPassword().length() > 60) {
+            throw new BadRequestException(
+                    "A senha deve ter entre 8 e 60 caracteres."
+            );
         }
 
         return request.newPassword();
