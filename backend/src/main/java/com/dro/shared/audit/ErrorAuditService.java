@@ -38,6 +38,19 @@ public class ErrorAuditService {
             TransactionOutcome transactionOutcome
     ) {
         String correlationId = CorrelationIdContext.current();
+
+        if (httpStatus >= 500) {
+            log.error(
+                    "Application error. correlationId={}, method={}, path={}, status={}, errorCode={}",
+                    correlationId,
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    httpStatus,
+                    errorCode,
+                    exception
+            );
+        }
+
         ErrorLogDocument document = new ErrorLogDocument(
                 null,
                 UUID.randomUUID().toString(),
@@ -59,6 +72,7 @@ public class ErrorAuditService {
                 severityFor(httpStatus),
                 ErrorLogDocument.CURRENT_SCHEMA_VERSION
         );
+
         try {
             documentStore.saveError(document);
         } catch (RuntimeException auditFailure) {
