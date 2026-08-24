@@ -21,6 +21,7 @@ import com.dro.modules.server.application.GlobalDamageBuffService;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.audit.TransactionAuditPublisher;
+import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -49,6 +50,7 @@ public class ChallengeArenaUseCase {
     private final AddItemUseCase addItemUseCase;
     private final ChestDefinitionRepository chestDefinitionRepository;
     private final TransactionAuditPublisher transactionAuditPublisher;
+    private final GameplayConfig gameplayConfig;
 
     /**
      * Executa um desafio de Arena e persiste todos os efeitos da partida.
@@ -90,8 +92,9 @@ public class ChallengeArenaUseCase {
             Instant dailyResetCutoff = player.getArenaDailyResetAt() != null ? player.getArenaDailyResetAt().atZone(ZoneId.systemDefault()).toInstant() : null;
             Instant attackCutoff = dailyResetCutoff != null && dailyResetCutoff.isAfter(startOfDay) ? dailyResetCutoff : startOfDay;
             long usedToday = arenaMatchRepository.countByAttackerPlayerIdAndCreatedAtGreaterThanEqual(playerId, attackCutoff);
-            if (ArenaRules.dailyLimitReached(usedToday)) {
-                throw new BadRequestException("Daily challenge limit reached (" + ArenaRules.DAILY_CHALLENGE_LIMIT + " per day). Come back tomorrow.");
+            int dailyChallengeLimit = gameplayConfig.getArenaDailyChallengeLimit();
+            if (ArenaRules.dailyLimitReached(usedToday, dailyChallengeLimit)) {
+                throw new BadRequestException("Daily challenge limit reached (" + dailyChallengeLimit + " per day). Come back tomorrow.");
             }
             arenaMatchRepository.findFirstByAttackerPlayerIdAndDefenderDigimonIdOrderByCreatedAtDesc(playerId, opponentDigimonId).ifPresent(last -> {
                 Instant readyAt = last.getCreatedAt().plus(ArenaRules.TARGET_COOLDOWN_MINUTES, ChronoUnit.MINUTES);
@@ -206,7 +209,7 @@ public class ChallengeArenaUseCase {
         return Math.max(1, (int) Math.floor(baseCost * multiplier));
     }
 
-    public ChallengeArenaUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ArenaMatchRepository arenaMatchRepository, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final ClanMissionProgressTracker clanMissionProgressTracker, final GlobalDamageBuffService globalDamageBuffService, final AddItemUseCase addItemUseCase, final ChestDefinitionRepository chestDefinitionRepository, final TransactionAuditPublisher transactionAuditPublisher) {
+    public ChallengeArenaUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ArenaMatchRepository arenaMatchRepository, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final ClanMissionProgressTracker clanMissionProgressTracker, final GlobalDamageBuffService globalDamageBuffService, final AddItemUseCase addItemUseCase, final ChestDefinitionRepository chestDefinitionRepository, final TransactionAuditPublisher transactionAuditPublisher, final GameplayConfig gameplayConfig) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.arenaMatchRepository = arenaMatchRepository;
@@ -217,5 +220,6 @@ public class ChallengeArenaUseCase {
         this.addItemUseCase = addItemUseCase;
         this.chestDefinitionRepository = chestDefinitionRepository;
         this.transactionAuditPublisher = transactionAuditPublisher;
+        this.gameplayConfig = gameplayConfig;
     }
 }
