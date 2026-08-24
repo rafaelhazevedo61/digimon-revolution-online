@@ -1,6 +1,7 @@
 package com.dro.modules.config.api.dto.response;
 
 public record PublicConfigResponse(
-        boolean registrationInviteRequired
+        boolean registrationInviteRequired,
+        String appVersion
 ) {
 }

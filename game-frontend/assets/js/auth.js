@@ -154,6 +154,8 @@ function renderLoginPage() {
             </button>
           </form>
         </div>
+
+        <p id="app-version" class="text-center text-xs text-slate-600 mt-4"></p>
       </div>
     </div>
   `;
@@ -179,6 +181,7 @@ async function loadPublicConfig() {
       config.registrationInviteRequired === true;
 
     updateInviteCodeVisibility();
+    renderAppVersion(config.appVersion);
 
   } catch (error) {
     console.error(
@@ -195,6 +198,16 @@ async function loadPublicConfig() {
 
     updateInviteCodeVisibility();
   }
+}
+
+function renderAppVersion(version) {
+  const el = document.getElementById("app-version");
+
+  if (!el || !version) {
+    return;
+  }
+
+  el.textContent = `v${version}`;
 }
 
 function updateInviteCodeVisibility() {

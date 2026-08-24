@@ -12,6 +12,8 @@ logging:
     org.springframework.jdbc: INFO
 
 dro:
+  app-version: ${DRO_APP_VERSION:0.0.1-SNAPSHOT}
+
   registration:
     invite-required: true
 

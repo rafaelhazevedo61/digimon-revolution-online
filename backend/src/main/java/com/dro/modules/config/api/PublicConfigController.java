@@ -11,20 +11,26 @@ import org.springframework.web.bind.annotation.RestController;
 public class PublicConfigController {
 
     private final boolean registrationInviteRequired;
+    private final String appVersion;
 
     public PublicConfigController(
 
             @Value("${dro.registration.invite-required:true}")
-            boolean registrationInviteRequired
+            boolean registrationInviteRequired,
+
+            @Value("${dro.app-version:0.0.1-SNAPSHOT}")
+            String appVersion
     ) {
         this.registrationInviteRequired =
                 registrationInviteRequired;
+        this.appVersion = appVersion;
     }
 
     @GetMapping("/config")
     public PublicConfigResponse getConfig() {
         return new PublicConfigResponse(
-                registrationInviteRequired
+                registrationInviteRequired,
+                appVersion
         );
     }
 }
