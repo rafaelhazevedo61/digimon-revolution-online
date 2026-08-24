@@ -13,6 +13,9 @@ logging:
 
 dro:
   app-version: ${DRO_APP_VERSION:0.0.1-SNAPSHOT}
+  gameplay:
+    energy:
+      consumption-enabled: ${DRO_ENERGY_CONSUMPTION_ENABLED:true}
 
   registration:
     invite-required: true
