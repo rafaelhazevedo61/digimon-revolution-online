@@ -16,6 +16,7 @@ import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.tutorial.application.TutorialService;
 import com.dro.modules.tutorial.domain.TutorialStep;
 import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,9 @@ public class HatchDigitamaUseCase {
             Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
             if (player.getSelectedDigitama() == null) {
                 throw new BadRequestException("No digitama selected");
+            }
+            if (player.getActiveDigimonId() != null) {
+                throw new ConflictException("A starter Digimon has already been hatched");
             }
             String selectedDigitamaCode = player.getSelectedDigitama().getPoolCode();
             DigitamaPool pool = digitamaPoolRepository.findByCodeAndActiveTrueAndContentActiveTrue(selectedDigitamaCode).orElseThrow(() -> new NotFoundException("Digitama pool not found or inactive: " + selectedDigitamaCode));
