@@ -23,6 +23,7 @@ public class AuditOutboxProcessor {
     private final TransactionAuditRepository transactionAuditRepository;
     private final ObjectMapper objectMapper;
 
+    @Value("${dro.audit.outbox.max-attempts:5}")
     private int maxAttempts;
 
     /**

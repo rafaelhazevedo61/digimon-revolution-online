@@ -16,6 +16,7 @@ public class CorsConfig implements WebMvcConfigurer {
     private final AdminAuthInterceptor adminAuthInterceptor;
     private final TokenVersionInterceptor tokenVersionInterceptor;
 
+    @Value("${dro.cors.allowed-origins}")
     private String allowedOrigins;
 
     public CorsConfig (
