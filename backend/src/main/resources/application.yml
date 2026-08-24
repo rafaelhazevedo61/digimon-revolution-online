@@ -36,6 +36,9 @@ logging:
     org.springframework.jdbc: INFO
 
 dro:
+  registration:
+    invite-required: ${DRO_REGISTRATION_INVITE_REQUIRED:false}
+
   audit:
     outbox:
       fixed-delay-ms: ${DRO_AUDIT_OUTBOX_FIXED_DELAY_MS:5000}

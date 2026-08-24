@@ -60,6 +60,9 @@
                 <button class="nav-link" data-route="players">
                     Jogadores
                 </button>
+                <button class="nav-link" data-route="alpha-invites">
+                    Convites Alpha
+                </button>
                 <button class="nav-link" data-route="mail-announcements">
                     Comunicados do Correio
                 </button>
@@ -79,8 +82,9 @@
                 </button>
             </nav>
 
-                <div class="p-4 border-t border-slate-800">
-                <button onclick="adminLogout()" class="w-full px-3 py-2 rounded text-sm text-red-400 hover:bg-slate-800 transition-colors">
+            <div class="p-4 border-t border-slate-800">
+                <button onclick="adminLogout()"
+                    class="w-full px-3 py-2 rounded text-sm text-red-400 hover:bg-slate-800 transition-colors">
                     Sair
                 </button>
             </div>
@@ -107,7 +111,32 @@
         </main>
 
     </div>
+    <div id="confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 px-4">
+        <div class="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
+            <div class="border-b border-slate-800 px-5 py-4">
+                <h3 id="confirm-modal-title" class="text-lg font-semibold text-slate-100">
+                    Confirmar ação
+                </h3>
+            </div>
 
+            <div class="px-5 py-5">
+                <p id="confirm-modal-message" class="text-sm leading-relaxed text-slate-400"></p>
+            </div>
+
+            <div class="flex justify-end gap-3 border-t border-slate-800 px-5 py-4">
+                <button id="confirm-modal-cancel" type="button"
+                    class="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-700">
+                    Cancelar
+                </button>
+
+                <button id="confirm-modal-confirm" type="button"
+                    class="rounded-lg border border-red-800 bg-red-950/70 px-4 py-2 text-sm font-medium text-red-300 transition hover:bg-red-900/70">
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="./assets/js/modal.js"></script>
     <script src="./assets/js/config.js"></script>
     <script src="./assets/js/escape.js"></script>
     <script src="./assets/js/api.js"></script>
@@ -117,6 +146,7 @@
     <script src="./assets/js/digimon-infos.js"></script>
     <script src="./assets/js/evolution-lines.js"></script>
     <script src="./assets/js/players.js"></script>
+    <script src="./assets/js/alpha-invites.js"></script>
     <script src="./assets/js/equipment-templates.js"></script>
     <script src="./assets/js/shop-products.js"></script>
     <script src="./assets/js/missions.js"></script>

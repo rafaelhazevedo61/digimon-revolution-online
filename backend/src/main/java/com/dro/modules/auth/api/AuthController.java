@@ -1,8 +1,8 @@
 package com.dro.modules.auth.api;
 
-import com.dro.modules.auth.api.dto.LoginRequest;
-import com.dro.modules.auth.api.dto.LoginResponse;
-import com.dro.modules.auth.api.dto.RegisterRequest;
+import com.dro.modules.auth.api.dto.request.LoginRequest;
+import com.dro.modules.auth.api.dto.response.LoginResponse;
+import com.dro.modules.auth.api.dto.request.RegisterRequest;
 import com.dro.modules.auth.application.LoginUseCase;
 import com.dro.modules.auth.application.RegisterUseCase;
 import jakarta.validation.Valid;
