@@ -5,12 +5,10 @@ import com.dro.modules.mail.domain.MailMessageMapper;
 import com.dro.modules.mail.domain.MailRules;
 import com.dro.modules.mail.infra.MailMessageRepository;
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.UUID;
 
 /**
@@ -21,9 +19,7 @@ import java.util.UUID;
  * {@link MailRules#MAX_PAGE_SIZE}.</p>
  */
 @Service
-@RequiredArgsConstructor
 public class ListMailMessagesUseCase {
-
     private final MailMessageRepository mailMessageRepository;
 
     /**
@@ -38,8 +34,7 @@ public class ListMailMessagesUseCase {
     public MailMessagePageResponse inbox(String token, int page, int size) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         PageRequest pageable = pageRequest(page, size);
-        return toPage(mailMessageRepository
-                .findByRecipientIdAndRecipientDeletedFalseOrderByCreatedAtDesc(playerId, pageable));
+        return toPage(mailMessageRepository.findByRecipientIdAndRecipientDeletedFalseOrderByCreatedAtDesc(playerId, pageable));
     }
 
     /**
@@ -54,11 +49,12 @@ public class ListMailMessagesUseCase {
     public MailMessagePageResponse sent(String token, int page, int size) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         PageRequest pageable = pageRequest(page, size);
-        return toPage(mailMessageRepository
-                .findBySenderIdAndSenderDeletedFalseOrderByCreatedAtDesc(playerId, pageable));
+        return toPage(mailMessageRepository.findBySenderIdAndSenderDeletedFalseOrderByCreatedAtDesc(playerId, pageable));
     }
 
-    /** Normaliza página e tamanho para os limites aceitos pelo Correio. */
+    /**
+     * Normaliza página e tamanho para os limites aceitos pelo Correio.
+     */
     private PageRequest pageRequest(int page, int size) {
         int safePage = Math.max(0, page);
         int safeSize = Math.max(1, Math.min(size <= 0 ? 20 : size, MailRules.MAX_PAGE_SIZE));
@@ -66,12 +62,10 @@ public class ListMailMessagesUseCase {
     }
 
     private MailMessagePageResponse toPage(Page<com.dro.modules.mail.domain.MailMessage> page) {
-        return new MailMessagePageResponse(
-                page.getContent().stream().map(MailMessageMapper::toSummary).toList(),
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements(),
-                page.getTotalPages()
-        );
+        return new MailMessagePageResponse(page.getContent().stream().map(MailMessageMapper::toSummary).toList(), page.getNumber(), page.getSize(), page.getTotalElements(), page.getTotalPages());
+    }
+
+    public ListMailMessagesUseCase(final MailMessageRepository mailMessageRepository) {
+        this.mailMessageRepository = mailMessageRepository;
     }
 }

@@ -5,7 +5,6 @@ import com.dro.modules.loot.api.dto.response.AdminLootItemCatalogResponse;
 import com.dro.modules.loot.api.dto.response.AdminLootTableResponse;
 import com.dro.modules.loot.application.AdminLootTableUseCase;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.util.List;
 
 /**
@@ -27,55 +25,40 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/admin/loot-tables")
-@RequiredArgsConstructor
 public class AdminLootTableController {
-
     private final AdminLootTableUseCase adminLootTableUseCase;
 
     @PostMapping
-    public ResponseEntity<AdminLootTableResponse> create(
-            @RequestHeader("Authorization") String authorization,
-            @RequestBody @Valid LootTableAdminRequest request
-    ) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(adminLootTableUseCase.create(authorization, request));
+    public ResponseEntity<AdminLootTableResponse> create(@RequestHeader("Authorization") String authorization, @RequestBody @Valid LootTableAdminRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(adminLootTableUseCase.create(authorization, request));
     }
 
     @GetMapping
-    public ResponseEntity<List<AdminLootTableResponse>> list(
-            @RequestParam(required = false) Boolean activeOnly
-    ) {
+    public ResponseEntity<List<AdminLootTableResponse>> list(@RequestParam(required = false) Boolean activeOnly) {
         return ResponseEntity.ok(adminLootTableUseCase.list(activeOnly));
     }
 
     @GetMapping("/catalog/items")
-    public ResponseEntity<List<AdminLootItemCatalogResponse>> catalog(
-            @RequestParam(required = false) String category
-    ) {
+    public ResponseEntity<List<AdminLootItemCatalogResponse>> catalog(@RequestParam(required = false) String category) {
         return ResponseEntity.ok(adminLootTableUseCase.catalog(category));
     }
 
     @GetMapping("/{code}")
-    public ResponseEntity<AdminLootTableResponse> get(
-            @PathVariable String code
-    ) {
+    public ResponseEntity<AdminLootTableResponse> get(@PathVariable String code) {
         return ResponseEntity.ok(adminLootTableUseCase.get(code));
     }
 
     @PutMapping("/{code}")
-    public ResponseEntity<AdminLootTableResponse> update(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable String code,
-            @RequestBody @Valid LootTableAdminRequest request
-    ) {
+    public ResponseEntity<AdminLootTableResponse> update(@RequestHeader("Authorization") String authorization, @PathVariable String code, @RequestBody @Valid LootTableAdminRequest request) {
         return ResponseEntity.ok(adminLootTableUseCase.update(authorization, code, request));
     }
 
     @PatchMapping("/{code}/toggle-active")
-    public ResponseEntity<AdminLootTableResponse> toggleActive(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable String code
-    ) {
+    public ResponseEntity<AdminLootTableResponse> toggleActive(@RequestHeader("Authorization") String authorization, @PathVariable String code) {
         return ResponseEntity.ok(adminLootTableUseCase.toggleActive(authorization, code));
+    }
+
+    public AdminLootTableController(final AdminLootTableUseCase adminLootTableUseCase) {
+        this.adminLootTableUseCase = adminLootTableUseCase;
     }
 }

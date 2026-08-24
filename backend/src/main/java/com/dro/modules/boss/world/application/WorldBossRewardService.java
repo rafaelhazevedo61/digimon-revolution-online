@@ -11,10 +11,8 @@ import com.dro.modules.boss.world.infra.WorldBossRewardRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.loot.domain.ChestDefinitionEntity;
 import com.dro.shared.exception.ConflictException;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -34,9 +32,7 @@ import java.util.stream.Collectors;
  * resultado determinístico.</p>
  */
 @Service
-@RequiredArgsConstructor
 public class WorldBossRewardService {
-
     private final WorldBossAttackRepository worldBossAttackRepository;
     private final WorldBossRewardRepository worldBossRewardRepository;
     private final AddItemUseCase addItemUseCase;
@@ -52,103 +48,46 @@ public class WorldBossRewardService {
      * @return Baús concedidos nesta operação, em ordem de tipo
      */
     @Transactional
-    public List<WorldBossRewardResponse> grant(
-            BossDefinitionEntity boss,
-            WorldBossInstance instance,
-            WorldBossAttack attack,
-            boolean defeated
-    ) {
+    public List<WorldBossRewardResponse> grant(BossDefinitionEntity boss, WorldBossInstance instance, WorldBossAttack attack, boolean defeated) {
         List<WorldBossRewardResponse> rewards = new ArrayList<>();
-        rewards.add(grantOne(
-                boss,
-                instance,
-                attack,
-                attack,
-                WorldBossRewardType.ATTEMPT
-        ));
-
+        rewards.add(grantOne(boss, instance, attack, attack, WorldBossRewardType.ATTEMPT));
         if (defeated) {
-            List<WorldBossAttack> attacks = new ArrayList<>(
-                    worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(instance.getId())
-            );
+            List<WorldBossAttack> attacks = new ArrayList<>(worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(instance.getId()));
             if (attacks.stream().noneMatch(item -> item.getId().equals(attack.getId()))) {
                 attacks.add(attack);
             }
-
             WorldBossAttack topDamageAttack = findTopDamageAttack(attacks);
-            rewards.add(grantOne(
-                    boss,
-                    instance,
-                    attack,
-                    topDamageAttack,
-                    WorldBossRewardType.TOP_DAMAGE
-            ));
-            rewards.add(grantOne(
-                    boss,
-                    instance,
-                    attack,
-                    attack,
-                    WorldBossRewardType.FINAL_BLOW
-            ));
+            rewards.add(grantOne(boss, instance, attack, topDamageAttack, WorldBossRewardType.TOP_DAMAGE));
+            rewards.add(grantOne(boss, instance, attack, attack, WorldBossRewardType.FINAL_BLOW));
         }
-
         return rewards;
     }
 
-    /** Retorna as recompensas originadas por um ataque específico. */
+    /**
+     * Retorna as recompensas originadas por um ataque específico.
+     */
     @Transactional(readOnly = true)
     public List<WorldBossRewardResponse> findBySourceAttackId(UUID sourceAttackId) {
-        return worldBossRewardRepository.findBySourceAttackIdOrderByRewardTypeAsc(sourceAttackId)
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        return worldBossRewardRepository.findBySourceAttackIdOrderByRewardTypeAsc(sourceAttackId).stream().map(this::toResponse).toList();
     }
 
-    /** Retorna as recompensas oficiais do jogador nesta instância diária. */
+    /**
+     * Retorna as recompensas oficiais do jogador nesta instância diária.
+     */
     @Transactional(readOnly = true)
     public List<WorldBossRewardResponse> findPlayerRewards(UUID worldBossId, UUID playerId) {
-        return worldBossRewardRepository
-                .findByWorldBossIdAndRecipientPlayerIdOrderByCreatedAtAsc(worldBossId, playerId)
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        return worldBossRewardRepository.findByWorldBossIdAndRecipientPlayerIdOrderByCreatedAtAsc(worldBossId, playerId).stream().map(this::toResponse).toList();
     }
 
-    private WorldBossRewardResponse grantOne(
-            BossDefinitionEntity boss,
-            WorldBossInstance instance,
-            WorldBossAttack sourceAttack,
-            WorldBossAttack recipientAttack,
-            WorldBossRewardType rewardType
-    ) {
-        String eventKey = "world-boss:" + instance.getId()
-                + ":" + rewardType.getCode()
-                + ":" + sourceAttack.getId();
-
+    private WorldBossRewardResponse grantOne(BossDefinitionEntity boss, WorldBossInstance instance, WorldBossAttack sourceAttack, WorldBossAttack recipientAttack, WorldBossRewardType rewardType) {
+        String eventKey = "world-boss:" + instance.getId() + ":" + rewardType.getCode() + ":" + sourceAttack.getId();
         WorldBossReward existing = worldBossRewardRepository.findByEventKey(eventKey).orElse(null);
         if (existing != null) {
             return toResponse(existing);
         }
-
         ChestDefinitionEntity chest = resolveChest(boss, rewardType);
-        addItemUseCase.addMaterial(
-                recipientAttack.getDigimonId(),
-                chest.getItemDefinition(),
-                1
-        );
-
-        WorldBossReward reward = WorldBossReward.builder()
-                .id(UUID.randomUUID())
-                .worldBossId(instance.getId())
-                .sourceAttackId(sourceAttack.getId())
-                .recipientPlayerId(recipientAttack.getPlayerId())
-                .recipientDigimonId(recipientAttack.getDigimonId())
-                .chestDefinition(chest)
-                .rewardType(rewardType)
-                .eventKey(eventKey)
-                .createdAt(Instant.now())
-                .build();
-
+        addItemUseCase.addMaterial(recipientAttack.getDigimonId(), chest.getItemDefinition(), 1);
+        WorldBossReward reward = WorldBossReward.builder().id(UUID.randomUUID()).worldBossId(instance.getId()).sourceAttackId(sourceAttack.getId()).recipientPlayerId(recipientAttack.getPlayerId()).recipientDigimonId(recipientAttack.getDigimonId()).chestDefinition(chest).rewardType(rewardType).eventKey(eventKey).createdAt(Instant.now()).build();
         return toResponse(worldBossRewardRepository.save(reward));
     }
 
@@ -160,64 +99,33 @@ public class WorldBossRewardService {
             case FINAL_BLOW -> "golpe final";
         };
         if (chest == null) {
-            throw new ConflictException(
-                    "Boss Mundial não possui Baú configurado para " + rewardLabel + ".");
+            throw new ConflictException("Boss Mundial não possui Baú configurado para " + rewardLabel + ".");
         }
         if (!chest.isActive()) {
-            throw new ConflictException(
-                    "Baú de recompensa do Boss Mundial está inativo: " + chest.getCode());
+            throw new ConflictException("Baú de recompensa do Boss Mundial está inativo: " + chest.getCode());
         }
         if (chest.getLootTable() == null || !chest.getLootTable().isActive()) {
-            throw new ConflictException(
-                    "Loot Table do Baú de recompensa do Boss Mundial está inativa: " + chest.getCode());
+            throw new ConflictException("Loot Table do Baú de recompensa do Boss Mundial está inativa: " + chest.getCode());
         }
         return chest;
     }
 
     private WorldBossAttack findTopDamageAttack(List<WorldBossAttack> attacks) {
-        Map<UUID, List<WorldBossAttack>> byPlayer = attacks.stream()
-                .collect(Collectors.groupingBy(
-                        WorldBossAttack::getPlayerId,
-                        LinkedHashMap::new,
-                        Collectors.toList()
-                ));
-
-        return byPlayer.values().stream()
-                .map(playerAttacks -> new PlayerDamageSummary(
-                        playerAttacks.get(0).getPlayerId(),
-                        playerAttacks.stream().mapToLong(WorldBossAttack::getDamage).sum(),
-                        playerAttacks.stream()
-                                .map(WorldBossAttack::getCreatedAt)
-                                .min(Comparator.naturalOrder())
-                                .orElseThrow(),
-                        playerAttacks.stream()
-                                .max(Comparator.comparing(WorldBossAttack::getCreatedAt)
-                                        .thenComparing(WorldBossAttack::getId))
-                                .orElseThrow()
-                ))
-                .sorted(Comparator
-                        .comparingLong(PlayerDamageSummary::totalDamage).reversed()
-                        .thenComparing(PlayerDamageSummary::firstAttackAt)
-                        .thenComparing(summary -> summary.playerId().toString()))
-                .map(PlayerDamageSummary::recipientAttack)
-                .findFirst()
-                .orElseThrow(() -> new ConflictException(
-                        "Não foi possível identificar participante do Boss Mundial derrotado"));
+        Map<UUID, List<WorldBossAttack>> byPlayer = attacks.stream().collect(Collectors.groupingBy(WorldBossAttack::getPlayerId, LinkedHashMap::new, Collectors.toList()));
+        return byPlayer.values().stream().map(playerAttacks -> new PlayerDamageSummary(playerAttacks.get(0).getPlayerId(), playerAttacks.stream().mapToLong(WorldBossAttack::getDamage).sum(), playerAttacks.stream().map(WorldBossAttack::getCreatedAt).min(Comparator.naturalOrder()).orElseThrow(), playerAttacks.stream().max(Comparator.comparing(WorldBossAttack::getCreatedAt).thenComparing(WorldBossAttack::getId)).orElseThrow())).sorted(Comparator.comparingLong(PlayerDamageSummary::totalDamage).reversed().thenComparing(PlayerDamageSummary::firstAttackAt).thenComparing(summary -> summary.playerId().toString())).map(PlayerDamageSummary::recipientAttack).findFirst().orElseThrow(() -> new ConflictException("Não foi possível identificar participante do Boss Mundial derrotado"));
     }
 
     private WorldBossRewardResponse toResponse(WorldBossReward reward) {
-        return new WorldBossRewardResponse(
-                reward.getRewardType().getCode(),
-                reward.getChestDefinition().getCode(),
-                reward.getChestDefinition().getName()
-        );
+        return new WorldBossRewardResponse(reward.getRewardType().getCode(), reward.getChestDefinition().getCode(), reward.getChestDefinition().getName());
     }
 
-    private record PlayerDamageSummary(
-            UUID playerId,
-            long totalDamage,
-            Instant firstAttackAt,
-            WorldBossAttack recipientAttack
-    ) {
+
+    private record PlayerDamageSummary(UUID playerId, long totalDamage, Instant firstAttackAt, WorldBossAttack recipientAttack) {
+    }
+
+    public WorldBossRewardService(final WorldBossAttackRepository worldBossAttackRepository, final WorldBossRewardRepository worldBossRewardRepository, final AddItemUseCase addItemUseCase) {
+        this.worldBossAttackRepository = worldBossAttackRepository;
+        this.worldBossRewardRepository = worldBossRewardRepository;
+        this.addItemUseCase = addItemUseCase;
     }
 }

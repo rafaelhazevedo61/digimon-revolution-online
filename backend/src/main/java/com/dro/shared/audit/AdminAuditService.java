@@ -1,9 +1,7 @@
 package com.dro.shared.audit;
 
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -13,9 +11,7 @@ import java.util.UUID;
  * como ator explícito.
  */
 @Service
-@RequiredArgsConstructor
 public class AdminAuditService {
-
     private final TransactionAuditPublisher transactionAuditPublisher;
 
     /**
@@ -29,15 +25,7 @@ public class AdminAuditService {
      * @param summary resumo sanitizado da operação
      * @param metadata parâmetros relevantes e não sensíveis
      */
-    public void success(
-            String authorization,
-            String eventType,
-            String aggregateType,
-            String aggregateId,
-            String operation,
-            String summary,
-            Map<String, Object> metadata
-    ) {
+    public void success(String authorization, String eventType, String aggregateType, String aggregateId, String operation, String summary, Map<String, Object> metadata) {
         UUID adminId = TokenExtractor.extractPlayerId(authorization);
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("actorId", adminId.toString());
@@ -48,13 +36,10 @@ public class AdminAuditService {
         if (metadata != null) {
             payload.putAll(metadata);
         }
+        transactionAuditPublisher.success("admin:" + eventType.toLowerCase() + ":" + aggregateId + ":" + UUID.randomUUID(), eventType, aggregateType, aggregateId, payload);
+    }
 
-        transactionAuditPublisher.success(
-                "admin:" + eventType.toLowerCase() + ":" + aggregateId + ":" + UUID.randomUUID(),
-                eventType,
-                aggregateType,
-                aggregateId,
-                payload
-        );
+    public AdminAuditService(final TransactionAuditPublisher transactionAuditPublisher) {
+        this.transactionAuditPublisher = transactionAuditPublisher;
     }
 }

@@ -1,4 +1,5 @@
 package com.dro.modules.player.application;
+import com.dro.shared.security.JwtTestToken;
 
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.*;
@@ -17,8 +18,8 @@ import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.player.api.dto.response.PlayerDashboardResponse;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
-import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.exception.UnauthorizedException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -48,7 +49,7 @@ class GetPlayerDashboardUseCaseTest {
     private GetPlayerDashboardUseCase useCase;
 
     private String makeToken(UUID playerId) {
-        return UUID.randomUUID() + ":" + playerId;
+        return JwtTestToken.create(playerId);
     }
 
     private Player makePlayer(UUID playerId, UUID activeDigimonId) {
@@ -219,7 +220,7 @@ class GetPlayerDashboardUseCaseTest {
 
     @Test
     void execute_throwsException_whenTokenNull() {
-        assertThrows(BadRequestException.class, () -> useCase.execute(null));
+        assertThrows(UnauthorizedException.class, () -> useCase.execute(null));
     }
 
     @Test

@@ -4,22 +4,18 @@ import com.dro.modules.clan.api.dto.response.ClanSummaryResponse;
 import com.dro.modules.clan.domain.Clan;
 import com.dro.modules.clan.infra.ClanRepository;
 import com.dro.modules.player.infra.PlayerRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
 import java.util.UUID;
 
 /**
  * Componente da camada de caso de uso da aplicação do módulo de Clãs.
  */
 @Service
-@RequiredArgsConstructor
 public class ListClansUseCase {
-
     private final ClanRepository clanRepository;
     private final PlayerRepository playerRepository;
     private final ClanResponseMapper mapper;
@@ -33,5 +29,11 @@ public class ListClansUseCase {
             clans = clanRepository.findByActiveTrue(pageable);
         }
         return clans.map(c -> mapper.toSummary(c, (int) playerRepository.countByClanId(c.getId())));
+    }
+
+    public ListClansUseCase(final ClanRepository clanRepository, final PlayerRepository playerRepository, final ClanResponseMapper mapper) {
+        this.clanRepository = clanRepository;
+        this.playerRepository = playerRepository;
+        this.mapper = mapper;
     }
 }

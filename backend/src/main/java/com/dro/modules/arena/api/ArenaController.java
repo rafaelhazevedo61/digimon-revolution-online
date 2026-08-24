@@ -15,10 +15,8 @@ import com.dro.modules.arena.application.GetArenaLobbyUseCase;
 import com.dro.modules.arena.application.GetArenaRankingUseCase;
 import com.dro.modules.arena.application.GetArenaShopUseCase;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 /**
@@ -26,9 +24,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/arena")
-@RequiredArgsConstructor
 public class ArenaController {
-
     private final GetArenaLobbyUseCase getArenaLobbyUseCase;
     private final ChallengeArenaUseCase challengeArenaUseCase;
     private final GetArenaRankingUseCase getArenaRankingUseCase;
@@ -37,49 +33,41 @@ public class ArenaController {
     private final BuyArenaShopProductUseCase buyArenaShopProductUseCase;
 
     @GetMapping("/lobby")
-    public ResponseEntity<ArenaLobbyResponse> getLobby(
-            @RequestHeader("Authorization") String authorization
-    ) {
+    public ResponseEntity<ArenaLobbyResponse> getLobby(@RequestHeader("Authorization") String authorization) {
         return ResponseEntity.ok(getArenaLobbyUseCase.execute(authorization));
     }
 
     @PostMapping("/challenge")
-    public ResponseEntity<ArenaMatchResponse> challenge(
-            @RequestHeader("Authorization") String authorization,
-            @RequestBody @Valid ChallengeArenaRequest request
-    ) {
+    public ResponseEntity<ArenaMatchResponse> challenge(@RequestHeader("Authorization") String authorization, @RequestBody @Valid ChallengeArenaRequest request) {
         return ResponseEntity.ok(challengeArenaUseCase.execute(authorization, request.opponentDigimonId()));
     }
 
     @GetMapping("/ranking")
-    public ResponseEntity<List<ArenaRankingEntryResponse>> getRanking(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
+    public ResponseEntity<List<ArenaRankingEntryResponse>> getRanking(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(getArenaRankingUseCase.execute(page, size));
     }
 
     @GetMapping("/history")
-    public ResponseEntity<List<ArenaHistoryEntryResponse>> getHistory(
-            @RequestHeader("Authorization") String authorization,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
+    public ResponseEntity<List<ArenaHistoryEntryResponse>> getHistory(@RequestHeader("Authorization") String authorization, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(getArenaHistoryUseCase.execute(authorization, page, size));
     }
 
     @GetMapping("/shop")
-    public ResponseEntity<ArenaShopResponse> getShop(
-            @RequestHeader("Authorization") String authorization
-    ) {
+    public ResponseEntity<ArenaShopResponse> getShop(@RequestHeader("Authorization") String authorization) {
         return ResponseEntity.ok(getArenaShopUseCase.execute(authorization));
     }
 
     @PostMapping("/shop/buy")
-    public ResponseEntity<BuyArenaShopResponse> buyFromShop(
-            @RequestHeader("Authorization") String authorization,
-            @RequestBody @Valid BuyArenaShopRequest request
-    ) {
+    public ResponseEntity<BuyArenaShopResponse> buyFromShop(@RequestHeader("Authorization") String authorization, @RequestBody @Valid BuyArenaShopRequest request) {
         return ResponseEntity.ok(buyArenaShopProductUseCase.execute(authorization, request));
+    }
+
+    public ArenaController(final GetArenaLobbyUseCase getArenaLobbyUseCase, final ChallengeArenaUseCase challengeArenaUseCase, final GetArenaRankingUseCase getArenaRankingUseCase, final GetArenaHistoryUseCase getArenaHistoryUseCase, final GetArenaShopUseCase getArenaShopUseCase, final BuyArenaShopProductUseCase buyArenaShopProductUseCase) {
+        this.getArenaLobbyUseCase = getArenaLobbyUseCase;
+        this.challengeArenaUseCase = challengeArenaUseCase;
+        this.getArenaRankingUseCase = getArenaRankingUseCase;
+        this.getArenaHistoryUseCase = getArenaHistoryUseCase;
+        this.getArenaShopUseCase = getArenaShopUseCase;
+        this.buyArenaShopProductUseCase = buyArenaShopProductUseCase;
     }
 }

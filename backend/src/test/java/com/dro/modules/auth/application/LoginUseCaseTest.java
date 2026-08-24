@@ -5,6 +5,7 @@ import com.dro.modules.auth.api.dto.response.LoginResponse;
 import com.dro.modules.auth.domain.exception.InvalidCredentialsException;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,6 +29,9 @@ class LoginUseCaseTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private JwtService jwtService;
+
     @InjectMocks
     private LoginUseCase loginUseCase;
 
@@ -46,6 +50,7 @@ class LoginUseCaseTest {
         Player player = createPlayer();
         when(repository.findByEmail("test@email.com")).thenReturn(Optional.of(player));
         when(passwordEncoder.matches("password123", "encoded_password")).thenReturn(true);
+        when(jwtService.generateToken(player)).thenReturn(player.getId().toString());
 
         LoginResponse response = loginUseCase.execute(new LoginRequest("test@email.com", "password123"));
 

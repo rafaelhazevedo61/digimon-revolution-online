@@ -11,11 +11,9 @@ import com.dro.modules.clan.api.dto.response.ClanUpgradeResponse;
 import com.dro.modules.mail.api.dto.response.MailMessageResponse;
 import com.dro.modules.clan.application.*;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -24,9 +22,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/clans")
-@RequiredArgsConstructor
 public class ClanController {
-
     private final CreateClanUseCase createClanUseCase;
     private final ListClansUseCase listClansUseCase;
     private final GetClanUseCase getClanUseCase;
@@ -44,132 +40,96 @@ public class ClanController {
     private final GetClanRankingUseCase getClanRankingUseCase;
 
     @PostMapping
-    public ResponseEntity<ClanResponse> create(
-            @RequestHeader("Authorization") String authorization,
-            @RequestBody @Valid ClanCreateRequest request
-    ) {
-        return ResponseEntity.ok(createClanUseCase.execute(
-                authorization, request.name(), request.tag(), request.description()));
+    public ResponseEntity<ClanResponse> create(@RequestHeader("Authorization") String authorization, @RequestBody @Valid ClanCreateRequest request) {
+        return ResponseEntity.ok(createClanUseCase.execute(authorization, request.name(), request.tag(), request.description()));
     }
 
     @GetMapping
-    public ResponseEntity<Page<ClanSummaryResponse>> list(
-            @RequestParam(required = false) String query,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
+    public ResponseEntity<Page<ClanSummaryResponse>> list(@RequestParam(required = false) String query, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(listClansUseCase.execute(query, page, size));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<ClanResponse> getMyClan(
-            @RequestHeader("Authorization") String authorization
-    ) {
+    public ResponseEntity<ClanResponse> getMyClan(@RequestHeader("Authorization") String authorization) {
         return ResponseEntity.ok(getMyClanUseCase.execute(authorization));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ClanResponse> getById(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID id
-    ) {
+    public ResponseEntity<ClanResponse> getById(@RequestHeader("Authorization") String authorization, @PathVariable UUID id) {
         return ResponseEntity.ok(getClanUseCase.execute(authorization, id));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<ClanResponse> update(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID id,
-            @RequestBody @Valid ClanUpdateRequest request
-    ) {
-        return ResponseEntity.ok(updateClanUseCase.execute(
-                authorization, id, request.description(), request.emblem()));
+    public ResponseEntity<ClanResponse> update(@RequestHeader("Authorization") String authorization, @PathVariable UUID id, @RequestBody @Valid ClanUpdateRequest request) {
+        return ResponseEntity.ok(updateClanUseCase.execute(authorization, id, request.description(), request.emblem()));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> dissolve(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID id
-    ) {
+    public ResponseEntity<Void> dissolve(@RequestHeader("Authorization") String authorization, @PathVariable UUID id) {
         dissolveClanUseCase.execute(authorization, id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/invite")
-    public ResponseEntity<MailMessageResponse> invite(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID id,
-            @RequestBody @Valid ClanInviteRequest request
-    ) {
+    public ResponseEntity<MailMessageResponse> invite(@RequestHeader("Authorization") String authorization, @PathVariable UUID id, @RequestBody @Valid ClanInviteRequest request) {
         return ResponseEntity.ok(inviteClanPlayerUseCase.execute(authorization, id, request));
     }
 
     @PostMapping("/{id}/join")
-    public ResponseEntity<ClanResponse> join(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID id
-    ) {
+    public ResponseEntity<ClanResponse> join(@RequestHeader("Authorization") String authorization, @PathVariable UUID id) {
         return ResponseEntity.ok(joinClanUseCase.execute(authorization, id));
     }
 
     @PostMapping("/{id}/leave")
-    public ResponseEntity<ClanResponse> leave(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID id
-    ) {
+    public ResponseEntity<ClanResponse> leave(@RequestHeader("Authorization") String authorization, @PathVariable UUID id) {
         return ResponseEntity.ok(leaveClanUseCase.execute(authorization, id));
     }
 
     @PostMapping("/{id}/members/{username}/kick")
-    public ResponseEntity<ClanResponse> kick(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID id,
-            @PathVariable String username
-    ) {
+    public ResponseEntity<ClanResponse> kick(@RequestHeader("Authorization") String authorization, @PathVariable UUID id, @PathVariable String username) {
         return ResponseEntity.ok(kickMemberUseCase.execute(authorization, id, username));
     }
 
     @PostMapping("/{id}/members/{username}/role")
-    public ResponseEntity<ClanResponse> changeRole(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID id,
-            @PathVariable String username,
-            @RequestBody @Valid ChangeRoleRequest request
-    ) {
+    public ResponseEntity<ClanResponse> changeRole(@RequestHeader("Authorization") String authorization, @PathVariable UUID id, @PathVariable String username, @RequestBody @Valid ChangeRoleRequest request) {
         return ResponseEntity.ok(changeRoleUseCase.execute(authorization, id, username, request));
     }
 
     @PostMapping("/{id}/members/{username}/transfer")
-    public ResponseEntity<ClanResponse> transferLeadership(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID id,
-            @PathVariable String username
-    ) {
+    public ResponseEntity<ClanResponse> transferLeadership(@RequestHeader("Authorization") String authorization, @PathVariable UUID id, @PathVariable String username) {
         return ResponseEntity.ok(transferLeadershipUseCase.execute(authorization, id, username));
     }
 
     @GetMapping("/{id}/upgrades")
-    public ResponseEntity<List<ClanUpgradeResponse>> listUpgrades(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID id
-    ) {
+    public ResponseEntity<List<ClanUpgradeResponse>> listUpgrades(@RequestHeader("Authorization") String authorization, @PathVariable UUID id) {
         return ResponseEntity.ok(listClanUpgradesUseCase.execute(authorization, id));
     }
 
     @PostMapping("/{id}/upgrades/{code}/buy")
-    public ResponseEntity<ClanUpgradeResponse> buyUpgrade(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID id,
-            @PathVariable String code
-    ) {
+    public ResponseEntity<ClanUpgradeResponse> buyUpgrade(@RequestHeader("Authorization") String authorization, @PathVariable UUID id, @PathVariable String code) {
         return ResponseEntity.ok(buyUpgradeUseCase.execute(authorization, id, code));
     }
 
     @GetMapping("/ranking")
-    public ResponseEntity<Page<ClanRankingEntryResponse>> getRanking(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
+    public ResponseEntity<Page<ClanRankingEntryResponse>> getRanking(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(getClanRankingUseCase.execute(page, size));
+    }
+
+    public ClanController(final CreateClanUseCase createClanUseCase, final ListClansUseCase listClansUseCase, final GetClanUseCase getClanUseCase, final GetMyClanUseCase getMyClanUseCase, final JoinClanUseCase joinClanUseCase, final InviteClanPlayerUseCase inviteClanPlayerUseCase, final LeaveClanUseCase leaveClanUseCase, final UpdateClanUseCase updateClanUseCase, final KickMemberUseCase kickMemberUseCase, final ChangeRoleUseCase changeRoleUseCase, final TransferLeadershipUseCase transferLeadershipUseCase, final DissolveClanUseCase dissolveClanUseCase, final ListClanUpgradesUseCase listClanUpgradesUseCase, final BuyUpgradeUseCase buyUpgradeUseCase, final GetClanRankingUseCase getClanRankingUseCase) {
+        this.createClanUseCase = createClanUseCase;
+        this.listClansUseCase = listClansUseCase;
+        this.getClanUseCase = getClanUseCase;
+        this.getMyClanUseCase = getMyClanUseCase;
+        this.joinClanUseCase = joinClanUseCase;
+        this.inviteClanPlayerUseCase = inviteClanPlayerUseCase;
+        this.leaveClanUseCase = leaveClanUseCase;
+        this.updateClanUseCase = updateClanUseCase;
+        this.kickMemberUseCase = kickMemberUseCase;
+        this.changeRoleUseCase = changeRoleUseCase;
+        this.transferLeadershipUseCase = transferLeadershipUseCase;
+        this.dissolveClanUseCase = dissolveClanUseCase;
+        this.listClanUpgradesUseCase = listClanUpgradesUseCase;
+        this.buyUpgradeUseCase = buyUpgradeUseCase;
+        this.getClanRankingUseCase = getClanRankingUseCase;
     }
 }

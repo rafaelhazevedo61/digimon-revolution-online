@@ -28,10 +28,8 @@ import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -44,9 +42,7 @@ import java.util.stream.Collectors;
  * Componente da camada de caso de uso da aplicação do módulo de Boss Mundial.
  */
 @Service
-@RequiredArgsConstructor
 public class ChallengeBossUseCase {
-
     private final BossDefinitionRepository bossDefinitionRepository;
     private final BossAttemptRepository bossAttemptRepository;
     private final DigimonRepository digimonRepository;
@@ -63,72 +59,47 @@ public class ChallengeBossUseCase {
 
     @Transactional
     public BossChallengeResponse execute(String token, String bossCode, UUID digimonId) {
-
         UUID playerId = TokenExtractor.extractPlayerId(token);
-
-        var player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
-
-        BossDefinitionEntity boss = bossDefinitionRepository.findByCode(bossCode)
-                .orElseThrow(() -> new NotFoundException("Boss not found: " + bossCode));
-
+        var player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+        BossDefinitionEntity boss = bossDefinitionRepository.findByCode(bossCode).orElseThrow(() -> new NotFoundException("Boss not found: " + bossCode));
         if (!boss.isActive()) {
             throw new BadRequestException("Boss is not active");
         }
-
         if (boss.getBossType() == BossType.CLAN || boss.getBossType() == BossType.WORLD) {
             throw new BadRequestException("This boss can only be challenged through its dedicated raid");
         }
-
         if (boss.getBossType() == BossType.DAILY) {
             validateDailyRotation(boss);
         }
-
-        Digimon digimon = digimonRepository.findById(digimonId)
-                .orElseThrow(() -> new NotFoundException("Digimon not found"));
-
+        Digimon digimon = digimonRepository.findById(digimonId).orElseThrow(() -> new NotFoundException("Digimon not found"));
         if (!digimon.getPlayerId().equals(playerId)) {
             throw new BadRequestException("Digimon does not belong to player");
         }
-
         validateRequirements(boss, digimon);
-
         boolean isAdmin = player.getUserType() == UserType.ADMIN;
         UUID clanId = player.getClanId();
-
         if (!isAdmin) {
             validateCooldown(playerId, boss);
-
             int maxEnergyBonus = clanId != null ? clanBonusService.getMaxEnergyBonus(clanId) : 0;
             digimon.regenerateEnergy(maxEnergyBonus);
-            int energyCost = clanId != null
-                    ? applyCostReduction(boss.getEnergyCost(), clanBonusService.getEnergyCostMultiplier(clanId))
-                    : boss.getEnergyCost();
+            int energyCost = clanId != null ? applyCostReduction(boss.getEnergyCost(), clanBonusService.getEnergyCostMultiplier(clanId)) : boss.getEnergyCost();
             if (digimon.getEnergy() < energyCost) {
                 throw new BadRequestException("Not enough energy. Required: " + energyCost + ", current: " + digimon.getEnergy());
             }
-
             digimon.consumeEnergy(energyCost);
         }
-
-        List<Equipment> equippedItems = equipmentRepository.findByDigimonId(digimon.getId())
-                .stream().filter(Equipment::isEquipped).toList();
-
+        List<Equipment> equippedItems = equipmentRepository.findByDigimonId(digimon.getId()).stream().filter(Equipment::isEquipped).toList();
         double atkBonus = clanId != null ? clanBonusService.getAttackBonusPercent(clanId) : 0.0;
         double defBonus = clanId != null ? clanBonusService.getDefenseBonusPercent(clanId) : 0.0;
         double hpBonus = clanId != null ? clanBonusService.getHpBonusPercent(clanId) : 0.0;
-
         int totalHp = applyBonus(digimon.getHp() + EquipmentRules.totalBonusHp(equippedItems), hpBonus);
         int totalAtk = applyBonus(digimon.getAttack() + EquipmentRules.totalBonusAttack(equippedItems), atkBonus);
         int totalDef = applyBonus(digimon.getDefense() + EquipmentRules.totalBonusDefense(equippedItems), defBonus);
-
         double rawDigimonPower = BossCombatRules.calculatePower(totalHp, totalAtk, totalDef);
         double digimonPower = rawDigimonPower * globalDamageBuffService.getMultiplier();
         double bossPower = BossCombatRules.calculatePower(boss.getHp(), boss.getAtk(), boss.getDef());
-
         boolean buffActive = globalDamageBuffService.isEnabled();
         int winChance = buffActive ? 100 : BossCombatRules.calculateWinChance(digimonPower, bossPower);
-
         boolean victory;
         if (buffActive) {
             victory = true;
@@ -138,28 +109,18 @@ public class ChallengeBossUseCase {
             int roll = ThreadLocalRandom.current().nextInt(1, 101);
             victory = roll <= winChance;
         }
-
         int xpGained;
         int bitsGained;
         ChestDefinitionEntity rewardChest = null;
         List<DropRewardResponse> drops = new ArrayList<>();
-
         if (victory) {
             rewardChest = resolveRewardChest(boss);
             xpGained = boss.getBaseXpReward();
             double bitsMultiplier = clanId != null ? clanBonusService.getMissionBitsMultiplier(clanId) : 1.0;
             bitsGained = (int) Math.floor(boss.getBaseBitsReward() * bitsMultiplier);
-
             addItemUseCase.addMaterial(digimon.getId(), rewardChest.getItemDefinition(), 1);
-            drops.add(new DropRewardResponse(
-                    "CHEST",
-                    rewardChest.getCode(),
-                    rewardChest.getName(),
-                    1,
-                    null
-            ));
+            drops.add(new DropRewardResponse("CHEST", rewardChest.getCode(), rewardChest.getName(), 1, null));
             drops.addAll(rollLegacyEquipmentDrops(boss, digimon.getId(), clanId));
-
             if (clanId != null) {
                 clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.BOSSES_DEFEATED);
             }
@@ -167,61 +128,23 @@ public class ChallengeBossUseCase {
             xpGained = (int) Math.round(boss.getBaseXpReward() * boss.getDefeatXpPercent() / 100.0);
             bitsGained = 0;
         }
-
         digimon.gainExperience(xpGained);
         digimon.setBits(digimon.getBits() + bitsGained);
         digimonRepository.save(digimon);
-
-        BossAttemptEntity attempt = BossAttemptEntity.builder()
-                .id(UUID.randomUUID())
-                .playerId(playerId)
-                .digimonId(digimonId)
-                .bossId(boss.getId())
-                .status(victory ? BossAttemptStatus.VICTORY : BossAttemptStatus.DEFEAT)
-                .damageDealt((int) digimonPower)
-                .xpGained(xpGained)
-                .bitsGained(bitsGained)
-                .createdAt(Instant.now())
-                .build();
-
+        BossAttemptEntity attempt = BossAttemptEntity.builder().id(UUID.randomUUID()).playerId(playerId).digimonId(digimonId).bossId(boss.getId()).status(victory ? BossAttemptStatus.VICTORY : BossAttemptStatus.DEFEAT).damageDealt((int) digimonPower).xpGained(xpGained).bitsGained(bitsGained).createdAt(Instant.now()).build();
         bossAttemptRepository.save(attempt);
-        transactionAuditPublisher.success(
-                "boss-challenge:" + attempt.getId(),
-                "BOSS_CHALLENGED",
-                "BossAttempt",
-                attempt.getId().toString(),
-                buildAuditPayload(playerId, boss, attempt, rewardChest, drops)
-        );
-
-        return new BossChallengeResponse(
-                boss.getCode(),
-                boss.getName(),
-                victory ? "VICTORY" : "DEFEAT",
-                winChance,
-                digimonPower,
-                bossPower,
-                xpGained,
-                bitsGained,
-                rewardChest != null ? rewardChest.getCode() : null,
-                rewardChest != null ? rewardChest.getName() : null,
-                drops
-        );
+        transactionAuditPublisher.success("boss-challenge:" + attempt.getId(), "BOSS_CHALLENGED", "BossAttempt", attempt.getId().toString(), buildAuditPayload(playerId, boss, attempt, rewardChest, drops));
+        return new BossChallengeResponse(boss.getCode(), boss.getName(), victory ? "VICTORY" : "DEFEAT", winChance, digimonPower, bossPower, xpGained, bitsGained, rewardChest != null ? rewardChest.getCode() : null, rewardChest != null ? rewardChest.getName() : null, drops);
     }
 
     private void validateDailyRotation(BossDefinitionEntity boss) {
-        List<BossDefinitionEntity> dailySameStage = bossDefinitionRepository.findAllActive().stream()
-                .filter(b -> b.getBossType() == BossType.DAILY && b.getRequiredStage() == boss.getRequiredStage())
-                .sorted(Comparator.comparingLong(BossDefinitionEntity::getId))
-                .toList();
-
+        List<BossDefinitionEntity> dailySameStage = bossDefinitionRepository.findAllActive().stream().filter(b -> b.getBossType() == BossType.DAILY && b.getRequiredStage() == boss.getRequiredStage()).sorted(Comparator.comparingLong(BossDefinitionEntity::getId)).toList();
         if (dailySameStage.size() <= 1) return;
-
         long dayIndex = LocalDate.now(ZoneOffset.UTC).toEpochDay();
         int todayIndex = (int) (dayIndex % dailySameStage.size());
         BossDefinitionEntity todaysBoss = dailySameStage.get(todayIndex);
-
         if (!todaysBoss.getId().equals(boss.getId())) {
-            throw new BadRequestException("This daily boss is not available today. Today's boss: " + todaysBoss.getName());
+            throw new BadRequestException("This daily boss is not available today. Today\'s boss: " + todaysBoss.getName());
         }
     }
 
@@ -238,55 +161,33 @@ public class ChallengeBossUseCase {
     }
 
     private void validateCooldown(UUID playerId, BossDefinitionEntity boss) {
-        var lastAttempt = bossAttemptRepository
-                .findFirstByPlayerIdAndBossIdOrderByCreatedAtDesc(playerId, boss.getId());
-
+        var lastAttempt = bossAttemptRepository.findFirstByPlayerIdAndBossIdOrderByCreatedAtDesc(playerId, boss.getId());
         if (lastAttempt.isEmpty()) return;
-
         Instant lastTime = lastAttempt.get().getCreatedAt();
         Instant now = Instant.now();
-
         long cooldownMinutes = boss.getCooldownMinutes();
         Instant cooldownEnd = lastTime.plus(cooldownMinutes, ChronoUnit.MINUTES);
-
         if (now.isBefore(cooldownEnd)) {
             long remainingSeconds = now.until(cooldownEnd, ChronoUnit.SECONDS);
             throw new BadRequestException("Boss on cooldown. " + remainingSeconds + " seconds remaining.");
         }
     }
 
-    private List<DropRewardResponse> rollLegacyEquipmentDrops(
-            BossDefinitionEntity boss,
-            UUID digimonId,
-            UUID clanId
-    ) {
+    private List<DropRewardResponse> rollLegacyEquipmentDrops(BossDefinitionEntity boss, UUID digimonId, UUID clanId) {
         List<DropRewardResponse> rewards = new ArrayList<>();
         if (boss.getDrops() == null) return rewards;
-
         double dropBonusPercent = clanId != null ? clanBonusService.getBossDropBonusPercent(clanId) : 0.0;
         int dropBonusPoints = (int) Math.round(dropBonusPercent * 100);
-        List<BossDropEntity> equipmentDrops = boss.getDrops().stream()
-                .filter(drop -> "EQUIPMENT".equals(drop.getDropType()))
-                .toList();
-
+        List<BossDropEntity> equipmentDrops = boss.getDrops().stream().filter(drop -> "EQUIPMENT".equals(drop.getDropType())).toList();
         if (equipmentDrops.isEmpty()) return rewards;
-
         int poolChance = Math.min(100, equipmentDrops.get(0).getChance() + dropBonusPoints);
         int roll = ThreadLocalRandom.current().nextInt(1, 101);
         if (roll > poolChance) return rewards;
-
-        BossDropEntity picked = equipmentDrops.get(
-                ThreadLocalRandom.current().nextInt(equipmentDrops.size()));
+        BossDropEntity picked = equipmentDrops.get(ThreadLocalRandom.current().nextInt(equipmentDrops.size()));
         String profile = "BOSS_" + boss.getBossType().name();
         EquipmentRarity rarity = equipmentRarityProfileService.roll(profile, dropBonusPercent);
         grantEquipmentUseCase.execute(digimonId, picked.getTemplateName(), rarity);
-        rewards.add(new DropRewardResponse(
-                "EQUIPMENT",
-                picked.getTemplateName(),
-                picked.getTemplateName(),
-                1,
-                rarity.name()
-        ));
+        rewards.add(new DropRewardResponse("EQUIPMENT", picked.getTemplateName(), picked.getTemplateName(), 1, rarity.name()));
         return rewards;
     }
 
@@ -295,11 +196,7 @@ public class ChallengeBossUseCase {
         if (configuredChest == null) {
             throw new ConflictException("Boss não possui Baú de recompensa configurado: " + boss.getCode());
         }
-
-        ChestDefinitionEntity chest = chestDefinitionRepository
-                .findWithCatalogByCode(configuredChest.getCode())
-                .orElseThrow(() -> new ConflictException(
-                        "Baú de recompensa do Boss não encontrado: " + configuredChest.getCode()));
+        ChestDefinitionEntity chest = chestDefinitionRepository.findWithCatalogByCode(configuredChest.getCode()).orElseThrow(() -> new ConflictException("Baú de recompensa do Boss não encontrado: " + configuredChest.getCode()));
         if (!chest.isActive()) {
             throw new ConflictException("Baú de recompensa do Boss está inativo: " + chest.getCode());
         }
@@ -309,13 +206,7 @@ public class ChallengeBossUseCase {
         return chest;
     }
 
-    private Map<String, Object> buildAuditPayload(
-            UUID playerId,
-            BossDefinitionEntity boss,
-            BossAttemptEntity attempt,
-            ChestDefinitionEntity rewardChest,
-            List<DropRewardResponse> drops
-    ) {
+    private Map<String, Object> buildAuditPayload(UUID playerId, BossDefinitionEntity boss, BossAttemptEntity attempt, ChestDefinitionEntity rewardChest, List<DropRewardResponse> drops) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("module", "boss");
         payload.put("operation", "challenge");
@@ -327,12 +218,7 @@ public class ChallengeBossUseCase {
         payload.put("xpGained", attempt.getXpGained());
         payload.put("bitsGained", attempt.getBitsGained());
         payload.put("chestCode", rewardChest != null ? rewardChest.getCode() : null);
-        payload.put("drops", drops.stream().map(drop -> Map.of(
-                "type", drop.type(),
-                "code", drop.code(),
-                "quantity", drop.quantity(),
-                "rarity", drop.rarity() == null ? "" : drop.rarity()
-        )).toList());
+        payload.put("drops", drops.stream().map(drop -> Map.of("type", drop.type(), "code", drop.code(), "quantity", drop.quantity(), "rarity", drop.rarity() == null ? "" : drop.rarity())).toList());
         return payload;
     }
 
@@ -344,5 +230,21 @@ public class ChallengeBossUseCase {
     private int applyCostReduction(int baseCost, double multiplier) {
         if (multiplier >= 1.0) return baseCost;
         return Math.max(1, (int) Math.floor(baseCost * multiplier));
+    }
+
+    public ChallengeBossUseCase(final BossDefinitionRepository bossDefinitionRepository, final BossAttemptRepository bossAttemptRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final EquipmentRepository equipmentRepository, final AddItemUseCase addItemUseCase, final ChestDefinitionRepository chestDefinitionRepository, final GrantEquipmentUseCase grantEquipmentUseCase, final EquipmentRarityProfileService equipmentRarityProfileService, final ClanBonusService clanBonusService, final ClanMissionProgressTracker clanMissionProgressTracker, final GlobalDamageBuffService globalDamageBuffService, final TransactionAuditPublisher transactionAuditPublisher) {
+        this.bossDefinitionRepository = bossDefinitionRepository;
+        this.bossAttemptRepository = bossAttemptRepository;
+        this.digimonRepository = digimonRepository;
+        this.playerRepository = playerRepository;
+        this.equipmentRepository = equipmentRepository;
+        this.addItemUseCase = addItemUseCase;
+        this.chestDefinitionRepository = chestDefinitionRepository;
+        this.grantEquipmentUseCase = grantEquipmentUseCase;
+        this.equipmentRarityProfileService = equipmentRarityProfileService;
+        this.clanBonusService = clanBonusService;
+        this.clanMissionProgressTracker = clanMissionProgressTracker;
+        this.globalDamageBuffService = globalDamageBuffService;
+        this.transactionAuditPublisher = transactionAuditPublisher;
     }
 }

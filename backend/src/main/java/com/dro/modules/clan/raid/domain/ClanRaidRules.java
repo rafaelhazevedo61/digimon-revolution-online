@@ -1,16 +1,12 @@
 package com.dro.modules.clan.raid.domain;
 
 import com.dro.modules.boss.domain.BossCombatRules;
-import lombok.experimental.UtilityClass;
-
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Componente da camada de conjunto de regras de domínio do módulo de Clãs.
  */
-@UtilityClass
-public class ClanRaidRules {
-
+public final class ClanRaidRules {
     public static final int DAILY_ATTACK_LIMIT = 3;
     public static final double DAMAGE_PERCENT_PER_WIN_CHANCE = 0.15;
     public static final int MIN_DAMAGE_PERCENT = 1;
@@ -25,9 +21,7 @@ public class ClanRaidRules {
     }
 
     public static int calculateDamage(int maxHp, int winChance) {
-        int maxPercent = Math.max(MIN_DAMAGE_PERCENT,
-                (int) Math.round(winChance * DAMAGE_PERCENT_PER_WIN_CHANCE));
-
+        int maxPercent = Math.max(MIN_DAMAGE_PERCENT, (int) Math.round(winChance * DAMAGE_PERCENT_PER_WIN_CHANCE));
         int percent = ThreadLocalRandom.current().nextInt(MIN_DAMAGE_PERCENT, maxPercent + 1);
         return (int) Math.max(1, Math.round(maxHp * percent / 100.0));
     }
@@ -42,5 +36,9 @@ public class ClanRaidRules {
 
     public static int calculateWinChance(double digimonPower, double bossPower) {
         return BossCombatRules.calculateWinChance(digimonPower, bossPower);
+    }
+
+    private ClanRaidRules() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 }

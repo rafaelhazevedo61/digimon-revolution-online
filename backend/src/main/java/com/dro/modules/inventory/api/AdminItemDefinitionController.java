@@ -4,7 +4,6 @@ import com.dro.modules.inventory.api.dto.request.UpdateItemDefinitionRequest;
 import com.dro.modules.inventory.api.dto.response.ItemDefinitionResponse;
 import com.dro.modules.inventory.application.UpdateItemDefinitionUseCase;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -17,16 +16,15 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/admin/items")
-@RequiredArgsConstructor
 public class AdminItemDefinitionController {
-
     private final UpdateItemDefinitionUseCase updateItemDefinitionUseCase;
 
     @PutMapping("/{id}")
-    public ResponseEntity<ItemDefinitionResponse> update(
-            @PathVariable Long id,
-            @RequestBody @Valid UpdateItemDefinitionRequest request
-    ) {
+    public ResponseEntity<ItemDefinitionResponse> update(@PathVariable Long id, @RequestBody @Valid UpdateItemDefinitionRequest request) {
         return ResponseEntity.ok(updateItemDefinitionUseCase.execute(id, request));
+    }
+
+    public AdminItemDefinitionController(final UpdateItemDefinitionUseCase updateItemDefinitionUseCase) {
+        this.updateItemDefinitionUseCase = updateItemDefinitionUseCase;
     }
 }

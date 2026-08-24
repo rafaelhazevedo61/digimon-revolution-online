@@ -12,10 +12,8 @@ import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.UUID;
@@ -24,9 +22,7 @@ import java.util.UUID;
  * Componente da camada de caso de uso da aplicação do módulo de Clãs.
  */
 @Service
-@RequiredArgsConstructor
 public class CreateClanUseCase {
-
     private final ClanRepository clanRepository;
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
@@ -35,51 +31,46 @@ public class CreateClanUseCase {
     @Transactional
     public ClanResponse execute(String token, String name, String tag, String description) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-
-        Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
-
+        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         if (player.getClanId() != null) {
             throw new BadRequestException("You are already in a clan");
         }
-
         Digimon activeDigimon = null;
         if (ClanRules.CREATE_COST > 0) {
             if (player.getActiveDigimonId() == null) {
                 throw new BadRequestException("You need an active Digimon to create a clan");
             }
-            activeDigimon = digimonRepository.findById(player.getActiveDigimonId())
-                    .orElseThrow(() -> new NotFoundException("Active Digimon not found"));
+            activeDigimon = digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Active Digimon not found"));
             if (activeDigimon.getBits() < ClanRules.CREATE_COST) {
                 throw new BadRequestException("Not enough bits on your active Digimon to create a clan");
             }
             activeDigimon.setBits(activeDigimon.getBits() - ClanRules.CREATE_COST);
         }
-
         ClanRules.validateCreateRequest(name, tag, description);
-
         String normalizedTag = tag.toUpperCase().trim();
         String normalizedName = name.trim();
-
         if (clanRepository.existsByNameAndActiveTrue(normalizedName)) {
             throw new BadRequestException("Clan name already taken");
         }
         if (clanRepository.existsByTagAndActiveTrue(normalizedTag)) {
             throw new BadRequestException("Clan tag already taken");
         }
-
         Clan clan = ClanRules.create(normalizedName, normalizedTag, description, playerId);
         clan = clanRepository.save(clan);
-
         player.setClanId(clan.getId());
         player.setClanRole(ClanRole.LEADER);
         player.setClanJoinedAt(LocalDateTime.now());
         playerRepository.save(player);
-
         if (activeDigimon != null) {
             digimonRepository.save(activeDigimon);
         }
-
         return mapper.toResponse(clan, player, Collections.singletonList(player));
+    }
+
+    public CreateClanUseCase(final ClanRepository clanRepository, final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ClanResponseMapper mapper) {
+        this.clanRepository = clanRepository;
+        this.playerRepository = playerRepository;
+        this.digimonRepository = digimonRepository;
+        this.mapper = mapper;
     }
 }

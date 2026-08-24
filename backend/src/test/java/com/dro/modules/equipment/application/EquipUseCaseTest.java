@@ -1,4 +1,5 @@
 package com.dro.modules.equipment.application;
+import com.dro.shared.security.JwtTestToken;
 
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.*;
@@ -9,6 +10,7 @@ import com.dro.modules.equipment.domain.EquipmentSlot;
 import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.modules.tutorial.application.TutorialService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +38,9 @@ class EquipUseCaseTest {
     @Mock
     private PlayerRepository playerRepository;
 
+    @Mock
+    private TutorialService tutorialService;
+
     @InjectMocks
     private EquipUseCase equipUseCase;
 
@@ -49,7 +54,7 @@ class EquipUseCaseTest {
     void setUp() {
         playerId = UUID.randomUUID();
         digimonId = UUID.randomUUID();
-        token = UUID.randomUUID() + ":" + playerId;
+        token = JwtTestToken.create(playerId);
 
         player = Player.builder()
                 .id(playerId)

@@ -12,10 +12,8 @@ import com.dro.modules.digimon.domain.DigimonLevelRules;
 import com.dro.modules.evolution.api.dto.response.EvolutionOptionsResponse;
 import com.dro.modules.evolution.application.GetEvolutionOptionsUseCase;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -25,9 +23,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/digimon")
-@RequiredArgsConstructor
 public class DigimonController {
-
     private final GetDigimonUseCase useCase;
     private final GetDigimonByIdUseCase getDigimonByIdUseCase;
     private final SelectActiveDigimonUseCase selectUseCase;
@@ -41,53 +37,36 @@ public class DigimonController {
     private final GetEvolutionOptionsUseCase getEvolutionOptionsUseCase;
 
     @GetMapping("/me")
-    public ResponseEntity<List<DigimonResponse>> me(
-            @RequestHeader("Authorization") String authorization
-    ) {
+    public ResponseEntity<List<DigimonResponse>> me(@RequestHeader("Authorization") String authorization) {
         return ResponseEntity.ok(useCase.execute(authorization));
     }
 
     @PostMapping("/select")
-    public ResponseEntity<Void> select(
-            @RequestHeader("Authorization") String authorization,
-            @RequestBody @Valid SelectDigimonRequest request
-    ) {
+    public ResponseEntity<Void> select(@RequestHeader("Authorization") String authorization, @RequestBody @Valid SelectDigimonRequest request) {
         selectUseCase.execute(authorization, request.digimonId());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/evolve")
-    public ResponseEntity<Map<String, String>> evolve(
-            @RequestHeader("Authorization") String authorization,
-            @RequestBody(required = false) EvolveDigimonRequest request
-    ) {
+    public ResponseEntity<Map<String, String>> evolve(@RequestHeader("Authorization") String authorization, @RequestBody(required = false) EvolveDigimonRequest request) {
         Long evolutionLineId = request != null ? request.evolutionLineId() : null;
         evolveDigimonUseCase.execute(authorization, evolutionLineId);
         return ResponseEntity.ok(Map.of("message", "Digimon evolved successfully"));
     }
 
     @GetMapping("/{digimonId}/evolution-options")
-    public ResponseEntity<EvolutionOptionsResponse> evolutionOptions(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID digimonId
-    ) {
+    public ResponseEntity<EvolutionOptionsResponse> evolutionOptions(@RequestHeader("Authorization") String authorization, @PathVariable UUID digimonId) {
         return ResponseEntity.ok(getEvolutionOptionsUseCase.execute(authorization, digimonId));
     }
 
     @PostMapping("/rebirth")
-    public ResponseEntity<Map<String, String>> rebirth(
-            @RequestHeader("Authorization") String authorization,
-            @RequestBody @Valid RebirthDigimonRequest request
-    ) {
+    public ResponseEntity<Map<String, String>> rebirth(@RequestHeader("Authorization") String authorization, @RequestBody @Valid RebirthDigimonRequest request) {
         rebirthUseCase.execute(authorization, request.digimonId());
         return ResponseEntity.ok(Map.of("message", "Digimon reborn successfully"));
     }
 
     @GetMapping("/{digimonId}")
-    public ResponseEntity<DigimonResponse> getById(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID digimonId
-    ) {
+    public ResponseEntity<DigimonResponse> getById(@RequestHeader("Authorization") String authorization, @PathVariable UUID digimonId) {
         return ResponseEntity.ok(getDigimonByIdUseCase.execute(authorization, digimonId));
     }
 
@@ -97,56 +76,49 @@ public class DigimonController {
     }
 
     @GetMapping("/{digimonId}/lineage")
-    public ResponseEntity<DigimonLineageResponse> lineage(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID digimonId
-    ) {
-        return ResponseEntity.ok(
-                getDigimonLineageUseCase.execute(authorization, digimonId)
-        );
+    public ResponseEntity<DigimonLineageResponse> lineage(@RequestHeader("Authorization") String authorization, @PathVariable UUID digimonId) {
+        return ResponseEntity.ok(getDigimonLineageUseCase.execute(authorization, digimonId));
     }
 
     @GetMapping("/{digimonId}/rebirth-preview")
-    public ResponseEntity<RebirthPreviewResponse> rebirthPreview(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID digimonId
-    ) {
-        return ResponseEntity.ok(
-                rebirthPreviewUseCase.execute(authorization, digimonId)
-        );
+    public ResponseEntity<RebirthPreviewResponse> rebirthPreview(@RequestHeader("Authorization") String authorization, @PathVariable UUID digimonId) {
+        return ResponseEntity.ok(rebirthPreviewUseCase.execute(authorization, digimonId));
     }
 
     @PutMapping("/rename")
-    public ResponseEntity<Map<String, String>> rename(
-            @RequestHeader("Authorization") String authorization,
-            @RequestBody @Valid RenameDigimonRequest request
-    ) {
+    public ResponseEntity<Map<String, String>> rename(@RequestHeader("Authorization") String authorization, @RequestBody @Valid RenameDigimonRequest request) {
         renameDigimonUseCase.execute(authorization, request.digimonId(), request.newName());
         return ResponseEntity.ok(Map.of("message", "Digimon renamed successfully"));
     }
 
     @PostMapping("/{digimonId}/store")
-    public ResponseEntity<DigimonResponse> store(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID digimonId
-    ) {
+    public ResponseEntity<DigimonResponse> store(@RequestHeader("Authorization") String authorization, @PathVariable UUID digimonId) {
         var digimon = storeDigimonUseCase.execute(authorization, digimonId);
         return ResponseEntity.ok(DigimonResponse.from(digimon));
     }
 
     @PostMapping("/{digimonId}/retrieve")
-    public ResponseEntity<DigimonResponse> retrieve(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID digimonId
-    ) {
+    public ResponseEntity<DigimonResponse> retrieve(@RequestHeader("Authorization") String authorization, @PathVariable UUID digimonId) {
         var digimon = retrieveDigimonUseCase.execute(authorization, digimonId);
         return ResponseEntity.ok(DigimonResponse.from(digimon));
     }
 
     @GetMapping("/storage")
-    public ResponseEntity<List<DigimonResponse>> storage(
-            @RequestHeader("Authorization") String authorization
-    ) {
+    public ResponseEntity<List<DigimonResponse>> storage(@RequestHeader("Authorization") String authorization) {
         return ResponseEntity.ok(useCase.executeStorage(authorization));
+    }
+
+    public DigimonController(final GetDigimonUseCase useCase, final GetDigimonByIdUseCase getDigimonByIdUseCase, final SelectActiveDigimonUseCase selectUseCase, final EvolveDigimonUseCase evolveDigimonUseCase, final RebirthUseCase rebirthUseCase, final GetDigimonLineageUseCase getDigimonLineageUseCase, final RebirthPreviewUseCase rebirthPreviewUseCase, final RenameDigimonUseCase renameDigimonUseCase, final StoreDigimonUseCase storeDigimonUseCase, final RetrieveDigimonUseCase retrieveDigimonUseCase, final GetEvolutionOptionsUseCase getEvolutionOptionsUseCase) {
+        this.useCase = useCase;
+        this.getDigimonByIdUseCase = getDigimonByIdUseCase;
+        this.selectUseCase = selectUseCase;
+        this.evolveDigimonUseCase = evolveDigimonUseCase;
+        this.rebirthUseCase = rebirthUseCase;
+        this.getDigimonLineageUseCase = getDigimonLineageUseCase;
+        this.rebirthPreviewUseCase = rebirthPreviewUseCase;
+        this.renameDigimonUseCase = renameDigimonUseCase;
+        this.storeDigimonUseCase = storeDigimonUseCase;
+        this.retrieveDigimonUseCase = retrieveDigimonUseCase;
+        this.getEvolutionOptionsUseCase = getEvolutionOptionsUseCase;
     }
 }

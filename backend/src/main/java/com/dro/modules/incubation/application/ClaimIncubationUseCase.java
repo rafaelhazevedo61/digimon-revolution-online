@@ -22,10 +22,8 @@ import com.dro.modules.tutorial.domain.TutorialStep;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -33,9 +31,7 @@ import java.util.UUID;
  * Componente da camada de caso de uso da aplicação do módulo de Incubação.
  */
 @Service
-@RequiredArgsConstructor
 public class ClaimIncubationUseCase {
-
     private final IncubationRepository incubationRepository;
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
@@ -44,34 +40,21 @@ public class ClaimIncubationUseCase {
 
     @Transactional
     public Digimon execute(String token) {
-
         UUID playerId = extractPlayerId(token);
-
-        Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
-
+        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         boolean isAdmin = player.getUserType() == UserType.ADMIN;
-
         Incubation incubation = findActiveIncubation(playerId);
-
         if (isAdmin) {
             forceReadyIfInProgress(incubation);
         } else {
             validateIncubationFinished(incubation);
         }
-
         validateDigimonSlots(playerId);
-
         Digimon digimon = createDigimonFromIncubation(playerId, incubation);
-
         digimonRepository.save(digimon);
-
         setActiveIfFirstDigimon(playerId, digimon);
-
         finalizeIncubation(incubation);
-
         tutorialService.completeStep(playerId, TutorialStep.HATCH_DIGIMON);
-
         return digimon;
     }
 
@@ -80,48 +63,30 @@ public class ClaimIncubationUseCase {
     }
 
     private Incubation findActiveIncubation(UUID playerId) {
-
-        return incubationRepository
-                .findByPlayerIdAndStatus(playerId, IncubationStatus.READY)
-                .or(() -> incubationRepository.findByPlayerIdAndStatus(playerId, IncubationStatus.IN_PROGRESS))
-                .orElseThrow(() -> new NotFoundException("No active incubation"));
+        return incubationRepository.findByPlayerIdAndStatus(playerId, IncubationStatus.READY).or(() -> incubationRepository.findByPlayerIdAndStatus(playerId, IncubationStatus.IN_PROGRESS)).orElseThrow(() -> new NotFoundException("No active incubation"));
     }
 
     private void validateIncubationFinished(Incubation incubation) {
-
         if (incubation.getStatus() == IncubationStatus.READY) {
             return;
         }
-
         if (incubation.getFinishAt().isAfter(LocalDateTime.now())) {
             throw new BadRequestException("Incubation not finished yet");
         }
-
         incubation.markReadyIfFinished();
     }
 
-    private Digimon createDigimonFromIncubation(
-            UUID playerId,
-            Incubation incubation
-    ) {
+    private Digimon createDigimonFromIncubation(UUID playerId, Incubation incubation) {
         DigitamaType digitamaType = DigitamaHatchRules.toDigitamaType(incubation.getDigitamaType());
         String poolCode = digitamaType.getPoolCode();
-
-        DigitamaPool pool = digitamaPoolRepository
-                .findByCodeAndActiveTrueAndContentActiveTrue(poolCode)
-                .orElseThrow(() -> new NotFoundException("Digitama pool not found: " + poolCode));
-
+        DigitamaPool pool = digitamaPoolRepository.findByCodeAndActiveTrueAndContentActiveTrue(poolCode).orElseThrow(() -> new NotFoundException("Digitama pool not found: " + poolCode));
         DigitamaPoolEntry entry = DigitamaPoolRoller.roll(pool.getEntries());
         DigimonInfos infos = entry.getDigimonInfo();
-
         return DigimonFactory.createBaby(playerId, digitamaType, infos);
     }
 
     private void setActiveIfFirstDigimon(UUID playerId, Digimon digimon) {
-
-        Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
-
+        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         if (player.getActiveDigimonId() == null) {
             player.setActiveDigimonId(digimon.getId());
             playerRepository.save(player);
@@ -129,14 +94,10 @@ public class ClaimIncubationUseCase {
     }
 
     private void validateDigimonSlots(UUID playerId) {
-        Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
-
+        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         long activeCount = digimonRepository.countByPlayerIdAndStatus(playerId, DigimonStatus.ACTIVE);
         if (activeCount >= player.getMaxDigimonSlots()) {
-            throw new BadRequestException(
-                    "Slots de Digimon cheios (" + activeCount + "/" + player.getMaxDigimonSlots() +
-                    "). Guarde um Digimon no Storage para liberar espaço.");
+            throw new BadRequestException("Slots de Digimon cheios (" + activeCount + "/" + player.getMaxDigimonSlots() + "). Guarde um Digimon no Storage para liberar espaço.");
         }
     }
 
@@ -147,8 +108,15 @@ public class ClaimIncubationUseCase {
     }
 
     private void finalizeIncubation(Incubation incubation) {
-
         incubation.claim();
         incubationRepository.save(incubation);
+    }
+
+    public ClaimIncubationUseCase(final IncubationRepository incubationRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final DigitamaPoolRepository digitamaPoolRepository, final TutorialService tutorialService) {
+        this.incubationRepository = incubationRepository;
+        this.digimonRepository = digimonRepository;
+        this.playerRepository = playerRepository;
+        this.digitamaPoolRepository = digitamaPoolRepository;
+        this.tutorialService = tutorialService;
     }
 }

@@ -23,9 +23,7 @@ import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.util.TokenExtractor;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,15 +34,12 @@ import java.util.UUID;
  * Componente da camada de caso de uso da aplicação do módulo de Digimon.
  */
 @Service
-@RequiredArgsConstructor
 public class RebirthUseCase {
-
     private static final int MAX_IV = 100;
     private static final int REQUIRED_LEVEL = 100;
-    private static final double HP_IV_WEIGHT = 0.30;
-    private static final double ATTACK_IV_WEIGHT = 0.20;
-    private static final double DEFENSE_IV_WEIGHT = 0.20;
-
+    private static final double HP_IV_WEIGHT = 0.3;
+    private static final double ATTACK_IV_WEIGHT = 0.2;
+    private static final double DEFENSE_IV_WEIGHT = 0.2;
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
     private final InventoryRepository inventoryRepository;
@@ -52,50 +47,35 @@ public class RebirthUseCase {
     private final DigimonInfosRepository digimonInfosRepository;
     private final EvolutionLineRepository evolutionLineRepository;
     private final ClanMissionProgressTracker clanMissionProgressTracker;
-
     private final Random random = new Random();
 
     @Transactional
     public void execute(String token, UUID digimonId) {
-
         UUID playerId = extractPlayerId(token);
-
         Player player = findPlayer(playerId);
-
         Digimon oldDigimon = findDigimon(digimonId);
-
         validateOwner(oldDigimon, playerId);
         validateStatus(oldDigimon);
         validateLevel(oldDigimon);
         validateStage(oldDigimon);
         validateActiveMission(oldDigimon);
-
         int currentRebirthCount = oldDigimon.getRebirthCount();
         int newRebirthCount = currentRebirthCount + 1;
-
         int bitsCost = RebirthRules.calculateBitsCost(currentRebirthCount);
         int dataCoreCost = RebirthRules.calculateDataCoreCost(currentRebirthCount);
-
         validateBits(oldDigimon, bitsCost);
-
         InventoryItem dataCore = findDataCore(digimonId);
         validateDataCore(dataCore, dataCoreCost);
-
         consumeCosts(oldDigimon, dataCore, bitsCost, dataCoreCost);
-
         Digimon newDigimon = createRebornDigimon(playerId, oldDigimon, newRebirthCount);
-
         oldDigimon.setStatus(DigimonStatus.REBORN);
         oldDigimon.setBits(0);
-
         digimonRepository.save(oldDigimon);
         digimonRepository.save(newDigimon);
         inventoryRepository.save(dataCore);
-
         if (player.getClanId() != null) {
             clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.REBIRTHS_DONE);
         }
-
         updateActiveDigimonIfNeeded(player, oldDigimon, newDigimon);
     }
 
@@ -104,13 +84,11 @@ public class RebirthUseCase {
     }
 
     private Player findPlayer(UUID playerId) {
-        return playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
+        return playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
     }
 
     private Digimon findDigimon(UUID digimonId) {
-        return digimonRepository.findById(digimonId)
-                .orElseThrow(() -> new NotFoundException("Digimon not found"));
+        return digimonRepository.findById(digimonId).orElseThrow(() -> new NotFoundException("Digimon not found"));
     }
 
     private void validateOwner(Digimon digimon, UUID playerId) {
@@ -138,11 +116,7 @@ public class RebirthUseCase {
     }
 
     private void validateActiveMission(Digimon digimon) {
-        boolean hasRunningMission = missionInstanceRepository.existsByDigimonIdAndStatus(
-                digimon.getId(),
-                MissionStatus.RUNNING
-        );
-
+        boolean hasRunningMission = missionInstanceRepository.existsByDigimonIdAndStatus(digimon.getId(), MissionStatus.RUNNING);
         if (hasRunningMission) {
             throw new ConflictException("Digimon cannot perform Rebirth while in a running mission");
         }
@@ -155,8 +129,7 @@ public class RebirthUseCase {
     }
 
     private InventoryItem findDataCore(UUID digimonId) {
-        return inventoryRepository.findByDigimonIdAndItemType(digimonId, ItemType.DATA_CORE)
-                .orElseThrow(() -> new NotFoundException("Data Core not found in inventory"));
+        return inventoryRepository.findByDigimonIdAndItemType(digimonId, ItemType.DATA_CORE).orElseThrow(() -> new NotFoundException("Data Core not found in inventory"));
     }
 
     private void validateDataCore(InventoryItem dataCore, int dataCoreCost) {
@@ -165,185 +138,77 @@ public class RebirthUseCase {
         }
     }
 
-    private void consumeCosts(
-            Digimon digimon,
-            InventoryItem dataCore,
-            int bitsCost,
-            int dataCoreCost
-    ) {
+    private void consumeCosts(Digimon digimon, InventoryItem dataCore, int bitsCost, int dataCoreCost) {
         digimon.setBits(digimon.getBits() - bitsCost);
         dataCore.setQuantity(dataCore.getQuantity() - dataCoreCost);
     }
 
-    private Digimon createRebornDigimon(
-            UUID playerId,
-            Digimon oldDigimon,
-            int newRebirthCount
-    ) {
-
-        Rarity rarity = RarityRoller.rollForRebirth(
-                oldDigimon.getRarity(),
-                newRebirthCount
-        );
-
+    private Digimon createRebornDigimon(UUID playerId, Digimon oldDigimon, int newRebirthCount) {
+        Rarity rarity = RarityRoller.rollForRebirth(oldDigimon.getRarity(), newRebirthCount);
         Personality personality = PersonalityRoller.roll();
-
         Trait trait = TraitRoller.rollForRebirth(newRebirthCount);
-
         int rarityMinimumIv = RarityRules.getMinimumIv(rarity);
-
-        int ivHp = rollInheritedIv(
-                oldDigimon.getIvHp(),
-                rarityMinimumIv,
-                newRebirthCount
-        );
-
-        int ivAttack = rollInheritedIv(
-                oldDigimon.getIvAttack(),
-                rarityMinimumIv,
-                newRebirthCount
-        );
-
-        int ivDefense = rollInheritedIv(
-                oldDigimon.getIvDefense(),
-                rarityMinimumIv,
-                newRebirthCount
-        );
-
+        int ivHp = rollInheritedIv(oldDigimon.getIvHp(), rarityMinimumIv, newRebirthCount);
+        int ivAttack = rollInheritedIv(oldDigimon.getIvAttack(), rarityMinimumIv, newRebirthCount);
+        int ivDefense = rollInheritedIv(oldDigimon.getIvDefense(), rarityMinimumIv, newRebirthCount);
         DigimonGrade grade = DigimonGradeRules.calculate(ivHp, ivAttack, ivDefense);
-
         Long babyInfoId = resolveBabyDigimonInfoId(oldDigimon);
-        DigimonInfos babyInfo = babyInfoId != null
-                ? digimonInfosRepository.findById(babyInfoId).orElse(null)
-                : null;
-
+        DigimonInfos babyInfo = babyInfoId != null ? digimonInfosRepository.findById(babyInfoId).orElse(null) : null;
         int baseHp = 10;
         int baseAtk = 5;
         int baseDef = 3;
-
         if (babyInfo != null) {
             baseHp = babyInfo.getBaseHp();
             baseAtk = babyInfo.getBaseAtk();
             baseDef = babyInfo.getBaseDef();
         }
-
         double rarityMultiplier = RarityRules.getStatMultiplier(rarity);
         double stageMultiplier = EvolutionRules.stageStatMultiplier(Stage.BABY);
         double rebirthMultiplier = RebirthRules.calculateStatMultiplier(newRebirthCount);
-
-        int hp = (int) Math.floor(
-                (baseHp + (ivHp * HP_IV_WEIGHT))
-                        * rarityMultiplier
-                        * stageMultiplier
-                        * PersonalityRules.getHpMultiplier(personality)
-                        * TraitRules.getHpMultiplier(trait)
-                        * rebirthMultiplier
-        );
-
-        int attack = (int) Math.floor(
-                (baseAtk + (ivAttack * ATTACK_IV_WEIGHT))
-                        * rarityMultiplier
-                        * stageMultiplier
-                        * PersonalityRules.getAttackMultiplier(personality)
-                        * TraitRules.getAttackMultiplier(trait)
-                        * rebirthMultiplier
-        );
-
-        int defense = (int) Math.floor(
-                (baseDef + (ivDefense * DEFENSE_IV_WEIGHT))
-                        * rarityMultiplier
-                        * stageMultiplier
-                        * PersonalityRules.getDefenseMultiplier(personality)
-                        * TraitRules.getDefenseMultiplier(trait)
-                        * rebirthMultiplier
-        );
-
+        int hp = (int) Math.floor((baseHp + (ivHp * HP_IV_WEIGHT)) * rarityMultiplier * stageMultiplier * PersonalityRules.getHpMultiplier(personality) * TraitRules.getHpMultiplier(trait) * rebirthMultiplier);
+        int attack = (int) Math.floor((baseAtk + (ivAttack * ATTACK_IV_WEIGHT)) * rarityMultiplier * stageMultiplier * PersonalityRules.getAttackMultiplier(personality) * TraitRules.getAttackMultiplier(trait) * rebirthMultiplier);
+        int defense = (int) Math.floor((baseDef + (ivDefense * DEFENSE_IV_WEIGHT)) * rarityMultiplier * stageMultiplier * PersonalityRules.getDefenseMultiplier(personality) * TraitRules.getDefenseMultiplier(trait) * rebirthMultiplier);
         int maxEnergy = 20 + TraitRules.getMaxEnergyBonus(trait);
-
-        String rebornName = babyInfo != null
-                ? babyInfo.getName()
-                : "Reborn " + oldDigimon.getType();
-
-        return Digimon.builder()
-                .id(UUID.randomUUID())
-                .playerId(playerId)
-                .name(rebornName)
-                .type(oldDigimon.getType())
-                .stage(Stage.BABY)
-                .digimonInfoId(babyInfoId)
-                .level(1)
-                .experience(0)
-                .hp(hp)
-                .attack(attack)
-                .defense(defense)
-                .ivHp(ivHp)
-                .ivAttack(ivAttack)
-                .ivDefense(ivDefense)
-                .grade(grade)
-                .rarity(rarity)
-                .personality(personality)
-                .energy(maxEnergy)
-                .maxEnergy(maxEnergy)
-                .trait(trait)
-                .lastEnergyUpdate(Instant.now())
-                .createdAt(LocalDateTime.now())
-                .bits(oldDigimon.getBits())
-                .rebirthCount(newRebirthCount)
-                .rebornedFrom(oldDigimon.getId())
-                .status(DigimonStatus.ACTIVE)
-                .build();
+        String rebornName = babyInfo != null ? babyInfo.getName() : "Reborn " + oldDigimon.getType();
+        return Digimon.builder().id(UUID.randomUUID()).playerId(playerId).name(rebornName).type(oldDigimon.getType()).stage(Stage.BABY).digimonInfoId(babyInfoId).level(1).experience(0).hp(hp).attack(attack).defense(defense).ivHp(ivHp).ivAttack(ivAttack).ivDefense(ivDefense).grade(grade).rarity(rarity).personality(personality).energy(maxEnergy).maxEnergy(maxEnergy).trait(trait).lastEnergyUpdate(Instant.now()).createdAt(LocalDateTime.now()).bits(oldDigimon.getBits()).rebirthCount(newRebirthCount).rebornedFrom(oldDigimon.getId()).status(DigimonStatus.ACTIVE).build();
     }
 
     private Long resolveBabyDigimonInfoId(Digimon oldDigimon) {
         Long infoId = oldDigimon.getDigimonInfoId();
-
         // Fallback for legacy digimon: resolve infoId from current name
         if (infoId == null) {
-            infoId = digimonInfosRepository.findByName(oldDigimon.getName())
-                    .map(DigimonInfos::getId)
-                    .orElse(null);
+            infoId = digimonInfosRepository.findByName(oldDigimon.getName()).map(DigimonInfos::getId).orElse(null);
         }
-
         if (infoId == null) {
             return null;
         }
-
         // Find the evolution line and return the first (baby) step's DigimonInfos ID
-        List<EvolutionLine> lines = evolutionLineRepository
-                .findByActiveTrueAndSteps_DigimonInfo_Id(infoId);
-
+        List<EvolutionLine> lines = evolutionLineRepository.findByActiveTrueAndSteps_DigimonInfo_Id(infoId);
         if (!lines.isEmpty()) {
-            return lines.get(0).getSteps().stream()
-                    .min(java.util.Comparator.comparingInt(EvolutionLineStep::getStepOrder))
-                    .map(step -> step.getDigimonInfo().getId())
-                    .orElse(null);
+            return lines.get(0).getSteps().stream().min(java.util.Comparator.comparingInt(EvolutionLineStep::getStepOrder)).map(step -> step.getDigimonInfo().getId()).orElse(null);
         }
-
         return null;
     }
 
-    private int rollInheritedIv(
-            int previousIv,
-            int rarityMinimumIv,
-            int rebirthCount
-    ) {
-        int inheritedMinimum = RebirthRules.calculateInheritedIvMinimum(
-                previousIv,
-                rarityMinimumIv,
-                rebirthCount
-        );
-
+    private int rollInheritedIv(int previousIv, int rarityMinimumIv, int rebirthCount) {
+        int inheritedMinimum = RebirthRules.calculateInheritedIvMinimum(previousIv, rarityMinimumIv, rebirthCount);
         return inheritedMinimum + random.nextInt((MAX_IV - inheritedMinimum) + 1);
     }
 
-    private void updateActiveDigimonIfNeeded(
-            Player player,
-            Digimon oldDigimon,
-            Digimon newDigimon
-    ) {
+    private void updateActiveDigimonIfNeeded(Player player, Digimon oldDigimon, Digimon newDigimon) {
         if (oldDigimon.getId().equals(player.getActiveDigimonId())) {
             player.setActiveDigimonId(newDigimon.getId());
             playerRepository.save(player);
         }
+    }
+
+    public RebirthUseCase(final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final InventoryRepository inventoryRepository, final MissionInstanceRepository missionInstanceRepository, final DigimonInfosRepository digimonInfosRepository, final EvolutionLineRepository evolutionLineRepository, final ClanMissionProgressTracker clanMissionProgressTracker) {
+        this.digimonRepository = digimonRepository;
+        this.playerRepository = playerRepository;
+        this.inventoryRepository = inventoryRepository;
+        this.missionInstanceRepository = missionInstanceRepository;
+        this.digimonInfosRepository = digimonInfosRepository;
+        this.evolutionLineRepository = evolutionLineRepository;
+        this.clanMissionProgressTracker = clanMissionProgressTracker;
     }
 }

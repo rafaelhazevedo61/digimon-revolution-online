@@ -13,6 +13,7 @@ public class PublicConfigController {
     private final boolean registrationInviteRequired;
 
     public PublicConfigController(
+
             @Value("${dro.registration.invite-required:true}")
             boolean registrationInviteRequired
     ) {

@@ -16,10 +16,8 @@ import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -28,97 +26,53 @@ import java.util.*;
  * Componente da camada de caso de uso da aplicação do módulo de Missões.
  */
 @Service
-@RequiredArgsConstructor
 public class StartMissionUseCase {
-
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final MissionInstanceRepository missionInstanceRepository;
     private final MissionDefinitionRepository missionDefinitionRepository;
     private final ClanBonusService clanBonusService;
-
     private static final long COOLDOWN_SECONDS = 10;
 
     @Transactional
     public MissionStartResponse execute(String token, String missionId) {
-
         UUID playerId = TokenExtractor.extractPlayerId(token);
-
-        Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
-
+        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         Digimon digimon = getActiveDigimon(player);
-
-        MissionDefinitionEntity entity = missionDefinitionRepository.findById(missionId)
-                .orElseThrow(() -> new NotFoundException("Mission not found"));
-
+        MissionDefinitionEntity entity = missionDefinitionRepository.findById(missionId).orElseThrow(() -> new NotFoundException("Mission not found"));
         MissionDefinition mission = MissionDefinitionMapper.toDefinition(entity);
-
         Stage highestStage = getHighestStage(playerId);
-
         if (!AreaRules.isUnlocked(highestStage, mission.getArea())) {
             throw new BadRequestException("Area locked: " + mission.getArea());
         }
-
         validateRequirement(digimon, mission);
-
         boolean isAdmin = player.getUserType() == UserType.ADMIN;
-
-        // 🔋 Energia
+        // \ud83d\udd0b Energia
         UUID clanId = player.getClanId();
-
         if (!isAdmin) {
             int maxEnergyBonus = clanId != null ? clanBonusService.getMaxEnergyBonus(clanId) : 0;
             digimon.regenerateEnergy(maxEnergyBonus);
-
-            int energyCost = clanId != null
-                    ? applyCostReduction(mission.getEnergyCost(), clanBonusService.getEnergyCostMultiplier(clanId))
-                    : mission.getEnergyCost();
-
+            int energyCost = clanId != null ? applyCostReduction(mission.getEnergyCost(), clanBonusService.getEnergyCostMultiplier(clanId)) : mission.getEnergyCost();
             if (digimon.getEnergy() < energyCost) {
                 throw new UnprocessableException("Energia insuficiente");
             }
-
             digimon.consumeEnergy(energyCost);
         }
-
-        // 🔒 Verificar se já está em missão
-        boolean alreadyRunning = missionInstanceRepository
-                .existsByDigimonIdAndStatus(digimon.getId(), MissionStatus.RUNNING);
-
+        // \ud83d\udd12 Verificar se já está em missão
+        boolean alreadyRunning = missionInstanceRepository.existsByDigimonIdAndStatus(digimon.getId(), MissionStatus.RUNNING);
         if (alreadyRunning) {
             throw new ConflictException("Digimon já está em missão");
         }
-
         digimonRepository.save(digimon);
-
         // ⏱ Criar instância
-        Duration missionDuration = isAdmin
-                ? Duration.ZERO
-                : Duration.ofSeconds(mission.getDurationSeconds());
-
-        MissionInstance instance = new MissionInstance(
-                playerId,
-                digimon.getId(),
-                missionId,
-                missionDuration
-        );
-
+        Duration missionDuration = isAdmin ? Duration.ZERO : Duration.ofSeconds(mission.getDurationSeconds());
+        MissionInstance instance = new MissionInstance(playerId, digimon.getId(), missionId, missionDuration);
         missionInstanceRepository.save(instance);
-
-        return new MissionStartResponse(
-                instance.getId(),
-                instance.getEndsAt()
-        );
+        return new MissionStartResponse(instance.getId(), instance.getEndsAt());
     }
 
     private Stage getHighestStage(UUID playerId) {
-
-        return digimonRepository.findByPlayerId(playerId)
-                .stream()
-                .map(Digimon::getStage)
-                .max(Enum::compareTo)
-                .orElse(Stage.BABY);
+        return digimonRepository.findByPlayerId(playerId).stream().map(Digimon::getStage).max(Enum::compareTo).orElse(Stage.BABY);
     }
 
     private int applyCostReduction(int baseCost, double multiplier) {
@@ -126,27 +80,22 @@ public class StartMissionUseCase {
         return Math.max(1, (int) Math.floor(baseCost * multiplier));
     }
 
-    private void validateCooldown (Player player) {
-
+    private void validateCooldown(Player player) {
         if (player.getLastMissionAt() == null) return;
-
         long seconds = Duration.between(player.getLastMissionAt(), LocalDateTime.now()).getSeconds();
-
         if (seconds < COOLDOWN_SECONDS) {
             throw new ConflictException("Mission on cooldown. Try again in " + (COOLDOWN_SECONDS - seconds) + " seconds.");
         }
     }
 
-    private Digimon getActiveDigimon (Player player) {
-
+    private Digimon getActiveDigimon(Player player) {
         if (player.getActiveDigimonId() == null) {
             throw new BadRequestException("No active digimon selected");
         }
-
         return digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Active digimon not found"));
     }
 
-    private void validateRequirement (Digimon digimon, MissionDefinition mission) {
+    private void validateRequirement(Digimon digimon, MissionDefinition mission) {
         if (digimon.getStage().ordinal() < mission.getRequiredStage().ordinal()) {
             throw new BadRequestException("Mission locked: stage too low");
         }
@@ -155,8 +104,11 @@ public class StartMissionUseCase {
         }
     }
 
-
-
-
-
+    public StartMissionUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final MissionInstanceRepository missionInstanceRepository, final MissionDefinitionRepository missionDefinitionRepository, final ClanBonusService clanBonusService) {
+        this.playerRepository = playerRepository;
+        this.digimonRepository = digimonRepository;
+        this.missionInstanceRepository = missionInstanceRepository;
+        this.missionDefinitionRepository = missionDefinitionRepository;
+        this.clanBonusService = clanBonusService;
+    }
 }

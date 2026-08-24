@@ -4,10 +4,8 @@ import com.dro.modules.mail.domain.MailMessage;
 import com.dro.modules.mail.domain.MailMessageType;
 import com.dro.modules.mail.domain.MailRules;
 import com.dro.modules.mail.infra.MailMessageRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -19,9 +17,7 @@ import java.util.UUID;
  * mensagem para o destinatário.</p>
  */
 @Service
-@RequiredArgsConstructor
 public class CreateSystemMailMessageUseCase {
-
     private final MailMessageRepository mailMessageRepository;
 
     /**
@@ -36,24 +32,8 @@ public class CreateSystemMailMessageUseCase {
      * @return mensagem persistida
      */
     @Transactional
-    public MailMessage createAuctionNotification(
-            UUID recipientId,
-            UUID sourceId,
-            String actionType,
-            String subject,
-            String body,
-            String deliveryKey
-    ) {
-        return create(
-                MailMessageType.AUCTION,
-                "AUCTION",
-                recipientId,
-                sourceId,
-                actionType,
-                subject,
-                body,
-                deliveryKey
-        );
+    public MailMessage createAuctionNotification(UUID recipientId, UUID sourceId, String actionType, String subject, String body, String deliveryKey) {
+        return create(MailMessageType.AUCTION, "AUCTION", recipientId, sourceId, actionType, subject, body, deliveryKey);
     }
 
     /**
@@ -71,52 +51,21 @@ public class CreateSystemMailMessageUseCase {
      * @throws IllegalArgumentException quando os campos não respeitam as regras do Correio
      */
     @Transactional
-    public MailMessage create(
-            MailMessageType messageType,
-            String sourceType,
-            UUID recipientId,
-            UUID sourceId,
-            String actionType,
-            String subject,
-            String body,
-            String deliveryKey
-    ) {
+    public MailMessage create(MailMessageType messageType, String sourceType, UUID recipientId, UUID sourceId, String actionType, String subject, String body, String deliveryKey) {
         validate(messageType, sourceType, recipientId, actionType, subject, body, deliveryKey);
-
         UUID messageId = UUID.randomUUID();
-        mailMessageRepository.insertSystemMessage(
-                messageId,
-                recipientId,
-                messageType.name(),
-                subject.trim(),
-                body.trim(),
-                LocalDateTime.now(),
-                sourceType,
-                sourceId,
-                actionType,
-                null,
-                deliveryKey
-        );
-
-        return mailMessageRepository.findByDeliveryKey(deliveryKey)
-                .orElseThrow(() -> new IllegalStateException("System mail message could not be persisted"));
+        mailMessageRepository.insertSystemMessage(messageId, recipientId, messageType.name(), subject.trim(), body.trim(), LocalDateTime.now(), sourceType, sourceId, actionType, null, deliveryKey);
+        return mailMessageRepository.findByDeliveryKey(deliveryKey).orElseThrow(() -> new IllegalStateException("System mail message could not be persisted"));
     }
 
-    /** Valida os campos compartilhados por todas as mensagens do sistema. */
-    private void validate(
-            MailMessageType messageType,
-            String sourceType,
-            UUID recipientId,
-            String actionType,
-            String subject,
-            String body,
-            String deliveryKey
-    ) {
+    /**
+     * Valida os campos compartilhados por todas as mensagens do sistema.
+     */
+    private void validate(MailMessageType messageType, String sourceType, UUID recipientId, String actionType, String subject, String body, String deliveryKey) {
         if (messageType == null || messageType == MailMessageType.PLAYER) {
             throw new IllegalArgumentException("System mail requires a non-player message type");
         }
-        if (sourceType == null || sourceType.isBlank()
-                || sourceType.length() > MailRules.SOURCE_TYPE_MAX_LENGTH) {
+        if (sourceType == null || sourceType.isBlank() || sourceType.length() > MailRules.SOURCE_TYPE_MAX_LENGTH) {
             throw new IllegalArgumentException("Invalid system mail source type");
         }
         if (recipientId == null) {
@@ -125,17 +74,18 @@ public class CreateSystemMailMessageUseCase {
         if (actionType != null && actionType.length() > MailRules.ACTION_TYPE_MAX_LENGTH) {
             throw new IllegalArgumentException("Invalid system mail action type");
         }
-        if (subject == null || subject.trim().isEmpty()
-                || subject.trim().length() > MailRules.SUBJECT_MAX_LENGTH) {
+        if (subject == null || subject.trim().isEmpty() || subject.trim().length() > MailRules.SUBJECT_MAX_LENGTH) {
             throw new IllegalArgumentException("Invalid system mail subject");
         }
-        if (body == null || body.trim().isEmpty()
-                || body.trim().length() > MailRules.BODY_MAX_LENGTH) {
+        if (body == null || body.trim().isEmpty() || body.trim().length() > MailRules.BODY_MAX_LENGTH) {
             throw new IllegalArgumentException("Invalid system mail body");
         }
-        if (deliveryKey == null || deliveryKey.isBlank()
-                || deliveryKey.length() > MailRules.DELIVERY_KEY_MAX_LENGTH) {
+        if (deliveryKey == null || deliveryKey.isBlank() || deliveryKey.length() > MailRules.DELIVERY_KEY_MAX_LENGTH) {
             throw new IllegalArgumentException("Invalid system mail delivery key");
         }
+    }
+
+    public CreateSystemMailMessageUseCase(final MailMessageRepository mailMessageRepository) {
+        this.mailMessageRepository = mailMessageRepository;
     }
 }

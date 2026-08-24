@@ -6,10 +6,8 @@ import com.dro.modules.mail.domain.MailMessageMapper;
 import com.dro.modules.mail.infra.MailMessageRepository;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -20,9 +18,7 @@ import java.util.UUID;
  * alterar o estado de leitura.</p>
  */
 @Service
-@RequiredArgsConstructor
 public class MarkMailReadUseCase {
-
     private final MailMessageRepository mailMessageRepository;
 
     /**
@@ -36,18 +32,18 @@ public class MarkMailReadUseCase {
     @Transactional
     public MailMessageResponse execute(String token, UUID messageId) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        MailMessage message = mailMessageRepository.findVisibleById(messageId, playerId)
-                .orElseThrow(() -> new ConflictException("Mail message not found"));
-
+        MailMessage message = mailMessageRepository.findVisibleById(messageId, playerId).orElseThrow(() -> new ConflictException("Mail message not found"));
         if (!message.belongsToRecipient(playerId)) {
             throw new ConflictException("Only the recipient can mark a message as read");
         }
-
         if (message.getReadAt() == null) {
             message.setReadAt(LocalDateTime.now());
             mailMessageRepository.save(message);
         }
-
         return MailMessageMapper.toResponse(message);
+    }
+
+    public MarkMailReadUseCase(final MailMessageRepository mailMessageRepository) {
+        this.mailMessageRepository = mailMessageRepository;
     }
 }

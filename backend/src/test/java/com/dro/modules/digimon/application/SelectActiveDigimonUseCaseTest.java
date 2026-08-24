@@ -1,4 +1,5 @@
 package com.dro.modules.digimon.application;
+import com.dro.shared.security.JwtTestToken;
 
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.*;
@@ -40,7 +41,7 @@ class SelectActiveDigimonUseCaseTest {
     void setUp() {
         playerId = UUID.randomUUID();
         digimonId = UUID.randomUUID();
-        token = UUID.randomUUID() + ":" + playerId;
+        token = JwtTestToken.create(playerId);
     }
 
     @Test

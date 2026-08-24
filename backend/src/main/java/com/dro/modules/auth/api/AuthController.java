@@ -6,7 +6,6 @@ import com.dro.modules.auth.api.dto.request.RegisterRequest;
 import com.dro.modules.auth.application.LoginUseCase;
 import com.dro.modules.auth.application.RegisterUseCase;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,9 +14,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/auth")
-@RequiredArgsConstructor
 public class AuthController {
-
     private final RegisterUseCase registerUseCase;
     private final LoginUseCase loginUseCase;
 
@@ -32,4 +29,8 @@ public class AuthController {
         return ResponseEntity.ok(loginUseCase.execute(request));
     }
 
+    public AuthController(final RegisterUseCase registerUseCase, final LoginUseCase loginUseCase) {
+        this.registerUseCase = registerUseCase;
+        this.loginUseCase = loginUseCase;
+    }
 }

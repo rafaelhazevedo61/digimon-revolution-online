@@ -13,10 +13,8 @@ import com.dro.modules.mail.application.MarkMailReadUseCase;
 import com.dro.modules.mail.application.ProcessMailActionUseCase;
 import com.dro.modules.mail.application.SendMailMessageUseCase;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Map;
 import java.util.UUID;
 
@@ -29,9 +27,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/mail")
-@RequiredArgsConstructor
 public class MailController {
-
     private final ListMailMessagesUseCase listMailMessagesUseCase;
     private final SendMailMessageUseCase sendMailMessageUseCase;
     private final GetMailMessageUseCase getMailMessageUseCase;
@@ -49,11 +45,7 @@ public class MailController {
      * @return página de mensagens recebidas
      */
     @GetMapping("/inbox")
-    public ResponseEntity<MailMessagePageResponse> inbox(
-            @RequestHeader("Authorization") String authorization,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
+    public ResponseEntity<MailMessagePageResponse> inbox(@RequestHeader("Authorization") String authorization, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(listMailMessagesUseCase.inbox(authorization, page, size));
     }
 
@@ -66,11 +58,7 @@ public class MailController {
      * @return página de mensagens enviadas
      */
     @GetMapping("/sent")
-    public ResponseEntity<MailMessagePageResponse> sent(
-            @RequestHeader("Authorization") String authorization,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
+    public ResponseEntity<MailMessagePageResponse> sent(@RequestHeader("Authorization") String authorization, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(listMailMessagesUseCase.sent(authorization, page, size));
     }
 
@@ -81,9 +69,7 @@ public class MailController {
      * @return objeto contendo a contagem de mensagens não lidas
      */
     @GetMapping("/unread-count")
-    public ResponseEntity<Map<String, Long>> unreadCount(
-            @RequestHeader("Authorization") String authorization
-    ) {
+    public ResponseEntity<Map<String, Long>> unreadCount(@RequestHeader("Authorization") String authorization) {
         return ResponseEntity.ok(Map.of("count", getUnreadMailCountUseCase.execute(authorization)));
     }
 
@@ -95,10 +81,7 @@ public class MailController {
      * @return mensagem completa
      */
     @GetMapping("/{messageId}")
-    public ResponseEntity<MailMessageResponse> get(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID messageId
-    ) {
+    public ResponseEntity<MailMessageResponse> get(@RequestHeader("Authorization") String authorization, @PathVariable UUID messageId) {
         return ResponseEntity.ok(getMailMessageUseCase.execute(authorization, messageId));
     }
 
@@ -114,10 +97,7 @@ public class MailController {
      * @return mensagem criada
      */
     @PostMapping
-    public ResponseEntity<MailMessageResponse> send(
-            @RequestHeader("Authorization") String authorization,
-            @RequestBody @Valid SendMailMessageRequest request
-    ) {
+    public ResponseEntity<MailMessageResponse> send(@RequestHeader("Authorization") String authorization, @RequestBody @Valid SendMailMessageRequest request) {
         return ResponseEntity.ok(sendMailMessageUseCase.execute(authorization, request));
     }
 
@@ -129,10 +109,7 @@ public class MailController {
      * @return mensagem após a atualização do estado de leitura
      */
     @PostMapping("/{messageId}/read")
-    public ResponseEntity<MailMessageResponse> markRead(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID messageId
-    ) {
+    public ResponseEntity<MailMessageResponse> markRead(@RequestHeader("Authorization") String authorization, @PathVariable UUID messageId) {
         return ResponseEntity.ok(markMailReadUseCase.execute(authorization, messageId));
     }
 
@@ -145,13 +122,8 @@ public class MailController {
      * @return resultado da ação
      */
     @PostMapping("/{messageId}/action")
-    public ResponseEntity<MailActionResponse> action(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID messageId,
-            @RequestBody @Valid MailActionRequest request
-    ) {
-        return ResponseEntity.ok(processMailActionUseCase.execute(
-                authorization, messageId, request.action()));
+    public ResponseEntity<MailActionResponse> action(@RequestHeader("Authorization") String authorization, @PathVariable UUID messageId, @RequestBody @Valid MailActionRequest request) {
+        return ResponseEntity.ok(processMailActionUseCase.execute(authorization, messageId, request.action()));
     }
 
     /**
@@ -164,11 +136,18 @@ public class MailController {
      * @return resposta sem conteúdo quando a exclusão é concluída
      */
     @DeleteMapping("/{messageId}")
-    public ResponseEntity<Void> delete(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable UUID messageId
-    ) {
+    public ResponseEntity<Void> delete(@RequestHeader("Authorization") String authorization, @PathVariable UUID messageId) {
         deleteMailMessageUseCase.execute(authorization, messageId);
         return ResponseEntity.noContent().build();
+    }
+
+    public MailController(final ListMailMessagesUseCase listMailMessagesUseCase, final SendMailMessageUseCase sendMailMessageUseCase, final GetMailMessageUseCase getMailMessageUseCase, final MarkMailReadUseCase markMailReadUseCase, final DeleteMailMessageUseCase deleteMailMessageUseCase, final GetUnreadMailCountUseCase getUnreadMailCountUseCase, final ProcessMailActionUseCase processMailActionUseCase) {
+        this.listMailMessagesUseCase = listMailMessagesUseCase;
+        this.sendMailMessageUseCase = sendMailMessageUseCase;
+        this.getMailMessageUseCase = getMailMessageUseCase;
+        this.markMailReadUseCase = markMailReadUseCase;
+        this.deleteMailMessageUseCase = deleteMailMessageUseCase;
+        this.getUnreadMailCountUseCase = getUnreadMailCountUseCase;
+        this.processMailActionUseCase = processMailActionUseCase;
     }
 }

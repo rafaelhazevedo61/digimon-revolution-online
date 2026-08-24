@@ -1,4 +1,5 @@
 package com.dro.modules.equipment.application;
+import com.dro.shared.security.JwtTestToken;
 
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.*;
@@ -49,7 +50,7 @@ class UnequipAllUseCaseTest {
     void setUp() {
         playerId = UUID.randomUUID();
         digimonId = UUID.randomUUID();
-        token = UUID.randomUUID() + ":" + playerId;
+        token = JwtTestToken.create(playerId);
 
         player = Player.builder()
                 .id(playerId)

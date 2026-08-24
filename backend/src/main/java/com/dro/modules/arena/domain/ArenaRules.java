@@ -2,6 +2,8 @@ package com.dro.modules.arena.domain;
 
 import com.dro.modules.digimon.domain.enums.Stage;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 /**
  * Regras competitivas da Arena, incluindo matchmaking, ELO, recompensas e limites diários.
  *
@@ -86,6 +88,11 @@ public class ArenaRules {
         if (total <= 0) return 50;
         int chance = (int) Math.round((attackerPower / total) * 100);
         return Math.min(MAX_WIN_CHANCE, Math.max(MIN_WIN_CHANCE, chance));
+    }
+
+    /** Rola um valor de 1 a 100 para decidir o resultado do desafio. */
+    public static int roll() {
+        return ThreadLocalRandom.current().nextInt(1, 101);
     }
 
     /**

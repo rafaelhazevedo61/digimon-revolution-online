@@ -3,7 +3,10 @@ package com.dro.modules.equipment.application;
 import com.dro.modules.equipment.domain.Equipment;
 import com.dro.modules.equipment.domain.EquipmentRarity;
 import com.dro.modules.equipment.domain.EquipmentSlot;
+import com.dro.modules.equipment.domain.EquipmentTemplateEntity;
 import com.dro.modules.equipment.infra.EquipmentRepository;
+import com.dro.modules.equipment.infra.EquipmentTemplateRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -11,9 +14,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -22,8 +27,43 @@ class GrantEquipmentUseCaseTest {
     @Mock
     private EquipmentRepository equipmentRepository;
 
+    @Mock
+    private EquipmentTemplateRepository equipmentTemplateRepository;
+
     @InjectMocks
     private GrantEquipmentUseCase grantEquipmentUseCase;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(equipmentTemplateRepository.findByName(anyString())).thenAnswer(invocation -> {
+            String name = invocation.getArgument(0);
+            if ("Iron Claw".equals(name)) {
+                return Optional.of(EquipmentTemplateEntity.builder()
+                        .name("Iron Claw")
+                        .slot(EquipmentSlot.WEAPON)
+                        .rarity(EquipmentRarity.COMMON)
+                        .setCode("iron")
+                        .tier(1)
+                        .bonusHp(0)
+                        .bonusAttack(5)
+                        .bonusDefense(0)
+                        .build());
+            }
+            if ("Omega Blade".equals(name)) {
+                return Optional.of(EquipmentTemplateEntity.builder()
+                        .name("Omega Blade")
+                        .slot(EquipmentSlot.WEAPON)
+                        .rarity(EquipmentRarity.LEGENDARY)
+                        .setCode("omega")
+                        .tier(5)
+                        .bonusHp(5)
+                        .bonusAttack(40)
+                        .bonusDefense(5)
+                        .build());
+            }
+            return Optional.empty();
+        });
+    }
 
     @Test
     void execute_createsEquipmentFromTemplate() {

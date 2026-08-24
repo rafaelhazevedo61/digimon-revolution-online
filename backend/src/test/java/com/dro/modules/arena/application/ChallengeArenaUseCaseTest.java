@@ -40,7 +40,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
+
+import org.mockito.Answers;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -173,10 +174,8 @@ class ChallengeArenaUseCaseTest {
     }
 
     private ArenaMatchResponse challengeWithRoll(int roll) {
-        try (MockedStatic<ThreadLocalRandom> mocked = mockStatic(ThreadLocalRandom.class)) {
-            ThreadLocalRandom random = mock(ThreadLocalRandom.class);
-            when(random.nextInt(anyInt(), anyInt())).thenReturn(roll);
-            mocked.when(ThreadLocalRandom::current).thenReturn(random);
+        try (MockedStatic<ArenaRules> mocked = mockStatic(ArenaRules.class, Answers.CALLS_REAL_METHODS)) {
+            mocked.when(ArenaRules::roll).thenReturn(roll);
             return useCase.execute(token, defenderId);
         }
     }

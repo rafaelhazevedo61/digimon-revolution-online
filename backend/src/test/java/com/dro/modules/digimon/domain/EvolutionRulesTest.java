@@ -9,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class EvolutionRulesTest {
 
     @Test
-    void nextStage_baby_returnsRookie() {
-        assertEquals(Stage.ROOKIE, EvolutionRules.nextStage(Stage.BABY));
+    void nextStage_baby_returnsBabyIi() {
+        assertEquals(Stage.BABY_II, EvolutionRules.nextStage(Stage.BABY));
     }
 
     @Test
@@ -79,18 +79,23 @@ class EvolutionRulesTest {
     }
 
     @Test
-    void requiredFragmentQuantity_rookie_returns5() {
-        assertEquals(5, EvolutionRules.requiredFragmentQuantity(Stage.ROOKIE));
+    void requiredFragmentQuantity_babyIi_returns5() {
+        assertEquals(5, EvolutionRules.requiredFragmentQuantity(Stage.BABY_II));
     }
 
     @Test
-    void requiredFragmentQuantity_champion_returns10() {
-        assertEquals(10, EvolutionRules.requiredFragmentQuantity(Stage.CHAMPION));
+    void requiredFragmentQuantity_rookie_returns10() {
+        assertEquals(10, EvolutionRules.requiredFragmentQuantity(Stage.ROOKIE));
     }
 
     @Test
-    void requiredFragmentQuantity_ultimate_returns20() {
-        assertEquals(20, EvolutionRules.requiredFragmentQuantity(Stage.ULTIMATE));
+    void requiredFragmentQuantity_champion_returns20() {
+        assertEquals(20, EvolutionRules.requiredFragmentQuantity(Stage.CHAMPION));
+    }
+
+    @Test
+    void requiredFragmentQuantity_ultimate_returns50() {
+        assertEquals(50, EvolutionRules.requiredFragmentQuantity(Stage.ULTIMATE));
     }
 
     @Test

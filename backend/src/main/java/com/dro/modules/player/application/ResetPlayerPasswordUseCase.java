@@ -7,7 +7,6 @@ import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.audit.AdminAuditService;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
