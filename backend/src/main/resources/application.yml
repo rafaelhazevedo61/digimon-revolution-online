@@ -53,3 +53,10 @@ dro:
     jwt:
       issuer: ${DRO_JWT_ISSUER:digimon-revolution-online}
       expiration-minutes: ${DRO_JWT_EXPIRATION_MINUTES:1440}
+
+  dro:
+    bootstrap-admin:
+      enabled: ${DRO_BOOTSTRAP_ADMIN_ENABLED:false}
+      username: ${DRO_BOOTSTRAP_ADMIN_USERNAME:}
+      email: ${DRO_BOOTSTRAP_ADMIN_EMAIL:}
+      password: ${DRO_BOOTSTRAP_ADMIN_PASSWORD:}

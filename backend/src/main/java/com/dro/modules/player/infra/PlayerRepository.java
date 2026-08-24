@@ -1,6 +1,7 @@
 package com.dro.modules.player.infra;
 
 import com.dro.modules.player.domain.Player;
+import com.dro.modules.player.domain.UserType;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -36,4 +37,6 @@ public interface PlayerRepository extends JpaRepository<Player, UUID>, JpaSpecif
     List<Player> findTop100ByUsernameContainingIgnoreCaseOrderByUsernameAsc(String username);
 
     long countByClanId(UUID clanId);
+
+    boolean existsByUserType(UserType userType);
 }
