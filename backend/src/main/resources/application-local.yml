@@ -5,7 +5,7 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:arisco2017}
 
   mongodb:
-    uri: ${SPRING_MONGODB_URI:mongodb://dro_mongo:arisco2017@localhost:27017/dro_audit?authSource=admin}
+    uri: ${SPRING_MONGODB_URI:mongodb://127.0.0.1:27017/dro_audit}
 
 logging:
   level:
@@ -13,7 +13,7 @@ logging:
 
 dro:
   registration:
-    invite-required: ${DRO_REGISTRATION_INVITE_REQUIRED:false}
+    invite-required: ${DRO_REGISTRATION_INVITE_REQUIRED:true}
 
   cors:
     allowed-origins: ${DRO_ALLOWED_ORIGINS:http://localhost:8080,http://localhost:3000,http://localhost:27017,http://127.0.0.1:5500,http://127.0.0.1:59527}
