@@ -63,21 +63,4 @@
     }
   });
 
-  const ctaModal = document.querySelector('[data-cta-modal]');
-  if (ctaModal) {
-    const openCtaModal = () => {
-      ctaModal.hidden = false;
-      document.body.classList.add('cta-modal-open');
-    };
-    const closeCtaModal = () => {
-      ctaModal.hidden = true;
-      document.body.classList.remove('cta-modal-open');
-    };
-    ctaModal.querySelector('[data-cta-modal-backdrop]')?.addEventListener('click', closeCtaModal);
-    ctaModal.querySelector('[data-cta-modal-close]')?.addEventListener('click', closeCtaModal);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !ctaModal.hidden) closeCtaModal(); });
-    document.querySelectorAll('a[href*="game-frontend/index.html"]').forEach((link) => {
-      link.addEventListener('click', (e) => { e.preventDefault(); openCtaModal(); });
-    });
-  }
 })();
