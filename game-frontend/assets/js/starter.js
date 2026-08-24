@@ -3,6 +3,24 @@ async function renderStarterPage() {
   const nav = document.getElementById("bottom-nav");
   if (nav) nav.classList.add("hidden");
 
+  try {
+    const startup = await apiGet("/players/me/startup");
+    if (startup && startup.redirectTo) {
+      if (startup.redirectTo === "DIGITAMA_HATCHING") {
+        const hatched = await apiPost("/digitama/hatch");
+        renderHatchingAnimation(hatched);
+        return;
+      }
+      if (startup.redirectTo !== "DIGITAMA_SELECTION") {
+        const route = startup.redirectTo === "DIGIMON_SELECTION" ? "digimon-select" : "dashboard";
+        navigateTo(route);
+        return;
+      }
+    }
+  } catch (err) {
+    console.error("renderStarterPage: erro ao verificar estado inicial", err);
+  }
+
   app.innerHTML = `
     <div class="flex items-center justify-center min-h-screen p-4">
       <div class="w-full max-w-lg text-center">
@@ -180,9 +198,9 @@ async function hatchConfirm(digimonId) {
     console.log("hatchConfirm: selecionando Digimon", digimonId);
     await apiPost("/digimon/select", { digimonId: digimonId });
     console.log("hatchConfirm: sucesso, navegando para dashboard");
+    // Remove a tela de seleção do histórico para o botão "voltar" não voltar ao starter
+    history.replaceState(null, "", window.location.pathname + window.location.search + "#dashboard");
     navigateTo("dashboard");
-    // Fallback caso navigateTo não altere o hash
-    window.location.hash = "dashboard";
   } catch (err) {
     console.error("hatchConfirm: erro", err);
     const message = err && err.message ? err.message : "Não foi possível iniciar a jornada.";
