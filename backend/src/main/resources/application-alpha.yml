@@ -12,6 +12,9 @@ logging:
     org.springframework.jdbc: INFO
 
 dro:
+  registration:
+    invite-required: true
+
   cors:
     allowed-origins: ${DRO_ALLOWED_ORIGINS}
 
