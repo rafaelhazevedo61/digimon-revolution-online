@@ -1,15 +1,12 @@
 package com.dro.shared.audit;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
  * Implementação MongoDB da porta de armazenamento de auditoria.
  */
 @Service
-@RequiredArgsConstructor
 public class MongoAuditDocumentStore implements AuditDocumentStore {
-
     private final TransactionAuditRepository transactionAuditRepository;
     private final ErrorLogRepository errorLogRepository;
 
@@ -21,5 +18,10 @@ public class MongoAuditDocumentStore implements AuditDocumentStore {
     @Override
     public ErrorLogDocument saveError(ErrorLogDocument document) {
         return errorLogRepository.save(document);
+    }
+
+    public MongoAuditDocumentStore(final TransactionAuditRepository transactionAuditRepository, final ErrorLogRepository errorLogRepository) {
+        this.transactionAuditRepository = transactionAuditRepository;
+        this.errorLogRepository = errorLogRepository;
     }
 }

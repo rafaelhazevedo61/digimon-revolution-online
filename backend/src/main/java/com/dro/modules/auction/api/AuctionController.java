@@ -13,7 +13,6 @@ import com.dro.modules.auction.application.GetAuctionHistoryUseCase;
 import com.dro.modules.auction.application.ListAuctionListingsUseCase;
 import com.dro.modules.auction.application.ListMyAuctionListingsUseCase;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

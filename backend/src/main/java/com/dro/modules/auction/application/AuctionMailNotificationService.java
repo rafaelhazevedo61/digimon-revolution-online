@@ -3,7 +3,6 @@ package com.dro.modules.auction.application;
 import com.dro.modules.auction.domain.AuctionListing;
 import com.dro.modules.auction.domain.AuctionTransaction;
 import com.dro.modules.mail.application.CreateSystemMailMessageUseCase;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,9 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Componente da camada de serviço de aplicação do módulo de Casa de Leilões.
  */
 @Service
-@RequiredArgsConstructor
 public class AuctionMailNotificationService {
-
     private final CreateSystemMailMessageUseCase createSystemMailMessageUseCase;
 
     @Transactional
@@ -33,13 +30,10 @@ public class AuctionMailNotificationService {
     }
 
     private void notifyMessage(AuctionMailNotificationFactory.AuctionMailNotification notification) {
-        createSystemMailMessageUseCase.createAuctionNotification(
-                notification.recipientId(),
-                notification.sourceId(),
-                notification.actionType(),
-                notification.subject(),
-                notification.body(),
-                notification.deliveryKey()
-        );
+        createSystemMailMessageUseCase.createAuctionNotification(notification.recipientId(), notification.sourceId(), notification.actionType(), notification.subject(), notification.body(), notification.deliveryKey());
+    }
+
+    public AuctionMailNotificationService(final CreateSystemMailMessageUseCase createSystemMailMessageUseCase) {
+        this.createSystemMailMessageUseCase = createSystemMailMessageUseCase;
     }
 }

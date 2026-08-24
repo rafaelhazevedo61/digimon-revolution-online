@@ -21,10 +21,8 @@ import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnauthorizedException;
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -43,16 +41,16 @@ import java.util.UUID;
  * transação. A pool continua invisível para jogadores comuns.</p>
  */
 @Service
-@RequiredArgsConstructor
 public class AdminLootTableUseCase {
-
     private final LootTableRepository lootTableRepository;
     private final ChestDefinitionRepository chestDefinitionRepository;
     private final ItemDefinitionRepository itemDefinitionRepository;
     private final PlayerRepository playerRepository;
     private final TransactionAuditPublisher transactionAuditPublisher;
 
-    /** Cria uma Loot Table nova e registra a operação no Outbox. */
+    /**
+     * Cria uma Loot Table nova e registra a operação no Outbox.
+     */
     @Transactional
     public AdminLootTableResponse create(String authorization, LootTableAdminRequest request) {
         Player admin = findAdmin(authorization);
@@ -60,41 +58,39 @@ public class AdminLootTableUseCase {
         if (lootTableRepository.findByCode(code).isPresent()) {
             throw new ConflictException("Já existe uma Loot Table com o código " + code + ".");
         }
-
         PreparedConfiguration configuration = validateAndPrepare(request);
         LootTableEntity entity = new LootTableEntity();
         entity.setCode(code);
         entity.setCreatedBy(admin.getUsername());
         entity.setUpdatedBy(admin.getUsername());
         applyConfiguration(entity, request, configuration);
-
         LootTableEntity saved = lootTableRepository.save(entity);
         publishAudit("CREATED", saved, admin);
         return toResponse(saved);
     }
 
-    /** Lista tabelas administrativas ordenadas por nome. */
+    /**
+     * Lista tabelas administrativas ordenadas por nome.
+     */
     @Transactional(readOnly = true)
     public List<AdminLootTableResponse> list(Boolean activeOnly) {
-        List<LootTableEntity> entities = Boolean.TRUE.equals(activeOnly)
-                ? lootTableRepository.findByActiveTrueOrderByNameAsc()
-                : lootTableRepository.findAllByOrderByNameAsc();
+        List<LootTableEntity> entities = Boolean.TRUE.equals(activeOnly) ? lootTableRepository.findByActiveTrueOrderByNameAsc() : lootTableRepository.findAllByOrderByNameAsc();
         return entities.stream().map(this::toResponse).toList();
     }
 
-    /** Retorna uma tabela completa pelo código estável. */
+    /**
+     * Retorna uma tabela completa pelo código estável.
+     */
     @Transactional(readOnly = true)
     public AdminLootTableResponse get(String code) {
         return toResponse(findTable(code));
     }
 
-    /** Atualiza metadados, pesos, entradas e status de uma tabela existente. */
+    /**
+     * Atualiza metadados, pesos, entradas e status de uma tabela existente.
+     */
     @Transactional
-    public AdminLootTableResponse update(
-            String authorization,
-            String code,
-            LootTableAdminRequest request
-    ) {
+    public AdminLootTableResponse update(String authorization, String code, LootTableAdminRequest request) {
         Player admin = findAdmin(authorization);
         LootTableEntity entity = findTable(code);
         if (entity.isActive() && Boolean.FALSE.equals(request.active())) {
@@ -104,7 +100,6 @@ public class AdminLootTableUseCase {
         if (!entity.getCode().equals(normalizedCode)) {
             throw new BadRequestException("O código da Loot Table não pode ser alterado.");
         }
-
         PreparedConfiguration configuration = validateAndPrepare(request);
         applyConfiguration(entity, request, configuration);
         entity.setUpdatedBy(admin.getUsername());
@@ -113,7 +108,9 @@ public class AdminLootTableUseCase {
         return toResponse(saved);
     }
 
-    /** Alterna o status ativo sem remover a configuração histórica. */
+    /**
+     * Alterna o status ativo sem remover a configuração histórica.
+     */
     @Transactional
     public AdminLootTableResponse toggleActive(String authorization, String code) {
         Player admin = findAdmin(authorization);
@@ -128,23 +125,17 @@ public class AdminLootTableUseCase {
         return toResponse(saved);
     }
 
-    /** Retorna itens catalogados para seleção na tela administrativa. */
+    /**
+     * Retorna itens catalogados para seleção na tela administrativa.
+     */
     @Transactional(readOnly = true)
     public List<AdminLootItemCatalogResponse> catalog(String category) {
-        String normalizedCategory = category == null || category.isBlank()
-                ? null
-                : category.trim().toUpperCase();
-        return itemDefinitionRepository.findAll().stream()
-                .filter(item -> normalizedCategory == null
-                        || normalizedCategory.equalsIgnoreCase(item.getCategory()))
-                .sorted((left, right) -> left.getName().compareToIgnoreCase(right.getName()))
-                .map(AdminLootItemCatalogResponse::from)
-                .toList();
+        String normalizedCategory = category == null || category.isBlank() ? null : category.trim().toUpperCase();
+        return itemDefinitionRepository.findAll().stream().filter(item -> normalizedCategory == null || normalizedCategory.equalsIgnoreCase(item.getCategory())).sorted((left, right) -> left.getName().compareToIgnoreCase(right.getName())).map(AdminLootItemCatalogResponse::from).toList();
     }
 
     private LootTableEntity findTable(String code) {
-        LootTableEntity entity = lootTableRepository.findByCode(code)
-                .orElseThrow(() -> new NotFoundException("Loot Table não encontrada: " + code));
+        LootTableEntity entity = lootTableRepository.findByCode(code).orElseThrow(() -> new NotFoundException("Loot Table não encontrada: " + code));
         // As duas coleções são bags JPA. Inicializá-las separadamente evita
         // MultipleBagFetchException ao consultar pesos e entradas juntas.
         entity.getRarityWeights().size();
@@ -159,7 +150,6 @@ public class AdminLootTableUseCase {
         if (request.entries() == null || request.entries().isEmpty()) {
             throw new BadRequestException("A Loot Table precisa ter pelo menos uma entrada.");
         }
-
         EnumMap<LootRarity, Integer> weights = new EnumMap<>(LootRarity.class);
         for (LootTableAdminRequest.LootTableRarityWeightRequest weight : request.rarityWeights()) {
             if (weight == null || weight.rarity() == null || weight.weight() == null) {
@@ -175,91 +165,58 @@ public class AdminLootTableUseCase {
         } catch (IllegalArgumentException exception) {
             throw new BadRequestException(exception.getMessage());
         }
-
         Set<String> duplicateKeys = new HashSet<>();
         List<PreparedEntry> entries = new ArrayList<>();
         for (LootTableAdminRequest.LootTableEntryRequest entry : request.entries()) {
-            if (entry == null || entry.rarity() == null || entry.itemType() == null
-                    || entry.weight() == null || entry.minQuantity() == null || entry.maxQuantity() == null) {
+            if (entry == null || entry.rarity() == null || entry.itemType() == null || entry.weight() == null || entry.minQuantity() == null || entry.maxQuantity() == null) {
                 throw new BadRequestException("Todas as entradas precisam estar preenchidas.");
             }
-
             String materialCode = normalizeMaterialCode(entry.materialCode());
-            boolean requiresCatalogCode = entry.itemType() == ItemType.EVOLUTION_MATERIAL
-                    || entry.itemType() == ItemType.LOOT_CHEST;
+            boolean requiresCatalogCode = entry.itemType() == ItemType.EVOLUTION_MATERIAL || entry.itemType() == ItemType.LOOT_CHEST;
             if (requiresCatalogCode && materialCode == null) {
                 throw new BadRequestException("Informe o código do material ou baú catalogado.");
             }
             if (!requiresCatalogCode && materialCode != null) {
                 throw new BadRequestException("Somente materiais nomeados e baús podem usar código específico.");
             }
-
             try {
-                LootTableRules.validateEntry(
-                        entry.itemType(),
-                        materialCode,
-                        entry.weight(),
-                        entry.minQuantity(),
-                        entry.maxQuantity()
-                );
+                LootTableRules.validateEntry(entry.itemType(), materialCode, entry.weight(), entry.minQuantity(), entry.maxQuantity());
             } catch (IllegalArgumentException exception) {
                 throw new BadRequestException(exception.getMessage());
             }
-
             String catalogCode = requiresCatalogCode ? materialCode : entry.itemType().name();
-            ItemDefinition definition = itemDefinitionRepository.findByCode(catalogCode)
-                    .orElseThrow(() -> new ConflictException(
-                            "Item não encontrado no catálogo: " + catalogCode));
+            ItemDefinition definition = itemDefinitionRepository.findByCode(catalogCode).orElseThrow(() -> new ConflictException("Item não encontrado no catálogo: " + catalogCode));
             validateCatalogCategory(entry.itemType(), definition, catalogCode);
             if (definition.getMaxStack() != null && entry.maxQuantity() > definition.getMaxStack()) {
-                throw new BadRequestException(
-                        "A quantidade máxima de " + catalogCode + " excede o max_stack do catálogo.");
+                throw new BadRequestException("A quantidade máxima de " + catalogCode + " excede o max_stack do catálogo.");
             }
-
             String duplicateKey = entry.rarity() + "|" + entry.itemType() + "|" + (materialCode == null ? "" : materialCode);
             if (!duplicateKeys.add(duplicateKey)) {
                 throw new BadRequestException("A entrada " + catalogCode + " está duplicada na raridade " + entry.rarity() + ".");
             }
-
-            entries.add(new PreparedEntry(
-                    entry.rarity(),
-                    entry.itemType(),
-                    materialCode,
-                    entry.weight(),
-                    entry.minQuantity(),
-                    entry.maxQuantity(),
-                    entry.active() == null || entry.active()
-            ));
+            entries.add(new PreparedEntry(entry.rarity(), entry.itemType(), materialCode, entry.weight(), entry.minQuantity(), entry.maxQuantity(), entry.active() == null || entry.active()));
         }
         if (entries.size() < request.minItems()) {
-            throw new BadRequestException(
-                    "A Loot Table precisa ter pelo menos " + request.minItems() + " entradas distintas para atender ao mínimo configurado.");
+            throw new BadRequestException("A Loot Table precisa ter pelo menos " + request.minItems() + " entradas distintas para atender ao mínimo configurado.");
         }
         return new PreparedConfiguration(weights, entries);
     }
 
     private void validateCatalogCategory(ItemType itemType, ItemDefinition definition, String catalogCode) {
-        if (itemType == ItemType.EVOLUTION_MATERIAL
-                && !"EVOLUTION_MATERIAL".equalsIgnoreCase(definition.getCategory())) {
+        if (itemType == ItemType.EVOLUTION_MATERIAL && !"EVOLUTION_MATERIAL".equalsIgnoreCase(definition.getCategory())) {
             throw new ConflictException("O item " + catalogCode + " não é um material de evolução catalogado.");
         }
-        if (itemType == ItemType.LOOT_CHEST
-                && !"CHEST".equalsIgnoreCase(definition.getCategory())) {
+        if (itemType == ItemType.LOOT_CHEST && !"CHEST".equalsIgnoreCase(definition.getCategory())) {
             throw new ConflictException("O item " + catalogCode + " não é um baú catalogado.");
         }
     }
 
-    private void applyConfiguration(
-            LootTableEntity entity,
-            LootTableAdminRequest request,
-            PreparedConfiguration configuration
-    ) {
+    private void applyConfiguration(LootTableEntity entity, LootTableAdminRequest request, PreparedConfiguration configuration) {
         entity.setName(request.name().trim());
         entity.setDescription(normalizeDescription(request.description()));
         entity.setMinItems(request.minItems());
         entity.setMaxItems(request.maxItems());
         entity.setActive(request.active() == null || request.active());
-
         entity.getRarityWeights().clear();
         entity.getEntries().clear();
         if (entity.getId() != null) {
@@ -267,32 +224,14 @@ public class AdminLootTableUseCase {
             // sejam removidos antes de inserir as novas linhas do update.
             lootTableRepository.flush();
         }
-        configuration.weights().forEach((rarity, weight) ->
-                entity.getRarityWeights().add(LootTableRarityWeightEntity.builder()
-                        .lootTable(entity)
-                        .rarity(rarity)
-                        .weight(weight)
-                        .build()));
-
-        configuration.entries().forEach(entry ->
-                entity.getEntries().add(LootTableEntryEntity.builder()
-                        .lootTable(entity)
-                        .rarity(entry.rarity())
-                        .itemType(entry.itemType())
-                        .materialCode(entry.materialCode())
-                        .weight(entry.weight())
-                        .minQuantity(entry.minQuantity())
-                        .maxQuantity(entry.maxQuantity())
-                        .active(entry.active())
-                        .build()));
+        configuration.weights().forEach((rarity, weight) -> entity.getRarityWeights().add(LootTableRarityWeightEntity.builder().lootTable(entity).rarity(rarity).weight(weight).build()));
+        configuration.entries().forEach(entry -> entity.getEntries().add(LootTableEntryEntity.builder().lootTable(entity).rarity(entry.rarity()).itemType(entry.itemType()).materialCode(entry.materialCode()).weight(entry.weight()).minQuantity(entry.minQuantity()).maxQuantity(entry.maxQuantity()).active(entry.active()).build()));
     }
 
     private AdminLootTableResponse toResponse(LootTableEntity entity) {
         Map<String, ItemDefinition> catalog = new HashMap<>();
         entity.getEntries().forEach(entry -> {
-            String code = entry.getMaterialCode() != null
-                    ? entry.getMaterialCode()
-                    : entry.getItemType().name();
+            String code = entry.getMaterialCode() != null ? entry.getMaterialCode() : entry.getItemType().name();
             itemDefinitionRepository.findByCode(code).ifPresent(definition -> catalog.put(code, definition));
         });
         return AdminLootTableResponse.from(entity, catalog);
@@ -300,9 +239,7 @@ public class AdminLootTableUseCase {
 
     private void ensureCanDeactivate(LootTableEntity entity, String code) {
         if (chestDefinitionRepository.existsByLootTable_Id(entity.getId())) {
-            throw new ConflictException(
-                    "Não é possível desativar a Loot Table " + code
-                            + " porque ela está vinculada a um ou mais Baús da Área.");
+            throw new ConflictException("Não é possível desativar a Loot Table " + code + " porque ela está vinculada a um ou mais Baús da Área.");
         }
     }
 
@@ -316,14 +253,7 @@ public class AdminLootTableUseCase {
         payload.put("active", entity.isActive());
         payload.put("rarityWeightCount", entity.getRarityWeights().size());
         payload.put("entryCount", entity.getEntries().size());
-
-        transactionAuditPublisher.success(
-                "admin-loot-table:" + entity.getCode() + ":" + operation.toLowerCase() + ":" + UUID.randomUUID(),
-                "ADMIN_LOOT_TABLE_" + operation,
-                "LootTable",
-                entity.getCode(),
-                payload
-        );
+        transactionAuditPublisher.success("admin-loot-table:" + entity.getCode() + ":" + operation.toLowerCase() + ":" + UUID.randomUUID(), "ADMIN_LOOT_TABLE_" + operation, "LootTable", entity.getCode(), payload);
     }
 
     private Player findAdmin(String authorization) {
@@ -331,8 +261,7 @@ public class AdminLootTableUseCase {
             throw new UnauthorizedException("Authorization é obrigatório.");
         }
         UUID adminId = TokenExtractor.extractPlayerId(authorization);
-        return playerRepository.findById(adminId)
-                .orElseThrow(() -> new UnauthorizedException("Administrador não encontrado."));
+        return playerRepository.findById(adminId).orElseThrow(() -> new UnauthorizedException("Administrador não encontrado."));
     }
 
     private String normalizeMaterialCode(String code) {
@@ -345,20 +274,19 @@ public class AdminLootTableUseCase {
         return description.trim();
     }
 
-    private record PreparedConfiguration(
-            Map<LootRarity, Integer> weights,
-            List<PreparedEntry> entries
-    ) {
+
+    private record PreparedConfiguration(Map<LootRarity, Integer> weights, List<PreparedEntry> entries) {
     }
 
-    private record PreparedEntry(
-            LootRarity rarity,
-            ItemType itemType,
-            String materialCode,
-            int weight,
-            int minQuantity,
-            int maxQuantity,
-            boolean active
-    ) {
+
+    private record PreparedEntry(LootRarity rarity, ItemType itemType, String materialCode, int weight, int minQuantity, int maxQuantity, boolean active) {
+    }
+
+    public AdminLootTableUseCase(final LootTableRepository lootTableRepository, final ChestDefinitionRepository chestDefinitionRepository, final ItemDefinitionRepository itemDefinitionRepository, final PlayerRepository playerRepository, final TransactionAuditPublisher transactionAuditPublisher) {
+        this.lootTableRepository = lootTableRepository;
+        this.chestDefinitionRepository = chestDefinitionRepository;
+        this.itemDefinitionRepository = itemDefinitionRepository;
+        this.playerRepository = playerRepository;
+        this.transactionAuditPublisher = transactionAuditPublisher;
     }
 }

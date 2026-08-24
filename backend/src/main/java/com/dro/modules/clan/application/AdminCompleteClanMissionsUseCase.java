@@ -5,10 +5,8 @@ import com.dro.modules.clan.domain.PlayerClanMission;
 import com.dro.modules.clan.domain.enums.PlayerClanMissionStatus;
 import com.dro.modules.clan.infra.ClanMissionRepository;
 import com.dro.modules.clan.infra.PlayerClanMissionRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,9 +14,7 @@ import java.util.List;
  * Componente da camada de caso de uso da aplicação do módulo de Clãs.
  */
 @Service
-@RequiredArgsConstructor
 public class AdminCompleteClanMissionsUseCase {
-
     private final PlayerClanMissionRepository playerClanMissionRepository;
     private final ClanMissionRepository clanMissionRepository;
 
@@ -26,7 +22,6 @@ public class AdminCompleteClanMissionsUseCase {
     public long execute() {
         List<PlayerClanMission> active = playerClanMissionRepository.findByStatus(PlayerClanMissionStatus.IN_PROGRESS);
         LocalDateTime now = LocalDateTime.now();
-
         for (PlayerClanMission playerMission : active) {
             ClanMission mission = clanMissionRepository.findById(playerMission.getClanMissionId()).orElse(null);
             if (mission == null) {
@@ -36,8 +31,12 @@ public class AdminCompleteClanMissionsUseCase {
             playerMission.setStatus(PlayerClanMissionStatus.COMPLETED);
             playerMission.setCompletedAt(now);
         }
-
         playerClanMissionRepository.saveAll(active);
         return active.size();
+    }
+
+    public AdminCompleteClanMissionsUseCase(final PlayerClanMissionRepository playerClanMissionRepository, final ClanMissionRepository clanMissionRepository) {
+        this.playerClanMissionRepository = playerClanMissionRepository;
+        this.clanMissionRepository = clanMissionRepository;
     }
 }

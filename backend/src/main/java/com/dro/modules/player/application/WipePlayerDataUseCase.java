@@ -3,20 +3,16 @@ package com.dro.modules.player.application;
 import com.dro.modules.player.api.dto.request.WipePlayersRequest;
 import com.dro.shared.audit.AdminAuditService;
 import com.dro.shared.exception.BadRequestException;
-import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Map;
 
 /**
  * Componente da camada de caso de uso da aplicação do módulo de Jogadores.
  */
 @Service
-@RequiredArgsConstructor
 public class WipePlayerDataUseCase {
-
     private final JdbcTemplate jdbcTemplate;
     private final AdminAuditService adminAuditService;
 
@@ -35,7 +31,6 @@ public class WipePlayerDataUseCase {
         if (request == null || !"WIPE".equals(request.confirmation())) {
             throw new BadRequestException("A confirmação deve ser exatamente WIPE.");
         }
-
         jdbcTemplate.execute("DELETE FROM boss_attempts");
         jdbcTemplate.execute("DELETE FROM mission_instances");
         jdbcTemplate.execute("DELETE FROM player_mission_progress");
@@ -47,15 +42,11 @@ public class WipePlayerDataUseCase {
         jdbcTemplate.execute("DELETE FROM digitama_history");
         jdbcTemplate.execute("DELETE FROM digimons");
         jdbcTemplate.execute("DELETE FROM players");
+        adminAuditService.success(authorization, "ADMIN_PLAYER_WIPE", "PlayerData", "all", "wipe", "Dados de jogadores removidos", Map.of("confirmation", "WIPE"));
+    }
 
-        adminAuditService.success(
-                authorization,
-                "ADMIN_PLAYER_WIPE",
-                "PlayerData",
-                "all",
-                "wipe",
-                "Dados de jogadores removidos",
-                Map.of("confirmation", "WIPE")
-        );
+    public WipePlayerDataUseCase(final JdbcTemplate jdbcTemplate, final AdminAuditService adminAuditService) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.adminAuditService = adminAuditService;
     }
 }

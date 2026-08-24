@@ -4,19 +4,15 @@ import com.dro.modules.admin.api.dto.AdminAnnouncementRequest;
 import com.dro.modules.mail.application.CreateSystemMailMessageUseCase;
 import com.dro.modules.mail.domain.MailMessageType;
 import com.dro.modules.player.infra.PlayerRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.UUID;
 
 /**
  * Componente da camada de caso de uso da aplicação do módulo de Administração.
  */
 @Service
-@RequiredArgsConstructor
 public class CreateAdminAnnouncementUseCase {
-
     private final PlayerRepository playerRepository;
     private final CreateSystemMailMessageUseCase createSystemMailMessageUseCase;
 
@@ -34,18 +30,14 @@ public class CreateAdminAnnouncementUseCase {
         UUID announcementId = UUID.randomUUID();
         int delivered = 0;
         for (var player : playerRepository.findAll()) {
-            createSystemMailMessageUseCase.create(
-                    MailMessageType.ADMIN,
-                    "ADMIN_ANNOUNCEMENT",
-                    player.getId(),
-                    announcementId,
-                    null,
-                    request.subject(),
-                    request.body(),
-                    "admin:announcement:" + announcementId + ":" + player.getId()
-            );
+            createSystemMailMessageUseCase.create(MailMessageType.ADMIN, "ADMIN_ANNOUNCEMENT", player.getId(), announcementId, null, request.subject(), request.body(), "admin:announcement:" + announcementId + ":" + player.getId());
             delivered++;
         }
         return delivered;
+    }
+
+    public CreateAdminAnnouncementUseCase(final PlayerRepository playerRepository, final CreateSystemMailMessageUseCase createSystemMailMessageUseCase) {
+        this.playerRepository = playerRepository;
+        this.createSystemMailMessageUseCase = createSystemMailMessageUseCase;
     }
 }

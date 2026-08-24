@@ -12,9 +12,7 @@ import com.dro.modules.boss.world.infra.WorldBossAttackRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.NotFoundException;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -26,109 +24,48 @@ import java.util.stream.Collectors;
  * Componente da camada de conversor entre domínio e contratos da API do módulo de Boss Mundial.
  */
 @Component
-@RequiredArgsConstructor
 public class WorldBossResponseMapper {
-
     private final BossDefinitionRepository bossDefinitionRepository;
     private final WorldBossAttackRepository worldBossAttackRepository;
     private final PlayerRepository playerRepository;
     private final WorldBossRewardService worldBossRewardService;
 
     public WorldBossResponse toResponse(WorldBossInstance instance, UUID viewerPlayerId) {
-        BossDefinitionEntity boss = bossDefinitionRepository.findById(instance.getBossId())
-                .orElseThrow(() -> new NotFoundException("Boss not found"));
-
-        Instant startOfDay = LocalDate.now(ZoneId.systemDefault())
-                .atStartOfDay(ZoneId.systemDefault())
-                .toInstant();
-        Instant resetCutoff = instance.getDailyResetAt() != null && instance.getDailyResetAt().isAfter(startOfDay)
-                ? instance.getDailyResetAt()
-                : startOfDay;
-
-        int usedToday = (int) worldBossAttackRepository
-                .countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(instance.getId(), viewerPlayerId, resetCutoff);
-        List<WorldBossAttack> myAttacks = worldBossAttackRepository
-                .findByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(instance.getId(), viewerPlayerId);
-        long myTotalDamage = myAttacks.stream()
-                .mapToLong(WorldBossAttack::getDamage)
-                .sum();
+        BossDefinitionEntity boss = bossDefinitionRepository.findById(instance.getBossId()).orElseThrow(() -> new NotFoundException("Boss not found"));
+        Instant startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant resetCutoff = instance.getDailyResetAt() != null && instance.getDailyResetAt().isAfter(startOfDay) ? instance.getDailyResetAt() : startOfDay;
+        int usedToday = (int) worldBossAttackRepository.countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(instance.getId(), viewerPlayerId, resetCutoff);
+        List<WorldBossAttack> myAttacks = worldBossAttackRepository.findByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(instance.getId(), viewerPlayerId);
+        long myTotalDamage = myAttacks.stream().mapToLong(WorldBossAttack::getDamage).sum();
         int attackCooldownMinutes = WorldBossRules.attackCooldownMinutes(boss.getCooldownMinutes());
-        Instant nextAttackCandidate = myAttacks.isEmpty() || myAttacks.get(0).getCreatedAt() == null
-                ? null
-                : myAttacks.get(0).getCreatedAt().plus(Duration.ofMinutes(attackCooldownMinutes));
-        Instant nextAttackAvailableAt = boss.isCooldownEnabled()
-                && instance.getStatus() == com.dro.modules.boss.world.domain.WorldBossStatus.ACTIVE
-                && nextAttackCandidate != null
-                && nextAttackCandidate.isAfter(Instant.now())
-                ? nextAttackCandidate
-                : null;
-
-        List<WorldBossAttackResponse> recentAttacks = worldBossAttackRepository
-                .findByWorldBossIdOrderByCreatedAtDesc(instance.getId()).stream()
-                .limit(20)
-                .map(this::toAttackResponse)
-                .toList();
-
-        return new WorldBossResponse(
-                instance.getId(),
-                boss.getCode(),
-                boss.getName(),
-                boss.getImageUrl(),
-                instance.getMaxHp(),
-                instance.getRemainingHp(),
-                instance.getStatus(),
-                instance.getCreatedAt(),
-                instance.getDefeatedAt(),
-                usedToday,
-                Math.max(0, WorldBossRules.DAILY_ATTACK_LIMIT - usedToday),
-                attackCooldownMinutes,
-                boss.isCooldownEnabled(),
-                nextAttackAvailableAt,
-                myTotalDamage,
-                buildRanking(instance.getId()),
-                recentAttacks,
-                worldBossRewardService.findPlayerRewards(instance.getId(), viewerPlayerId)
-        );
+        Instant nextAttackCandidate = myAttacks.isEmpty() || myAttacks.get(0).getCreatedAt() == null ? null : myAttacks.get(0).getCreatedAt().plus(Duration.ofMinutes(attackCooldownMinutes));
+        Instant nextAttackAvailableAt = boss.isCooldownEnabled() && instance.getStatus() == com.dro.modules.boss.world.domain.WorldBossStatus.ACTIVE && nextAttackCandidate != null && nextAttackCandidate.isAfter(Instant.now()) ? nextAttackCandidate : null;
+        List<WorldBossAttackResponse> recentAttacks = worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(instance.getId()).stream().limit(20).map(this::toAttackResponse).toList();
+        return new WorldBossResponse(instance.getId(), boss.getCode(), boss.getName(), boss.getImageUrl(), instance.getMaxHp(), instance.getRemainingHp(), instance.getStatus(), instance.getCreatedAt(), instance.getDefeatedAt(), usedToday, Math.max(0, WorldBossRules.DAILY_ATTACK_LIMIT - usedToday), attackCooldownMinutes, boss.isCooldownEnabled(), nextAttackAvailableAt, myTotalDamage, buildRanking(instance.getId()), recentAttacks, worldBossRewardService.findPlayerRewards(instance.getId(), viewerPlayerId));
     }
 
     private List<WorldBossRankingEntryResponse> buildRanking(UUID worldBossId) {
-        Map<UUID, Long> damageByPlayer = worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(worldBossId).stream()
-                .collect(Collectors.groupingBy(
-                        WorldBossAttack::getPlayerId,
-                        Collectors.summingLong(WorldBossAttack::getDamage)
-                ));
-
+        Map<UUID, Long> damageByPlayer = worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(worldBossId).stream().collect(Collectors.groupingBy(WorldBossAttack::getPlayerId, Collectors.summingLong(WorldBossAttack::getDamage)));
         List<UUID> playerIds = damageByPlayer.keySet().stream().toList();
-        Map<UUID, String> usernames = playerIds.isEmpty()
-                ? Collections.emptyMap()
-                : playerRepository.findAllById(playerIds).stream()
-                        .collect(Collectors.toMap(Player::getId, Player::getUsername));
-
-        List<Map.Entry<UUID, Long>> sorted = damageByPlayer.entrySet().stream()
-                .sorted(Map.Entry.<UUID, Long>comparingByValue().reversed())
-                .toList();
-
+        Map<UUID, String> usernames = playerIds.isEmpty() ? Collections.emptyMap() : playerRepository.findAllById(playerIds).stream().collect(Collectors.toMap(Player::getId, Player::getUsername));
+        List<Map.Entry<UUID, Long>> sorted = damageByPlayer.entrySet().stream().sorted(Map.Entry.<UUID, Long>comparingByValue().reversed()).toList();
         List<WorldBossRankingEntryResponse> ranking = new ArrayList<>();
         int position = 1;
         for (Map.Entry<UUID, Long> entry : sorted) {
-            ranking.add(new WorldBossRankingEntryResponse(
-                    position++,
-                    entry.getKey(),
-                    usernames.getOrDefault(entry.getKey(), "Unknown"),
-                    entry.getValue()
-            ));
+            ranking.add(new WorldBossRankingEntryResponse(position++, entry.getKey(), usernames.getOrDefault(entry.getKey(), "Unknown"), entry.getValue()));
         }
         return ranking;
     }
 
     private WorldBossAttackResponse toAttackResponse(WorldBossAttack attack) {
         Player player = playerRepository.findById(attack.getPlayerId()).orElse(null);
-        return new WorldBossAttackResponse(
-                attack.getId(),
-                attack.getPlayerId(),
-                player != null ? player.getUsername() : "Unknown",
-                attack.getDamage(),
-                attack.getCreatedAt()
-        );
+        return new WorldBossAttackResponse(attack.getId(), attack.getPlayerId(), player != null ? player.getUsername() : "Unknown", attack.getDamage(), attack.getCreatedAt());
+    }
+
+    public WorldBossResponseMapper(final BossDefinitionRepository bossDefinitionRepository, final WorldBossAttackRepository worldBossAttackRepository, final PlayerRepository playerRepository, final WorldBossRewardService worldBossRewardService) {
+        this.bossDefinitionRepository = bossDefinitionRepository;
+        this.worldBossAttackRepository = worldBossAttackRepository;
+        this.playerRepository = playerRepository;
+        this.worldBossRewardService = worldBossRewardService;
     }
 }

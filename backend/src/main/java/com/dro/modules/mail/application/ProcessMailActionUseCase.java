@@ -25,10 +25,8 @@ import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -41,9 +39,7 @@ import java.util.UUID;
  * simultaneamente a entidade de origem, a mensagem e os recursos do jogador.</p>
  */
 @Service
-@RequiredArgsConstructor
 public class ProcessMailActionUseCase {
-
     private final MailMessageRepository mailMessageRepository;
     private final ClanInvitationRepository clanInvitationRepository;
     private final ClanRepository clanRepository;
@@ -68,21 +64,14 @@ public class ProcessMailActionUseCase {
     @Transactional
     public MailActionResponse execute(String token, UUID messageId, String requestedAction) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        MailMessage message = mailMessageRepository.findVisibleById(messageId, playerId)
-                .orElseThrow(() -> new NotFoundException("Mensagem não encontrada."));
+        MailMessage message = mailMessageRepository.findVisibleById(messageId, playerId).orElseThrow(() -> new NotFoundException("Mensagem não encontrada."));
         if (!message.belongsToRecipient(playerId)) {
             throw new BadRequestException("Somente o destinatário pode executar esta ação.");
         }
-
-        if ("EVENT_REWARD".equals(message.getSourceType())
-                && "EVENT_REWARD_CLAIM".equals(message.getActionType())
-                && message.getSourceId() != null) {
+        if ("EVENT_REWARD".equals(message.getSourceType()) && "EVENT_REWARD_CLAIM".equals(message.getActionType()) && message.getSourceId() != null) {
             return claimEventReward(message, playerId, requestedAction);
         }
-
-        if (!"CLAN_INVITATION".equals(message.getSourceType())
-                || !"CLAN_INVITE".equals(message.getActionType())
-                || message.getSourceId() == null) {
+        if (!"CLAN_INVITATION".equals(message.getSourceType()) || !"CLAN_INVITE".equals(message.getActionType()) || message.getSourceId() == null) {
             throw new BadRequestException("Esta mensagem não possui uma ação disponível.");
         }
         return processClanInvitation(message, playerId, requestedAction);
@@ -95,22 +84,15 @@ public class ProcessMailActionUseCase {
      * convite está pendente e se ainda existe vaga. Uma falha de capacidade
      * mantém o convite pendente para nova tentativa.</p>
      */
-    private MailActionResponse processClanInvitation(
-            MailMessage message,
-            UUID playerId,
-            String requestedAction
-    ) {
+    private MailActionResponse processClanInvitation(MailMessage message, UUID playerId, String requestedAction) {
         String action = requestedAction == null ? "" : requestedAction.trim().toUpperCase();
         if (!"ACCEPT".equals(action) && !"DECLINE".equals(action)) {
             throw new BadRequestException("Ação de convite inválida.");
         }
-
-        ClanInvitation invitation = clanInvitationRepository.findByIdForUpdate(message.getSourceId())
-                .orElseThrow(() -> new NotFoundException("Convite não encontrado."));
+        ClanInvitation invitation = clanInvitationRepository.findByIdForUpdate(message.getSourceId()).orElseThrow(() -> new NotFoundException("Convite não encontrado."));
         if (!invitation.getInvitee().getId().equals(playerId)) {
             throw new BadRequestException("Este convite não pertence ao jogador atual.");
         }
-
         LocalDateTime now = LocalDateTime.now();
         if (!invitation.isPendingAt(now)) {
             if (invitation.getStatus() == ClanInvitationStatus.PENDING) {
@@ -121,7 +103,6 @@ public class ProcessMailActionUseCase {
             completeMessage(message, now);
             return new MailActionResponse(false, "Este convite não está mais disponível.");
         }
-
         if ("DECLINE".equals(action)) {
             invitation.setStatus(ClanInvitationStatus.DECLINED);
             invitation.setActedAt(now);
@@ -129,12 +110,8 @@ public class ProcessMailActionUseCase {
             completeMessage(message, now);
             return new MailActionResponse(true, "Convite recusado.");
         }
-
-        Player player = playerRepository.findByIdForUpdate(playerId)
-                .orElseThrow(() -> new NotFoundException("Jogador não encontrado."));
-        Clan clan = clanRepository.findByIdForUpdate(invitation.getClan().getId())
-                .orElseThrow(() -> new NotFoundException("Clã não encontrado."));
-
+        Player player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Jogador não encontrado."));
+        Clan clan = clanRepository.findByIdForUpdate(invitation.getClan().getId()).orElseThrow(() -> new NotFoundException("Clã não encontrado."));
         if (!clan.isActive()) {
             invitation.setStatus(ClanInvitationStatus.CANCELLED);
             invitation.setActedAt(now);
@@ -142,7 +119,6 @@ public class ProcessMailActionUseCase {
             completeMessage(message, now);
             return new MailActionResponse(false, "Este clã não existe mais.");
         }
-
         if (player.getClanId() != null) {
             invitation.setStatus(ClanInvitationStatus.CANCELLED);
             invitation.setActedAt(now);
@@ -150,17 +126,14 @@ public class ProcessMailActionUseCase {
             completeMessage(message, now);
             return new MailActionResponse(false, "Você já pertence a um clã.");
         }
-
         long memberCount = playerRepository.countByClanId(clan.getId());
         if (memberCount >= clanBonusService.getEffectiveMaxMembers(clan)) {
             throw new ConflictException("O clã está cheio. O convite continua pendente.");
         }
-
         player.setClanId(clan.getId());
         player.setClanRole(ClanRole.MEMBER);
         player.setClanJoinedAt(now);
         playerRepository.save(player);
-
         invitation.setStatus(ClanInvitationStatus.ACCEPTED);
         invitation.setActedAt(now);
         clanInvitationRepository.save(invitation);
@@ -176,18 +149,12 @@ public class ProcessMailActionUseCase {
      * mensagem e status da premiação são atualizados na mesma transação. Se uma
      * pré-condição falhar, a premiação permanece disponível.</p>
      */
-    private MailActionResponse claimEventReward(
-            MailMessage message,
-            UUID playerId,
-            String requestedAction
-    ) {
+    private MailActionResponse claimEventReward(MailMessage message, UUID playerId, String requestedAction) {
         if (!"CLAIM".equals(requestedAction == null ? "" : requestedAction.trim().toUpperCase())) {
             throw new BadRequestException("Ação de premiação inválida.");
         }
-
         UUID rewardId = message.getSourceId();
-        EventReward reward = eventRewardRepository.findByIdAndPlayerIdForUpdate(rewardId, playerId)
-                .orElseThrow(() -> new NotFoundException("Premiação não encontrada."));
+        EventReward reward = eventRewardRepository.findByIdAndPlayerIdForUpdate(rewardId, playerId).orElseThrow(() -> new NotFoundException("Premiação não encontrada."));
         LocalDateTime now = LocalDateTime.now();
         if (!reward.isPendingAt(now)) {
             if (reward.getStatus() == EventRewardStatus.PENDING) {
@@ -197,63 +164,30 @@ public class ProcessMailActionUseCase {
             completeMessage(message, now);
             return new MailActionResponse(false, "Esta premiação não está mais disponível.");
         }
-
-        Player player = playerRepository.findByIdForUpdate(playerId)
-                .orElseThrow(() -> new NotFoundException("Jogador não encontrado."));
+        Player player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Jogador não encontrado."));
         if (player.getActiveDigimonId() == null) {
             throw new ConflictException("Selecione um Digimon ativo antes de resgatar a premiação.");
         }
-
-        Digimon digimon = digimonRepository.findByIdForUpdate(player.getActiveDigimonId())
-                .orElseThrow(() -> new NotFoundException("Digimon ativo não encontrado."));
+        Digimon digimon = digimonRepository.findByIdForUpdate(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Digimon ativo não encontrado."));
         if (!playerId.equals(digimon.getPlayerId())) {
             throw new ConflictException("O Digimon ativo não pertence ao jogador atual.");
         }
         if ((long) digimon.getBits() + reward.getBitsAmount() > Integer.MAX_VALUE) {
             throw new ConflictException("O saldo de Bits do Digimon não comporta esta premiação.");
         }
-
         if (reward.getBitsAmount() > 0) {
             digimon.setBits(digimon.getBits() + reward.getBitsAmount());
         }
         if (reward.getItemQuantity() > 0) {
-            addItemUseCase.execute(
-                    digimon.getId(),
-                    ItemType.valueOf(reward.getItemType()),
-                    reward.getItemQuantity()
-            );
+            addItemUseCase.execute(digimon.getId(), ItemType.valueOf(reward.getItemType()), reward.getItemQuantity());
         }
         digimonRepository.save(digimon);
-        message.setBody(EventRewardMessageText.claimedBody(
-                message.getBody(),
-                reward.getBitsAmount(),
-                reward.getItemType(),
-                reward.getItemQuantity(),
-                digimon.getName(),
-                now
-        ));
-
+        message.setBody(EventRewardMessageText.claimedBody(message.getBody(), reward.getBitsAmount(), reward.getItemType(), reward.getItemQuantity(), digimon.getName(), now));
         reward.setStatus(EventRewardStatus.CLAIMED);
         reward.setClaimedAt(now);
         eventRewardRepository.save(reward);
         completeMessage(message, now);
-        transactionAuditPublisher.success(
-                "mail-reward-claim:" + rewardId,
-                "MAIL_REWARD_CLAIMED",
-                "EventReward",
-                rewardId.toString(),
-                Map.of(
-                        "module", "mail",
-                        "operation", "claimEventReward",
-                        "actorId", playerId.toString(),
-                        "digimonId", digimon.getId().toString(),
-                        "digimonName", digimon.getName() == null ? "" : digimon.getName(),
-                        "bitsAmount", reward.getBitsAmount(),
-                        "itemType", reward.getItemType() == null ? "" : reward.getItemType(),
-                        "itemQuantity", reward.getItemQuantity(),
-                        "summary", "Event reward claimed"
-                )
-        );
+        transactionAuditPublisher.success("mail-reward-claim:" + rewardId, "MAIL_REWARD_CLAIMED", "EventReward", rewardId.toString(), Map.of("module", "mail", "operation", "claimEventReward", "actorId", playerId.toString(), "digimonId", digimon.getId().toString(), "digimonName", digimon.getName() == null ? "" : digimon.getName(), "bitsAmount", reward.getBitsAmount(), "itemType", reward.getItemType() == null ? "" : reward.getItemType(), "itemQuantity", reward.getItemQuantity(), "summary", "Event reward claimed"));
         return new MailActionResponse(true, "Premiação resgatada com sucesso.");
     }
 
@@ -267,5 +201,17 @@ public class ProcessMailActionUseCase {
         message.setActionType(null);
         message.setReadAt(now);
         mailMessageRepository.save(message);
+    }
+
+    public ProcessMailActionUseCase(final MailMessageRepository mailMessageRepository, final ClanInvitationRepository clanInvitationRepository, final ClanRepository clanRepository, final PlayerRepository playerRepository, final ClanBonusService clanBonusService, final EventRewardRepository eventRewardRepository, final DigimonRepository digimonRepository, final AddItemUseCase addItemUseCase, final TransactionAuditPublisher transactionAuditPublisher) {
+        this.mailMessageRepository = mailMessageRepository;
+        this.clanInvitationRepository = clanInvitationRepository;
+        this.clanRepository = clanRepository;
+        this.playerRepository = playerRepository;
+        this.clanBonusService = clanBonusService;
+        this.eventRewardRepository = eventRewardRepository;
+        this.digimonRepository = digimonRepository;
+        this.addItemUseCase = addItemUseCase;
+        this.transactionAuditPublisher = transactionAuditPublisher;
     }
 }

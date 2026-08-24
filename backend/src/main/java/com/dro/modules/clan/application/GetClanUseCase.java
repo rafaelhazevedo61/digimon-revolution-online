@@ -7,31 +7,28 @@ import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.UUID;
 
 /**
  * Componente da camada de caso de uso da aplicação do módulo de Clãs.
  */
 @Service
-@RequiredArgsConstructor
 public class GetClanUseCase {
-
     private final ClanRepository clanRepository;
     private final PlayerRepository playerRepository;
     private final ClanResponseMapper mapper;
 
     public ClanResponse execute(String token, UUID clanId) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-
-        Player viewer = playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
-
-        Clan clan = clanRepository.findById(clanId)
-                .orElseThrow(() -> new NotFoundException("Clan not found"));
-
+        Player viewer = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+        Clan clan = clanRepository.findById(clanId).orElseThrow(() -> new NotFoundException("Clan not found"));
         return mapper.toResponse(clan, viewer, playerRepository.findByClanId(clan.getId()));
+    }
+
+    public GetClanUseCase(final ClanRepository clanRepository, final PlayerRepository playerRepository, final ClanResponseMapper mapper) {
+        this.clanRepository = clanRepository;
+        this.playerRepository = playerRepository;
+        this.mapper = mapper;
     }
 }

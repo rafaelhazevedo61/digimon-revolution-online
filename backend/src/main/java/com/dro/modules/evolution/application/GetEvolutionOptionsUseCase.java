@@ -17,18 +17,14 @@ import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ForbiddenException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.*;
 
 /**
  * Componente da camada de caso de uso da aplicação do módulo de Evolução.
  */
 @Service
-@RequiredArgsConstructor
 public class GetEvolutionOptionsUseCase {
-
     private final DigimonRepository digimonRepository;
     private final DigimonInfosRepository digimonInfosRepository;
     private final EvolutionLineRepository evolutionLineRepository;
@@ -37,125 +33,66 @@ public class GetEvolutionOptionsUseCase {
     private final PlayerRepository playerRepository;
 
     public EvolutionOptionsResponse execute(String token, UUID digimonId) {
-
         UUID playerId = TokenExtractor.extractPlayerId(token);
-
-        Digimon digimon = digimonRepository.findById(digimonId)
-                .orElseThrow(() -> new NotFoundException("Digimon not found"));
-
+        Digimon digimon = digimonRepository.findById(digimonId).orElseThrow(() -> new NotFoundException("Digimon not found"));
         if (!digimon.getPlayerId().equals(playerId)) {
             throw new ForbiddenException("This Digimon does not belong to the player");
         }
-
         if (digimon.getDigimonInfoId() == null) {
             throw new BadRequestException("Digimon has no linked DigimonInfo. Cannot determine evolution options.");
         }
-
-        List<EvolutionLine> lines = evolutionLineRepository
-                .findByActiveTrueAndSteps_DigimonInfo_Id(digimon.getDigimonInfoId());
-
+        List<EvolutionLine> lines = evolutionLineRepository.findByActiveTrueAndSteps_DigimonInfo_Id(digimon.getDigimonInfoId());
         List<EvolutionOptionResponse> options = new ArrayList<>();
-
         for (EvolutionLine line : lines) {
             findNextStep(line, digimon).ifPresent(nextStep -> {
                 EvolutionOptionResponse option = buildOption(line, nextStep, digimon);
                 options.add(option);
             });
         }
-
-        DigimonInfos currentInfo = digimonInfosRepository.findById(digimon.getDigimonInfoId())
-                .orElse(null);
-
-        return new EvolutionOptionsResponse(
-                digimon.getDigimonInfoId(),
-                digimon.getName(),
-                digimon.getStage().name(),
-                digimon.getLevel(),
-                currentInfo != null ? currentInfo.getAttribute().name() : null,
-                currentInfo != null ? currentInfo.getElement().name() : null,
-                options
-        );
+        DigimonInfos currentInfo = digimonInfosRepository.findById(digimon.getDigimonInfoId()).orElse(null);
+        return new EvolutionOptionsResponse(digimon.getDigimonInfoId(), digimon.getName(), digimon.getStage().name(), digimon.getLevel(), currentInfo != null ? currentInfo.getAttribute().name() : null, currentInfo != null ? currentInfo.getElement().name() : null, options);
     }
 
     private Optional<EvolutionLineStep> findNextStep(EvolutionLine line, Digimon digimon) {
-        List<EvolutionLineStep> steps = line.getSteps().stream()
-                .sorted(Comparator.comparingInt(EvolutionLineStep::getStepOrder))
-                .toList();
-
+        List<EvolutionLineStep> steps = line.getSteps().stream().sorted(Comparator.comparingInt(EvolutionLineStep::getStepOrder)).toList();
         for (int i = 0; i < steps.size() - 1; i++) {
             if (steps.get(i).getDigimonInfo().getId().equals(digimon.getDigimonInfoId())) {
                 return Optional.of(steps.get(i + 1));
             }
         }
-
         return Optional.empty();
     }
 
-    private EvolutionOptionResponse buildOption(
-            EvolutionLine line,
-            EvolutionLineStep nextStep,
-            Digimon digimon
-    ) {
+    private EvolutionOptionResponse buildOption(EvolutionLine line, EvolutionLineStep nextStep, Digimon digimon) {
         DigimonInfos nextInfo = nextStep.getDigimonInfo();
-
-        EvolutionNextStepResponse nextStepResponse = new EvolutionNextStepResponse(
-                nextInfo.getId(),
-                nextInfo.getName(),
-                nextStep.getStage().name(),
-                nextInfo.getAttribute().name(),
-                nextInfo.getElement().name(),
-                nextInfo.getSpecie().name(),
-                nextInfo.getBaseHp(),
-                nextInfo.getBaseAtk(),
-                nextInfo.getBaseDef(),
-                nextInfo.getImageUrl()
-        );
-
+        EvolutionNextStepResponse nextStepResponse = new EvolutionNextStepResponse(nextInfo.getId(), nextInfo.getName(), nextStep.getStage().name(), nextInfo.getAttribute().name(), nextInfo.getElement().name(), nextInfo.getSpecie().name(), nextInfo.getBaseHp(), nextInfo.getBaseAtk(), nextInfo.getBaseDef(), nextInfo.getImageUrl());
         List<EvolutionMaterialRequirementResponse> materialResponses = new ArrayList<>();
         boolean hasMaterials = true;
-
         for (EvolutionStepMaterial material : nextStep.getMaterials()) {
-            int playerHas = itemDefinitionRepository.findByCode(material.getMaterialCode())
-                    .flatMap(itemDef -> inventoryRepository
-                            .findByDigimonIdAndItemDefinitionId(digimon.getId(), itemDef.getId()))
-                    .map(InventoryItem::getQuantity)
-                    .orElse(0);
-
-            materialResponses.add(new EvolutionMaterialRequirementResponse(
-                    material.getMaterialCode(),
-                    material.getDescription(),
-                    material.getQuantity(),
-                    playerHas
-            ));
-
+            int playerHas = itemDefinitionRepository.findByCode(material.getMaterialCode()).flatMap(itemDef -> inventoryRepository.findByDigimonIdAndItemDefinitionId(digimon.getId(), itemDef.getId())).map(InventoryItem::getQuantity).orElse(0);
+            materialResponses.add(new EvolutionMaterialRequirementResponse(material.getMaterialCode(), material.getDescription(), material.getQuantity(), playerHas));
             if (playerHas < material.getQuantity()) {
                 hasMaterials = false;
             }
         }
-
-        EvolutionRequirementsResponse requirements = new EvolutionRequirementsResponse(
-                nextStep.getRequiredLevel(),
-                materialResponses
-        );
-
+        EvolutionRequirementsResponse requirements = new EvolutionRequirementsResponse(nextStep.getRequiredLevel(), materialResponses);
         boolean levelMet = digimon.getLevel() >= nextStep.getRequiredLevel();
         boolean canEvolve = levelMet && hasMaterials;
-
         String reason = null;
         if (!levelMet) {
             reason = "Level insuficiente. Necessário: " + nextStep.getRequiredLevel();
         } else if (!hasMaterials) {
             reason = "Materiais insuficientes";
         }
+        return new EvolutionOptionResponse(line.getId(), line.getCode(), line.getName(), nextStepResponse, requirements, canEvolve, reason);
+    }
 
-        return new EvolutionOptionResponse(
-                line.getId(),
-                line.getCode(),
-                line.getName(),
-                nextStepResponse,
-                requirements,
-                canEvolve,
-                reason
-        );
+    public GetEvolutionOptionsUseCase(final DigimonRepository digimonRepository, final DigimonInfosRepository digimonInfosRepository, final EvolutionLineRepository evolutionLineRepository, final InventoryRepository inventoryRepository, final ItemDefinitionRepository itemDefinitionRepository, final PlayerRepository playerRepository) {
+        this.digimonRepository = digimonRepository;
+        this.digimonInfosRepository = digimonInfosRepository;
+        this.evolutionLineRepository = evolutionLineRepository;
+        this.inventoryRepository = inventoryRepository;
+        this.itemDefinitionRepository = itemDefinitionRepository;
+        this.playerRepository = playerRepository;
     }
 }

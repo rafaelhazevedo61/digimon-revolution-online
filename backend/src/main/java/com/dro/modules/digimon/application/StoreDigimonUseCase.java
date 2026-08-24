@@ -11,19 +11,15 @@ import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.UUID;
 
 /**
  * Componente da camada de caso de uso da aplicação do módulo de Digimon.
  */
 @Service
-@RequiredArgsConstructor
 public class StoreDigimonUseCase {
-
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
     private final EquipmentRepository equipmentRepository;
@@ -31,36 +27,24 @@ public class StoreDigimonUseCase {
     @Transactional
     public Digimon execute(String token, UUID digimonId) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-
-        Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
-
-        Digimon digimon = digimonRepository.findById(digimonId)
-                .orElseThrow(() -> new NotFoundException("Digimon not found"));
-
+        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+        Digimon digimon = digimonRepository.findById(digimonId).orElseThrow(() -> new NotFoundException("Digimon not found"));
         if (!digimon.getPlayerId().equals(playerId)) {
             throw new BadRequestException("Digimon does not belong to player");
         }
-
         if (digimon.getStatus() != DigimonStatus.ACTIVE) {
             throw new BadRequestException("Only active Digimons can be stored");
         }
-
         if (digimon.getId().equals(player.getActiveDigimonId())) {
             throw new BadRequestException("Nao e possivel guardar o Digimon ativo. Troque de Digimon primeiro.");
         }
-
         long storedCount = digimonRepository.countByPlayerIdAndStatus(playerId, DigimonStatus.STORED);
         if (storedCount >= player.getMaxStorageSlots()) {
-            throw new BadRequestException(
-                    "Storage cheio (" + storedCount + "/" + player.getMaxStorageSlots() + ").");
+            throw new BadRequestException("Storage cheio (" + storedCount + "/" + player.getMaxStorageSlots() + ").");
         }
-
         unequipAll(digimon);
-
         digimon.setStatus(DigimonStatus.STORED);
         digimonRepository.save(digimon);
-
         return digimon;
     }
 
@@ -76,5 +60,11 @@ public class StoreDigimonUseCase {
                 digimon.clearSlot(slot);
             }
         }
+    }
+
+    public StoreDigimonUseCase(final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final EquipmentRepository equipmentRepository) {
+        this.digimonRepository = digimonRepository;
+        this.playerRepository = playerRepository;
+        this.equipmentRepository = equipmentRepository;
     }
 }

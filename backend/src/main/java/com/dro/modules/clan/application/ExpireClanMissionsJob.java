@@ -23,7 +23,6 @@ public class ExpireClanMissionsJob {
 
     private final ExpireClanMissionsUseCase expireClanMissionsUseCase;
 
-    @Value("${dro.clan.missions.time-zone:America/Sao_Paulo}")
     private String timeZone;
 
     public ExpireClanMissionsJob (ExpireClanMissionsUseCase expireClanMissionsUseCase) {

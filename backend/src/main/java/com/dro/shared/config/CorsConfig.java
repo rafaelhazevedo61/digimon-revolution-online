@@ -2,7 +2,6 @@ package com.dro.shared.config;
 
 import com.dro.shared.security.AdminAuthInterceptor;
 import com.dro.shared.security.TokenVersionInterceptor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -17,7 +16,6 @@ public class CorsConfig implements WebMvcConfigurer {
     private final AdminAuthInterceptor adminAuthInterceptor;
     private final TokenVersionInterceptor tokenVersionInterceptor;
 
-    @Value("${dro.cors.allowed-origins}")
     private String allowedOrigins;
 
     public CorsConfig (

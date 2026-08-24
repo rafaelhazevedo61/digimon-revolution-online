@@ -2,9 +2,7 @@ package com.dro.modules.mail.application;
 
 import com.dro.modules.mail.infra.MailMessageRepository;
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.UUID;
 
 /**
@@ -14,9 +12,7 @@ import java.util.UUID;
  * que ele já excluiu.</p>
  */
 @Service
-@RequiredArgsConstructor
 public class GetUnreadMailCountUseCase {
-
     private final MailMessageRepository mailMessageRepository;
 
     /**
@@ -28,5 +24,9 @@ public class GetUnreadMailCountUseCase {
     public long execute(String token) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         return mailMessageRepository.countByRecipientIdAndRecipientDeletedFalseAndReadAtIsNull(playerId);
+    }
+
+    public GetUnreadMailCountUseCase(final MailMessageRepository mailMessageRepository) {
+        this.mailMessageRepository = mailMessageRepository;
     }
 }

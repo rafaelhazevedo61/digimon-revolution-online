@@ -14,10 +14,8 @@ import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnauthorizedException;
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,41 +25,38 @@ import java.util.UUID;
  * Caso de uso administrativo para vincular Baús temáticos às Loot Tables nomeadas.
  */
 @Service
-@RequiredArgsConstructor
 public class AdminChestUseCase {
-
     private final ChestDefinitionRepository chestDefinitionRepository;
     private final BossDefinitionRepository bossDefinitionRepository;
     private final LootTableRepository lootTableRepository;
     private final PlayerRepository playerRepository;
     private final TransactionAuditPublisher transactionAuditPublisher;
 
-    /** Lista os baús, podendo restringir aos ativos. */
+    /**
+     * Lista os baús, podendo restringir aos ativos.
+     */
     @Transactional(readOnly = true)
     public List<AdminChestResponse> list(Boolean activeOnly) {
-        List<ChestDefinitionEntity> chests = Boolean.TRUE.equals(activeOnly)
-                ? chestDefinitionRepository.findByActiveTrueOrderByNameAsc()
-                : chestDefinitionRepository.findAllByOrderByNameAsc();
+        List<ChestDefinitionEntity> chests = Boolean.TRUE.equals(activeOnly) ? chestDefinitionRepository.findByActiveTrueOrderByNameAsc() : chestDefinitionRepository.findAllByOrderByNameAsc();
         return chests.stream().map(AdminChestResponse::from).toList();
     }
 
-    /** Consulta um baú pelo código estável. */
+    /**
+     * Consulta um baú pelo código estável.
+     */
     @Transactional(readOnly = true)
     public AdminChestResponse get(String code) {
         return AdminChestResponse.from(findChest(code));
     }
 
-    /** Atualiza dados editáveis e o vínculo para uma Loot Table ativa. */
+    /**
+     * Atualiza dados editáveis e o vínculo para uma Loot Table ativa.
+     */
     @Transactional
-    public AdminChestResponse update(
-            String authorization,
-            String code,
-            AdminChestUpdateRequest request
-    ) {
+    public AdminChestResponse update(String authorization, String code, AdminChestUpdateRequest request) {
         Player admin = findAdmin(authorization);
         ChestDefinitionEntity chest = findChest(code);
         LootTableEntity lootTable = resolveActiveLootTable(request.lootTableCode());
-
         chest.setName(request.name().trim());
         chest.setDescription(normalize(request.description()));
         chest.setIcon(normalize(request.icon()));
@@ -72,13 +67,14 @@ public class AdminChestUseCase {
         if (request.tradable() != null) chest.setTradable(request.tradable());
         if (request.active() != null) chest.setActive(request.active());
         chest.setUpdatedBy(admin.getUsername());
-
         ChestDefinitionEntity saved = chestDefinitionRepository.saveAndFlush(chest);
         publishAudit("UPDATED", saved, admin, lootTable.getCode());
         return AdminChestResponse.from(saved);
     }
 
-    /** Ativa ou desativa o baú sem apagar o vínculo ou o histórico. */
+    /**
+     * Ativa ou desativa o baú sem apagar o vínculo ou o histórico.
+     */
     @Transactional
     public AdminChestResponse toggleActive(String authorization, String code) {
         Player admin = findAdmin(authorization);
@@ -91,21 +87,17 @@ public class AdminChestUseCase {
         chest.setActive(!chest.isActive());
         chest.setUpdatedBy(admin.getUsername());
         ChestDefinitionEntity saved = chestDefinitionRepository.saveAndFlush(chest);
-        publishAudit(saved.isActive() ? "ACTIVATED" : "DEACTIVATED", saved,
-                admin, saved.getLootTable() != null ? saved.getLootTable().getCode() : null);
+        publishAudit(saved.isActive() ? "ACTIVATED" : "DEACTIVATED", saved, admin, saved.getLootTable() != null ? saved.getLootTable().getCode() : null);
         return AdminChestResponse.from(saved);
     }
 
     private ChestDefinitionEntity findChest(String code) {
-        return chestDefinitionRepository.findWithCatalogByCode(code)
-                .orElseThrow(() -> new NotFoundException("Baú da Área não encontrado: " + code));
+        return chestDefinitionRepository.findWithCatalogByCode(code).orElseThrow(() -> new NotFoundException("Baú da Área não encontrado: " + code));
     }
 
     private LootTableEntity resolveActiveLootTable(String code) {
         String normalizedCode = code == null ? "" : code.trim();
-        return lootTableRepository.findByCodeAndActiveTrue(normalizedCode)
-                .orElseThrow(() -> new ConflictException(
-                        "Loot Table ativa não encontrada: " + normalizedCode));
+        return lootTableRepository.findByCodeAndActiveTrue(normalizedCode).orElseThrow(() -> new ConflictException("Loot Table ativa não encontrada: " + normalizedCode));
     }
 
     private void ensureActiveLootTable(LootTableEntity lootTable) {
@@ -116,9 +108,7 @@ public class AdminChestUseCase {
 
     private void ensureNotLinkedToBoss(ChestDefinitionEntity chest) {
         if (bossDefinitionRepository.existsByAnyChestDefinitionId(chest.getId())) {
-            throw new ConflictException(
-                    "Não é possível desativar o Baú porque ele está vinculado a um ou mais Bosses."
-            );
+            throw new ConflictException("Não é possível desativar o Baú porque ele está vinculado a um ou mais Bosses.");
         }
     }
 
@@ -132,14 +122,7 @@ public class AdminChestUseCase {
         payload.put("lootTableCode", lootTableCode);
         payload.put("active", chest.isActive());
         payload.put("tradable", chest.isTradable());
-
-        transactionAuditPublisher.success(
-                "admin-chest:" + chest.getCode() + ":" + operation.toLowerCase() + ":" + UUID.randomUUID(),
-                "ADMIN_CHEST_" + operation,
-                "ChestDefinition",
-                chest.getCode(),
-                payload
-        );
+        transactionAuditPublisher.success("admin-chest:" + chest.getCode() + ":" + operation.toLowerCase() + ":" + UUID.randomUUID(), "ADMIN_CHEST_" + operation, "ChestDefinition", chest.getCode(), payload);
     }
 
     private Player findAdmin(String authorization) {
@@ -147,11 +130,18 @@ public class AdminChestUseCase {
             throw new UnauthorizedException("Authorization é obrigatório.");
         }
         UUID adminId = TokenExtractor.extractPlayerId(authorization);
-        return playerRepository.findById(adminId)
-                .orElseThrow(() -> new UnauthorizedException("Administrador não encontrado."));
+        return playerRepository.findById(adminId).orElseThrow(() -> new UnauthorizedException("Administrador não encontrado."));
     }
 
     private String normalize(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    public AdminChestUseCase(final ChestDefinitionRepository chestDefinitionRepository, final BossDefinitionRepository bossDefinitionRepository, final LootTableRepository lootTableRepository, final PlayerRepository playerRepository, final TransactionAuditPublisher transactionAuditPublisher) {
+        this.chestDefinitionRepository = chestDefinitionRepository;
+        this.bossDefinitionRepository = bossDefinitionRepository;
+        this.lootTableRepository = lootTableRepository;
+        this.playerRepository = playerRepository;
+        this.transactionAuditPublisher = transactionAuditPublisher;
     }
 }

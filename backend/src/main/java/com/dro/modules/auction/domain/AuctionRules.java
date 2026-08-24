@@ -1,8 +1,6 @@
 package com.dro.modules.auction.domain;
 
 import com.dro.shared.exception.BadRequestException;
-import lombok.experimental.UtilityClass;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
@@ -14,18 +12,26 @@ import java.util.Set;
  * 5%, 750 representa 7,5% e 1.000 representa 10%. A taxa de publicação é
  * cobrada separadamente da comissão da venda.</p>
  */
-@UtilityClass
-public class AuctionRules {
-
-    /** Taxa fixa cobrada no momento da publicação do anúncio. */
+public final class AuctionRules {
+    /**
+     * Taxa fixa cobrada no momento da publicação do anúncio.
+     */
     public static final int LISTING_FEE = 100;
-    /** Quantidade máxima de anúncios ativos por jogador. */
+    /**
+     * Quantidade máxima de anúncios ativos por jogador.
+     */
     public static final int MAX_ACTIVE_LISTINGS_PER_PLAYER = 10;
-    /** Comissão do vendedor para anúncios de 24 horas, em basis points. */
+    /**
+     * Comissão do vendedor para anúncios de 24 horas, em basis points.
+     */
     public static final int SELLER_FEE_RATE_24_HOURS_BPS = 500;
-    /** Comissão do vendedor para anúncios de 48 horas, em basis points. */
+    /**
+     * Comissão do vendedor para anúncios de 48 horas, em basis points.
+     */
     public static final int SELLER_FEE_RATE_48_HOURS_BPS = 750;
-    /** Comissão do vendedor para anúncios de 72 horas, em basis points. */
+    /**
+     * Comissão do vendedor para anúncios de 72 horas, em basis points.
+     */
     public static final int SELLER_FEE_RATE_72_HOURS_BPS = 1000;
     public static final Set<Integer> ALLOWED_DURATIONS_HOURS = Set.of(24, 48, 72);
 
@@ -86,7 +92,7 @@ public class AuctionRules {
         if (grossAmount <= 0 || feeRateBps <= 0) {
             return 0;
         }
-        return (int) ((long) grossAmount * feeRateBps / 10_000);
+        return (int) ((long) grossAmount * feeRateBps / 10000);
     }
 
     /**
@@ -114,5 +120,9 @@ public class AuctionRules {
      */
     public static Instant expirationAt(Instant createdAt, int durationHours) {
         return createdAt.plus(Duration.ofHours(durationHours));
+    }
+
+    private AuctionRules() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 }

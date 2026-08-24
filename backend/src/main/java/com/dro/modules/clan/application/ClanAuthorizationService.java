@@ -9,9 +9,7 @@ import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.ForbiddenException;
 import com.dro.shared.exception.NotFoundException;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -19,25 +17,20 @@ import java.util.UUID;
  * Componente da camada de serviço de aplicação do módulo de Clãs.
  */
 @Service
-@RequiredArgsConstructor
 public class ClanAuthorizationService {
-
     private final ClanRepository clanRepository;
     private final PlayerRepository playerRepository;
 
     public Player getPlayer(UUID playerId) {
-        return playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
+        return playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
     }
 
     public Clan getClan(UUID clanId) {
-        return clanRepository.findById(clanId)
-                .orElseThrow(() -> new NotFoundException("Clan not found"));
+        return clanRepository.findById(clanId).orElseThrow(() -> new NotFoundException("Clan not found"));
     }
 
     public Player getMember(UUID clanId, String username) {
-        Player member = playerRepository.findByUsername(username)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
+        Player member = playerRepository.findByUsername(username).orElseThrow(() -> new NotFoundException("Player not found"));
         if (member.getClanId() == null || !member.getClanId().equals(clanId)) {
             throw new NotFoundException("Player is not a member of this clan");
         }
@@ -79,16 +72,14 @@ public class ClanAuthorizationService {
     public void assertCanChangeRole(Player actor, Clan clan, ClanRole currentRole, ClanRole newRole) {
         assertInClan(actor, clan);
         if (isAdmin(actor)) return;
-
         if (newRole == ClanRole.LEADER) {
             throw new ForbiddenException("Use the transfer endpoint to change the leader");
         }
-        if (!ClanRules.canPromote(actor.getClanRole(), currentRole)
-                && !ClanRules.canDemote(actor.getClanRole(), currentRole)) {
-            throw new ForbiddenException("You are not allowed to change this member's role");
+        if (!ClanRules.canPromote(actor.getClanRole(), currentRole) && !ClanRules.canDemote(actor.getClanRole(), currentRole)) {
+            throw new ForbiddenException("You are not allowed to change this member\'s role");
         }
         if (currentRole == ClanRole.LEADER) {
-            throw new ForbiddenException("Cannot change the leader's role directly");
+            throw new ForbiddenException("Cannot change the leader\'s role directly");
         }
     }
 
@@ -116,5 +107,10 @@ public class ClanAuthorizationService {
 
     public List<Player> getMembers(UUID clanId) {
         return playerRepository.findByClanId(clanId);
+    }
+
+    public ClanAuthorizationService(final ClanRepository clanRepository, final PlayerRepository playerRepository) {
+        this.clanRepository = clanRepository;
+        this.playerRepository = playerRepository;
     }
 }

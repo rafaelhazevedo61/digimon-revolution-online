@@ -6,31 +6,21 @@ import com.dro.modules.player.domain.enums.StartupDestination;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.UUID;
 
 /**
  * Componente da camada de caso de uso da aplicação do módulo de Jogadores.
  */
 @Service
-@RequiredArgsConstructor
 public class GetPlayerStartupUseCase {
-
     private final PlayerRepository playerRepository;
 
     public PlayerStartupResponse execute(String token) {
-
         UUID playerId = TokenExtractor.extractPlayerId(token);
-
-        Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Player not found"));
-
+        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         boolean hasSelectedStarter = player.isStarterSelected() && player.getSelectedDigitama() == null;
-
         StartupDestination redirectTo;
-
         if (!player.isStarterSelected()) {
             redirectTo = StartupDestination.DIGITAMA_SELECTION;
         } else if (player.getSelectedDigitama() != null) {
@@ -40,10 +30,10 @@ public class GetPlayerStartupUseCase {
         } else {
             redirectTo = StartupDestination.DASHBOARD;
         }
+        return new PlayerStartupResponse(hasSelectedStarter, redirectTo);
+    }
 
-        return new PlayerStartupResponse(
-                hasSelectedStarter,
-                redirectTo
-        );
+    public GetPlayerStartupUseCase(final PlayerRepository playerRepository) {
+        this.playerRepository = playerRepository;
     }
 }

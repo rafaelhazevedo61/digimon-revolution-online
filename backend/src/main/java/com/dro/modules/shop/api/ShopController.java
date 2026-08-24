@@ -10,10 +10,8 @@ import com.dro.modules.shop.application.BuyShopProductUseCase;
 import com.dro.modules.shop.application.GetShopProductsUseCase;
 import com.dro.modules.shop.application.SellShopProductUseCase;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 /**
@@ -21,9 +19,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/shop")
-@RequiredArgsConstructor
 public class ShopController {
-
     private final GetShopProductsUseCase getShopProductsUseCase;
     private final BuyShopProductUseCase buyShopProductUseCase;
     private final SellShopProductUseCase sellShopProductUseCase;
@@ -34,18 +30,18 @@ public class ShopController {
     }
 
     @PostMapping("/buy")
-    public ResponseEntity<BuyShopProductResponse> buy(
-            @RequestHeader("Authorization") String authorization,
-            @RequestBody @Valid BuyShopProductRequest request
-    ) {
+    public ResponseEntity<BuyShopProductResponse> buy(@RequestHeader("Authorization") String authorization, @RequestBody @Valid BuyShopProductRequest request) {
         return ResponseEntity.ok(buyShopProductUseCase.execute(authorization, request));
     }
 
     @PostMapping("/sell")
-    public ResponseEntity<SellShopProductResponse> sell(
-            @RequestHeader("Authorization") String authorization,
-            @RequestBody @Valid SellShopProductRequest request
-    ) {
+    public ResponseEntity<SellShopProductResponse> sell(@RequestHeader("Authorization") String authorization, @RequestBody @Valid SellShopProductRequest request) {
         return ResponseEntity.ok(sellShopProductUseCase.execute(authorization, request));
+    }
+
+    public ShopController(final GetShopProductsUseCase getShopProductsUseCase, final BuyShopProductUseCase buyShopProductUseCase, final SellShopProductUseCase sellShopProductUseCase) {
+        this.getShopProductsUseCase = getShopProductsUseCase;
+        this.buyShopProductUseCase = buyShopProductUseCase;
+        this.sellShopProductUseCase = sellShopProductUseCase;
     }
 }

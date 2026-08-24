@@ -23,10 +23,8 @@ import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.util.TokenExtractor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Map;
 import java.util.UUID;
 
@@ -39,9 +37,7 @@ import java.util.UUID;
  * Loja; itens podem respeitar sua quantidade empilhável.</p>
  */
 @Service
-@RequiredArgsConstructor
 public class BuyShopProductUseCase {
-
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final AddItemUseCase addItemUseCase;
@@ -64,98 +60,52 @@ public class BuyShopProductUseCase {
      */
     @Transactional
     public BuyShopProductResponse execute(String token, BuyShopProductRequest request) {
-
         UUID playerId = TokenExtractor.extractPlayerId(token);
-
-        Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new NotFoundException("Jogador não encontrado"));
-
+        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Jogador não encontrado"));
         if (player.getActiveDigimonId() == null) {
             throw new BadRequestException("Nenhum Digimon ativo selecionado");
         }
-
-        Digimon digimon = digimonRepository.findById(player.getActiveDigimonId())
-                .orElseThrow(() -> new NotFoundException("Digimon ativo não encontrado"));
-
+        Digimon digimon = digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Digimon ativo não encontrado"));
         if (!digimon.getPlayerId().equals(playerId)) {
             throw new BadRequestException("O Digimon ativo não pertence a este jogador");
         }
-
-        ShopProduct product = shopProductRepository.findById(request.productCode())
-                .map(ShopProductMapper::toProduct)
-                .orElseThrow(() -> new NotFoundException("Produto da loja não encontrado: " + request.productCode()));
-
+        ShopProduct product = shopProductRepository.findById(request.productCode()).map(ShopProductMapper::toProduct).orElseThrow(() -> new NotFoundException("Produto da loja não encontrado: " + request.productCode()));
         int quantity = request.quantity();
-
         if (product.getProductType() == ShopProductType.EQUIPMENT && quantity > 1) {
             throw new BadRequestException("Equipamentos devem ser comprados um por vez");
         }
-
         int totalPrice = product.getPrice() * quantity;
-
         if (digimon.getBits() < totalPrice) {
             throw new UnprocessableException("Bits insuficientes");
         }
-
         UUID equipmentId = null;
-
         if (product.getProductType() == ShopProductType.ITEM) {
             if (product.getItemType() == ItemType.LOOT_CHEST) {
-                String definitionCode = product.getItemDefinitionCode() != null
-                        ? product.getItemDefinitionCode()
-                        : product.getCode();
-                ItemDefinition chestDefinition = itemDefinitionRepository.findByCode(definitionCode)
-                        .filter(item -> "CHEST".equalsIgnoreCase(item.getCategory()))
-                        .orElseThrow(() -> new NotFoundException("Definição do item de baú não encontrada: " + definitionCode));
+                String definitionCode = product.getItemDefinitionCode() != null ? product.getItemDefinitionCode() : product.getCode();
+                ItemDefinition chestDefinition = itemDefinitionRepository.findByCode(definitionCode).filter(item -> "CHEST".equalsIgnoreCase(item.getCategory())).orElseThrow(() -> new NotFoundException("Definição do item de baú não encontrada: " + definitionCode));
                 addItemUseCase.addMaterial(digimon.getId(), chestDefinition, quantity);
             } else {
-                addItemUseCase.execute(
-                        digimon.getId(),
-                        product.getItemType(),
-                        quantity
-                );
+                addItemUseCase.execute(digimon.getId(), product.getItemType(), quantity);
             }
         }
-
         if (product.getProductType() == ShopProductType.EQUIPMENT) {
-            equipmentId = grantEquipmentUseCase.execute(
-                    digimon.getId(),
-                    product.getEquipmentTemplateName(),
-                    EquipmentRarityRules.rollRarity("SHOP")
-            );
+            equipmentId = grantEquipmentUseCase.execute(digimon.getId(), product.getEquipmentTemplateName(), EquipmentRarityRules.rollRarity("SHOP"));
         }
-
         digimon.setBits(digimon.getBits() - totalPrice);
         digimonRepository.save(digimon);
-
         tutorialService.completeStep(playerId, TutorialStep.BUY_SHOP);
-        transactionAuditPublisher.success(
-                "shop-purchase:" + playerId + ":" + product.getCode() + ":" + UUID.randomUUID(),
-                "SHOP_PURCHASE_COMPLETED",
-                "ShopProduct",
-                product.getCode(),
-                Map.of(
-                        "module", "shop",
-                        "operation", "buyProduct",
-                        "actorId", playerId.toString(),
-                        "productType", product.getProductType().name(),
-                        "quantity", quantity,
-                        "totalPrice", totalPrice,
-                        "digimonId", digimon.getId().toString(),
-                        "equipmentId", equipmentId == null ? "" : equipmentId.toString(),
-                        "summary", "Produto da loja comprado"
-                )
-        );
+        transactionAuditPublisher.success("shop-purchase:" + playerId + ":" + product.getCode() + ":" + UUID.randomUUID(), "SHOP_PURCHASE_COMPLETED", "ShopProduct", product.getCode(), Map.of("module", "shop", "operation", "buyProduct", "actorId", playerId.toString(), "productType", product.getProductType().name(), "quantity", quantity, "totalPrice", totalPrice, "digimonId", digimon.getId().toString(), "equipmentId", equipmentId == null ? "" : equipmentId.toString(), "summary", "Produto da loja comprado"));
+        return new BuyShopProductResponse(product.getCode(), product.getName(), product.getProductType(), quantity, totalPrice, digimon.getBits(), equipmentId, "Produto comprado com sucesso");
+    }
 
-        return new BuyShopProductResponse(
-                product.getCode(),
-                product.getName(),
-                product.getProductType(),
-                quantity,
-                totalPrice,
-                digimon.getBits(),
-                equipmentId,
-                "Produto comprado com sucesso"
-        );
+    public BuyShopProductUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final AddItemUseCase addItemUseCase, final ItemDefinitionRepository itemDefinitionRepository, final GrantEquipmentUseCase grantEquipmentUseCase, final ShopProductRepository shopProductRepository, final TutorialService tutorialService, final TransactionAuditPublisher transactionAuditPublisher) {
+        this.playerRepository = playerRepository;
+        this.digimonRepository = digimonRepository;
+        this.addItemUseCase = addItemUseCase;
+        this.itemDefinitionRepository = itemDefinitionRepository;
+        this.grantEquipmentUseCase = grantEquipmentUseCase;
+        this.shopProductRepository = shopProductRepository;
+        this.tutorialService = tutorialService;
+        this.transactionAuditPublisher = transactionAuditPublisher;
     }
 }

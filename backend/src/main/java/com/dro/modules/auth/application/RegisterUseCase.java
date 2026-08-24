@@ -26,7 +26,6 @@ public class RegisterUseCase {
     private final PasswordEncoder passwordEncoder;
     private final ValidateAlphaInviteUseCase validateAlphaInviteUseCase;
 
-    @Value("${dro.registration.invite-required:true}")
     private boolean inviteRequired;
 
     public RegisterUseCase (PlayerRepository repository, PasswordEncoder passwordEncoder, ValidateAlphaInviteUseCase validateAlphaInviteUseCase) {
