@@ -33,7 +33,7 @@ class RegisterUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        validRequest = new RegisterRequest("testuser", "test@email.com", "password123");
+        validRequest = new RegisterRequest("testuser", "test@email.com", "password123", null);
     }
 
     @Test

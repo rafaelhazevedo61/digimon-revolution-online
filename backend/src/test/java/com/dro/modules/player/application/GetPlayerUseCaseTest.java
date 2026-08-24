@@ -1,4 +1,5 @@
 package com.dro.modules.player.application;
+import com.dro.shared.security.JwtTestToken;
 
 import com.dro.modules.player.api.dto.response.PlayerResponse;
 import com.dro.modules.player.domain.Player;
@@ -28,7 +29,7 @@ class GetPlayerUseCaseTest {
     @Test
     void execute_returnsPlayerResponse_whenTokenValid() {
         UUID playerId = UUID.randomUUID();
-        String token = UUID.randomUUID() + ":" + playerId;
+        String token = JwtTestToken.create(playerId);
 
         Player player = Player.builder()
                 .id(playerId)
@@ -60,7 +61,7 @@ class GetPlayerUseCaseTest {
     @Test
     void execute_throwsException_whenPlayerNotFound() {
         UUID playerId = UUID.randomUUID();
-        String token = UUID.randomUUID() + ":" + playerId;
+        String token = JwtTestToken.create(playerId);
 
         when(repository.findById(playerId)).thenReturn(Optional.empty());
 

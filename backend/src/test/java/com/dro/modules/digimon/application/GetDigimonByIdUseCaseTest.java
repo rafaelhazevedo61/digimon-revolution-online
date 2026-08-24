@@ -19,6 +19,8 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.dro.shared.security.JwtTestToken;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -63,7 +65,7 @@ class GetDigimonByIdUseCaseTest {
 
         when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
 
-        DigimonResponse response = useCase.execute(null, digimonId);
+        DigimonResponse response = useCase.execute(JwtTestToken.create(UUID.randomUUID()), digimonId);
 
         assertEquals(digimonId, response.id());
         assertEquals("Botamon", response.name());
@@ -95,7 +97,7 @@ class GetDigimonByIdUseCaseTest {
         when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
         when(equipmentRepository.findById(weapon.getId())).thenReturn(Optional.of(weapon));
 
-        DigimonResponse response = useCase.execute(null, digimonId);
+        DigimonResponse response = useCase.execute(JwtTestToken.create(UUID.randomUUID()), digimonId);
 
         assertEquals(0, response.equipBonusHp());
         assertEquals(5, response.equipBonusAttack());
@@ -107,6 +109,6 @@ class GetDigimonByIdUseCaseTest {
         UUID digimonId = UUID.randomUUID();
         when(digimonRepository.findById(digimonId)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> useCase.execute(null, digimonId));
+        assertThrows(RuntimeException.class, () -> useCase.execute(JwtTestToken.create(UUID.randomUUID()), digimonId));
     }
 }

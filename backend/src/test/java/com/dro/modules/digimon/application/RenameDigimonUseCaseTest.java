@@ -1,4 +1,5 @@
 package com.dro.modules.digimon.application;
+import com.dro.shared.security.JwtTestToken;
 
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.*;
@@ -32,7 +33,7 @@ class RenameDigimonUseCaseTest {
     void execute_validRename_updatesName() {
         UUID playerId = UUID.randomUUID();
         UUID digimonId = UUID.randomUUID();
-        String token = UUID.randomUUID() + ":" + playerId;
+        String token = JwtTestToken.create(playerId);
 
         Digimon digimon = buildDigimon(digimonId, playerId, "Agumon");
 
@@ -48,7 +49,7 @@ class RenameDigimonUseCaseTest {
     void execute_trimsWhitespace() {
         UUID playerId = UUID.randomUUID();
         UUID digimonId = UUID.randomUUID();
-        String token = UUID.randomUUID() + ":" + playerId;
+        String token = JwtTestToken.create(playerId);
 
         Digimon digimon = buildDigimon(digimonId, playerId, "Agumon");
 
@@ -63,7 +64,7 @@ class RenameDigimonUseCaseTest {
     void execute_digimonNotFound_throwsNotFoundException() {
         UUID playerId = UUID.randomUUID();
         UUID digimonId = UUID.randomUUID();
-        String token = UUID.randomUUID() + ":" + playerId;
+        String token = JwtTestToken.create(playerId);
 
         when(digimonRepository.findById(digimonId)).thenReturn(Optional.empty());
 
@@ -76,7 +77,7 @@ class RenameDigimonUseCaseTest {
         UUID playerId = UUID.randomUUID();
         UUID otherPlayerId = UUID.randomUUID();
         UUID digimonId = UUID.randomUUID();
-        String token = UUID.randomUUID() + ":" + playerId;
+        String token = JwtTestToken.create(playerId);
 
         Digimon digimon = buildDigimon(digimonId, otherPlayerId, "Agumon");
 
