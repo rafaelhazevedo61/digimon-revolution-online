@@ -1,6 +1,6 @@
 package com.dro.modules.auth.application;
 
-import com.dro.modules.auth.api.dto.RegisterRequest;
+import com.dro.modules.auth.api.dto.request.RegisterRequest;
 import com.dro.modules.auth.domain.exception.EmailAlreadyRegisteredException;
 import com.dro.modules.auth.domain.exception.UsernameAlreadyTakenException;
 import com.dro.modules.player.domain.Player;

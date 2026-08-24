@@ -1,7 +1,7 @@
 package com.dro.modules.auth.application;
 
-import com.dro.modules.auth.api.dto.LoginRequest;
-import com.dro.modules.auth.api.dto.LoginResponse;
+import com.dro.modules.auth.api.dto.request.LoginRequest;
+import com.dro.modules.auth.api.dto.response.LoginResponse;
 import com.dro.modules.auth.domain.exception.InvalidCredentialsException;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;

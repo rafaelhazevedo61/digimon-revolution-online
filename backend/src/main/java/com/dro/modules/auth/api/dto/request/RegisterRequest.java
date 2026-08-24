@@ -1,4 +1,4 @@
-package com.dro.modules.auth.api.dto;
+package com.dro.modules.auth.api.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -12,6 +12,7 @@ public record RegisterRequest(
         @NotBlank
         String username,
 
+        @NotBlank
         @Email
         String email,
 
@@ -21,6 +22,8 @@ public record RegisterRequest(
                 max = 60,
                 message = "A senha deve ter entre 8 e 60 caracteres."
         )
-        String password
+        String password,
+
+        String inviteCode
 
 ) {}

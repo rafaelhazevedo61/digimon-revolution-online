@@ -19,7 +19,6 @@ import java.util.UUID;
 @Table(name = "players")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Builder
 public class Player {
 
     @Id
@@ -51,23 +50,18 @@ public class Player {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type", nullable = false)
-    @Builder.Default
     private UserType userType = UserType.PLAYER;
 
     @Column(name = "token_version", nullable = false)
-    @Builder.Default
     private int tokenVersion = 0;
 
     @Column(name = "max_digimon_slots", nullable = false)
-    @Builder.Default
     private int maxDigimonSlots = 3;
 
     @Column(name = "max_storage_slots", nullable = false)
-    @Builder.Default
     private int maxStorageSlots = 50;
 
     @Column(name = "arena_coins", nullable = false)
-    @Builder.Default
     private int arenaCoins = 0;
 
     @Column(name = "clan_id")
@@ -83,13 +77,38 @@ public class Player {
     @Column(name = "arena_daily_reset_at")
     private LocalDateTime arenaDailyResetAt;
 
-    /** Informa se o jogador já concluiu a seleção do Digitama inicial. */
-    public boolean hasSelectedStarter() {
+    public static Player createPlayer (
+            UUID id,
+            String username,
+            String email,
+            String password,
+            LocalDateTime createdAt
+    ) {
+        Player player = new Player();
+
+        player.id = id;
+        player.username = username;
+        player.email = email;
+        player.password = password;
+        player.createdAt = createdAt;
+        player.maxDigimonSlots = 3;
+        player.maxStorageSlots = 50;
+        player.userType = UserType.PLAYER;
+
+        return player;
+    }
+
+    /**
+     * Informa se o jogador já concluiu a seleção do Digitama inicial.
+     */
+    public boolean hasSelectedStarter () {
         return starterSelected;
     }
 
-    /** Marca a seleção inicial como concluída. */
-    public void markStarterAsSelected() {
+    /**
+     * Marca a seleção inicial como concluída.
+     */
+    public void markStarterAsSelected () {
         this.starterSelected = true;
     }
 
@@ -97,7 +116,7 @@ public class Player {
         this.password = password;
     }
 
-    public void incrementTokenVersion() {
+    public void incrementTokenVersion () {
         this.tokenVersion++;
     }
 

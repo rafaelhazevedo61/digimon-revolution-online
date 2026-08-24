@@ -4,6 +4,7 @@ const routes = {
     "digimon-infos": renderDigimonInfosPage,
     "evolution-lines": renderEvolutionLinesPage,
     players: renderPlayersPage,
+    "alpha-invites": renderAlphaInvitesPage,
     "equipment-templates": renderEquipmentTemplatesPage,
     "shop-products": renderShopProductsPage,
     missions: renderMissionsPage,
