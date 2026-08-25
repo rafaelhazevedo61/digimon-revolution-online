@@ -29,25 +29,57 @@ const routes = {
 };
 
 function navigateTo(route, params = {}) {
-  window._routeParams = params;
-
   if (route !== "login" && !isLoggedIn()) {
     route = "login";
+    params = {};
+  }
+
+  const query = new URLSearchParams(params).toString();
+  const targetHash = query ? `${route}?${query}` : route;
+  const currentHash = window.location.hash.replace("#", "");
+
+  window._routeParams = params;
+
+  if (currentHash !== targetHash) {
+    window.location.hash = targetHash;
+    return;
   }
 
   const renderer = routes[route] || routes.dashboard;
-  window.location.hash = route;
   renderer(params);
 }
 
 function setupRouter() {
-  const hash = window.location.hash.replace("#", "") || (isLoggedIn() ? "dashboard" : "login");
-  navigateTo(hash);
+  const rawHash = window.location.hash.replace("#", "");
+
+  if (!rawHash) {
+    navigateTo(isLoggedIn() ? "dashboard" : "login");
+    return;
+  }
+
+  const [route, queryString] = rawHash.split("?");
+
+  const params = Object.fromEntries(
+    new URLSearchParams(queryString || "")
+  );
+
+  window._routeParams = params;
+
+  if (route !== "login" && !isLoggedIn()) {
+    navigateTo("login");
+    return;
+  }
+
+  const renderer = routes[route] || routes.dashboard;
+  renderer(params);
 }
 
 function updateNavActive(route) {
   document.querySelectorAll(".nav-btn").forEach(btn => {
     btn.classList.remove("active");
-    if (btn.dataset.route === route) btn.classList.add("active");
+
+    if (btn.dataset.route === route) {
+      btn.classList.add("active");
+    }
   });
 }

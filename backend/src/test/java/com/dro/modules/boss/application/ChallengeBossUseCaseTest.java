@@ -26,6 +26,7 @@ import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.server.application.GlobalDamageBuffService;
 import com.dro.shared.audit.TransactionAuditPublisher;
+import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.security.JwtSettings;
 import com.dro.shared.security.JwtTokenCodec;
@@ -45,8 +46,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ChallengeBossUseCaseTest {
@@ -64,6 +64,7 @@ class ChallengeBossUseCaseTest {
     @Mock private ClanMissionProgressTracker clanMissionProgressTracker;
     @Mock private GlobalDamageBuffService globalDamageBuffService;
     @Mock private TransactionAuditPublisher transactionAuditPublisher;
+    @Mock private GameplayConfig gameplayConfig;
 
     @InjectMocks
     private ChallengeBossUseCase challengeBossUseCase;
@@ -76,6 +77,7 @@ class ChallengeBossUseCaseTest {
     void setUp() {
         playerId = UUID.randomUUID();
         digimonId = UUID.randomUUID();
+        lenient().when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(true);
         token = JwtTokenCodec.create(
                 Map.of("sub", playerId.toString(), "iss", JwtSettings.getIssuer(), "exp", Instant.now().getEpochSecond() + 3600),
                 JwtSettings.getSecret()
@@ -156,6 +158,29 @@ class ChallengeBossUseCaseTest {
 
         assertThat(response.drops()).anyMatch(d -> d.type().equals("EQUIPMENT") && d.code().equals("Espada de Teste"));
         assertThat(response.chestCode()).isEqualTo("CHEST_EQUIP");
+    }
+
+    @Test
+    void energyDisabledAllowsChallengeWithZeroEnergyWithoutConsumption() {
+        BossDefinitionEntity boss = bossWithChest("BOSS_NO_ENERGY", "CHEST_NO_ENERGY");
+        Digimon digimon = activeDigimon(playerId, digimonId);
+        digimon.setEnergy(0);
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player(playerId)));
+        when(bossDefinitionRepository.findByCode("BOSS_NO_ENERGY")).thenReturn(Optional.of(boss));
+        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
+        when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(false);
+        when(globalDamageBuffService.isEnabled()).thenReturn(true);
+        when(globalDamageBuffService.getMultiplier()).thenReturn(1.0);
+        when(chestDefinitionRepository.findWithCatalogByCode("CHEST_NO_ENERGY"))
+                .thenReturn(Optional.of(boss.getChestDefinition()));
+
+        BossChallengeResponse response = challengeBossUseCase.execute(token, "BOSS_NO_ENERGY", digimonId);
+
+        assertThat(response.result()).isEqualTo("VICTORY");
+        assertThat(digimon.getEnergy()).isZero();
+        verify(digimonRepository).save(digimon);
+        verify(bossAttemptRepository).save(any(BossAttemptEntity.class));
     }
 
     private BossDefinitionEntity bossWithChest(String code, String chestCode) {

@@ -20,6 +20,7 @@ import com.dro.modules.player.domain.UserType;
 import com.dro.modules.server.application.GlobalDamageBuffService;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.audit.TransactionAuditPublisher;
+import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.security.JwtSettings;
@@ -77,6 +78,9 @@ class ChallengeArenaUseCaseTest {
     private GlobalDamageBuffService globalDamageBuffService;
 
     @Mock
+    private GameplayConfig gameplayConfig;
+
+    @Mock
     private ChestDefinitionEntity rewardChest;
 
     @Mock
@@ -115,6 +119,8 @@ class ChallengeArenaUseCaseTest {
         attacker = digimon(attackerId, playerId, 1000, Stage.ROOKIE, false);
         defender = digimon(defenderId, opponentPlayerId, 1000, Stage.ROOKIE, false);
 
+        lenient().when(gameplayConfig.getArenaDailyChallengeLimit()).thenReturn(ArenaRules.DAILY_CHALLENGE_LIMIT);
+        lenient().when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(true);
         lenient().when(globalDamageBuffService.getMultiplier()).thenReturn(1.0);
         lenient().when(globalDamageBuffService.isEnabled()).thenReturn(false);
         lenient().when(chestDefinitionRepository.findWithCatalogByCode(anyString())).thenReturn(Optional.of(rewardChest));
@@ -321,6 +327,20 @@ class ChallengeArenaUseCaseTest {
     }
 
     @Test
+    void energyDisabledAllowsChallengeWithZeroEnergyWithoutConsumption() {
+        attacker.setEnergy(0);
+        stubDigimons();
+        stubPowers(1000.0, 100.0);
+        when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(false);
+
+        ArenaMatchResponse response = challengeWithRoll(1);
+
+        assertNotNull(response);
+        assertEquals(0, attacker.getEnergy());
+        verify(arenaMatchRepository).save(any(ArenaMatch.class));
+    }
+
+    @Test
     void throwsWhenChallengingOwnDigimon() {
         defender = digimon(defenderId, playerId, 1000, Stage.ROOKIE, false);
         stubDigimons();
@@ -370,6 +390,30 @@ class ChallengeArenaUseCaseTest {
                 .thenReturn((long) ArenaRules.DAILY_CHALLENGE_LIMIT);
 
         assertThrows(BadRequestException.class, () -> useCase.execute(token, defenderId));
+        verify(arenaMatchRepository, never()).save(any());
+    }
+
+    @Test
+    void usesConfiguredDailyChallengeLimit() {
+        stubDigimons();
+        when(gameplayConfig.getArenaDailyChallengeLimit()).thenReturn(10);
+        when(arenaMatchRepository.countByAttackerPlayerIdAndCreatedAtGreaterThanEqual(eq(playerId), any()))
+                .thenReturn(9L);
+        stubPowers(1000.0, 100.0);
+
+        assertDoesNotThrow(() -> challengeWithRoll(1));
+    }
+
+    @Test
+    void blocksWhenConfiguredDailyChallengeLimitIsReached() {
+        stubDigimons();
+        when(gameplayConfig.getArenaDailyChallengeLimit()).thenReturn(10);
+        when(arenaMatchRepository.countByAttackerPlayerIdAndCreatedAtGreaterThanEqual(eq(playerId), any()))
+                .thenReturn(10L);
+
+        BadRequestException exception = assertThrows(BadRequestException.class, () -> useCase.execute(token, defenderId));
+
+        assertTrue(exception.getMessage().contains("10 per day"));
         verify(arenaMatchRepository, never()).save(any());
     }
 

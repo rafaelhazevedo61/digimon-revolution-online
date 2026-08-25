@@ -20,6 +20,7 @@ import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.server.application.GlobalDamageBuffService;
+import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
@@ -29,7 +30,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Componente da camada de caso de uso da aplicação do módulo de Clãs.
@@ -46,6 +46,7 @@ public class AttackClanRaidUseCase {
     private final DigimonPowerService digimonPowerService;
     private final ClanBonusService clanBonusService;
     private final GlobalDamageBuffService globalDamageBuffService;
+    private final GameplayConfig gameplayConfig;
 
     @Transactional
     public AttackClanRaidResponse execute(String token) {
@@ -70,17 +71,21 @@ public class AttackClanRaidUseCase {
         Instant startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant();
         Instant resetCutoff = raid.getDailyResetAt() != null && raid.getDailyResetAt().isAfter(startOfDay) ? raid.getDailyResetAt() : startOfDay;
         long usedToday = clanRaidAttackRepository.countByClanRaidIdAndPlayerIdAndCreatedAtGreaterThanEqual(raid.getId(), playerId, resetCutoff);
-        if (ClanRaidRules.dailyLimitReached(usedToday)) {
-            throw new BadRequestException("Daily raid attack limit reached (" + ClanRaidRules.DAILY_ATTACK_LIMIT + " per day). Come back tomorrow.");
+        int dailyAttackLimit = gameplayConfig.getClanRaidDailyAttackLimit();
+        if (ClanRaidRules.dailyLimitReached(usedToday, dailyAttackLimit)) {
+            throw new BadRequestException("Daily raid attack limit reached (" + dailyAttackLimit + " per day). Come back tomorrow.");
         }
-        int maxEnergyBonus = clanBonusService.getMaxEnergyBonus(player.getClanId());
-        digimon.regenerateEnergy(maxEnergyBonus);
-        int baseEnergyCost = boss.getEnergyCost();
-        int energyCost = applyCostReduction(baseEnergyCost, clanBonusService.getEnergyCostMultiplier(player.getClanId()));
-        if (digimon.getEnergy() < energyCost) {
-            throw new BadRequestException("Not enough energy. Required: " + energyCost + ", current: " + digimon.getEnergy());
+        int energyCost = 0;
+        if (gameplayConfig.isEnergyConsumptionEnabled()) {
+            int maxEnergyBonus = clanBonusService.getMaxEnergyBonus(player.getClanId());
+            digimon.regenerateEnergy(maxEnergyBonus);
+            int baseEnergyCost = boss.getEnergyCost();
+            energyCost = applyCostReduction(baseEnergyCost, clanBonusService.getEnergyCostMultiplier(player.getClanId()));
+            if (digimon.getEnergy() < energyCost) {
+                throw new BadRequestException("Not enough energy. Required: " + energyCost + ", current: " + digimon.getEnergy());
+            }
+            digimon.consumeEnergy(energyCost);
         }
-        digimon.consumeEnergy(energyCost);
         double digimonPower = digimonPowerService.calculatePower(digimon, player.getClanId());
         double bossPower = BossCombatRules.calculatePower(boss.getHp(), boss.getAtk(), boss.getDef());
         int winChance = BossCombatRules.calculateWinChance(digimonPower, bossPower);
@@ -111,7 +116,7 @@ public class AttackClanRaidUseCase {
         digimonRepository.save(digimon);
         clanRaidRepository.save(raid);
         clanRaidAttackRepository.save(attack);
-        long remainingAttacks = ClanRaidRules.dailyAttacksRemaining(usedToday + 1);
+        long remainingAttacks = ClanRaidRules.dailyAttacksRemaining(usedToday + 1, dailyAttackLimit);
         return new AttackClanRaidResponse(raid.getId(), boss.getCode(), boss.getName(), actualDamage, raid.getRemainingHp(), raid.getMaxHp(), defeated, winChance, xpGained, bitsGained, clanHonorMarksGained, clanXpGained, (int) remainingAttacks);
     }
 
@@ -132,7 +137,7 @@ public class AttackClanRaidUseCase {
         return Math.max(1, (int) Math.floor(baseCost * multiplier));
     }
 
-    public AttackClanRaidUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ClanRepository clanRepository, final BossDefinitionRepository bossDefinitionRepository, final ClanRaidRepository clanRaidRepository, final ClanRaidAttackRepository clanRaidAttackRepository, final ClanRaidService clanRaidService, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final GlobalDamageBuffService globalDamageBuffService) {
+    public AttackClanRaidUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ClanRepository clanRepository, final BossDefinitionRepository bossDefinitionRepository, final ClanRaidRepository clanRaidRepository, final ClanRaidAttackRepository clanRaidAttackRepository, final ClanRaidService clanRaidService, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final GlobalDamageBuffService globalDamageBuffService, final GameplayConfig gameplayConfig) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.clanRepository = clanRepository;
@@ -143,5 +148,6 @@ public class AttackClanRaidUseCase {
         this.digimonPowerService = digimonPowerService;
         this.clanBonusService = clanBonusService;
         this.globalDamageBuffService = globalDamageBuffService;
+        this.gameplayConfig = gameplayConfig;
     }
 }

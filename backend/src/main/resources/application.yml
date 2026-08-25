@@ -36,7 +36,18 @@ logging:
     org.springframework.jdbc: INFO
 
 dro:
-  app-version: ${DRO_APP_VERSION:0.0.1-SNAPSHOT}
+  gameplay:
+    clan-raid:
+      daily-attack-limit: ${DRO_CLAN_RAID_DAILY_ATTACK_LIMIT:3}
+
+    energy:
+      consumption-enabled: ${DRO_ENERGY_CONSUMPTION_ENABLED:true}
+
+    arena:
+      daily-challenge-limit: ${DRO_ARENA_DAILY_CHALLENGE_LIMIT:5}
+
+    world-boss:
+      daily-attack-limit: ${DRO_WORLD_BOSS_DAILY_ATTACK_LIMIT:3}
 
   registration:
     invite-required: ${DRO_REGISTRATION_INVITE_REQUIRED:false}

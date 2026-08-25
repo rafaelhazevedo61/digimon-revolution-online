@@ -25,6 +25,7 @@ import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.server.application.GlobalDamageBuffService;
 import com.dro.shared.audit.TransactionAuditPublisher;
+import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.security.JwtSettings;
 import com.dro.shared.security.JwtTokenCodec;
@@ -92,6 +93,9 @@ class AttackWorldBossUseCaseTest {
 
     @Mock
     private TransactionAuditPublisher transactionAuditPublisher;
+
+    @Mock
+    private GameplayConfig gameplayConfig;
 
     @InjectMocks
     private AttackWorldBossUseCase useCase;
@@ -185,6 +189,8 @@ class AttackWorldBossUseCaseTest {
                 eq(instance.getId()), eq(playerId), anyString())).thenReturn(Optional.empty());
         lenient().when(digimonPowerService.calculatePower(digimon, null)).thenReturn(100_000.0);
         lenient().when(globalDamageBuffService.getMultiplier()).thenReturn(1.0);
+        lenient().when(gameplayConfig.getWorldBossDailyAttackLimit()).thenReturn(3);
+        lenient().when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(true);
         lenient().when(worldBossRewardService.grant(any(), any(), any(), anyBoolean()))
                 .thenReturn(List.of(attemptReward));
     }
@@ -243,6 +249,51 @@ class AttackWorldBossUseCaseTest {
         verify(worldBossRewardService, never()).grant(any(), any(), any(), anyBoolean());
         verify(digimonRepository, never()).save(any());
         verify(transactionAuditPublisher, never()).success(anyString(), anyString(), anyString(), anyString(), anyMap());
+    }
+
+
+    @Test
+    void attackUsesConfiguredDailyLimit() {
+        when(gameplayConfig.getWorldBossDailyAttackLimit()).thenReturn(10);
+        when(worldBossAttackRepository.countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(
+                eq(instance.getId()), eq(playerId), any(Instant.class))).thenReturn(9L);
+
+        AttackWorldBossResponse response = useCase.execute(token, "request-configured-limit");
+
+        assertTrue(response.defeated());
+        assertEquals(0, response.dailyAttacksRemaining());
+        verify(worldBossAttackRepository).save(any(WorldBossAttack.class));
+    }
+
+    @Test
+    void attackIsBlockedWhenConfiguredDailyLimitIsReached() {
+        when(gameplayConfig.getWorldBossDailyAttackLimit()).thenReturn(10);
+        when(worldBossAttackRepository.countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(
+                eq(instance.getId()), eq(playerId), any(Instant.class))).thenReturn(10L);
+
+        BadRequestException exception = assertThrows(
+                BadRequestException.class,
+                () -> useCase.execute(token, "request-daily-limit")
+        );
+
+        assertTrue(exception.getMessage().contains("10 per day"));
+        verify(worldBossAttackRepository, never()).save(any());
+        verify(digimonRepository, never()).save(any());
+    }
+
+    @Test
+    void energyDisabledAllowsAttackWithZeroEnergyWithoutConsumption() {
+        digimon.setEnergy(0);
+        when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(false);
+
+        AttackWorldBossResponse response = useCase.execute(token, "request-energy-disabled");
+
+        assertTrue(response.defeated());
+        assertEquals(0, digimon.getEnergy());
+
+        ArgumentCaptor<WorldBossAttack> captor = ArgumentCaptor.forClass(WorldBossAttack.class);
+        verify(worldBossAttackRepository).save(captor.capture());
+        assertEquals(0, captor.getValue().getEnergyCost());
     }
 
     @Test

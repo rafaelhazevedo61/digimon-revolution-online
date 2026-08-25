@@ -10,7 +10,8 @@ public class AreaRules {
     public static Stage requiredStage(Area area) {
         return switch (area) {
             case NATIVE_FOREST -> Stage.BABY;
-            case GEAR_SAVANNA, FACTORIAL_TOWN -> Stage.ROOKIE;
+            case GEAR_SAVANNA -> Stage.BABY_II;
+            case FACTORIAL_TOWN -> Stage.ROOKIE;
             case FREEZELAND -> Stage.CHAMPION;
             case SERVER_DESERT -> Stage.ULTIMATE;
             case INFINITY_MOUNTAIN -> Stage.MEGA;

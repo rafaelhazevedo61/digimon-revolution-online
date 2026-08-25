@@ -12,12 +12,20 @@ public final class ClanRaidRules {
     public static final int MIN_DAMAGE_PERCENT = 1;
 
     public static int dailyAttacksRemaining(long usedToday) {
-        long remaining = DAILY_ATTACK_LIMIT - usedToday;
+        return dailyAttacksRemaining(usedToday, DAILY_ATTACK_LIMIT);
+    }
+
+    public static int dailyAttacksRemaining(long usedToday, int dailyAttackLimit) {
+        long remaining = dailyAttackLimit - usedToday;
         return (int) Math.max(0, remaining);
     }
 
     public static boolean dailyLimitReached(long usedToday) {
-        return usedToday >= DAILY_ATTACK_LIMIT;
+        return dailyLimitReached(usedToday, DAILY_ATTACK_LIMIT);
+    }
+
+    public static boolean dailyLimitReached(long usedToday, int dailyAttackLimit) {
+        return usedToday >= dailyAttackLimit;
     }
 
     public static int calculateDamage(int maxHp, int winChance) {

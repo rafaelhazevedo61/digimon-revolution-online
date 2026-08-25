@@ -113,13 +113,23 @@ public class ArenaRules {
 
     /** Desafios restantes no dia, dado quantos já foram usados (nunca negativo). */
     public static int remainingDailyChallenges(long usedToday) {
-        long remaining = DAILY_CHALLENGE_LIMIT - usedToday;
+        return remainingDailyChallenges(usedToday, DAILY_CHALLENGE_LIMIT);
+    }
+
+    /** Desafios restantes no dia usando um limite configurável. */
+    public static int remainingDailyChallenges(long usedToday, int dailyChallengeLimit) {
+        long remaining = dailyChallengeLimit - usedToday;
         return (int) Math.max(0, remaining);
     }
 
     /** True se o limite diário de desafios já foi atingido. */
     public static boolean dailyLimitReached(long usedToday) {
-        return usedToday >= DAILY_CHALLENGE_LIMIT;
+        return dailyLimitReached(usedToday, DAILY_CHALLENGE_LIMIT);
+    }
+
+    /** True se o limite diário configurado de desafios já foi atingido. */
+    public static boolean dailyLimitReached(long usedToday, int dailyChallengeLimit) {
+        return usedToday >= dailyChallengeLimit;
     }
 
     /** Tier de Arena correspondente a um rating. */

@@ -11,6 +11,7 @@ import com.dro.modules.clan.raid.domain.ClanRaidRules;
 import com.dro.modules.clan.raid.infra.ClanRaidAttackRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.NotFoundException;
 import org.springframework.stereotype.Component;
 import java.time.Instant;
@@ -27,15 +28,17 @@ public class ClanRaidResponseMapper {
     private final BossDefinitionRepository bossDefinitionRepository;
     private final ClanRaidAttackRepository clanRaidAttackRepository;
     private final PlayerRepository playerRepository;
+    private final GameplayConfig gameplayConfig;
 
     public ClanRaidResponse toResponse(ClanRaid raid, UUID viewerPlayerId) {
         BossDefinitionEntity boss = bossDefinitionRepository.findById(raid.getBossId()).orElseThrow(() -> new NotFoundException("Boss not found"));
         Instant startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant();
         Instant resetCutoff = raid.getDailyResetAt() != null && raid.getDailyResetAt().isAfter(startOfDay) ? raid.getDailyResetAt() : startOfDay;
         int usedToday = (int) clanRaidAttackRepository.countByClanRaidIdAndPlayerIdAndCreatedAtGreaterThanEqual(raid.getId(), viewerPlayerId, resetCutoff);
+        int dailyAttackLimit = gameplayConfig.getClanRaidDailyAttackLimit();
         long myTotalDamage = clanRaidAttackRepository.findByClanRaidIdOrderByCreatedAtDesc(raid.getId()).stream().filter(a -> a.getPlayerId().equals(viewerPlayerId)).mapToLong(ClanRaidAttack::getDamage).sum();
         List<ClanRaidAttackResponse> recentAttacks = clanRaidAttackRepository.findByClanRaidIdOrderByCreatedAtDesc(raid.getId()).stream().limit(20).map(this::toAttackResponse).toList();
-        return new ClanRaidResponse(raid.getId(), raid.getClanId(), boss.getCode(), boss.getName(), boss.getImageUrl(), raid.getMaxHp(), raid.getRemainingHp(), raid.getStatus(), raid.getCreatedAt(), raid.getDefeatedAt(), usedToday, Math.max(0, ClanRaidRules.DAILY_ATTACK_LIMIT - usedToday), myTotalDamage, buildRanking(raid.getId()), recentAttacks);
+        return new ClanRaidResponse(raid.getId(), raid.getClanId(), boss.getCode(), boss.getName(), boss.getImageUrl(), raid.getMaxHp(), raid.getRemainingHp(), raid.getStatus(), raid.getCreatedAt(), raid.getDefeatedAt(), usedToday, ClanRaidRules.dailyAttacksRemaining(usedToday, dailyAttackLimit), myTotalDamage, buildRanking(raid.getId()), recentAttacks);
     }
 
     private List<ClanRaidRankingEntryResponse> buildRanking(UUID raidId) {
@@ -56,9 +59,10 @@ public class ClanRaidResponseMapper {
         return new ClanRaidAttackResponse(attack.getId(), attack.getPlayerId(), player != null ? player.getUsername() : "Unknown", attack.getDamage(), attack.getCreatedAt());
     }
 
-    public ClanRaidResponseMapper(final BossDefinitionRepository bossDefinitionRepository, final ClanRaidAttackRepository clanRaidAttackRepository, final PlayerRepository playerRepository) {
+    public ClanRaidResponseMapper(final BossDefinitionRepository bossDefinitionRepository, final ClanRaidAttackRepository clanRaidAttackRepository, final PlayerRepository playerRepository, final GameplayConfig gameplayConfig) {
         this.bossDefinitionRepository = bossDefinitionRepository;
         this.clanRaidAttackRepository = clanRaidAttackRepository;
         this.playerRepository = playerRepository;
+        this.gameplayConfig = gameplayConfig;
     }
 }
