@@ -14,6 +14,9 @@ logging:
 dro:
   app-version: ${DRO_APP_VERSION:0.0.1-SNAPSHOT}
   gameplay:
+    clan-raid:
+      daily-attack-limit: ${DRO_CLAN_RAID_DAILY_ATTACK_LIMIT:99}
+
     energy:
       consumption-enabled: ${DRO_ENERGY_CONSUMPTION_ENABLED:false}
 

@@ -37,6 +37,9 @@ logging:
 
 dro:
   gameplay:
+    clan-raid:
+      daily-attack-limit: ${DRO_CLAN_RAID_DAILY_ATTACK_LIMIT:3}
+
     energy:
       consumption-enabled: ${DRO_ENERGY_CONSUMPTION_ENABLED:true}
 
