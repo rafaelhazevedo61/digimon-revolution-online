@@ -71,8 +71,9 @@ public class AttackClanRaidUseCase {
         Instant startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant();
         Instant resetCutoff = raid.getDailyResetAt() != null && raid.getDailyResetAt().isAfter(startOfDay) ? raid.getDailyResetAt() : startOfDay;
         long usedToday = clanRaidAttackRepository.countByClanRaidIdAndPlayerIdAndCreatedAtGreaterThanEqual(raid.getId(), playerId, resetCutoff);
-        if (ClanRaidRules.dailyLimitReached(usedToday)) {
-            throw new BadRequestException("Daily raid attack limit reached (" + ClanRaidRules.DAILY_ATTACK_LIMIT + " per day). Come back tomorrow.");
+        int dailyAttackLimit = gameplayConfig.getClanRaidDailyAttackLimit();
+        if (ClanRaidRules.dailyLimitReached(usedToday, dailyAttackLimit)) {
+            throw new BadRequestException("Daily raid attack limit reached (" + dailyAttackLimit + " per day). Come back tomorrow.");
         }
         int energyCost = 0;
         if (gameplayConfig.isEnergyConsumptionEnabled()) {
@@ -115,7 +116,7 @@ public class AttackClanRaidUseCase {
         digimonRepository.save(digimon);
         clanRaidRepository.save(raid);
         clanRaidAttackRepository.save(attack);
-        long remainingAttacks = ClanRaidRules.dailyAttacksRemaining(usedToday + 1);
+        long remainingAttacks = ClanRaidRules.dailyAttacksRemaining(usedToday + 1, dailyAttackLimit);
         return new AttackClanRaidResponse(raid.getId(), boss.getCode(), boss.getName(), actualDamage, raid.getRemainingHp(), raid.getMaxHp(), defeated, winChance, xpGained, bitsGained, clanHonorMarksGained, clanXpGained, (int) remainingAttacks);
     }
 

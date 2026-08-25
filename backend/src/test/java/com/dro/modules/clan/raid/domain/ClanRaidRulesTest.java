@@ -24,6 +24,20 @@ class ClanRaidRulesTest {
         assertFalse(ClanRaidRules.dailyLimitReached(2));
     }
 
+
+    @Test
+    void dailyAttacksRemaining_usesConfiguredLimit() {
+        assertEquals(10, ClanRaidRules.dailyAttacksRemaining(0, 10));
+        assertEquals(1, ClanRaidRules.dailyAttacksRemaining(9, 10));
+        assertEquals(0, ClanRaidRules.dailyAttacksRemaining(10, 10));
+    }
+
+    @Test
+    void dailyLimitReached_usesConfiguredLimit() {
+        assertFalse(ClanRaidRules.dailyLimitReached(9, 10));
+        assertTrue(ClanRaidRules.dailyLimitReached(10, 10));
+    }
+
     @Test
     void calculateDamage_neverExceedsMaxPercent() {
         int maxHp = 10000;

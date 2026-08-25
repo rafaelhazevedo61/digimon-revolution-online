@@ -14,6 +14,7 @@ public class GameplayConfig {
     private Energy energy = new Energy();
     private Arena arena = new Arena();
     private WorldBoss worldBoss = new WorldBoss();
+    private ClanRaid clanRaid = new ClanRaid();
 
     public Energy getEnergy() {
         return energy;
@@ -39,6 +40,14 @@ public class GameplayConfig {
         this.worldBoss = worldBoss;
     }
 
+    public ClanRaid getClanRaid() {
+        return clanRaid;
+    }
+
+    public void setClanRaid(ClanRaid clanRaid) {
+        this.clanRaid = clanRaid;
+    }
+
     public boolean isEnergyConsumptionEnabled() {
         return energy.isConsumptionEnabled();
     }
@@ -49,6 +58,10 @@ public class GameplayConfig {
 
     public int getWorldBossDailyAttackLimit() {
         return worldBoss.getDailyAttackLimit();
+    }
+
+    public int getClanRaidDailyAttackLimit() {
+        return clanRaid.getDailyAttackLimit();
     }
 
     public static class Energy {
@@ -78,6 +91,19 @@ public class GameplayConfig {
     }
 
     public static class WorldBoss {
+
+        private int dailyAttackLimit = 3;
+
+        public int getDailyAttackLimit() {
+            return dailyAttackLimit;
+        }
+
+        public void setDailyAttackLimit(int dailyAttackLimit) {
+            this.dailyAttackLimit = dailyAttackLimit;
+        }
+    }
+
+    public static class ClanRaid {
 
         private int dailyAttackLimit = 3;
 
