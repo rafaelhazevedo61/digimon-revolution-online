@@ -17,13 +17,13 @@ import com.dro.modules.equipment.application.EquipmentRarityProfileService;
 import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
-import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.loot.domain.ChestDefinitionEntity;
 import com.dro.modules.loot.infra.ChestDefinitionRepository;
 import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.server.application.GlobalDamageBuffService;
 import com.dro.shared.audit.TransactionAuditPublisher;
+import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
@@ -36,7 +36,6 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 
 /**
  * Componente da camada de caso de uso da aplicação do módulo de Boss Mundial.
@@ -56,6 +55,7 @@ public class ChallengeBossUseCase {
     private final ClanMissionProgressTracker clanMissionProgressTracker;
     private final GlobalDamageBuffService globalDamageBuffService;
     private final TransactionAuditPublisher transactionAuditPublisher;
+    private final GameplayConfig gameplayConfig;
 
     @Transactional
     public BossChallengeResponse execute(String token, String bossCode, UUID digimonId) {
@@ -80,13 +80,15 @@ public class ChallengeBossUseCase {
         UUID clanId = player.getClanId();
         if (!isAdmin) {
             validateCooldown(playerId, boss);
-            int maxEnergyBonus = clanId != null ? clanBonusService.getMaxEnergyBonus(clanId) : 0;
-            digimon.regenerateEnergy(maxEnergyBonus);
-            int energyCost = clanId != null ? applyCostReduction(boss.getEnergyCost(), clanBonusService.getEnergyCostMultiplier(clanId)) : boss.getEnergyCost();
-            if (digimon.getEnergy() < energyCost) {
-                throw new BadRequestException("Not enough energy. Required: " + energyCost + ", current: " + digimon.getEnergy());
+            if (gameplayConfig.isEnergyConsumptionEnabled()) {
+                int maxEnergyBonus = clanId != null ? clanBonusService.getMaxEnergyBonus(clanId) : 0;
+                digimon.regenerateEnergy(maxEnergyBonus);
+                int energyCost = clanId != null ? applyCostReduction(boss.getEnergyCost(), clanBonusService.getEnergyCostMultiplier(clanId)) : boss.getEnergyCost();
+                if (digimon.getEnergy() < energyCost) {
+                    throw new BadRequestException("Not enough energy. Required: " + energyCost + ", current: " + digimon.getEnergy());
+                }
+                digimon.consumeEnergy(energyCost);
             }
-            digimon.consumeEnergy(energyCost);
         }
         List<Equipment> equippedItems = equipmentRepository.findByDigimonId(digimon.getId()).stream().filter(Equipment::isEquipped).toList();
         double atkBonus = clanId != null ? clanBonusService.getAttackBonusPercent(clanId) : 0.0;
@@ -232,7 +234,7 @@ public class ChallengeBossUseCase {
         return Math.max(1, (int) Math.floor(baseCost * multiplier));
     }
 
-    public ChallengeBossUseCase(final BossDefinitionRepository bossDefinitionRepository, final BossAttemptRepository bossAttemptRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final EquipmentRepository equipmentRepository, final AddItemUseCase addItemUseCase, final ChestDefinitionRepository chestDefinitionRepository, final GrantEquipmentUseCase grantEquipmentUseCase, final EquipmentRarityProfileService equipmentRarityProfileService, final ClanBonusService clanBonusService, final ClanMissionProgressTracker clanMissionProgressTracker, final GlobalDamageBuffService globalDamageBuffService, final TransactionAuditPublisher transactionAuditPublisher) {
+    public ChallengeBossUseCase(final BossDefinitionRepository bossDefinitionRepository, final BossAttemptRepository bossAttemptRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final EquipmentRepository equipmentRepository, final AddItemUseCase addItemUseCase, final ChestDefinitionRepository chestDefinitionRepository, final GrantEquipmentUseCase grantEquipmentUseCase, final EquipmentRarityProfileService equipmentRarityProfileService, final ClanBonusService clanBonusService, final ClanMissionProgressTracker clanMissionProgressTracker, final GlobalDamageBuffService globalDamageBuffService, final TransactionAuditPublisher transactionAuditPublisher, final GameplayConfig gameplayConfig) {
         this.bossDefinitionRepository = bossDefinitionRepository;
         this.bossAttemptRepository = bossAttemptRepository;
         this.digimonRepository = digimonRepository;
@@ -246,5 +248,6 @@ public class ChallengeBossUseCase {
         this.clanMissionProgressTracker = clanMissionProgressTracker;
         this.globalDamageBuffService = globalDamageBuffService;
         this.transactionAuditPublisher = transactionAuditPublisher;
+        this.gameplayConfig = gameplayConfig;
     }
 }
