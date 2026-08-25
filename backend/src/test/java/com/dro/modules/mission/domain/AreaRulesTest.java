@@ -13,8 +13,8 @@ class AreaRulesTest {
     }
 
     @Test
-    void requiredStage_gearSavanna_returnsRookie() {
-        assertEquals(Stage.ROOKIE, AreaRules.requiredStage(Area.GEAR_SAVANNA));
+    void requiredStage_gearSavanna_returnsBabyII() {
+        assertEquals(Stage.BABY_II, AreaRules.requiredStage(Area.GEAR_SAVANNA));
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.dro.modules.mission.api.dto.response;
 
+import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.mission.domain.Area;
 
 /**
@@ -7,5 +8,6 @@ import com.dro.modules.mission.domain.Area;
  */
 public record AreaResponse(
         Area area,
+        Stage requiredStage,
         boolean unlocked
 ) {}

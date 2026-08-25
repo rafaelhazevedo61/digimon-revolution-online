@@ -22,7 +22,13 @@ public class AreaUseCase {
     public List<AreaResponse> execute(String token) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         Stage highestStage = getHighestStage(playerId);
-        return Arrays.stream(Area.values()).map(area -> new AreaResponse(area, AreaRules.isUnlocked(highestStage, area))).toList();
+        return Arrays.stream(Area.values())
+                .map(area -> new AreaResponse(
+                        area,
+                        AreaRules.requiredStage(area),
+                        AreaRules.isUnlocked(highestStage, area)
+                ))
+                .toList();
     }
 
     private Stage getHighestStage(UUID playerId) {
