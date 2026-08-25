@@ -120,6 +120,7 @@ class ChallengeArenaUseCaseTest {
         defender = digimon(defenderId, opponentPlayerId, 1000, Stage.ROOKIE, false);
 
         lenient().when(gameplayConfig.getArenaDailyChallengeLimit()).thenReturn(ArenaRules.DAILY_CHALLENGE_LIMIT);
+        lenient().when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(true);
         lenient().when(globalDamageBuffService.getMultiplier()).thenReturn(1.0);
         lenient().when(globalDamageBuffService.isEnabled()).thenReturn(false);
         lenient().when(chestDefinitionRepository.findWithCatalogByCode(anyString())).thenReturn(Optional.of(rewardChest));
@@ -323,6 +324,20 @@ class ChallengeArenaUseCaseTest {
         challengeWithRoll(1);
 
         assertEquals(100, attacker.getEnergy());
+    }
+
+    @Test
+    void energyDisabledAllowsChallengeWithZeroEnergyWithoutConsumption() {
+        attacker.setEnergy(0);
+        stubDigimons();
+        stubPowers(1000.0, 100.0);
+        when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(false);
+
+        ArenaMatchResponse response = challengeWithRoll(1);
+
+        assertNotNull(response);
+        assertEquals(0, attacker.getEnergy());
+        verify(arenaMatchRepository).save(any(ArenaMatch.class));
     }
 
     @Test

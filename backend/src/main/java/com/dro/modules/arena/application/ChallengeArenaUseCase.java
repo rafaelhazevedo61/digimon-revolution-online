@@ -105,7 +105,7 @@ public class ChallengeArenaUseCase {
             });
         }
         UUID attackerClanId = player.getClanId();
-        if (!isAdmin) {
+        if (!isAdmin && gameplayConfig.isEnergyConsumptionEnabled()) {
             int maxEnergyBonus = attackerClanId != null ? clanBonusService.getMaxEnergyBonus(attackerClanId) : 0;
             attacker.regenerateEnergy(maxEnergyBonus);
             int energyCost = attackerClanId != null ? applyCostReduction(ArenaRules.ENERGY_COST, clanBonusService.getEnergyCostMultiplier(attackerClanId)) : ArenaRules.ENERGY_COST;
