@@ -100,7 +100,7 @@ function renderDashContent(data) {
     });
   });
   startMissionTimers();
-  startIncubationTimer();
+  startIncubationTimer(data.incubation);
   loadTutorialCard();
   loadDashboardMailNotice();
 }
@@ -284,7 +284,7 @@ function renderIncubation(inc) {
   const done = remaining <= 0;
 
   return `
-    <div class="mb-4" id="dash-incubation" data-finish-at="${inc.finishAt}">
+    <div class="mb-4" id="dash-incubation" data-finish-at="${escapeAttr(inc.finishAt)}" data-started-at="${escapeAttr(inc.startedAt)}" data-remaining-seconds="${Number(inc.remainingSeconds)}">
       <h3 class="text-sm font-bold text-slate-300 mb-2 px-1">Incubação</h3>
       <div class="card-sm flex items-center justify-between cursor-pointer" onclick="navigateTo('incubation')">
         <div>
@@ -311,33 +311,31 @@ async function claimMission(instanceId) {
 }
 
 // Incubation timer
-let incubTimerDashInterval = null;
-
-function startIncubationTimer() {
-  if (incubTimerDashInterval) clearInterval(incubTimerDashInterval);
+function startIncubationTimer(inc = null) {
   const el = document.getElementById("dash-incubation");
-  if (!el) return;
+  if (!el || !inc) {
+    if (typeof incubStopTimer === "function") incubStopTimer();
+    return;
+  }
 
-  const finishAt = new Date(el.dataset.finishAt).getTime();
+  incubStartTimer({
+    finishAt: el.dataset.finishAt,
+    startedAt: el.dataset.startedAt,
+    remainingSeconds: Number(el.dataset.remainingSeconds),
+    timerId: "incub-dash-timer",
+    formatter: formatTime,
+    onComplete: () => {
+      const timerEl = document.getElementById("incub-dash-timer");
+      if (!timerEl) return;
 
-  incubTimerDashInterval = setInterval(() => {
-    const timerEl = document.getElementById("incub-dash-timer");
-    if (!timerEl) { clearInterval(incubTimerDashInterval); return; }
-
-    const remaining = Math.max(0, Math.floor((finishAt - Date.now()) / 1000));
-
-    if (remaining <= 0) {
-      clearInterval(incubTimerDashInterval);
       timerEl.textContent = "Pronta! 🐣";
       timerEl.className = "text-xs text-green-400 font-bold";
       const parent = timerEl.parentElement;
       if (parent && !parent.querySelector("button")) {
         parent.insertAdjacentHTML("beforeend", `<button class="btn-sm btn-primary mt-1" onclick="event.stopPropagation(); navigateTo('incubation')">Chocar</button>`);
       }
-    } else {
-      timerEl.textContent = formatTime(remaining);
     }
-  }, 1000);
+  });
 }
 
 // Mission timer logic

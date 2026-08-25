@@ -13,7 +13,7 @@ async function renderIncubationPage() {
     </div>
   `;
 
-  if (incubTimerInterval) { clearInterval(incubTimerInterval); incubTimerInterval = null; }
+  incubStopTimer();
 
   try {
     const [incubation, dashboard] = await Promise.all([
@@ -23,8 +23,11 @@ async function renderIncubationPage() {
 
     window._incubSlotInfo = dashboard.slotInfo;
 
-    if (incubation) {
-      incubRenderActive(incubation);
+    // O dashboard também pode marcar uma incubação expirada como READY.
+    // Usa-o como fallback para não ocultar o ovo durante a transição de estado.
+    const activeIncubation = incubation || dashboard?.incubation;
+    if (activeIncubation) {
+      incubRenderActive(activeIncubation);
     } else {
       await incubRenderStart();
     }
@@ -73,40 +76,90 @@ function incubRenderActive(inc) {
   `;
 
   if (!done) {
-    incubStartTimer(inc);
+    incubStartTimer({
+      finishAt: inc.finishAt,
+      remainingSeconds: remaining,
+      timerId: "incub-timer",
+      barId: "incub-bar",
+      startedAt: inc.startedAt,
+      formatter: incubFormatTime,
+      onComplete: () => {
+        if (window.location.hash.replace("#", "").split("?")[0] === "incubation") {
+          renderIncubationPage();
+        }
+      }
+    });
   }
 }
 
 function incubProgress(inc) {
   const total = (new Date(inc.finishAt) - new Date(inc.startedAt)) / 1000;
-  const elapsed = total - Math.max(0, inc.remainingSeconds);
+  if (!Number.isFinite(total) || total <= 0) return 0;
+
+  const remaining = Math.max(0, Number(inc.remainingSeconds) || 0);
+  const elapsed = Math.max(0, total - remaining);
   return Math.min(100, Math.round((elapsed / total) * 100));
 }
 
-function incubStartTimer(inc) {
-  const finishAt = new Date(inc.finishAt).getTime();
+function incubStopTimer() {
+  if (incubTimerInterval) {
+    clearInterval(incubTimerInterval);
+    incubTimerInterval = null;
+  }
+}
 
-  incubTimerInterval = setInterval(() => {
-    const remaining = Math.max(0, Math.floor((finishAt - Date.now()) / 1000));
-    const timerEl = document.getElementById("incub-timer");
-    const barEl = document.getElementById("incub-bar");
+function incubStartTimer({ finishAt, remainingSeconds, timerId, barId, startedAt, formatter, onComplete }) {
+  incubStopTimer();
 
-    if (!timerEl) { clearInterval(incubTimerInterval); return; }
+  const timerEl = document.getElementById(timerId);
+  if (!timerEl) return;
 
+  const initialRemaining = Number(remainingSeconds);
+  if (!Number.isFinite(initialRemaining)) {
+    timerEl.textContent = "--:--";
+    return;
+  }
+
+  // O restante calculado pelo servidor é a referência inicial. Isso evita
+  // divergência por fuso horário quando finishAt é um LocalDateTime sem offset.
+  const deadline = Date.now() + Math.max(0, initialRemaining) * 1000;
+  const finishTimestamp = new Date(finishAt).getTime();
+  const startedTimestamp = new Date(startedAt).getTime();
+
+  const updateProgress = remaining => {
+    const barEl = document.getElementById(barId);
+    if (!barEl) return;
+
+    const total = finishTimestamp - startedTimestamp;
+    if (!Number.isFinite(total) || total <= 0) return;
+
+    const elapsed = Math.max(0, total - remaining * 1000);
+    barEl.style.width = Math.min(100, Math.round((elapsed / total) * 100)) + "%";
+  };
+
+  const tick = () => {
+    const currentTimerEl = document.getElementById(timerId);
+    if (!currentTimerEl) {
+      incubStopTimer();
+      return false;
+    }
+
+    const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
     if (remaining <= 0) {
-      clearInterval(incubTimerInterval);
-      renderIncubationPage();
-      return;
+      incubStopTimer();
+      onComplete?.();
+      return false;
     }
 
-    timerEl.textContent = incubFormatTime(remaining);
+    currentTimerEl.textContent = formatter(remaining);
+    updateProgress(remaining);
+    return true;
+  };
 
-    if (barEl) {
-      const total = (new Date(inc.finishAt) - new Date(inc.startedAt)) / 1000;
-      const elapsed = total - remaining;
-      barEl.style.width = Math.min(100, Math.round((elapsed / total) * 100)) + "%";
-    }
-  }, 1000);
+  // Atualiza imediatamente para não exibir um valor inicial antigo ou fixo.
+  if (tick()) {
+    incubTimerInterval = setInterval(tick, 1000);
+  }
 }
 
 async function incubClaim() {
@@ -115,12 +168,69 @@ async function incubClaim() {
 
   try {
     const digimon = await apiPost("/incubation/claim", {});
+    if (!digimon || !digimon.id) {
+      throw new Error("O servidor não retornou o Digimon chocado.");
+    }
+
     showToast(`${digimon.name} nasceu! (${digimon.rarity})`);
     renderIncubationPage();
+    incubShowHatchResult(digimon);
   } catch (err) {
     showToast(err.message, "error");
     if (btn) { btn.disabled = false; btn.textContent = "🐣 Chocar!"; }
   }
+}
+
+function incubCloseHatchResult() {
+  document.getElementById("incub-hatch-result-modal")?.remove();
+}
+
+function incubShowHatchResult(digimon) {
+  incubCloseHatchResult();
+
+  const overlay = document.createElement("div");
+  overlay.id = "incub-hatch-result-modal";
+  overlay.className = "fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-labelledby", "incub-hatch-result-title");
+  overlay.innerHTML = `
+    <div class="card w-full max-w-sm text-center border-cyan-700 shadow-2xl">
+      <div class="text-5xl mb-3">🐣</div>
+      <h3 id="incub-hatch-result-title" class="text-xl font-bold text-cyan-300">${escapeHtml(digimon.name || "Novo Digimon")} nasceu!</h3>
+      <p class="text-sm text-slate-400 mt-2">O Digimon foi adicionado à sua coleção.</p>
+      <div class="mt-4 rounded-lg bg-slate-900/70 p-3 text-left text-xs text-slate-300">
+        <div class="flex justify-between"><span>Estágio</span><strong>${escapeHtml(digimon.stage || "BABY")}</strong></div>
+        <div class="flex justify-between mt-1"><span>Raridade</span><strong>${escapeHtml(digimon.rarity || "COMMON")}</strong></div>
+      </div>
+      <div class="grid gap-2 mt-5">
+        <button class="btn-primary w-full" id="incub-select-hatched-btn" onclick="incubSelectHatched('${escapeAttr(String(digimon.id))}')">Selecionar como ativo</button>
+        <button class="btn-sm w-full" style="background:#164e63;color:#67e8f9" onclick="incubGoToHatchedCollection('${escapeAttr(String(digimon.id))}')">Ver minha coleção</button>
+        <button class="text-xs text-slate-500 hover:text-slate-300 py-1" onclick="incubCloseHatchResult()">Continuar aqui</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+async function incubSelectHatched(digimonId) {
+  const btn = document.getElementById("incub-select-hatched-btn");
+  if (btn) { btn.disabled = true; btn.textContent = "Selecionando..."; }
+
+  try {
+    await apiPost("/digimon/select", { digimonId });
+    incubCloseHatchResult();
+    showToast("O Digimon chocado agora é seu parceiro ativo!");
+    navigateTo("dashboard");
+  } catch (err) {
+    showToast(err.message, "error");
+    if (btn) { btn.disabled = false; btn.textContent = "Selecionar como ativo"; }
+  }
+}
+
+function incubGoToHatchedCollection(digimonId) {
+  incubCloseHatchResult();
+  navigateTo("digimon-select", { newDigimonId: digimonId });
 }
 
 function incubClaimButton() {

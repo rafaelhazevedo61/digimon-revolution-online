@@ -225,6 +225,7 @@ async function renderDigimonSelectPage() {
     <div class="page-container">
       <div class="w-full max-w-lg mx-auto">
         <h2 class="text-2xl font-bold text-cyan-400 mb-2 text-center">Selecione seu Digimon</h2>
+        <div id="digimon-new-notice"></div>
         <div id="digimon-slot-info" class="mb-3"></div>
         <p class="text-slate-400 text-sm mb-4 text-center">Escolha qual Digimon sera seu parceiro ativo.</p>
         <div id="digimon-select-list" class="flex flex-col gap-3">
@@ -245,6 +246,19 @@ async function renderDigimonSelectPage() {
     ]);
 
     const slotInfo = dashboard.slotInfo;
+    const newDigimonId = window._routeParams?.newDigimonId || null;
+    const newDigimon = newDigimonId
+      ? digimons.find(d => String(d.id) === String(newDigimonId))
+      : null;
+
+    if (newDigimonId) {
+      const noticeEl = document.getElementById("digimon-new-notice");
+      if (noticeEl) {
+        noticeEl.innerHTML = newDigimon
+          ? `<div class="card-sm mb-3 border-emerald-700 bg-emerald-950/30 text-center"><p class="text-emerald-300 font-bold text-sm">${escapeHtml(newDigimon.name)} foi adicionado à sua coleção.</p><p class="text-xs text-slate-400 mt-1">Escolha “Selecionar” para torná-lo seu parceiro ativo.</p></div>`
+          : `<div class="card-sm mb-3 border-amber-700 bg-amber-950/30 text-center"><p class="text-amber-300 font-bold text-sm">O Digimon chocado não foi localizado na lista de ativos.</p><p class="text-xs text-slate-400 mt-1">Atualize a página ou verifique o Storage.</p></div>`;
+      }
+    }
 
     if (slotInfo) {
       const infoEl = document.getElementById("digimon-slot-info");
@@ -259,7 +273,7 @@ async function renderDigimonSelectPage() {
       `;
     }
 
-    renderDigimonSelectCards(digimons, dashboard);
+    renderDigimonSelectCards(digimons, dashboard, newDigimonId);
   } catch (err) {
     const errorDiv = document.getElementById("digimon-select-error");
     errorDiv.textContent = err.message;
@@ -267,7 +281,7 @@ async function renderDigimonSelectPage() {
   }
 }
 
-function renderDigimonSelectCards(digimons, dashboard) {
+function renderDigimonSelectCards(digimons, dashboard, newDigimonId = null) {
   const container = document.getElementById("digimon-select-list");
 
   if (!digimons || digimons.length === 0) {
@@ -279,12 +293,13 @@ function renderDigimonSelectCards(digimons, dashboard) {
 
   container.innerHTML = digimons.map(d => {
     const isActive = d.id === activeDigimonId;
+    const isNew = newDigimonId && String(d.id) === String(newDigimonId);
 
     return `
-    <div class="card flex items-center gap-4 text-left ${isActive ? 'border-cyan-700' : ''}">
+    <div id="digimon-card-${escapeAttr(String(d.id))}" class="card flex items-center gap-4 text-left ${isActive ? 'border-cyan-700' : isNew ? 'border-emerald-600 ring-1 ring-emerald-500/40' : ''}">
       ${renderDigimonVisual(d.imageUrl, d.stage, "w-14 h-14", "text-4xl")}
       <div class="flex-1 min-w-0">
-        <h3 class="font-bold text-sm truncate">${escapeHtml(d.name)} ${isActive ? '<span class="text-cyan-400 text-xs">(Ativo)</span>' : ''}</h3>
+        <h3 class="font-bold text-sm truncate">${escapeHtml(d.name)} ${isActive ? '<span class="text-cyan-400 text-xs">(Ativo)</span>' : isNew ? '<span class="text-emerald-400 text-xs">(Recém-chocado)</span>' : ''}</h3>
         <div class="flex gap-2 mt-1">
           <span class="badge badge-${d.stage ? d.stage.toLowerCase() : 'baby'}">${escapeHtml(d.stage)}</span>
           <span class="badge badge-${d.rarity ? d.rarity.toLowerCase() : 'common'}">${escapeHtml(formatRarity(d.rarity))}</span>
@@ -303,6 +318,10 @@ function renderDigimonSelectCards(digimons, dashboard) {
     </div>
   `;
   }).join("");
+
+  if (newDigimonId) {
+    document.getElementById(`digimon-card-${newDigimonId}`)?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
 }
 
 async function selectDigimon(digimonId) {
