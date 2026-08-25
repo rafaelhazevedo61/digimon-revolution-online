@@ -7,6 +7,7 @@ import com.dro.modules.boss.world.domain.WorldBossStatus;
 import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.modules.boss.world.infra.WorldBossAttackRepository;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.config.GameplayConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -37,6 +38,9 @@ class WorldBossResponseMapperTest {
 
     @Mock
     private WorldBossRewardService worldBossRewardService;
+
+    @Mock
+    private GameplayConfig gameplayConfig;
 
     @InjectMocks
     private WorldBossResponseMapper mapper;
@@ -80,11 +84,13 @@ class WorldBossResponseMapperTest {
         when(playerRepository.findAllById(any())).thenReturn(List.of());
         when(playerRepository.findById(playerId)).thenReturn(Optional.empty());
         when(worldBossRewardService.findPlayerRewards(worldBossId, playerId)).thenReturn(List.of());
+        when(gameplayConfig.getWorldBossDailyAttackLimit()).thenReturn(10);
 
         var response = mapper.toResponse(instance, playerId);
 
         assertThat(response.cooldownEnabled()).isFalse();
         assertThat(response.attackCooldownMinutes()).isEqualTo(5);
         assertThat(response.nextAttackAvailableAt()).isNull();
+        assertThat(response.dailyAttacksRemaining()).isEqualTo(9);
     }
 }

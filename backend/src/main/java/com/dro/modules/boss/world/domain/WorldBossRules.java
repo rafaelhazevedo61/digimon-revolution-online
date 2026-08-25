@@ -20,7 +20,14 @@ public final class WorldBossRules {
      * Calcula quantos ataques diários ainda estão disponíveis.
      */
     public static int dailyAttacksRemaining(long usedToday) {
-        long remaining = DAILY_ATTACK_LIMIT - usedToday;
+        return dailyAttacksRemaining(usedToday, DAILY_ATTACK_LIMIT);
+    }
+
+    /**
+     * Calcula quantos ataques diários ainda estão disponíveis para o limite informado.
+     */
+    public static int dailyAttacksRemaining(long usedToday, int dailyAttackLimit) {
+        long remaining = dailyAttackLimit - usedToday;
         return (int) Math.max(0, remaining);
     }
 
@@ -35,7 +42,14 @@ public final class WorldBossRules {
      * Verifica se o jogador já consumiu os três ataques do dia.
      */
     public static boolean dailyLimitReached(long usedToday) {
-        return usedToday >= DAILY_ATTACK_LIMIT;
+        return dailyLimitReached(usedToday, DAILY_ATTACK_LIMIT);
+    }
+
+    /**
+     * Verifica se o jogador atingiu o limite diário informado.
+     */
+    public static boolean dailyLimitReached(long usedToday, int dailyAttackLimit) {
+        return usedToday >= dailyAttackLimit;
     }
 
     /**

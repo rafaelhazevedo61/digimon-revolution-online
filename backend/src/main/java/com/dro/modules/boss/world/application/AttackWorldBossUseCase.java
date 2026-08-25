@@ -19,6 +19,7 @@ import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.server.application.GlobalDamageBuffService;
 import com.dro.shared.audit.TransactionAuditPublisher;
+import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
@@ -49,6 +50,7 @@ public class AttackWorldBossUseCase {
     private final ClanBonusService clanBonusService;
     private final GlobalDamageBuffService globalDamageBuffService;
     private final TransactionAuditPublisher transactionAuditPublisher;
+    private final GameplayConfig gameplayConfig;
 
     @Transactional
     public AttackWorldBossResponse execute(String token, String idempotencyKey) {
@@ -77,8 +79,9 @@ public class AttackWorldBossUseCase {
         Instant startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant();
         Instant resetCutoff = instance.getDailyResetAt() != null && instance.getDailyResetAt().isAfter(startOfDay) ? instance.getDailyResetAt() : startOfDay;
         long usedToday = worldBossAttackRepository.countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(instance.getId(), playerId, resetCutoff);
-        if (WorldBossRules.dailyLimitReached(usedToday)) {
-            throw new BadRequestException("Daily world boss attack limit reached (" + WorldBossRules.DAILY_ATTACK_LIMIT + " per day). Come back tomorrow.");
+        int dailyAttackLimit = gameplayConfig.getWorldBossDailyAttackLimit();
+        if (WorldBossRules.dailyLimitReached(usedToday, dailyAttackLimit)) {
+            throw new BadRequestException("Daily world boss attack limit reached (" + dailyAttackLimit + " per day). Come back tomorrow.");
         }
         WorldBossAttack lastAttack = worldBossAttackRepository.findFirstByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(instance.getId(), playerId).orElse(null);
         int cooldownMinutes = WorldBossRules.attackCooldownMinutes(boss.getCooldownMinutes());
@@ -124,7 +127,7 @@ public class AttackWorldBossUseCase {
             digimon.setBits(digimon.getBits() + defeatedRewardBits);
         }
         WorldBossAttack attack = WorldBossAttack.builder().id(UUID.randomUUID()).worldBossId(instance.getId()).playerId(playerId).digimonId(digimon.getId()).damage(actualDamage).energyCost(energyCost).bitsGained(bitsGained + defeatedRewardBits).xpGained(xpGained + defeatedRewardXp).createdAt(Instant.now()).build();
-        long remainingAttacks = WorldBossRules.dailyAttacksRemaining(usedToday + 1);
+        long remainingAttacks = WorldBossRules.dailyAttacksRemaining(usedToday + 1, dailyAttackLimit);
         attack.setRequestId(requestId);
         attack.setRemainingHpAfter(instance.getRemainingHp());
         attack.setWinChance(winChance);
@@ -185,7 +188,7 @@ public class AttackWorldBossUseCase {
         return Math.max(1, (int) Math.floor(baseCost * multiplier));
     }
 
-    public AttackWorldBossUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final BossDefinitionRepository bossDefinitionRepository, final WorldBossInstanceRepository worldBossInstanceRepository, final WorldBossAttackRepository worldBossAttackRepository, final WorldBossService worldBossService, final WorldBossRewardService worldBossRewardService, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final GlobalDamageBuffService globalDamageBuffService, final TransactionAuditPublisher transactionAuditPublisher) {
+    public AttackWorldBossUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final BossDefinitionRepository bossDefinitionRepository, final WorldBossInstanceRepository worldBossInstanceRepository, final WorldBossAttackRepository worldBossAttackRepository, final WorldBossService worldBossService, final WorldBossRewardService worldBossRewardService, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final GlobalDamageBuffService globalDamageBuffService, final TransactionAuditPublisher transactionAuditPublisher, final GameplayConfig gameplayConfig) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.bossDefinitionRepository = bossDefinitionRepository;
@@ -197,5 +200,6 @@ public class AttackWorldBossUseCase {
         this.clanBonusService = clanBonusService;
         this.globalDamageBuffService = globalDamageBuffService;
         this.transactionAuditPublisher = transactionAuditPublisher;
+        this.gameplayConfig = gameplayConfig;
     }
 }
