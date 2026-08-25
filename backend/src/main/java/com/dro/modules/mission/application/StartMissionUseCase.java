@@ -14,6 +14,7 @@ import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ public class StartMissionUseCase {
     private final MissionInstanceRepository missionInstanceRepository;
     private final MissionDefinitionRepository missionDefinitionRepository;
     private final ClanBonusService clanBonusService;
+    private final GameplayConfig gameplayConfig;
     private static final long COOLDOWN_SECONDS = 10;
 
     @Transactional
@@ -49,7 +51,7 @@ public class StartMissionUseCase {
         boolean isAdmin = player.getUserType() == UserType.ADMIN;
         // \ud83d\udd0b Energia
         UUID clanId = player.getClanId();
-        if (!isAdmin) {
+        if (!isAdmin && gameplayConfig.isEnergyConsumptionEnabled()) {
             int maxEnergyBonus = clanId != null ? clanBonusService.getMaxEnergyBonus(clanId) : 0;
             digimon.regenerateEnergy(maxEnergyBonus);
             int energyCost = clanId != null ? applyCostReduction(mission.getEnergyCost(), clanBonusService.getEnergyCostMultiplier(clanId)) : mission.getEnergyCost();
@@ -104,11 +106,12 @@ public class StartMissionUseCase {
         }
     }
 
-    public StartMissionUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final MissionInstanceRepository missionInstanceRepository, final MissionDefinitionRepository missionDefinitionRepository, final ClanBonusService clanBonusService) {
+    public StartMissionUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final MissionInstanceRepository missionInstanceRepository, final MissionDefinitionRepository missionDefinitionRepository, final ClanBonusService clanBonusService, final GameplayConfig gameplayConfig) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.missionInstanceRepository = missionInstanceRepository;
         this.missionDefinitionRepository = missionDefinitionRepository;
         this.clanBonusService = clanBonusService;
+        this.gameplayConfig = gameplayConfig;
     }
 }
