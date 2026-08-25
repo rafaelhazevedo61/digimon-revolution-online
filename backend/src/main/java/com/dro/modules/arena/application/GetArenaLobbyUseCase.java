@@ -83,7 +83,11 @@ public class GetArenaLobbyUseCase {
             return new ArenaOpponentResponse(d.getId(), d.getName(), playerNames.getOrDefault(d.getPlayerId(), "Unknown"), d.getStage(), d.getLevel(), d.getArenaRating(), (int) Math.round(power), winChance, ArenaRules.winBits(me.getArenaRating(), d.getArenaRating()), d.isBot(), cooldownSecondsRemaining, ArenaRules.tierFor(d.getArenaRating()).getLabel());
         }).toList();
         int dailyChallengeLimit = gameplayConfig.getArenaDailyChallengeLimit();
-        return new ArenaLobbyResponse(me.getName(), me.getArenaRating(), me.getArenaWins(), me.getArenaLosses(), (int) Math.round(myPower), me.getEnergy(), ArenaRules.ENERGY_COST, dailyChallengeLimit, (int) usedToday, ArenaRules.remainingDailyChallenges(usedToday, dailyChallengeLimit), player.getArenaCoins(), ArenaRules.tierFor(me.getArenaRating()).getLabel(), ArenaRules.tierFor(me.getArenaRating()).next() == null ? null : ArenaRules.tierFor(me.getArenaRating()).next().getLabel(), ArenaRules.pointsToNextTier(me.getArenaRating()), opponents);
+        int effectiveEnergyCost = gameplayConfig.isEnergyConsumptionEnabled()
+                ? ArenaRules.ENERGY_COST
+                : 0;
+
+        return new ArenaLobbyResponse(me.getName(), me.getArenaRating(), me.getArenaWins(), me.getArenaLosses(), (int) Math.round(myPower), me.getEnergy(), effectiveEnergyCost, dailyChallengeLimit, (int) usedToday, ArenaRules.remainingDailyChallenges(usedToday, dailyChallengeLimit), player.getArenaCoins(), ArenaRules.tierFor(me.getArenaRating()).getLabel(), ArenaRules.tierFor(me.getArenaRating()).next() == null ? null : ArenaRules.tierFor(me.getArenaRating()).next().getLabel(), ArenaRules.pointsToNextTier(me.getArenaRating()), opponents);
     }
 
     public GetArenaLobbyUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final DigimonPowerService digimonPowerService, final ArenaMatchRepository arenaMatchRepository, final ClanBonusService clanBonusService, final GameplayConfig gameplayConfig) {
