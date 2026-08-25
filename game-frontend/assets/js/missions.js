@@ -251,7 +251,7 @@ function renderAreaCards(areas) {
   const container = document.getElementById("areas-list");
 
   const sorted = [...areas].sort((a, b) => {
-    return STAGE_ORDER.indexOf(getAreaStage(a.area)) - STAGE_ORDER.indexOf(getAreaStage(b.area));
+    return STAGE_ORDER.indexOf(a.requiredStage) - STAGE_ORDER.indexOf(b.requiredStage);
   });
 
   container.innerHTML = sorted.map(a => {
@@ -265,7 +265,7 @@ function renderAreaCards(areas) {
           <span class="text-3xl">${info.emoji}</span>
           <div class="flex-1">
             <h3 class="font-bold">${info.name}</h3>
-            <p class="text-xs text-slate-400">Stage mínimo: ${formatStage(getAreaStage(a.area))}</p>
+            <p class="text-xs text-slate-400">Stage mínimo: ${formatStage(a.requiredStage)}</p>
           </div>
           ${locked ? `<span class="text-xl">🔒</span>` : `<span class="text-slate-400">›</span>`}
         </div>
@@ -274,17 +274,6 @@ function renderAreaCards(areas) {
   }).join("");
 }
 
-function getAreaStage(area) {
-  const map = {
-    NATIVE_FOREST: "BABY",
-    GEAR_SAVANNA: "ROOKIE",
-    FACTORIAL_TOWN: "ROOKIE",
-    FREEZELAND: "CHAMPION",
-    SERVER_DESERT: "ULTIMATE",
-    INFINITY_MOUNTAIN: "MEGA"
-  };
-  return map[area] || "BABY";
-}
 
 // Mission list for a specific area
 async function renderMissionAreaPage(params) {
