@@ -44,7 +44,8 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(tokenVersionInterceptor)
-                .addPathPatterns("/**");
+                .addPathPatterns("/**")
+                .excludePathPatterns("/auth/**");
         registry.addInterceptor(adminAuthInterceptor)
                 .addPathPatterns("/admin/**");
     }

@@ -84,6 +84,10 @@ function handleAuthError(response) {
 
 const NETWORK_ERROR_MESSAGE = "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.";
 
+function isPublicAuthPath(path) {
+  return path === "/auth/login" || path === "/auth/register";
+}
+
 async function apiRequest(method, path, { params = {}, body, headers = {} } = {}) {
   const url = new URL(`${CONFIG.API_BASE_URL}${path}`);
   Object.entries(params).forEach(([key, value]) => {
@@ -94,7 +98,9 @@ async function apiRequest(method, path, { params = {}, body, headers = {} } = {}
 
   const options = {
     method,
-    headers: { ...authHeaders(), ...headers }
+    // Login e cadastro devem funcionar mesmo com um JWT antigo, expirado
+    // ou revogado armazenado no navegador.
+    headers: { ...(isPublicAuthPath(path) ? { "Content-Type": "application/json" } : authHeaders()), ...headers }
   };
   if (body !== undefined && body !== null) options.body = JSON.stringify(body);
 
