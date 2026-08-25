@@ -95,14 +95,17 @@ public class AttackWorldBossUseCase {
             }
         }
         UUID clanId = player.getClanId();
-        int maxEnergyBonus = clanId != null ? clanBonusService.getMaxEnergyBonus(clanId) : 0;
-        digimon.regenerateEnergy(maxEnergyBonus);
-        int baseEnergyCost = boss.getEnergyCost();
-        int energyCost = applyCostReduction(baseEnergyCost, clanId != null ? clanBonusService.getEnergyCostMultiplier(clanId) : 1.0);
-        if (digimon.getEnergy() < energyCost) {
-            throw new BadRequestException("Not enough energy. Required: " + energyCost + ", current: " + digimon.getEnergy());
+        int energyCost = 0;
+        if (gameplayConfig.isEnergyConsumptionEnabled()) {
+            int maxEnergyBonus = clanId != null ? clanBonusService.getMaxEnergyBonus(clanId) : 0;
+            digimon.regenerateEnergy(maxEnergyBonus);
+            int baseEnergyCost = boss.getEnergyCost();
+            energyCost = applyCostReduction(baseEnergyCost, clanId != null ? clanBonusService.getEnergyCostMultiplier(clanId) : 1.0);
+            if (digimon.getEnergy() < energyCost) {
+                throw new BadRequestException("Not enough energy. Required: " + energyCost + ", current: " + digimon.getEnergy());
+            }
+            digimon.consumeEnergy(energyCost);
         }
-        digimon.consumeEnergy(energyCost);
         double digimonPower = digimonPowerService.calculatePower(digimon, clanId);
         double bossPower = BossCombatRules.calculatePower(boss.getHp(), boss.getAtk(), boss.getDef());
         int winChance = WorldBossRules.calculateWinChance(digimonPower, bossPower);

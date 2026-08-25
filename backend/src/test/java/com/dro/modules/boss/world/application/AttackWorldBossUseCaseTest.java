@@ -190,6 +190,7 @@ class AttackWorldBossUseCaseTest {
         lenient().when(digimonPowerService.calculatePower(digimon, null)).thenReturn(100_000.0);
         lenient().when(globalDamageBuffService.getMultiplier()).thenReturn(1.0);
         lenient().when(gameplayConfig.getWorldBossDailyAttackLimit()).thenReturn(3);
+        lenient().when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(true);
         lenient().when(worldBossRewardService.grant(any(), any(), any(), anyBoolean()))
                 .thenReturn(List.of(attemptReward));
     }
@@ -278,6 +279,21 @@ class AttackWorldBossUseCaseTest {
         assertTrue(exception.getMessage().contains("10 per day"));
         verify(worldBossAttackRepository, never()).save(any());
         verify(digimonRepository, never()).save(any());
+    }
+
+    @Test
+    void energyDisabledAllowsAttackWithZeroEnergyWithoutConsumption() {
+        digimon.setEnergy(0);
+        when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(false);
+
+        AttackWorldBossResponse response = useCase.execute(token, "request-energy-disabled");
+
+        assertTrue(response.defeated());
+        assertEquals(0, digimon.getEnergy());
+
+        ArgumentCaptor<WorldBossAttack> captor = ArgumentCaptor.forClass(WorldBossAttack.class);
+        verify(worldBossAttackRepository).save(captor.capture());
+        assertEquals(0, captor.getValue().getEnergyCost());
     }
 
     @Test
