@@ -182,7 +182,9 @@ O jogador escolhe uma opção disponível e realiza o hatch. A espécie nasce a 
 
 ### Incubação
 
-A incubadora possui três slots fixos, exibidos sempre para o jogador. Cada jogador começa com o slot 1 desbloqueado; os slots 2 e 3 permanecem bloqueados até uma futura mecânica de progressão. Cada slot desbloqueado pode manter uma incubação independente, permitindo ovos em paralelo.
+A incubadora possui três slots fixos, exibidos sempre para o jogador. Cada jogador começa com o slot 1 desbloqueado; os slots 2 e 3 permanecem bloqueados até serem liberados. Cada slot desbloqueado pode manter uma incubação independente, permitindo ovos em paralelo.
+
+A capacidade de incubação é persistida em `players.unlocked_incubation_slots` e pertence ao jogador, não ao Digimon ativo. O item consumível **Expansor de Slot de Incubação** desbloqueia exatamente um slot por uso, consome uma unidade do inventário e não permite ultrapassar o limite total de três slots. O inventário atual é entregue ao Digimon ativo, mas o efeito de capacidade é aplicado exclusivamente ao jogador.
 
 O fluxo utiliza Digitama e incubadora do inventário, associa a nova incubação ao slot escolhido e permite resgatar o Digimon daquele slot quando estiver pronta. Os estados `IN_PROGRESS` e `READY` mantêm o slot ocupado; o claim altera somente a incubação selecionada para `CLAIMED` e libera sua posição.
 
@@ -335,7 +337,7 @@ O inventário utilizado pela jornada está associado ao Digimon ativo e integra 
 | Método | Rota | Descrição |
 |---|---|---|
 | GET | `/inventory` | Inventário do Digimon ativo |
-| POST | `/inventory/use` | Utilizar item suportado |
+| POST | `/inventory/use` | Utilizar item suportado, incluindo `INCUBATION_SLOT_UNLOCK` para aumentar em um o limite de slots de incubação do jogador |
 | POST | `/inventory/chests/open` | Abrir um baú do inventário |
 | GET | `/items` | Catálogo público de definições de item |
 

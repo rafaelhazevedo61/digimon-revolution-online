@@ -25,6 +25,13 @@ class EventRewardMessageTextTest {
     }
 
     @Test
+    void slotUnlockItemUsesLocalizedLabel() {
+        String body = EventRewardMessageText.formatItem("INCUBATION_SLOT_UNLOCK", 1);
+
+        assertTrue(body.contains("1 × Expansor de slot de incubação"), body);
+    }
+
+    @Test
     void claimedMessageRecordsWhatWasDelivered() {
         String body = EventRewardMessageText.claimedBody(
                 "Prêmio disponível.",

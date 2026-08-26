@@ -214,7 +214,9 @@ async function invReloadItems() {
 async function invUseItem(itemType) {
   try {
     await apiPost("/inventory/use", { itemType: itemType });
-    showToast(`${invItemName(itemType)} usado!`);
+    showToast(itemType === "INCUBATION_SLOT_UNLOCK"
+      ? "Slot de incubação desbloqueado!"
+      : `${invItemName(itemType)} usado!`);
     await invReloadItems();
   } catch (err) {
     showToast(err.message, "error");
@@ -309,6 +311,7 @@ function invItemName(itemType) {
     INCUBATOR_COMMON: "Incubadora Comum",
     INCUBATOR_RARE: "Incubadora Rara",
     INCUBATOR_EPIC: "Incubadora Épica",
+    INCUBATION_SLOT_UNLOCK: "Expansor de Slot de Incubação",
     FRAGMENT_ROOKIE: "Fragmento Rookie",
     FRAGMENT_CHAMPION: "Fragmento Champion",
     FRAGMENT_ULTIMATE: "Fragmento Ultimate",
@@ -324,6 +327,7 @@ function invItemEmoji(itemType) {
     POTION_SMALL: "🧪", TRAINING_STONE: "💎", DATA_CORE: "🔮",
     DIGITAMA_STARTER: "🥚", DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿",
     INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "📦", INCUBATOR_EPIC: "📦",
+    INCUBATION_SLOT_UNLOCK: "🔓",
     FRAGMENT_ROOKIE: "🧩", FRAGMENT_CHAMPION: "🧩", FRAGMENT_ULTIMATE: "🧩", FRAGMENT_MEGA: "🧩",
     EVOLUTION_MATERIAL: "⭐",
     LOOT_CHEST: "🎁"
@@ -332,12 +336,12 @@ function invItemEmoji(itemType) {
 }
 
 function invIsUsable(itemType) {
-  const usable = ["POTION_SMALL", "TRAINING_STONE", "DATA_CORE"];
+  const usable = ["POTION_SMALL", "TRAINING_STONE", "DATA_CORE", "INCUBATION_SLOT_UNLOCK"];
   return usable.includes(itemType);
 }
 
 function invItemCategory(itemType) {
-  if (itemType === "POTION_SMALL") return "common";
+  if (itemType === "POTION_SMALL" || itemType === "INCUBATION_SLOT_UNLOCK") return "common";
   if (itemType.startsWith("DIGITAMA_")) return "rare";
   if (itemType.startsWith("INCUBATOR_")) return "epic";
   if (itemType.startsWith("FRAGMENT_")) return "champion";
@@ -348,6 +352,7 @@ function invItemCategory(itemType) {
 
 function invItemCategoryName(itemType) {
   if (itemType === "POTION_SMALL") return "Poção";
+  if (itemType === "INCUBATION_SLOT_UNLOCK") return "Incubação";
   if (itemType === "TRAINING_STONE" || itemType === "DATA_CORE") return "Material";
   if (itemType.startsWith("DIGITAMA_")) return "Digitama";
   if (itemType.startsWith("INCUBATOR_")) return "Incubadora";

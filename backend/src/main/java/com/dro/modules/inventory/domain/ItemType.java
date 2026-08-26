@@ -23,6 +23,9 @@ public enum ItemType {
     INCUBATOR_RARE,
     INCUBATOR_EPIC,
 
+    // Expansão da incubadora
+    INCUBATION_SLOT_UNLOCK,
+
     // Fragmentos (legado — mantidos para compatibilidade)
     FRAGMENT_ROOKIE,
     FRAGMENT_CHAMPION,
