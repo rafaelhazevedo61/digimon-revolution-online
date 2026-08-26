@@ -63,7 +63,6 @@ class WorldBossResponseMapperTest {
                 .code("WORLD_BOSS_APOCALYMON")
                 .name("Apocalymon")
                 .cooldownMinutes(5)
-                .cooldownEnabled(true)
                 .build();
         WorldBossAttack previousAttack = WorldBossAttack.builder()
                 .id(UUID.randomUUID())
@@ -92,7 +91,7 @@ class WorldBossResponseMapperTest {
     }
 
     @Test
-    void exposesNextAttackWhenLegacyDatabaseCooldownIsDisabled () {
+    void exposesNextAttackWhenCooldownFlagsAreEnabled () {
         UUID worldBossId = UUID.randomUUID();
         UUID playerId = UUID.randomUUID();
         WorldBossInstance instance = WorldBossInstance.builder()
@@ -109,7 +108,6 @@ class WorldBossResponseMapperTest {
                 .code("WORLD_BOSS_APOCALYMON")
                 .name("Apocalymon")
                 .cooldownMinutes(5)
-                .cooldownEnabled(false)
                 .build();
         WorldBossAttack previousAttack = WorldBossAttack.builder()
                 .id(UUID.randomUUID())

@@ -158,7 +158,6 @@ class AttackWorldBossUseCaseTest {
                 .atk(10)
                 .def(10)
                 .energyCost(1)
-                .cooldownEnabled(true)
                 .baseXpReward(100)
                 .baseBitsReward(10)
                 .defeatXpPercent(5)
@@ -285,30 +284,6 @@ class AttackWorldBossUseCaseTest {
         verify(worldBossAttackRepository, never()).save(any());
         verify(worldBossRewardService, never()).grant(any(), any(), any(), anyBoolean());
         verify(digimonRepository, never()).save(any());
-    }
-
-    @Test
-    void attackStillBlocksRecentAttackWhenLegacyDatabaseCooldownIsDisabled() {
-        boss.setCooldownEnabled(false);
-        WorldBossAttack lastAttack = WorldBossAttack.builder()
-                .id(UUID.randomUUID())
-                .worldBossId(instance.getId())
-                .playerId(playerId)
-                .digimonId(digimonId)
-                .damage(10)
-                .createdAt(Instant.now().minusSeconds(1))
-                .build();
-        when(worldBossAttackRepository.findFirstByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(
-                instance.getId(), playerId)).thenReturn(Optional.of(lastAttack));
-
-        BadRequestException exception = assertThrows(
-                BadRequestException.class,
-                () -> useCase.execute(token, "request-legacy-disabled-cooldown")
-        );
-
-        assertTrue(exception.getMessage().contains("cooldown"));
-        verify(worldBossAttackRepository, never()).save(any());
-        verify(worldBossRewardService, never()).grant(any(), any(), any(), anyBoolean());
     }
 
     @Test

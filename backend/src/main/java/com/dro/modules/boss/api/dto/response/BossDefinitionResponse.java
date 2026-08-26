@@ -18,7 +18,6 @@ public record BossDefinitionResponse(
         int def,
         int energyCost,
         int cooldownMinutes,
-        boolean cooldownEnabled,
         int baseXpReward,
         int baseBitsReward,
         String imageUrl,

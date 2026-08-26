@@ -41,11 +41,6 @@ public class BossDefinitionEntity {
     private int energyCost;
     @Column(name = "cooldown_minutes", nullable = false)
     private int cooldownMinutes;
-    /**
-     * Indica se o cooldown entre tentativas está ativo para este Boss.
-     */
-    @Column(name = "cooldown_enabled", nullable = false)
-    private boolean cooldownEnabled;
     @Column(name = "base_xp_reward", nullable = false)
     private int baseXpReward;
     @Column(name = "base_bits_reward", nullable = false)
@@ -144,11 +139,6 @@ public class BossDefinitionEntity {
     @OneToMany(mappedBy = "boss", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<BossDropEntity> drops;
 
-    private static boolean $default$cooldownEnabled() {
-        return true;
-    }
-
-
     public static class BossDefinitionEntityBuilder {
         private Long id;
         private String code;
@@ -162,8 +152,6 @@ public class BossDefinitionEntity {
         private int def;
         private int energyCost;
         private int cooldownMinutes;
-        private boolean cooldownEnabled$set;
-        private boolean cooldownEnabled$value;
         private int baseXpReward;
         private int baseBitsReward;
         private int defeatXpPercent;
@@ -275,16 +263,6 @@ public class BossDefinitionEntity {
         }
 
         /**
-         * Indica se o cooldown entre tentativas está ativo para este Boss.
-         * @return {@code this}.
-         */
-        public BossDefinitionEntity.BossDefinitionEntityBuilder cooldownEnabled(final boolean cooldownEnabled) {
-            this.cooldownEnabled$value = cooldownEnabled;
-            cooldownEnabled$set = true;
-            return this;
-        }
-
-        /**
          * @return {@code this}.
          */
         public BossDefinitionEntity.BossDefinitionEntityBuilder baseXpReward(final int baseXpReward) {
@@ -373,14 +351,12 @@ public class BossDefinitionEntity {
         }
 
         public BossDefinitionEntity build() {
-            boolean cooldownEnabled$value = this.cooldownEnabled$value;
-            if (!this.cooldownEnabled$set) cooldownEnabled$value = BossDefinitionEntity.$default$cooldownEnabled();
-            return new BossDefinitionEntity(this.id, this.code, this.name, this.bossType, this.requiredStage, this.requiredLevel, this.requiredRebirths, this.hp, this.atk, this.def, this.energyCost, this.cooldownMinutes, cooldownEnabled$value, this.baseXpReward, this.baseBitsReward, this.defeatXpPercent, this.imageUrl, this.active, this.chestDefinition, this.worldAttemptChestDefinition, this.worldTopDamageChestDefinition, this.worldFinalBlowChestDefinition, this.drops);
+            return new BossDefinitionEntity(this.id, this.code, this.name, this.bossType, this.requiredStage, this.requiredLevel, this.requiredRebirths, this.hp, this.atk, this.def, this.energyCost, this.cooldownMinutes, this.baseXpReward, this.baseBitsReward, this.defeatXpPercent, this.imageUrl, this.active, this.chestDefinition, this.worldAttemptChestDefinition, this.worldTopDamageChestDefinition, this.worldFinalBlowChestDefinition, this.drops);
         }
 
         @Override
         public String toString() {
-            return "BossDefinitionEntity.BossDefinitionEntityBuilder(id=" + this.id + ", code=" + this.code + ", name=" + this.name + ", bossType=" + this.bossType + ", requiredStage=" + this.requiredStage + ", requiredLevel=" + this.requiredLevel + ", requiredRebirths=" + this.requiredRebirths + ", hp=" + this.hp + ", atk=" + this.atk + ", def=" + this.def + ", energyCost=" + this.energyCost + ", cooldownMinutes=" + this.cooldownMinutes + ", cooldownEnabled$value=" + this.cooldownEnabled$value + ", baseXpReward=" + this.baseXpReward + ", baseBitsReward=" + this.baseBitsReward + ", defeatXpPercent=" + this.defeatXpPercent + ", imageUrl=" + this.imageUrl + ", active=" + this.active + ", chestDefinition=" + this.chestDefinition + ", worldAttemptChestDefinition=" + this.worldAttemptChestDefinition + ", worldTopDamageChestDefinition=" + this.worldTopDamageChestDefinition + ", worldFinalBlowChestDefinition=" + this.worldFinalBlowChestDefinition + ", drops=" + this.drops + ")";
+            return "BossDefinitionEntity.BossDefinitionEntityBuilder(id=" + this.id + ", code=" + this.code + ", name=" + this.name + ", bossType=" + this.bossType + ", requiredStage=" + this.requiredStage + ", requiredLevel=" + this.requiredLevel + ", requiredRebirths=" + this.requiredRebirths + ", hp=" + this.hp + ", atk=" + this.atk + ", def=" + this.def + ", energyCost=" + this.energyCost + ", cooldownMinutes=" + this.cooldownMinutes + ", baseXpReward=" + this.baseXpReward + ", baseBitsReward=" + this.baseBitsReward + ", defeatXpPercent=" + this.defeatXpPercent + ", imageUrl=" + this.imageUrl + ", active=" + this.active + ", chestDefinition=" + this.chestDefinition + ", worldAttemptChestDefinition=" + this.worldAttemptChestDefinition + ", worldTopDamageChestDefinition=" + this.worldTopDamageChestDefinition + ", worldFinalBlowChestDefinition=" + this.worldFinalBlowChestDefinition + ", drops=" + this.drops + ")";
         }
     }
 
@@ -434,13 +410,6 @@ public class BossDefinitionEntity {
 
     public int getCooldownMinutes() {
         return this.cooldownMinutes;
-    }
-
-    /**
-     * Indica se o cooldown entre tentativas está ativo para este Boss.
-     */
-    public boolean isCooldownEnabled() {
-        return this.cooldownEnabled;
     }
 
     public int getBaseXpReward() {
@@ -543,13 +512,6 @@ public class BossDefinitionEntity {
         this.cooldownMinutes = cooldownMinutes;
     }
 
-    /**
-     * Indica se o cooldown entre tentativas está ativo para este Boss.
-     */
-    public void setCooldownEnabled(final boolean cooldownEnabled) {
-        this.cooldownEnabled = cooldownEnabled;
-    }
-
     public void setBaseXpReward(final int baseXpReward) {
         this.baseXpReward = baseXpReward;
     }
@@ -603,7 +565,6 @@ public class BossDefinitionEntity {
     }
 
     public BossDefinitionEntity() {
-        this.cooldownEnabled = BossDefinitionEntity.$default$cooldownEnabled();
     }
 
     /**
@@ -621,7 +582,6 @@ public class BossDefinitionEntity {
      * @param def
      * @param energyCost
      * @param cooldownMinutes
-     * @param cooldownEnabled Indica se o cooldown entre tentativas está ativo para este Boss.
      * @param baseXpReward
      * @param baseBitsReward
      * @param defeatXpPercent
@@ -633,7 +593,7 @@ public class BossDefinitionEntity {
      * @param worldFinalBlowChestDefinition Baú concedido ao jogador que desferiu o golpe final.
      * @param drops
      */
-    public BossDefinitionEntity(final Long id, final String code, final String name, final BossType bossType, final Stage requiredStage, final int requiredLevel, final int requiredRebirths, final int hp, final int atk, final int def, final int energyCost, final int cooldownMinutes, final boolean cooldownEnabled, final int baseXpReward, final int baseBitsReward, final int defeatXpPercent, final String imageUrl, final boolean active, final ChestDefinitionEntity chestDefinition, final ChestDefinitionEntity worldAttemptChestDefinition, final ChestDefinitionEntity worldTopDamageChestDefinition, final ChestDefinitionEntity worldFinalBlowChestDefinition, final List<BossDropEntity> drops) {
+    public BossDefinitionEntity(final Long id, final String code, final String name, final BossType bossType, final Stage requiredStage, final int requiredLevel, final int requiredRebirths, final int hp, final int atk, final int def, final int energyCost, final int cooldownMinutes, final int baseXpReward, final int baseBitsReward, final int defeatXpPercent, final String imageUrl, final boolean active, final ChestDefinitionEntity chestDefinition, final ChestDefinitionEntity worldAttemptChestDefinition, final ChestDefinitionEntity worldTopDamageChestDefinition, final ChestDefinitionEntity worldFinalBlowChestDefinition, final List<BossDropEntity> drops) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -646,7 +606,6 @@ public class BossDefinitionEntity {
         this.def = def;
         this.energyCost = energyCost;
         this.cooldownMinutes = cooldownMinutes;
-        this.cooldownEnabled = cooldownEnabled;
         this.baseXpReward = baseXpReward;
         this.baseBitsReward = baseBitsReward;
         this.defeatXpPercent = defeatXpPercent;

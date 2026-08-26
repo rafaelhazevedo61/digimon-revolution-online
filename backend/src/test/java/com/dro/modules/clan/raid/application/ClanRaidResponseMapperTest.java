@@ -48,7 +48,7 @@ class ClanRaidResponseMapperTest {
         UUID playerId = UUID.randomUUID();
         Instant previousAttackAt = Instant.now().minusSeconds(60);
         ClanRaid raid = raid(raidId, ClanRaidStatus.ACTIVE);
-        BossDefinitionEntity boss = boss(true);
+        BossDefinitionEntity boss = boss();
         ClanRaidAttack previousAttack = attack(raidId, playerId, previousAttackAt);
         stubCommon(raid, playerId, boss, previousAttack);
 
@@ -64,7 +64,7 @@ class ClanRaidResponseMapperTest {
         UUID raidId = UUID.randomUUID();
         UUID playerId = UUID.randomUUID();
         ClanRaid raid = raid(raidId, ClanRaidStatus.ACTIVE);
-        BossDefinitionEntity boss = boss(true);
+        BossDefinitionEntity boss = boss();
         ClanRaidAttack previousAttack = attack(raidId, playerId, Instant.now().minusSeconds(60));
         stubCommon(raid, playerId, boss, previousAttack);
         when(gameplayConfig.isClanRaidCooldownEnabled()).thenReturn(false);
@@ -81,7 +81,7 @@ class ClanRaidResponseMapperTest {
         UUID raidId = UUID.randomUUID();
         UUID playerId = UUID.randomUUID();
         ClanRaid raid = raid(raidId, ClanRaidStatus.ACTIVE);
-        BossDefinitionEntity boss = boss(false);
+        BossDefinitionEntity boss = boss();
         ClanRaidAttack previousAttack = attack(raidId, playerId, Instant.now().minusSeconds(60));
         stubCommon(raid, playerId, boss, previousAttack);
 
@@ -113,13 +113,12 @@ class ClanRaidResponseMapperTest {
                 .build();
     }
 
-    private BossDefinitionEntity boss(boolean cooldownEnabled) {
+    private BossDefinitionEntity boss() {
         return BossDefinitionEntity.builder()
                 .id(1L)
                 .code("CLAN_RAID_OMEGAMON")
                 .name("Omegamon")
                 .cooldownMinutes(5)
-                .cooldownEnabled(cooldownEnabled)
                 .build();
     }
 

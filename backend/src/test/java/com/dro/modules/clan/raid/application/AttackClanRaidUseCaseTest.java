@@ -150,8 +150,7 @@ class AttackClanRaidUseCaseTest {
                 .atk(100)
                 .def(100)
                 .energyCost(1)
-                .cooldownMinutes(5)
-                .cooldownEnabled(true)
+                .energyCost(1)
                 .baseXpReward(100)
                 .baseBitsReward(10)
                 .defeatXpPercent(5)
@@ -189,31 +188,6 @@ class AttackClanRaidUseCaseTest {
                 .digimonId(digimonId)
                 .damage(100)
                 .createdAt(Instant.now().minusSeconds(60))
-                .build();
-        when(clanRaidAttackRepository.findFirstByClanRaidIdAndPlayerIdOrderByCreatedAtDesc(raid.getId(), playerId))
-                .thenReturn(Optional.of(lastAttack));
-
-        BadRequestException exception = assertThrows(
-                BadRequestException.class,
-                () -> useCase.execute(token)
-        );
-
-        assertTrue(exception.getMessage().contains("cooldown"));
-        verify(clanRaidAttackRepository, never()).save(any());
-        verify(digimonRepository, never()).save(any());
-        verify(clanRaidRepository, never()).save(any());
-    }
-
-    @Test
-    void attackStillBlocksRecentAttackWhenLegacyDatabaseCooldownIsDisabled() {
-        boss.setCooldownEnabled(false);
-        ClanRaidAttack lastAttack = ClanRaidAttack.builder()
-                .id(UUID.randomUUID())
-                .clanRaidId(raid.getId())
-                .playerId(playerId)
-                .digimonId(digimonId)
-                .damage(100)
-                .createdAt(Instant.now().minusSeconds(1))
                 .build();
         when(clanRaidAttackRepository.findFirstByClanRaidIdAndPlayerIdOrderByCreatedAtDesc(raid.getId(), playerId))
                 .thenReturn(Optional.of(lastAttack));

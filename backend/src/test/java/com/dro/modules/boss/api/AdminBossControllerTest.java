@@ -63,7 +63,7 @@ class AdminBossControllerTest {
 
         var response = controller.update(7L, new UpdateBossRequest(
                 null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, 42,
+                null, null, null, null, null, null, null, 42,
                 null, null, null
         ));
 
@@ -71,32 +71,6 @@ class AdminBossControllerTest {
         assertThat(firstEquipment.getChance()).isEqualTo(42);
         assertThat(secondEquipment.getChance()).isEqualTo(42);
         assertThat(itemDrop.getChance()).isEqualTo(80);
-        verify(bossDefinitionRepository).save(boss);
-    }
-
-    @Test
-    void ignoresIndividualCooldownToggleForWorldBoss() {
-        BossDefinitionEntity boss = BossDefinitionEntity.builder()
-                .id(8L)
-                .bossType(BossType.WORLD)
-                .cooldownMinutes(5)
-                .cooldownEnabled(true)
-                .worldAttemptChestDefinition(ChestDefinitionEntity.builder().code("CHEST_WORLD_ATTEMPT").build())
-                .worldTopDamageChestDefinition(ChestDefinitionEntity.builder().code("CHEST_WORLD_TOP_DAMAGE").build())
-                .worldFinalBlowChestDefinition(ChestDefinitionEntity.builder().code("CHEST_WORLD_FINAL_BLOW").build())
-                .build();
-
-        when(bossDefinitionRepository.findWithDropsAndChestById(8L)).thenReturn(Optional.of(boss));
-        when(bossDefinitionRepository.save(boss)).thenReturn(boss);
-
-        controller.update(8L, new UpdateBossRequest(
-                null, null, null, null, null, null, null, null, null,
-                null, false, null, null, null, null, null, null, null,
-                null, null, null
-        ));
-
-        assertThat(boss.isCooldownEnabled()).isTrue();
-        assertThat(boss.getCooldownMinutes()).isEqualTo(5);
         verify(bossDefinitionRepository).save(boss);
     }
 
@@ -121,7 +95,7 @@ class AdminBossControllerTest {
 
         controller.update(9L, new UpdateBossRequest(
                 null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null,
                 attempt.getCode(), topDamage.getCode(), finalBlow.getCode()
         ));
 
