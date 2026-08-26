@@ -28,8 +28,13 @@ e o projeto segue versionamento incremental por entregas (PRs).
   - Migrations `V74` (rating, estatísticas e tabela `arena_matches`) e `V75`/`V76` (flag `is_bot`, jogador de sistema e seed de bots).
 
 ### Corrigido
+
 - **Premiação global de eventos**: administradores podem selecionar todos os jogadores do servidor, visualizar a quantidade elegível antes da confirmação e gerar uma mensagem individual para cada conta do tipo `PLAYER`.
 - **Busca de jogadores nas ferramentas administrativas**: a etapa de seleção do jogador no fluxo de grant agora mantém o filtro por username, exibe o total encontrado e permite navegar entre páginas de resultados, sem limitar o operador aos dez primeiros jogadores.
+- **Identificador de origem da premiação**: o formulário administrativo agora oferece geração automática de identificador, mantendo a edição manual e a idempotência por jogador.
+- **Seleção de itens na premiação de eventos**: o item deixou de depender de uma lista fixa no formulário e passou a ser escolhido em modal com pesquisa, catálogo pré-carregado, paginação e resumo do item selecionado.
+- **Catálogo completo na premiação de eventos**: o modal passou a exibir todas as definições de `item_definitions`, incluindo itens específicos como fragmentos e baús, com entrega persistida pelo código da definição.
+- **Múltiplos itens por premiação**: administradores podem adicionar até 10 itens distintos no mesmo envio e definir a quantidade individual de cada item.
 
 ## [0.0.3-SNAPSHOT]
 

@@ -25,6 +25,22 @@ class EventRewardMessageTextTest {
     }
 
     @Test
+    void multiItemMessageListsEachIndependentQuantity() {
+        String body = EventRewardMessageText.pendingBody(
+                "Pacote de evento.",
+                0,
+                java.util.List.of(
+                        new EventRewardMessageText.ItemLabel("FRAGMENT_AGUMON", "Fragmento do Agumon", 3),
+                        new EventRewardMessageText.ItemLabel("LOOT_CHEST", "Baú de teste", 2)
+                ),
+                LocalDateTime.of(2026, 8, 26, 18, 30)
+        );
+
+        assertTrue(body.contains("3 × Fragmento do Agumon"), body);
+        assertTrue(body.contains("2 × Baú de teste"), body);
+    }
+
+    @Test
     void slotUnlockItemUsesLocalizedLabel() {
         String body = EventRewardMessageText.formatItem("INCUBATION_SLOT_UNLOCK", 1);
 

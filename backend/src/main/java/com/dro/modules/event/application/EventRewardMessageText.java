@@ -4,6 +4,8 @@ import com.dro.modules.inventory.domain.ItemType;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Formata o conteúdo legível das mensagens de premiação no Correio.
@@ -20,19 +22,11 @@ public final class EventRewardMessageText {
     private EventRewardMessageText() {
     }
 
-    /**
-     * Acrescenta ao texto personalizado o resumo da premiação disponível.
-     *
-     * <p>O resultado permanece dentro do limite de corpo do Correio e informa
-     * Bits, item, validade e a instrução de resgate.</p>
-     *
-     * @param customBody texto escrito pelo administrador
-     * @param bitsAmount quantidade de Bits a entregar
-     * @param itemType tipo do item ou {@code null} quando não houver item
-     * @param itemQuantity quantidade do item
-     * @param expiresAt instante limite para o resgate
-     * @return corpo pronto para ser persistido na mensagem pendente
-     */
+    /** Item apresentado no resumo automático da premiação. */
+    public record ItemLabel(String itemType, String label, int quantity) {
+    }
+
+    /** Acrescenta ao texto personalizado o resumo de uma premiação legada de item único. */
     public static String pendingBody(
             String customBody,
             int bitsAmount,
@@ -40,25 +34,37 @@ public final class EventRewardMessageText {
             int itemQuantity,
             LocalDateTime expiresAt
     ) {
+        return pendingBody(customBody, bitsAmount, itemType == null ? List.of() : List.of(new ItemLabel(itemType, null, itemQuantity)), expiresAt);
+    }
+
+    /** Acrescenta ao texto personalizado o resumo da premiação com todos os itens. */
+    public static String pendingBody(
+            String customBody,
+            int bitsAmount,
+            List<ItemLabel> items,
+            LocalDateTime expiresAt
+    ) {
         String summary = "\n\nPrêmio disponível para resgate:\n"
                 + "- Bits disponíveis: " + formatBits(bitsAmount) + "\n"
-                + "- Item: " + formatItem(itemType, itemQuantity) + "\n"
+                + "- Itens disponíveis: " + formatItems(items) + "\n"
                 + "- Validade: até " + DATE_FORMAT.format(expiresAt) + "\n\n"
                 + "Para receber a premiação, abra esta mensagem com um Digimon ativo e clique em “Resgatar prêmio”.";
         return fitWithSuffix(customBody.trim(), summary);
     }
 
-    /**
-     * Substitui o resumo pendente por um registro da entrega concluída.
-     *
-     * @param currentBody corpo atual da mensagem, possivelmente com resumo pendente
-     * @param bitsAmount quantidade de Bits entregue
-     * @param itemType tipo do item ou {@code null} quando não houver item
-     * @param itemQuantity quantidade do item entregue
-     * @param digimonName nome do Digimon que recebeu o prêmio
-     * @param claimedAt instante em que a entrega foi concluída
-     * @return corpo atualizado, limitado ao tamanho máximo do Correio
-     */
+    /** Acrescenta o nome exato de uma definição para mensagens de item único. */
+    public static String pendingBody(
+            String customBody,
+            int bitsAmount,
+            String itemType,
+            String itemLabel,
+            int itemQuantity,
+            LocalDateTime expiresAt
+    ) {
+        return pendingBody(customBody, bitsAmount, itemType == null ? List.of() : List.of(new ItemLabel(itemType, itemLabel, itemQuantity)), expiresAt);
+    }
+
+    /** Substitui o resumo pendente por um registro de entrega legada de item único. */
     public static String claimedBody(
             String currentBody,
             int bitsAmount,
@@ -67,9 +73,20 @@ public final class EventRewardMessageText {
             String digimonName,
             LocalDateTime claimedAt
     ) {
+        return claimedBody(currentBody, bitsAmount, itemType == null ? List.of() : List.of(new ItemLabel(itemType, null, itemQuantity)), digimonName, claimedAt);
+    }
+
+    /** Substitui o resumo pendente pelo registro completo da entrega. */
+    public static String claimedBody(
+            String currentBody,
+            int bitsAmount,
+            List<ItemLabel> items,
+            String digimonName,
+            LocalDateTime claimedAt
+    ) {
         String summary = "\n\nResgate concluído:\n"
                 + "- Bits entregues: " + formatBits(bitsAmount) + "\n"
-                + "- Item entregue: " + formatItem(itemType, itemQuantity) + "\n"
+                + "- Itens entregues: " + formatItems(items) + "\n"
                 + "- Destino: Digimon “" + digimonName + "”\n"
                 + "- Resgatado em: " + DATE_FORMAT.format(claimedAt);
         String baseBody = currentBody.trim();
@@ -80,18 +97,33 @@ public final class EventRewardMessageText {
         return fitWithSuffix(baseBody, summary);
     }
 
-    /**
-     * Converte o tipo e a quantidade do item para uma descrição exibível ao jogador.
-     *
-     * @param itemType valor persistido do {@link ItemType}
-     * @param itemQuantity quantidade de unidades
-     * @return descrição traduzida do item ou {@code Nenhum item}
-     */
+    /** Registra a entrega usando o nome exato de uma definição de item único. */
+    public static String claimedBody(
+            String currentBody,
+            int bitsAmount,
+            String itemType,
+            String itemLabel,
+            int itemQuantity,
+            String digimonName,
+            LocalDateTime claimedAt
+    ) {
+        return claimedBody(currentBody, bitsAmount, itemType == null ? List.of() : List.of(new ItemLabel(itemType, itemLabel, itemQuantity)), digimonName, claimedAt);
+    }
+
+    /** Converte um item legado em uma descrição exibível ao jogador. */
     public static String formatItem(String itemType, int itemQuantity) {
-        if (itemType == null || itemQuantity <= 0) {
+        return formatItems(itemType == null ? List.of() : List.of(new ItemLabel(itemType, null, itemQuantity)));
+    }
+
+    private static String formatItems(List<ItemLabel> items) {
+        if (items == null || items.isEmpty()) {
             return "Nenhum item";
         }
-        return itemQuantity + " × " + itemLabel(itemType);
+        String formatted = items.stream()
+                .filter(item -> item != null && item.quantity() > 0)
+                .map(item -> item.quantity() + " × " + (item.label() == null || item.label().isBlank() ? itemLabel(item.itemType()) : item.label()))
+                .collect(Collectors.joining(", "));
+        return formatted.isBlank() ? "Nenhum item" : formatted;
     }
 
     private static String formatBits(int bitsAmount) {

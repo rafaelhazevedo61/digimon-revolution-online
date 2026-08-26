@@ -66,11 +66,11 @@ public interface EventRewardRepository extends JpaRepository<EventReward, UUID> 
     @Query(value = """
             INSERT INTO event_rewards (
                 id, player_id, source_type, source_id, subject, body,
-                bits_amount, item_type, item_quantity, status,
+                bits_amount, item_type, item_definition_code, item_quantity, status,
                 created_at, expires_at
             ) VALUES (
                 :id, :playerId, :sourceType, :sourceId, :subject, :body,
-                :bitsAmount, :itemType, :itemQuantity, :status,
+                :bitsAmount, :itemType, :itemDefinitionCode, :itemQuantity, :status,
                 :createdAt, :expiresAt
             ) ON CONFLICT (source_type, source_id, player_id) DO NOTHING
             """, nativeQuery = true)
@@ -83,6 +83,7 @@ public interface EventRewardRepository extends JpaRepository<EventReward, UUID> 
             @Param("body") String body,
             @Param("bitsAmount") int bitsAmount,
             @Param("itemType") String itemType,
+            @Param("itemDefinitionCode") String itemDefinitionCode,
             @Param("itemQuantity") int itemQuantity,
             @Param("status") String status,
             @Param("createdAt") LocalDateTime createdAt,

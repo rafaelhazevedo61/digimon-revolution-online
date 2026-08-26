@@ -155,7 +155,8 @@ USABLE="${USABLE:-VALOR}"
 # curl --fail-with-body -i -X POST "${BASE_URL}/admin/mail/announcements" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"subject": "Manutenção programada", "body": "Comunicado de teste. Altere este texto antes de enviar."}'
 
 # AdminEventRewardController.create (POST /admin/mail/event-rewards)
-# curl --fail-with-body -i -X POST "${BASE_URL}/admin/mail/event-rewards" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"recipientType": "PLAYER", "playerUsername": "jogador-alvo", "clanId": null, "playerUsernames": [], "sourceType": "EVENT", "sourceId": "evento-teste-001", "subject": "Premiação de teste", "body": "Você recebeu esta recompensa pelo evento.", "bitsAmount": 5000, "itemType": "TRAINING_STONE", "itemQuantity": 2, "validityDays": 7}'
+# curl --fail-with-body -i -X POST "${BASE_URL}/admin/mail/event-rewards" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"recipientType": "PLAYER", "playerUsername": "jogador-alvo", "clanId": null, "playerUsernames": [], "sourceType": "EVENT", "sourceId": "evento-teste-001", "subject": "Premiação de teste", "body": "Você recebeu esta recompensa pelo evento.", "bitsAmount": 5000, "itemType": null, "itemDefinitionCode": null, "items": [{"itemDefinitionCode": "FRAGMENT_AGUMON", "quantity": 3}, {"itemDefinitionCode": "CHEST_MISSION_TEST", "quantity": 1}], "itemQuantity": 0, "validityDays": 7}'
+# Compatibilidade legada: `itemType` e `itemQuantity` continuam aceitos quando a premiação usa o formato antigo de item único.
 
 # AdminEventRewardRecipientController.listClans (GET /admin/mail/recipients/clans)
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/mail/recipients/clans" -H "Authorization: Bearer ${ADMIN_TOKEN}"

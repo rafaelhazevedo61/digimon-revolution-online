@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
@@ -28,8 +29,10 @@ import java.util.List;
  * @param subject assunto da mensagem de Correio
  * @param body texto personalizado da premiação
  * @param bitsAmount quantidade de Bits, podendo ser zero
- * @param itemType tipo do item, quando houver item
- * @param itemQuantity quantidade do item, podendo ser zero
+ * @param itemType tipo legado do item, quando houver item
+ * @param itemDefinitionCode código específico da definição no catálogo, quando selecionado
+ * @param items itens do catálogo, cada um com sua quantidade independente
+ * @param itemQuantity quantidade do item legado, podendo ser zero
  * @param validityDays validade entre 1 e 30 dias
  */
 public record AdminEventRewardRequest(
@@ -58,6 +61,10 @@ public record AdminEventRewardRequest(
         Integer bitsAmount,
         @Size(max = 50, message = "O tipo do item deve ter no máximo 50 caracteres.")
         String itemType,
+        @Size(max = 128, message = "O código da definição deve ter no máximo 128 caracteres.")
+        String itemDefinitionCode,
+        @Size(max = 10, message = "A premiação pode conter no máximo 10 itens diferentes.")
+        List<@Valid AdminEventRewardItemRequest> items,
         @NotNull(message = "Informe a quantidade do item.")
         @PositiveOrZero(message = "A quantidade do item não pode ser negativa.")
         Integer itemQuantity,
