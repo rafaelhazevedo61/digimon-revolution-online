@@ -151,6 +151,7 @@ class AttackClanRaidUseCaseTest {
                 .def(100)
                 .energyCost(1)
                 .cooldownMinutes(5)
+                .cooldownEnabled(true)
                 .baseXpReward(100)
                 .baseBitsReward(10)
                 .defeatXpPercent(5)
@@ -179,6 +180,7 @@ class AttackClanRaidUseCaseTest {
         lenient().when(globalDamageBuffService.getMultiplier()).thenReturn(1.0);
         lenient().when(gameplayConfig.getClanRaidDailyAttackLimit()).thenReturn(3);
         lenient().when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(false);
+        lenient().when(gameplayConfig.isBossCooldownEnabled()).thenReturn(true);
     }
 
     @Test
@@ -208,6 +210,28 @@ class AttackClanRaidUseCaseTest {
     @Test
     void attackIgnoresRecentAttackWhenCooldownIsDisabled() {
         boss.setCooldownEnabled(false);
+        ClanRaidAttack lastAttack = ClanRaidAttack.builder()
+                .id(UUID.randomUUID())
+                .clanRaidId(raid.getId())
+                .playerId(playerId)
+                .digimonId(digimonId)
+                .damage(100)
+                .createdAt(Instant.now().minusSeconds(1))
+                .build();
+        when(clanRaidAttackRepository.findFirstByClanRaidIdAndPlayerIdOrderByCreatedAtDesc(raid.getId(), playerId))
+                .thenReturn(Optional.of(lastAttack));
+
+        AttackClanRaidResponse response = useCase.execute(token);
+
+        assertFalse(response.defeated());
+        verify(clanRaidAttackRepository).save(any(ClanRaidAttack.class));
+        verify(digimonRepository).save(any(Digimon.class));
+        verify(clanRaidRepository).save(any(ClanRaid.class));
+    }
+
+    @Test
+    void attackIgnoresRecentAttackWhenGlobalCooldownIsDisabled() {
+        when(gameplayConfig.isBossCooldownEnabled()).thenReturn(false);
         ClanRaidAttack lastAttack = ClanRaidAttack.builder()
                 .id(UUID.randomUUID())
                 .clanRaidId(raid.getId())

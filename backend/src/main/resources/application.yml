@@ -38,6 +38,7 @@ logging:
 dro:
   gameplay:
     auto-boss-respawn-after-defeat-enabled: false
+    boss-cooldown-enabled: ${DRO_BOSS_COOLDOWN_ENABLED:true}
 
     clan-raid:
       daily-attack-limit: ${DRO_CLAN_RAID_DAILY_ATTACK_LIMIT:3}

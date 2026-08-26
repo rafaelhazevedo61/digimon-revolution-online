@@ -60,6 +60,23 @@ class ClanRaidResponseMapperTest {
     }
 
     @Test
+    void doesNotExposeNextAttackWhenGlobalCooldownIsDisabled() {
+        UUID raidId = UUID.randomUUID();
+        UUID playerId = UUID.randomUUID();
+        ClanRaid raid = raid(raidId, ClanRaidStatus.ACTIVE);
+        BossDefinitionEntity boss = boss(true);
+        ClanRaidAttack previousAttack = attack(raidId, playerId, Instant.now().minusSeconds(60));
+        stubCommon(raid, playerId, boss, previousAttack);
+        when(gameplayConfig.isBossCooldownEnabled()).thenReturn(false);
+
+        var response = mapper.toResponse(raid, playerId);
+
+        assertThat(response.cooldownEnabled()).isFalse();
+        assertThat(response.attackCooldownMinutes()).isEqualTo(5);
+        assertThat(response.nextAttackAvailableAt()).isNull();
+    }
+
+    @Test
     void doesNotExposeNextAttackWhenCooldownIsDisabled() {
         UUID raidId = UUID.randomUUID();
         UUID playerId = UUID.randomUUID();
@@ -84,6 +101,7 @@ class ClanRaidResponseMapperTest {
         when(playerRepository.findAllById(any())).thenReturn(List.of());
         when(playerRepository.findById(playerId)).thenReturn(Optional.empty());
         when(gameplayConfig.getClanRaidDailyAttackLimit()).thenReturn(3);
+        when(gameplayConfig.isBossCooldownEnabled()).thenReturn(true);
     }
 
     private ClanRaid raid(UUID raidId, ClanRaidStatus status) {

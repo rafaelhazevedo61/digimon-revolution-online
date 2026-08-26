@@ -42,10 +42,11 @@ public class ClanRaidResponseMapper {
         List<ClanRaidAttack> myAttacks = attacks.stream().filter(attack -> attack.getPlayerId().equals(viewerPlayerId)).toList();
         long myTotalDamage = myAttacks.stream().mapToLong(ClanRaidAttack::getDamage).sum();
         int attackCooldownMinutes = ClanRaidRules.attackCooldownMinutes(boss.getCooldownMinutes());
+        boolean cooldownEnabled = gameplayConfig.isBossCooldownEnabled() && boss.isCooldownEnabled();
         Instant nextAttackCandidate = myAttacks.isEmpty() || myAttacks.get(0).getCreatedAt() == null
                 ? null
                 : myAttacks.get(0).getCreatedAt().plus(Duration.ofMinutes(attackCooldownMinutes));
-        Instant nextAttackAvailableAt = boss.isCooldownEnabled()
+        Instant nextAttackAvailableAt = cooldownEnabled
                 && raid.getStatus() == ClanRaidStatus.ACTIVE
                 && nextAttackCandidate != null
                 && nextAttackCandidate.isAfter(Instant.now())
@@ -56,7 +57,7 @@ public class ClanRaidResponseMapper {
                 raid.getId(), raid.getClanId(), boss.getCode(), boss.getName(), boss.getImageUrl(),
                 raid.getMaxHp(), raid.getRemainingHp(), raid.getStatus(), raid.getCreatedAt(), raid.getDefeatedAt(),
                 usedToday, ClanRaidRules.dailyAttacksRemaining(usedToday, dailyAttackLimit),
-                attackCooldownMinutes, boss.isCooldownEnabled(), nextAttackAvailableAt,
+                attackCooldownMinutes, cooldownEnabled, nextAttackAvailableAt,
                 myTotalDamage, buildRanking(raid.getId()), recentAttacks
         );
     }

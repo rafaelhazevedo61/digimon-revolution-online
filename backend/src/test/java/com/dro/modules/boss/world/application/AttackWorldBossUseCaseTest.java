@@ -158,6 +158,7 @@ class AttackWorldBossUseCaseTest {
                 .atk(10)
                 .def(10)
                 .energyCost(1)
+                .cooldownEnabled(true)
                 .baseXpReward(100)
                 .baseBitsReward(10)
                 .defeatXpPercent(5)
@@ -191,6 +192,7 @@ class AttackWorldBossUseCaseTest {
         lenient().when(globalDamageBuffService.getMultiplier()).thenReturn(1.0);
         lenient().when(gameplayConfig.getWorldBossDailyAttackLimit()).thenReturn(3);
         lenient().when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(true);
+        lenient().when(gameplayConfig.isBossCooldownEnabled()).thenReturn(true);
         lenient().when(worldBossRewardService.grant(any(), any(), any(), anyBoolean()))
                 .thenReturn(List.of(attemptReward));
     }
@@ -335,6 +337,27 @@ class AttackWorldBossUseCaseTest {
                 instance.getId(), playerId)).thenReturn(Optional.of(lastAttack));
 
         AttackWorldBossResponse response = useCase.execute(token, "request-disabled-cooldown");
+
+        assertTrue(response.defeated());
+        verify(worldBossAttackRepository).save(any(WorldBossAttack.class));
+        verify(worldBossRewardService).grant(any(), any(), any(), eq(true));
+    }
+
+    @Test
+    void attackIgnoresRecentAttackWhenGlobalCooldownIsDisabled() {
+        when(gameplayConfig.isBossCooldownEnabled()).thenReturn(false);
+        WorldBossAttack lastAttack = WorldBossAttack.builder()
+                .id(UUID.randomUUID())
+                .worldBossId(instance.getId())
+                .playerId(playerId)
+                .digimonId(digimonId)
+                .damage(10)
+                .createdAt(Instant.now().minusSeconds(1))
+                .build();
+        when(worldBossAttackRepository.findFirstByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(
+                instance.getId(), playerId)).thenReturn(Optional.of(lastAttack));
+
+        AttackWorldBossResponse response = useCase.execute(token, "request-global-disabled-cooldown");
 
         assertTrue(response.defeated());
         verify(worldBossAttackRepository).save(any(WorldBossAttack.class));

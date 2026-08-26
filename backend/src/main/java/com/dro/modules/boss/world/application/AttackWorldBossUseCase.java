@@ -85,7 +85,7 @@ public class AttackWorldBossUseCase {
         }
         WorldBossAttack lastAttack = worldBossAttackRepository.findFirstByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(instance.getId(), playerId).orElse(null);
         int cooldownMinutes = WorldBossRules.attackCooldownMinutes(boss.getCooldownMinutes());
-        if (boss.isCooldownEnabled() && lastAttack != null && lastAttack.getCreatedAt() != null) {
+        if (gameplayConfig.isBossCooldownEnabled() && boss.isCooldownEnabled() && lastAttack != null && lastAttack.getCreatedAt() != null) {
             Instant nextAttackAt = lastAttack.getCreatedAt().plus(Duration.ofMinutes(cooldownMinutes));
             Instant now = Instant.now();
             if (now.isBefore(nextAttackAt)) {
