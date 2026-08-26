@@ -4,6 +4,8 @@ import com.dro.modules.admin.api.dto.AdminEventRewardRequest;
 import com.dro.modules.clan.infra.ClanRepository;
 import com.dro.modules.event.domain.EventRewardRecipientType;
 import com.dro.modules.event.infra.EventRewardRepository;
+import com.dro.modules.inventory.domain.ItemDefinition;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.mail.application.CreateSystemMailMessageUseCase;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.domain.UserType;
@@ -16,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,6 +44,9 @@ class CreateEventRewardUseCaseTest {
     private EventRewardRepository eventRewardRepository;
 
     @Mock
+    private ItemDefinitionRepository itemDefinitionRepository;
+
+    @Mock
     private CreateSystemMailMessageUseCase createSystemMailMessageUseCase;
 
     @InjectMocks
@@ -55,7 +61,7 @@ class CreateEventRewardUseCaseTest {
         when(playerRepository.findByUserTypeOrderByUsernameAsc(UserType.PLAYER)).thenReturn(players);
         when(eventRewardRepository.insertIfAbsent(
                 any(UUID.class), any(UUID.class), anyString(), anyString(), anyString(), anyString(),
-                anyInt(), nullable(String.class), anyInt(), anyString(), any(LocalDateTime.class), any(LocalDateTime.class)
+                anyInt(), nullable(String.class), nullable(String.class), anyInt(), anyString(), any(LocalDateTime.class), any(LocalDateTime.class)
         )).thenReturn(1);
 
         EventRewardBatchResult result = createEventRewardUseCase.execute(globalRequest());
@@ -71,6 +77,55 @@ class CreateEventRewardUseCaseTest {
     }
 
     @Test
+    void acceptsSpecificCatalogDefinitionAndPersistsItsCode() {
+        Player player = createPlayer("jogador-item", UserType.PLAYER);
+        ItemDefinition definition = ItemDefinition.builder()
+                .code("FRAGMENT_AGUMON")
+                .name("Fragmento do Agumon")
+                .category("EVOLUTION_MATERIAL")
+                .stackable(true)
+                .tradable(true)
+                .sellable(true)
+                .usable(false)
+                .maxStack(999)
+                .rarity("COMMON")
+                .build();
+        when(playerRepository.findByUsernameIgnoreCase("jogador-item")).thenReturn(Optional.of(player));
+        when(itemDefinitionRepository.findByCode("FRAGMENT_AGUMON")).thenReturn(Optional.of(definition));
+        when(eventRewardRepository.insertIfAbsent(
+                any(UUID.class), eq(player.getId()), anyString(), anyString(), anyString(), anyString(),
+                eq(0), eq("EVOLUTION_MATERIAL"), eq("FRAGMENT_AGUMON"), eq(2), anyString(),
+                any(LocalDateTime.class), any(LocalDateTime.class)
+        )).thenReturn(1);
+
+        AdminEventRewardRequest request = new AdminEventRewardRequest(
+                EventRewardRecipientType.PLAYER,
+                "jogador-item",
+                null,
+                null,
+                "EVENT",
+                "evento-item-specifico",
+                "Premiação de item",
+                "Você recebeu um fragmento.",
+                0,
+                null,
+                "FRAGMENT_AGUMON",
+                2,
+                7
+        );
+
+        EventRewardBatchResult result = createEventRewardUseCase.execute(request);
+
+        assertThat(result.createdCount()).isEqualTo(1);
+        verify(itemDefinitionRepository).findByCode("FRAGMENT_AGUMON");
+        verify(eventRewardRepository).insertIfAbsent(
+                any(UUID.class), eq(player.getId()), eq("EVENT"), eq("evento-item-specifico"),
+                eq("Premiação de item"), anyString(), eq(0), eq("EVOLUTION_MATERIAL"),
+                eq("FRAGMENT_AGUMON"), eq(2), eq("PENDING"), any(LocalDateTime.class), any(LocalDateTime.class)
+        );
+    }
+
+    @Test
     void globalRewardIsNotLimitedToOneHundredPlayers() {
         List<Player> players = java.util.stream.IntStream.rangeClosed(1, 101)
                 .mapToObj(index -> createPlayer("jogador-" + index, UserType.PLAYER))
@@ -78,7 +133,7 @@ class CreateEventRewardUseCaseTest {
         when(playerRepository.findByUserTypeOrderByUsernameAsc(UserType.PLAYER)).thenReturn(players);
         when(eventRewardRepository.insertIfAbsent(
                 any(UUID.class), any(UUID.class), anyString(), anyString(), anyString(), anyString(),
-                anyInt(), nullable(String.class), anyInt(), anyString(), any(LocalDateTime.class), any(LocalDateTime.class)
+                anyInt(), nullable(String.class), nullable(String.class), anyInt(), anyString(), any(LocalDateTime.class), any(LocalDateTime.class)
         )).thenReturn(1);
 
         EventRewardBatchResult result = createEventRewardUseCase.execute(globalRequest());
@@ -103,6 +158,7 @@ class CreateEventRewardUseCaseTest {
                 "Premiação global",
                 "Obrigado por participar do evento.",
                 100,
+                null,
                 null,
                 0,
                 7

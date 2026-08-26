@@ -5,7 +5,7 @@ let adminEventRewardClanMembers = [];
 let adminEventRewardPlayerSearchTimer = null;
 let adminEventRewardAllPlayersCount = null;
 let adminEventRewardSelectedItem = null;
-let adminEventRewardItemModalState = { search: "", page: 0, pageSize: 8, items: [], loading: false, error: "" };
+let adminEventRewardItemModalState = { search: "", page: 0, pageSize: 8, items: [], totalItems: 0, totalPages: 1, hasNext: false, hasPrevious: false, loading: false, error: "", remote: false };
 
 const ADMIN_EVENT_ITEM_OPTIONS = [
   ["", "Nenhum item"],
@@ -30,7 +30,7 @@ const ADMIN_EVENT_ITEM_OPTIONS = [
 
 function renderEventRewardsPage() {
   adminEventRewardSelectedItem = null;
-  adminEventRewardItemModalState = { search: "", page: 0, pageSize: 8, items: [], loading: false, error: "" };
+  adminEventRewardItemModalState = { search: "", page: 0, pageSize: 8, items: [], totalItems: 0, totalPages: 1, hasNext: false, hasPrevious: false, loading: false, error: "", remote: false };
   setPageHeader("Premiações de Eventos", "Envie uma recompensa resgatável pelo Correio");
   const app = document.getElementById("app");
   app.innerHTML = `
@@ -195,7 +195,7 @@ function adminClearEventRewardItem() {
 function adminOpenEventRewardItemModal() {
   if (document.getElementById("admin-event-reward-item-modal")) return;
 
-  adminEventRewardItemModalState = { search: "", page: 0, pageSize: 8, items: [], loading: false, error: "" };
+  adminEventRewardItemModalState = { search: "", page: 0, pageSize: 8, items: [], totalItems: 0, totalPages: 1, hasNext: false, hasPrevious: false, loading: false, error: "", remote: false };
   const overlay = document.createElement("div");
   overlay.id = "admin-event-reward-item-modal";
   overlay.className = "modal-overlay";
@@ -255,18 +255,20 @@ async function adminLoadEventRewardItemModal() {
   try {
     const result = await apiGet("/items", {
       search: adminEventRewardItemModalState.search,
-      page: 0,
-      size: 100
+      page: adminEventRewardItemModalState.page,
+      size: adminEventRewardItemModalState.pageSize
     });
-    const availableCodes = new Set(ADMIN_EVENT_ITEM_OPTIONS.map(([code]) => code).filter(Boolean));
-    adminEventRewardItemModalState.items = (result.items || [])
-      .filter(item => availableCodes.has(item.code))
-      .map(item => ({
-        code: item.code,
-        name: item.name || adminGetEventRewardItemLabel(item.code),
-        category: item.category || "Item",
-        description: item.description || ""
-      }));
+    adminEventRewardItemModalState.items = (result.items || []).map(item => ({
+      code: item.code,
+      name: item.name || adminGetEventRewardItemLabel(item.code),
+      category: item.category || "Item",
+      description: item.description || ""
+    }));
+    adminEventRewardItemModalState.totalItems = Number(result.totalItems || 0);
+    adminEventRewardItemModalState.totalPages = Math.max(1, Number(result.totalPages || 1));
+    adminEventRewardItemModalState.hasNext = Boolean(result.hasNext);
+    adminEventRewardItemModalState.hasPrevious = Boolean(result.hasPrevious);
+    adminEventRewardItemModalState.remote = true;
     adminEventRewardItemModalState.error = "";
   } catch (error) {
     adminEventRewardItemModalState.error = error.message || "Não foi possível carregar o catálogo.";
@@ -274,6 +276,12 @@ async function adminLoadEventRewardItemModal() {
     adminEventRewardItemModalState.items = ADMIN_EVENT_ITEM_OPTIONS
       .filter(([code, label]) => code && (!query || `${code} ${label}`.toLowerCase().includes(query)))
       .map(([code, label]) => ({ code, name: label, category: "Item" }));
+    adminEventRewardItemModalState.page = 0;
+    adminEventRewardItemModalState.totalItems = adminEventRewardItemModalState.items.length;
+    adminEventRewardItemModalState.totalPages = Math.max(1, Math.ceil(adminEventRewardItemModalState.items.length / adminEventRewardItemModalState.pageSize));
+    adminEventRewardItemModalState.hasNext = adminEventRewardItemModalState.totalPages > 1;
+    adminEventRewardItemModalState.hasPrevious = false;
+    adminEventRewardItemModalState.remote = false;
   } finally {
     adminEventRewardItemModalState.loading = false;
     adminRenderEventRewardItemModalResults();
@@ -284,11 +292,11 @@ function adminRenderEventRewardItemModalResults() {
   const container = document.getElementById("admin-event-reward-item-modal-results");
   if (!container) return;
   const state = adminEventRewardItemModalState;
-  const totalItems = state.items.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / state.pageSize));
+  const totalItems = state.totalItems;
+  const totalPages = Math.max(1, state.totalPages);
   const currentPage = Math.min(state.page, totalPages - 1);
   state.page = currentPage;
-  const pageItems = state.items.slice(currentPage * state.pageSize, (currentPage + 1) * state.pageSize);
+  const pageItems = state.remote ? state.items : state.items.slice(currentPage * state.pageSize, (currentPage + 1) * state.pageSize);
   const errorNotice = state.error
     ? `<p class="text-xs text-amber-300 mb-2">Catálogo indisponível; exibindo a lista pré-carregada.</p>`
     : "";
@@ -311,23 +319,31 @@ function adminRenderEventRewardItemModalResults() {
     <div class="flex items-center justify-between gap-3 mb-2">
       <p class="text-xs text-slate-500">${totalItems} item(ns) encontrado(s)</p>
       <div class="flex items-center gap-2">
-        <button type="button" class="btn-secondary text-xs" data-event-reward-item-previous ${currentPage === 0 ? "disabled" : ""}>Anterior</button>
+        <button type="button" class="btn-secondary text-xs" data-event-reward-item-previous ${!state.hasPrevious ? "disabled" : ""}>Anterior</button>
         <span class="text-xs text-slate-400 whitespace-nowrap">Página ${currentPage + 1} de ${totalPages}</span>
-        <button type="button" class="btn-secondary text-xs" data-event-reward-item-next ${currentPage >= totalPages - 1 ? "disabled" : ""}>Próxima</button>
+        <button type="button" class="btn-secondary text-xs" data-event-reward-item-next ${!state.hasNext ? "disabled" : ""}>Próxima</button>
       </div>
     </div>
     <div class="space-y-2">${results}</div>
   `;
 
   container.querySelector("[data-event-reward-item-previous]")?.addEventListener("click", () => {
-    if (state.page > 0) {
-      state.page--;
+    if (!state.hasPrevious) return;
+    state.page--;
+    if (state.remote) adminLoadEventRewardItemModal();
+    else {
+      state.hasPrevious = state.page > 0;
+      state.hasNext = state.page < totalPages - 1;
       adminRenderEventRewardItemModalResults();
     }
   });
   container.querySelector("[data-event-reward-item-next]")?.addEventListener("click", () => {
-    if (state.page < totalPages - 1) {
-      state.page++;
+    if (!state.hasNext) return;
+    state.page++;
+    if (state.remote) adminLoadEventRewardItemModal();
+    else {
+      state.hasPrevious = state.page > 0;
+      state.hasNext = state.page < totalPages - 1;
       adminRenderEventRewardItemModalResults();
     }
   });
@@ -620,8 +636,9 @@ function adminConfirmEventReward(payload) {
     document.body.appendChild(overlay);
     document.getElementById("admin-event-reward-confirm-recipient").textContent = `${payload.recipientLabel} (${payload.recipientCount} mensagem(ns))`;
     document.getElementById("admin-event-reward-confirm-subject").textContent = payload.subject;
-    const itemText = payload.itemType && payload.itemQuantity > 0
-      ? `${payload.itemQuantity.toLocaleString("pt-BR")} × ${adminGetEventRewardItemLabel(payload.itemType)}`
+    const rewardItemCode = payload.itemDefinitionCode || payload.itemType;
+    const itemText = rewardItemCode && payload.itemQuantity > 0
+      ? `${payload.itemQuantity.toLocaleString("pt-BR")} × ${adminGetEventRewardItemLabel(rewardItemCode)}`
       : "Sem item";
     document.getElementById("admin-event-reward-confirm-reward").textContent = `${payload.bitsAmount.toLocaleString("pt-BR")} Bits · ${itemText}`;
     document.getElementById("admin-event-reward-confirm-validity").textContent = `${payload.validityDays} ${payload.validityDays === 1 ? "dia" : "dias"}`;
@@ -657,7 +674,8 @@ async function adminSubmitEventReward(event) {
     subject: adminEventRewardValue("admin-event-reward-subject"),
     body: adminEventRewardValue("admin-event-reward-body"),
     bitsAmount: Number(document.getElementById("admin-event-reward-bits")?.value || 0),
-    itemType: document.getElementById("admin-event-reward-item")?.value || null,
+    itemType: null,
+    itemDefinitionCode: document.getElementById("admin-event-reward-item")?.value || null,
     itemQuantity: Number(document.getElementById("admin-event-reward-item-quantity")?.value || 0),
     validityDays: Number(document.getElementById("admin-event-reward-validity")?.value || 0),
     recipientLabel: adminGetEventRewardRecipientLabel(),
@@ -675,11 +693,14 @@ async function adminSubmitEventReward(event) {
     adminShowEventRewardResult("Informe Bits ou uma quantidade de item maior que zero.", false);
     return;
   }
-  if (payload.itemQuantity > 0 && !payload.itemType) {
+  if (payload.itemQuantity > 0 && !payload.itemDefinitionCode) {
     adminShowEventRewardResult("Selecione o item correspondente à quantidade informada.", false);
     return;
   }
-  if (payload.itemQuantity === 0) payload.itemType = null;
+  if (payload.itemQuantity === 0) {
+    payload.itemType = null;
+    payload.itemDefinitionCode = null;
+  }
   if (!await adminConfirmEventReward(payload)) return;
 
   const button = document.getElementById("admin-event-reward-submit");

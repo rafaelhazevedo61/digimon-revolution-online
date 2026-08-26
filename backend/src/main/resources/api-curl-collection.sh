@@ -155,7 +155,8 @@ USABLE="${USABLE:-VALOR}"
 # curl --fail-with-body -i -X POST "${BASE_URL}/admin/mail/announcements" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"subject": "Manutenção programada", "body": "Comunicado de teste. Altere este texto antes de enviar."}'
 
 # AdminEventRewardController.create (POST /admin/mail/event-rewards)
-# curl --fail-with-body -i -X POST "${BASE_URL}/admin/mail/event-rewards" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"recipientType": "PLAYER", "playerUsername": "jogador-alvo", "clanId": null, "playerUsernames": [], "sourceType": "EVENT", "sourceId": "evento-teste-001", "subject": "Premiação de teste", "body": "Você recebeu esta recompensa pelo evento.", "bitsAmount": 5000, "itemType": "TRAINING_STONE", "itemQuantity": 2, "validityDays": 7}'
+# curl --fail-with-body -i -X POST "${BASE_URL}/admin/mail/event-rewards" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"recipientType": "PLAYER", "playerUsername": "jogador-alvo", "clanId": null, "playerUsernames": [], "sourceType": "EVENT", "sourceId": "evento-teste-001", "subject": "Premiação de teste", "body": "Você recebeu esta recompensa pelo evento.", "bitsAmount": 5000, "itemType": null, "itemDefinitionCode": "FRAGMENT_AGUMON", "itemQuantity": 2, "validityDays": 7}'
+# Compatibilidade legada: `itemType` pode ser informado quando a premiação não usa uma definição específica do catálogo.
 
 # AdminEventRewardRecipientController.listClans (GET /admin/mail/recipients/clans)
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/mail/recipients/clans" -H "Authorization: Bearer ${ADMIN_TOKEN}"

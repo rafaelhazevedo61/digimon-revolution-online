@@ -33,6 +33,7 @@ e o projeto segue versionamento incremental por entregas (PRs).
 - **Busca de jogadores nas ferramentas administrativas**: a etapa de seleção do jogador no fluxo de grant agora mantém o filtro por username, exibe o total encontrado e permite navegar entre páginas de resultados, sem limitar o operador aos dez primeiros jogadores.
 - **Identificador de origem da premiação**: o formulário administrativo agora oferece geração automática de identificador, mantendo a edição manual e a idempotência por jogador.
 - **Seleção de itens na premiação de eventos**: o item deixou de depender de uma lista fixa no formulário e passou a ser escolhido em modal com pesquisa, catálogo pré-carregado, paginação e resumo do item selecionado.
+- **Catálogo completo na premiação de eventos**: o modal passou a exibir todas as definições de `item_definitions`, incluindo itens específicos como fragmentos e baús, com entrega persistida pelo código da definição.
 
 ## [0.0.3-SNAPSHOT]
 

@@ -657,6 +657,7 @@ O módulo `event` atual implementa **premiações administrativas de evento**, e
 ### Funcionamento atual
 
 - administrador cria uma premiação contendo Bits e/ou item;
+- o item pode ser selecionado pelo catálogo paginado de `item_definitions`, usando o código específico da definição; `itemType` continua aceito para premiações legadas;
 - destinatários podem ser um jogador, uma lista manual de até 100 jogadores, todos os membros de um Clã ou todos os jogadores do servidor;
 - o modo global considera as contas do tipo `PLAYER` existentes no momento do envio;
 - cada prêmio é persistido individualmente por jogador;

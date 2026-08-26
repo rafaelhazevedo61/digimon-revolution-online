@@ -9,9 +9,11 @@ import java.util.UUID;
  * Premiação persistente de um evento destinada a um jogador específico.
  *
  * <p>A premiação guarda o conteúdo que será entregue, sua origem idempotente,
- * o prazo de validade e o estado do resgate. A entrega é feita por meio de uma
- * mensagem {@code EVENT} do Correio, mas o estado da premiação é a fonte de
- * verdade para impedir duplicidade.</p>
+ * o prazo de validade e o estado do resgate. Quando selecionada pelo catálogo,
+ * a definição específica é preservada em {@code itemDefinitionCode}; o campo
+ * {@code itemType} continua sendo mantido para compatibilidade com registros
+ * legados. A entrega é feita por meio de uma mensagem {@code EVENT} do Correio,
+ * mas o estado da premiação é a fonte de verdade para impedir duplicidade.</p>
  */
 @Entity
 @Table(name = "event_rewards", indexes = {@Index(name = "idx_event_reward_player_status", columnList = "player_id, status, expires_at"), @Index(name = "idx_event_reward_source", columnList = "source_type, source_id")})
@@ -33,6 +35,8 @@ public class EventReward {
     private int bitsAmount;
     @Column(name = "item_type", length = 50)
     private String itemType;
+    @Column(name = "item_definition_code", length = 128)
+    private String itemDefinitionCode;
     @Column(name = "item_quantity", nullable = false)
     private int itemQuantity;
     @Enumerated(EnumType.STRING)
@@ -82,6 +86,7 @@ public class EventReward {
         private boolean bitsAmount$set;
         private int bitsAmount$value;
         private String itemType;
+        private String itemDefinitionCode;
         private boolean itemQuantity$set;
         private int itemQuantity$value;
         private boolean status$set;
@@ -161,6 +166,14 @@ public class EventReward {
         /**
          * @return {@code this}.
          */
+        public EventReward.EventRewardBuilder itemDefinitionCode(final String itemDefinitionCode) {
+            this.itemDefinitionCode = itemDefinitionCode;
+            return this;
+        }
+
+        /**
+         * @return {@code this}.
+         */
         public EventReward.EventRewardBuilder itemQuantity(final int itemQuantity) {
             this.itemQuantity$value = itemQuantity;
             itemQuantity$set = true;
@@ -207,12 +220,12 @@ public class EventReward {
             if (!this.itemQuantity$set) itemQuantity$value = EventReward.$default$itemQuantity();
             EventRewardStatus status$value = this.status$value;
             if (!this.status$set) status$value = EventReward.$default$status();
-            return new EventReward(this.id, this.player, this.sourceType, this.sourceId, this.subject, this.body, bitsAmount$value, this.itemType, itemQuantity$value, status$value, this.createdAt, this.expiresAt, this.claimedAt);
+            return new EventReward(this.id, this.player, this.sourceType, this.sourceId, this.subject, this.body, bitsAmount$value, this.itemType, this.itemDefinitionCode, itemQuantity$value, status$value, this.createdAt, this.expiresAt, this.claimedAt);
         }
 
         @Override
         public String toString() {
-            return "EventReward.EventRewardBuilder(id=" + this.id + ", player=" + this.player + ", sourceType=" + this.sourceType + ", sourceId=" + this.sourceId + ", subject=" + this.subject + ", body=" + this.body + ", bitsAmount$value=" + this.bitsAmount$value + ", itemType=" + this.itemType + ", itemQuantity$value=" + this.itemQuantity$value + ", status$value=" + this.status$value + ", createdAt=" + this.createdAt + ", expiresAt=" + this.expiresAt + ", claimedAt=" + this.claimedAt + ")";
+            return "EventReward.EventRewardBuilder(id=" + this.id + ", player=" + this.player + ", sourceType=" + this.sourceType + ", sourceId=" + this.sourceId + ", subject=" + this.subject + ", body=" + this.body + ", bitsAmount$value=" + this.bitsAmount$value + ", itemType=" + this.itemType + ", itemDefinitionCode=" + this.itemDefinitionCode + ", itemQuantity$value=" + this.itemQuantity$value + ", status$value=" + this.status$value + ", createdAt=" + this.createdAt + ", expiresAt=" + this.expiresAt + ", claimedAt=" + this.claimedAt + ")";
         }
     }
 
@@ -250,6 +263,10 @@ public class EventReward {
 
     public String getItemType() {
         return this.itemType;
+    }
+
+    public String getItemDefinitionCode() {
+        return this.itemDefinitionCode;
     }
 
     public int getItemQuantity() {
@@ -304,6 +321,10 @@ public class EventReward {
         this.itemType = itemType;
     }
 
+    public void setItemDefinitionCode(final String itemDefinitionCode) {
+        this.itemDefinitionCode = itemDefinitionCode;
+    }
+
     public void setItemQuantity(final int itemQuantity) {
         this.itemQuantity = itemQuantity;
     }
@@ -330,7 +351,7 @@ public class EventReward {
         this.status = EventReward.$default$status();
     }
 
-    public EventReward(final UUID id, final Player player, final String sourceType, final String sourceId, final String subject, final String body, final int bitsAmount, final String itemType, final int itemQuantity, final EventRewardStatus status, final LocalDateTime createdAt, final LocalDateTime expiresAt, final LocalDateTime claimedAt) {
+    public EventReward(final UUID id, final Player player, final String sourceType, final String sourceId, final String subject, final String body, final int bitsAmount, final String itemType, final String itemDefinitionCode, final int itemQuantity, final EventRewardStatus status, final LocalDateTime createdAt, final LocalDateTime expiresAt, final LocalDateTime claimedAt) {
         this.id = id;
         this.player = player;
         this.sourceType = sourceType;
@@ -339,6 +360,7 @@ public class EventReward {
         this.body = body;
         this.bitsAmount = bitsAmount;
         this.itemType = itemType;
+        this.itemDefinitionCode = itemDefinitionCode;
         this.itemQuantity = itemQuantity;
         this.status = status;
         this.createdAt = createdAt;

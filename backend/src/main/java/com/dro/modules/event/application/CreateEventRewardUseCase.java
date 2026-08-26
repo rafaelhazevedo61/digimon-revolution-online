@@ -7,7 +7,9 @@ import com.dro.modules.event.domain.EventReward;
 import com.dro.modules.event.domain.EventRewardRecipientType;
 import com.dro.modules.event.domain.EventRewardStatus;
 import com.dro.modules.event.infra.EventRewardRepository;
+import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.mail.application.CreateSystemMailMessageUseCase;
 import com.dro.modules.mail.domain.MailMessageType;
 import com.dro.modules.player.domain.Player;
@@ -41,6 +43,7 @@ public class CreateEventRewardUseCase {
     private final PlayerRepository playerRepository;
     private final ClanRepository clanRepository;
     private final EventRewardRepository eventRewardRepository;
+    private final ItemDefinitionRepository itemDefinitionRepository;
     private final CreateSystemMailMessageUseCase createSystemMailMessageUseCase;
 
     /**
@@ -61,13 +64,13 @@ public class CreateEventRewardUseCase {
         List<Player> recipients = resolveRecipients(request);
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiresAt = now.plusDays(request.validityDays());
-        String messageBody = EventRewardMessageText.pendingBody(request.body(), values.bitsAmount(), values.itemType(), values.itemQuantity(), expiresAt);
+        String messageBody = EventRewardMessageText.pendingBody(request.body(), values.bitsAmount(), values.itemType(), values.itemLabel(), values.itemQuantity(), expiresAt);
         List<UUID> rewardIds = new ArrayList<>();
         List<String> skippedUsernames = new ArrayList<>();
         int createdCount = 0;
         for (Player player : recipients) {
             UUID rewardId = UUID.randomUUID();
-            int inserted = eventRewardRepository.insertIfAbsent(rewardId, player.getId(), request.sourceType().trim(), request.sourceId().trim(), request.subject().trim(), messageBody, values.bitsAmount(), values.itemType(), values.itemQuantity(), EventRewardStatus.PENDING.name(), now, expiresAt);
+            int inserted = eventRewardRepository.insertIfAbsent(rewardId, player.getId(), request.sourceType().trim(), request.sourceId().trim(), request.subject().trim(), messageBody, values.bitsAmount(), values.itemType(), values.itemDefinitionCode(), values.itemQuantity(), EventRewardStatus.PENDING.name(), now, expiresAt);
             if (inserted == 0) {
                 eventRewardRepository.findBySourceTypeAndSourceIdAndPlayerId(request.sourceType().trim(), request.sourceId().trim(), player.getId()).ifPresent(existing -> rewardIds.add(existing.getId()));
                 skippedUsernames.add(player.getUsername());
@@ -91,23 +94,33 @@ public class CreateEventRewardUseCase {
         int bitsAmount = request.bitsAmount() == null ? 0 : request.bitsAmount();
         int itemQuantity = request.itemQuantity() == null ? 0 : request.itemQuantity();
         String itemType = request.itemType() == null || request.itemType().isBlank() ? null : request.itemType().trim().toUpperCase();
+        String itemDefinitionCode = request.itemDefinitionCode() == null || request.itemDefinitionCode().isBlank() ? null : request.itemDefinitionCode().trim().toUpperCase();
+        String itemLabel = null;
         if (bitsAmount == 0 && itemQuantity == 0) {
             throw new ConflictException("A premiação precisa conter Bits ou um item.");
         }
-        if (itemQuantity > 0 && itemType == null) {
-            throw new ConflictException("Informe o tipo do item da premiação.");
+        if (itemQuantity > 0 && itemType == null && itemDefinitionCode == null) {
+            throw new ConflictException("Informe o item da premiação.");
         }
-        if (itemQuantity == 0 && itemType != null) {
+        if (itemQuantity == 0 && (itemType != null || itemDefinitionCode != null)) {
             throw new ConflictException("A quantidade do item precisa ser maior que zero.");
         }
-        if (itemType != null) {
+        if (itemType != null && itemDefinitionCode != null) {
+            throw new ConflictException("Informe o item pelo catálogo ou pelo tipo legado, não ambos.");
+        }
+        if (itemDefinitionCode != null) {
+            ItemDefinition definition = itemDefinitionRepository.findByCode(itemDefinitionCode)
+                    .orElseThrow(() -> new ConflictException("Definição de item não encontrada: " + itemDefinitionCode));
+            itemType = resolveItemType(definition).name();
+            itemLabel = definition.getName();
+        } else if (itemType != null) {
             try {
                 ItemType.valueOf(itemType);
             } catch (IllegalArgumentException exception) {
                 throw new ConflictException("Tipo de item inválido para a premiação.");
             }
         }
-        return new RewardValues(bitsAmount, itemType, itemQuantity);
+        return new RewardValues(bitsAmount, itemType, itemDefinitionCode, itemLabel, itemQuantity);
     }
 
     /**
@@ -123,6 +136,20 @@ public class CreateEventRewardUseCase {
      * @throws ConflictException quando o modo, o identificador ou o limite são inválidos
      * @throws NotFoundException quando um destinatário ou clã não existe
      */
+    private ItemType resolveItemType(ItemDefinition definition) {
+        if ("CHEST".equalsIgnoreCase(definition.getCategory())) {
+            return ItemType.LOOT_CHEST;
+        }
+        try {
+            return ItemType.valueOf(definition.getCode());
+        } catch (IllegalArgumentException exception) {
+            if ("EVOLUTION_MATERIAL".equalsIgnoreCase(definition.getCategory())) {
+                return ItemType.EVOLUTION_MATERIAL;
+            }
+            throw new ConflictException("Definição de item não pode ser usada em premiações: " + definition.getCode());
+        }
+    }
+
     private List<Player> resolveRecipients(AdminEventRewardRequest request) {
         EventRewardRecipientType type = request.recipientType();
         if (type == null) {
@@ -175,13 +202,14 @@ public class CreateEventRewardUseCase {
     }
 
 
-    private record RewardValues(int bitsAmount, String itemType, int itemQuantity) {
+    private record RewardValues(int bitsAmount, String itemType, String itemDefinitionCode, String itemLabel, int itemQuantity) {
     }
 
-    public CreateEventRewardUseCase(final PlayerRepository playerRepository, final ClanRepository clanRepository, final EventRewardRepository eventRewardRepository, final CreateSystemMailMessageUseCase createSystemMailMessageUseCase) {
+    public CreateEventRewardUseCase(final PlayerRepository playerRepository, final ClanRepository clanRepository, final EventRewardRepository eventRewardRepository, final ItemDefinitionRepository itemDefinitionRepository, final CreateSystemMailMessageUseCase createSystemMailMessageUseCase) {
         this.playerRepository = playerRepository;
         this.clanRepository = clanRepository;
         this.eventRewardRepository = eventRewardRepository;
+        this.itemDefinitionRepository = itemDefinitionRepository;
         this.createSystemMailMessageUseCase = createSystemMailMessageUseCase;
     }
 }

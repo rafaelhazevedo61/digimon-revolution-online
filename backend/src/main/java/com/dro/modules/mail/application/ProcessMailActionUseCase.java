@@ -14,7 +14,9 @@ import com.dro.modules.event.application.EventRewardMessageText;
 import com.dro.modules.event.domain.EventRewardStatus;
 import com.dro.modules.event.infra.EventRewardRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.mail.api.dto.response.MailActionResponse;
 import com.dro.modules.mail.domain.MailMessage;
 import com.dro.modules.mail.infra.MailMessageRepository;
@@ -48,6 +50,7 @@ public class ProcessMailActionUseCase {
     private final EventRewardRepository eventRewardRepository;
     private final DigimonRepository digimonRepository;
     private final AddItemUseCase addItemUseCase;
+    private final ItemDefinitionRepository itemDefinitionRepository;
     private final TransactionAuditPublisher transactionAuditPublisher;
 
     /**
@@ -178,11 +181,19 @@ public class ProcessMailActionUseCase {
         if (reward.getBitsAmount() > 0) {
             digimon.setBits(digimon.getBits() + reward.getBitsAmount());
         }
+        String itemLabel = null;
         if (reward.getItemQuantity() > 0) {
-            addItemUseCase.execute(digimon.getId(), ItemType.valueOf(reward.getItemType()), reward.getItemQuantity());
+            if (reward.getItemDefinitionCode() != null && !reward.getItemDefinitionCode().isBlank()) {
+                ItemDefinition definition = itemDefinitionRepository.findByCode(reward.getItemDefinitionCode())
+                        .orElseThrow(() -> new NotFoundException("Definição do item da premiação não encontrada."));
+                itemLabel = definition.getName();
+                addItemUseCase.addMaterial(digimon.getId(), definition, reward.getItemQuantity());
+            } else {
+                addItemUseCase.execute(digimon.getId(), ItemType.valueOf(reward.getItemType()), reward.getItemQuantity());
+            }
         }
         digimonRepository.save(digimon);
-        message.setBody(EventRewardMessageText.claimedBody(message.getBody(), reward.getBitsAmount(), reward.getItemType(), reward.getItemQuantity(), digimon.getName(), now));
+        message.setBody(EventRewardMessageText.claimedBody(message.getBody(), reward.getBitsAmount(), reward.getItemType(), itemLabel, reward.getItemQuantity(), digimon.getName(), now));
         reward.setStatus(EventRewardStatus.CLAIMED);
         reward.setClaimedAt(now);
         eventRewardRepository.save(reward);
@@ -203,7 +214,7 @@ public class ProcessMailActionUseCase {
         mailMessageRepository.save(message);
     }
 
-    public ProcessMailActionUseCase(final MailMessageRepository mailMessageRepository, final ClanInvitationRepository clanInvitationRepository, final ClanRepository clanRepository, final PlayerRepository playerRepository, final ClanBonusService clanBonusService, final EventRewardRepository eventRewardRepository, final DigimonRepository digimonRepository, final AddItemUseCase addItemUseCase, final TransactionAuditPublisher transactionAuditPublisher) {
+    public ProcessMailActionUseCase(final MailMessageRepository mailMessageRepository, final ClanInvitationRepository clanInvitationRepository, final ClanRepository clanRepository, final PlayerRepository playerRepository, final ClanBonusService clanBonusService, final EventRewardRepository eventRewardRepository, final DigimonRepository digimonRepository, final AddItemUseCase addItemUseCase, final ItemDefinitionRepository itemDefinitionRepository, final TransactionAuditPublisher transactionAuditPublisher) {
         this.mailMessageRepository = mailMessageRepository;
         this.clanInvitationRepository = clanInvitationRepository;
         this.clanRepository = clanRepository;
@@ -212,6 +223,7 @@ public class ProcessMailActionUseCase {
         this.eventRewardRepository = eventRewardRepository;
         this.digimonRepository = digimonRepository;
         this.addItemUseCase = addItemUseCase;
+        this.itemDefinitionRepository = itemDefinitionRepository;
         this.transactionAuditPublisher = transactionAuditPublisher;
     }
 }
