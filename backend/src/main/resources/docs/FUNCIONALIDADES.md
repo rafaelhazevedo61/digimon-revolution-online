@@ -657,7 +657,8 @@ O módulo `event` atual implementa **premiações administrativas de evento**, e
 ### Funcionamento atual
 
 - administrador cria uma premiação contendo Bits e/ou item;
-- destinatários podem ser jogador, conjunto de jogadores ou membros de um Clã, conforme as opções suportadas;
+- destinatários podem ser um jogador, uma lista manual de até 100 jogadores, todos os membros de um Clã ou todos os jogadores do servidor;
+- o modo global considera as contas do tipo `PLAYER` existentes no momento do envio;
 - cada prêmio é persistido individualmente por jogador;
 - uma mensagem de Correio é criada para permitir o resgate;
 - premiações possuem estado e validade;
@@ -667,7 +668,8 @@ O módulo `event` atual implementa **premiações administrativas de evento**, e
 
 | Método | Rota | Descrição |
 |---|---|---|
-| POST | `/admin/mail/event-rewards` | Criar/distribuir premiação de evento |
+| POST | `/admin/mail/event-rewards` | Criar/distribuir premiação de evento (`PLAYER`, `CLAN`, `PLAYERS` ou `ALL_PLAYERS`) |
+| GET | `/admin/mail/recipients/players/count` | Consultar a quantidade de jogadores elegíveis para o modo global |
 
 A expansão para calendário, programação automática ou catálogo público de eventos deve ser tratada como evolução futura, não como funcionalidade já entregue.
 

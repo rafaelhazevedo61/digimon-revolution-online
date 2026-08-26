@@ -27,6 +27,10 @@ e o projeto segue versionamento incremental por entregas (PRs).
   - Telas de Arena no game frontend: lobby, resultado do duelo, ranking e histórico.
   - Migrations `V74` (rating, estatísticas e tabela `arena_matches`) e `V75`/`V76` (flag `is_bot`, jogador de sistema e seed de bots).
 
+### Corrigido
+
+- **Premiação global de eventos**: administradores podem selecionar todos os jogadores do servidor, visualizar a quantidade elegível antes da confirmação e gerar uma mensagem individual para cada conta do tipo `PLAYER`.
+
 ## [0.0.3-SNAPSHOT]
 
 Versão focada em estabilidade dos fluxos de incubação e autenticação.

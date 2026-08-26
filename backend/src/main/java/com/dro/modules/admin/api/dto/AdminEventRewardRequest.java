@@ -14,9 +14,10 @@ import java.util.List;
  * Solicitação administrativa para criar premiações de eventos em lote.
  *
  * <p>O modo {@code PLAYER} usa {@code playerUsername}, o modo {@code CLAN}
- * usa {@code clanId} e o modo {@code PLAYERS} usa {@code playerUsernames}. A
- * combinação de {@code sourceType}, {@code sourceId} e jogador define a
- * idempotência da entrega.</p>
+ * usa {@code clanId}, o modo {@code PLAYERS} usa {@code playerUsernames} e o
+ * modo {@code ALL_PLAYERS} alcança todos os jogadores do servidor no momento
+ * do envio. A combinação de {@code sourceType}, {@code sourceId} e jogador
+ * define a idempotência da entrega.</p>
  *
  * @param recipientType estratégia de expansão dos destinatários
  * @param playerUsername username usado no modo individual

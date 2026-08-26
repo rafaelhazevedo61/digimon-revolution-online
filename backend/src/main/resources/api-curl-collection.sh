@@ -155,7 +155,7 @@ USABLE="${USABLE:-VALOR}"
 # curl --fail-with-body -i -X POST "${BASE_URL}/admin/mail/announcements" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"subject": "Manutenção programada", "body": "Comunicado de teste. Altere este texto antes de enviar."}'
 
 # AdminEventRewardController.create (POST /admin/mail/event-rewards)
-# curl --fail-with-body -i -X POST "${BASE_URL}/admin/mail/event-rewards" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"playerUsername": "jogador-alvo", "sourceType": "EVENT", "sourceId": "evento-teste-001", "subject": "Premiação de teste", "body": "Você recebeu esta recompensa pelo evento.", "bitsAmount": 5000, "itemType": "TRAINING_STONE", "itemQuantity": 2, "validityDays": 7}'
+# curl --fail-with-body -i -X POST "${BASE_URL}/admin/mail/event-rewards" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"recipientType": "PLAYER", "playerUsername": "jogador-alvo", "clanId": null, "playerUsernames": [], "sourceType": "EVENT", "sourceId": "evento-teste-001", "subject": "Premiação de teste", "body": "Você recebeu esta recompensa pelo evento.", "bitsAmount": 5000, "itemType": "TRAINING_STONE", "itemQuantity": 2, "validityDays": 7}'
 
 # AdminEventRewardRecipientController.listClans (GET /admin/mail/recipients/clans)
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/mail/recipients/clans" -H "Authorization: Bearer ${ADMIN_TOKEN}"
@@ -165,6 +165,9 @@ USABLE="${USABLE:-VALOR}"
 
 # AdminEventRewardRecipientController.searchPlayers (GET /admin/mail/recipients/players)
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/mail/recipients/players?query=${QUERY}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+
+# AdminEventRewardRecipientController.countEligiblePlayers (GET /admin/mail/recipients/players/count)
+# curl --fail-with-body -i -X GET "${BASE_URL}/admin/mail/recipients/players/count" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
 # AdminMissionController.list (GET /admin/missions)
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/missions?activeOnly=${ACTIVE_ONLY}&area=${AREA}&stage=${STAGE}&chestCode=${CHEST_CODE}&lootItemType=${LOOT_ITEM_TYPE}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
