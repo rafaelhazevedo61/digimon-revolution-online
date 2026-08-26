@@ -6,50 +6,20 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * Regras de ataques contra o Boss Mundial.
  *
- * <p>Cada jogador possui três ataques diários. O dano usa a vida máxima do Boss
- * e uma faixa percentual baseada na chance de vitória: a chance é multiplicada
- * por 0,05 ponto percentual, com dano mínimo de 0,05% da vida máxima.</p>
+ * <p>O dano usa a vida máxima do Boss e uma faixa percentual baseada na chance
+ * de vitória: a chance é multiplicada por 0,05 ponto percentual, com dano
+ * mínimo de 0,05% da vida máxima.</p>
  */
 public final class WorldBossRules {
-    public static final int DAILY_ATTACK_LIMIT = 3;
     public static final int DEFAULT_ATTACK_COOLDOWN_MINUTES = BossCombatRules.DEFAULT_ATTACK_COOLDOWN_MINUTES;
     public static final double DAMAGE_PERCENT_PER_WIN_CHANCE = 0.05;
     public static final double MIN_DAMAGE_PERCENT = 0.05;
-
-    /**
-     * Calcula quantos ataques diários ainda estão disponíveis.
-     */
-    public static int dailyAttacksRemaining(long usedToday) {
-        return dailyAttacksRemaining(usedToday, DAILY_ATTACK_LIMIT);
-    }
-
-    /**
-     * Calcula quantos ataques diários ainda estão disponíveis para o limite informado.
-     */
-    public static int dailyAttacksRemaining(long usedToday, int dailyAttackLimit) {
-        long remaining = dailyAttackLimit - usedToday;
-        return (int) Math.max(0, remaining);
-    }
 
     /**
      * Retorna o cooldown efetivo, aplicando cinco minutos quando o cadastro não o configurou.
      */
     public static int attackCooldownMinutes(int configuredMinutes) {
         return BossCombatRules.attackCooldownMinutes(configuredMinutes);
-    }
-
-    /**
-     * Verifica se o jogador já consumiu os três ataques do dia.
-     */
-    public static boolean dailyLimitReached(long usedToday) {
-        return dailyLimitReached(usedToday, DAILY_ATTACK_LIMIT);
-    }
-
-    /**
-     * Verifica se o jogador atingiu o limite diário informado.
-     */
-    public static boolean dailyLimitReached(long usedToday, int dailyAttackLimit) {
-        return usedToday >= dailyAttackLimit;
     }
 
     /**

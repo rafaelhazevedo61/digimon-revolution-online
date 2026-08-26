@@ -184,13 +184,10 @@ class AttackWorldBossUseCaseTest {
         when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
         when(worldBossService.getOrCreateToday()).thenReturn(instance);
         when(bossDefinitionRepository.findById(1L)).thenReturn(Optional.of(boss));
-        lenient().when(worldBossAttackRepository.countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(
-                eq(instance.getId()), eq(playerId), any(Instant.class))).thenReturn(0L);
         lenient().when(worldBossAttackRepository.findByWorldBossIdAndPlayerIdAndRequestId(
                 eq(instance.getId()), eq(playerId), anyString())).thenReturn(Optional.empty());
         lenient().when(digimonPowerService.calculatePower(digimon, null)).thenReturn(100_000.0);
         lenient().when(globalDamageBuffService.getMultiplier()).thenReturn(1.0);
-        lenient().when(gameplayConfig.getWorldBossDailyAttackLimit()).thenReturn(3);
         lenient().when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(true);
         lenient().when(gameplayConfig.isWorldBossCooldownEnabled()).thenReturn(true);
         lenient().when(worldBossRewardService.grant(any(), any(), any(), anyBoolean()))
@@ -204,7 +201,6 @@ class AttackWorldBossUseCaseTest {
         assertTrue(response.defeated());
         assertEquals(List.of(attemptReward), response.rewards());
         assertEquals(0, response.remainingHp());
-        assertEquals(2, response.dailyAttacksRemaining());
 
         ArgumentCaptor<WorldBossAttack> captor = ArgumentCaptor.forClass(WorldBossAttack.class);
         verify(worldBossAttackRepository).save(captor.capture());
@@ -212,7 +208,6 @@ class AttackWorldBossUseCaseTest {
         assertEquals("request-1", saved.getRequestId());
         assertEquals(0, saved.getRemainingHpAfter());
         assertTrue(saved.isDefeated());
-        assertEquals(2, saved.getDailyAttacksRemaining());
         verify(worldBossRewardService).grant(boss, instance, saved, true);
         verify(transactionAuditPublisher).success(
                 anyString(), eq("WORLD_BOSS_ATTACKED"), eq("WorldBossAttack"), anyString(), anyMap());
@@ -234,7 +229,6 @@ class AttackWorldBossUseCaseTest {
                 .defeated(false)
                 .defeatedRewardXp(0)
                 .defeatedRewardBits(0)
-                .dailyAttacksRemaining(2)
                 .createdAt(Instant.now())
                 .build();
         when(worldBossAttackRepository.findByWorldBossIdAndPlayerIdAndRequestId(
@@ -245,7 +239,6 @@ class AttackWorldBossUseCaseTest {
 
         assertFalse(response.defeated());
         assertEquals(90, response.remainingHp());
-        assertEquals(2, response.dailyAttacksRemaining());
         assertEquals(List.of(attemptReward), response.rewards());
         verify(worldBossAttackRepository, never()).save(any());
         verify(worldBossRewardService, never()).grant(any(), any(), any(), anyBoolean());
@@ -254,34 +247,6 @@ class AttackWorldBossUseCaseTest {
     }
 
 
-    @Test
-    void attackUsesConfiguredDailyLimit() {
-        when(gameplayConfig.getWorldBossDailyAttackLimit()).thenReturn(10);
-        when(worldBossAttackRepository.countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(
-                eq(instance.getId()), eq(playerId), any(Instant.class))).thenReturn(9L);
-
-        AttackWorldBossResponse response = useCase.execute(token, "request-configured-limit");
-
-        assertTrue(response.defeated());
-        assertEquals(0, response.dailyAttacksRemaining());
-        verify(worldBossAttackRepository).save(any(WorldBossAttack.class));
-    }
-
-    @Test
-    void attackIsBlockedWhenConfiguredDailyLimitIsReached() {
-        when(gameplayConfig.getWorldBossDailyAttackLimit()).thenReturn(10);
-        when(worldBossAttackRepository.countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(
-                eq(instance.getId()), eq(playerId), any(Instant.class))).thenReturn(10L);
-
-        BadRequestException exception = assertThrows(
-                BadRequestException.class,
-                () -> useCase.execute(token, "request-daily-limit")
-        );
-
-        assertTrue(exception.getMessage().contains("10 per day"));
-        verify(worldBossAttackRepository, never()).save(any());
-        verify(digimonRepository, never()).save(any());
-    }
 
     @Test
     void energyDisabledAllowsAttackWithZeroEnergyWithoutConsumption() {

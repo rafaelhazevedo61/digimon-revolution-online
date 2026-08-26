@@ -75,8 +75,6 @@ class WorldBossResponseMapperTest {
                 .build();
 
         when(bossDefinitionRepository.findById(1L)).thenReturn(Optional.of(boss));
-        when(worldBossAttackRepository.countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(
-                any(), any(), any())).thenReturn(1L);
         when(worldBossAttackRepository.findByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(worldBossId, playerId))
                 .thenReturn(List.of(previousAttack));
         when(worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(worldBossId))
@@ -84,7 +82,6 @@ class WorldBossResponseMapperTest {
         when(playerRepository.findAllById(any())).thenReturn(List.of());
         when(playerRepository.findById(playerId)).thenReturn(Optional.empty());
         when(worldBossRewardService.findPlayerRewards(worldBossId, playerId)).thenReturn(List.of());
-        when(gameplayConfig.getWorldBossDailyAttackLimit()).thenReturn(10);
         when(gameplayConfig.isWorldBossCooldownEnabled()).thenReturn(false);
 
         var response = mapper.toResponse(instance, playerId);
@@ -124,8 +121,6 @@ class WorldBossResponseMapperTest {
                 .build();
 
         when(bossDefinitionRepository.findById(1L)).thenReturn(Optional.of(boss));
-        when(worldBossAttackRepository.countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(
-                any(), any(), any())).thenReturn(1L);
         when(worldBossAttackRepository.findByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(worldBossId, playerId))
                 .thenReturn(List.of(previousAttack));
         when(worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(worldBossId))
@@ -133,7 +128,6 @@ class WorldBossResponseMapperTest {
         when(playerRepository.findAllById(any())).thenReturn(List.of());
         when(playerRepository.findById(playerId)).thenReturn(Optional.empty());
         when(worldBossRewardService.findPlayerRewards(worldBossId, playerId)).thenReturn(List.of());
-        when(gameplayConfig.getWorldBossDailyAttackLimit()).thenReturn(10);
         when(gameplayConfig.isWorldBossCooldownEnabled()).thenReturn(true);
 
         var response = mapper.toResponse(instance, playerId);
@@ -141,6 +135,5 @@ class WorldBossResponseMapperTest {
         assertThat(response.cooldownEnabled()).isFalse();
         assertThat(response.attackCooldownMinutes()).isEqualTo(5);
         assertThat(response.nextAttackAvailableAt()).isNull();
-        assertThat(response.myDailyAttacksRemaining()).isEqualTo(9);
     }
 }

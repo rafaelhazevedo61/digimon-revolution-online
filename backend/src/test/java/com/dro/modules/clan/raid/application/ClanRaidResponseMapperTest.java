@@ -94,13 +94,10 @@ class ClanRaidResponseMapperTest {
 
     private void stubCommon(ClanRaid raid, UUID playerId, BossDefinitionEntity boss, ClanRaidAttack previousAttack) {
         when(bossDefinitionRepository.findById(raid.getBossId())).thenReturn(Optional.of(boss));
-        when(clanRaidAttackRepository.countByClanRaidIdAndPlayerIdAndCreatedAtGreaterThanEqual(
-                any(), any(), any())).thenReturn(1L);
         when(clanRaidAttackRepository.findByClanRaidIdOrderByCreatedAtDesc(raid.getId()))
                 .thenReturn(List.of(previousAttack));
         when(playerRepository.findAllById(any())).thenReturn(List.of());
         when(playerRepository.findById(playerId)).thenReturn(Optional.empty());
-        when(gameplayConfig.getClanRaidDailyAttackLimit()).thenReturn(3);
         when(gameplayConfig.isClanRaidCooldownEnabled()).thenReturn(true);
     }
 

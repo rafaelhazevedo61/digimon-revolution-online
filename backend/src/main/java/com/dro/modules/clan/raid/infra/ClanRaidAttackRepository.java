@@ -17,10 +17,6 @@ import java.util.UUID;
 @Repository
 public interface ClanRaidAttackRepository extends JpaRepository<ClanRaidAttack, UUID> {
 
-    long countByClanRaidIdAndPlayerIdAndCreatedAtGreaterThanEqual(UUID clanRaidId, UUID playerId, Instant startOfDay);
-
-    long countByClanRaidIdAndCreatedAtGreaterThanEqual(UUID clanRaidId, Instant startOfDay);
-
     long deleteByCreatedAtGreaterThanEqual(Instant since);
 
     List<ClanRaidAttack> findByClanRaidIdOrderByCreatedAtDesc(UUID clanRaidId);

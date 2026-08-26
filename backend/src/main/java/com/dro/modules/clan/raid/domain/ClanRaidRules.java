@@ -7,27 +7,9 @@ import java.util.concurrent.ThreadLocalRandom;
  * Componente da camada de conjunto de regras de domínio do módulo de Clãs.
  */
 public final class ClanRaidRules {
-    public static final int DAILY_ATTACK_LIMIT = 3;
     public static final int DEFAULT_ATTACK_COOLDOWN_MINUTES = BossCombatRules.DEFAULT_ATTACK_COOLDOWN_MINUTES;
     public static final double DAMAGE_PERCENT_PER_WIN_CHANCE = 0.15;
     public static final int MIN_DAMAGE_PERCENT = 1;
-
-    public static int dailyAttacksRemaining(long usedToday) {
-        return dailyAttacksRemaining(usedToday, DAILY_ATTACK_LIMIT);
-    }
-
-    public static int dailyAttacksRemaining(long usedToday, int dailyAttackLimit) {
-        long remaining = dailyAttackLimit - usedToday;
-        return (int) Math.max(0, remaining);
-    }
-
-    public static boolean dailyLimitReached(long usedToday) {
-        return dailyLimitReached(usedToday, DAILY_ATTACK_LIMIT);
-    }
-
-    public static boolean dailyLimitReached(long usedToday, int dailyAttackLimit) {
-        return usedToday >= dailyAttackLimit;
-    }
 
     public static int attackCooldownMinutes(int configuredMinutes) {
         return BossCombatRules.attackCooldownMinutes(configuredMinutes);

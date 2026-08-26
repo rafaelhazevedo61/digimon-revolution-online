@@ -172,13 +172,10 @@ class AttackClanRaidUseCaseTest {
         when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
         when(clanRaidService.getOrCreateToday(clanId)).thenReturn(raid);
         when(bossDefinitionRepository.findById(1L)).thenReturn(Optional.of(boss));
-        lenient().when(clanRaidAttackRepository.countByClanRaidIdAndPlayerIdAndCreatedAtGreaterThanEqual(
-                eq(raid.getId()), eq(playerId), any(Instant.class))).thenReturn(0L);
         lenient().when(clanRaidAttackRepository.findFirstByClanRaidIdAndPlayerIdOrderByCreatedAtDesc(
                 eq(raid.getId()), eq(playerId))).thenReturn(Optional.empty());
         lenient().when(digimonPowerService.calculatePower(digimon, clanId)).thenReturn(100_000.0);
         lenient().when(globalDamageBuffService.getMultiplier()).thenReturn(1.0);
-        lenient().when(gameplayConfig.getClanRaidDailyAttackLimit()).thenReturn(3);
         lenient().when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(false);
         lenient().when(gameplayConfig.isClanRaidCooldownEnabled()).thenReturn(true);
     }

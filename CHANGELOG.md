@@ -38,6 +38,7 @@ e o projeto segue versionamento incremental por entregas (PRs).
 - **Restart automático de bosses no alpha**: após a derrota, o Boss Mundial e a Raid de Clã passam a abrir um novo ciclo automaticamente quando `dro.gameplay.auto-boss-respawn-after-defeat-enabled` está ativo; a flag permanece desligada por padrão fora do perfil alpha.
 - **Cooldown da Raid de Clã**: reativado o intervalo entre ataques com a mesma regra do Boss Mundial, usando cinco minutos como configuração do boss e como fallback para valores antigos.
 - **Flags de cooldown dos bosses**: adicionada `DRO_BOSS_COOLDOWN_ENABLED`/`dro.gameplay.boss-cooldown-enabled` como controle global, além de `DRO_WORLD_BOSS_COOLDOWN_ENABLED`/`dro.gameplay.world-boss.cooldown-enabled` e `DRO_CLAN_RAID_COOLDOWN_ENABLED`/`dro.gameplay.clan-raid.cooldown-enabled` para controle individual por tipo; o cooldown só é aplicado quando a flag global, a flag do tipo e `cooldownEnabled` da definição individual estão ativos.
+- **Tentativas de Boss Mundial e Raid de Clã**: removido o limite diário de ataques do backend, frontend, contratos e configuração; ambos os sistemas agora ficam limitados somente pelo cooldown efetivo e pela derrota do ciclo.
 
 ## [0.0.3-SNAPSHOT]
 

@@ -19,8 +19,6 @@ public record WorldBossResponse(
         WorldBossStatus status,
         Instant createdAt,
         Instant defeatedAt,
-        int myDailyAttacksUsed,
-        int myDailyAttacksRemaining,
         int attackCooldownMinutes,
         boolean cooldownEnabled,
         Instant nextAttackAvailableAt,

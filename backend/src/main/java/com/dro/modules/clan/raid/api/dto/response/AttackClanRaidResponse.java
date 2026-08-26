@@ -17,7 +17,6 @@ public record AttackClanRaidResponse(
         int xpGained,
         int bitsGained,
         int clanHonorMarksGained,
-        int clanXpGained,
-        int dailyAttacksRemaining
+        int clanXpGained
 ) {
 }

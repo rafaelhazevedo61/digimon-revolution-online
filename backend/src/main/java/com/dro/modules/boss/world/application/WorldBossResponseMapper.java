@@ -16,8 +16,6 @@ import com.dro.shared.exception.NotFoundException;
 import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -34,10 +32,6 @@ public class WorldBossResponseMapper {
 
     public WorldBossResponse toResponse(WorldBossInstance instance, UUID viewerPlayerId) {
         BossDefinitionEntity boss = bossDefinitionRepository.findById(instance.getBossId()).orElseThrow(() -> new NotFoundException("Boss not found"));
-        Instant startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant();
-        Instant resetCutoff = instance.getDailyResetAt() != null && instance.getDailyResetAt().isAfter(startOfDay) ? instance.getDailyResetAt() : startOfDay;
-        int usedToday = (int) worldBossAttackRepository.countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(instance.getId(), viewerPlayerId, resetCutoff);
-        int dailyAttackLimit = gameplayConfig.getWorldBossDailyAttackLimit();
         List<WorldBossAttack> myAttacks = worldBossAttackRepository.findByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(instance.getId(), viewerPlayerId);
         long myTotalDamage = myAttacks.stream().mapToLong(WorldBossAttack::getDamage).sum();
         int attackCooldownMinutes = WorldBossRules.attackCooldownMinutes(boss.getCooldownMinutes());
@@ -45,7 +39,7 @@ public class WorldBossResponseMapper {
         Instant nextAttackCandidate = myAttacks.isEmpty() || myAttacks.get(0).getCreatedAt() == null ? null : myAttacks.get(0).getCreatedAt().plus(Duration.ofMinutes(attackCooldownMinutes));
         Instant nextAttackAvailableAt = cooldownEnabled && instance.getStatus() == com.dro.modules.boss.world.domain.WorldBossStatus.ACTIVE && nextAttackCandidate != null && nextAttackCandidate.isAfter(Instant.now()) ? nextAttackCandidate : null;
         List<WorldBossAttackResponse> recentAttacks = worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(instance.getId()).stream().limit(20).map(this::toAttackResponse).toList();
-        return new WorldBossResponse(instance.getId(), boss.getCode(), boss.getName(), boss.getImageUrl(), instance.getMaxHp(), instance.getRemainingHp(), instance.getStatus(), instance.getCreatedAt(), instance.getDefeatedAt(), usedToday, WorldBossRules.dailyAttacksRemaining(usedToday, dailyAttackLimit), attackCooldownMinutes, cooldownEnabled, nextAttackAvailableAt, myTotalDamage, buildRanking(instance.getId()), recentAttacks, worldBossRewardService.findPlayerRewards(instance.getId(), viewerPlayerId));
+        return new WorldBossResponse(instance.getId(), boss.getCode(), boss.getName(), boss.getImageUrl(), instance.getMaxHp(), instance.getRemainingHp(), instance.getStatus(), instance.getCreatedAt(), instance.getDefeatedAt(), attackCooldownMinutes, cooldownEnabled, nextAttackAvailableAt, myTotalDamage, buildRanking(instance.getId()), recentAttacks, worldBossRewardService.findPlayerRewards(instance.getId(), viewerPlayerId));
     }
 
     private List<WorldBossRankingEntryResponse> buildRanking(UUID worldBossId) {

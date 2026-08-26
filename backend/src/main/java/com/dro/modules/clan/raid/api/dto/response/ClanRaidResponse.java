@@ -20,8 +20,6 @@ public record ClanRaidResponse(
         ClanRaidStatus status,
         Instant createdAt,
         Instant defeatedAt,
-        int myDailyAttacksUsed,
-        int myDailyAttacksRemaining,
         int attackCooldownMinutes,
         boolean cooldownEnabled,
         Instant nextAttackAvailableAt,

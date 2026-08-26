@@ -82,14 +82,6 @@ public class GameplayConfig {
         return arena.getDailyChallengeLimit();
     }
 
-    public int getWorldBossDailyAttackLimit() {
-        return worldBoss.getDailyAttackLimit();
-    }
-
-    public int getClanRaidDailyAttackLimit() {
-        return clanRaid.getDailyAttackLimit();
-    }
-
     public static class Energy {
 
         private boolean consumptionEnabled = true;
@@ -118,16 +110,7 @@ public class GameplayConfig {
 
     public static class WorldBoss {
 
-        private int dailyAttackLimit = 3;
         private boolean cooldownEnabled = true;
-
-        public int getDailyAttackLimit() {
-            return dailyAttackLimit;
-        }
-
-        public void setDailyAttackLimit(int dailyAttackLimit) {
-            this.dailyAttackLimit = dailyAttackLimit;
-        }
 
         public boolean isCooldownEnabled() {
             return cooldownEnabled;
@@ -140,16 +123,7 @@ public class GameplayConfig {
 
     public static class ClanRaid {
 
-        private int dailyAttackLimit = 3;
         private boolean cooldownEnabled = true;
-
-        public int getDailyAttackLimit() {
-            return dailyAttackLimit;
-        }
-
-        public void setDailyAttackLimit(int dailyAttackLimit) {
-            this.dailyAttackLimit = dailyAttackLimit;
-        }
 
         public boolean isCooldownEnabled() {
             return cooldownEnabled;

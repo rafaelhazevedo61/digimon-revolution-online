@@ -566,7 +566,6 @@ async function clanLoadRaid() {
     const nextAttackAt = raid.nextAttackAvailableAt ? Date.parse(raid.nextAttackAvailableAt) : NaN;
     const cooldownActive = cooldownEnabled
       && !defeated
-      && raid.myDailyAttacksRemaining > 0
       && Number.isFinite(nextAttackAt)
       && nextAttackAt > Date.now();
     const cooldownInfoHtml = cooldownEnabled
@@ -634,11 +633,10 @@ async function clanLoadRaid() {
           <div class="${defeated ? 'bg-green-500' : 'bg-red-500'} h-2.5 rounded-full" style="width:${percent}%"></div>
         </div>
 
-        <p class="text-xs text-slate-400 mb-3">Seus ataques hoje: <span class="text-cyan-400">${raid.myDailyAttacksUsed}/${raid.myDailyAttacksUsed + raid.myDailyAttacksRemaining}</span> · Seu dano: <span class="text-cyan-400">${raid.myTotalDamage.toLocaleString()}</span></p>
+        <p class="text-xs text-slate-400 mb-3">Seu dano: <span class="text-cyan-400">${raid.myTotalDamage.toLocaleString()}</span></p>
 
-        ${!defeated && raid.myDailyAttacksRemaining > 0 ? `${cooldownInfoHtml}<button id="clan-raid-attack-button" class="btn-primary w-full" onclick="clanAttackRaid()"${cooldownActive ? " disabled" : ""}>${cooldownActive ? "Próximo ataque em <span id=\"clan-raid-countdown\">--:--</span>" : "Atacar Raid"}</button>` : ""}
-        ${!defeated && raid.myDailyAttacksRemaining === 0 ? `${cooldownInfoHtml}<p class="text-xs text-slate-500 text-center">Limite diário de ataques atingido.</p>` : ""}
-        ${defeated ? `<p class="text-xs text-green-400 text-center">Raid derrotado hoje! Volte amanhã.</p>` : ""}
+        ${!defeated ? `${cooldownInfoHtml}<button id="clan-raid-attack-button" class="btn-primary w-full" onclick="clanAttackRaid()"${cooldownActive ? " disabled" : ""}>${cooldownActive ? "Próximo ataque em <span id=\"clan-raid-countdown\">--:--</span>" : "Atacar Raid"}</button>` : ""}
+        ${defeated ? `<p class="text-xs text-green-400 text-center">Raid derrotado. Aguarde o próximo ciclo.</p>` : ""}
       </div>
 
       ${rankingHtml}
