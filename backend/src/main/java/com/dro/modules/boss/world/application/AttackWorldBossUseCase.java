@@ -76,7 +76,7 @@ public class AttackWorldBossUseCase {
         validateRequirements(boss, digimon);
         WorldBossAttack lastAttack = worldBossAttackRepository.findFirstByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(instance.getId(), playerId).orElse(null);
         int cooldownMinutes = WorldBossRules.attackCooldownMinutes(boss.getCooldownMinutes());
-        if (gameplayConfig.isWorldBossCooldownEnabled() && boss.isCooldownEnabled() && lastAttack != null && lastAttack.getCreatedAt() != null) {
+        if (gameplayConfig.isWorldBossCooldownEnabled() && lastAttack != null && lastAttack.getCreatedAt() != null) {
             Instant nextAttackAt = lastAttack.getCreatedAt().plus(Duration.ofMinutes(cooldownMinutes));
             Instant now = Instant.now();
             if (now.isBefore(nextAttackAt)) {

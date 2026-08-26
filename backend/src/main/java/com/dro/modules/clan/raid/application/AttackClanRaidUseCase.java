@@ -71,7 +71,7 @@ public class AttackClanRaidUseCase {
                 .findFirstByClanRaidIdAndPlayerIdOrderByCreatedAtDesc(raid.getId(), playerId)
                 .orElse(null);
         int cooldownMinutes = ClanRaidRules.attackCooldownMinutes(boss.getCooldownMinutes());
-        if (gameplayConfig.isClanRaidCooldownEnabled() && boss.isCooldownEnabled() && lastAttack != null && lastAttack.getCreatedAt() != null) {
+        if (gameplayConfig.isClanRaidCooldownEnabled() && lastAttack != null && lastAttack.getCreatedAt() != null) {
             Instant nextAttackAt = lastAttack.getCreatedAt().plus(Duration.ofMinutes(cooldownMinutes));
             Instant now = Instant.now();
             if (now.isBefore(nextAttackAt)) {

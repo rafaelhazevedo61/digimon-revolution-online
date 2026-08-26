@@ -35,7 +35,7 @@ public class WorldBossResponseMapper {
         List<WorldBossAttack> myAttacks = worldBossAttackRepository.findByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(instance.getId(), viewerPlayerId);
         long myTotalDamage = myAttacks.stream().mapToLong(WorldBossAttack::getDamage).sum();
         int attackCooldownMinutes = WorldBossRules.attackCooldownMinutes(boss.getCooldownMinutes());
-        boolean cooldownEnabled = gameplayConfig.isWorldBossCooldownEnabled() && boss.isCooldownEnabled();
+        boolean cooldownEnabled = gameplayConfig.isWorldBossCooldownEnabled();
         Instant nextAttackCandidate = myAttacks.isEmpty() || myAttacks.get(0).getCreatedAt() == null ? null : myAttacks.get(0).getCreatedAt().plus(Duration.ofMinutes(attackCooldownMinutes));
         Instant nextAttackAvailableAt = cooldownEnabled && instance.getStatus() == com.dro.modules.boss.world.domain.WorldBossStatus.ACTIVE && nextAttackCandidate != null && nextAttackCandidate.isAfter(Instant.now()) ? nextAttackCandidate : null;
         List<WorldBossAttackResponse> recentAttacks = worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(instance.getId()).stream().limit(20).map(this::toAttackResponse).toList();

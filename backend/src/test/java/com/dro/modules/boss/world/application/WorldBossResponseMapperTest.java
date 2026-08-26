@@ -92,7 +92,7 @@ class WorldBossResponseMapperTest {
     }
 
     @Test
-    void doesNotExposeNextAttackWhenCooldownIsDisabled () {
+    void exposesNextAttackWhenLegacyDatabaseCooldownIsDisabled () {
         UUID worldBossId = UUID.randomUUID();
         UUID playerId = UUID.randomUUID();
         WorldBossInstance instance = WorldBossInstance.builder()
@@ -132,8 +132,8 @@ class WorldBossResponseMapperTest {
 
         var response = mapper.toResponse(instance, playerId);
 
-        assertThat(response.cooldownEnabled()).isFalse();
+        assertThat(response.cooldownEnabled()).isTrue();
         assertThat(response.attackCooldownMinutes()).isEqualTo(5);
-        assertThat(response.nextAttackAvailableAt()).isNull();
+        assertThat(response.nextAttackAvailableAt()).isNotNull().isAfter(Instant.now());
     }
 }

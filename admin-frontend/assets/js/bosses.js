@@ -50,6 +50,9 @@ function equipmentPoolChance(boss) {
 }
 
 function cooldownSummary(boss) {
+  if (["WORLD", "CLAN"].includes(boss.bossType)) {
+    return `<span class="text-cyan-300">Por ambiente</span><div class="text-[10px] text-slate-500">${boss.cooldownMinutes} min · YAML</div>`;
+  }
   return boss.cooldownEnabled === false
     ? '<span class="text-slate-500">Desligado</span>'
     : `<span class="text-green-400">Ativo</span><div class="text-[10px] text-slate-500">${boss.cooldownMinutes} min</div>`;
@@ -305,7 +308,7 @@ function openBossForm(id = null) {
             </div>
             <div>
               <label class="text-xs text-slate-400">Tipo</label>
-              <select id="bf-type" onchange="updateBossChestRequirement()" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm">
+              <select id="bf-type" onchange="updateBossChestRequirement(); updateBossCooldownControls()" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm">
                 <option value="NORMAL" ${boss?.bossType === "NORMAL" || !boss ? "selected" : ""}>Normal</option>
                 <option value="DAILY" ${boss?.bossType === "DAILY" ? "selected" : ""}>Diário</option>
                 <option value="WEEKLY" ${boss?.bossType === "WEEKLY" ? "selected" : ""}>Semanal</option>
@@ -352,12 +355,12 @@ function openBossForm(id = null) {
               <label class="text-xs text-slate-400">Cooldown (min)</label>
               <input id="bf-cooldown" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.cooldownMinutes ?? 5}" required>
             </div>
-            <div class="flex flex-col justify-end">
+            <div id="bf-cooldown-enabled-container" class="flex flex-col justify-end">
               <label class="flex items-center gap-2 text-sm text-slate-200 cursor-pointer">
                 <input id="bf-cooldown-enabled" type="checkbox" class="accent-cyan-500" ${!boss || boss.cooldownEnabled !== false ? "checked" : ""}>
-                Ativar cooldown
+                Ativar cooldown individual
               </label>
-              <p class="text-[10px] text-slate-500 mt-1">Desligado permite ataques sem intervalo; os minutos são preservados.</p>
+              <p class="text-[10px] text-slate-500 mt-1">Disponível apenas para bosses comuns e periódicos.</p>
             </div>
             <div>
               <label class="text-xs text-slate-400">XP Reward</label>
@@ -429,11 +432,15 @@ function openBossForm(id = null) {
 }
 
 function updateBossCooldownControls() {
+  const type = document.getElementById("bf-type")?.value;
+  const supportsIndividualCooldown = !["WORLD", "CLAN"].includes(type);
+  const container = document.getElementById("bf-cooldown-enabled-container");
   const enabled = document.getElementById("bf-cooldown-enabled")?.checked ?? true;
   const cooldown = document.getElementById("bf-cooldown");
   if (!cooldown) return;
-  cooldown.disabled = !enabled;
-  cooldown.required = enabled;
+  container?.classList.toggle("hidden", !supportsIndividualCooldown);
+  cooldown.disabled = supportsIndividualCooldown ? !enabled : false;
+  cooldown.required = true;
 }
 
 function updateBossChestRequirement() {
@@ -481,7 +488,6 @@ async function saveBoss(event) {
     def: parseInt(document.getElementById("bf-def").value),
     energyCost: parseInt(document.getElementById("bf-energy").value),
     cooldownMinutes: parseInt(document.getElementById("bf-cooldown").value),
-    cooldownEnabled: document.getElementById("bf-cooldown-enabled")?.checked ?? true,
     baseXpReward: parseInt(document.getElementById("bf-xp").value),
     baseBitsReward: parseInt(document.getElementById("bf-bits").value),
     defeatXpPercent: parseInt(document.getElementById("bf-defeatxp").value),
@@ -491,6 +497,10 @@ async function saveBoss(event) {
     worldTopDamageChestCode: document.getElementById("bf-world-top-damage-chest")?.value || null,
     worldFinalBlowChestCode: document.getElementById("bf-world-final-blow-chest")?.value || null
   };
+
+  if (!["WORLD", "CLAN"].includes(body.bossType)) {
+    body.cooldownEnabled = document.getElementById("bf-cooldown-enabled")?.checked ?? true;
+  }
 
   if (body.bossType === "WORLD") {
     const worldChestCodes = [

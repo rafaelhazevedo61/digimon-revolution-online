@@ -75,7 +75,7 @@ class AdminBossControllerTest {
     }
 
     @Test
-    void disablesCooldownWithoutChangingConfiguredMinutesOrRequiringLegacyChest() {
+    void ignoresIndividualCooldownToggleForWorldBoss() {
         BossDefinitionEntity boss = BossDefinitionEntity.builder()
                 .id(8L)
                 .bossType(BossType.WORLD)
@@ -95,7 +95,7 @@ class AdminBossControllerTest {
                 null, null, null
         ));
 
-        assertThat(boss.isCooldownEnabled()).isFalse();
+        assertThat(boss.isCooldownEnabled()).isTrue();
         assertThat(boss.getCooldownMinutes()).isEqualTo(5);
         verify(bossDefinitionRepository).save(boss);
     }

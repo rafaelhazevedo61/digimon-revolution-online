@@ -77,7 +77,7 @@ class ClanRaidResponseMapperTest {
     }
 
     @Test
-    void doesNotExposeNextAttackWhenCooldownIsDisabled() {
+    void exposesNextAttackWhenLegacyDatabaseCooldownIsDisabled() {
         UUID raidId = UUID.randomUUID();
         UUID playerId = UUID.randomUUID();
         ClanRaid raid = raid(raidId, ClanRaidStatus.ACTIVE);
@@ -87,9 +87,9 @@ class ClanRaidResponseMapperTest {
 
         var response = mapper.toResponse(raid, playerId);
 
-        assertThat(response.cooldownEnabled()).isFalse();
+        assertThat(response.cooldownEnabled()).isTrue();
         assertThat(response.attackCooldownMinutes()).isEqualTo(5);
-        assertThat(response.nextAttackAvailableAt()).isNull();
+        assertThat(response.nextAttackAvailableAt()).isNotNull().isAfter(Instant.now());
     }
 
     private void stubCommon(ClanRaid raid, UUID playerId, BossDefinitionEntity boss, ClanRaidAttack previousAttack) {

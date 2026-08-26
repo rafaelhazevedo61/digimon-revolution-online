@@ -205,7 +205,7 @@ class AttackClanRaidUseCaseTest {
     }
 
     @Test
-    void attackIgnoresRecentAttackWhenCooldownIsDisabled() {
+    void attackStillBlocksRecentAttackWhenLegacyDatabaseCooldownIsDisabled() {
         boss.setCooldownEnabled(false);
         ClanRaidAttack lastAttack = ClanRaidAttack.builder()
                 .id(UUID.randomUUID())
@@ -218,12 +218,15 @@ class AttackClanRaidUseCaseTest {
         when(clanRaidAttackRepository.findFirstByClanRaidIdAndPlayerIdOrderByCreatedAtDesc(raid.getId(), playerId))
                 .thenReturn(Optional.of(lastAttack));
 
-        AttackClanRaidResponse response = useCase.execute(token);
+        BadRequestException exception = assertThrows(
+                BadRequestException.class,
+                () -> useCase.execute(token)
+        );
 
-        assertFalse(response.defeated());
-        verify(clanRaidAttackRepository).save(any(ClanRaidAttack.class));
-        verify(digimonRepository).save(any(Digimon.class));
-        verify(clanRaidRepository).save(any(ClanRaid.class));
+        assertTrue(exception.getMessage().contains("cooldown"));
+        verify(clanRaidAttackRepository, never()).save(any());
+        verify(digimonRepository, never()).save(any());
+        verify(clanRaidRepository, never()).save(any());
     }
 
     @Test

@@ -52,7 +52,8 @@ public class AdminBossController {
         ChestDefinitionEntity worldAttemptChest = requiresWorldRewardChests(bossType) ? resolveActiveChest(request.worldAttemptChestCode()) : null;
         ChestDefinitionEntity worldTopDamageChest = requiresWorldRewardChests(bossType) ? resolveActiveChest(request.worldTopDamageChestCode()) : null;
         ChestDefinitionEntity worldFinalBlowChest = requiresWorldRewardChests(bossType) ? resolveActiveChest(request.worldFinalBlowChestCode()) : null;
-        BossDefinitionEntity boss = BossDefinitionEntity.builder().code(request.code()).name(request.name()).bossType(bossType).requiredStage(Stage.valueOf(request.requiredStage())).requiredLevel(request.requiredLevel()).requiredRebirths(request.requiredRebirths()).hp(request.hp()).atk(request.atk()).def(request.def()).energyCost(request.energyCost()).cooldownMinutes(request.cooldownMinutes()).cooldownEnabled(request.cooldownEnabled() == null || request.cooldownEnabled()).baseXpReward(request.baseXpReward()).baseBitsReward(request.baseBitsReward()).defeatXpPercent(request.defeatXpPercent() != null ? request.defeatXpPercent() : 10).imageUrl(request.imageUrl()).chestDefinition(rewardChest).worldAttemptChestDefinition(worldAttemptChest).worldTopDamageChestDefinition(worldTopDamageChest).worldFinalBlowChestDefinition(worldFinalBlowChest).active(true).build();
+        boolean cooldownEnabled = !supportsIndividualCooldown(bossType) || request.cooldownEnabled() == null || request.cooldownEnabled();
+        BossDefinitionEntity boss = BossDefinitionEntity.builder().code(request.code()).name(request.name()).bossType(bossType).requiredStage(Stage.valueOf(request.requiredStage())).requiredLevel(request.requiredLevel()).requiredRebirths(request.requiredRebirths()).hp(request.hp()).atk(request.atk()).def(request.def()).energyCost(request.energyCost()).cooldownMinutes(request.cooldownMinutes()).cooldownEnabled(cooldownEnabled).baseXpReward(request.baseXpReward()).baseBitsReward(request.baseBitsReward()).defeatXpPercent(request.defeatXpPercent() != null ? request.defeatXpPercent() : 10).imageUrl(request.imageUrl()).chestDefinition(rewardChest).worldAttemptChestDefinition(worldAttemptChest).worldTopDamageChestDefinition(worldTopDamageChest).worldFinalBlowChestDefinition(worldFinalBlowChest).active(true).build();
         return ResponseEntity.ok(bossDefinitionRepository.save(boss));
     }
 
@@ -70,7 +71,11 @@ public class AdminBossController {
         if (request.def() != null) boss.setDef(request.def());
         if (request.energyCost() != null) boss.setEnergyCost(request.energyCost());
         if (request.cooldownMinutes() != null) boss.setCooldownMinutes(request.cooldownMinutes());
-        if (request.cooldownEnabled() != null) boss.setCooldownEnabled(request.cooldownEnabled());
+        if (supportsIndividualCooldown(resultingType) && request.cooldownEnabled() != null) {
+            boss.setCooldownEnabled(request.cooldownEnabled());
+        } else if (!supportsIndividualCooldown(resultingType)) {
+            boss.setCooldownEnabled(true);
+        }
         if (request.baseXpReward() != null) boss.setBaseXpReward(request.baseXpReward());
         if (request.baseBitsReward() != null) boss.setBaseBitsReward(request.baseBitsReward());
         if (request.defeatXpPercent() != null) boss.setDefeatXpPercent(request.defeatXpPercent());
@@ -119,6 +124,10 @@ public class AdminBossController {
             throw new ConflictException("Boss não possui drops de equipamento para configurar a chance da pool.");
         }
         equipmentDrops.forEach(drop -> drop.setChance(chance));
+    }
+
+    private boolean supportsIndividualCooldown(BossType bossType) {
+        return bossType != BossType.WORLD && bossType != BossType.CLAN;
     }
 
     private boolean requiresRewardChest(BossType bossType) {

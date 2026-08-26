@@ -288,7 +288,7 @@ class AttackWorldBossUseCaseTest {
     }
 
     @Test
-    void attackIgnoresRecentAttackWhenCooldownIsDisabled() {
+    void attackStillBlocksRecentAttackWhenLegacyDatabaseCooldownIsDisabled() {
         boss.setCooldownEnabled(false);
         WorldBossAttack lastAttack = WorldBossAttack.builder()
                 .id(UUID.randomUUID())
@@ -301,11 +301,14 @@ class AttackWorldBossUseCaseTest {
         when(worldBossAttackRepository.findFirstByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(
                 instance.getId(), playerId)).thenReturn(Optional.of(lastAttack));
 
-        AttackWorldBossResponse response = useCase.execute(token, "request-disabled-cooldown");
+        BadRequestException exception = assertThrows(
+                BadRequestException.class,
+                () -> useCase.execute(token, "request-legacy-disabled-cooldown")
+        );
 
-        assertTrue(response.defeated());
-        verify(worldBossAttackRepository).save(any(WorldBossAttack.class));
-        verify(worldBossRewardService).grant(any(), any(), any(), eq(true));
+        assertTrue(exception.getMessage().contains("cooldown"));
+        verify(worldBossAttackRepository, never()).save(any());
+        verify(worldBossRewardService, never()).grant(any(), any(), any(), anyBoolean());
     }
 
     @Test

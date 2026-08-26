@@ -36,7 +36,7 @@ public class ClanRaidResponseMapper {
         List<ClanRaidAttack> myAttacks = attacks.stream().filter(attack -> attack.getPlayerId().equals(viewerPlayerId)).toList();
         long myTotalDamage = myAttacks.stream().mapToLong(ClanRaidAttack::getDamage).sum();
         int attackCooldownMinutes = ClanRaidRules.attackCooldownMinutes(boss.getCooldownMinutes());
-        boolean cooldownEnabled = gameplayConfig.isClanRaidCooldownEnabled() && boss.isCooldownEnabled();
+        boolean cooldownEnabled = gameplayConfig.isClanRaidCooldownEnabled();
         Instant nextAttackCandidate = myAttacks.isEmpty() || myAttacks.get(0).getCreatedAt() == null
                 ? null
                 : myAttacks.get(0).getCreatedAt().plus(Duration.ofMinutes(attackCooldownMinutes));
