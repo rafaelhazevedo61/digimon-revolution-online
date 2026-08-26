@@ -9,6 +9,14 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Adicionado
 
+- **Incubadora em paralelo**: três slots fixos sempre visíveis, com o slot 1 desbloqueado por padrão e slots 2 e 3 preparados para futura liberação por progressão.
+  - Incubações independentes por slot, com timers e claims individuais.
+  - Consulta da incubadora retornando estados bloqueado, livre, em andamento e pronto para cada posição.
+  - Capacidade de slots desbloqueados persistida por jogador, iniciando em 1 e limitada a 3.
+  - A tela dedicada mantém os três slots visíveis; o dashboard resume apenas os slots que possuem incubação ativa ou pronta.
+  - Nomes de Digitamas e incubadoras localizados em português no resumo do dashboard.
+  - Item consumível **Expansor de Slot de Incubação**, que incrementa em um a capacidade do jogador até o máximo de três slots.
+
 - **Modo Arena / PvP assíncrono** (#32): desafie o Digimon ativo de outro jogador; o resultado é resolvido no servidor comparando o poder efetivo (stats + equipamentos) com a mesma fórmula dos bosses, mais um fator de aleatoriedade.
   - Rating por Digimon estilo **ELO** (inicial 1000, K=32, piso 100), com vitórias e derrotas registradas.
   - **Matchmaking** por janela de rating (±200 pts) e por stage (mesmo stage ou adjacente).

@@ -76,7 +76,7 @@ public class InventoryController {
         if (itemType.name().startsWith("INCUBATOR_")) return "INCUBATOR";
         if (itemType == ItemType.LOOT_CHEST) return "CHEST";
         if (itemType == ItemType.EVOLUTION_MATERIAL) return "EVOLUTION_MATERIAL";
-        if (itemType == ItemType.POTION_SMALL) return "CONSUMABLE";
+        if (itemType == ItemType.POTION_SMALL || itemType == ItemType.INCUBATION_SLOT_UNLOCK) return "CONSUMABLE";
         if (itemType == ItemType.TRAINING_STONE || itemType == ItemType.DATA_CORE || itemType == ItemType.REFINEMENT_STONE) return "MATERIAL";
         return "OTHER";
     }

@@ -2697,8 +2697,8 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/incubation/claim",
-            "description": "Gerado de IncubationController.claim. Revise IDs e valores antes de enviar."
+            "url": "{{baseUrl}}/incubation/{{id}}/claim",
+            "description": "Gerado de IncubationController.claim. Informe o incubationId do slot pronto antes de enviar."
           },
           "response": []
         },
@@ -2738,7 +2738,7 @@
             "description": "Gerado de IncubationController.start. Revise IDs e valores antes de enviar.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"digitamaType\": \"POTION_SMALL\",\n  \"incubatorType\": \"POTION_SMALL\"\n}",
+              "raw": "{\n  \"slotNumber\": 1,\n  \"digitamaType\": \"DIGITAMA_FIRE\",\n  \"incubatorType\": \"INCUBATOR_COMMON\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

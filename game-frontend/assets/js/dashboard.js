@@ -279,22 +279,55 @@ function renderActiveMission(m) {
 }
 
 function renderIncubation(inc) {
-  if (!inc) return "";
-  const remaining = Math.max(0, inc.remainingSeconds);
-  const done = remaining <= 0;
+  if (!inc || !Array.isArray(inc.slots)) return "";
+  const activeSlots = inc.slots.filter(slot => slot.incubation);
+  if (activeSlots.length === 0) return "";
 
   return `
-    <div class="mb-4" id="dash-incubation" data-finish-at="${escapeAttr(inc.finishAt)}" data-started-at="${escapeAttr(inc.startedAt)}" data-remaining-seconds="${Number(inc.remainingSeconds)}">
-      <h3 class="text-sm font-bold text-slate-300 mb-2 px-1">Incubação</h3>
-      <div class="card-sm flex items-center justify-between cursor-pointer" onclick="navigateTo('incubation')">
-        <div>
-          <p class="font-bold text-sm">${formatItemType(inc.digitamaType)}</p>
-          <p class="text-xs text-slate-500">${formatItemType(inc.incubatorType)}</p>
-        </div>
-        <div class="text-right">
-          <p class="text-xs ${done ? 'text-green-400 font-bold' : 'text-amber-400'}" id="incub-dash-timer">${done ? "Pronta! 🐣" : formatTime(remaining)}</p>
-          ${done ? `<button class="btn-sm btn-primary mt-1" onclick="event.stopPropagation(); navigateTo('incubation')">Chocar</button>` : ""}
-        </div>
+    <div class="mb-4" id="dash-incubation">
+      <div class="flex items-center justify-between mb-2 px-1">
+        <h3 class="text-sm font-bold text-slate-300">Incubação</h3>
+        <button class="text-xs text-cyan-400" onclick="navigateTo('incubation')">Ver slots</button>
+      </div>
+      <div class="grid grid-cols-1 gap-2">
+        ${activeSlots.map(slot => renderDashboardIncubationSlot(slot)).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderDashboardIncubationSlot(slot) {
+  const slotNumber = Number(slot.slotNumber);
+  if (!slot.unlocked) {
+    return `
+      <div class="card-sm flex items-center justify-between opacity-70" data-dash-incub-slot="${slotNumber}">
+        <div class="flex items-center gap-2"><span>🔒</span><span class="text-sm">Slot ${slotNumber}</span></div>
+        <span class="badge">Bloqueado</span>
+      </div>
+    `;
+  }
+
+  if (!slot.incubation) {
+    return `
+      <div class="card-sm flex items-center justify-between" data-dash-incub-slot="${slotNumber}" onclick="navigateTo('incubation')">
+        <div class="flex items-center gap-2"><span>🥚</span><span class="text-sm">Slot ${slotNumber}</span></div>
+        <span class="badge text-emerald-300">Livre</span>
+      </div>
+    `;
+  }
+
+  const incubation = slot.incubation;
+  const remaining = Math.max(0, Number(incubation.remainingSeconds) || 0);
+  const done = incubation.status === "READY" || remaining <= 0;
+  return `
+    <div class="card-sm flex items-center justify-between cursor-pointer" data-dash-incub-slot="${slotNumber}" data-finish-at="${escapeAttr(incubation.finishAt)}" data-started-at="${escapeAttr(incubation.startedAt)}" data-remaining-seconds="${remaining}" onclick="navigateTo('incubation')">
+      <div class="min-w-0">
+        <p class="font-bold text-sm truncate">Slot ${slotNumber} · ${formatItemType(incubation.digitamaType)}</p>
+        <p class="text-xs text-slate-500">${formatItemType(incubation.incubatorType)}</p>
+      </div>
+      <div class="text-right shrink-0 ml-2">
+        <p class="text-xs ${done ? "text-green-400 font-bold" : "text-amber-400"}" id="incub-dash-timer-${slotNumber}">${done ? "Pronta! 🐣" : formatTime(remaining)}</p>
+        ${done ? `<button class="btn-sm btn-primary mt-1" onclick="event.stopPropagation(); navigateTo('incubation')">Chocar</button>` : ""}
       </div>
     </div>
   `;
@@ -310,32 +343,43 @@ async function claimMission(instanceId) {
   }
 }
 
-// Incubation timer
+// Incubation timers
 function startIncubationTimer(inc = null) {
-  const el = document.getElementById("dash-incubation");
-  if (!el || !inc) {
-    if (typeof incubStopTimer === "function") incubStopTimer();
-    return;
-  }
+  if (typeof incubStopTimer === "function") incubStopTimer();
+  if (!inc || !Array.isArray(inc.slots)) return;
 
-  incubStartTimer({
-    finishAt: el.dataset.finishAt,
-    startedAt: el.dataset.startedAt,
-    remainingSeconds: Number(el.dataset.remainingSeconds),
-    timerId: "incub-dash-timer",
-    formatter: formatTime,
-    onComplete: () => {
-      const timerEl = document.getElementById("incub-dash-timer");
-      if (!timerEl) return;
+  inc.slots.forEach(slot => {
+    const incubation = slot.incubation;
+    if (!slot.unlocked || !incubation || incubation.status === "READY") return;
 
-      timerEl.textContent = "Pronta! 🐣";
-      timerEl.className = "text-xs text-green-400 font-bold";
-      const parent = timerEl.parentElement;
-      if (parent && !parent.querySelector("button")) {
-        parent.insertAdjacentHTML("beforeend", `<button class="btn-sm btn-primary mt-1" onclick="event.stopPropagation(); navigateTo('incubation')">Chocar</button>`);
-      }
+    const remaining = Math.max(0, Number(incubation.remainingSeconds) || 0);
+    if (remaining <= 0) {
+      dashboardMarkIncubationReady(Number(slot.slotNumber));
+      return;
     }
+
+    incubStartTimer({
+      key: `dashboard-slot-${Number(slot.slotNumber)}`,
+      finishAt: incubation.finishAt,
+      startedAt: incubation.startedAt,
+      remainingSeconds: remaining,
+      timerId: `incub-dash-timer-${Number(slot.slotNumber)}`,
+      formatter: formatTime,
+      onComplete: () => dashboardMarkIncubationReady(Number(slot.slotNumber))
+    });
   });
+}
+
+function dashboardMarkIncubationReady(slotNumber) {
+  const timerEl = document.getElementById(`incub-dash-timer-${slotNumber}`);
+  if (!timerEl) return;
+
+  timerEl.textContent = "Pronta! 🐣";
+  timerEl.className = "text-xs text-green-400 font-bold";
+  const parent = timerEl.parentElement;
+  if (parent && !parent.querySelector("button")) {
+    parent.insertAdjacentHTML("beforeend", `<button class="btn-sm btn-primary mt-1" onclick="event.stopPropagation(); navigateTo('incubation')">Chocar</button>`);
+  }
 }
 
 // Mission timer logic
@@ -384,7 +428,16 @@ function formatTrait(t) {
 
 function formatItemType(t) {
   if (!t) return "";
-  return t.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  const map = {
+    DIGITAMA_STARTER: "Digitama Inicial",
+    DIGITAMA_FIRE: "Digitama de Fogo",
+    DIGITAMA_WATER: "Digitama de Água",
+    DIGITAMA_NATURE: "Digitama de Natureza",
+    INCUBATOR_COMMON: "Incubadora Comum",
+    INCUBATOR_RARE: "Incubadora Rara",
+    INCUBATOR_EPIC: "Incubadora Épica"
+  };
+  return map[t] || t.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function formatTime(seconds) {

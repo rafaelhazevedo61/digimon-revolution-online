@@ -45,6 +45,8 @@ public class Player {
     private int maxStorageSlots;
     @Column(name = "arena_coins", nullable = false)
     private int arenaCoins;
+    @Column(name = "unlocked_incubation_slots", nullable = false)
+    private int unlockedIncubationSlots;
     @Column(name = "clan_id")
     private UUID clanId;
     @Column(name = "clan_role")
@@ -64,6 +66,7 @@ public class Player {
         player.createdAt = createdAt;
         player.maxDigimonSlots = 3;
         player.maxStorageSlots = 50;
+        player.unlockedIncubationSlots = 1;
         player.userType = UserType.PLAYER;
         return player;
     }
@@ -198,6 +201,14 @@ public class Player {
         this.arenaCoins = arenaCoins;
     }
 
+    public int getUnlockedIncubationSlots() {
+        return unlockedIncubationSlots;
+    }
+
+    public void setUnlockedIncubationSlots(int unlockedIncubationSlots) {
+        this.unlockedIncubationSlots = unlockedIncubationSlots;
+    }
+
     public UUID getClanId() {
         return clanId;
     }
@@ -250,6 +261,9 @@ public class Player {
         return 0;
     }
 
+    private static int $default$unlockedIncubationSlots() {
+        return 1;
+    }
 
     public static class PlayerBuilder {
         private UUID id;
@@ -271,6 +285,8 @@ public class Player {
         private int maxStorageSlots$value;
         private boolean arenaCoins$set;
         private int arenaCoins$value;
+        private boolean unlockedIncubationSlots$set;
+        private int unlockedIncubationSlots$value;
         private UUID clanId;
         private ClanRole clanRole;
         private LocalDateTime clanJoinedAt;
@@ -399,6 +415,15 @@ public class Player {
         /**
          * @return {@code this}.
          */
+        public Player.PlayerBuilder unlockedIncubationSlots(final int unlockedIncubationSlots) {
+            this.unlockedIncubationSlots$value = unlockedIncubationSlots;
+            unlockedIncubationSlots$set = true;
+            return this;
+        }
+
+        /**
+         * @return {@code this}.
+         */
         public Player.PlayerBuilder clanId(final UUID clanId) {
             this.clanId = clanId;
             return this;
@@ -439,12 +464,14 @@ public class Player {
             if (!this.maxStorageSlots$set) maxStorageSlots$value = Player.$default$maxStorageSlots();
             int arenaCoins$value = this.arenaCoins$value;
             if (!this.arenaCoins$set) arenaCoins$value = Player.$default$arenaCoins();
-            return new Player(this.id, this.username, this.email, this.password, this.createdAt, this.selectedDigitama, this.activeDigimonId, this.lastMissionAt, this.starterSelected, userType$value, tokenVersion$value, maxDigimonSlots$value, maxStorageSlots$value, arenaCoins$value, this.clanId, this.clanRole, this.clanJoinedAt, this.arenaDailyResetAt);
+            int unlockedIncubationSlots$value = this.unlockedIncubationSlots$value;
+            if (!this.unlockedIncubationSlots$set) unlockedIncubationSlots$value = Player.$default$unlockedIncubationSlots();
+            return new Player(this.id, this.username, this.email, this.password, this.createdAt, this.selectedDigitama, this.activeDigimonId, this.lastMissionAt, this.starterSelected, userType$value, tokenVersion$value, maxDigimonSlots$value, maxStorageSlots$value, arenaCoins$value, unlockedIncubationSlots$value, this.clanId, this.clanRole, this.clanJoinedAt, this.arenaDailyResetAt);
         }
 
         @Override
         public String toString() {
-            return "Player.PlayerBuilder(id=" + this.id + ", username=" + this.username + ", email=" + this.email + ", password=" + this.password + ", createdAt=" + this.createdAt + ", selectedDigitama=" + this.selectedDigitama + ", activeDigimonId=" + this.activeDigimonId + ", lastMissionAt=" + this.lastMissionAt + ", starterSelected=" + this.starterSelected + ", userType$value=" + this.userType$value + ", tokenVersion$value=" + this.tokenVersion$value + ", maxDigimonSlots$value=" + this.maxDigimonSlots$value + ", maxStorageSlots$value=" + this.maxStorageSlots$value + ", arenaCoins$value=" + this.arenaCoins$value + ", clanId=" + this.clanId + ", clanRole=" + this.clanRole + ", clanJoinedAt=" + this.clanJoinedAt + ", arenaDailyResetAt=" + this.arenaDailyResetAt + ")";
+            return "Player.PlayerBuilder(id=" + this.id + ", username=" + this.username + ", email=" + this.email + ", password=" + this.password + ", createdAt=" + this.createdAt + ", selectedDigitama=" + this.selectedDigitama + ", activeDigimonId=" + this.activeDigimonId + ", lastMissionAt=" + this.lastMissionAt + ", starterSelected=" + this.starterSelected + ", userType$value=" + this.userType$value + ", tokenVersion$value=" + this.tokenVersion$value + ", maxDigimonSlots$value=" + this.maxDigimonSlots$value + ", maxStorageSlots$value=" + this.maxStorageSlots$value + ", arenaCoins=" + this.arenaCoins$value + ", unlockedIncubationSlots=" + this.unlockedIncubationSlots$value + ", clanId=" + this.clanId + ", clanRole=" + this.clanRole + ", clanJoinedAt=" + this.clanJoinedAt + ", arenaDailyResetAt=" + this.arenaDailyResetAt + ")";
         }
     }
 
@@ -458,9 +485,10 @@ public class Player {
         this.maxDigimonSlots = Player.$default$maxDigimonSlots();
         this.maxStorageSlots = Player.$default$maxStorageSlots();
         this.arenaCoins = Player.$default$arenaCoins();
+        this.unlockedIncubationSlots = Player.$default$unlockedIncubationSlots();
     }
 
-    public Player(final UUID id, final String username, final String email, final String password, final LocalDateTime createdAt, final DigitamaType selectedDigitama, final UUID activeDigimonId, final LocalDateTime lastMissionAt, final boolean starterSelected, final UserType userType, final int tokenVersion, final int maxDigimonSlots, final int maxStorageSlots, final int arenaCoins, final UUID clanId, final ClanRole clanRole, final LocalDateTime clanJoinedAt, final LocalDateTime arenaDailyResetAt) {
+    public Player(final UUID id, final String username, final String email, final String password, final LocalDateTime createdAt, final DigitamaType selectedDigitama, final UUID activeDigimonId, final LocalDateTime lastMissionAt, final boolean starterSelected, final UserType userType, final int tokenVersion, final int maxDigimonSlots, final int maxStorageSlots, final int arenaCoins, final int unlockedIncubationSlots, final UUID clanId, final ClanRole clanRole, final LocalDateTime clanJoinedAt, final LocalDateTime arenaDailyResetAt) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -475,6 +503,7 @@ public class Player {
         this.maxDigimonSlots = maxDigimonSlots;
         this.maxStorageSlots = maxStorageSlots;
         this.arenaCoins = arenaCoins;
+        this.unlockedIncubationSlots = unlockedIncubationSlots;
         this.clanId = clanId;
         this.clanRole = clanRole;
         this.clanJoinedAt = clanJoinedAt;

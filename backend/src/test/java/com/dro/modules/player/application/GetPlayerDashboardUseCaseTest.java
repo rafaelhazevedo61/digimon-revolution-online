@@ -110,7 +110,7 @@ class GetPlayerDashboardUseCaseTest {
         ));
         when(missionInstanceRepository.findByPlayerIdAndStatusIn(eq(playerId), any()))
                 .thenReturn(List.of());
-        when(incubationRepository.findByPlayerIdAndStatusNot(playerId, IncubationStatus.CLAIMED))
+        when(incubationRepository.findByPlayerIdAndStatusNotOrderBySlotNumberAsc(playerId, IncubationStatus.CLAIMED))
                 .thenReturn(List.of());
 
         PlayerDashboardResponse response = useCase.execute(token);
@@ -124,7 +124,13 @@ class GetPlayerDashboardUseCaseTest {
         assertEquals(ItemType.TRAINING_STONE, response.inventory().get(0).itemType());
         assertEquals(5, response.inventory().get(0).quantity());
         assertTrue(response.activeMissions().isEmpty());
-        assertNull(response.incubation());
+        assertNotNull(response.incubation());
+        assertEquals(3, response.incubation().totalSlots());
+        assertEquals(1, response.incubation().unlockedSlots());
+        assertEquals(3, response.incubation().slots().size());
+        assertNull(response.incubation().slots().get(0).incubation());
+        assertFalse(response.incubation().slots().get(1).unlocked());
+        assertFalse(response.incubation().slots().get(2).unlocked());
     }
 
     @Test
@@ -137,7 +143,7 @@ class GetPlayerDashboardUseCaseTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
         when(missionInstanceRepository.findByPlayerIdAndStatusIn(eq(playerId), any()))
                 .thenReturn(List.of());
-        when(incubationRepository.findByPlayerIdAndStatusNot(playerId, IncubationStatus.CLAIMED))
+        when(incubationRepository.findByPlayerIdAndStatusNotOrderBySlotNumberAsc(playerId, IncubationStatus.CLAIMED))
                 .thenReturn(List.of());
 
         PlayerDashboardResponse response = useCase.execute(token);
@@ -168,14 +174,66 @@ class GetPlayerDashboardUseCaseTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
         when(missionInstanceRepository.findByPlayerIdAndStatusIn(eq(playerId), any()))
                 .thenReturn(List.of());
-        when(incubationRepository.findByPlayerIdAndStatusNot(playerId, IncubationStatus.CLAIMED))
+        when(incubationRepository.findByPlayerIdAndStatusNotOrderBySlotNumberAsc(playerId, IncubationStatus.CLAIMED))
                 .thenReturn(List.of(incubation));
 
         PlayerDashboardResponse response = useCase.execute(token);
 
         assertNotNull(response.incubation());
-        assertEquals(ItemType.DIGITAMA_FIRE, response.incubation().digitamaType());
-        assertTrue(response.incubation().remainingSeconds() > 0);
+        assertEquals(3, response.incubation().totalSlots());
+        assertNotNull(response.incubation().slots().get(0).incubation());
+        assertEquals(ItemType.DIGITAMA_FIRE, response.incubation().slots().get(0).incubation().digitamaType());
+        assertTrue(response.incubation().slots().get(0).incubation().remainingSeconds() > 0);
+    }
+
+    @Test
+    void execute_includesMultipleIncubationsInTheirSlots() {
+        UUID playerId = UUID.randomUUID();
+        String token = makeToken(playerId);
+        Player player = Player.builder()
+                .id(playerId)
+                .username("testuser")
+                .email("test@email.com")
+                .password("encoded")
+                .createdAt(LocalDateTime.now())
+                .unlockedIncubationSlots(2)
+                .build();
+
+        Incubation first = Incubation.builder()
+                .id(UUID.randomUUID())
+                .playerId(playerId)
+                .slotNumber(1)
+                .digitamaType(ItemType.DIGITAMA_FIRE)
+                .incubatorType(ItemType.INCUBATOR_COMMON)
+                .status(IncubationStatus.IN_PROGRESS)
+                .startedAt(LocalDateTime.now().minusMinutes(1))
+                .finishAt(LocalDateTime.now().plusMinutes(4))
+                .build();
+        Incubation second = Incubation.builder()
+                .id(UUID.randomUUID())
+                .playerId(playerId)
+                .slotNumber(2)
+                .digitamaType(ItemType.DIGITAMA_WATER)
+                .incubatorType(ItemType.INCUBATOR_RARE)
+                .status(IncubationStatus.IN_PROGRESS)
+                .startedAt(LocalDateTime.now().minusMinutes(1))
+                .finishAt(LocalDateTime.now().plusMinutes(1))
+                .build();
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(missionInstanceRepository.findByPlayerIdAndStatusIn(eq(playerId), any()))
+                .thenReturn(List.of());
+        when(incubationRepository.findByPlayerIdAndStatusNotOrderBySlotNumberAsc(playerId, IncubationStatus.CLAIMED))
+                .thenReturn(List.of(first, second));
+
+        PlayerDashboardResponse response = useCase.execute(token);
+
+        assertEquals(3, response.incubation().slots().size());
+        assertEquals(ItemType.DIGITAMA_FIRE, response.incubation().slots().get(0).incubation().digitamaType());
+        assertEquals(ItemType.DIGITAMA_WATER, response.incubation().slots().get(1).incubation().digitamaType());
+        assertTrue(response.incubation().slots().get(0).unlocked());
+        assertTrue(response.incubation().slots().get(1).unlocked());
+        assertFalse(response.incubation().slots().get(2).unlocked());
     }
 
     @Test
@@ -208,7 +266,7 @@ class GetPlayerDashboardUseCaseTest {
         when(inventoryRepository.findByDigimonId(digimonId)).thenReturn(List.of());
         when(missionInstanceRepository.findByPlayerIdAndStatusIn(eq(playerId), any()))
                 .thenReturn(List.of());
-        when(incubationRepository.findByPlayerIdAndStatusNot(playerId, IncubationStatus.CLAIMED))
+        when(incubationRepository.findByPlayerIdAndStatusNotOrderBySlotNumberAsc(playerId, IncubationStatus.CLAIMED))
                 .thenReturn(List.of());
 
         PlayerDashboardResponse response = useCase.execute(token);

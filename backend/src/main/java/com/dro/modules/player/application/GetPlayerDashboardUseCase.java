@@ -12,8 +12,11 @@ import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.equipment.domain.EquipmentSlot;
 import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.incubation.api.dto.response.IncubationResponse;
+import com.dro.modules.incubation.api.dto.response.IncubationSlotResponse;
+import com.dro.modules.incubation.api.dto.response.IncubationSlotsResponse;
 import com.dro.modules.incubation.domain.Incubation;
 import com.dro.modules.incubation.domain.IncubationStatus;
+import com.dro.modules.incubation.domain.IncubatorRules;
 import com.dro.modules.incubation.infra.IncubationRepository;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.infra.InventoryRepository;
@@ -38,7 +41,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -91,7 +96,7 @@ public class GetPlayerDashboardUseCase {
 
         List<ActiveMissionResponse> activeMissions = buildActiveMissions(playerId);
 
-        IncubationResponse incubation = buildIncubation(playerId);
+        IncubationSlotsResponse incubation = buildIncubation(playerId, player);
 
         long activeCount = digimonRepository.countByPlayerIdAndStatus(playerId, DigimonStatus.ACTIVE);
         long storedCount = digimonRepository.countByPlayerIdAndStatus(playerId, DigimonStatus.STORED);
@@ -257,39 +262,48 @@ public class GetPlayerDashboardUseCase {
                 .toList();
     }
 
-    private IncubationResponse buildIncubation(UUID playerId) {
+    private IncubationSlotsResponse buildIncubation(UUID playerId, Player player) {
+        int unlockedSlots = Math.max(
+                1,
+                Math.min(IncubatorRules.TOTAL_SLOTS, player.getUnlockedIncubationSlots())
+        );
+        LocalDateTime now = LocalDateTime.now();
+        Map<Integer, Incubation> activeBySlot = new HashMap<>();
 
-        List<Incubation> incubations = incubationRepository
-                .findByPlayerIdAndStatusNot(playerId, IncubationStatus.CLAIMED);
-
-        if (incubations == null || incubations.isEmpty()) {
-            return null;
-        }
-
-        // Seleciona a incubação mais próxima de terminar
-        Incubation incubation = incubations.stream()
-                .min(Comparator.comparing(Incubation::getFinishAt))
-                .orElse(null);
-
-        if (incubation == null) {
-            return null;
-        }
-
-        long remaining = Duration.between(
-                LocalDateTime.now(),
-                incubation.getFinishAt()
-        ).getSeconds();
-
-        if (remaining < 0) {
-            remaining = 0;
-            // Só chama markReadyIfFinished se o status for IN_PROGRESS
-            if (incubation.getStatus() == IncubationStatus.IN_PROGRESS) {
+        for (Incubation incubation : incubationRepository
+                .findByPlayerIdAndStatusNotOrderBySlotNumberAsc(playerId, IncubationStatus.CLAIMED)) {
+            if (incubation.getStatus() == IncubationStatus.IN_PROGRESS
+                    && !incubation.getFinishAt().isAfter(now)) {
                 incubation.markReadyIfFinished();
                 incubationRepository.save(incubation);
             }
+            activeBySlot.put(incubation.getSlotNumber(), incubation);
         }
 
+        List<IncubationSlotResponse> slots = java.util.stream.IntStream
+                .rangeClosed(1, IncubatorRules.TOTAL_SLOTS)
+                .mapToObj(slotNumber -> new IncubationSlotResponse(
+                        slotNumber,
+                        slotNumber <= unlockedSlots,
+                        toIncubationResponse(activeBySlot.get(slotNumber), now)
+                ))
+                .toList();
+
+        return new IncubationSlotsResponse(
+                IncubatorRules.TOTAL_SLOTS,
+                unlockedSlots,
+                slots
+        );
+    }
+
+    private IncubationResponse toIncubationResponse(Incubation incubation, LocalDateTime now) {
+        if (incubation == null) {
+            return null;
+        }
+        long remaining = Math.max(0, Duration.between(now, incubation.getFinishAt()).getSeconds());
         return new IncubationResponse(
+                incubation.getId(),
+                incubation.getSlotNumber(),
                 incubation.getDigitamaType(),
                 incubation.getIncubatorType(),
                 incubation.getStatus(),

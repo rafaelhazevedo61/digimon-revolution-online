@@ -472,14 +472,14 @@ USABLE="${USABLE:-VALOR}"
 
 # ===== INCUBATION =====
 
-# IncubationController.claim (POST /incubation/claim)
-# curl --fail-with-body -i -X POST "${BASE_URL}/incubation/claim" -H "Authorization: Bearer ${TOKEN}"
+# IncubationController.claim (POST /incubation/{incubationId}/claim)
+# curl --fail-with-body -i -X POST "${BASE_URL}/incubation/${ID}/claim" -H "Authorization: Bearer ${TOKEN}"
 
 # IncubationController.me (GET /incubation/me)
 # curl --fail-with-body -i -X GET "${BASE_URL}/incubation/me" -H "Authorization: Bearer ${TOKEN}"
 
 # IncubationController.start (POST /incubation/start)
-# curl --fail-with-body -i -X POST "${BASE_URL}/incubation/start" -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" -d '{"digitamaType": "POTION_SMALL", "incubatorType": "POTION_SMALL"}'
+# curl --fail-with-body -i -X POST "${BASE_URL}/incubation/start" -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" -d '{"slotNumber": 1, "digitamaType": "DIGITAMA_FIRE", "incubatorType": "INCUBATOR_COMMON"}'
 
 # ===== ROOT =====
 

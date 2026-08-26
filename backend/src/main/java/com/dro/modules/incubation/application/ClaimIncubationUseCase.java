@@ -4,11 +4,9 @@ import com.dro.modules.digitama.domain.DigitamaHatchRules;
 import com.dro.modules.digitama.domain.DigitamaPool;
 import com.dro.modules.digitama.domain.DigitamaPoolEntry;
 import com.dro.modules.digitama.domain.DigitamaPoolRoller;
-import com.dro.modules.digitama.domain.enums.DigitamaType;
 import com.dro.modules.digitama.infra.DigitamaPoolRepository;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.DigimonFactory;
-import com.dro.modules.digimon.domain.DigimonInfos;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.incubation.domain.Incubation;
@@ -17,13 +15,14 @@ import com.dro.modules.incubation.infra.IncubationRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
-import com.dro.modules.tutorial.application.TutorialService;
 import com.dro.modules.tutorial.domain.TutorialStep;
+import com.dro.modules.tutorial.application.TutorialService;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -39,36 +38,39 @@ public class ClaimIncubationUseCase {
     private final TutorialService tutorialService;
 
     @Transactional
-    public Digimon execute(String token) {
-        UUID playerId = extractPlayerId(token);
-        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+    public Digimon execute(String token, UUID incubationId) {
+        UUID playerId = TokenExtractor.extractPlayerId(token);
+        Player player = playerRepository.findByIdForUpdate(playerId)
+                .orElseThrow(() -> new NotFoundException("Player not found"));
+        Incubation incubation = incubationRepository.findByIdAndPlayerIdForUpdate(incubationId, playerId)
+                .orElseThrow(() -> new NotFoundException("Incubation not found"));
+
+        if (incubation.getStatus() == IncubationStatus.CLAIMED) {
+            throw new BadRequestException("Incubation already claimed");
+        }
+
         boolean isAdmin = player.getUserType() == UserType.ADMIN;
-        Incubation incubation = findActiveIncubation(playerId);
         if (isAdmin) {
             forceReadyIfInProgress(incubation);
         } else {
             validateIncubationFinished(incubation);
         }
-        validateDigimonSlots(playerId);
+
+        validateDigimonSlots(player);
         Digimon digimon = createDigimonFromIncubation(playerId, incubation);
         digimonRepository.save(digimon);
-        setActiveIfFirstDigimon(playerId, digimon);
+        setActiveIfFirstDigimon(player, digimon);
         finalizeIncubation(incubation);
         tutorialService.completeStep(playerId, TutorialStep.HATCH_DIGIMON);
         return digimon;
     }
 
-    private UUID extractPlayerId(String token) {
-        return TokenExtractor.extractPlayerId(token);
-    }
-
-    private Incubation findActiveIncubation(UUID playerId) {
-        return incubationRepository.findByPlayerIdAndStatus(playerId, IncubationStatus.READY).or(() -> incubationRepository.findByPlayerIdAndStatus(playerId, IncubationStatus.IN_PROGRESS)).orElseThrow(() -> new NotFoundException("No active incubation"));
-    }
-
     private void validateIncubationFinished(Incubation incubation) {
         if (incubation.getStatus() == IncubationStatus.READY) {
             return;
+        }
+        if (incubation.getStatus() != IncubationStatus.IN_PROGRESS) {
+            throw new BadRequestException("Incubation is not available");
         }
         if (incubation.getFinishAt().isAfter(LocalDateTime.now())) {
             throw new BadRequestException("Incubation not finished yet");
@@ -77,25 +79,24 @@ public class ClaimIncubationUseCase {
     }
 
     private Digimon createDigimonFromIncubation(UUID playerId, Incubation incubation) {
-        DigitamaType digitamaType = DigitamaHatchRules.toDigitamaType(incubation.getDigitamaType());
+        var digitamaType = DigitamaHatchRules.toDigitamaType(incubation.getDigitamaType());
         String poolCode = digitamaType.getPoolCode();
-        DigitamaPool pool = digitamaPoolRepository.findByCodeAndActiveTrueAndContentActiveTrue(poolCode).orElseThrow(() -> new NotFoundException("Digitama pool not found: " + poolCode));
+        DigitamaPool pool = digitamaPoolRepository.findByCodeAndActiveTrueAndContentActiveTrue(poolCode)
+                .orElseThrow(() -> new NotFoundException("Digitama pool not found: " + poolCode));
         DigitamaPoolEntry entry = DigitamaPoolRoller.roll(pool.getEntries());
-        DigimonInfos infos = entry.getDigimonInfo();
+        var infos = entry.getDigimonInfo();
         return DigimonFactory.createBaby(playerId, digitamaType, infos);
     }
 
-    private void setActiveIfFirstDigimon(UUID playerId, Digimon digimon) {
-        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+    private void setActiveIfFirstDigimon(Player player, Digimon digimon) {
         if (player.getActiveDigimonId() == null) {
             player.setActiveDigimonId(digimon.getId());
             playerRepository.save(player);
         }
     }
 
-    private void validateDigimonSlots(UUID playerId) {
-        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
-        long activeCount = digimonRepository.countByPlayerIdAndStatus(playerId, DigimonStatus.ACTIVE);
+    private void validateDigimonSlots(Player player) {
+        long activeCount = digimonRepository.countByPlayerIdAndStatus(player.getId(), DigimonStatus.ACTIVE);
         if (activeCount >= player.getMaxDigimonSlots()) {
             throw new BadRequestException("Slots de Digimon cheios (" + activeCount + "/" + player.getMaxDigimonSlots() + "). Guarde um Digimon no Storage para liberar espaço.");
         }
@@ -112,7 +113,13 @@ public class ClaimIncubationUseCase {
         incubationRepository.save(incubation);
     }
 
-    public ClaimIncubationUseCase(final IncubationRepository incubationRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final DigitamaPoolRepository digitamaPoolRepository, final TutorialService tutorialService) {
+    public ClaimIncubationUseCase(
+            final IncubationRepository incubationRepository,
+            final DigimonRepository digimonRepository,
+            final PlayerRepository playerRepository,
+            final DigitamaPoolRepository digitamaPoolRepository,
+            final TutorialService tutorialService
+    ) {
         this.incubationRepository = incubationRepository;
         this.digimonRepository = digimonRepository;
         this.playerRepository = playerRepository;
