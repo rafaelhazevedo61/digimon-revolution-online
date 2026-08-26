@@ -428,7 +428,16 @@ function formatTrait(t) {
 
 function formatItemType(t) {
   if (!t) return "";
-  return t.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  const map = {
+    DIGITAMA_STARTER: "Digitama Inicial",
+    DIGITAMA_FIRE: "Digitama de Fogo",
+    DIGITAMA_WATER: "Digitama de Água",
+    DIGITAMA_NATURE: "Digitama de Natureza",
+    INCUBATOR_COMMON: "Incubadora Comum",
+    INCUBATOR_RARE: "Incubadora Rara",
+    INCUBATOR_EPIC: "Incubadora Épica"
+  };
+  return map[t] || t.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function formatTime(seconds) {
