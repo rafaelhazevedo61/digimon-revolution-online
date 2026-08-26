@@ -67,7 +67,7 @@ class ClanRaidResponseMapperTest {
         BossDefinitionEntity boss = boss(true);
         ClanRaidAttack previousAttack = attack(raidId, playerId, Instant.now().minusSeconds(60));
         stubCommon(raid, playerId, boss, previousAttack);
-        when(gameplayConfig.isBossCooldownEnabled()).thenReturn(false);
+        when(gameplayConfig.isClanRaidCooldownEnabled()).thenReturn(false);
 
         var response = mapper.toResponse(raid, playerId);
 
@@ -101,7 +101,7 @@ class ClanRaidResponseMapperTest {
         when(playerRepository.findAllById(any())).thenReturn(List.of());
         when(playerRepository.findById(playerId)).thenReturn(Optional.empty());
         when(gameplayConfig.getClanRaidDailyAttackLimit()).thenReturn(3);
-        when(gameplayConfig.isBossCooldownEnabled()).thenReturn(true);
+        when(gameplayConfig.isClanRaidCooldownEnabled()).thenReturn(true);
     }
 
     private ClanRaid raid(UUID raidId, ClanRaidStatus status) {

@@ -192,7 +192,7 @@ class AttackWorldBossUseCaseTest {
         lenient().when(globalDamageBuffService.getMultiplier()).thenReturn(1.0);
         lenient().when(gameplayConfig.getWorldBossDailyAttackLimit()).thenReturn(3);
         lenient().when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(true);
-        lenient().when(gameplayConfig.isBossCooldownEnabled()).thenReturn(true);
+        lenient().when(gameplayConfig.isWorldBossCooldownEnabled()).thenReturn(true);
         lenient().when(worldBossRewardService.grant(any(), any(), any(), anyBoolean()))
                 .thenReturn(List.of(attemptReward));
     }
@@ -345,7 +345,7 @@ class AttackWorldBossUseCaseTest {
 
     @Test
     void attackIgnoresRecentAttackWhenGlobalCooldownIsDisabled() {
-        when(gameplayConfig.isBossCooldownEnabled()).thenReturn(false);
+        when(gameplayConfig.isWorldBossCooldownEnabled()).thenReturn(false);
         WorldBossAttack lastAttack = WorldBossAttack.builder()
                 .id(UUID.randomUUID())
                 .worldBossId(instance.getId())

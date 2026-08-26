@@ -37,7 +37,7 @@ e o projeto segue versionamento incremental por entregas (PRs).
 - **Múltiplos itens por premiação**: administradores podem adicionar até 10 itens distintos no mesmo envio e definir a quantidade individual de cada item.
 - **Restart automático de bosses no alpha**: após a derrota, o Boss Mundial e a Raid de Clã passam a abrir um novo ciclo automaticamente quando `dro.gameplay.auto-boss-respawn-after-defeat-enabled` está ativo; a flag permanece desligada por padrão fora do perfil alpha.
 - **Cooldown da Raid de Clã**: reativado o intervalo entre ataques com a mesma regra do Boss Mundial, usando cinco minutos como configuração do boss e como fallback para valores antigos.
-- **Flag global de cooldown dos bosses**: adicionada `DRO_BOSS_COOLDOWN_ENABLED`/`dro.gameplay.boss-cooldown-enabled`, que liga ou desliga simultaneamente o cooldown do Boss Mundial e da Raid de Clã; o cooldown só é aplicado quando a flag global e `cooldownEnabled` da definição individual estão ativos.
+- **Flags de cooldown dos bosses**: adicionada `DRO_BOSS_COOLDOWN_ENABLED`/`dro.gameplay.boss-cooldown-enabled` como controle global, além de `DRO_WORLD_BOSS_COOLDOWN_ENABLED`/`dro.gameplay.world-boss.cooldown-enabled` e `DRO_CLAN_RAID_COOLDOWN_ENABLED`/`dro.gameplay.clan-raid.cooldown-enabled` para controle individual por tipo; o cooldown só é aplicado quando a flag global, a flag do tipo e `cooldownEnabled` da definição individual estão ativos.
 
 ## [0.0.3-SNAPSHOT]
 

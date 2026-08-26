@@ -410,7 +410,7 @@ O Boss Mundial é uma atividade separada dos bosses convencionais.
 - ataques respeitam as regras e cooldown definidos pelo módulo;
 - o dano contribui para o progresso compartilhado do ciclo;
 - o sistema possui recompensas vinculadas ao conteúdo atual, incluindo integração com baús;
-- ataques respeitam cooldown de cinco minutos quando `dro.gameplay.boss-cooldown-enabled` e o `cooldownEnabled` da definição do boss estão habilitados;
+- ataques respeitam cooldown de cinco minutos quando `dro.gameplay.boss-cooldown-enabled`, `dro.gameplay.world-boss.cooldown-enabled` e o `cooldownEnabled` da definição do boss estão habilitados;
 - no perfil alpha, a flag `dro.gameplay.auto-boss-respawn-after-defeat-enabled` abre automaticamente um novo ciclo após a derrota, preservando o histórico do ciclo anterior;
 - ferramentas administrativas permitem controlar/resetar ciclos para operação e contingência.
 
@@ -577,7 +577,7 @@ Raid de Clã é uma atividade coletiva do Clã contra um alvo compartilhado.
 
 - o jogador consulta a Raid associada ao seu Clã;
 - ataques contribuem para o progresso coletivo;
-- cada jogador respeita cooldown de cinco minutos entre ataques quando `dro.gameplay.boss-cooldown-enabled` e o `cooldownEnabled` da definição do boss estão habilitados;
+- cada jogador respeita cooldown de cinco minutos entre ataques quando `dro.gameplay.boss-cooldown-enabled`, `dro.gameplay.clan-raid.cooldown-enabled` e o `cooldownEnabled` da definição do boss estão habilitados;
 - no perfil alpha, a flag `dro.gameplay.auto-boss-respawn-after-defeat-enabled` abre automaticamente uma nova Raid após a derrota, preservando o histórico da instância anterior;
 - o sistema aplica as regras de disponibilidade e participação configuradas;
 - ferramentas administrativas existem para contingência/reset operacional.

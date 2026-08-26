@@ -18,6 +18,7 @@ dro:
     boss-cooldown-enabled: ${DRO_BOSS_COOLDOWN_ENABLED:true}
 
     clan-raid:
+      cooldown-enabled: ${DRO_CLAN_RAID_COOLDOWN_ENABLED:true}
       daily-attack-limit: ${DRO_CLAN_RAID_DAILY_ATTACK_LIMIT:99}
 
     energy:
@@ -27,6 +28,7 @@ dro:
       daily-challenge-limit: ${DRO_ARENA_DAILY_CHALLENGE_LIMIT:100}
 
     world-boss:
+      cooldown-enabled: ${DRO_WORLD_BOSS_COOLDOWN_ENABLED:true}
       daily-attack-limit: ${DRO_WORLD_BOSS_DAILY_ATTACK_LIMIT:100}
 
   registration:

@@ -66,6 +66,14 @@ public class GameplayConfig {
         this.bossCooldownEnabled = bossCooldownEnabled;
     }
 
+    public boolean isWorldBossCooldownEnabled() {
+        return bossCooldownEnabled && worldBoss.isCooldownEnabled();
+    }
+
+    public boolean isClanRaidCooldownEnabled() {
+        return bossCooldownEnabled && clanRaid.isCooldownEnabled();
+    }
+
     public boolean isEnergyConsumptionEnabled() {
         return energy.isConsumptionEnabled();
     }
@@ -111,6 +119,7 @@ public class GameplayConfig {
     public static class WorldBoss {
 
         private int dailyAttackLimit = 3;
+        private boolean cooldownEnabled = true;
 
         public int getDailyAttackLimit() {
             return dailyAttackLimit;
@@ -118,12 +127,21 @@ public class GameplayConfig {
 
         public void setDailyAttackLimit(int dailyAttackLimit) {
             this.dailyAttackLimit = dailyAttackLimit;
+        }
+
+        public boolean isCooldownEnabled() {
+            return cooldownEnabled;
+        }
+
+        public void setCooldownEnabled(boolean cooldownEnabled) {
+            this.cooldownEnabled = cooldownEnabled;
         }
     }
 
     public static class ClanRaid {
 
         private int dailyAttackLimit = 3;
+        private boolean cooldownEnabled = true;
 
         public int getDailyAttackLimit() {
             return dailyAttackLimit;
@@ -131,6 +149,14 @@ public class GameplayConfig {
 
         public void setDailyAttackLimit(int dailyAttackLimit) {
             this.dailyAttackLimit = dailyAttackLimit;
+        }
+
+        public boolean isCooldownEnabled() {
+            return cooldownEnabled;
+        }
+
+        public void setCooldownEnabled(boolean cooldownEnabled) {
+            this.cooldownEnabled = cooldownEnabled;
         }
     }
 }

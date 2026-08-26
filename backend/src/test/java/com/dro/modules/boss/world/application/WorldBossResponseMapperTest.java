@@ -85,7 +85,7 @@ class WorldBossResponseMapperTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.empty());
         when(worldBossRewardService.findPlayerRewards(worldBossId, playerId)).thenReturn(List.of());
         when(gameplayConfig.getWorldBossDailyAttackLimit()).thenReturn(10);
-        when(gameplayConfig.isBossCooldownEnabled()).thenReturn(false);
+        when(gameplayConfig.isWorldBossCooldownEnabled()).thenReturn(false);
 
         var response = mapper.toResponse(instance, playerId);
 
@@ -134,7 +134,7 @@ class WorldBossResponseMapperTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.empty());
         when(worldBossRewardService.findPlayerRewards(worldBossId, playerId)).thenReturn(List.of());
         when(gameplayConfig.getWorldBossDailyAttackLimit()).thenReturn(10);
-        when(gameplayConfig.isBossCooldownEnabled()).thenReturn(true);
+        when(gameplayConfig.isWorldBossCooldownEnabled()).thenReturn(true);
 
         var response = mapper.toResponse(instance, playerId);
 

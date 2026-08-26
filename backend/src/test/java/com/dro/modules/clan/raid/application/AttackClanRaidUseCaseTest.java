@@ -180,7 +180,7 @@ class AttackClanRaidUseCaseTest {
         lenient().when(globalDamageBuffService.getMultiplier()).thenReturn(1.0);
         lenient().when(gameplayConfig.getClanRaidDailyAttackLimit()).thenReturn(3);
         lenient().when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(false);
-        lenient().when(gameplayConfig.isBossCooldownEnabled()).thenReturn(true);
+        lenient().when(gameplayConfig.isClanRaidCooldownEnabled()).thenReturn(true);
     }
 
     @Test
@@ -231,7 +231,7 @@ class AttackClanRaidUseCaseTest {
 
     @Test
     void attackIgnoresRecentAttackWhenGlobalCooldownIsDisabled() {
-        when(gameplayConfig.isBossCooldownEnabled()).thenReturn(false);
+        when(gameplayConfig.isClanRaidCooldownEnabled()).thenReturn(false);
         ClanRaidAttack lastAttack = ClanRaidAttack.builder()
                 .id(UUID.randomUUID())
                 .clanRaidId(raid.getId())
