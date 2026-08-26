@@ -3,6 +3,7 @@ let adminEventRewardSelectedPlayers = [];
 let adminEventRewardClanOptions = [];
 let adminEventRewardClanMembers = [];
 let adminEventRewardPlayerSearchTimer = null;
+let adminEventRewardAllPlayersCount = null;
 
 const ADMIN_EVENT_ITEM_OPTIONS = [
   ["", "Nenhum item"],
@@ -33,7 +34,7 @@ function renderEventRewardsPage() {
         <div class="flex items-start justify-between gap-4 mb-2">
           <div>
             <h3 class="text-xl font-bold">Nova premiação</h3>
-            <p class="text-sm text-slate-400 mt-1">Escolha um jogador, um clã inteiro ou uma lista de jogadores.</p>
+            <p class="text-sm text-slate-400 mt-1">Escolha um jogador, um clã inteiro, uma lista de jogadores ou todos os jogadores do servidor.</p>
           </div>
           <span class="badge badge-area">EVENT</span>
         </div>
@@ -46,6 +47,7 @@ function renderEventRewardsPage() {
                 <option value="PLAYER">Um jogador</option>
                 <option value="CLAN">Todos os membros de um clã</option>
                 <option value="PLAYERS">Lista de jogadores</option>
+                <option value="ALL_PLAYERS">Todos os jogadores do servidor</option>
               </select>
             </label>
             <label class="block">
@@ -142,7 +144,16 @@ function adminChangeEventRewardRecipientType() {
   const panel = document.getElementById("admin-event-reward-recipient-panel");
   if (!panel) return;
 
-  if (type === "CLAN") {
+  if (type === "ALL_PLAYERS") {
+    adminEventRewardAllPlayersCount = null;
+    panel.innerHTML = `
+      <div class="rounded-lg border border-amber-900/70 bg-amber-950/20 p-3">
+        <p class="text-sm font-semibold text-amber-200">Todos os jogadores do servidor</p>
+        <p id="admin-event-reward-all-players-status" class="text-xs text-amber-100/70 mt-1">Consultando a quantidade de jogadores elegíveis...</p>
+      </div>
+    `;
+    adminLoadEventRewardAllPlayersCount();
+  } else if (type === "CLAN") {
     panel.innerHTML = `
       <label class="block">
         <span class="text-sm text-slate-300">Clã destinatário</span>
@@ -178,6 +189,25 @@ function adminChangeEventRewardRecipientType() {
     `;
   }
   adminUpdateEventRewardPreview();
+}
+
+async function adminLoadEventRewardAllPlayersCount() {
+  try {
+    const result = await apiGet("/admin/mail/recipients/players/count");
+    adminEventRewardAllPlayersCount = Math.max(0, Number(result?.count) || 0);
+    const status = document.getElementById("admin-event-reward-all-players-status");
+    if (status) {
+      status.textContent = adminEventRewardAllPlayersCount > 0
+        ? `${adminEventRewardAllPlayersCount} jogador(es) receberão uma mensagem individual.`
+        : "Nenhum jogador elegível foi encontrado.";
+    }
+    adminUpdateEventRewardPreview();
+  } catch (error) {
+    adminEventRewardAllPlayersCount = null;
+    const status = document.getElementById("admin-event-reward-all-players-status");
+    if (status) status.textContent = error.message || "Não foi possível consultar os jogadores.";
+    adminUpdateEventRewardPreview();
+  }
 }
 
 async function adminLoadEventRewardClans() {
@@ -281,6 +311,11 @@ function adminGetEventRewardRecipientLabel() {
     const clan = adminEventRewardClanOptions.find(option => String(option.id) === adminEventRewardValue("admin-event-reward-clan"));
     return clan ? `Clã [${clan.tag}] ${clan.name}: ${clan.memberCount} membros` : "Nenhum clã selecionado";
   }
+  if (type === "ALL_PLAYERS") {
+    return adminEventRewardAllPlayersCount === null
+      ? "Consultando todos os jogadores..."
+      : `Todos os jogadores do servidor: ${adminEventRewardAllPlayersCount}`;
+  }
   return adminEventRewardSelectedPlayers.length
     ? `${adminEventRewardSelectedPlayers.length} jogador(es) selecionado(s)`
     : "Nenhum jogador selecionado";
@@ -290,6 +325,7 @@ function adminGetEventRewardRecipientCount() {
   const type = document.getElementById("admin-event-reward-recipient-type")?.value || "PLAYER";
   if (type === "PLAYER") return adminEventRewardValue("admin-event-reward-player") ? 1 : 0;
   if (type === "CLAN") return adminEventRewardClanMembers.length;
+  if (type === "ALL_PLAYERS") return adminEventRewardAllPlayersCount || 0;
   return adminEventRewardSelectedPlayers.length;
 }
 

@@ -28,7 +28,7 @@ e o projeto segue versionamento incremental por entregas (PRs).
   - Migrations `V74` (rating, estatísticas e tabela `arena_matches`) e `V75`/`V76` (flag `is_bot`, jogador de sistema e seed de bots).
 
 ### Corrigido
-
+- **Premiação global de eventos**: administradores podem selecionar todos os jogadores do servidor, visualizar a quantidade elegível antes da confirmação e gerar uma mensagem individual para cada conta do tipo `PLAYER`.
 - **Busca de jogadores nas ferramentas administrativas**: a etapa de seleção do jogador no fluxo de grant agora mantém o filtro por username, exibe o total encontrado e permite navegar entre páginas de resultados, sem limitar o operador aos dez primeiros jogadores.
 
 ## [0.0.3-SNAPSHOT]

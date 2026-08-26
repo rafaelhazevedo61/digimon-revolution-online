@@ -909,7 +909,7 @@
             "description": "Gerado de AdminEventRewardController.create. Revise IDs e valores antes de enviar.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"playerUsername\": \"jogador-alvo\",\n  \"sourceType\": \"EVENT\",\n  \"sourceId\": \"evento-teste-001\",\n  \"subject\": \"Premiação de teste\",\n  \"body\": \"Você recebeu esta recompensa pelo evento.\",\n  \"bitsAmount\": 5000,\n  \"itemType\": \"TRAINING_STONE\",\n  \"itemQuantity\": 2,\n  \"validityDays\": 7\n}",
+              "raw": "{\n  \"recipientType\": \"PLAYER\",\n  \"playerUsername\": \"jogador-alvo\",\n  \"clanId\": null,\n  \"playerUsernames\": [],\n  \"sourceType\": \"EVENT\",\n  \"sourceId\": \"evento-teste-001\",\n  \"subject\": \"Premiação de teste\",\n  \"body\": \"Você recebeu esta recompensa pelo evento.\",\n  \"bitsAmount\": 5000,\n  \"itemType\": \"TRAINING_STONE\",\n  \"itemQuantity\": 2,\n  \"validityDays\": 7\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -948,6 +948,22 @@
             ],
             "url": "{{baseUrl}}/admin/mail/recipients/clans/{{clanId}}/members",
             "description": "Gerado de AdminEventRewardRecipientController.listClanMembers. Revise IDs e valores antes de enviar."
+          },
+          "response": []
+        },
+        {
+          "name": "countEligiblePlayers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/mail/recipients/players/count",
+            "description": "Gerado de AdminEventRewardRecipientController.countEligiblePlayers. Revise o ambiente antes de enviar."
           },
           "response": []
         },

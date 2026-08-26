@@ -11,6 +11,7 @@ import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.mail.application.CreateSystemMailMessageUseCase;
 import com.dro.modules.mail.domain.MailMessageType;
 import com.dro.modules.player.domain.Player;
+import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
@@ -114,7 +115,8 @@ public class CreateEventRewardUseCase {
      *
      * <p>No modo {@code CLAN}, são considerados os membros vinculados ao clã no
      * momento do envio. No modo {@code PLAYERS}, a lista final não pode exceder
-     * 100 jogadores.</p>
+     * 100 jogadores. No modo {@code ALL_PLAYERS}, são consideradas todas as
+     * contas do tipo {@code PLAYER} existentes no momento do envio.</p>
      *
      * @param request solicitação com o modo e os identificadores de destino
      * @return jogadores únicos que serão processados pelo lote
@@ -160,8 +162,13 @@ public class CreateEventRewardUseCase {
                     unique.put(player.getId(), player);
                 }
             }
+            case ALL_PLAYERS -> playerRepository.findByUserTypeOrderByUsernameAsc(UserType.PLAYER)
+                    .forEach(player -> unique.put(player.getId(), player));
         }
-        if (unique.size() > 100) {
+        if (unique.isEmpty()) {
+            throw new ConflictException("Nenhum jogador elegível foi encontrado.");
+        }
+        if (type != EventRewardRecipientType.ALL_PLAYERS && unique.size() > 100) {
             throw new ConflictException("A premiação pode alcançar no máximo 100 jogadores.");
         }
         return new ArrayList<>(unique.values());

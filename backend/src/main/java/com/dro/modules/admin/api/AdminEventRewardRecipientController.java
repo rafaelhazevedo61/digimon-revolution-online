@@ -1,6 +1,7 @@
 package com.dro.modules.admin.api;
 
 import com.dro.modules.clan.infra.ClanRepository;
+import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.NotFoundException;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -66,6 +67,16 @@ public class AdminEventRewardRecipientController {
             result.add(item);
         });
         return result;
+    }
+
+    /**
+     * Retorna a quantidade atual de contas elegíveis para o modo global.
+     *
+     * @return quantidade de contas do tipo PLAYER no momento da consulta
+     */
+    @GetMapping("/players/count")
+    public Map<String, Object> countEligiblePlayers() {
+        return Map.of("count", playerRepository.countByUserType(UserType.PLAYER));
     }
 
     /**
