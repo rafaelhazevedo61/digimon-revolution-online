@@ -2,6 +2,8 @@ package com.dro.modules.boss.world.application;
 
 import com.dro.modules.boss.world.domain.WorldBossInstance;
 import com.dro.modules.boss.world.infra.WorldBossInstanceRepository;
+import com.dro.shared.config.GameplayConfig;
+import com.dro.modules.boss.world.domain.WorldBossStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,6 +27,9 @@ class WorldBossServiceTest {
     @Mock
     private WorldBossInstanceFactory worldBossInstanceFactory;
 
+    @Mock
+    private GameplayConfig gameplayConfig;
+
     @InjectMocks
     private WorldBossService service;
 
@@ -38,6 +43,37 @@ class WorldBossServiceTest {
 
         assertSame(existing, result);
         verifyNoInteractions(worldBossInstanceFactory);
+    }
+
+    @Test
+    void getOrCreateToday_keepsDefeatedInstanceWhenAutomaticRespawnIsDisabled() {
+        WorldBossInstance defeated = new WorldBossInstance();
+        defeated.setStatus(WorldBossStatus.DEFEATED);
+        when(worldBossInstanceRepository.findFirstByBossDateOrderByCreatedAtDesc(any(LocalDate.class)))
+                .thenReturn(Optional.of(defeated));
+        when(gameplayConfig.isAutoBossRespawnAfterDefeatEnabled()).thenReturn(false);
+
+        WorldBossInstance result = service.getOrCreateToday();
+
+        assertSame(defeated, result);
+        verifyNoInteractions(worldBossInstanceFactory);
+    }
+
+    @Test
+    void getOrCreateToday_createsNextCycleWhenAutomaticRespawnIsEnabled() {
+        WorldBossInstance defeated = new WorldBossInstance();
+        defeated.setStatus(WorldBossStatus.DEFEATED);
+        defeated.setCycleNumber(2);
+        WorldBossInstance nextCycle = new WorldBossInstance();
+        when(worldBossInstanceRepository.findFirstByBossDateOrderByCreatedAtDesc(any(LocalDate.class)))
+                .thenReturn(Optional.of(defeated));
+        when(gameplayConfig.isAutoBossRespawnAfterDefeatEnabled()).thenReturn(true);
+        when(worldBossInstanceFactory.create(any(LocalDate.class), eq(3))).thenReturn(nextCycle);
+
+        WorldBossInstance result = service.getOrCreateToday();
+
+        assertSame(nextCycle, result);
+        verify(worldBossInstanceFactory).create(any(LocalDate.class), eq(3));
     }
 
     @Test

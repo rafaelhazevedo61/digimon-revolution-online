@@ -37,8 +37,11 @@ logging:
 
 dro:
   gameplay:
+    auto-boss-respawn-after-defeat-enabled: false
+    boss-cooldown-enabled: ${DRO_BOSS_COOLDOWN_ENABLED:true}
+
     clan-raid:
-      daily-attack-limit: ${DRO_CLAN_RAID_DAILY_ATTACK_LIMIT:3}
+      cooldown-enabled: ${DRO_CLAN_RAID_COOLDOWN_ENABLED:true}
 
     energy:
       consumption-enabled: ${DRO_ENERGY_CONSUMPTION_ENABLED:true}
@@ -47,7 +50,7 @@ dro:
       daily-challenge-limit: ${DRO_ARENA_DAILY_CHALLENGE_LIMIT:5}
 
     world-boss:
-      daily-attack-limit: ${DRO_WORLD_BOSS_DAILY_ATTACK_LIMIT:3}
+      cooldown-enabled: ${DRO_WORLD_BOSS_COOLDOWN_ENABLED:true}
 
   registration:
     invite-required: ${DRO_REGISTRATION_INVITE_REQUIRED:false}

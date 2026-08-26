@@ -18,7 +18,7 @@ Se o mesmo jogador possuir o maior dano acumulado e aplicar o golpe final, receb
 
 ## Pré-requisitos
 
-A branch deve estar baseada na `develop` após o merge do PR #70. O backend deve iniciar para que o Flyway aplique as migrations V110, V111, V112 e V113. O Boss Mundial atualmente catalogado é `WORLD_BOSS_APOCALYMON`, com `cooldown_minutes` inicial de 5 minutos e `cooldown_enabled` ativo. O valor permanece configurável no cadastro do Boss, sem ser apagado quando o cooldown é desligado. Os três Baús seguem o padrão inicial:
+A branch deve estar baseada na `develop` após o merge do PR #70. O backend deve iniciar para que o Flyway aplique as migrations necessárias, incluindo a remoção de `cooldown_enabled` pela V133. O Boss Mundial atualmente catalogado é `WORLD_BOSS_APOCALYMON`, com `cooldown_minutes` inicial de 5 minutos. A duração permanece configurável no cadastro do Boss; a ativação é controlada pelas flags YAML do ambiente. Os três Baús seguem o padrão inicial:
 
 | Tipo | Baú | Loot Table |
 | --- | --- | --- |
@@ -32,7 +32,7 @@ As pools são conservadoras e editáveis pelo painel **Baús Temáticos → Loot
 
 Acesse **Boss Mundial** e execute um ataque válido. O modal deve exibir o Baú por tentativa. O inventário do Digimon usado deve receber exatamente uma unidade de `CHEST_BOSS_WORLD_APOCALYMON_ATTEMPT`.
 
-Aguarde o cooldown configurado expirar e execute outro ataque válido com uma nova chave `Idempotency-Key`. Um segundo Baú por tentativa deve ser recebido, pois são ataques diferentes. O limite diário continua sendo três ataques por jogador, conforme a regra existente.
+Aguarde o cooldown configurado expirar e execute outro ataque válido com uma nova chave `Idempotency-Key`. Um segundo Baú por tentativa deve ser recebido, pois são ataques diferentes. Não existe limite diário de ataques; o jogador permanece limitado apenas pelo cooldown e pelo estado da instância.
 
 Tente atacar novamente antes de o cooldown expirar. A API deve rejeitar a operação, informando o tempo aproximado restante, sem consumir energia, alterar o HP do Boss, conceder XP/Bits ou criar Baú.
 
@@ -70,11 +70,9 @@ No painel, acesse **Baús Temáticos** e selecione a origem **Boss**. Os três B
 
 Na tela **Bosses**, abra **Editar** no Boss Mundial. O modal deve exibir a seção **Baús do Boss Mundial** com três seletores: **Baú por tentativa**, **Baú de maior dano** e **Baú do golpe final**. Selecione três Baús ativos diferentes e salve. A tabela deve exibir os três vínculos, e cada Baú deve continuar apontando para sua própria Loot Table. Tente repetir um mesmo Baú em duas situações; o painel deve rejeitar o envio antes de salvar e a API também deve impedir a configuração duplicada.
 
-Ainda no mesmo modal, confirme que o checkbox **Ativar cooldown** está marcado e o campo `Cooldown (min)` habilitado com o valor atual. Desmarque o checkbox, salve e confirme que a tabela mostra o cooldown como **Desligado**. O valor em minutos deve permanecer armazenado. Reabra o modal, marque o checkbox novamente e confirme que o valor anterior foi preservado.
+No mesmo modal, confirme que existe somente o campo `Cooldown (min)` para definir a duração do intervalo e que não existe checkbox de ativação individual. O PUT administrativo não deve enviar `cooldownEnabled`. As flags de ativação devem ser alteradas exclusivamente no YAML ou nas variáveis de ambiente do backend.
 
-Ao desligar o checkbox, o campo de minutos deve ficar visualmente desabilitado, mas seu valor não deve ser apagado. O PUT administrativo deve enviar `cooldownEnabled: false`; ao religar, deve enviar `cooldownEnabled: true` e reutilizar os minutos preservados. Essa operação deve funcionar sem exigir o Baú legado de **Recompensa (Vitória)**, pois esse campo não é usado por Boss Mundial.
-
-Com o cooldown desligado, confirme no Network que `GET /world-boss/me` retorna `cooldownEnabled: false` e `nextAttackAvailableAt: null`. A tela deve mostrar **Cooldown desativado pelo administrador**, não deve iniciar contador e uma nova tentativa do mesmo jogador não deve ser bloqueada pelo intervalo. Depois de religá-lo, `cooldownEnabled` deve voltar a `true`, o intervalo configurado deve voltar a ser aplicado e a tela pública deve mostrar a contagem regressiva.
+Com `DRO_BOSS_COOLDOWN_ENABLED=true` e `DRO_WORLD_BOSS_COOLDOWN_ENABLED=true`, confirme no Network que `GET /world-boss/me` retorna `cooldownEnabled: true` após um ataque e que `nextAttackAvailableAt` está no futuro. Desligue uma das flags, reinicie o backend e confirme que a resposta retorna `cooldownEnabled: false`, `nextAttackAvailableAt: null`, a tela mostra **Cooldown desativado pelo administrador** e uma nova tentativa não é bloqueada pelo intervalo. Depois de religar as flags e reiniciar o backend, a contagem regressiva deve voltar a ser aplicada.
 
 Em **Loot Tables**, verifique as três tabelas `LOOT_TABLE_BOSS_WORLD_APOCALYMON_*`. Os pesos de raridade e as entradas devem ser editáveis pelo mecanismo genérico existente. A desativação de uma Loot Table deve impedir a concessão do Baú correspondente e registrar a falha da operação, sem entregar item parcialmente.
 
@@ -162,7 +160,6 @@ Consultar a configuração dos Baús no Boss Mundial:
 SELECT
     b.code AS boss_code,
     b.cooldown_minutes,
-    b.cooldown_enabled,
     attempt_chest.code AS attempt_chest_code,
     attempt_chest.loot_table_id AS attempt_loot_table_id,
     top_damage_chest.code AS top_damage_chest_code,

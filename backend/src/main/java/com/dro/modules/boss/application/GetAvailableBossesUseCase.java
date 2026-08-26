@@ -52,7 +52,7 @@ public class GetAvailableBossesUseCase {
             double bossPower = BossCombatRules.calculatePower(boss.getHp(), boss.getAtk(), boss.getDef());
             Integer winChance = meetsRequirements ? BossCombatRules.calculateWinChance(digimonPower, bossPower) : null;
             List<BossDropResponse> drops = boss.getDrops() != null ? boss.getDrops().stream().filter(drop -> "EQUIPMENT".equals(drop.getDropType())).map(d -> new BossDropResponse(d.getDropType(), d.getItemCode(), d.getTemplateName(), d.getEquipmentRarity(), d.getChance(), d.getMinQuantity(), d.getMaxQuantity())).toList() : List.of();
-            return new BossDefinitionResponse(boss.getId(), boss.getCode(), boss.getName(), boss.getBossType().name(), boss.getRequiredStage().name(), boss.getRequiredLevel(), boss.getRequiredRebirths(), boss.getHp(), boss.getAtk(), boss.getDef(), boss.getEnergyCost(), boss.getCooldownMinutes(), boss.isCooldownEnabled(), boss.getBaseXpReward(), boss.getBaseBitsReward(), boss.getImageUrl(), available, cooldownRemaining != null && cooldownRemaining > 0 ? cooldownRemaining : null, winChance, boss.getChestDefinition() != null ? boss.getChestDefinition().getCode() : null, boss.getChestDefinition() != null ? boss.getChestDefinition().getName() : null, drops);
+            return new BossDefinitionResponse(boss.getId(), boss.getCode(), boss.getName(), boss.getBossType().name(), boss.getRequiredStage().name(), boss.getRequiredLevel(), boss.getRequiredRebirths(), boss.getHp(), boss.getAtk(), boss.getDef(), boss.getEnergyCost(), boss.getCooldownMinutes(), boss.getBaseXpReward(), boss.getBaseBitsReward(), boss.getImageUrl(), available, cooldownRemaining != null && cooldownRemaining > 0 ? cooldownRemaining : null, winChance, boss.getChestDefinition() != null ? boss.getChestDefinition().getCode() : null, boss.getChestDefinition() != null ? boss.getChestDefinition().getName() : null, drops);
         }).toList();
     }
 
@@ -70,7 +70,7 @@ public class GetAvailableBossesUseCase {
 
     private Long calculateCooldownRemaining(UUID playerId, BossDefinitionEntity boss) {
         var lastAttempt = bossAttemptRepository.findFirstByPlayerIdAndBossIdOrderByCreatedAtDesc(playerId, boss.getId());
-        if (!boss.isCooldownEnabled() || lastAttempt.isEmpty()) return null;
+        if (lastAttempt.isEmpty()) return null;
         Instant lastTime = lastAttempt.get().getCreatedAt();
         Instant cooldownEnd = lastTime.plus(boss.getCooldownMinutes(), ChronoUnit.MINUTES);
         Instant now = Instant.now();

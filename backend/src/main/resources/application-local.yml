@@ -14,17 +14,20 @@ logging:
 dro:
   app-version: ${DRO_APP_VERSION:0.0.1-SNAPSHOT}
   gameplay:
+    auto-boss-respawn-after-defeat-enabled: true
+    boss-cooldown-enabled: ${DRO_BOSS_COOLDOWN_ENABLED:true}
+
     clan-raid:
-      daily-attack-limit: ${DRO_CLAN_RAID_DAILY_ATTACK_LIMIT:99}
+      cooldown-enabled: ${DRO_CLAN_RAID_COOLDOWN_ENABLED:true}
+
+    world-boss:
+      cooldown-enabled: ${DRO_WORLD_BOSS_COOLDOWN_ENABLED:true}
 
     energy:
       consumption-enabled: ${DRO_ENERGY_CONSUMPTION_ENABLED:false}
 
     arena:
       daily-challenge-limit: ${DRO_ARENA_DAILY_CHALLENGE_LIMIT:99}
-
-    world-boss:
-      daily-attack-limit: ${DRO_WORLD_BOSS_DAILY_ATTACK_LIMIT:99}
 
   registration:
     invite-required: ${DRO_REGISTRATION_INVITE_REQUIRED:false}

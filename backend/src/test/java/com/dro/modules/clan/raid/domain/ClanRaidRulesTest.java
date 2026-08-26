@@ -2,40 +2,20 @@ package com.dro.modules.clan.raid.domain;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ClanRaidRulesTest {
 
     @Test
-    void dailyAttacksRemaining_returnsZeroWhenLimitReached() {
-        assertEquals(0, ClanRaidRules.dailyAttacksRemaining(3));
-        assertEquals(0, ClanRaidRules.dailyAttacksRemaining(5));
+    void attackCooldownMinutes_usesFiveMinutesAsDefault() {
+        assertEquals(5, ClanRaidRules.attackCooldownMinutes(0));
+        assertEquals(5, ClanRaidRules.attackCooldownMinutes(-1));
     }
 
     @Test
-    void dailyAttacksRemaining_returnsRemaining() {
-        assertEquals(3, ClanRaidRules.dailyAttacksRemaining(0));
-        assertEquals(1, ClanRaidRules.dailyAttacksRemaining(2));
-    }
-
-    @Test
-    void dailyLimitReached_detectsLimit() {
-        assertTrue(ClanRaidRules.dailyLimitReached(3));
-        assertFalse(ClanRaidRules.dailyLimitReached(2));
-    }
-
-
-    @Test
-    void dailyAttacksRemaining_usesConfiguredLimit() {
-        assertEquals(10, ClanRaidRules.dailyAttacksRemaining(0, 10));
-        assertEquals(1, ClanRaidRules.dailyAttacksRemaining(9, 10));
-        assertEquals(0, ClanRaidRules.dailyAttacksRemaining(10, 10));
-    }
-
-    @Test
-    void dailyLimitReached_usesConfiguredLimit() {
-        assertFalse(ClanRaidRules.dailyLimitReached(9, 10));
-        assertTrue(ClanRaidRules.dailyLimitReached(10, 10));
+    void attackCooldownMinutes_preservesPositiveConfiguredValue() {
+        assertEquals(15, ClanRaidRules.attackCooldownMinutes(15));
     }
 
     @Test

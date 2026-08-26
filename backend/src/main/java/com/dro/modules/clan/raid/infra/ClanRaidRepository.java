@@ -2,7 +2,9 @@ package com.dro.modules.clan.raid.infra;
 
 import com.dro.modules.clan.raid.domain.ClanRaid;
 import com.dro.modules.clan.raid.domain.ClanRaidStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
@@ -16,6 +18,7 @@ import java.util.UUID;
 @Repository
 public interface ClanRaidRepository extends JpaRepository<ClanRaid, UUID> {
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<ClanRaid> findFirstByClanIdOrderByCreatedAtDesc(UUID clanId);
 
     Optional<ClanRaid> findFirstByClanIdAndStatusOrderByCreatedAtDesc(UUID clanId, ClanRaidStatus status);

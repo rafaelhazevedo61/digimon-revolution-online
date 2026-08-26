@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -16,13 +17,11 @@ import java.util.UUID;
 @Repository
 public interface ClanRaidAttackRepository extends JpaRepository<ClanRaidAttack, UUID> {
 
-    long countByClanRaidIdAndPlayerIdAndCreatedAtGreaterThanEqual(UUID clanRaidId, UUID playerId, Instant startOfDay);
-
-    long countByClanRaidIdAndCreatedAtGreaterThanEqual(UUID clanRaidId, Instant startOfDay);
-
     long deleteByCreatedAtGreaterThanEqual(Instant since);
 
     List<ClanRaidAttack> findByClanRaidIdOrderByCreatedAtDesc(UUID clanRaidId);
+
+    Optional<ClanRaidAttack> findFirstByClanRaidIdAndPlayerIdOrderByCreatedAtDesc(UUID clanRaidId, UUID playerId);
 
     @Query("SELECT a.playerId, COALESCE(SUM(a.damage), 0) " +
             "FROM ClanRaidAttack a " +
