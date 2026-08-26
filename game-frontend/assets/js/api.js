@@ -60,26 +60,31 @@ function authHeaders() {
 
 let authRedirectScheduled = false;
 
-function handleAuthError(response) {
-  if (response.status === 401 || response.status === 403) {
-    clearAuth();
-    if (!authRedirectScheduled) {
-      authRedirectScheduled = true;
-      setTimeout(() => {
-        authRedirectScheduled = false;
-        if (typeof navigateTo === "function") {
-          navigateTo("login");
-        } else {
-          window.location.hash = "#login";
-        }
-        if (typeof showToast === "function") {
-          showToast("Sua sessão expirou. Faça login novamente.", "error");
-        }
-      }, 0);
-    }
-    return true;
+function handleAuthError(response, path = "") {
+  // 401 no próprio login/cadastro significa credencial inválida; não é
+  // uma sessão protegida e não deve disparar redirecionamento ou toast.
+  if (isPublicAuthPath(path) || response.status !== 401) return false;
+
+  clearAuth();
+  if (!authRedirectScheduled) {
+    authRedirectScheduled = true;
+    setTimeout(() => {
+      authRedirectScheduled = false;
+      // Evita que um redirecionamento agendado por uma requisição antiga
+      // derrube um login novo concluído antes do callback executar.
+      if (isLoggedIn()) return;
+
+      if (typeof navigateTo === "function") {
+        navigateTo("login");
+      } else {
+        window.location.hash = "#login";
+      }
+      if (typeof showToast === "function") {
+        showToast("Sua sessão expirou. Faça login novamente.", "error");
+      }
+    }, 0);
   }
-  return false;
+  return true;
 }
 
 const NETWORK_ERROR_MESSAGE = "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.";
@@ -112,7 +117,7 @@ async function apiRequest(method, path, { params = {}, body, headers = {} } = {}
   }
 
   if (!response.ok) {
-    if (handleAuthError(response)) throw new Error("Sessão expirada. Faça login novamente.");
+    if (handleAuthError(response, path)) throw new Error("Sessão expirada. Faça login novamente.");
     const msg = await safeReadError(response);
     throw new Error(msg);
   }
