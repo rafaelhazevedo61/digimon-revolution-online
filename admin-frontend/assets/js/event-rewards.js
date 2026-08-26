@@ -70,8 +70,11 @@ function renderEventRewardsPage() {
             </label>
             <label class="block">
               <span class="text-sm text-slate-300">Identificador da origem</span>
-              <input id="admin-event-reward-source-id" class="input w-full mt-1" maxlength="128" required placeholder="ex.: evento-agosto-2026-001" oninput="adminUpdateEventRewardPreview()">
-              <span class="text-xs text-slate-500 mt-1 block">A mesma origem não gera uma segunda premiação para o mesmo jogador.</span>
+              <div class="flex flex-col sm:flex-row gap-2 mt-1">
+                <input id="admin-event-reward-source-id" class="input w-full" maxlength="128" required placeholder="ex.: evento-agosto-2026-001" oninput="adminUpdateEventRewardPreview()">
+                <button type="button" class="btn-secondary whitespace-nowrap" onclick="adminGenerateEventRewardSourceId()" title="Gera um novo identificador e substitui o valor atual.">Gerar identificador</button>
+              </div>
+              <span class="text-xs text-slate-500 mt-1 block">A mesma origem não gera uma segunda premiação para o mesmo jogador. Você pode gerar ou editar o identificador manualmente.</span>
             </label>
           </div>
 
@@ -137,6 +140,23 @@ function renderEventRewardsPage() {
 
 function adminEventRewardValue(id) {
   return document.getElementById(id)?.value?.trim() || "";
+}
+
+function adminGenerateEventRewardSourceId() {
+  const input = document.getElementById("admin-event-reward-source-id");
+  if (!input) return;
+
+  const now = new Date();
+  const pad = value => String(value).padStart(2, "0");
+  const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  const token = globalThis.crypto?.randomUUID
+    ? globalThis.crypto.randomUUID().replaceAll("-", "").slice(0, 12)
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+
+  input.value = `event-${timestamp}-${token}`;
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.focus();
+  input.select();
 }
 
 function adminChangeEventRewardRecipientType() {
