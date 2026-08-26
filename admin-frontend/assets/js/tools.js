@@ -1,5 +1,9 @@
 const toolsState = {
   players: [],
+  playerPage: 0,
+  playerPageSize: 10,
+  playerSearch: "",
+  playerSearchResult: null,
   digimons: [],
   itemDefinitions: [],
   equipmentTemplates: [],
@@ -17,7 +21,7 @@ async function renderToolsPage() {
       <div class="flex gap-4 items-end">
         <div class="flex-1">
           <label class="text-sm text-slate-400">Buscar por username</label>
-          <input id="tools-player-search" class="input mt-1" placeholder="Digite o username..." />
+          <input id="tools-player-search" class="input mt-1" placeholder="Digite o username..." value="${escapeAttr(toolsState.playerSearch)}" />
         </div>
         <button id="tools-player-search-btn" class="btn-primary px-4 py-2">Buscar</button>
       </div>
@@ -136,38 +140,84 @@ async function renderToolsPage() {
   adminLoadDamageBuff();
 }
 
-async function toolsSearchPlayers() {
-  const username = document.getElementById("tools-player-search").value.trim();
+async function toolsSearchPlayers(page = 0) {
+  const input = document.getElementById("tools-player-search");
+  const username = (input ? input.value : toolsState.playerSearch).trim();
   if (!username) return;
 
+  if (page === 0) {
+    toolsState.selectedPlayerId = null;
+    toolsState.selectedDigimonId = null;
+    toolsState.digimons = [];
+    document.getElementById("tools-digimon-section")?.classList.add("hidden");
+    document.getElementById("tools-actions-section")?.classList.add("hidden");
+  }
+
+  toolsState.playerPage = Math.max(0, Number(page) || 0);
+  toolsState.playerSearch = username;
+  const container = document.getElementById("tools-player-list");
+  container.innerHTML = `<p class="text-slate-400">Buscando jogadores...</p>`;
+
   try {
-    const data = await apiGet("/admin/players", { username, size: 10 });
+    const data = await apiGet("/admin/players", {
+      username: toolsState.playerSearch,
+      page: toolsState.playerPage,
+      size: toolsState.playerPageSize
+    });
     toolsState.players = data.items || [];
+    toolsState.playerSearchResult = data;
     toolsRenderPlayerList();
   } catch (err) {
-    document.getElementById("tools-player-list").innerHTML =
+    toolsState.playerSearchResult = null;
+    container.innerHTML =
       `<p class="text-red-400">${escapeHtml(err.message)}</p>`;
   }
 }
 
 function toolsRenderPlayerList() {
   const container = document.getElementById("tools-player-list");
-  if (toolsState.players.length === 0) {
-    container.innerHTML = `<p class="text-slate-500">Nenhum jogador encontrado.</p>`;
-    return;
-  }
+  if (!container) return;
 
-  container.innerHTML = toolsState.players.map(p => `
-    <button class="w-full text-left px-3 py-2 rounded hover:bg-slate-800 transition-colors flex justify-between items-center
-      ${toolsState.selectedPlayerId === p.id ? 'bg-slate-800 border border-cyan-500' : 'border border-slate-700'}"
-      data-player-id="${escapeAttr(p.id)}">
-      <span>
-        <span class="text-cyan-300 font-medium">${escapeHtml(p.username)}</span>
-        <span class="text-slate-500 text-sm ml-2">${escapeHtml(p.email)}</span>
-      </span>
-      <span class="text-slate-500 text-xs">${escapeHtml(p.id.substring(0, 8))}...</span>
-    </button>
-  `).join("");
+  const result = toolsState.playerSearchResult || {};
+  const currentPage = Number(result.page ?? toolsState.playerPage) || 0;
+  const totalItems = Number(result.totalItems) || 0;
+  const totalPages = Math.max(1, Number(result.totalPages) || 0);
+  const hasPrevious = Boolean(result.hasPrevious);
+  const hasNext = Boolean(result.hasNext);
+  const playerRows = toolsState.players.length === 0
+    ? `<p class="text-slate-500">Nenhum jogador encontrado.</p>`
+    : toolsState.players.map(p => `
+      <button class="w-full text-left px-3 py-2 rounded hover:bg-slate-800 transition-colors flex justify-between items-center
+        ${toolsState.selectedPlayerId === p.id ? 'bg-slate-800 border border-cyan-500' : 'border border-slate-700'}"
+        data-player-id="${escapeAttr(p.id)}">
+        <span>
+          <span class="text-cyan-300 font-medium">${escapeHtml(p.username)}</span>
+          <span class="text-slate-500 text-sm ml-2">${escapeHtml(p.email)}</span>
+        </span>
+        <span class="text-slate-500 text-xs">${escapeHtml(p.id.substring(0, 8))}...</span>
+      </button>
+    `).join("");
+
+  container.innerHTML = `
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
+      <p class="text-sm text-slate-400">
+        ${totalItems} jogador${totalItems === 1 ? "" : "es"} encontrado${totalItems === 1 ? "" : "s"}
+      </p>
+      <div class="flex items-center gap-2">
+        <button class="btn-secondary text-xs" data-tools-player-previous ${!hasPrevious ? "disabled" : ""}>Anterior</button>
+        <span class="text-xs text-slate-400 whitespace-nowrap">Página ${currentPage + 1} de ${totalPages}</span>
+        <button class="btn-secondary text-xs" data-tools-player-next ${!hasNext ? "disabled" : ""}>Próxima</button>
+      </div>
+    </div>
+    <div class="space-y-1">${playerRows}</div>
+  `;
+
+  container.querySelector("[data-tools-player-previous]")?.addEventListener("click", () => {
+    if (hasPrevious) toolsSearchPlayers(currentPage - 1);
+  });
+  container.querySelector("[data-tools-player-next]")?.addEventListener("click", () => {
+    if (hasNext) toolsSearchPlayers(currentPage + 1);
+  });
   container.querySelectorAll("[data-player-id]").forEach(button => {
     button.addEventListener("click", () => toolsSelectPlayer(button.dataset.playerId));
   });
