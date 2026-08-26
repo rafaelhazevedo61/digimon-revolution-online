@@ -4,6 +4,8 @@ let adminEventRewardClanOptions = [];
 let adminEventRewardClanMembers = [];
 let adminEventRewardPlayerSearchTimer = null;
 let adminEventRewardAllPlayersCount = null;
+let adminEventRewardSelectedItem = null;
+let adminEventRewardItemModalState = { search: "", page: 0, pageSize: 8, items: [], loading: false, error: "" };
 
 const ADMIN_EVENT_ITEM_OPTIONS = [
   ["", "Nenhum item"],
@@ -17,6 +19,7 @@ const ADMIN_EVENT_ITEM_OPTIONS = [
   ["INCUBATOR_COMMON", "Incubadora comum"],
   ["INCUBATOR_RARE", "Incubadora rara"],
   ["INCUBATOR_EPIC", "Incubadora épica"],
+  ["INCUBATION_SLOT_UNLOCK", "Expansor de slot de incubação"],
   ["FRAGMENT_ROOKIE", "Fragmento Rookie"],
   ["FRAGMENT_CHAMPION", "Fragmento Champion"],
   ["FRAGMENT_ULTIMATE", "Fragmento Ultimate"],
@@ -26,6 +29,8 @@ const ADMIN_EVENT_ITEM_OPTIONS = [
 ];
 
 function renderEventRewardsPage() {
+  adminEventRewardSelectedItem = null;
+  adminEventRewardItemModalState = { search: "", page: 0, pageSize: 8, items: [], loading: false, error: "" };
   setPageHeader("Premiações de Eventos", "Envie uma recompensa resgatável pelo Correio");
   const app = document.getElementById("app");
   app.innerHTML = `
@@ -95,12 +100,15 @@ function renderEventRewardsPage() {
               <input id="admin-event-reward-bits" class="input w-full mt-1" type="number" min="0" max="2147483647" value="0" required oninput="adminUpdateEventRewardPreview()">
               <span class="text-xs text-slate-500 mt-1 block">Será entregue ao Digimon ativo de cada destinatário.</span>
             </label>
-            <label class="block">
+            <div class="block">
               <span class="text-sm text-slate-300">Item</span>
-              <select id="admin-event-reward-item" class="input w-full mt-1" onchange="adminUpdateEventRewardPreview()">
-                ${ADMIN_EVENT_ITEM_OPTIONS.map(([value, label]) => `<option value="${value}">${label}</option>`).join("")}
-              </select>
-            </label>
+              <input id="admin-event-reward-item" type="hidden" value="">
+              <div class="flex flex-col sm:flex-row gap-2 mt-1">
+                <button id="admin-event-reward-item-picker" type="button" class="btn-secondary flex-1 text-left" onclick="adminOpenEventRewardItemModal()">Selecionar item</button>
+                <button id="admin-event-reward-item-clear" type="button" class="btn-secondary hidden" onclick="adminClearEventRewardItem()">Remover</button>
+              </div>
+              <div id="admin-event-reward-selected-item" class="text-xs text-slate-500 mt-2">Nenhum item selecionado.</div>
+            </div>
           </div>
           <label class="block max-w-md">
             <span class="text-sm text-slate-300">Quantidade do item</span>
@@ -134,12 +142,201 @@ function renderEventRewardsPage() {
     </div>
   `;
   adminChangeEventRewardRecipientType();
+  adminRenderSelectedEventRewardItem();
   adminUpdateEventRewardCounters();
   adminUpdateEventRewardPreview();
 }
 
 function adminEventRewardValue(id) {
   return document.getElementById(id)?.value?.trim() || "";
+}
+
+function adminGetEventRewardItemLabel(itemType) {
+  if (!itemType) return "Sem item";
+  if (adminEventRewardSelectedItem?.code === itemType) return adminEventRewardSelectedItem.name;
+  return ADMIN_EVENT_ITEM_OPTIONS.find(([code]) => code === itemType)?.[1] || itemType;
+}
+
+function adminRenderSelectedEventRewardItem() {
+  const hidden = document.getElementById("admin-event-reward-item");
+  const picker = document.getElementById("admin-event-reward-item-picker");
+  const clear = document.getElementById("admin-event-reward-item-clear");
+  const summary = document.getElementById("admin-event-reward-selected-item");
+  const item = adminEventRewardSelectedItem;
+
+  if (hidden) hidden.value = item?.code || "";
+  if (picker) picker.textContent = item ? `${item.name} (${item.code})` : "Selecionar item";
+  if (clear) clear.classList.toggle("hidden", !item);
+  if (summary) {
+    summary.innerHTML = item
+      ? `<span class="text-slate-300">${escapeHtml(item.name)}</span> <span class="text-slate-500">· ${escapeHtml(item.category || "Item")}</span> <span class="font-mono text-slate-600">· ${escapeHtml(item.code)}</span>`
+      : "Nenhum item selecionado.";
+  }
+}
+
+function adminSelectEventRewardItem(item) {
+  adminEventRewardSelectedItem = {
+    code: item.code,
+    name: item.name || adminGetEventRewardItemLabel(item.code),
+    category: item.category || "Item",
+    description: item.description || ""
+  };
+  adminRenderSelectedEventRewardItem();
+  adminCloseEventRewardItemModal();
+  adminUpdateEventRewardPreview();
+}
+
+function adminClearEventRewardItem() {
+  adminEventRewardSelectedItem = null;
+  adminRenderSelectedEventRewardItem();
+  adminUpdateEventRewardPreview();
+}
+
+function adminOpenEventRewardItemModal() {
+  if (document.getElementById("admin-event-reward-item-modal")) return;
+
+  adminEventRewardItemModalState = { search: "", page: 0, pageSize: 8, items: [], loading: false, error: "" };
+  const overlay = document.createElement("div");
+  overlay.id = "admin-event-reward-item-modal";
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-content modal-wide" role="dialog" aria-modal="true" aria-labelledby="admin-event-reward-item-modal-title">
+      <div class="flex items-start justify-between gap-4 mb-5">
+        <div>
+          <h3 id="admin-event-reward-item-modal-title" class="text-xl font-bold">Selecionar item</h3>
+          <p class="text-sm text-slate-400 mt-1">Pesquise no catálogo de itens disponíveis para premiações.</p>
+        </div>
+        <button type="button" class="text-slate-400 hover:text-white text-2xl" aria-label="Fechar" data-event-reward-item-close>&times;</button>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2 mb-4">
+        <input id="admin-event-reward-item-search" class="input flex-1" placeholder="Pesquisar por nome ou código" autocomplete="off">
+        <button type="button" class="btn-primary" data-event-reward-item-search>Pesquisar</button>
+      </div>
+      <div id="admin-event-reward-item-modal-results" class="space-y-2 min-h-48"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector("[data-event-reward-item-close]").addEventListener("click", adminCloseEventRewardItemModal);
+  overlay.querySelector("[data-event-reward-item-search]").addEventListener("click", adminSearchEventRewardItemModal);
+  overlay.querySelector("#admin-event-reward-item-search").addEventListener("keydown", event => {
+    if (event.key === "Enter") adminSearchEventRewardItemModal();
+  });
+  overlay.addEventListener("click", event => {
+    if (event.target === overlay) adminCloseEventRewardItemModal();
+  });
+  document.addEventListener("keydown", adminHandleEventRewardItemModalKeydown);
+  adminLoadEventRewardItemModal();
+  overlay.querySelector("#admin-event-reward-item-search").focus();
+}
+
+function adminHandleEventRewardItemModalKeydown(event) {
+  if (event.key === "Escape") adminCloseEventRewardItemModal();
+}
+
+function adminCloseEventRewardItemModal() {
+  document.getElementById("admin-event-reward-item-modal")?.remove();
+  document.removeEventListener("keydown", adminHandleEventRewardItemModalKeydown);
+}
+
+function adminSearchEventRewardItemModal() {
+  const input = document.getElementById("admin-event-reward-item-search");
+  if (!input) return;
+  adminEventRewardItemModalState.search = input.value.trim();
+  adminEventRewardItemModalState.page = 0;
+  adminLoadEventRewardItemModal();
+}
+
+async function adminLoadEventRewardItemModal() {
+  const container = document.getElementById("admin-event-reward-item-modal-results");
+  if (!container) return;
+  adminEventRewardItemModalState.loading = true;
+  container.innerHTML = `<p class="text-slate-400">Carregando itens...</p>`;
+
+  try {
+    const result = await apiGet("/items", {
+      search: adminEventRewardItemModalState.search,
+      page: 0,
+      size: 100
+    });
+    const availableCodes = new Set(ADMIN_EVENT_ITEM_OPTIONS.map(([code]) => code).filter(Boolean));
+    adminEventRewardItemModalState.items = (result.items || [])
+      .filter(item => availableCodes.has(item.code))
+      .map(item => ({
+        code: item.code,
+        name: item.name || adminGetEventRewardItemLabel(item.code),
+        category: item.category || "Item",
+        description: item.description || ""
+      }));
+    adminEventRewardItemModalState.error = "";
+  } catch (error) {
+    adminEventRewardItemModalState.error = error.message || "Não foi possível carregar o catálogo.";
+    const query = adminEventRewardItemModalState.search.toLowerCase();
+    adminEventRewardItemModalState.items = ADMIN_EVENT_ITEM_OPTIONS
+      .filter(([code, label]) => code && (!query || `${code} ${label}`.toLowerCase().includes(query)))
+      .map(([code, label]) => ({ code, name: label, category: "Item" }));
+  } finally {
+    adminEventRewardItemModalState.loading = false;
+    adminRenderEventRewardItemModalResults();
+  }
+}
+
+function adminRenderEventRewardItemModalResults() {
+  const container = document.getElementById("admin-event-reward-item-modal-results");
+  if (!container) return;
+  const state = adminEventRewardItemModalState;
+  const totalItems = state.items.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / state.pageSize));
+  const currentPage = Math.min(state.page, totalPages - 1);
+  state.page = currentPage;
+  const pageItems = state.items.slice(currentPage * state.pageSize, (currentPage + 1) * state.pageSize);
+  const errorNotice = state.error
+    ? `<p class="text-xs text-amber-300 mb-2">Catálogo indisponível; exibindo a lista pré-carregada.</p>`
+    : "";
+  const results = pageItems.length
+    ? pageItems.map(item => `
+      <button type="button" class="card-sm w-full text-left hover:border-cyan-600" data-event-reward-item-code="${escapeAttr(item.code)}">
+        <div class="flex items-center justify-between gap-3">
+          <span class="min-w-0">
+            <span class="block text-cyan-300 font-medium truncate">${escapeHtml(item.name)}</span>
+            <span class="block text-xs text-slate-500">${escapeHtml(item.category)} · <span class="font-mono">${escapeHtml(item.code)}</span></span>
+          </span>
+          <span class="text-xs text-slate-400 shrink-0">Selecionar</span>
+        </div>
+      </button>
+    `).join("")
+    : `<p class="text-slate-500">Nenhum item disponível encontrado.</p>`;
+
+  container.innerHTML = `
+    ${errorNotice}
+    <div class="flex items-center justify-between gap-3 mb-2">
+      <p class="text-xs text-slate-500">${totalItems} item(ns) encontrado(s)</p>
+      <div class="flex items-center gap-2">
+        <button type="button" class="btn-secondary text-xs" data-event-reward-item-previous ${currentPage === 0 ? "disabled" : ""}>Anterior</button>
+        <span class="text-xs text-slate-400 whitespace-nowrap">Página ${currentPage + 1} de ${totalPages}</span>
+        <button type="button" class="btn-secondary text-xs" data-event-reward-item-next ${currentPage >= totalPages - 1 ? "disabled" : ""}>Próxima</button>
+      </div>
+    </div>
+    <div class="space-y-2">${results}</div>
+  `;
+
+  container.querySelector("[data-event-reward-item-previous]")?.addEventListener("click", () => {
+    if (state.page > 0) {
+      state.page--;
+      adminRenderEventRewardItemModalResults();
+    }
+  });
+  container.querySelector("[data-event-reward-item-next]")?.addEventListener("click", () => {
+    if (state.page < totalPages - 1) {
+      state.page++;
+      adminRenderEventRewardItemModalResults();
+    }
+  });
+  container.querySelectorAll("[data-event-reward-item-code]").forEach(button => {
+    button.addEventListener("click", () => {
+      const item = state.items.find(candidate => candidate.code === button.dataset.eventRewardItemCode);
+      if (item) adminSelectEventRewardItem(item);
+    });
+  });
 }
 
 function adminGenerateEventRewardSourceId() {
@@ -363,9 +560,9 @@ function adminUpdateEventRewardPreview() {
   const subject = adminEventRewardValue("admin-event-reward-subject");
   const body = adminEventRewardValue("admin-event-reward-body");
   const bits = Number(document.getElementById("admin-event-reward-bits")?.value || 0);
-  const itemSelect = document.getElementById("admin-event-reward-item");
+  const itemType = adminEventRewardValue("admin-event-reward-item");
   const itemQuantity = Number(document.getElementById("admin-event-reward-item-quantity")?.value || 0);
-  const itemLabel = itemSelect?.selectedOptions?.[0]?.textContent || "Sem item";
+  const itemLabel = adminGetEventRewardItemLabel(itemType);
   const validity = adminEventRewardValue("admin-event-reward-validity") || "7";
   const previewRecipient = document.getElementById("admin-event-reward-preview-recipient");
   const previewSubject = document.getElementById("admin-event-reward-preview-subject");
@@ -377,7 +574,7 @@ function adminUpdateEventRewardPreview() {
   if (previewSubject) previewSubject.textContent = subject || "Assunto da premiação";
   if (previewBody) previewBody.textContent = body || "O texto da premiação aparecerá aqui.";
   if (previewBits) previewBits.textContent = `${bits.toLocaleString("pt-BR")} Bits por jogador`;
-  if (previewItem) previewItem.textContent = itemQuantity > 0 && itemSelect?.value ? `${itemQuantity.toLocaleString("pt-BR")} × ${itemLabel} por jogador` : "Sem item";
+  if (previewItem) previewItem.textContent = itemQuantity > 0 && itemType ? `${itemQuantity.toLocaleString("pt-BR")} × ${itemLabel} por jogador` : "Sem item";
   if (previewValidity) previewValidity.textContent = `Válido por ${validity} ${validity === "1" ? "dia" : "dias"}`;
 }
 
@@ -423,7 +620,9 @@ function adminConfirmEventReward(payload) {
     document.body.appendChild(overlay);
     document.getElementById("admin-event-reward-confirm-recipient").textContent = `${payload.recipientLabel} (${payload.recipientCount} mensagem(ns))`;
     document.getElementById("admin-event-reward-confirm-subject").textContent = payload.subject;
-    const itemText = payload.itemType && payload.itemQuantity > 0 ? `${payload.itemQuantity.toLocaleString("pt-BR")} × ${payload.itemType}` : "Sem item";
+    const itemText = payload.itemType && payload.itemQuantity > 0
+      ? `${payload.itemQuantity.toLocaleString("pt-BR")} × ${adminGetEventRewardItemLabel(payload.itemType)}`
+      : "Sem item";
     document.getElementById("admin-event-reward-confirm-reward").textContent = `${payload.bitsAmount.toLocaleString("pt-BR")} Bits · ${itemText}`;
     document.getElementById("admin-event-reward-confirm-validity").textContent = `${payload.validityDays} ${payload.validityDays === 1 ? "dia" : "dias"}`;
     let settled = false;
@@ -499,7 +698,9 @@ async function adminSubmitEventReward(event) {
     adminShowEventRewardResult(`${result.createdCount || 0} premiação(ões) criada(s) para ${payload.recipientLabel}.${suffix}`, true);
     document.getElementById("admin-event-reward-form")?.reset();
     adminEventRewardSelectedPlayers = [];
+    adminEventRewardSelectedItem = null;
     adminChangeEventRewardRecipientType();
+    adminRenderSelectedEventRewardItem();
     adminUpdateEventRewardCounters();
     adminUpdateEventRewardPreview();
   } catch (error) {
