@@ -29,4 +29,14 @@ class IncubatorRulesTest {
         assertThrows(IllegalArgumentException.class,
                 () -> IncubatorRules.getIncubationTime(ItemType.DATA_CORE));
     }
+
+    @Test
+    void supportsThreeSlotsWithOnlyFirstUnlockedByDefault() {
+        assertEquals(3, IncubatorRules.TOTAL_SLOTS);
+        assertEquals(1, IncubatorRules.DEFAULT_UNLOCKED_SLOTS);
+        assertTrue(IncubatorRules.isUnlocked(1, 1));
+        assertFalse(IncubatorRules.isUnlocked(2, 1));
+        assertFalse(IncubatorRules.isUnlocked(4, 3));
+        assertTrue(IncubatorRules.isUnlocked(3, 3));
+    }
 }

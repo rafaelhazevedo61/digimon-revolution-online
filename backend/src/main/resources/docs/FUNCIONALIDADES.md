@@ -182,7 +182,9 @@ O jogador escolhe uma opção disponível e realiza o hatch. A espécie nasce a 
 
 ### Incubação
 
-O fluxo de incubação utiliza Digitama e incubadora do inventário, cria uma incubação para o jogador e permite resgatar o Digimon quando estiver pronta.
+A incubadora possui três slots fixos, exibidos sempre para o jogador. Cada jogador começa com o slot 1 desbloqueado; os slots 2 e 3 permanecem bloqueados até uma futura mecânica de progressão. Cada slot desbloqueado pode manter uma incubação independente, permitindo ovos em paralelo.
+
+O fluxo utiliza Digitama e incubadora do inventário, associa a nova incubação ao slot escolhido e permite resgatar o Digimon daquele slot quando estiver pronta. Os estados `IN_PROGRESS` e `READY` mantêm o slot ocupado; o claim altera somente a incubação selecionada para `CLAIMED` e libera sua posição.
 
 As pools e tempos de incubação são dados de catálogo/configuração e não devem ser duplicados neste documento.
 
@@ -194,9 +196,9 @@ As pools e tempos de incubação são dados de catálogo/configuração e não d
 | POST | `/digitama/hatch` | Realizar hatch do starter |
 | GET | `/digitama/history` | Histórico de hatch |
 | GET | `/digitama-pools/available` | Pools disponíveis |
-| POST | `/incubation/start` | Iniciar incubação |
-| POST | `/incubation/claim` | Resgatar incubação concluída |
-| GET | `/incubation/me` | Consultar incubação atual |
+| POST | `/incubation/start` | Iniciar incubação em um slot desbloqueado e vazio |
+| POST | `/incubation/{incubationId}/claim` | Resgatar a incubação concluída indicada |
+| GET | `/incubation/me` | Consultar os três slots da incubadora |
 
 ---
 

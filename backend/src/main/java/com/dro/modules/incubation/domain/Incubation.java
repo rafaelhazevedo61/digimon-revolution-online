@@ -16,6 +16,8 @@ public class Incubation {
     private UUID id;
     @Column(nullable = false)
     private UUID playerId;
+    @Column(name = "slot_number", nullable = false)
+    private int slotNumber;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ItemType digitamaType;
@@ -62,7 +64,12 @@ public class Incubation {
     public void setPlayerId(UUID playerId) {
         this.playerId = playerId;
     }
-
+    public int getSlotNumber() {
+        return slotNumber;
+    }
+    public void setSlotNumber(int slotNumber) {
+        this.slotNumber = slotNumber;
+    }
     public ItemType getDigitamaType() {
         return digitamaType;
     }
@@ -104,9 +111,15 @@ public class Incubation {
     }
 
 
+    private static int $default$slotNumber() {
+        return 1;
+    }
+
     public static class IncubationBuilder {
         private UUID id;
         private UUID playerId;
+        private boolean slotNumber$set;
+        private int slotNumber$value;
         private ItemType digitamaType;
         private ItemType incubatorType;
         private LocalDateTime startedAt;
@@ -131,7 +144,14 @@ public class Incubation {
             this.playerId = playerId;
             return this;
         }
-
+        /**
+         * @return {@code this}.
+         */
+        public Incubation.IncubationBuilder slotNumber(final int slotNumber) {
+            this.slotNumber$value = slotNumber;
+            slotNumber$set = true;
+            return this;
+        }
         /**
          * @return {@code this}.
          */
@@ -173,12 +193,13 @@ public class Incubation {
         }
 
         public Incubation build() {
-            return new Incubation(this.id, this.playerId, this.digitamaType, this.incubatorType, this.startedAt, this.finishAt, this.status);
+            int slotNumber$value = this.slotNumber$value;
+            if (!this.slotNumber$set) slotNumber$value = Incubation.$default$slotNumber();
+            return new Incubation(this.id, this.playerId, slotNumber$value, this.digitamaType, this.incubatorType, this.startedAt, this.finishAt, this.status);
         }
-
         @Override
         public String toString() {
-            return "Incubation.IncubationBuilder(id=" + this.id + ", playerId=" + this.playerId + ", digitamaType=" + this.digitamaType + ", incubatorType=" + this.incubatorType + ", startedAt=" + this.startedAt + ", finishAt=" + this.finishAt + ", status=" + this.status + ")";
+            return "Incubation.IncubationBuilder(id=" + this.id + ", playerId=" + this.playerId + ", slotNumber=" + this.slotNumber$value + ", digitamaType=" + this.digitamaType + ", incubatorType=" + this.incubatorType + ", startedAt=" + this.startedAt + ", finishAt=" + this.finishAt + ", status=" + this.status + ")";
         }
     }
 
@@ -187,11 +208,12 @@ public class Incubation {
     }
 
     public Incubation() {
+        this.slotNumber = Incubation.$default$slotNumber();
     }
-
-    public Incubation(final UUID id, final UUID playerId, final ItemType digitamaType, final ItemType incubatorType, final LocalDateTime startedAt, final LocalDateTime finishAt, final IncubationStatus status) {
+    public Incubation(final UUID id, final UUID playerId, final int slotNumber, final ItemType digitamaType, final ItemType incubatorType, final LocalDateTime startedAt, final LocalDateTime finishAt, final IncubationStatus status) {
         this.id = id;
         this.playerId = playerId;
+        this.slotNumber = slotNumber;
         this.digitamaType = digitamaType;
         this.incubatorType = incubatorType;
         this.startedAt = startedAt;

@@ -11,6 +11,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 /**
  * Componente da camada de controller da API do módulo de Incubação.
  */
@@ -36,40 +38,35 @@ public class IncubationController {
     }
 
     @PostMapping("/start")
-    public ResponseEntity<Void> start (
+    public ResponseEntity<Void> start(
             @RequestHeader("Authorization") String authorization,
             @RequestBody @Valid StartIncubationRequest request
     ) {
         startUseCase.execute(
                 authorization,
+                request.slotNumber(),
                 request.digitamaType(),
                 request.incubatorType()
         );
-
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/claim")
-    public ResponseEntity<HatchDigitamaResponse> claim (
-            @RequestHeader("Authorization") String authorization
+    @PostMapping("/{incubationId}/claim")
+    public ResponseEntity<HatchDigitamaResponse> claim(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable UUID incubationId
     ) {
-        Digimon digimon = claimUseCase.execute(authorization);
-        String imageUrl = digimon.getDigimonInfoId() == null ? null : digimonInfosRepository.findById(digimon.getDigimonInfoId())
-                .map(info -> info.getImageUrl())
-                .orElse(null);
+        Digimon digimon = claimUseCase.execute(authorization, incubationId);
+        String imageUrl = digimon.getDigimonInfoId() == null
+                ? null
+                : digimonInfosRepository.findById(digimon.getDigimonInfoId())
+                        .map(info -> info.getImageUrl())
+                        .orElse(null);
         return ResponseEntity.ok(HatchDigitamaResponse.from(digimon, imageUrl));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> me (
-            @RequestHeader("Authorization") String authorization
-    ) {
-        var response = getUseCase.execute(authorization);
-
-        if (response == null) {
-            return ResponseEntity.noContent().build();
-        }
-
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> me(@RequestHeader("Authorization") String authorization) {
+        return ResponseEntity.ok(getUseCase.execute(authorization));
     }
 }
