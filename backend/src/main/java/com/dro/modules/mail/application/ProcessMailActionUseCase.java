@@ -10,8 +10,10 @@ import com.dro.modules.clan.infra.ClanRepository;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.event.domain.EventReward;
+import com.dro.modules.event.domain.EventRewardItem;
 import com.dro.modules.event.application.EventRewardMessageText;
 import com.dro.modules.event.domain.EventRewardStatus;
+import com.dro.modules.event.infra.EventRewardItemRepository;
 import com.dro.modules.event.infra.EventRewardRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.domain.ItemDefinition;
@@ -30,6 +32,8 @@ import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -48,6 +52,7 @@ public class ProcessMailActionUseCase {
     private final PlayerRepository playerRepository;
     private final ClanBonusService clanBonusService;
     private final EventRewardRepository eventRewardRepository;
+    private final EventRewardItemRepository eventRewardItemRepository;
     private final DigimonRepository digimonRepository;
     private final AddItemUseCase addItemUseCase;
     private final ItemDefinitionRepository itemDefinitionRepository;
@@ -181,8 +186,24 @@ public class ProcessMailActionUseCase {
         if (reward.getBitsAmount() > 0) {
             digimon.setBits(digimon.getBits() + reward.getBitsAmount());
         }
-        String itemLabel = null;
-        if (reward.getItemQuantity() > 0) {
+        List<EventRewardItem> rewardItems = eventRewardItemRepository.findByEventRewardIdOrderByPositionAsc(reward.getId());
+        List<EventRewardMessageText.ItemLabel> deliveredItems = new ArrayList<>();
+        if (!rewardItems.isEmpty()) {
+            for (EventRewardItem rewardItem : rewardItems) {
+                String itemLabel;
+                if (rewardItem.getItemDefinitionCode() != null && !rewardItem.getItemDefinitionCode().isBlank()) {
+                    ItemDefinition definition = itemDefinitionRepository.findByCode(rewardItem.getItemDefinitionCode())
+                            .orElseThrow(() -> new NotFoundException("Definição do item da premiação não encontrada."));
+                    itemLabel = definition.getName();
+                    addItemUseCase.addMaterial(digimon.getId(), definition, rewardItem.getItemQuantity());
+                } else {
+                    itemLabel = null;
+                    addItemUseCase.execute(digimon.getId(), ItemType.valueOf(rewardItem.getItemType()), rewardItem.getItemQuantity());
+                }
+                deliveredItems.add(new EventRewardMessageText.ItemLabel(rewardItem.getItemType(), itemLabel, rewardItem.getItemQuantity()));
+            }
+        } else if (reward.getItemQuantity() > 0) {
+            String itemLabel = null;
             if (reward.getItemDefinitionCode() != null && !reward.getItemDefinitionCode().isBlank()) {
                 ItemDefinition definition = itemDefinitionRepository.findByCode(reward.getItemDefinitionCode())
                         .orElseThrow(() -> new NotFoundException("Definição do item da premiação não encontrada."));
@@ -191,14 +212,15 @@ public class ProcessMailActionUseCase {
             } else {
                 addItemUseCase.execute(digimon.getId(), ItemType.valueOf(reward.getItemType()), reward.getItemQuantity());
             }
+            deliveredItems.add(new EventRewardMessageText.ItemLabel(reward.getItemType(), itemLabel, reward.getItemQuantity()));
         }
         digimonRepository.save(digimon);
-        message.setBody(EventRewardMessageText.claimedBody(message.getBody(), reward.getBitsAmount(), reward.getItemType(), itemLabel, reward.getItemQuantity(), digimon.getName(), now));
+        message.setBody(EventRewardMessageText.claimedBody(message.getBody(), reward.getBitsAmount(), deliveredItems, digimon.getName(), now));
         reward.setStatus(EventRewardStatus.CLAIMED);
         reward.setClaimedAt(now);
         eventRewardRepository.save(reward);
         completeMessage(message, now);
-        transactionAuditPublisher.success("mail-reward-claim:" + rewardId, "MAIL_REWARD_CLAIMED", "EventReward", rewardId.toString(), Map.of("module", "mail", "operation", "claimEventReward", "actorId", playerId.toString(), "digimonId", digimon.getId().toString(), "digimonName", digimon.getName() == null ? "" : digimon.getName(), "bitsAmount", reward.getBitsAmount(), "itemType", reward.getItemType() == null ? "" : reward.getItemType(), "itemQuantity", reward.getItemQuantity(), "summary", "Event reward claimed"));
+        transactionAuditPublisher.success("mail-reward-claim:" + rewardId, "MAIL_REWARD_CLAIMED", "EventReward", rewardId.toString(), Map.of("module", "mail", "operation", "claimEventReward", "actorId", playerId.toString(), "digimonId", digimon.getId().toString(), "digimonName", digimon.getName() == null ? "" : digimon.getName(), "bitsAmount", reward.getBitsAmount(), "itemType", reward.getItemType() == null ? "" : reward.getItemType(), "itemQuantity", reward.getItemQuantity(), "itemsCount", deliveredItems.size(), "summary", "Event reward claimed"));
         return new MailActionResponse(true, "Premiação resgatada com sucesso.");
     }
 
@@ -214,13 +236,14 @@ public class ProcessMailActionUseCase {
         mailMessageRepository.save(message);
     }
 
-    public ProcessMailActionUseCase(final MailMessageRepository mailMessageRepository, final ClanInvitationRepository clanInvitationRepository, final ClanRepository clanRepository, final PlayerRepository playerRepository, final ClanBonusService clanBonusService, final EventRewardRepository eventRewardRepository, final DigimonRepository digimonRepository, final AddItemUseCase addItemUseCase, final ItemDefinitionRepository itemDefinitionRepository, final TransactionAuditPublisher transactionAuditPublisher) {
+    public ProcessMailActionUseCase(final MailMessageRepository mailMessageRepository, final ClanInvitationRepository clanInvitationRepository, final ClanRepository clanRepository, final PlayerRepository playerRepository, final ClanBonusService clanBonusService, final EventRewardRepository eventRewardRepository, final EventRewardItemRepository eventRewardItemRepository, final DigimonRepository digimonRepository, final AddItemUseCase addItemUseCase, final ItemDefinitionRepository itemDefinitionRepository, final TransactionAuditPublisher transactionAuditPublisher) {
         this.mailMessageRepository = mailMessageRepository;
         this.clanInvitationRepository = clanInvitationRepository;
         this.clanRepository = clanRepository;
         this.playerRepository = playerRepository;
         this.clanBonusService = clanBonusService;
         this.eventRewardRepository = eventRewardRepository;
+        this.eventRewardItemRepository = eventRewardItemRepository;
         this.digimonRepository = digimonRepository;
         this.addItemUseCase = addItemUseCase;
         this.itemDefinitionRepository = itemDefinitionRepository;

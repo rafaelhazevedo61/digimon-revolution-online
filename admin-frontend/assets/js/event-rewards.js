@@ -4,7 +4,8 @@ let adminEventRewardClanOptions = [];
 let adminEventRewardClanMembers = [];
 let adminEventRewardPlayerSearchTimer = null;
 let adminEventRewardAllPlayersCount = null;
-let adminEventRewardSelectedItem = null;
+let adminEventRewardSelectedItems = [];
+let adminEventRewardItemModalTargetIndex = null;
 let adminEventRewardItemModalState = { search: "", page: 0, pageSize: 8, items: [], totalItems: 0, totalPages: 1, hasNext: false, hasPrevious: false, loading: false, error: "", remote: false };
 
 const ADMIN_EVENT_ITEM_OPTIONS = [
@@ -29,7 +30,8 @@ const ADMIN_EVENT_ITEM_OPTIONS = [
 ];
 
 function renderEventRewardsPage() {
-  adminEventRewardSelectedItem = null;
+  adminEventRewardSelectedItems = [];
+  adminEventRewardItemModalTargetIndex = null;
   adminEventRewardItemModalState = { search: "", page: 0, pageSize: 8, items: [], totalItems: 0, totalPages: 1, hasNext: false, hasPrevious: false, loading: false, error: "", remote: false };
   setPageHeader("Premiações de Eventos", "Envie uma recompensa resgatável pelo Correio");
   const app = document.getElementById("app");
@@ -101,19 +103,15 @@ function renderEventRewardsPage() {
               <span class="text-xs text-slate-500 mt-1 block">Será entregue ao Digimon ativo de cada destinatário.</span>
             </label>
             <div class="block">
-              <span class="text-sm text-slate-300">Item</span>
-              <input id="admin-event-reward-item" type="hidden" value="">
-              <div class="flex flex-col sm:flex-row gap-2 mt-1">
-                <button id="admin-event-reward-item-picker" type="button" class="btn-secondary flex-1 text-left" onclick="adminOpenEventRewardItemModal()">Selecionar item</button>
-                <button id="admin-event-reward-item-clear" type="button" class="btn-secondary hidden" onclick="adminClearEventRewardItem()">Remover</button>
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-sm text-slate-300">Itens da premiação</span>
+                <span class="text-xs text-slate-500">Até 10 itens</span>
               </div>
-              <div id="admin-event-reward-selected-item" class="text-xs text-slate-500 mt-2">Nenhum item selecionado.</div>
+              <div id="admin-event-reward-items" class="space-y-2 mt-1"></div>
+              <button id="admin-event-reward-add-item" type="button" class="btn-secondary w-full mt-2" onclick="adminOpenEventRewardItemModal()">Adicionar item</button>
+              <span class="text-xs text-slate-500 mt-1 block">Cada item pode ter uma quantidade diferente. Não é permitido repetir o mesmo item.</span>
             </div>
           </div>
-          <label class="block max-w-md">
-            <span class="text-sm text-slate-300">Quantidade do item</span>
-            <input id="admin-event-reward-item-quantity" class="input w-full mt-1" type="number" min="0" max="2147483647" value="0" required oninput="adminUpdateEventRewardPreview()">
-          </label>
 
           <div class="rounded-lg border border-amber-900/70 bg-amber-950/20 p-3 text-sm text-amber-200">
             <p class="font-semibold">Como o resgate funciona</p>
@@ -142,7 +140,7 @@ function renderEventRewardsPage() {
     </div>
   `;
   adminChangeEventRewardRecipientType();
-  adminRenderSelectedEventRewardItem();
+  adminRenderSelectedEventRewardItems();
   adminUpdateEventRewardCounters();
   adminUpdateEventRewardPreview();
 }
@@ -151,50 +149,104 @@ function adminEventRewardValue(id) {
   return document.getElementById(id)?.value?.trim() || "";
 }
 
-function adminGetEventRewardItemLabel(itemType) {
-  if (!itemType) return "Sem item";
-  if (adminEventRewardSelectedItem?.code === itemType) return adminEventRewardSelectedItem.name;
-  return ADMIN_EVENT_ITEM_OPTIONS.find(([code]) => code === itemType)?.[1] || itemType;
+function adminGetEventRewardItemLabel(itemCode) {
+  if (!itemCode) return "Sem item";
+  const selected = adminEventRewardSelectedItems.find(item => item.code === itemCode);
+  if (selected) return selected.name;
+  return ADMIN_EVENT_ITEM_OPTIONS.find(([code]) => code === itemCode)?.[1] || itemCode;
 }
 
-function adminRenderSelectedEventRewardItem() {
-  const hidden = document.getElementById("admin-event-reward-item");
-  const picker = document.getElementById("admin-event-reward-item-picker");
-  const clear = document.getElementById("admin-event-reward-item-clear");
-  const summary = document.getElementById("admin-event-reward-selected-item");
-  const item = adminEventRewardSelectedItem;
+function adminRenderSelectedEventRewardItems() {
+  const container = document.getElementById("admin-event-reward-items");
+  const addButton = document.getElementById("admin-event-reward-add-item");
+  if (!container) return;
+  if (addButton) addButton.disabled = adminEventRewardSelectedItems.length >= 10;
+  container.innerHTML = adminEventRewardSelectedItems.length
+    ? adminEventRewardSelectedItems.map((item, index) => `
+      <div class="rounded-lg border border-slate-700 bg-slate-950/50 p-3" data-event-reward-item-row="${index}">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="text-sm text-cyan-300 font-medium truncate">${escapeHtml(item.name)}</p>
+            <p class="text-xs text-slate-500"><span class="font-mono">${escapeHtml(item.code)}</span> · ${escapeHtml(item.category || "Item")}</p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button" class="text-xs text-cyan-300 hover:text-cyan-200" data-event-reward-item-change="${index}">Alterar</button>
+            <button type="button" class="text-xs text-red-300 hover:text-red-200" data-event-reward-item-remove="${index}">Remover</button>
+          </div>
+        </div>
+        <label class="block mt-2">
+          <span class="text-xs text-slate-400">Quantidade</span>
+          <input class="input w-full mt-1" type="number" min="1" max="2147483647" value="${Number(item.quantity) || 1}" data-event-reward-item-quantity="${index}" required>
+        </label>
+      </div>
+    `).join("")
+    : `<p class="text-xs text-slate-500 rounded-lg border border-dashed border-slate-700 p-3">Nenhum item selecionado.</p>`;
 
-  if (hidden) hidden.value = item?.code || "";
-  if (picker) picker.textContent = item ? `${item.name} (${item.code})` : "Selecionar item";
-  if (clear) clear.classList.toggle("hidden", !item);
-  if (summary) {
-    summary.innerHTML = item
-      ? `<span class="text-slate-300">${escapeHtml(item.name)}</span> <span class="text-slate-500">· ${escapeHtml(item.category || "Item")}</span> <span class="font-mono text-slate-600">· ${escapeHtml(item.code)}</span>`
-      : "Nenhum item selecionado.";
-  }
+  container.querySelectorAll("[data-event-reward-item-change]").forEach(button => {
+    button.addEventListener("click", () => adminOpenEventRewardItemModal(Number(button.dataset.eventRewardItemChange)));
+  });
+  container.querySelectorAll("[data-event-reward-item-remove]").forEach(button => {
+    button.addEventListener("click", () => adminRemoveEventRewardItem(Number(button.dataset.eventRewardItemRemove)));
+  });
+  container.querySelectorAll("[data-event-reward-item-quantity]").forEach(input => {
+    input.addEventListener("input", () => {
+      const index = Number(input.dataset.eventRewardItemQuantity);
+      if (adminEventRewardSelectedItems[index]) adminEventRewardSelectedItems[index].quantity = Number(input.value || 0);
+      adminUpdateEventRewardPreview();
+    });
+  });
 }
 
 function adminSelectEventRewardItem(item) {
-  adminEventRewardSelectedItem = {
+  const normalized = {
     code: item.code,
     name: item.name || adminGetEventRewardItemLabel(item.code),
     category: item.category || "Item",
-    description: item.description || ""
+    description: item.description || "",
+    quantity: 1
   };
-  adminRenderSelectedEventRewardItem();
+  const targetIndex = adminEventRewardItemModalTargetIndex;
+  const duplicateIndex = adminEventRewardSelectedItems.findIndex(candidate => candidate.code === normalized.code);
+  if (targetIndex !== null && targetIndex !== undefined) {
+    if (duplicateIndex >= 0 && duplicateIndex !== targetIndex) {
+      adminShowEventRewardResult("Esse item já foi adicionado à premiação.", false);
+      return;
+    }
+    normalized.quantity = adminEventRewardSelectedItems[targetIndex]?.quantity || 1;
+    adminEventRewardSelectedItems[targetIndex] = normalized;
+  } else {
+    if (duplicateIndex >= 0) {
+      adminShowEventRewardResult("Esse item já foi adicionado à premiação.", false);
+      return;
+    }
+    if (adminEventRewardSelectedItems.length >= 10) {
+      adminShowEventRewardResult("A premiação pode conter no máximo 10 itens.", false);
+      return;
+    }
+    adminEventRewardSelectedItems.push(normalized);
+  }
+  adminEventRewardItemModalTargetIndex = null;
+  adminRenderSelectedEventRewardItems();
   adminCloseEventRewardItemModal();
   adminUpdateEventRewardPreview();
 }
 
-function adminClearEventRewardItem() {
-  adminEventRewardSelectedItem = null;
-  adminRenderSelectedEventRewardItem();
+function adminRemoveEventRewardItem(index) {
+  adminEventRewardSelectedItems.splice(index, 1);
+  adminRenderSelectedEventRewardItems();
   adminUpdateEventRewardPreview();
 }
 
-function adminOpenEventRewardItemModal() {
+function adminClearEventRewardItems() {
+  adminEventRewardSelectedItems = [];
+  adminRenderSelectedEventRewardItems();
+  adminUpdateEventRewardPreview();
+}
+
+function adminOpenEventRewardItemModal(targetIndex = null) {
   if (document.getElementById("admin-event-reward-item-modal")) return;
 
+  adminEventRewardItemModalTargetIndex = Number.isInteger(targetIndex) ? targetIndex : null;
   adminEventRewardItemModalState = { search: "", page: 0, pageSize: 8, items: [], totalItems: 0, totalPages: 1, hasNext: false, hasPrevious: false, loading: false, error: "", remote: false };
   const overlay = document.createElement("div");
   overlay.id = "admin-event-reward-item-modal";
@@ -576,9 +628,9 @@ function adminUpdateEventRewardPreview() {
   const subject = adminEventRewardValue("admin-event-reward-subject");
   const body = adminEventRewardValue("admin-event-reward-body");
   const bits = Number(document.getElementById("admin-event-reward-bits")?.value || 0);
-  const itemType = adminEventRewardValue("admin-event-reward-item");
-  const itemQuantity = Number(document.getElementById("admin-event-reward-item-quantity")?.value || 0);
-  const itemLabel = adminGetEventRewardItemLabel(itemType);
+  const itemSummary = adminEventRewardSelectedItems
+    .filter(item => Number(item.quantity) > 0)
+    .map(item => `${Number(item.quantity).toLocaleString("pt-BR")} × ${item.name}`);
   const validity = adminEventRewardValue("admin-event-reward-validity") || "7";
   const previewRecipient = document.getElementById("admin-event-reward-preview-recipient");
   const previewSubject = document.getElementById("admin-event-reward-preview-subject");
@@ -590,7 +642,7 @@ function adminUpdateEventRewardPreview() {
   if (previewSubject) previewSubject.textContent = subject || "Assunto da premiação";
   if (previewBody) previewBody.textContent = body || "O texto da premiação aparecerá aqui.";
   if (previewBits) previewBits.textContent = `${bits.toLocaleString("pt-BR")} Bits por jogador`;
-  if (previewItem) previewItem.textContent = itemQuantity > 0 && itemType ? `${itemQuantity.toLocaleString("pt-BR")} × ${itemLabel} por jogador` : "Sem item";
+  if (previewItem) previewItem.textContent = itemSummary.length ? `${itemSummary.join(" · ")} por jogador` : "Sem item";
   if (previewValidity) previewValidity.textContent = `Válido por ${validity} ${validity === "1" ? "dia" : "dias"}`;
 }
 
@@ -636,9 +688,8 @@ function adminConfirmEventReward(payload) {
     document.body.appendChild(overlay);
     document.getElementById("admin-event-reward-confirm-recipient").textContent = `${payload.recipientLabel} (${payload.recipientCount} mensagem(ns))`;
     document.getElementById("admin-event-reward-confirm-subject").textContent = payload.subject;
-    const rewardItemCode = payload.itemDefinitionCode || payload.itemType;
-    const itemText = rewardItemCode && payload.itemQuantity > 0
-      ? `${payload.itemQuantity.toLocaleString("pt-BR")} × ${adminGetEventRewardItemLabel(rewardItemCode)}`
+    const itemText = Array.isArray(payload.items) && payload.items.length
+      ? payload.items.map(item => `${Number(item.quantity).toLocaleString("pt-BR")} × ${item.name || adminGetEventRewardItemLabel(item.itemDefinitionCode)}`).join(" · ")
       : "Sem item";
     document.getElementById("admin-event-reward-confirm-reward").textContent = `${payload.bitsAmount.toLocaleString("pt-BR")} Bits · ${itemText}`;
     document.getElementById("admin-event-reward-confirm-validity").textContent = `${payload.validityDays} ${payload.validityDays === 1 ? "dia" : "dias"}`;
@@ -675,8 +726,12 @@ async function adminSubmitEventReward(event) {
     body: adminEventRewardValue("admin-event-reward-body"),
     bitsAmount: Number(document.getElementById("admin-event-reward-bits")?.value || 0),
     itemType: null,
-    itemDefinitionCode: document.getElementById("admin-event-reward-item")?.value || null,
-    itemQuantity: Number(document.getElementById("admin-event-reward-item-quantity")?.value || 0),
+    itemDefinitionCode: null,
+    items: adminEventRewardSelectedItems.map(item => ({
+      itemDefinitionCode: item.code,
+      quantity: Number(item.quantity || 0)
+    })),
+    itemQuantity: 0,
     validityDays: Number(document.getElementById("admin-event-reward-validity")?.value || 0),
     recipientLabel: adminGetEventRewardRecipientLabel(),
     recipientCount
@@ -689,17 +744,19 @@ async function adminSubmitEventReward(event) {
     adminShowEventRewardResult("Selecione pelo menos um destinatário válido.", false);
     return;
   }
-  if (payload.bitsAmount <= 0 && payload.itemQuantity <= 0) {
-    adminShowEventRewardResult("Informe Bits ou uma quantidade de item maior que zero.", false);
+  const hasItems = payload.items.length > 0;
+  if (payload.bitsAmount <= 0 && !hasItems) {
+    adminShowEventRewardResult("Informe Bits ou pelo menos um item.", false);
     return;
   }
-  if (payload.itemQuantity > 0 && !payload.itemDefinitionCode) {
-    adminShowEventRewardResult("Selecione o item correspondente à quantidade informada.", false);
+  if (payload.items.some(item => !Number.isInteger(item.quantity) || item.quantity <= 0)) {
+    adminShowEventRewardResult("Informe uma quantidade maior que zero para cada item selecionado.", false);
     return;
   }
-  if (payload.itemQuantity === 0) {
+  if (!hasItems) {
     payload.itemType = null;
     payload.itemDefinitionCode = null;
+    payload.itemQuantity = 0;
   }
   if (!await adminConfirmEventReward(payload)) return;
 
@@ -719,9 +776,10 @@ async function adminSubmitEventReward(event) {
     adminShowEventRewardResult(`${result.createdCount || 0} premiação(ões) criada(s) para ${payload.recipientLabel}.${suffix}`, true);
     document.getElementById("admin-event-reward-form")?.reset();
     adminEventRewardSelectedPlayers = [];
-    adminEventRewardSelectedItem = null;
+    adminEventRewardSelectedItems = [];
+    adminEventRewardItemModalTargetIndex = null;
     adminChangeEventRewardRecipientType();
-    adminRenderSelectedEventRewardItem();
+    adminRenderSelectedEventRewardItems();
     adminUpdateEventRewardCounters();
     adminUpdateEventRewardPreview();
   } catch (error) {

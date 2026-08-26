@@ -909,7 +909,7 @@
             "description": "Gerado de AdminEventRewardController.create. Revise IDs e valores antes de enviar.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"recipientType\": \"PLAYER\",\n  \"playerUsername\": \"jogador-alvo\",\n  \"clanId\": null,\n  \"playerUsernames\": [],\n  \"sourceType\": \"EVENT\",\n  \"sourceId\": \"evento-teste-001\",\n  \"subject\": \"Premiação de teste\",\n  \"body\": \"Você recebeu esta recompensa pelo evento.\",\n  \"bitsAmount\": 5000,\n  \"itemType\": null,\n  \"itemDefinitionCode\": \"FRAGMENT_AGUMON\",\n  \"itemQuantity\": 2,\n  \"validityDays\": 7\n}",
+              "raw": "{\n  \"recipientType\": \"PLAYER\",\n  \"playerUsername\": \"jogador-alvo\",\n  \"clanId\": null,\n  \"playerUsernames\": [],\n  \"sourceType\": \"EVENT\",\n  \"sourceId\": \"evento-teste-001\",\n  \"subject\": \"Premiação de teste\",\n  \"body\": \"Você recebeu esta recompensa pelo evento.\",\n  \"bitsAmount\": 5000,\n  \"itemType\": null,\n  \"itemDefinitionCode\": null,\n  \"items\": [{\"itemDefinitionCode\": \"FRAGMENT_AGUMON\", \"quantity\": 3}, {\"itemDefinitionCode\": \"CHEST_MISSION_TEST\", \"quantity\": 1}],\n  \"itemQuantity\": 0,\n  \"validityDays\": 7\n}",
               "options": {
                 "raw": {
                   "language": "json"
