@@ -280,6 +280,8 @@ function renderActiveMission(m) {
 
 function renderIncubation(inc) {
   if (!inc || !Array.isArray(inc.slots)) return "";
+  const activeSlots = inc.slots.filter(slot => slot.incubation);
+  if (activeSlots.length === 0) return "";
 
   return `
     <div class="mb-4" id="dash-incubation">
@@ -288,7 +290,7 @@ function renderIncubation(inc) {
         <button class="text-xs text-cyan-400" onclick="navigateTo('incubation')">Ver slots</button>
       </div>
       <div class="grid grid-cols-1 gap-2">
-        ${inc.slots.filter(slot => slot.unlocked || slot.incubation).map(slot => renderDashboardIncubationSlot(slot)).join("")}
+        ${activeSlots.map(slot => renderDashboardIncubationSlot(slot)).join("")}
       </div>
     </div>
   `;

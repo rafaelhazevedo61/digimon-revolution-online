@@ -13,7 +13,7 @@ e o projeto segue versionamento incremental por entregas (PRs).
   - Incubações independentes por slot, com timers e claims individuais.
   - Consulta da incubadora retornando estados bloqueado, livre, em andamento e pronto para cada posição.
   - Capacidade de slots desbloqueados persistida por jogador, iniciando em 1 e limitada a 3.
-  - Slots bloqueados permanecem ocultos durante a incubação até serem liberados, mantendo apenas o indicador compacto de slots desbloqueados.
+  - A tela dedicada mantém os três slots visíveis; o dashboard resume apenas os slots que possuem incubação ativa ou pronta.
 
 - **Modo Arena / PvP assíncrono** (#32): desafie o Digimon ativo de outro jogador; o resultado é resolvido no servidor comparando o poder efetivo (stats + equipamentos) com a mesma fórmula dos bosses, mais um fator de aleatoriedade.
   - Rating por Digimon estilo **ELO** (inicial 1000, K=32, piso 100), com vitórias e derrotas registradas.
