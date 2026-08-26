@@ -26,6 +26,7 @@ import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -74,6 +75,19 @@ public class AttackClanRaidUseCase {
         int dailyAttackLimit = gameplayConfig.getClanRaidDailyAttackLimit();
         if (ClanRaidRules.dailyLimitReached(usedToday, dailyAttackLimit)) {
             throw new BadRequestException("Daily raid attack limit reached (" + dailyAttackLimit + " per day). Come back tomorrow.");
+        }
+        ClanRaidAttack lastAttack = clanRaidAttackRepository
+                .findFirstByClanRaidIdAndPlayerIdOrderByCreatedAtDesc(raid.getId(), playerId)
+                .orElse(null);
+        int cooldownMinutes = ClanRaidRules.attackCooldownMinutes(boss.getCooldownMinutes());
+        if (boss.isCooldownEnabled() && lastAttack != null && lastAttack.getCreatedAt() != null) {
+            Instant nextAttackAt = lastAttack.getCreatedAt().plus(Duration.ofMinutes(cooldownMinutes));
+            Instant now = Instant.now();
+            if (now.isBefore(nextAttackAt)) {
+                long remainingSeconds = Math.max(1, Duration.between(now, nextAttackAt).toSeconds());
+                long remainingMinutes = (remainingSeconds + 59) / 60;
+                throw new BadRequestException("Clan raid attack cooldown active. Try again in " + remainingMinutes + " minute(s).");
+            }
         }
         int energyCost = 0;
         if (gameplayConfig.isEnergyConsumptionEnabled()) {

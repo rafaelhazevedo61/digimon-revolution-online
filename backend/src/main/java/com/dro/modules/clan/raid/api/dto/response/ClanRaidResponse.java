@@ -22,6 +22,9 @@ public record ClanRaidResponse(
         Instant defeatedAt,
         int myDailyAttacksUsed,
         int myDailyAttacksRemaining,
+        int attackCooldownMinutes,
+        boolean cooldownEnabled,
+        Instant nextAttackAvailableAt,
         long myTotalDamage,
         List<ClanRaidRankingEntryResponse> ranking,
         List<ClanRaidAttackResponse> recentAttacks

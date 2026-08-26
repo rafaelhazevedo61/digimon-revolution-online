@@ -15,6 +15,7 @@ public class GameplayConfig {
     private Arena arena = new Arena();
     private WorldBoss worldBoss = new WorldBoss();
     private ClanRaid clanRaid = new ClanRaid();
+    private boolean autoBossRespawnAfterDefeatEnabled = false;
 
     public Energy getEnergy() {
         return energy;
@@ -46,6 +47,14 @@ public class GameplayConfig {
 
     public void setClanRaid(ClanRaid clanRaid) {
         this.clanRaid = clanRaid;
+    }
+
+    public boolean isAutoBossRespawnAfterDefeatEnabled() {
+        return autoBossRespawnAfterDefeatEnabled;
+    }
+
+    public void setAutoBossRespawnAfterDefeatEnabled(boolean autoBossRespawnAfterDefeatEnabled) {
+        this.autoBossRespawnAfterDefeatEnabled = autoBossRespawnAfterDefeatEnabled;
     }
 
     public boolean isEnergyConsumptionEnabled() {

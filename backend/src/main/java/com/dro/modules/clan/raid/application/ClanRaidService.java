@@ -6,6 +6,7 @@ import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.modules.clan.raid.domain.ClanRaid;
 import com.dro.modules.clan.raid.domain.ClanRaidStatus;
 import com.dro.modules.clan.raid.infra.ClanRaidRepository;
+import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,11 +22,18 @@ import java.util.UUID;
 public class ClanRaidService {
     private final ClanRaidRepository clanRaidRepository;
     private final BossDefinitionRepository bossDefinitionRepository;
+    private final GameplayConfig gameplayConfig;
 
     @Transactional
     public ClanRaid getOrCreateToday(UUID clanId) {
         Instant startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant();
-        return clanRaidRepository.findFirstByClanIdOrderByCreatedAtDesc(clanId).filter(raid -> !raid.getCreatedAt().isBefore(startOfDay)).orElseGet(() -> createNewRaid(clanId));
+        ClanRaid current = clanRaidRepository.findFirstByClanIdOrderByCreatedAtDesc(clanId)
+                .filter(raid -> !raid.getCreatedAt().isBefore(startOfDay))
+                .orElse(null);
+        if (current == null || (gameplayConfig.isAutoBossRespawnAfterDefeatEnabled() && current.getStatus() == ClanRaidStatus.DEFEATED)) {
+            return createNewRaid(clanId);
+        }
+        return current;
     }
 
     private ClanRaid createNewRaid(UUID clanId) {
@@ -39,8 +47,9 @@ public class ClanRaidService {
         return clanRaidRepository.save(raid);
     }
 
-    public ClanRaidService(final ClanRaidRepository clanRaidRepository, final BossDefinitionRepository bossDefinitionRepository) {
+    public ClanRaidService(final ClanRaidRepository clanRaidRepository, final BossDefinitionRepository bossDefinitionRepository, final GameplayConfig gameplayConfig) {
         this.clanRaidRepository = clanRaidRepository;
         this.bossDefinitionRepository = bossDefinitionRepository;
+        this.gameplayConfig = gameplayConfig;
     }
 }

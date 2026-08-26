@@ -11,6 +11,7 @@ let clanRankingLoading = false;
 
 let currentClan = null;
 let currentClanTab = "members";
+let clanRaidCooldownTimer = null;
 
 const clanActionHandlers = {
   promote: clanPromote,
@@ -549,6 +550,7 @@ async function clanClaimMission(playerMissionId) {
 async function clanLoadRaid() {
   const container = safeContent("clan-tab-content");
   if (!container) return;
+  clearClanRaidCooldownTimer();
   container.innerHTML = `<div class="card animate-pulse"><div class="h-24"></div></div>`;
 
   try {
@@ -556,7 +558,20 @@ async function clanLoadRaid() {
     const percent = raid.maxHp > 0
       ? Math.min(100, Math.round((raid.remainingHp / raid.maxHp) * 100))
       : 100;
-    const defeated = raid.status === "DEFEATED";
+    const defeated = raid.status === "DEFEATED" || raid.remainingHp <= 0;
+    const cooldownMinutes = Number.isFinite(Number(raid.attackCooldownMinutes)) && Number(raid.attackCooldownMinutes) > 0
+      ? Number(raid.attackCooldownMinutes)
+      : 5;
+    const cooldownEnabled = raid.cooldownEnabled !== false;
+    const nextAttackAt = raid.nextAttackAvailableAt ? Date.parse(raid.nextAttackAvailableAt) : NaN;
+    const cooldownActive = cooldownEnabled
+      && !defeated
+      && raid.myDailyAttacksRemaining > 0
+      && Number.isFinite(nextAttackAt)
+      && nextAttackAt > Date.now();
+    const cooldownInfoHtml = cooldownEnabled
+      ? `<p class="text-xs text-slate-500 mb-2 text-center">Cooldown entre ataques: ${cooldownMinutes} minuto(s)</p>`
+      : `<p class="text-xs text-green-400 mb-2 text-center">Cooldown desativado pelo administrador</p>`;
 
     let rankingHtml = "";
     if (raid.ranking && raid.ranking.length > 0) {
@@ -621,27 +636,73 @@ async function clanLoadRaid() {
 
         <p class="text-xs text-slate-400 mb-3">Seus ataques hoje: <span class="text-cyan-400">${raid.myDailyAttacksUsed}/${raid.myDailyAttacksUsed + raid.myDailyAttacksRemaining}</span> · Seu dano: <span class="text-cyan-400">${raid.myTotalDamage.toLocaleString()}</span></p>
 
-        ${!defeated && raid.myDailyAttacksRemaining > 0 ? `<button class="btn-primary w-full" onclick="clanAttackRaid()">Atacar Raid</button>` : ""}
-        ${!defeated && raid.myDailyAttacksRemaining === 0 ? `<p class="text-xs text-slate-500 text-center">Limite diário de ataques atingido.</p>` : ""}
+        ${!defeated && raid.myDailyAttacksRemaining > 0 ? `${cooldownInfoHtml}<button id="clan-raid-attack-button" class="btn-primary w-full" onclick="clanAttackRaid()"${cooldownActive ? " disabled" : ""}>${cooldownActive ? "Próximo ataque em <span id=\"clan-raid-countdown\">--:--</span>" : "Atacar Raid"}</button>` : ""}
+        ${!defeated && raid.myDailyAttacksRemaining === 0 ? `${cooldownInfoHtml}<p class="text-xs text-slate-500 text-center">Limite diário de ataques atingido.</p>` : ""}
         ${defeated ? `<p class="text-xs text-green-400 text-center">Raid derrotado hoje! Volte amanhã.</p>` : ""}
       </div>
 
       ${rankingHtml}
       ${attacksHtml}
     `;
+
+    if (cooldownActive) {
+      startClanRaidCooldownCountdown(nextAttackAt);
+    }
   } catch (err) {
     container.innerHTML = `<div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>`;
   }
 }
 
 async function clanAttackRaid() {
+  const btn = document.getElementById("clan-raid-attack-button");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Atacando...";
+  }
   try {
     const result = await apiPost("/clan-raids/attack");
     showRaidAttackModal(result);
     clanLoadRaid();
   } catch (err) {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Atacar Raid";
+    }
     showToast(err.message, "error");
   }
+}
+
+function clearClanRaidCooldownTimer() {
+  if (clanRaidCooldownTimer !== null) {
+    clearInterval(clanRaidCooldownTimer);
+    clanRaidCooldownTimer = null;
+  }
+}
+
+function formatClanRaidCountdown(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function startClanRaidCooldownCountdown(nextAttackAt) {
+  clearClanRaidCooldownTimer();
+  const button = document.getElementById("clan-raid-attack-button");
+  const countdown = document.getElementById("clan-raid-countdown");
+  if (!button || !countdown || !Number.isFinite(nextAttackAt)) return;
+
+  const tick = () => {
+    const remainingSeconds = Math.max(0, Math.ceil((nextAttackAt - Date.now()) / 1000));
+    if (remainingSeconds === 0) {
+      clearClanRaidCooldownTimer();
+      clanLoadRaid();
+      return;
+    }
+    countdown.textContent = formatClanRaidCountdown(remainingSeconds);
+  };
+
+  tick();
+  clanRaidCooldownTimer = setInterval(tick, 1000);
 }
 
 function showRaidAttackModal(result) {

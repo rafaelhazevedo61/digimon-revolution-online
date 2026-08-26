@@ -35,6 +35,8 @@ e o projeto segue versionamento incremental por entregas (PRs).
 - **Seleção de itens na premiação de eventos**: o item deixou de depender de uma lista fixa no formulário e passou a ser escolhido em modal com pesquisa, catálogo pré-carregado, paginação e resumo do item selecionado.
 - **Catálogo completo na premiação de eventos**: o modal passou a exibir todas as definições de `item_definitions`, incluindo itens específicos como fragmentos e baús, com entrega persistida pelo código da definição.
 - **Múltiplos itens por premiação**: administradores podem adicionar até 10 itens distintos no mesmo envio e definir a quantidade individual de cada item.
+- **Restart automático de bosses no alpha**: após a derrota, o Boss Mundial e a Raid de Clã passam a abrir um novo ciclo automaticamente quando `dro.gameplay.auto-boss-respawn-after-defeat-enabled` está ativo; a flag permanece desligada por padrão fora do perfil alpha.
+- **Cooldown da Raid de Clã**: reativado o intervalo entre ataques com a mesma regra do Boss Mundial, usando cinco minutos como configuração do boss e como fallback para valores antigos.
 
 ## [0.0.3-SNAPSHOT]
 

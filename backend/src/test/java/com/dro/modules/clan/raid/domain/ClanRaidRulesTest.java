@@ -39,6 +39,17 @@ class ClanRaidRulesTest {
     }
 
     @Test
+    void attackCooldownMinutes_usesFiveMinutesAsDefault() {
+        assertEquals(5, ClanRaidRules.attackCooldownMinutes(0));
+        assertEquals(5, ClanRaidRules.attackCooldownMinutes(-1));
+    }
+
+    @Test
+    void attackCooldownMinutes_preservesPositiveConfiguredValue() {
+        assertEquals(15, ClanRaidRules.attackCooldownMinutes(15));
+    }
+
+    @Test
     void calculateDamage_neverExceedsMaxPercent() {
         int maxHp = 10000;
 

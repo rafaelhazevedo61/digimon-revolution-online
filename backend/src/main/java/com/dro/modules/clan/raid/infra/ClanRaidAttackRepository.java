@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -23,6 +24,8 @@ public interface ClanRaidAttackRepository extends JpaRepository<ClanRaidAttack, 
     long deleteByCreatedAtGreaterThanEqual(Instant since);
 
     List<ClanRaidAttack> findByClanRaidIdOrderByCreatedAtDesc(UUID clanRaidId);
+
+    Optional<ClanRaidAttack> findFirstByClanRaidIdAndPlayerIdOrderByCreatedAtDesc(UUID clanRaidId, UUID playerId);
 
     @Query("SELECT a.playerId, COALESCE(SUM(a.damage), 0) " +
             "FROM ClanRaidAttack a " +
