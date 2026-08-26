@@ -53,6 +53,11 @@ function incubRenderSlots(response) {
   const slots = Array.isArray(response?.slots) ? response.slots : [];
   const totalSlots = Number(response?.totalSlots) || 3;
   const unlockedSlots = Number(response?.unlockedSlots) || 1;
+  const visibleSlots = Array.from({ length: totalSlots }, (_, index) => slots.find(item => Number(item.slotNumber) === index + 1) || {
+    slotNumber: index + 1,
+    unlocked: index < unlockedSlots,
+    incubation: null
+  }).filter(slot => slot.unlocked || slot.incubation);
 
   content.innerHTML = `
     <div class="card mb-4 border-cyan-800 bg-cyan-950/20">
@@ -66,14 +71,7 @@ function incubRenderSlots(response) {
     </div>
 
     <div class="grid grid-cols-1 gap-3 mb-5" id="incub-slots">
-      ${Array.from({ length: totalSlots }, (_, index) => {
-        const slot = slots.find(item => Number(item.slotNumber) === index + 1) || {
-          slotNumber: index + 1,
-          unlocked: index < unlockedSlots,
-          incubation: null
-        };
-        return incubRenderSlot(slot);
-      }).join("")}
+      ${visibleSlots.map(incubRenderSlot).join("")}
     </div>
 
     <div id="incub-start-form"></div>
