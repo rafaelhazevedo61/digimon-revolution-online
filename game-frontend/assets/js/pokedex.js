@@ -141,11 +141,11 @@ function dexRender() {
   let html = `
     <div class="grid grid-cols-4 gap-1.5" aria-label="Digimons disponíveis">
       ${dexEntries.map(d => `
-        <button type="button" class="card-sm group text-left p-1 cursor-pointer transition-all hover:border-cyan-500 hover:bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-cyan-400" onclick="dexShowDetail(${d.id})" aria-label="Ver detalhes de ${escapeAttr(d.name)}">
+        <button type="button" class="card-sm group text-center p-1 cursor-pointer transition-all hover:border-cyan-500 hover:bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-cyan-400" onclick="dexShowDetail(${d.id})" aria-label="Ver detalhes de ${escapeAttr(d.name)}">
           <div class="w-full aspect-square rounded-lg overflow-hidden bg-slate-900/70 flex items-center justify-center group-hover:bg-slate-900 transition-colors">
             ${renderDigimonVisual(d.imageUrl, d.stage, "w-full h-full", "text-5xl")}
           </div>
-          <p class="font-bold text-[10px] sm:text-[11px] truncate mt-1" title="${escapeAttr(d.name)}">${escapeHtml(d.name)}</p>
+          <p class="font-bold text-[10px] sm:text-[11px] text-center truncate mt-1" title="${escapeAttr(d.name)}">${escapeHtml(d.name)}</p>
         </button>
       `).join("")}
     </div>
