@@ -174,8 +174,9 @@ function renderDigimonCard(d) {
           <span>XP</span>
           <span>${d.experience} / ${xpNeeded}</span>
         </div>
-        <div class="xp-bar">
+        <div class="xp-bar xp-bar-with-label" role="progressbar" aria-valuenow="${xpPercent}" aria-valuemin="0" aria-valuemax="100" aria-label="${xpPercent}% da experiência para o próximo nível">
           <div class="xp-bar-fill" style="width: ${xpPercent}%"></div>
+          <span class="xp-bar-label">${xpPercent}%</span>
         </div>
       </div>
 
