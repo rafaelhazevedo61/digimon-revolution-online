@@ -154,6 +154,9 @@ public final class EventRewardMessageText {
                 case INCUBATOR_RARE -> "Incubadora rara";
                 case INCUBATOR_EPIC -> "Incubadora épica";
                 case INCUBATION_SLOT_UNLOCK -> "Expansor de slot de incubação";
+                case STORAGE_SLOT_1 -> "+1 Storage";
+                case STORAGE_SLOT_5 -> "+5 Storage";
+                case STORAGE_SLOT_10 -> "+10 Storage";
                 case XP_DISC_1 -> "Disco de XP +1%";
                 case XP_DISC_3 -> "Disco de XP +3%";
                 case XP_DISC_5 -> "Disco de XP +5%";

@@ -162,7 +162,9 @@ function invItemCategoryOrder(item) {
               ? "FRAGMENT"
               : (String(item.itemType || "") === "POTION_SMALL" || String(item.itemType || "").startsWith("XP_DISC_"))
                 ? "CONSUMABLE"
-                : String(item.itemType || "") === "TRAINING_STONE" || String(item.itemType || "") === "DATA_CORE"
+                : String(item.itemType || "").startsWith("STORAGE_SLOT_")
+                  ? "CONSUMABLE"
+                  : String(item.itemType || "") === "TRAINING_STONE" || String(item.itemType || "") === "DATA_CORE"
                 || String(item.itemType || "") === "REFINEMENT_STONE"
                 ? "MATERIAL"
                 : "OTHER";
@@ -252,9 +254,11 @@ async function invUseItem(itemType, quantity = null) {
       const quantityMessage = usedQuantity === 1 ? "1 unidade utilizada" : `${usedQuantity} unidades utilizadas`;
       showToast(`${invItemName(itemType)}: ${quantityMessage}, +${result.xpGranted} XP.${levelMessage}`);
     } else {
-      showToast(itemType === "INCUBATION_SLOT_UNLOCK"
-        ? "Slot de incubação desbloqueado!"
-        : `${invItemName(itemType)} usado!`);
+      showToast(result && result.message
+        ? result.message
+        : itemType === "INCUBATION_SLOT_UNLOCK"
+          ? "Slot de incubação desbloqueado!"
+          : `${invItemName(itemType)} usado!`);
     }
     await invReloadItems();
   } catch (err) {
@@ -374,6 +378,9 @@ function invItemName(itemType) {
     INCUBATOR_RARE: "Incubadora Rara",
     INCUBATOR_EPIC: "Incubadora Épica",
     INCUBATION_SLOT_UNLOCK: "Expansor de Slot de Incubação",
+    STORAGE_SLOT_1: "+1 Storage",
+    STORAGE_SLOT_5: "+5 Storage",
+    STORAGE_SLOT_10: "+10 Storage",
     XP_DISC_1: "Disco de XP +1%",
     XP_DISC_3: "Disco de XP +3%",
     XP_DISC_5: "Disco de XP +5%",
@@ -398,6 +405,7 @@ function invItemEmoji(itemType) {
     DIGITAMA_THUNDER: "⚡", DIGITAMA_NEUTRAL: "⚪", DIGITAMA_ICE: "❄️", DIGITAMA_STEEL: "⚙️",
     INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "📦", INCUBATOR_EPIC: "📦",
     INCUBATION_SLOT_UNLOCK: "🔓",
+    STORAGE_SLOT_1: "🗄️", STORAGE_SLOT_5: "🗄️", STORAGE_SLOT_10: "🗄️",
     XP_DISC_1: "💿", XP_DISC_3: "💿", XP_DISC_5: "💿",
     XP_DISC_10: "💿", XP_DISC_15: "💿", XP_DISC_20: "💿",
     FRAGMENT_ROOKIE: "🧩", FRAGMENT_CHAMPION: "🧩", FRAGMENT_ULTIMATE: "🧩", FRAGMENT_MEGA: "🧩",
@@ -409,12 +417,14 @@ function invItemEmoji(itemType) {
 
 function invIsUsable(itemType) {
   const usable = ["POTION_SMALL", "TRAINING_STONE", "DATA_CORE", "INCUBATION_SLOT_UNLOCK",
+    "STORAGE_SLOT_1", "STORAGE_SLOT_5", "STORAGE_SLOT_10",
     "XP_DISC_1", "XP_DISC_3", "XP_DISC_5", "XP_DISC_10", "XP_DISC_15", "XP_DISC_20"];
   return usable.includes(itemType);
 }
 
 function invItemCategory(itemType) {
-  if (itemType === "POTION_SMALL" || itemType === "INCUBATION_SLOT_UNLOCK") return "common";
+  if (itemType === "POTION_SMALL" || itemType === "INCUBATION_SLOT_UNLOCK"
+      || itemType.startsWith("STORAGE_SLOT_")) return "common";
   if (itemType.startsWith("XP_DISC_")) return "rare";
   if (itemType.startsWith("DIGITAMA_")) return "rare";
   if (itemType.startsWith("INCUBATOR_")) return "epic";
@@ -427,6 +437,7 @@ function invItemCategory(itemType) {
 function invItemCategoryName(itemType) {
   if (itemType === "POTION_SMALL") return "Poção";
   if (itemType === "INCUBATION_SLOT_UNLOCK") return "Incubação";
+  if (itemType.startsWith("STORAGE_SLOT_")) return "Storage";
   if (itemType.startsWith("XP_DISC_")) return "Experiência";
   if (itemType === "TRAINING_STONE" || itemType === "DATA_CORE") return "Material";
   if (itemType.startsWith("DIGITAMA_")) return "Digitama";
