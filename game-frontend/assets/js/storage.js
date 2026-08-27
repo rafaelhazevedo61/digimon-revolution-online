@@ -68,7 +68,16 @@ async function renderStoragePage() {
 }
 
 async function storageSacrifice(digimonId, digimonName) {
-  if (!window.confirm(`Sacrificar ${digimonName}? Esta ação é permanente e não pode ser desfeita.`)) return;
+  const confirmed = await showConfirm(
+    `Sacrificar ${digimonName}? Esta ação é permanente e não pode ser desfeita.`,
+    {
+      title: "Sacrificar Digimon",
+      confirmText: "Sacrificar",
+      cancelText: "Cancelar",
+      danger: true
+    }
+  );
+  if (!confirmed) return;
   try {
     const result = await apiPost(`/digimon/${digimonId}/sacrifice`, {});
     showToast(`Digimon sacrificado. +${result.digitalDataReceived} Dados Digitais.`);
