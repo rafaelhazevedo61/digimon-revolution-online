@@ -24,10 +24,14 @@ async function renderStoragePage() {
     const slotInfo = dashboard.slotInfo;
     const infoEl = document.getElementById("storage-info");
     infoEl.innerHTML = `
-      <div class="card-sm flex justify-between items-center">
-        <div>
+      <div class="grid grid-cols-2 gap-2">
+        <div class="card-sm text-center">
           <p class="text-xs text-slate-400">Digimons armazenados</p>
           <p class="font-bold text-sm ${slotInfo.storedDigimons >= slotInfo.maxStorageSlots ? 'text-red-400' : 'text-cyan-400'}">${slotInfo.storedDigimons}/${slotInfo.maxStorageSlots}</p>
+        </div>
+        <div class="card-sm text-center">
+          <p class="text-xs text-slate-400">Dados Digitais</p>
+          <p class="font-bold text-sm text-cyan-400">${Number(dashboard.digitalData || 0).toLocaleString()}</p>
         </div>
       </div>
     `;
