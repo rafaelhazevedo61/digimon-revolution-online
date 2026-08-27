@@ -320,8 +320,8 @@ function incubShowHatchResult(digimon) {
         <div class="flex justify-between mt-1"><span>Raridade</span><strong>${escapeHtml(digimon.rarity || "COMMON")}</strong></div>
       </div>
       <div class="grid gap-2 mt-5">
-        <button class="btn-primary w-full" id="incub-select-hatched-btn" onclick="incubSelectHatched('${escapeAttr(String(digimon.id))}')">Tornar ativo</button>
-        <button class="btn-sm w-full" id="incub-store-hatched-btn" style="background:#164e63;color:#67e8f9" onclick="incubStoreHatched('${escapeAttr(String(digimon.id))}')">Enviar para Storage</button>
+        <button class="hatch-choice-btn hatch-choice-primary" id="incub-select-hatched-btn" onclick="incubSelectHatched('${escapeAttr(String(digimon.id))}')">Tornar ativo</button>
+        <button class="hatch-choice-btn hatch-choice-secondary" id="incub-store-hatched-btn" onclick="incubStoreHatched('${escapeAttr(String(digimon.id))}')">Enviar para Storage</button>
       </div>
     </div>
   `;

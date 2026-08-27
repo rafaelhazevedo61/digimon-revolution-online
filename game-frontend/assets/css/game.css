@@ -77,6 +77,35 @@ body {
 .btn-primary:hover { opacity: 0.9; }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
+.hatch-choice-btn {
+  width: 100%;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.75rem;
+  color: #f8fafc;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: filter 0.2s, opacity 0.2s;
+}
+
+.hatch-choice-btn:hover { filter: brightness(1.08); }
+.hatch-choice-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.hatch-choice-primary {
+  background: linear-gradient(135deg, #0891b2, #2563eb);
+}
+
+.hatch-choice-secondary {
+  background: #155e75;
+  border-color: #0e7490;
+}
+
 .btn-sm {
   font-size: 0.75rem;
   padding: 0.35rem 0.75rem;
