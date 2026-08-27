@@ -1,5 +1,6 @@
 package com.dro.modules.clan.domain;
 
+import com.dro.shared.exception.BadRequestException;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -12,6 +13,7 @@ class ClanRulesTest {
     void validNamesAndTags() {
         assertTrue(ClanRules.isNameValid("DRO Heroes"));
         assertTrue(ClanRules.isTagValid("DRO"));
+        assertTrue(ClanRules.isTagValid("abc"));
         assertTrue(ClanRules.isTagValid("ab"));
     }
 
@@ -21,7 +23,14 @@ class ClanRulesTest {
         assertFalse(ClanRules.isNameValid("a".repeat(31)));
         assertFalse(ClanRules.isTagValid("a"));
         assertFalse(ClanRules.isTagValid("ab cd"));
+        assertFalse(ClanRules.isTagValid("abcd"));
         assertFalse(ClanRules.isTagValid("toolong"));
+    }
+
+    @Test
+    void createClanRejectsTagsLongerThanThreeCharacters() {
+        assertThrows(BadRequestException.class, () ->
+                ClanRules.create("My Clan", "ABCD", null, UUID.randomUUID()));
     }
 
     @Test
