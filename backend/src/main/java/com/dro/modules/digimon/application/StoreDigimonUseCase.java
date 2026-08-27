@@ -27,13 +27,22 @@ public class StoreDigimonUseCase {
     @Transactional
     public Digimon execute(String token, UUID digimonId) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
-        Digimon digimon = digimonRepository.findById(digimonId).orElseThrow(() -> new NotFoundException("Digimon not found"));
+        Player player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+        Digimon digimon = digimonRepository.findByIdForUpdate(digimonId).orElseThrow(() -> new NotFoundException("Digimon not found"));
         if (!digimon.getPlayerId().equals(playerId)) {
             throw new BadRequestException("Digimon does not belong to player");
         }
+        if (digimon.getStatus() == DigimonStatus.HATCHED) {
+            long storedCount = digimonRepository.countByPlayerIdAndStatus(playerId, DigimonStatus.STORED);
+            if (storedCount >= player.getMaxStorageSlots()) {
+                throw new BadRequestException("Storage cheio (" + storedCount + "/" + player.getMaxStorageSlots() + ").");
+            }
+            digimon.setStatus(DigimonStatus.STORED);
+            digimonRepository.save(digimon);
+            return digimon;
+        }
         if (digimon.getStatus() != DigimonStatus.ACTIVE) {
-            throw new BadRequestException("Only active Digimons can be stored");
+            throw new BadRequestException("Only active or newly hatched Digimons can be stored");
         }
         if (digimon.getId().equals(player.getActiveDigimonId())) {
             throw new BadRequestException("Nao e possivel guardar o Digimon ativo. Troque de Digimon primeiro.");

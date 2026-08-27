@@ -6,6 +6,7 @@ import com.dro.shared.exception.dto.ErrorResponse;
 import com.dro.shared.exception.dto.FieldErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -209,6 +210,28 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+            DataIntegrityViolationException exception,
+            HttpServletRequest request
+    ) {
+        errorAuditService.record(
+                request,
+                exception,
+                ApiErrorCode.CONFLICT,
+                HttpStatus.CONFLICT.value(),
+                TransactionOutcome.REJECTED
+        );
+        ErrorResponse response = ErrorResponse.of(
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                ApiErrorCode.CONFLICT,
+                "O estado do Digimon foi alterado por outra operação. Atualize a tela e tente novamente.",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     @ExceptionHandler(RuntimeException.class)

@@ -84,11 +84,11 @@ public class RebirthUseCase {
     }
 
     private Player findPlayer(UUID playerId) {
-        return playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+        return playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
     }
 
     private Digimon findDigimon(UUID digimonId) {
-        return digimonRepository.findById(digimonId).orElseThrow(() -> new NotFoundException("Digimon not found"));
+        return digimonRepository.findByIdForUpdate(digimonId).orElseThrow(() -> new NotFoundException("Digimon not found"));
     }
 
     private void validateOwner(Digimon digimon, UUID playerId) {

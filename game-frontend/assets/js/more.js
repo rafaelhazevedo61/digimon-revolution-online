@@ -74,7 +74,7 @@ async function renderMorePage() {
           route: "storage",
           icon: "📦",
           title: "Storage",
-          desc: "Guardar e retirar Digimons",
+          desc: "Gerenciar Digimons armazenados e tornar um parceiro ativo",
         },
         {
           route: "pokedex",

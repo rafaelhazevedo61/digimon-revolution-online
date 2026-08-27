@@ -5,7 +5,7 @@ async function renderStoragePage() {
   app.innerHTML = `
     <div class="page-container">
       <div class="flex items-center gap-2 mb-4 px-1">
-        <button class="btn-sm" style="background:#334155;color:#94a3b8" onclick="navigateTo('digimon-select')">← Voltar</button>
+        <button class="btn-sm" style="background:#334155;color:#94a3b8" onclick="navigateTo('dashboard')">← Voltar</button>
         <h2 class="text-lg font-bold">Storage</h2>
       </div>
       <div id="storage-info" class="mb-3"></div>
@@ -26,11 +26,7 @@ async function renderStoragePage() {
     infoEl.innerHTML = `
       <div class="card-sm flex justify-between items-center">
         <div>
-          <p class="text-xs text-slate-400">Ativos</p>
-          <p class="font-bold text-sm ${slotInfo.activeDigimons >= slotInfo.maxDigimonSlots ? 'text-red-400' : 'text-cyan-400'}">${slotInfo.activeDigimons}/${slotInfo.maxDigimonSlots}</p>
-        </div>
-        <div>
-          <p class="text-xs text-slate-400">Storage</p>
+          <p class="text-xs text-slate-400">Digimons armazenados</p>
           <p class="font-bold text-sm ${slotInfo.storedDigimons >= slotInfo.maxStorageSlots ? 'text-red-400' : 'text-cyan-400'}">${slotInfo.storedDigimons}/${slotInfo.maxStorageSlots}</p>
         </div>
       </div>
@@ -42,24 +38,21 @@ async function renderStoragePage() {
       return;
     }
 
-    container.innerHTML = stored.map(d => {
-      const canRetrieve = slotInfo.activeDigimons < slotInfo.maxDigimonSlots;
-      return `
+    container.innerHTML = stored.map(d => `
         <div class="card mb-2 flex items-center gap-3">
-          <div class="flex-1">
-            <p class="font-bold text-sm">${escapeHtml(d.name)}</p>
-            <p class="text-xs text-slate-400">Lv.${d.level} | ${d.stage} | ${formatRarity(d.rarity)}</p>
+          ${renderDigimonVisual(d.imageUrl, d.stage, "w-16 h-16", "text-4xl")}
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-sm truncate">${escapeHtml(d.name)}</p>
+            <p class="text-xs text-slate-400">Lv.${d.level} | ${escapeHtml(d.stage)} | ${formatRarity(d.rarity)}</p>
             <p class="text-xs text-slate-500">HP ${d.hp} ATK ${d.attack} DEF ${d.defense}</p>
           </div>
-          <button class="btn-sm ${canRetrieve ? '' : 'opacity-50 cursor-not-allowed'}"
+          <button class="btn-sm"
             style="background:#065f46;color:#6ee7b7"
-            ${canRetrieve ? '' : 'disabled'}
             onclick="storageRetrieve('${d.id}')">
-            Retirar
+            Tornar ativo
           </button>
         </div>
-      `;
-    }).join("");
+      `).join("");
   } catch (err) {
     document.getElementById("storage-list").innerHTML = `
       <div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>
@@ -70,7 +63,7 @@ async function renderStoragePage() {
 async function storageRetrieve(digimonId) {
   try {
     await apiPost(`/digimon/${digimonId}/retrieve`, {});
-    showToast("Digimon retirado do storage!");
+    showToast("Digimon agora é o parceiro ativo!");
     renderStoragePage();
   } catch (err) {
     showToast(err.message, "error");

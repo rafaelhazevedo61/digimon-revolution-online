@@ -29,8 +29,9 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Corrigido
 
-- **Navegação principal do game frontend**: Inventário passou a ocupar o atalho de Digimon na barra de rodapé, enquanto o acesso a Digimon passou a ocupar o botão de Inventário nas ações do dashboard.
+- **Navegação principal do game frontend**: Inventário passou a ocupar o atalho de Digimon na barra de rodapé, enquanto o acesso a Storage passou a ocupar o botão de Digimon nas ações do dashboard; a tela de seleção de Digimons permanece reservada a fluxos internos.
 - **Atalho de incubação no inventário**: Incubadoras exibem o botão Usar, que encaminha o jogador para a tela de Incubação sem consumir o item diretamente; Digitamas permanecem sem esse botão.
+- **Ativo único e Storage**: o jogador passa a ter no máximo um Digimon ativo; o Digimon recém-chocado fica em estado `HATCHED` até a escolha entre `Tornar ativo` e `Enviar para Storage`, e a troca envia o parceiro anterior para o Storage automaticamente. A tela de Storage exibe a imagem dos Digimons e usa a ação `Tornar ativo`.
 - **Premiação global de eventos**: administradores podem selecionar todos os jogadores do servidor, visualizar a quantidade elegível antes da confirmação e gerar uma mensagem individual para cada conta do tipo `PLAYER`.
 - **Busca de jogadores nas ferramentas administrativas**: a etapa de seleção do jogador no fluxo de grant agora mantém o filtro por username, exibe o total encontrado e permite navegar entre páginas de resultados, sem limitar o operador aos dez primeiros jogadores.
 - **Identificador de origem da premiação**: o formulário administrativo agora oferece geração automática de identificador, mantendo a edição manual e a idempotência por jogador.

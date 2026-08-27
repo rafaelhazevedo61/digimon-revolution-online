@@ -451,24 +451,26 @@ Arena e Clãs possuem rankings próprios em seus respectivos módulos.
 
 ## 15. Slots e Storage
 
-O jogador possui capacidade para Digimons ativos e Digimons armazenados.
+O jogador possui um único Digimon ativo e pode manter os demais no Storage.
 
 ### Regras gerais
 
-- Digimons `ACTIVE` ocupam slots ativos;
+- existe no máximo um Digimon `ACTIVE` por jogador;
 - Digimons `STORED` ocupam o Storage;
-- o Digimon atualmente selecionado não pode ser guardado quando a regra de domínio impedir a operação;
-- operações de incubação e recuperação respeitam disponibilidade de slots;
-- equipamentos são tratados de forma segura ao mover um Digimon para o Storage.
+- um Digimon recém-chocado fica temporariamente em estado `HATCHED` até o jogador escolher uma ação;
+- após o hatch, as únicas opções são `Tornar ativo` ou `Enviar para Storage`;
+- ao tornar um Digimon ativo, o parceiro ativo anterior é movido automaticamente para o Storage;
+- a troca respeita a capacidade do Storage e trata equipamentos com segurança ao mover o parceiro anterior;
+- a constraint parcial `uq_digimons_one_active_per_player` reforça a unicidade no PostgreSQL.
 
-Os limites padrão são atributos/configurações do jogador e devem ser consultados na entidade/configuração atual se forem necessários para regra de negócio.
+O campo histórico `max_digimon_slots` é mantido por compatibilidade de schema, mas o limite efetivo de ativos é 1. O limite de Storage continua sendo um atributo do jogador.
 
 ### Endpoints
 
 | Método | Rota | Descrição |
 |---|---|---|
-| POST | `/digimon/{digimonId}/store` | Guardar Digimon |
-| POST | `/digimon/{digimonId}/retrieve` | Recuperar Digimon |
+| POST | `/digimon/{digimonId}/store` | Enviar Digimon HATCHED para o Storage |
+| POST | `/digimon/{digimonId}/retrieve` | Tornar Digimon armazenado o parceiro ativo |
 | GET | `/digimon/storage` | Consultar Storage |
 
 ---
