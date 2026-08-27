@@ -73,6 +73,13 @@ class LootTableRulesTest {
     }
 
     @Test
+    void acceptsXpDiskAsAStandardLootEntry() {
+        assertThatCode(() -> LootTableRules.validateEntry(
+                ItemType.XP_DISC_20, null, 10, 1, 1
+        )).doesNotThrowAnyException();
+    }
+
+    @Test
     void acceptsNamedEvolutionMaterialWithValidRange() {
         assertThatCode(() -> LootTableRules.validateEntry(
                 ItemType.EVOLUTION_MATERIAL, "FRAGMENT_AGUMON", 35, 1, 5

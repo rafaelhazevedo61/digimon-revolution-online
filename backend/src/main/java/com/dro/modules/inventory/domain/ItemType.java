@@ -26,6 +26,14 @@ public enum ItemType {
     // Expansão da incubadora
     INCUBATION_SLOT_UNLOCK,
 
+    // Discos de XP instantâneo
+    XP_DISC_1,
+    XP_DISC_3,
+    XP_DISC_5,
+    XP_DISC_10,
+    XP_DISC_15,
+    XP_DISC_20,
+
     // Fragmentos (legado — mantidos para compatibilidade)
     FRAGMENT_ROOKIE,
     FRAGMENT_CHAMPION,
