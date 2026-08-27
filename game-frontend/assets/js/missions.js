@@ -137,14 +137,41 @@ function missionRewardLabel(reward) {
   return labels[reward && reward.item] || (reward && reward.item) || "Recompensa";
 }
 
+function missionRewardChestCode(reward) {
+  const code = String(reward && reward.itemCode || "").trim();
+  if (reward && reward.item === "LOOT_CHEST" && code) return code;
+  return code.startsWith("CHEST_") ? code : null;
+}
+
 function missionRewardIcon(reward) {
-  if (reward && (reward.item === "LOOT_CHEST" || String(reward.itemCode || "").startsWith("CHEST_"))) {
+  if (reward && (reward.item === "LOOT_CHEST" || missionRewardChestCode(reward))) {
     return "🎁";
   }
   if (reward && String(reward.item || "").startsWith("DIGITAMA")) return "🥚";
   if (reward && String(reward.item || "").startsWith("INCUBATOR")) return "📦";
   if (reward && String(reward.item || "").includes("FRAGMENT")) return "🧩";
   return "✨";
+}
+
+async function missionOpenRewardChest(chestCode, button) {
+  if (!chestCode || typeof invOpenChest !== "function") {
+    showToast("Abertura de baú indisponível.", "error");
+    return;
+  }
+  if (button && button.disabled) return;
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Abrindo...";
+  }
+
+  const result = await invOpenChest(chestCode);
+  if (result && button) {
+    button.textContent = "Baú aberto";
+  } else if (button) {
+    button.disabled = false;
+    button.textContent = "Abrir baú";
+  }
 }
 
 async function repeatMissionFromReward(missionId) {
@@ -174,16 +201,20 @@ function showMissionClaimModal(result) {
   const missionName = formatMissionName({ id: result && result.missionId });
   const hasFriendlyMissionName = missionName !== "Missão";
   const rewardMarkup = rewards.length > 0
-    ? rewards.map(reward => {
-        const isChest = reward.item === "LOOT_CHEST" || String(reward.itemCode || "").startsWith("CHEST_");
+      ? rewards.map(reward => {
+        const chestCode = missionRewardChestCode(reward);
+        const isChest = reward.item === "LOOT_CHEST" || !!chestCode;
         return `
           <div class="flex items-center gap-3 rounded-lg border ${isChest ? "border-cyan-700 bg-cyan-950/40" : "border-slate-700 bg-slate-900/60"} px-3 py-3">
             <span class="text-2xl" aria-hidden="true">${missionRewardIcon(reward)}</span>
             <div class="min-w-0 flex-1">
               <p class="font-semibold ${isChest ? "text-cyan-200" : "text-slate-100"}">${escapeHtml(missionRewardLabel(reward))}</p>
-              ${isChest ? "<p class=\"text-xs text-cyan-400 mt-1\">Abra pelo Inventário para revelar o loot</p>" : ""}
+              ${isChest ? "<p class=\"text-xs text-cyan-400 mt-1\">Abra aqui ou pelo Inventário para revelar o loot</p>" : ""}
             </div>
-            <span class="font-bold text-cyan-300">x${Number(reward.quantity) || 0}</span>
+            <div class="flex flex-col items-end gap-2">
+              <span class="font-bold text-cyan-300">x${Number(reward.quantity) || 0}</span>
+              ${chestCode ? `<button type="button" class="btn-sm btn-secondary whitespace-nowrap" onclick="missionOpenRewardChest('${escapeAttr(chestCode)}', this)">Abrir baú</button>` : ""}
+            </div>
           </div>
         `;
       }).join("")

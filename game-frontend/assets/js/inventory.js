@@ -208,7 +208,9 @@ function invCategoryBadge(category) {
 
 async function invReloadItems() {
   invItems = await apiGet("/inventory") || [];
-  invRenderItems();
+  if (document.getElementById("inv-content")) {
+    invRenderItems();
+  }
 }
 
 async function invUseItem(itemType) {
@@ -233,9 +235,9 @@ function createChestRequestId() {
 async function invOpenChest(chestCode) {
   if (!chestCode) {
     showToast("Definição do baú não encontrada.", "error");
-    return;
+    return null;
   }
-  if (invChestOpeningInProgress) return;
+  if (invChestOpeningInProgress) return null;
 
   invChestOpeningInProgress = true;
   try {
@@ -245,8 +247,10 @@ async function invOpenChest(chestCode) {
     });
     invShowChestOpeningResult(result);
     await invReloadItems();
+    return result;
   } catch (err) {
     showToast(err.message, "error");
+    return null;
   } finally {
     invChestOpeningInProgress = false;
   }
