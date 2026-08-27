@@ -412,9 +412,10 @@ async function incubRenderStart(response) {
   }
 
   const digitamas = inventory.filter(i => {
+    const itemType = String(i.itemType || "");
     const def = i.itemDefinition;
     if (def && def.category === "DIGITAMA" && i.quantity > 0) return true;
-    return ["DIGITAMA_FIRE", "DIGITAMA_WATER", "DIGITAMA_NATURE", "DIGITAMA_STARTER"].includes(i.itemType) && i.quantity > 0;
+    return itemType.startsWith("DIGITAMA_") && i.quantity > 0;
   });
 
   const incubators = inventory.filter(i => {
@@ -560,9 +561,18 @@ async function incubStart() {
 
 function incubItemName(type) {
   const map = {
+    DIGITAMA_STARTER: "Digitama Inicial",
     DIGITAMA_FIRE: "Digitama de Fogo",
     DIGITAMA_WATER: "Digitama de Água",
-    DIGITAMA_NATURE: "Digitama de Natureza",
+    DIGITAMA_NATURE: "Digitama de Planta",
+    DIGITAMA_EARTH: "Digitama de Terra",
+    DIGITAMA_WIND: "Digitama de Vento",
+    DIGITAMA_LIGHT: "Digitama de Luz",
+    DIGITAMA_DARK: "Digitama de Trevas",
+    DIGITAMA_THUNDER: "Digitama de Trovão",
+    DIGITAMA_NEUTRAL: "Digitama Neutro",
+    DIGITAMA_ICE: "Digitama de Gelo",
+    DIGITAMA_STEEL: "Digitama de Metal",
     INCUBATOR_COMMON: "Incubadora Comum",
     INCUBATOR_RARE: "Incubadora Rara",
     INCUBATOR_EPIC: "Incubadora Épica"
@@ -571,7 +581,11 @@ function incubItemName(type) {
 }
 
 function incubDigitamaEmoji(type) {
-  const map = { DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿", DIGITAMA_STARTER: "⭐" };
+  const map = {
+    DIGITAMA_STARTER: "⭐", DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿",
+    DIGITAMA_EARTH: "🌍", DIGITAMA_WIND: "🌪️", DIGITAMA_LIGHT: "✨", DIGITAMA_DARK: "🌑",
+    DIGITAMA_THUNDER: "⚡", DIGITAMA_NEUTRAL: "⚪", DIGITAMA_ICE: "❄️", DIGITAMA_STEEL: "⚙️"
+  };
   return map[type] || "🥚";
 }
 

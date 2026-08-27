@@ -9,6 +9,10 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Adicionado
 
+- **Digitamas elementais**: Fogo, Água, Planta, Terra, Vento, Luz, Trevas, Trovão, Neutro, Gelo e Metal passaram a ter pools próprios; a seleção inicial exibe todas as opções e bloqueia as que não possuem Digimon BABY elegível.
+  - A elegibilidade temporária dos 53 Digimons BABY é controlada por flags booleanas em `application.yml`; entradas `false` não participam do sorteio.
+  - O Digitama de Metal fica visível, porém bloqueado, até que um Digimon BABY do elemento `STEEL` seja cadastrado.
+
 - **Incubadora em paralelo**: três slots fixos sempre visíveis, com o slot 1 desbloqueado por padrão e slots 2 e 3 preparados para futura liberação por progressão.
   - Incubações independentes por slot, com timers e claims individuais.
   - Consulta da incubadora retornando estados bloqueado, livre, em andamento e pronto para cada posição.

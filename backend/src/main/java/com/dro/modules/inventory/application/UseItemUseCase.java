@@ -175,7 +175,10 @@ public class UseItemUseCase {
 
     private boolean isIncubationOnly(ItemType type) {
         return switch (type) {
-            case DIGITAMA_STARTER, DIGITAMA_FIRE, DIGITAMA_WATER, DIGITAMA_NATURE, INCUBATOR_COMMON, INCUBATOR_RARE, INCUBATOR_EPIC -> true;
+            case DIGITAMA_STARTER, DIGITAMA_FIRE, DIGITAMA_WATER, DIGITAMA_NATURE,
+                 DIGITAMA_EARTH, DIGITAMA_WIND, DIGITAMA_LIGHT, DIGITAMA_DARK,
+                 DIGITAMA_THUNDER, DIGITAMA_NEUTRAL, DIGITAMA_ICE, DIGITAMA_STEEL,
+                 INCUBATOR_COMMON, INCUBATOR_RARE, INCUBATOR_EPIC -> true;
             default -> false;
         };
     }

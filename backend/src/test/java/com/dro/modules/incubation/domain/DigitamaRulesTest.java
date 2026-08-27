@@ -23,6 +23,22 @@ class DigitamaRulesTest {
     }
 
     @Test
+    void isDigitama_allElementalDigitamas_returnsTrue() {
+        assertTrue(DigitamaRules.isDigitama(ItemType.DIGITAMA_STARTER));
+        assertTrue(DigitamaRules.isDigitama(ItemType.DIGITAMA_FIRE));
+        assertTrue(DigitamaRules.isDigitama(ItemType.DIGITAMA_WATER));
+        assertTrue(DigitamaRules.isDigitama(ItemType.DIGITAMA_NATURE));
+        assertTrue(DigitamaRules.isDigitama(ItemType.DIGITAMA_EARTH));
+        assertTrue(DigitamaRules.isDigitama(ItemType.DIGITAMA_WIND));
+        assertTrue(DigitamaRules.isDigitama(ItemType.DIGITAMA_LIGHT));
+        assertTrue(DigitamaRules.isDigitama(ItemType.DIGITAMA_DARK));
+        assertTrue(DigitamaRules.isDigitama(ItemType.DIGITAMA_THUNDER));
+        assertTrue(DigitamaRules.isDigitama(ItemType.DIGITAMA_NEUTRAL));
+        assertTrue(DigitamaRules.isDigitama(ItemType.DIGITAMA_ICE));
+        assertTrue(DigitamaRules.isDigitama(ItemType.DIGITAMA_STEEL));
+    }
+
+    @Test
     void isDigitama_nonDigitamaItem_returnsFalse() {
         assertFalse(DigitamaRules.isDigitama(ItemType.FRAGMENT_CHAMPION));
     }

@@ -26,7 +26,7 @@ async function renderStarterPage() {
       <div class="w-full max-w-lg text-center">
         <h2 class="text-2xl font-bold text-cyan-400 mb-2">Escolha seu Digitama!</h2>
         <p class="text-slate-400 text-sm mb-8">Selecione um Digitama para começar sua jornada no Mundo Digital.</p>
-        <div id="starter-list" class="grid grid-cols-3 gap-4">
+        <div id="starter-list" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <div class="card animate-pulse"><div class="h-32"></div></div>
           <div class="card animate-pulse"><div class="h-32"></div></div>
           <div class="card animate-pulse"><div class="h-32"></div></div>
@@ -38,35 +38,49 @@ async function renderStarterPage() {
 
   try {
     const pools = await apiGet("/digitama-pools/available");
-    const starterPool = pools.find(p => p.code === "DIGITAMA_STARTER");
-    if (!starterPool) throw new Error("Pool de starters não encontrada");
-    renderStarterCards(starterPool);
+    renderStarterCards(pools || []);
   } catch (err) {
     document.getElementById("starter-error").textContent = err.message;
     document.getElementById("starter-error").classList.remove("hidden");
   }
 }
 
-function renderStarterCards(pool) {
+function renderStarterCards(pools) {
   const types = [
     { type: "FIRE", emoji: "🔥", color: "border-orange-500", bg: "bg-orange-950/30", label: "Fogo" },
     { type: "WATER", emoji: "💧", color: "border-blue-500", bg: "bg-blue-950/30", label: "Água" },
-    { type: "NATURE", emoji: "🌿", color: "border-green-500", bg: "bg-green-950/30", label: "Natureza" }
+    { type: "NATURE", emoji: "🌿", color: "border-green-500", bg: "bg-green-950/30", label: "Planta" },
+    { type: "EARTH", emoji: "🌍", color: "border-amber-500", bg: "bg-amber-950/30", label: "Terra" },
+    { type: "WIND", emoji: "🌪️", color: "border-sky-500", bg: "bg-sky-950/30", label: "Vento" },
+    { type: "LIGHT", emoji: "✨", color: "border-yellow-300", bg: "bg-yellow-950/30", label: "Luz" },
+    { type: "DARK", emoji: "🌑", color: "border-violet-500", bg: "bg-violet-950/30", label: "Trevas" },
+    { type: "THUNDER", emoji: "⚡", color: "border-yellow-500", bg: "bg-yellow-950/20", label: "Trovão" },
+    { type: "NEUTRAL", emoji: "⚪", color: "border-slate-400", bg: "bg-slate-800/30", label: "Neutro" },
+    { type: "ICE", emoji: "❄️", color: "border-cyan-300", bg: "bg-cyan-950/30", label: "Gelo" },
+    { type: "STEEL", emoji: "⚙️", color: "border-slate-300", bg: "bg-slate-700/30", label: "Metal" }
   ];
-
+  const poolsByType = new Map((pools || []).map(pool => [String(pool.type || ""), pool]));
   const container = document.getElementById("starter-list");
+
   container.innerHTML = types.map(t => {
-    const entries = pool.entries.filter(e =>
-      e.element && e.element.toUpperCase().includes(t.type)
-    );
+    const pool = poolsByType.get(t.type);
+    const entries = pool && Array.isArray(pool.entries) ? pool.entries : [];
+    const selectable = Boolean(pool && pool.selectable && entries.length > 0);
+    const stateClasses = selectable
+      ? "hover:scale-105 transition-transform cursor-pointer"
+      : "opacity-50 cursor-not-allowed";
+    const lockedMarkup = selectable ? "" : `
+      <span class="inline-block badge badge-common mt-2">Bloqueado</span>
+      <p class="text-xs text-slate-500 mt-1">${escapeHtml(pool && pool.lockedReason || "Sem Digimon BABY elegível")}</p>
+    `;
 
     return `
-      <button class="card ${t.color} ${t.bg} hover:scale-105 transition-transform cursor-pointer text-center"
-        onclick="starterSelect('${t.type}')">
+      <button type="button" class="card ${t.color} ${t.bg} ${stateClasses} text-center"
+        ${selectable ? `onclick="starterSelect('${t.type}')"` : "disabled aria-disabled=\"true\""}>
         <div class="text-4xl mb-3">${t.emoji}</div>
         <h3 class="font-bold text-sm mb-1">${t.label}</h3>
-        <p class="text-xs text-slate-400">Digitama ${t.label}</p>
-        ${entries.length > 0 ? `<p class="text-xs text-slate-500 mt-2">${entries.map(e => escapeHtml(e.digimonName)).join(", ")}</p>` : ""}
+        <p class="text-xs text-slate-400">Digitama de ${t.label}</p>
+        ${selectable ? `<p class="text-xs text-slate-500 mt-2">${entries.map(e => escapeHtml(e.digimonName)).join(", ")}</p>` : lockedMarkup}
       </button>
     `;
   }).join("");
@@ -77,7 +91,7 @@ async function starterSelect(type) {
   errorDiv.classList.add("hidden");
 
   try {
-    await apiPost("/digitama/select", { type: "STARTER" });
+    await apiPost("/digitama/select", { type });
     const hatched = await apiPost("/digitama/hatch");
     renderHatchingAnimation(hatched);
   } catch (err) {

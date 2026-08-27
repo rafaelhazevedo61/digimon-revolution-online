@@ -1,5 +1,6 @@
 package com.dro.modules.incubation.application;
 
+import com.dro.modules.digitama.application.DigitamaPoolEligibilityService;
 import com.dro.modules.digitama.domain.DigitamaHatchRules;
 import com.dro.modules.digitama.domain.DigitamaPool;
 import com.dro.modules.digitama.domain.DigitamaPoolEntry;
@@ -35,6 +36,7 @@ public class ClaimIncubationUseCase {
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
     private final DigitamaPoolRepository digitamaPoolRepository;
+    private final DigitamaPoolEligibilityService digitamaPoolEligibilityService;
     private final TutorialService tutorialService;
 
     @Transactional
@@ -81,7 +83,9 @@ public class ClaimIncubationUseCase {
         String poolCode = digitamaType.getPoolCode();
         DigitamaPool pool = digitamaPoolRepository.findByCodeAndActiveTrueAndContentActiveTrue(poolCode)
                 .orElseThrow(() -> new NotFoundException("Digitama pool not found: " + poolCode));
-        DigitamaPoolEntry entry = DigitamaPoolRoller.roll(pool.getEntries());
+        DigitamaPoolEntry entry = DigitamaPoolRoller.roll(
+                digitamaPoolEligibilityService.getEligibleEntries(pool)
+        );
         var infos = entry.getDigimonInfo();
         return DigimonFactory.createBaby(playerId, digitamaType, infos, DigimonStatus.HATCHED);
     }
@@ -103,12 +107,14 @@ public class ClaimIncubationUseCase {
             final DigimonRepository digimonRepository,
             final PlayerRepository playerRepository,
             final DigitamaPoolRepository digitamaPoolRepository,
+            final DigitamaPoolEligibilityService digitamaPoolEligibilityService,
             final TutorialService tutorialService
     ) {
         this.incubationRepository = incubationRepository;
         this.digimonRepository = digimonRepository;
         this.playerRepository = playerRepository;
         this.digitamaPoolRepository = digitamaPoolRepository;
+        this.digitamaPoolEligibilityService = digitamaPoolEligibilityService;
         this.tutorialService = tutorialService;
     }
 }

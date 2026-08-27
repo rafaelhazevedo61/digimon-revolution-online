@@ -140,7 +140,15 @@ public final class EventRewardMessageText {
                 case DIGITAMA_STARTER -> "Digitama inicial";
                 case DIGITAMA_FIRE -> "Digitama de fogo";
                 case DIGITAMA_WATER -> "Digitama de água";
-                case DIGITAMA_NATURE -> "Digitama da natureza";
+                case DIGITAMA_NATURE -> "Digitama de planta";
+                case DIGITAMA_EARTH -> "Digitama de terra";
+                case DIGITAMA_WIND -> "Digitama de vento";
+                case DIGITAMA_LIGHT -> "Digitama de luz";
+                case DIGITAMA_DARK -> "Digitama de trevas";
+                case DIGITAMA_THUNDER -> "Digitama de trovão";
+                case DIGITAMA_NEUTRAL -> "Digitama neutro";
+                case DIGITAMA_ICE -> "Digitama de gelo";
+                case DIGITAMA_STEEL -> "Digitama de metal";
                 case INCUBATOR_COMMON -> "Incubadora comum";
                 case INCUBATOR_RARE -> "Incubadora rara";
                 case INCUBATOR_EPIC -> "Incubadora épica";
