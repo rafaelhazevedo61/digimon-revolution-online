@@ -7,7 +7,7 @@ let invItemUseInProgress = false;
 
 async function renderInventoryPage() {
   const app = document.getElementById("app");
-  showBottomNav("more");
+  showBottomNav("inventory");
 
   app.innerHTML = `
     <div class="page-container">
