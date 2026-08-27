@@ -9,6 +9,8 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Adicionado
 
+- **Imagens do catálogo de Digimons**: migration incremental preenche URLs públicas para 63 espécies que estavam sem imagem, preservando URLs já configuradas e cobrindo todo o catálogo atual com referências verificadas da DAPI e do Wikimon.
+
 - **Painel de Primeiros passos recolhível**: o jogador pode minimizar o tutorial no dashboard, mantendo apenas o título e o botão para expandir; a preferência fica persistida no navegador.
 
 - **Digitamas elementais**: Fogo, Água, Planta, Terra, Vento, Luz, Trevas, Trovão, Neutro, Gelo e Metal passaram a ter pools próprios; a seleção inicial exibe todas as opções e bloqueia as que não possuem Digimon BABY elegível.
