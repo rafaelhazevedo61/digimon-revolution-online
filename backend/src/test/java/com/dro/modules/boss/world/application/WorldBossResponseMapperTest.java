@@ -46,7 +46,7 @@ class WorldBossResponseMapperTest {
     private WorldBossResponseMapper mapper;
 
     @Test
-    void doesNotExposeNextAttackWhenCooldownIsDisabled () {
+    void doesNotExposeNextAttackWhenGlobalCooldownIsDisabled () {
         UUID worldBossId = UUID.randomUUID();
         UUID playerId = UUID.randomUUID();
         WorldBossInstance instance = WorldBossInstance.builder()
@@ -63,7 +63,6 @@ class WorldBossResponseMapperTest {
                 .code("WORLD_BOSS_APOCALYMON")
                 .name("Apocalymon")
                 .cooldownMinutes(5)
-                .cooldownEnabled(false)
                 .build();
         WorldBossAttack previousAttack = WorldBossAttack.builder()
                 .id(UUID.randomUUID())
@@ -75,8 +74,6 @@ class WorldBossResponseMapperTest {
                 .build();
 
         when(bossDefinitionRepository.findById(1L)).thenReturn(Optional.of(boss));
-        when(worldBossAttackRepository.countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(
-                any(), any(), any())).thenReturn(1L);
         when(worldBossAttackRepository.findByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(worldBossId, playerId))
                 .thenReturn(List.of(previousAttack));
         when(worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(worldBossId))
@@ -84,13 +81,57 @@ class WorldBossResponseMapperTest {
         when(playerRepository.findAllById(any())).thenReturn(List.of());
         when(playerRepository.findById(playerId)).thenReturn(Optional.empty());
         when(worldBossRewardService.findPlayerRewards(worldBossId, playerId)).thenReturn(List.of());
-        when(gameplayConfig.getWorldBossDailyAttackLimit()).thenReturn(10);
+        when(gameplayConfig.isWorldBossCooldownEnabled()).thenReturn(false);
 
         var response = mapper.toResponse(instance, playerId);
 
         assertThat(response.cooldownEnabled()).isFalse();
         assertThat(response.attackCooldownMinutes()).isEqualTo(5);
         assertThat(response.nextAttackAvailableAt()).isNull();
-        assertThat(response.myDailyAttacksRemaining()).isEqualTo(9);
+    }
+
+    @Test
+    void exposesNextAttackWhenCooldownFlagsAreEnabled () {
+        UUID worldBossId = UUID.randomUUID();
+        UUID playerId = UUID.randomUUID();
+        WorldBossInstance instance = WorldBossInstance.builder()
+                .id(worldBossId)
+                .bossId(1L)
+                .bossDate(LocalDate.now())
+                .maxHp(1_000_000)
+                .remainingHp(900_000)
+                .status(WorldBossStatus.ACTIVE)
+                .createdAt(Instant.now().minusSeconds(3600))
+                .build();
+        BossDefinitionEntity boss = BossDefinitionEntity.builder()
+                .id(1L)
+                .code("WORLD_BOSS_APOCALYMON")
+                .name("Apocalymon")
+                .cooldownMinutes(5)
+                .build();
+        WorldBossAttack previousAttack = WorldBossAttack.builder()
+                .id(UUID.randomUUID())
+                .worldBossId(worldBossId)
+                .playerId(playerId)
+                .digimonId(UUID.randomUUID())
+                .damage(100)
+                .createdAt(Instant.now().minusSeconds(60))
+                .build();
+
+        when(bossDefinitionRepository.findById(1L)).thenReturn(Optional.of(boss));
+        when(worldBossAttackRepository.findByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(worldBossId, playerId))
+                .thenReturn(List.of(previousAttack));
+        when(worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(worldBossId))
+                .thenReturn(List.of(previousAttack));
+        when(playerRepository.findAllById(any())).thenReturn(List.of());
+        when(playerRepository.findById(playerId)).thenReturn(Optional.empty());
+        when(worldBossRewardService.findPlayerRewards(worldBossId, playerId)).thenReturn(List.of());
+        when(gameplayConfig.isWorldBossCooldownEnabled()).thenReturn(true);
+
+        var response = mapper.toResponse(instance, playerId);
+
+        assertThat(response.cooldownEnabled()).isTrue();
+        assertThat(response.attackCooldownMinutes()).isEqualTo(5);
+        assertThat(response.nextAttackAvailableAt()).isNotNull().isAfter(Instant.now());
     }
 }

@@ -11,35 +11,32 @@ import static org.junit.jupiter.api.Assertions.*;
 class DigitamaHatchRulesTest {
 
     @Test
-    void getPossibleBabies_fire_returnsBotamonAndPunimon() {
+    void getPossibleBabies_fire_returnsOnlyFireBabies() {
         List<String> babies = DigitamaHatchRules.getPossibleBabies(DigitamaType.FIRE);
-        assertEquals(2, babies.size());
-        assertTrue(babies.contains("Botamon"));
-        assertTrue(babies.contains("Punimon"));
+        assertEquals(5, babies.size());
+        assertTrue(babies.containsAll(List.of("Bombmon", "Bommon", "Jyarimon", "Mokumon", "Peti Meramon")));
     }
 
     @Test
-    void getPossibleBabies_water_returnsPichimonAndPoyomon() {
+    void getPossibleBabies_water_returnsOnlyWaterBabies() {
         List<String> babies = DigitamaHatchRules.getPossibleBabies(DigitamaType.WATER);
-        assertEquals(2, babies.size());
-        assertTrue(babies.contains("Pichimon"));
-        assertTrue(babies.contains("Poyomon"));
+        assertEquals(8, babies.size());
+        assertTrue(babies.containsAll(List.of("Punimon", "Pichimon", "Bubbmon", "Fukamon", "Kekomon", "Pitchmon", "Pururumon", "Puyomon")));
     }
 
     @Test
-    void getPossibleBabies_nature_returnsPabumonAndYuramon() {
+    void getPossibleBabies_nature_returnsOnlyWoodBabies() {
         List<String> babies = DigitamaHatchRules.getPossibleBabies(DigitamaType.NATURE);
-        assertEquals(2, babies.size());
-        assertTrue(babies.contains("Pabumon"));
-        assertTrue(babies.contains("Yuramon"));
+        assertEquals(4, babies.size());
+        assertTrue(babies.containsAll(List.of("Yuramon", "Leafmon", "Nyokimon", "Popomon")));
     }
 
     @Test
     void rollBabyName_fire_returnsValidBaby() {
         for (int i = 0; i < 50; i++) {
             String name = DigitamaHatchRules.rollBabyName(DigitamaType.FIRE);
-            assertTrue(name.equals("Botamon") || name.equals("Punimon"),
-                    "Expected Botamon or Punimon but got: " + name);
+            assertTrue(List.of("Bombmon", "Bommon", "Jyarimon", "Mokumon", "Peti Meramon").contains(name),
+                    "Expected a fire BABY but got: " + name);
         }
     }
 
@@ -47,8 +44,8 @@ class DigitamaHatchRulesTest {
     void rollBabyName_water_returnsValidBaby() {
         for (int i = 0; i < 50; i++) {
             String name = DigitamaHatchRules.rollBabyName(DigitamaType.WATER);
-            assertTrue(name.equals("Pichimon") || name.equals("Poyomon"),
-                    "Expected Pichimon or Poyomon but got: " + name);
+            assertTrue(List.of("Punimon", "Pichimon", "Bubbmon", "Fukamon", "Kekomon", "Pitchmon", "Pururumon", "Puyomon").contains(name),
+                    "Expected a water BABY but got: " + name);
         }
     }
 
@@ -56,8 +53,8 @@ class DigitamaHatchRulesTest {
     void rollBabyName_nature_returnsValidBaby() {
         for (int i = 0; i < 50; i++) {
             String name = DigitamaHatchRules.rollBabyName(DigitamaType.NATURE);
-            assertTrue(name.equals("Pabumon") || name.equals("Yuramon"),
-                    "Expected Pabumon or Yuramon but got: " + name);
+            assertTrue(List.of("Yuramon", "Leafmon", "Nyokimon", "Popomon").contains(name),
+                    "Expected a wood BABY but got: " + name);
         }
     }
 

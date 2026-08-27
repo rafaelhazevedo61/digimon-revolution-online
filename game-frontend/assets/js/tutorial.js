@@ -43,6 +43,7 @@ function renderTutorialCard(data) {
   const percent = data.totalSteps > 0
     ? Math.round((data.completedSteps / data.totalSteps) * 100)
     : 0;
+  const collapsed = tutorialCardIsCollapsed();
 
   const nextStep = data.steps.find(s => !s.completed);
   const rows = data.steps
@@ -62,19 +63,62 @@ function renderTutorialCard(data) {
 
   return `
     <div class="card mb-4 border-cyan-800">
-      <div class="flex items-center justify-between mb-2">
+      <div class="flex items-center justify-between gap-3">
         <h3 class="text-sm font-bold text-cyan-300">🎓 Primeiros Passos</h3>
-        <span class="text-xs text-slate-400">${data.completedSteps}/${data.totalSteps}</span>
+        <button
+          type="button"
+          class="btn-sm border border-cyan-700 text-cyan-300 hover:bg-cyan-950/50 shrink-0"
+          data-tutorial-toggle
+          aria-controls="tutorial-card-content"
+          aria-expanded="${!collapsed}"
+          aria-label="${collapsed ? "Expandir primeiros passos" : "Minimizar primeiros passos"}"
+          onclick="toggleTutorialCard()"
+        >${collapsed ? "Expandir ▾" : "Minimizar ▴"}</button>
       </div>
-      <div class="xp-bar mb-3">
-        <div class="xp-bar-fill" style="width:${percent}%"></div>
+      <div id="tutorial-card-content" data-tutorial-content class="${collapsed ? "hidden" : "mt-3"}">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs text-slate-400">Progresso</span>
+          <span class="text-xs text-slate-400">${data.completedSteps}/${data.totalSteps}</span>
+        </div>
+        <div class="xp-bar mb-3">
+          <div class="xp-bar-fill" style="width:${percent}%"></div>
+        </div>
+        <div class="flex flex-col gap-2">
+          ${rows}
+        </div>
+        ${finishSection}
       </div>
-      <div class="flex flex-col gap-2">
-        ${rows}
-      </div>
-      ${finishSection}
     </div>
   `;
+}
+
+function tutorialCardIsCollapsed() {
+  try {
+    return window.localStorage.getItem("dro.tutorial.card.collapsed") === "true";
+  } catch (err) {
+    return false;
+  }
+}
+
+function tutorialCardSetCollapsed(collapsed) {
+  try {
+    window.localStorage.setItem("dro.tutorial.card.collapsed", String(collapsed));
+  } catch (err) {
+    // A preferência visual não deve impedir o uso do tutorial.
+  }
+}
+
+function toggleTutorialCard() {
+  const content = document.querySelector("[data-tutorial-content]");
+  const toggle = document.querySelector("[data-tutorial-toggle]");
+  if (!content || !toggle) return;
+
+  const collapsed = content.classList.toggle("hidden");
+  content.classList.toggle("mt-3", !collapsed);
+  toggle.setAttribute("aria-expanded", String(!collapsed));
+  toggle.setAttribute("aria-label", collapsed ? "Expandir primeiros passos" : "Minimizar primeiros passos");
+  toggle.textContent = collapsed ? "Expandir ▾" : "Minimizar ▴";
+  tutorialCardSetCollapsed(collapsed);
 }
 
 function renderTutorialStep(step, isNext) {

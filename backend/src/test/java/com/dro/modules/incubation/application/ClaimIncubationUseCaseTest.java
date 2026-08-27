@@ -46,6 +46,9 @@ class ClaimIncubationUseCaseTest {
     private com.dro.modules.digitama.infra.DigitamaPoolRepository digitamaPoolRepository;
 
     @Mock
+    private com.dro.modules.digitama.application.DigitamaPoolEligibilityService digitamaPoolEligibilityService;
+
+    @Mock
     private TutorialService tutorialService;
 
     @Test
@@ -56,7 +59,6 @@ class ClaimIncubationUseCaseTest {
         Player player = Player.builder()
                 .id(playerId)
                 .activeDigimonId(activeDigimonId)
-                .maxDigimonSlots(3)
                 .build();
         Incubation incubation = Incubation.builder()
                 .id(incubationId)
@@ -71,6 +73,8 @@ class ClaimIncubationUseCaseTest {
         DigimonInfos infos = new DigimonInfos();
         infos.setId(1L);
         infos.setName("Agumon");
+        infos.setStage(com.dro.modules.digimon.domain.enums.Stage.BABY);
+        infos.setElement(com.dro.modules.digimon.domain.enums.Element.FIRE);
         infos.setBaseHp(100);
         infos.setBaseAtk(50);
         infos.setBaseDef(40);
@@ -80,28 +84,30 @@ class ClaimIncubationUseCaseTest {
                 .active(true)
                 .build();
         DigitamaPool pool = DigitamaPool.builder()
-                .code("FIRE")
+                .code("DIGITAMA_FIRE")
                 .entries(List.of(entry))
                 .build();
 
         when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
         when(incubationRepository.findByIdAndPlayerIdForUpdate(incubationId, playerId))
                 .thenReturn(Optional.of(incubation));
-        when(digimonRepository.countByPlayerIdAndStatus(playerId, DigimonStatus.ACTIVE)).thenReturn(0L);
         when(digitamaPoolRepository.findByCodeAndActiveTrueAndContentActiveTrue(anyString()))
                 .thenReturn(Optional.of(pool));
+        when(digitamaPoolEligibilityService.getEligibleEntries(pool))
+                .thenReturn(List.of(entry));
 
         Digimon digimon = new ClaimIncubationUseCase(
                 incubationRepository,
                 digimonRepository,
                 playerRepository,
                 digitamaPoolRepository,
+                digitamaPoolEligibilityService,
                 tutorialService
         ).execute(JwtTestToken.create(playerId), incubationId);
 
         assertNotNull(digimon);
         assertEquals(playerId, digimon.getPlayerId());
-        assertEquals(DigimonStatus.ACTIVE, digimon.getStatus());
+        assertEquals(DigimonStatus.HATCHED, digimon.getStatus());
         assertEquals(IncubationStatus.CLAIMED, incubation.getStatus());
         verify(incubationRepository).findByIdAndPlayerIdForUpdate(eq(incubationId), eq(playerId));
         verify(incubationRepository).save(incubation);

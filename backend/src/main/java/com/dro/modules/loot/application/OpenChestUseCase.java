@@ -14,6 +14,7 @@ import com.dro.modules.loot.domain.ChestDefinitionEntity;
 import com.dro.modules.loot.domain.ChestLootRoller;
 import com.dro.modules.loot.domain.ChestOpeningEntity;
 import com.dro.modules.loot.domain.ChestOpeningItemEntity;
+import com.dro.modules.loot.domain.LootRarity;
 import com.dro.modules.loot.infra.ChestDefinitionRepository;
 import com.dro.modules.loot.infra.ChestOpeningRepository;
 import com.dro.modules.player.domain.Player;
@@ -26,22 +27,26 @@ import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
  * Abre baús de forma atômica e idempotente.
  *
  * <p>O caso de uso bloqueia o Digimon ativo e o item de baú, sorteia o resultado,
- * debita o baú, credita as recompensas, registra a abertura e enfileira a
+ * debita os baús, credita as recompensas, registra a abertura e enfileira a
  * auditoria positiva na mesma transação PostgreSQL.</p>
  */
 @Service
 public class OpenChestUseCase {
     private static final String OPENING_SOURCE = "PLAYER_INVENTORY";
+    private static final int MAX_BATCH_QUANTITY = 100;
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final InventoryRepository inventoryRepository;
@@ -52,16 +57,17 @@ public class OpenChestUseCase {
     private final TransactionAuditPublisher transactionAuditPublisher;
 
     /**
-     * Abre um baú do inventário do Digimon ativo do jogador.
+     * Abre um ou mais baús do inventário do Digimon ativo do jogador.
      *
      * @param token token JWT do jogador
-     * @param request código do baú e chave idempotente da requisição
+     * @param request código do baú, chave idempotente e quantidade solicitada
      * @return resultado persistido da abertura
      */
     @Transactional
     public ChestOpeningResponse execute(String token, OpenChestRequest request) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         validateRequest(request);
+        int quantity = request.requestedQuantity();
         ChestOpeningEntity previousOpening = chestOpeningRepository.findByRequestId(request.requestId()).orElse(null);
         if (previousOpening != null) {
             validateRetryOwnership(previousOpening, playerId, request.chestCode());
@@ -71,26 +77,45 @@ public class OpenChestUseCase {
         Digimon activeDigimon = findLockedActiveDigimon(player, playerId);
         ChestDefinitionEntity chest = chestDefinitionRepository.findWithCatalogByCode(request.chestCode()).filter(ChestDefinitionEntity::isActive).orElseThrow(() -> new NotFoundException("Chest not found or inactive"));
         InventoryItem chestInventory = inventoryRepository.findByDigimonIdAndItemDefinitionIdForUpdate(activeDigimon.getId(), chest.getItemDefinition().getId()).orElseThrow(() -> new NotFoundException("Chest not found in inventory"));
-        if (chestInventory.getItemType() != ItemType.LOOT_CHEST || chestInventory.getQuantity() <= 0) {
-            throw new UnprocessableException("No chest available in inventory");
+        if (chestInventory.getItemType() != ItemType.LOOT_CHEST || chestInventory.getQuantity() < quantity) {
+            throw new UnprocessableException("Not enough chests in inventory");
         }
-        ChestLootRoller.ChestLootRoll roll = chestLootRoller.roll(chest.getLootTable());
+
         List<ChestOpeningItemEntity> openingItems = new ArrayList<>();
-        for (ChestLootRoller.ChestLootItem reward : roll.items()) {
-            creditReward(activeDigimon, reward);
-            openingItems.add(ChestOpeningItemEntity.builder().rarity(reward.rarity()).itemType(reward.itemType()).materialCode(reward.materialCode()).quantity(reward.quantity()).build());
+        LootRarity primaryRarity = null;
+        for (int index = 0; index < quantity; index++) {
+            ChestLootRoller.ChestLootRoll roll = chestLootRoller.roll(chest.getLootTable());
+            if (primaryRarity == null) {
+                primaryRarity = roll.rarity();
+            }
+            for (ChestLootRoller.ChestLootItem reward : roll.items()) {
+                creditReward(activeDigimon, reward);
+                mergeOpeningItem(openingItems, reward);
+            }
         }
-        consumeChest(chestInventory);
-        ChestOpeningEntity openingToPersist = ChestOpeningEntity.builder().requestId(request.requestId()).playerId(playerId).chestDefinition(chest).rarity(roll.rarity()).source(OPENING_SOURCE).items(openingItems).build();
+        consumeChest(chestInventory, quantity);
+
+        ChestOpeningEntity openingToPersist = ChestOpeningEntity.builder()
+                .requestId(request.requestId())
+                .playerId(playerId)
+                .chestDefinition(chest)
+                .quantity(quantity)
+                .rarity(primaryRarity)
+                .source(OPENING_SOURCE)
+                .items(openingItems)
+                .build();
         openingItems.forEach(item -> item.setChestOpening(openingToPersist));
         ChestOpeningEntity opening = chestOpeningRepository.saveAndFlush(openingToPersist);
-        transactionAuditPublisher.success("chest-opening:" + opening.getId(), "CHEST_OPENED", "ChestOpening", String.valueOf(opening.getId()), buildAuditPayload(opening, activeDigimon, roll));
+        transactionAuditPublisher.success("chest-opening:" + opening.getId(), "CHEST_OPENED", "ChestOpening", String.valueOf(opening.getId()), buildAuditPayload(opening, activeDigimon));
         return toResponse(opening, false);
     }
 
     private void validateRequest(OpenChestRequest request) {
         if (request == null || request.chestCode() == null || request.chestCode().isBlank() || request.requestId() == null || request.requestId().isBlank()) {
             throw new BadRequestException("Chest code and request id are required");
+        }
+        if (request.requestedQuantity() < 1 || request.requestedQuantity() > MAX_BATCH_QUANTITY) {
+            throw new BadRequestException("Chest quantity must be between 1 and " + MAX_BATCH_QUANTITY);
         }
     }
 
@@ -128,8 +153,27 @@ public class OpenChestUseCase {
         }
     }
 
-    private void consumeChest(InventoryItem chestInventory) {
-        int remaining = chestInventory.getQuantity() - 1;
+    private void mergeOpeningItem(List<ChestOpeningItemEntity> openingItems, ChestLootRoller.ChestLootItem reward) {
+        ChestOpeningItemEntity existing = openingItems.stream()
+                .filter(item -> item.getRarity() == reward.rarity()
+                        && item.getItemType() == reward.itemType()
+                        && Objects.equals(item.getMaterialCode(), reward.materialCode()))
+                .findFirst()
+                .orElse(null);
+        if (existing == null) {
+            openingItems.add(ChestOpeningItemEntity.builder()
+                    .rarity(reward.rarity())
+                    .itemType(reward.itemType())
+                    .materialCode(reward.materialCode())
+                    .quantity(reward.quantity())
+                    .build());
+        } else {
+            existing.setQuantity(existing.getQuantity() + reward.quantity());
+        }
+    }
+
+    private void consumeChest(InventoryItem chestInventory, int quantity) {
+        int remaining = chestInventory.getQuantity() - quantity;
         if (remaining == 0) {
             inventoryRepository.delete(chestInventory);
         } else {
@@ -138,25 +182,25 @@ public class OpenChestUseCase {
         }
     }
 
-    private Map<String, Object> buildAuditPayload(ChestOpeningEntity opening, Digimon digimon, ChestLootRoller.ChestLootRoll roll) {
-        List<Map<String, Object>> items = roll.items().stream().map(reward -> {
-            Map<String, Object> item = new LinkedHashMap<>();
-            item.put("rarity", reward.rarity().name());
-            item.put("itemType", reward.itemType().name());
-            if (reward.materialCode() != null) {
-                item.put("materialCode", reward.materialCode());
+    private Map<String, Object> buildAuditPayload(ChestOpeningEntity opening, Digimon digimon) {
+        List<Map<String, Object>> items = opening.getItems().stream().map(item -> {
+            Map<String, Object> reward = new LinkedHashMap<>();
+            reward.put("rarity", item.getRarity().name());
+            reward.put("itemType", item.getItemType().name());
+            if (item.getMaterialCode() != null) {
+                reward.put("materialCode", item.getMaterialCode());
             }
-            item.put("quantity", reward.quantity());
-            return item;
+            reward.put("quantity", item.getQuantity());
+            return reward;
         }).toList();
-        return Map.of("module", "loot", "operation", "openChest", "playerId", opening.getPlayerId().toString(), "digimonId", digimon.getId().toString(), "requestId", opening.getRequestId(), "chestCode", opening.getChestDefinition().getCode(), "rarity", opening.getRarity().name(), "items", items, "summary", "Chest opened successfully");
+        return Map.of("module", "loot", "operation", "openChest", "playerId", opening.getPlayerId().toString(), "digimonId", digimon.getId().toString(), "requestId", opening.getRequestId(), "chestCode", opening.getChestDefinition().getCode(), "chestQuantity", opening.getQuantity(), "rarity", opening.getRarity().name(), "items", items, "summary", "Chest opened successfully");
     }
 
     private ChestOpeningResponse toResponse(ChestOpeningEntity opening, boolean replayed) {
         List<ChestOpeningItemResponse> items = opening.getItems().stream().map(this::toItemResponse).toList();
         ChestDefinitionEntity chest = opening.getChestDefinition();
         String message = replayed ? "Esta abertura já havia sido processada. O resultado original foi retornado." : "Baú aberto com sucesso!";
-        return new ChestOpeningResponse(opening.getRequestId(), chest.getCode(), chest.getName(), opening.getRarity(), items, replayed, message);
+        return new ChestOpeningResponse(opening.getRequestId(), chest.getCode(), chest.getName(), opening.getRarity(), items, opening.getQuantity(), replayed, message);
     }
 
     private ChestOpeningItemResponse toItemResponse(ChestOpeningItemEntity item) {

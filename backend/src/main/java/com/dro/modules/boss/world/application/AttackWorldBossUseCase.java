@@ -27,8 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,16 +74,9 @@ public class AttackWorldBossUseCase {
             throw new BadRequestException("The world boss has already been defeated today");
         }
         validateRequirements(boss, digimon);
-        Instant startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant();
-        Instant resetCutoff = instance.getDailyResetAt() != null && instance.getDailyResetAt().isAfter(startOfDay) ? instance.getDailyResetAt() : startOfDay;
-        long usedToday = worldBossAttackRepository.countByWorldBossIdAndPlayerIdAndCreatedAtGreaterThanEqual(instance.getId(), playerId, resetCutoff);
-        int dailyAttackLimit = gameplayConfig.getWorldBossDailyAttackLimit();
-        if (WorldBossRules.dailyLimitReached(usedToday, dailyAttackLimit)) {
-            throw new BadRequestException("Daily world boss attack limit reached (" + dailyAttackLimit + " per day). Come back tomorrow.");
-        }
         WorldBossAttack lastAttack = worldBossAttackRepository.findFirstByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(instance.getId(), playerId).orElse(null);
         int cooldownMinutes = WorldBossRules.attackCooldownMinutes(boss.getCooldownMinutes());
-        if (boss.isCooldownEnabled() && lastAttack != null && lastAttack.getCreatedAt() != null) {
+        if (gameplayConfig.isWorldBossCooldownEnabled() && lastAttack != null && lastAttack.getCreatedAt() != null) {
             Instant nextAttackAt = lastAttack.getCreatedAt().plus(Duration.ofMinutes(cooldownMinutes));
             Instant now = Instant.now();
             if (now.isBefore(nextAttackAt)) {
@@ -130,14 +121,12 @@ public class AttackWorldBossUseCase {
             digimon.setBits(digimon.getBits() + defeatedRewardBits);
         }
         WorldBossAttack attack = WorldBossAttack.builder().id(UUID.randomUUID()).worldBossId(instance.getId()).playerId(playerId).digimonId(digimon.getId()).damage(actualDamage).energyCost(energyCost).bitsGained(bitsGained + defeatedRewardBits).xpGained(xpGained + defeatedRewardXp).createdAt(Instant.now()).build();
-        long remainingAttacks = WorldBossRules.dailyAttacksRemaining(usedToday + 1, dailyAttackLimit);
         attack.setRequestId(requestId);
         attack.setRemainingHpAfter(instance.getRemainingHp());
         attack.setWinChance(winChance);
         attack.setDefeated(defeated);
         attack.setDefeatedRewardXp(defeatedRewardXp);
         attack.setDefeatedRewardBits(defeatedRewardBits);
-        attack.setDailyAttacksRemaining((int) remainingAttacks);
         digimonRepository.save(digimon);
         worldBossInstanceRepository.save(instance);
         worldBossAttackRepository.save(attack);
@@ -149,7 +138,7 @@ public class AttackWorldBossUseCase {
     private AttackWorldBossResponse toResponse(BossDefinitionEntity boss, WorldBossInstance instance, WorldBossAttack attack, List<WorldBossRewardResponse> rewards) {
         int hitXp = Math.max(0, attack.getXpGained() - attack.getDefeatedRewardXp());
         int hitBits = Math.max(0, attack.getBitsGained() - attack.getDefeatedRewardBits());
-        return new AttackWorldBossResponse(instance.getId(), boss.getCode(), boss.getName(), attack.getDamage(), attack.getRemainingHpAfter(), instance.getMaxHp(), attack.isDefeated(), attack.getWinChance(), hitXp, hitBits, attack.getDefeatedRewardXp(), attack.getDefeatedRewardBits(), attack.getDailyAttacksRemaining(), rewards);
+        return new AttackWorldBossResponse(instance.getId(), boss.getCode(), boss.getName(), attack.getDamage(), attack.getRemainingHpAfter(), instance.getMaxHp(), attack.isDefeated(), attack.getWinChance(), hitXp, hitBits, attack.getDefeatedRewardXp(), attack.getDefeatedRewardBits(), rewards);
     }
 
     private String normalizeRequestId(String idempotencyKey) {

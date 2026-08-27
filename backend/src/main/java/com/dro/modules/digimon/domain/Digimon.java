@@ -174,7 +174,29 @@ public class Digimon {
         double personalityMultiplier = PersonalityRules.getXpMultiplier(this.personality);
         double traitMultiplier = TraitRules.getXpMultiplier(this.trait);
         int finalXp = (int) Math.floor(baseXp * rarityMultiplier * personalityMultiplier * traitMultiplier);
-        this.experience += finalXp;
+        applyExperience(finalXp);
+    }
+
+    /**
+     * Concede exatamente a quantidade informada, sem aplicar multiplicadores de
+     * raridade, personalidade ou trait. É usado por itens de XP instantâneo.
+     */
+    public void grantDirectExperience(int xp) {
+        applyExperience(xp);
+    }
+
+    /**
+     * Retorna a XP necessária para o próximo nível, ou zero no nível máximo.
+     */
+    public int getExperienceToNextLevel() {
+        return xpToNextLevel();
+    }
+
+    private void applyExperience(int xp) {
+        if (xp <= 0 || this.level >= MAX_LEVEL) {
+            return;
+        }
+        this.experience += xp;
         while (this.level < MAX_LEVEL) {
             int xpRequired = xpToNextLevel();
             if (this.experience < xpRequired) {

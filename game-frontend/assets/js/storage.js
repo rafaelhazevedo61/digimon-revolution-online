@@ -5,7 +5,7 @@ async function renderStoragePage() {
   app.innerHTML = `
     <div class="page-container">
       <div class="flex items-center gap-2 mb-4 px-1">
-        <button class="btn-sm" style="background:#334155;color:#94a3b8" onclick="navigateTo('digimon-select')">← Voltar</button>
+        <button class="btn-sm" style="background:#334155;color:#94a3b8" onclick="navigateTo('dashboard')">← Voltar</button>
         <h2 class="text-lg font-bold">Storage</h2>
       </div>
       <div id="storage-info" class="mb-3"></div>
@@ -24,14 +24,14 @@ async function renderStoragePage() {
     const slotInfo = dashboard.slotInfo;
     const infoEl = document.getElementById("storage-info");
     infoEl.innerHTML = `
-      <div class="card-sm flex justify-between items-center">
-        <div>
-          <p class="text-xs text-slate-400">Ativos</p>
-          <p class="font-bold text-sm ${slotInfo.activeDigimons >= slotInfo.maxDigimonSlots ? 'text-red-400' : 'text-cyan-400'}">${slotInfo.activeDigimons}/${slotInfo.maxDigimonSlots}</p>
-        </div>
-        <div>
-          <p class="text-xs text-slate-400">Storage</p>
+      <div class="grid grid-cols-2 gap-2">
+        <div class="card-sm text-center">
+          <p class="text-xs text-slate-400">Digimons armazenados</p>
           <p class="font-bold text-sm ${slotInfo.storedDigimons >= slotInfo.maxStorageSlots ? 'text-red-400' : 'text-cyan-400'}">${slotInfo.storedDigimons}/${slotInfo.maxStorageSlots}</p>
+        </div>
+        <div class="card-sm text-center">
+          <p class="text-xs text-slate-400">Dados Digitais</p>
+          <p class="font-bold text-sm text-cyan-400">${Number(dashboard.digitalData || 0).toLocaleString()}</p>
         </div>
       </div>
     `;
@@ -42,24 +42,29 @@ async function renderStoragePage() {
       return;
     }
 
-    container.innerHTML = stored.map(d => {
-      const canRetrieve = slotInfo.activeDigimons < slotInfo.maxDigimonSlots;
-      return `
+    container.innerHTML = stored.map(d => `
         <div class="card mb-2 flex items-center gap-3">
-          <div class="flex-1">
-            <p class="font-bold text-sm">${escapeHtml(d.name)}</p>
-            <p class="text-xs text-slate-400">Lv.${d.level} | ${d.stage} | ${formatRarity(d.rarity)}</p>
+          ${renderDigimonVisual(d.imageUrl, d.stage, "w-16 h-16", "text-4xl")}
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-sm truncate">${escapeHtml(d.name)}</p>
+            <p class="text-xs text-slate-400">Lv.${d.level} | ${escapeHtml(d.stage)} | ${formatRarity(d.rarity)}</p>
             <p class="text-xs text-slate-500">HP ${d.hp} ATK ${d.attack} DEF ${d.defense}</p>
+            <p class="text-xs text-cyan-300 mt-1">Sacrifício: +${calculateDigitalDataPreview(d)} Dados Digitais</p>
           </div>
-          <button class="btn-sm ${canRetrieve ? '' : 'opacity-50 cursor-not-allowed'}"
-            style="background:#065f46;color:#6ee7b7"
-            ${canRetrieve ? '' : 'disabled'}
-            onclick="storageRetrieve('${d.id}')">
-            Retirar
-          </button>
+          <div class="flex flex-col gap-1">
+            <button class="btn-sm"
+              style="background:#065f46;color:#6ee7b7"
+              onclick="storageRetrieve('${d.id}')">
+              Tornar ativo
+            </button>
+            <button class="btn-sm"
+              style="background:#7f1d1d;color:#fecaca"
+              onclick="storageSacrifice('${d.id}', '${escapeHtml(d.name)}')">
+              Sacrificar
+            </button>
+          </div>
         </div>
-      `;
-    }).join("");
+      `).join("");
   } catch (err) {
     document.getElementById("storage-list").innerHTML = `
       <div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>
@@ -67,10 +72,49 @@ async function renderStoragePage() {
   }
 }
 
+function calculateDigitalDataPreview(digimon) {
+  const stageBase = {
+    BABY: 1,
+    BABY_II: 2,
+    ROOKIE: 5,
+    CHAMPION: 12,
+    ULTIMATE: 30,
+    MEGA: 60
+  }[digimon.stage] || 1;
+  const level = Math.min(Math.max(Number(digimon.level) || 1, 1), 100);
+  const ivHp = Math.min(Math.max(Number(digimon.ivHp) || 0, 0), 100);
+  const ivAttack = Math.min(Math.max(Number(digimon.ivAttack) || 0, 0), 100);
+  const ivDefense = Math.min(Math.max(Number(digimon.ivDefense) || 0, 0), 100);
+  const averageIv = Math.floor((ivHp + ivAttack + ivDefense) / 3);
+  const levelFactor = 25 + Math.floor((75 * level) / 100);
+  const ivFactor = 50 + Math.floor(averageIv / 2);
+  return Math.max(1, Math.floor((stageBase * levelFactor * ivFactor) / 10000));
+}
+
+async function storageSacrifice(digimonId, digimonName) {
+  const confirmed = await showConfirm(
+    `Sacrificar ${digimonName}? Esta ação é permanente e não pode ser desfeita.`,
+    {
+      title: "Sacrificar Digimon",
+      confirmText: "Sacrificar",
+      cancelText: "Cancelar",
+      danger: true
+    }
+  );
+  if (!confirmed) return;
+  try {
+    const result = await apiPost(`/digimon/${digimonId}/sacrifice`, {});
+    showToast(`Digimon sacrificado. +${result.digitalDataReceived} Dados Digitais.`);
+    renderStoragePage();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
 async function storageRetrieve(digimonId) {
   try {
     await apiPost(`/digimon/${digimonId}/retrieve`, {});
-    showToast("Digimon retirado do storage!");
+    showToast("Digimon agora é o parceiro ativo!");
     renderStoragePage();
   } catch (err) {
     showToast(err.message, "error");

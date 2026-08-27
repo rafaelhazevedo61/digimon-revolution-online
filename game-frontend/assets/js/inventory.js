@@ -3,10 +3,11 @@ let invEquipments = [];
 let invDigimonId = null;
 let invTab = "items"; // "items" or "equipment"
 let invChestOpeningInProgress = false;
+let invItemUseInProgress = false;
 
 async function renderInventoryPage() {
   const app = document.getElementById("app");
-  showBottomNav("more");
+  showBottomNav("inventory");
 
   app.innerHTML = `
     <div class="page-container">
@@ -77,18 +78,33 @@ function invRenderItems() {
 
   content.innerHTML = items.map(item => {
     const def = item.itemDefinition;
+    const isXpDiskItem = invIsXpDisk(item.itemType);
     const name = def ? def.name : invItemName(item.itemType);
-    const emoji = def ? invCategoryEmoji(def.category) : invItemEmoji(item.itemType);
+    const emoji = isXpDiskItem ? invItemEmoji(item.itemType) : def ? invCategoryEmoji(def.category) : invItemEmoji(item.itemType);
     const catName = def ? invCategoryLabel(def.category) : invItemCategoryName(item.itemType);
     const category = def ? String(def.category || "").toUpperCase() : "";
     const catBadge = def ? invCategoryBadge(category) : invItemCategory(item.itemType);
     const chestCode = category === "CHEST" ? def.code : null;
     const isChest = item.itemType === "LOOT_CHEST" || !!chestCode;
-    const incubationOnly = category === "DIGITAMA" || category === "INCUBATOR"
-      || item.itemType.startsWith("DIGITAMA_") || item.itemType.startsWith("INCUBATOR_");
+    const chestQuantityInputId = chestCode ? `inv-chest-quantity-${String(chestCode).replace(/[^a-zA-Z0-9_-]/g, "-")}` : null;
+    const xpDiskQuantityInputId = isXpDiskItem ? `inv-xp-disk-quantity-${String(item.itemType).replace(/[^a-zA-Z0-9_-]/g, "-")}` : null;
+    const maxUseQuantity = Math.min(100, Math.max(1, Number(item.quantity) || 1));
+    const digitamaItem = category === "DIGITAMA" || item.itemType.startsWith("DIGITAMA_");
+    const incubatorItem = category === "INCUBATOR" || item.itemType.startsWith("INCUBATOR_");
+    const incubationOnly = digitamaItem || incubatorItem;
     const usable = !incubationOnly && (def ? def.usable : invIsUsable(item.itemType));
     const action = isChest && chestCode ? `
-      <button class="btn-sm btn-primary" onclick="invOpenChest('${escapeHtml(chestCode)}')">Abrir</button>
+      <div class="flex items-center gap-2">
+        <input id="${chestQuantityInputId}" class="input w-16 text-center" type="number" min="1" max="${maxUseQuantity}" value="1" aria-label="Quantidade de baús" />
+        <button class="btn-sm btn-primary whitespace-nowrap" onclick="invOpenChest('${escapeHtml(chestCode)}', document.getElementById('${chestQuantityInputId}').value)">Abrir</button>
+      </div>
+    ` : incubatorItem ? `
+      <button class="btn-sm btn-primary whitespace-nowrap" onclick="navigateTo('incubation')">Usar</button>
+    ` : isXpDiskItem ? `
+      <div class="flex items-center gap-2">
+        <input id="${xpDiskQuantityInputId}" class="input w-16 text-center" type="number" min="1" max="${maxUseQuantity}" value="1" aria-label="Quantidade de Discos de XP" />
+        <button class="btn-sm btn-primary whitespace-nowrap" onclick="invUseItem('${escapeHtml(item.itemType)}', document.getElementById('${xpDiskQuantityInputId}').value)">Usar</button>
+      </div>
     ` : usable ? `
       <button class="btn-sm btn-primary" onclick="invUseItem('${escapeHtml(item.itemType)}')">Usar</button>
     ` : "";
@@ -144,9 +160,9 @@ function invItemCategoryOrder(item) {
             ? "EVOLUTION_MATERIAL"
             : String(item.itemType || "").startsWith("FRAGMENT_")
               ? "FRAGMENT"
-              : String(item.itemType || "") === "POTION_SMALL"
-              ? "CONSUMABLE"
-              : String(item.itemType || "") === "TRAINING_STONE" || String(item.itemType || "") === "DATA_CORE"
+              : (String(item.itemType || "") === "POTION_SMALL" || String(item.itemType || "").startsWith("XP_DISC_"))
+                ? "CONSUMABLE"
+                : String(item.itemType || "") === "TRAINING_STONE" || String(item.itemType || "") === "DATA_CORE"
                 || String(item.itemType || "") === "REFINEMENT_STONE"
                 ? "MATERIAL"
                 : "OTHER";
@@ -208,18 +224,43 @@ function invCategoryBadge(category) {
 
 async function invReloadItems() {
   invItems = await apiGet("/inventory") || [];
-  invRenderItems();
+  if (document.getElementById("inv-content")) {
+    invRenderItems();
+  }
 }
 
-async function invUseItem(itemType) {
+async function invUseItem(itemType, quantity = null) {
+  const isXpDiskItem = invIsXpDisk(itemType);
+  let requestedQuantity = 1;
+  if (isXpDiskItem) {
+    requestedQuantity = quantity == null ? 1 : Number.parseInt(quantity, 10);
+    if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1 || requestedQuantity > 100) {
+      showToast("Informe uma quantidade válida de Discos de XP (1 a 100).", "error");
+      return;
+    }
+  }
+  if (invItemUseInProgress) return;
+
+  invItemUseInProgress = true;
   try {
-    await apiPost("/inventory/use", { itemType: itemType });
-    showToast(itemType === "INCUBATION_SLOT_UNLOCK"
-      ? "Slot de incubação desbloqueado!"
-      : `${invItemName(itemType)} usado!`);
+    const payload = { itemType: itemType };
+    if (isXpDiskItem) payload.quantity = requestedQuantity;
+    const result = await apiPost("/inventory/use", payload);
+    const usedQuantity = Math.max(1, Number(result && result.quantity) || requestedQuantity);
+    const levelMessage = result && result.levelUp ? ` Nível ${result.currentLevel}!` : "";
+    if (result && result.xpGranted > 0) {
+      const quantityMessage = usedQuantity === 1 ? "1 unidade utilizada" : `${usedQuantity} unidades utilizadas`;
+      showToast(`${invItemName(itemType)}: ${quantityMessage}, +${result.xpGranted} XP.${levelMessage}`);
+    } else {
+      showToast(itemType === "INCUBATION_SLOT_UNLOCK"
+        ? "Slot de incubação desbloqueado!"
+        : `${invItemName(itemType)} usado!`);
+    }
     await invReloadItems();
   } catch (err) {
     showToast(err.message, "error");
+  } finally {
+    invItemUseInProgress = false;
   }
 }
 
@@ -230,23 +271,31 @@ function createChestRequestId() {
   return `chest-open-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-async function invOpenChest(chestCode) {
+async function invOpenChest(chestCode, quantity = 1) {
   if (!chestCode) {
     showToast("Definição do baú não encontrada.", "error");
-    return;
+    return null;
   }
-  if (invChestOpeningInProgress) return;
+  const requestedQuantity = Number.parseInt(quantity, 10);
+  if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1) {
+    showToast("Informe uma quantidade válida de baús.", "error");
+    return null;
+  }
+  if (invChestOpeningInProgress) return null;
 
   invChestOpeningInProgress = true;
   try {
     const result = await apiPost("/inventory/chests/open", {
       chestCode,
+      quantity: requestedQuantity,
       requestId: createChestRequestId()
     });
     invShowChestOpeningResult(result);
     await invReloadItems();
+    return result;
   } catch (err) {
     showToast(err.message, "error");
+    return null;
   } finally {
     invChestOpeningInProgress = false;
   }
@@ -257,7 +306,8 @@ function invShowChestOpeningResult(result) {
   if (existing) existing.remove();
 
   const items = Array.isArray(result && result.items) ? result.items : [];
-  const title = result && result.replayed ? "Abertura já processada" : "Baú aberto!";
+  const chestQuantity = Math.max(1, Number(result && result.quantity) || 1);
+  const title = result && result.replayed ? "Abertura já processada" : chestQuantity > 1 ? "Baús abertos!" : "Baú aberto!";
   const message = result && result.message ? result.message : "Recompensas recebidas";
 
   const overlay = document.createElement("div");
@@ -272,7 +322,7 @@ function invShowChestOpeningResult(result) {
       <div class="text-center mb-4">
         <div class="text-5xl mb-2">🎁</div>
         <h3 class="text-xl font-bold">${escapeHtml(title)}</h3>
-        <p class="text-sm text-slate-400 mt-1">${escapeHtml(result && result.chestName || "Baú")}</p>
+        <p class="text-sm text-slate-400 mt-1">${escapeHtml(result && result.chestName || "Baú")} · ${chestQuantity} ${chestQuantity === 1 ? "baú" : "baús"}</p>
         <p class="text-xs text-slate-500 mt-2">Cada item possui sua própria raridade</p>
       </div>
       <div class="card-sm mb-4">
@@ -299,19 +349,37 @@ function invShowChestOpeningResult(result) {
 }
 
 
+function invIsXpDisk(itemType) {
+  return String(itemType || "").startsWith("XP_DISC_");
+}
+
 function invItemName(itemType) {
   const map = {
     POTION_SMALL: "Poção Pequena",
     TRAINING_STONE: "Pedra de Treino",
     DATA_CORE: "Núcleo de Dados",
-    DIGITAMA_STARTER: "Digitama Starter",
+    DIGITAMA_STARTER: "Digitama Inicial",
     DIGITAMA_FIRE: "Digitama de Fogo",
     DIGITAMA_WATER: "Digitama de Água",
-    DIGITAMA_NATURE: "Digitama de Natureza",
+    DIGITAMA_NATURE: "Digitama de Planta",
+    DIGITAMA_EARTH: "Digitama de Terra",
+    DIGITAMA_WIND: "Digitama de Vento",
+    DIGITAMA_LIGHT: "Digitama de Luz",
+    DIGITAMA_DARK: "Digitama de Trevas",
+    DIGITAMA_THUNDER: "Digitama de Trovão",
+    DIGITAMA_NEUTRAL: "Digitama Neutro",
+    DIGITAMA_ICE: "Digitama de Gelo",
+    DIGITAMA_STEEL: "Digitama de Metal",
     INCUBATOR_COMMON: "Incubadora Comum",
     INCUBATOR_RARE: "Incubadora Rara",
     INCUBATOR_EPIC: "Incubadora Épica",
     INCUBATION_SLOT_UNLOCK: "Expansor de Slot de Incubação",
+    XP_DISC_1: "Disco de XP +1%",
+    XP_DISC_3: "Disco de XP +3%",
+    XP_DISC_5: "Disco de XP +5%",
+    XP_DISC_10: "Disco de XP +10%",
+    XP_DISC_15: "Disco de XP +15%",
+    XP_DISC_20: "Disco de XP +20%",
     FRAGMENT_ROOKIE: "Fragmento Rookie",
     FRAGMENT_CHAMPION: "Fragmento Champion",
     FRAGMENT_ULTIMATE: "Fragmento Ultimate",
@@ -325,9 +393,13 @@ function invItemName(itemType) {
 function invItemEmoji(itemType) {
   const map = {
     POTION_SMALL: "🧪", TRAINING_STONE: "💎", DATA_CORE: "🔮",
-    DIGITAMA_STARTER: "🥚", DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿",
+    DIGITAMA_STARTER: "⭐", DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿",
+    DIGITAMA_EARTH: "🌍", DIGITAMA_WIND: "🌪️", DIGITAMA_LIGHT: "✨", DIGITAMA_DARK: "🌑",
+    DIGITAMA_THUNDER: "⚡", DIGITAMA_NEUTRAL: "⚪", DIGITAMA_ICE: "❄️", DIGITAMA_STEEL: "⚙️",
     INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "📦", INCUBATOR_EPIC: "📦",
     INCUBATION_SLOT_UNLOCK: "🔓",
+    XP_DISC_1: "💿", XP_DISC_3: "💿", XP_DISC_5: "💿",
+    XP_DISC_10: "💿", XP_DISC_15: "💿", XP_DISC_20: "💿",
     FRAGMENT_ROOKIE: "🧩", FRAGMENT_CHAMPION: "🧩", FRAGMENT_ULTIMATE: "🧩", FRAGMENT_MEGA: "🧩",
     EVOLUTION_MATERIAL: "⭐",
     LOOT_CHEST: "🎁"
@@ -336,12 +408,14 @@ function invItemEmoji(itemType) {
 }
 
 function invIsUsable(itemType) {
-  const usable = ["POTION_SMALL", "TRAINING_STONE", "DATA_CORE", "INCUBATION_SLOT_UNLOCK"];
+  const usable = ["POTION_SMALL", "TRAINING_STONE", "DATA_CORE", "INCUBATION_SLOT_UNLOCK",
+    "XP_DISC_1", "XP_DISC_3", "XP_DISC_5", "XP_DISC_10", "XP_DISC_15", "XP_DISC_20"];
   return usable.includes(itemType);
 }
 
 function invItemCategory(itemType) {
   if (itemType === "POTION_SMALL" || itemType === "INCUBATION_SLOT_UNLOCK") return "common";
+  if (itemType.startsWith("XP_DISC_")) return "rare";
   if (itemType.startsWith("DIGITAMA_")) return "rare";
   if (itemType.startsWith("INCUBATOR_")) return "epic";
   if (itemType.startsWith("FRAGMENT_")) return "champion";
@@ -353,6 +427,7 @@ function invItemCategory(itemType) {
 function invItemCategoryName(itemType) {
   if (itemType === "POTION_SMALL") return "Poção";
   if (itemType === "INCUBATION_SLOT_UNLOCK") return "Incubação";
+  if (itemType.startsWith("XP_DISC_")) return "Experiência";
   if (itemType === "TRAINING_STONE" || itemType === "DATA_CORE") return "Material";
   if (itemType.startsWith("DIGITAMA_")) return "Digitama";
   if (itemType.startsWith("INCUBATOR_")) return "Incubadora";

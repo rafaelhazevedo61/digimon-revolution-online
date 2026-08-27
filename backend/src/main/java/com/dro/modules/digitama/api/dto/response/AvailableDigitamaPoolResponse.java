@@ -7,8 +7,12 @@ import java.util.List;
  */
 public record AvailableDigitamaPoolResponse(
         String code,
+        String type,
+        String element,
         String name,
         String description,
+        boolean selectable,
+        String lockedReason,
         List<AvailableDigitamaEntryResponse> entries
 ) {
 }

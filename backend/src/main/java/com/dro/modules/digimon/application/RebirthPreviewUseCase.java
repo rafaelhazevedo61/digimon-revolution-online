@@ -10,6 +10,8 @@ import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
+import com.dro.modules.player.domain.Player;
+import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.ForbiddenException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
@@ -26,6 +28,7 @@ public class RebirthPreviewUseCase {
     private final DigimonRepository digimonRepository;
     private final InventoryRepository inventoryRepository;
     private final MissionInstanceRepository missionInstanceRepository;
+    private final PlayerRepository playerRepository;
 
     public RebirthPreviewResponse execute(String token, UUID digimonId) {
         UUID playerId = extractPlayerId(token);
@@ -35,6 +38,12 @@ public class RebirthPreviewUseCase {
         int newRebirthCount = currentRebirthCount + 1;
         int costBits = RebirthRules.calculateBitsCost(currentRebirthCount);
         int costDataCore = RebirthRules.calculateDataCoreCost(currentRebirthCount);
+        int currentDataCore = inventoryRepository.findByDigimonIdAndItemType(digimonId, ItemType.DATA_CORE)
+                .map(InventoryItem::getQuantity).orElse(0);
+        int costDigitalData = RebirthRules.calculateDigitalDataCost(currentRebirthCount);
+        int currentDigitalData = playerRepository.findById(playerId).map(Player::getDigitalData).orElse(0);
+        int currentCodeInfinite = inventoryRepository.findByDigimonIdAndItemType(digimonId, ItemType.CODE_INFINITE)
+                .map(InventoryItem::getQuantity).orElse(0);
         int currentBits = digimon.getBits();
         int remainingBitsAfterRebirth = Math.max(0, currentBits - costBits);
         int rarityMinimumIv = RebirthRules.calculateIvBonus(newRebirthCount);
@@ -42,9 +51,9 @@ public class RebirthPreviewUseCase {
         IvRangeResponse attackRange = calculateIvRange(digimon.getIvAttack(), rarityMinimumIv, newRebirthCount);
         IvRangeResponse defenseRange = calculateIvRange(digimon.getIvDefense(), rarityMinimumIv, newRebirthCount);
         double statMultiplier = RebirthRules.calculateStatMultiplier(newRebirthCount);
-        String ineligibilityReason = getIneligibilityReason(digimon, costBits, costDataCore);
+        String ineligibilityReason = getIneligibilityReason(digimon, costBits, costDataCore, costDigitalData, currentDigitalData);
         boolean eligible = ineligibilityReason == null;
-        return new RebirthPreviewResponse(eligible, ineligibilityReason, currentRebirthCount, newRebirthCount, costBits, costDataCore, currentBits, remainingBitsAfterRebirth, hpRange, attackRange, defenseRange, statMultiplier);
+        return new RebirthPreviewResponse(eligible, ineligibilityReason, currentRebirthCount, newRebirthCount, costBits, costDataCore, currentDataCore, costDigitalData, currentDigitalData, currentCodeInfinite, currentBits, remainingBitsAfterRebirth, hpRange, attackRange, defenseRange, statMultiplier);
     }
 
     private UUID extractPlayerId(String token) {
@@ -62,7 +71,7 @@ public class RebirthPreviewUseCase {
         return new IvRangeResponse(min, MAX_IV);
     }
 
-    private String getIneligibilityReason(Digimon digimon, int costBits, int costDataCore) {
+    private String getIneligibilityReason(Digimon digimon, int costBits, int costDataCore, int costDigitalData, int currentDigitalData) {
         if (digimon.getStatus().name().equals("REBORN")) {
             return "Only active Digimons can perform Rebirth";
         }
@@ -81,14 +90,18 @@ public class RebirthPreviewUseCase {
         }
         int dataCoreQuantity = inventoryRepository.findByDigimonIdAndItemType(digimon.getId(), ItemType.DATA_CORE).map(InventoryItem::getQuantity).orElse(0);
         if (dataCoreQuantity < costDataCore) {
-            return "Not enough Data Core to perform Rebirth";
+            return "Núcleos de Dados insuficientes para realizar o Rebirth";
+        }
+        if (currentDigitalData < costDigitalData) {
+            return "Dados Digitais insuficientes para realizar o Rebirth";
         }
         return null;
     }
 
-    public RebirthPreviewUseCase(final DigimonRepository digimonRepository, final InventoryRepository inventoryRepository, final MissionInstanceRepository missionInstanceRepository) {
+    public RebirthPreviewUseCase(final DigimonRepository digimonRepository, final InventoryRepository inventoryRepository, final MissionInstanceRepository missionInstanceRepository, final PlayerRepository playerRepository) {
         this.digimonRepository = digimonRepository;
         this.inventoryRepository = inventoryRepository;
         this.missionInstanceRepository = missionInstanceRepository;
+        this.playerRepository = playerRepository;
     }
 }

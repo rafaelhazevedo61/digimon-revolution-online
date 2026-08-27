@@ -215,7 +215,7 @@
             "description": "Gerado de AdminBossController.create. Revise IDs e valores antes de enviar.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"code\": \"example-code\",\n  \"name\": \"example-name\",\n  \"bossType\": \"example-bossType\",\n  \"requiredStage\": \"example-requiredStage\",\n  \"requiredLevel\": 1,\n  \"requiredRebirths\": 1,\n  \"hp\": 1,\n  \"atk\": 1,\n  \"def\": 1,\n  \"energyCost\": 1,\n  \"cooldownMinutes\": 1,\n  \"cooldownEnabled\": true,\n  \"baseXpReward\": 1,\n  \"baseBitsReward\": 1,\n  \"defeatXpPercent\": 1,\n  \"imageUrl\": \"example-imageUrl\",\n  \"chestCode\": \"example-chestCode\",\n  \"worldAttemptChestCode\": \"example-worldAttemptChestCode\",\n  \"worldTopDamageChestCode\": \"example-worldTopDamageChestCode\",\n  \"worldFinalBlowChestCode\": \"example-worldFinalBlowChestCode\"\n}",
+              "raw": "{\n  \"code\": \"example-code\",\n  \"name\": \"example-name\",\n  \"bossType\": \"example-bossType\",\n  \"requiredStage\": \"example-requiredStage\",\n  \"requiredLevel\": 1,\n  \"requiredRebirths\": 1,\n  \"hp\": 1,\n  \"atk\": 1,\n  \"def\": 1,\n  \"energyCost\": 1,\n  \"cooldownMinutes\": 1,\n  \"baseXpReward\": 1,\n  \"baseBitsReward\": 1,\n  \"defeatXpPercent\": 1,\n  \"imageUrl\": \"example-imageUrl\",\n  \"chestCode\": \"example-chestCode\",\n  \"worldAttemptChestCode\": \"example-worldAttemptChestCode\",\n  \"worldTopDamageChestCode\": \"example-worldTopDamageChestCode\",\n  \"worldFinalBlowChestCode\": \"example-worldFinalBlowChestCode\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -385,7 +385,7 @@
             "description": "Gerado de AdminBossController.update. Revise IDs e valores antes de enviar.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"example-name\",\n  \"bossType\": \"example-bossType\",\n  \"requiredStage\": \"example-requiredStage\",\n  \"requiredLevel\": 1,\n  \"requiredRebirths\": 1,\n  \"hp\": 1,\n  \"atk\": 1,\n  \"def\": 1,\n  \"energyCost\": 1,\n  \"cooldownMinutes\": 1,\n  \"cooldownEnabled\": true,\n  \"baseXpReward\": 1,\n  \"baseBitsReward\": 1,\n  \"defeatXpPercent\": 1,\n  \"imageUrl\": \"example-imageUrl\",\n  \"active\": true,\n  \"chestCode\": \"example-chestCode\",\n  \"equipmentChance\": 1,\n  \"worldAttemptChestCode\": \"example-worldAttemptChestCode\",\n  \"worldTopDamageChestCode\": \"example-worldTopDamageChestCode\",\n  \"worldFinalBlowChestCode\": \"example-worldFinalBlowChestCode\"\n}",
+              "raw": "{\n  \"name\": \"example-name\",\n  \"bossType\": \"example-bossType\",\n  \"requiredStage\": \"example-requiredStage\",\n  \"requiredLevel\": 1,\n  \"requiredRebirths\": 1,\n  \"hp\": 1,\n  \"atk\": 1,\n  \"def\": 1,\n  \"energyCost\": 1,\n  \"cooldownMinutes\": 1,\n  \"baseXpReward\": 1,\n  \"baseBitsReward\": 1,\n  \"defeatXpPercent\": 1,\n  \"imageUrl\": \"example-imageUrl\",\n  \"active\": true,\n  \"chestCode\": \"example-chestCode\",\n  \"equipmentChance\": 1,\n  \"worldAttemptChestCode\": \"example-worldAttemptChestCode\",\n  \"worldTopDamageChestCode\": \"example-worldTopDamageChestCode\",\n  \"worldFinalBlowChestCode\": \"example-worldFinalBlowChestCode\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

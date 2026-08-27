@@ -26,7 +26,7 @@ async function renderStarterPage() {
       <div class="w-full max-w-lg text-center">
         <h2 class="text-2xl font-bold text-cyan-400 mb-2">Escolha seu Digitama!</h2>
         <p class="text-slate-400 text-sm mb-8">Selecione um Digitama para começar sua jornada no Mundo Digital.</p>
-        <div id="starter-list" class="grid grid-cols-3 gap-4">
+        <div id="starter-list" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <div class="card animate-pulse"><div class="h-32"></div></div>
           <div class="card animate-pulse"><div class="h-32"></div></div>
           <div class="card animate-pulse"><div class="h-32"></div></div>
@@ -38,35 +38,49 @@ async function renderStarterPage() {
 
   try {
     const pools = await apiGet("/digitama-pools/available");
-    const starterPool = pools.find(p => p.code === "DIGITAMA_STARTER");
-    if (!starterPool) throw new Error("Pool de starters não encontrada");
-    renderStarterCards(starterPool);
+    renderStarterCards(pools || []);
   } catch (err) {
     document.getElementById("starter-error").textContent = err.message;
     document.getElementById("starter-error").classList.remove("hidden");
   }
 }
 
-function renderStarterCards(pool) {
+function renderStarterCards(pools) {
   const types = [
     { type: "FIRE", emoji: "🔥", color: "border-orange-500", bg: "bg-orange-950/30", label: "Fogo" },
     { type: "WATER", emoji: "💧", color: "border-blue-500", bg: "bg-blue-950/30", label: "Água" },
-    { type: "NATURE", emoji: "🌿", color: "border-green-500", bg: "bg-green-950/30", label: "Natureza" }
+    { type: "NATURE", emoji: "🌿", color: "border-green-500", bg: "bg-green-950/30", label: "Planta" },
+    { type: "EARTH", emoji: "🌍", color: "border-amber-500", bg: "bg-amber-950/30", label: "Terra" },
+    { type: "WIND", emoji: "🌪️", color: "border-sky-500", bg: "bg-sky-950/30", label: "Vento" },
+    { type: "LIGHT", emoji: "✨", color: "border-yellow-300", bg: "bg-yellow-950/30", label: "Luz" },
+    { type: "DARK", emoji: "🌑", color: "border-violet-500", bg: "bg-violet-950/30", label: "Trevas" },
+    { type: "THUNDER", emoji: "⚡", color: "border-yellow-500", bg: "bg-yellow-950/20", label: "Trovão" },
+    { type: "NEUTRAL", emoji: "⚪", color: "border-slate-400", bg: "bg-slate-800/30", label: "Neutro" },
+    { type: "ICE", emoji: "❄️", color: "border-cyan-300", bg: "bg-cyan-950/30", label: "Gelo" },
+    { type: "STEEL", emoji: "⚙️", color: "border-slate-300", bg: "bg-slate-700/30", label: "Metal" }
   ];
-
+  const poolsByType = new Map((pools || []).map(pool => [String(pool.type || ""), pool]));
   const container = document.getElementById("starter-list");
+
   container.innerHTML = types.map(t => {
-    const entries = pool.entries.filter(e =>
-      e.element && e.element.toUpperCase().includes(t.type)
-    );
+    const pool = poolsByType.get(t.type);
+    const entries = pool && Array.isArray(pool.entries) ? pool.entries : [];
+    const selectable = Boolean(pool && pool.selectable && entries.length > 0);
+    const stateClasses = selectable
+      ? "hover:scale-105 transition-transform cursor-pointer"
+      : "opacity-50 cursor-not-allowed";
+    const lockedMarkup = selectable ? "" : `
+      <span class="inline-block badge badge-common mt-2">Bloqueado</span>
+      <p class="text-xs text-slate-500 mt-1">${escapeHtml(pool && pool.lockedReason || "Sem Digimon BABY elegível")}</p>
+    `;
 
     return `
-      <button class="card ${t.color} ${t.bg} hover:scale-105 transition-transform cursor-pointer text-center"
-        onclick="starterSelect('${t.type}')">
+      <button type="button" class="card ${t.color} ${t.bg} ${stateClasses} text-center"
+        ${selectable ? `onclick="starterSelect('${t.type}')"` : "disabled aria-disabled=\"true\""}>
         <div class="text-4xl mb-3">${t.emoji}</div>
         <h3 class="font-bold text-sm mb-1">${t.label}</h3>
-        <p class="text-xs text-slate-400">Digitama ${t.label}</p>
-        ${entries.length > 0 ? `<p class="text-xs text-slate-500 mt-2">${entries.map(e => escapeHtml(e.digimonName)).join(", ")}</p>` : ""}
+        <p class="text-xs text-slate-400">Digitama de ${t.label}</p>
+        ${selectable ? `<p class="text-xs text-slate-500 mt-2">${entries.map(e => escapeHtml(e.digimonName)).join(", ")}</p>` : lockedMarkup}
       </button>
     `;
   }).join("");
@@ -77,7 +91,7 @@ async function starterSelect(type) {
   errorDiv.classList.add("hidden");
 
   try {
-    await apiPost("/digitama/select", { type: "STARTER" });
+    await apiPost("/digitama/select", { type });
     const hatched = await apiPost("/digitama/hatch");
     renderHatchingAnimation(hatched);
   } catch (err) {
@@ -227,7 +241,7 @@ async function renderDigimonSelectPage() {
         <h2 class="text-2xl font-bold text-cyan-400 mb-2 text-center">Selecione seu Digimon</h2>
         <div id="digimon-new-notice"></div>
         <div id="digimon-slot-info" class="mb-3"></div>
-        <p class="text-slate-400 text-sm mb-4 text-center">Escolha qual Digimon sera seu parceiro ativo.</p>
+        <p class="text-slate-400 text-sm mb-4 text-center">Escolha qual Digimon será seu parceiro ativo. Você pode manter os demais no Storage.</p>
         <div id="digimon-select-list" class="flex flex-col gap-3">
           <div class="card animate-pulse"><div class="h-20"></div></div>
         </div>
@@ -255,19 +269,15 @@ async function renderDigimonSelectPage() {
       const noticeEl = document.getElementById("digimon-new-notice");
       if (noticeEl) {
         noticeEl.innerHTML = newDigimon
-          ? `<div class="card-sm mb-3 border-emerald-700 bg-emerald-950/30 text-center"><p class="text-emerald-300 font-bold text-sm">${escapeHtml(newDigimon.name)} foi adicionado à sua coleção.</p><p class="text-xs text-slate-400 mt-1">Escolha “Selecionar” para torná-lo seu parceiro ativo.</p></div>`
-          : `<div class="card-sm mb-3 border-amber-700 bg-amber-950/30 text-center"><p class="text-amber-300 font-bold text-sm">O Digimon chocado não foi localizado na lista de ativos.</p><p class="text-xs text-slate-400 mt-1">Atualize a página ou verifique o Storage.</p></div>`;
+          ? `<div class="card-sm mb-3 border-emerald-700 bg-emerald-950/30 text-center"><p class="text-emerald-300 font-bold text-sm">${escapeHtml(newDigimon.name)} foi adicionado à sua coleção.</p><p class="text-xs text-slate-400 mt-1">Escolha entre “Tornar ativo” ou “Enviar para Storage”.</p></div>`
+          : `<div class="card-sm mb-3 border-amber-700 bg-amber-950/30 text-center"><p class="text-amber-300 font-bold text-sm">O Digimon chocado não foi localizado na sua coleção.</p><p class="text-xs text-slate-400 mt-1">Atualize a página ou verifique o Storage.</p></div>`;
       }
     }
 
     if (slotInfo) {
       const infoEl = document.getElementById("digimon-slot-info");
-      const full = slotInfo.activeDigimons >= slotInfo.maxDigimonSlots;
-
       infoEl.innerHTML = `
-        <div class="flex justify-center gap-4 text-xs">
-          <span class="${full ? 'text-red-400' : 'text-cyan-400'} font-bold">Ativos: ${slotInfo.activeDigimons}/${slotInfo.maxDigimonSlots}</span>
-          <span class="text-slate-500">|</span>
+        <div class="flex justify-center text-xs">
           <span class="text-slate-400">Storage: ${slotInfo.storedDigimons}/${slotInfo.maxStorageSlots}</span>
         </div>
       `;
@@ -293,13 +303,14 @@ function renderDigimonSelectCards(digimons, dashboard, newDigimonId = null) {
 
   container.innerHTML = digimons.map(d => {
     const isActive = d.id === activeDigimonId;
+    const isHatched = d.status === "HATCHED";
     const isNew = newDigimonId && String(d.id) === String(newDigimonId);
 
     return `
-    <div id="digimon-card-${escapeAttr(String(d.id))}" class="card flex items-center gap-4 text-left ${isActive ? 'border-cyan-700' : isNew ? 'border-emerald-600 ring-1 ring-emerald-500/40' : ''}">
+    <div id="digimon-card-${escapeAttr(String(d.id))}" class="card flex items-center gap-4 text-left ${isActive ? 'border-cyan-700' : isHatched ? 'border-amber-700 ring-1 ring-amber-500/30' : isNew ? 'border-emerald-600 ring-1 ring-emerald-500/40' : ''}">
       ${renderDigimonVisual(d.imageUrl, d.stage, "w-14 h-14", "text-4xl")}
       <div class="flex-1 min-w-0">
-        <h3 class="font-bold text-sm truncate">${escapeHtml(d.name)} ${isActive ? '<span class="text-cyan-400 text-xs">(Ativo)</span>' : isNew ? '<span class="text-emerald-400 text-xs">(Recém-chocado)</span>' : ''}</h3>
+        <h3 class="font-bold text-sm truncate">${escapeHtml(d.name)} ${isActive ? '<span class="text-cyan-400 text-xs">(Ativo)</span>' : isHatched ? '<span class="text-amber-400 text-xs">(Aguardando escolha)</span>' : isNew ? '<span class="text-emerald-400 text-xs">(Recém-chocado)</span>' : ''}</h3>
         <div class="flex gap-2 mt-1">
           <span class="badge badge-${d.stage ? d.stage.toLowerCase() : 'baby'}">${escapeHtml(d.stage)}</span>
           <span class="badge badge-${d.rarity ? d.rarity.toLowerCase() : 'common'}">${escapeHtml(formatRarity(d.rarity))}</span>
@@ -312,8 +323,7 @@ function renderDigimonSelectCards(digimons, dashboard, newDigimonId = null) {
         </div>
       </div>
       <div class="flex flex-col gap-1">
-        ${isActive ? '' : `<button class="btn-primary btn-sm" onclick="selectDigimon('${d.id}')">Selecionar</button>`}
-        ${isActive ? '' : `<button class="btn-sm text-xs" style="background:#78350f;color:#fbbf24" onclick="storeDigimon('${d.id}')">Guardar</button>`}
+        ${isActive ? '<span class="text-xs text-cyan-400 font-bold text-right">Ativo</span>' : isHatched ? `<button class="btn-primary btn-sm" onclick="selectDigimon('${d.id}')">Tornar ativo</button><button class="btn-sm text-xs" style="background:#78350f;color:#fbbf24" onclick="storeDigimon('${d.id}')">Enviar para Storage</button>` : `<button class="btn-primary btn-sm" onclick="selectDigimon('${d.id}')">Tornar ativo</button>`}
       </div>
     </div>
   `;
@@ -336,7 +346,7 @@ async function selectDigimon(digimonId) {
 async function storeDigimon(digimonId) {
   try {
     await apiPost(`/digimon/${digimonId}/store`, {});
-    showToast("Digimon guardado no storage!");
+    showToast("Digimon enviado para o Storage!");
     renderDigimonSelectPage();
   } catch (err) {
     showToast(err.message, "error");

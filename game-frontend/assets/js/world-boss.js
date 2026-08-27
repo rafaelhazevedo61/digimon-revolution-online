@@ -49,13 +49,12 @@ function renderWorldBossContent(boss) {
   const nextAttackAt = boss.nextAttackAvailableAt ? Date.parse(boss.nextAttackAvailableAt) : NaN;
   const cooldownActive = cooldownEnabled
     && !defeated
-    && boss.myDailyAttacksRemaining > 0
     && Number.isFinite(nextAttackAt)
     && nextAttackAt > Date.now();
   const cooldownInfoHtml = cooldownEnabled
     ? `<p class="text-xs text-slate-500 mb-2 text-center">Cooldown entre ataques: ${cooldownMinutes} minuto(s)</p>`
     : `<p class="text-xs text-green-400 mb-2 text-center">Cooldown desativado pelo administrador</p>`;
-  const attackButtonHtml = !defeated && boss.myDailyAttacksRemaining > 0
+  const attackButtonHtml = !defeated
     ? `${cooldownInfoHtml}<button id="world-boss-attack-button" class="btn-primary w-full" onclick="attackWorldBoss()"${cooldownActive ? " disabled" : ""}>${cooldownActive ? "Próximo ataque em <span id=\"world-boss-countdown\">--:--</span>" : "Atacar Boss Mundial"}</button>`
     : "";
 
@@ -85,7 +84,7 @@ function renderWorldBossContent(boss) {
     rankingHtml = `
       <div class="card mt-4 border-slate-800">
         <p class="font-bold mb-2 text-sm">Ranking de Dano Global</p>
-        <p class="text-sm text-slate-500">Ainda nenhum jogador atacou o Boss Mundial hoje. Seja o primeiro!</p>
+        <p class="text-sm text-slate-500">Ainda nenhum jogador atacou o Boss Mundial neste ciclo. Seja o primeiro!</p>
       </div>
     `;
   }
@@ -125,11 +124,11 @@ function renderWorldBossContent(boss) {
         <div class="${defeated ? 'bg-green-500' : 'bg-red-500'} h-2.5 rounded-full" style="width:${percent}%"></div>
       </div>
 
-      <p class="text-xs text-slate-400 mb-3">Seus ataques hoje: <span class="text-cyan-400">${boss.myDailyAttacksUsed}/${boss.myDailyAttacksUsed + boss.myDailyAttacksRemaining}</span> · Seu dano: <span class="text-cyan-400">${boss.myTotalDamage.toLocaleString()}</span></p>
+      <p class="text-xs text-slate-400 mb-3">Seu dano: <span class="text-cyan-400">${boss.myTotalDamage.toLocaleString()}</span></p>
 
       ${attackButtonHtml}
-      ${!defeated && boss.myDailyAttacksRemaining === 0 ? `${cooldownInfoHtml}<p class="text-xs text-slate-500 text-center">Limite diário de ataques atingido. Volte amanhã.</p>` : ""}
-      ${defeated ? `<p class="text-xs text-green-400 text-center">Boss Mundial derrotado hoje! Volte amanhã.</p>` : ""}
+      ${defeated ? `<p class="text-xs text-green-400 text-center">Boss Mundial derrotado. Aguarde o próximo ciclo.</p>` : ""}
+
     </div>
 
     ${rankingHtml}

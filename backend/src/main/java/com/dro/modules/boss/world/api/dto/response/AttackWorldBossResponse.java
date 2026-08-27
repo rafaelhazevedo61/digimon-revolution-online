@@ -19,7 +19,6 @@ public record AttackWorldBossResponse(
         int bitsGained,
         int defeatedRewardXp,
         int defeatedRewardBits,
-        int dailyAttacksRemaining,
         List<WorldBossRewardResponse> rewards
 ) {
 }

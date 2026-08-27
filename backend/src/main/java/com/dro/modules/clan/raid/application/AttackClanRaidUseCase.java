@@ -26,9 +26,8 @@ import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.UUID;
 
 /**
@@ -68,12 +67,18 @@ public class AttackClanRaidUseCase {
         }
         BossDefinitionEntity boss = bossDefinitionRepository.findById(raid.getBossId()).orElseThrow(() -> new NotFoundException("Boss not found"));
         validateRequirements(boss, digimon);
-        Instant startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant();
-        Instant resetCutoff = raid.getDailyResetAt() != null && raid.getDailyResetAt().isAfter(startOfDay) ? raid.getDailyResetAt() : startOfDay;
-        long usedToday = clanRaidAttackRepository.countByClanRaidIdAndPlayerIdAndCreatedAtGreaterThanEqual(raid.getId(), playerId, resetCutoff);
-        int dailyAttackLimit = gameplayConfig.getClanRaidDailyAttackLimit();
-        if (ClanRaidRules.dailyLimitReached(usedToday, dailyAttackLimit)) {
-            throw new BadRequestException("Daily raid attack limit reached (" + dailyAttackLimit + " per day). Come back tomorrow.");
+        ClanRaidAttack lastAttack = clanRaidAttackRepository
+                .findFirstByClanRaidIdAndPlayerIdOrderByCreatedAtDesc(raid.getId(), playerId)
+                .orElse(null);
+        int cooldownMinutes = ClanRaidRules.attackCooldownMinutes(boss.getCooldownMinutes());
+        if (gameplayConfig.isClanRaidCooldownEnabled() && lastAttack != null && lastAttack.getCreatedAt() != null) {
+            Instant nextAttackAt = lastAttack.getCreatedAt().plus(Duration.ofMinutes(cooldownMinutes));
+            Instant now = Instant.now();
+            if (now.isBefore(nextAttackAt)) {
+                long remainingSeconds = Math.max(1, Duration.between(now, nextAttackAt).toSeconds());
+                long remainingMinutes = (remainingSeconds + 59) / 60;
+                throw new BadRequestException("Clan raid attack cooldown active. Try again in " + remainingMinutes + " minute(s).");
+            }
         }
         int energyCost = 0;
         if (gameplayConfig.isEnergyConsumptionEnabled()) {
@@ -116,8 +121,7 @@ public class AttackClanRaidUseCase {
         digimonRepository.save(digimon);
         clanRaidRepository.save(raid);
         clanRaidAttackRepository.save(attack);
-        long remainingAttacks = ClanRaidRules.dailyAttacksRemaining(usedToday + 1, dailyAttackLimit);
-        return new AttackClanRaidResponse(raid.getId(), boss.getCode(), boss.getName(), actualDamage, raid.getRemainingHp(), raid.getMaxHp(), defeated, winChance, xpGained, bitsGained, clanHonorMarksGained, clanXpGained, (int) remainingAttacks);
+        return new AttackClanRaidResponse(raid.getId(), boss.getCode(), boss.getName(), actualDamage, raid.getRemainingHp(), raid.getMaxHp(), defeated, winChance, xpGained, bitsGained, clanHonorMarksGained, clanXpGained);
     }
 
     private void validateRequirements(BossDefinitionEntity boss, Digimon digimon) {

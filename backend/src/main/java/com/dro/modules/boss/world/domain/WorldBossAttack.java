@@ -41,8 +41,6 @@ public class WorldBossAttack {
     private int defeatedRewardXp;
     @Column(name = "defeated_reward_bits", nullable = false)
     private int defeatedRewardBits;
-    @Column(name = "daily_attacks_remaining", nullable = false)
-    private int dailyAttacksRemaining;
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -62,7 +60,6 @@ public class WorldBossAttack {
         private boolean defeated;
         private int defeatedRewardXp;
         private int defeatedRewardBits;
-        private int dailyAttacksRemaining;
         private Instant createdAt;
 
         WorldBossAttackBuilder() {
@@ -184,26 +181,18 @@ public class WorldBossAttack {
         /**
          * @return {@code this}.
          */
-        public WorldBossAttack.WorldBossAttackBuilder dailyAttacksRemaining(final int dailyAttacksRemaining) {
-            this.dailyAttacksRemaining = dailyAttacksRemaining;
-            return this;
-        }
-
-        /**
-         * @return {@code this}.
-         */
         public WorldBossAttack.WorldBossAttackBuilder createdAt(final Instant createdAt) {
             this.createdAt = createdAt;
             return this;
         }
 
         public WorldBossAttack build() {
-            return new WorldBossAttack(this.id, this.worldBossId, this.playerId, this.digimonId, this.damage, this.energyCost, this.bitsGained, this.xpGained, this.requestId, this.remainingHpAfter, this.winChance, this.defeated, this.defeatedRewardXp, this.defeatedRewardBits, this.dailyAttacksRemaining, this.createdAt);
+            return new WorldBossAttack(this.id, this.worldBossId, this.playerId, this.digimonId, this.damage, this.energyCost, this.bitsGained, this.xpGained, this.requestId, this.remainingHpAfter, this.winChance, this.defeated, this.defeatedRewardXp, this.defeatedRewardBits, this.createdAt);
         }
 
         @Override
         public String toString() {
-            return "WorldBossAttack.WorldBossAttackBuilder(id=" + this.id + ", worldBossId=" + this.worldBossId + ", playerId=" + this.playerId + ", digimonId=" + this.digimonId + ", damage=" + this.damage + ", energyCost=" + this.energyCost + ", bitsGained=" + this.bitsGained + ", xpGained=" + this.xpGained + ", requestId=" + this.requestId + ", remainingHpAfter=" + this.remainingHpAfter + ", winChance=" + this.winChance + ", defeated=" + this.defeated + ", defeatedRewardXp=" + this.defeatedRewardXp + ", defeatedRewardBits=" + this.defeatedRewardBits + ", dailyAttacksRemaining=" + this.dailyAttacksRemaining + ", createdAt=" + this.createdAt + ")";
+            return "WorldBossAttack.WorldBossAttackBuilder(id=" + this.id + ", worldBossId=" + this.worldBossId + ", playerId=" + this.playerId + ", digimonId=" + this.digimonId + ", damage=" + this.damage + ", energyCost=" + this.energyCost + ", bitsGained=" + this.bitsGained + ", xpGained=" + this.xpGained + ", requestId=" + this.requestId + ", remainingHpAfter=" + this.remainingHpAfter + ", winChance=" + this.winChance + ", defeated=" + this.defeated + ", defeatedRewardXp=" + this.defeatedRewardXp + ", defeatedRewardBits=" + this.defeatedRewardBits + ", createdAt=" + this.createdAt + ")";
         }
     }
 
@@ -270,10 +259,6 @@ public class WorldBossAttack {
         return this.defeatedRewardBits;
     }
 
-    public int getDailyAttacksRemaining() {
-        return this.dailyAttacksRemaining;
-    }
-
     public Instant getCreatedAt() {
         return this.createdAt;
     }
@@ -337,10 +322,6 @@ public class WorldBossAttack {
         this.defeatedRewardBits = defeatedRewardBits;
     }
 
-    public void setDailyAttacksRemaining(final int dailyAttacksRemaining) {
-        this.dailyAttacksRemaining = dailyAttacksRemaining;
-    }
-
     public void setCreatedAt(final Instant createdAt) {
         this.createdAt = createdAt;
     }
@@ -365,10 +346,9 @@ public class WorldBossAttack {
      * @param defeated
      * @param defeatedRewardXp
      * @param defeatedRewardBits
-     * @param dailyAttacksRemaining
      * @param createdAt
      */
-    public WorldBossAttack(final UUID id, final UUID worldBossId, final UUID playerId, final UUID digimonId, final int damage, final int energyCost, final int bitsGained, final int xpGained, final String requestId, final int remainingHpAfter, final int winChance, final boolean defeated, final int defeatedRewardXp, final int defeatedRewardBits, final int dailyAttacksRemaining, final Instant createdAt) {
+    public WorldBossAttack(final UUID id, final UUID worldBossId, final UUID playerId, final UUID digimonId, final int damage, final int energyCost, final int bitsGained, final int xpGained, final String requestId, final int remainingHpAfter, final int winChance, final boolean defeated, final int defeatedRewardXp, final int defeatedRewardBits, final Instant createdAt) {
         this.id = id;
         this.worldBossId = worldBossId;
         this.playerId = playerId;
@@ -383,7 +363,6 @@ public class WorldBossAttack {
         this.defeated = defeated;
         this.defeatedRewardXp = defeatedRewardXp;
         this.defeatedRewardBits = defeatedRewardBits;
-        this.dailyAttacksRemaining = dailyAttacksRemaining;
         this.createdAt = createdAt;
     }
 }

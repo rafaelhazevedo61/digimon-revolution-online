@@ -18,7 +18,9 @@ const PRODUCT_CATEGORIES = ["POTION", "MATERIAL", "FRAGMENT", "CONSUMABLE", "CHE
 const ITEM_TYPES = [
   "POTION_SMALL", "TRAINING_STONE", "DATA_CORE",
   "DIGITAMA_STARTER", "DIGITAMA_FIRE", "DIGITAMA_WATER", "DIGITAMA_NATURE",
-  "INCUBATOR_COMMON", "INCUBATOR_RARE", "INCUBATOR_EPIC",
+  "DIGITAMA_EARTH", "DIGITAMA_WIND", "DIGITAMA_LIGHT", "DIGITAMA_DARK",
+  "DIGITAMA_THUNDER", "DIGITAMA_NEUTRAL", "DIGITAMA_ICE", "DIGITAMA_STEEL",
+  "INCUBATOR_COMMON", "INCUBATOR_RARE", "INCUBATOR_EPIC", "INCUBATION_SLOT_UNLOCK",
   "FRAGMENT_ROOKIE", "FRAGMENT_CHAMPION", "FRAGMENT_ULTIMATE", "FRAGMENT_MEGA",
   "EVOLUTION_MATERIAL", "LOOT_CHEST"
 ];
@@ -47,10 +49,19 @@ const SHOP_ITEM_TYPE_LABELS = {
   DIGITAMA_STARTER: "Digitama Inicial",
   DIGITAMA_FIRE: "Digitama de Fogo",
   DIGITAMA_WATER: "Digitama de Água",
-  DIGITAMA_NATURE: "Digitama de Natureza",
+  DIGITAMA_NATURE: "Digitama de Planta",
+  DIGITAMA_EARTH: "Digitama de Terra",
+  DIGITAMA_WIND: "Digitama de Vento",
+  DIGITAMA_LIGHT: "Digitama de Luz",
+  DIGITAMA_DARK: "Digitama de Trevas",
+  DIGITAMA_THUNDER: "Digitama de Trovão",
+  DIGITAMA_NEUTRAL: "Digitama Neutro",
+  DIGITAMA_ICE: "Digitama de Gelo",
+  DIGITAMA_STEEL: "Digitama de Metal",
   INCUBATOR_COMMON: "Incubadora Comum",
   INCUBATOR_RARE: "Incubadora Rara",
   INCUBATOR_EPIC: "Incubadora Épica",
+  INCUBATION_SLOT_UNLOCK: "Expansor de Slot de Incubação",
   FRAGMENT_ROOKIE: "Fragmento Rookie",
   FRAGMENT_CHAMPION: "Fragmento Champion",
   FRAGMENT_ULTIMATE: "Fragmento Ultimate",
@@ -260,6 +271,7 @@ function shopRenderModal(title, data, isEdit) {
   const modal = document.getElementById("shop-modal");
   const readonlyCatalogFields = !isEdit;
   const selectedDetails = data._catalogSource ? shopRenderSelectedCatalogSummary(data._catalogSource) : "";
+  const effectiveItemType = data.itemType || (data.itemDefinitionCode && ITEM_TYPES.includes(data.itemDefinitionCode) ? data.itemDefinitionCode : "");
 
   modal.innerHTML = `
     <div class="modal-overlay" onclick="shopCloseModal()">
@@ -310,8 +322,9 @@ function shopRenderModal(title, data, isEdit) {
               <label class="text-sm text-slate-400">Tipo do item</label>
               <select id="shop-item-type" class="input mt-1" ${readonlyCatalogFields ? "disabled" : ""}>
                 <option value="">-- Selecione --</option>
-                ${shopSelectOptions(ITEM_TYPES, data.itemType, shopItemTypeLabel)}
+                ${shopSelectOptions(ITEM_TYPES, effectiveItemType, shopItemTypeLabel)}
               </select>
+              <p class="text-xs text-slate-500 mt-1">Opcional quando o código da definição identifica um item específico; nesse caso o backend deriva o tipo automaticamente.</p>
               ${data._materialCode ? `<p class="text-xs text-amber-300 mt-1">Material específico detectado: ${escapeHtml(data._materialCode)}.</p>` : ""}
             </div>
 

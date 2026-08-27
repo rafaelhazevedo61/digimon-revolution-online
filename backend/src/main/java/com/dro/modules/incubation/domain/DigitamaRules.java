@@ -12,6 +12,14 @@ public class DigitamaRules {
             case DIGITAMA_FIRE,
                  DIGITAMA_WATER,
                  DIGITAMA_NATURE,
+                 DIGITAMA_EARTH,
+                 DIGITAMA_WIND,
+                 DIGITAMA_LIGHT,
+                 DIGITAMA_DARK,
+                 DIGITAMA_THUNDER,
+                 DIGITAMA_NEUTRAL,
+                 DIGITAMA_ICE,
+                 DIGITAMA_STEEL,
                  DIGITAMA_STARTER -> true;
             default -> false;
         };

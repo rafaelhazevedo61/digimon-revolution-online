@@ -320,9 +320,8 @@ function incubShowHatchResult(digimon) {
         <div class="flex justify-between mt-1"><span>Raridade</span><strong>${escapeHtml(digimon.rarity || "COMMON")}</strong></div>
       </div>
       <div class="grid gap-2 mt-5">
-        <button class="btn-primary w-full" id="incub-select-hatched-btn" onclick="incubSelectHatched('${escapeAttr(String(digimon.id))}')">Selecionar como ativo</button>
-        <button class="btn-sm w-full" style="background:#164e63;color:#67e8f9" onclick="incubGoToHatchedCollection('${escapeAttr(String(digimon.id))}')">Ver minha coleção</button>
-        <button class="text-xs text-slate-500 hover:text-slate-300 py-1" onclick="incubCloseHatchResult()">Continuar aqui</button>
+        <button class="hatch-choice-btn hatch-choice-primary" id="incub-select-hatched-btn" onclick="incubSelectHatched('${escapeAttr(String(digimon.id))}')">Tornar ativo</button>
+        <button class="hatch-choice-btn hatch-choice-secondary" id="incub-store-hatched-btn" onclick="incubStoreHatched('${escapeAttr(String(digimon.id))}')">Enviar para Storage</button>
       </div>
     </div>
   `;
@@ -331,10 +330,12 @@ function incubShowHatchResult(digimon) {
 
 async function incubSelectHatched(digimonId) {
   const btn = document.getElementById("incub-select-hatched-btn");
+  const storeBtn = document.getElementById("incub-store-hatched-btn");
   if (btn) {
     btn.disabled = true;
-    btn.textContent = "Selecionando...";
+    btn.textContent = "Tornando ativo...";
   }
+  if (storeBtn) storeBtn.disabled = true;
 
   try {
     await apiPost("/digimon/select", { digimonId });
@@ -345,29 +346,38 @@ async function incubSelectHatched(digimonId) {
     showToast(err.message, "error");
     if (btn) {
       btn.disabled = false;
-      btn.textContent = "Selecionar como ativo";
+      btn.textContent = "Tornar ativo";
     }
+    if (storeBtn) storeBtn.disabled = false;
   }
 }
 
-function incubGoToHatchedCollection(digimonId) {
-  incubCloseHatchResult();
-  navigateTo("digimon-select", { newDigimonId: digimonId });
+async function incubStoreHatched(digimonId) {
+  const btn = document.getElementById("incub-store-hatched-btn");
+  const selectBtn = document.getElementById("incub-select-hatched-btn");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Enviando...";
+  }
+  if (selectBtn) selectBtn.disabled = true;
+
+  try {
+    await apiPost(`/digimon/${encodeURIComponent(digimonId)}/store`, {});
+    incubCloseHatchResult();
+    showToast("O Digimon chocado foi enviado para o Storage!");
+    renderIncubationPage();
+  } catch (err) {
+    showToast(err.message, "error");
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Enviar para Storage";
+    }
+    if (selectBtn) selectBtn.disabled = false;
+  }
 }
 
 function incubClaimButton(incubationId) {
   const safeId = escapeAttr(String(incubationId));
-  const si = window._incubSlotInfo;
-  if (si && si.activeDigimons >= si.maxDigimonSlots) {
-    return `
-      <div class="mb-2">
-        <p class="text-xs text-red-400 font-bold mb-1">Slots ativos cheios (${si.activeDigimons}/${si.maxDigimonSlots})</p>
-        <p class="text-xs text-slate-500">Guarde um Digimon no Storage para poder chocar.</p>
-      </div>
-      <button class="btn-primary w-full text-lg py-3 opacity-50 cursor-not-allowed" disabled>🐣 Chocar!</button>
-      <button class="btn-sm w-full mt-2" style="background:#1e3a5f;color:#7dd3fc" onclick="navigateTo('digimon-select')">📦 Ir para Digimon / Storage</button>
-    `;
-  }
   return `<button class="btn-primary w-full text-lg py-3" id="incub-claim-${safeId}" onclick="incubClaim('${safeId}')">🐣 Chocar!</button>`;
 }
 
@@ -402,9 +412,10 @@ async function incubRenderStart(response) {
   }
 
   const digitamas = inventory.filter(i => {
+    const itemType = String(i.itemType || "");
     const def = i.itemDefinition;
     if (def && def.category === "DIGITAMA" && i.quantity > 0) return true;
-    return ["DIGITAMA_FIRE", "DIGITAMA_WATER", "DIGITAMA_NATURE", "DIGITAMA_STARTER"].includes(i.itemType) && i.quantity > 0;
+    return itemType.startsWith("DIGITAMA_") && i.quantity > 0;
   });
 
   const incubators = inventory.filter(i => {
@@ -550,9 +561,18 @@ async function incubStart() {
 
 function incubItemName(type) {
   const map = {
+    DIGITAMA_STARTER: "Digitama Inicial",
     DIGITAMA_FIRE: "Digitama de Fogo",
     DIGITAMA_WATER: "Digitama de Água",
-    DIGITAMA_NATURE: "Digitama de Natureza",
+    DIGITAMA_NATURE: "Digitama de Planta",
+    DIGITAMA_EARTH: "Digitama de Terra",
+    DIGITAMA_WIND: "Digitama de Vento",
+    DIGITAMA_LIGHT: "Digitama de Luz",
+    DIGITAMA_DARK: "Digitama de Trevas",
+    DIGITAMA_THUNDER: "Digitama de Trovão",
+    DIGITAMA_NEUTRAL: "Digitama Neutro",
+    DIGITAMA_ICE: "Digitama de Gelo",
+    DIGITAMA_STEEL: "Digitama de Metal",
     INCUBATOR_COMMON: "Incubadora Comum",
     INCUBATOR_RARE: "Incubadora Rara",
     INCUBATOR_EPIC: "Incubadora Épica"
@@ -561,7 +581,11 @@ function incubItemName(type) {
 }
 
 function incubDigitamaEmoji(type) {
-  const map = { DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿", DIGITAMA_STARTER: "⭐" };
+  const map = {
+    DIGITAMA_STARTER: "⭐", DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿",
+    DIGITAMA_EARTH: "🌍", DIGITAMA_WIND: "🌪️", DIGITAMA_LIGHT: "✨", DIGITAMA_DARK: "🌑",
+    DIGITAMA_THUNDER: "⚡", DIGITAMA_NEUTRAL: "⚪", DIGITAMA_ICE: "❄️", DIGITAMA_STEEL: "⚙️"
+  };
   return map[type] || "🥚";
 }
 

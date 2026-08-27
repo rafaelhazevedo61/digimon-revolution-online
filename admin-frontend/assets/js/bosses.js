@@ -50,9 +50,8 @@ function equipmentPoolChance(boss) {
 }
 
 function cooldownSummary(boss) {
-  return boss.cooldownEnabled === false
-    ? '<span class="text-slate-500">Desligado</span>'
-    : `<span class="text-green-400">Ativo</span><div class="text-[10px] text-slate-500">${boss.cooldownMinutes} min</div>`;
+  const source = ["WORLD", "CLAN"].includes(boss.bossType) ? "YAML" : "catálogo";
+  return `<span class="text-cyan-300">Intervalo · ${source}</span><div class="text-[10px] text-slate-500">${boss.cooldownMinutes} min</div>`;
 }
 
 function equipmentPoolSummary(boss) {
@@ -353,11 +352,8 @@ function openBossForm(id = null) {
               <input id="bf-cooldown" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.cooldownMinutes ?? 5}" required>
             </div>
             <div class="flex flex-col justify-end">
-              <label class="flex items-center gap-2 text-sm text-slate-200 cursor-pointer">
-                <input id="bf-cooldown-enabled" type="checkbox" class="accent-cyan-500" ${!boss || boss.cooldownEnabled !== false ? "checked" : ""}>
-                Ativar cooldown
-              </label>
-              <p class="text-[10px] text-slate-500 mt-1">Desligado permite ataques sem intervalo; os minutos são preservados.</p>
+              <p class="text-xs text-slate-400">Fonte do cooldown</p>
+              <p class="text-[10px] text-slate-500 mt-1">O intervalo usa estes minutos. World Boss e Raid de Clã são ligados/desligados pelas flags YAML.</p>
             </div>
             <div>
               <label class="text-xs text-slate-400">XP Reward</label>
@@ -424,16 +420,6 @@ function openBossForm(id = null) {
     </div>
   `;
   updateBossChestRequirement();
-  updateBossCooldownControls();
-  document.getElementById("bf-cooldown-enabled")?.addEventListener("change", updateBossCooldownControls);
-}
-
-function updateBossCooldownControls() {
-  const enabled = document.getElementById("bf-cooldown-enabled")?.checked ?? true;
-  const cooldown = document.getElementById("bf-cooldown");
-  if (!cooldown) return;
-  cooldown.disabled = !enabled;
-  cooldown.required = enabled;
 }
 
 function updateBossChestRequirement() {
@@ -481,7 +467,6 @@ async function saveBoss(event) {
     def: parseInt(document.getElementById("bf-def").value),
     energyCost: parseInt(document.getElementById("bf-energy").value),
     cooldownMinutes: parseInt(document.getElementById("bf-cooldown").value),
-    cooldownEnabled: document.getElementById("bf-cooldown-enabled")?.checked ?? true,
     baseXpReward: parseInt(document.getElementById("bf-xp").value),
     baseBitsReward: parseInt(document.getElementById("bf-bits").value),
     defeatXpPercent: parseInt(document.getElementById("bf-defeatxp").value),

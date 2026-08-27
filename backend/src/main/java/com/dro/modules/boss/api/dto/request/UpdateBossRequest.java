@@ -17,7 +17,6 @@ public record UpdateBossRequest(
         Integer def,
         Integer energyCost,
         Integer cooldownMinutes,
-        Boolean cooldownEnabled,
         Integer baseXpReward,
         Integer baseBitsReward,
         Integer defeatXpPercent,

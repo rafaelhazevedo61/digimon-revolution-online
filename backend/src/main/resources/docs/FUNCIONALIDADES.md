@@ -308,7 +308,7 @@ A loja utiliza um catálogo persistido de produtos ativos.
 - produtos de item e equipamento;
 - preços e disponibilidade administráveis via painel.
 
-Preços, itens e regras específicas de catálogo devem ser consultados em `shop_products` e na implementação dos use cases.
+Preços, itens e regras específicas de catálogo devem ser consultados em `shop_products` e na implementação dos use cases. Para um item específico, como `INCUBATION_SLOT_UNLOCK`, o `itemDefinitionCode` identifica a definição; o `itemType` pode ser omitido no formulário e é derivado pelo backend quando o código corresponde a um tipo conhecido.
 
 ### Endpoints
 
@@ -329,7 +329,9 @@ O inventário utilizado pela jornada está associado ao Digimon ativo e integra 
 - itens catalogados são enriquecidos por `item_definitions`;
 - itens podem possuir categorias diferentes;
 - alguns itens são consumíveis diretamente;
-- baús são abertos através de operação transacional específica;
+- os Discos de XP `XP_DISC_1`, `XP_DISC_3`, `XP_DISC_5`, `XP_DISC_10`, `XP_DISC_15` e `XP_DISC_20` concedem XP instantaneamente ao Digimon ativo;
+- os Discos de XP podem ser usados individualmente ou em lotes de até 100 unidades do mesmo tipo, com a quantidade processada e o XP total retornados pela operação;
+- baús são abertos através de operação transacional específica, individualmente ou em lotes de até 100 unidades do mesmo tipo;
 - concessões administrativas ficam sob `/admin`, não no namespace público do jogador.
 
 ### Endpoints
@@ -337,8 +339,8 @@ O inventário utilizado pela jornada está associado ao Digimon ativo e integra 
 | Método | Rota | Descrição |
 |---|---|---|
 | GET | `/inventory` | Inventário do Digimon ativo |
-| POST | `/inventory/use` | Utilizar item suportado, incluindo `INCUBATION_SLOT_UNLOCK` para aumentar em um o limite de slots de incubação do jogador |
-| POST | `/inventory/chests/open` | Abrir um baú do inventário |
+| POST | `/inventory/use` | Utilizar item suportado, incluindo `INCUBATION_SLOT_UNLOCK` e os seis Discos de XP; `quantity` é opcional para Discos de XP, assume 1 e aceita até 100; a resposta informa a quantidade e o efeito aplicado |
+| POST | `/inventory/chests/open` | Abrir um ou mais baús do mesmo tipo; `quantity` é opcional, assume 1 e aceita até 100 |
 | GET | `/items` | Catálogo público de definições de item |
 
 ---
@@ -410,6 +412,8 @@ O Boss Mundial é uma atividade separada dos bosses convencionais.
 - ataques respeitam as regras e cooldown definidos pelo módulo;
 - o dano contribui para o progresso compartilhado do ciclo;
 - o sistema possui recompensas vinculadas ao conteúdo atual, incluindo integração com baús;
+- não existe limite diário de ataques; cada ataque respeita cooldown de cinco minutos somente quando `dro.gameplay.boss-cooldown-enabled` e `dro.gameplay.world-boss.cooldown-enabled` estão habilitados;
+- no perfil alpha, a flag `dro.gameplay.auto-boss-respawn-after-defeat-enabled` abre automaticamente um novo ciclo após a derrota, preservando o histórico do ciclo anterior;
 - ferramentas administrativas permitem controlar/resetar ciclos para operação e contingência.
 
 ### Endpoints do jogador
@@ -447,24 +451,26 @@ Arena e Clãs possuem rankings próprios em seus respectivos módulos.
 
 ## 15. Slots e Storage
 
-O jogador possui capacidade para Digimons ativos e Digimons armazenados.
+O jogador possui um único Digimon ativo e pode manter os demais no Storage.
 
 ### Regras gerais
 
-- Digimons `ACTIVE` ocupam slots ativos;
+- existe no máximo um Digimon `ACTIVE` por jogador;
 - Digimons `STORED` ocupam o Storage;
-- o Digimon atualmente selecionado não pode ser guardado quando a regra de domínio impedir a operação;
-- operações de incubação e recuperação respeitam disponibilidade de slots;
-- equipamentos são tratados de forma segura ao mover um Digimon para o Storage.
+- um Digimon recém-chocado fica temporariamente em estado `HATCHED` até o jogador escolher uma ação;
+- após o hatch, as únicas opções são `Tornar ativo` ou `Enviar para Storage`;
+- ao tornar um Digimon ativo, o parceiro ativo anterior é movido automaticamente para o Storage;
+- a troca respeita a capacidade do Storage e trata equipamentos com segurança ao mover o parceiro anterior;
+- a constraint parcial `uq_digimons_one_active_per_player` reforça a unicidade no PostgreSQL.
 
-Os limites padrão são atributos/configurações do jogador e devem ser consultados na entidade/configuração atual se forem necessários para regra de negócio.
+O campo histórico `max_digimon_slots` é mantido por compatibilidade de schema, mas o limite efetivo de ativos é 1. O limite de Storage continua sendo um atributo do jogador.
 
 ### Endpoints
 
 | Método | Rota | Descrição |
 |---|---|---|
-| POST | `/digimon/{digimonId}/store` | Guardar Digimon |
-| POST | `/digimon/{digimonId}/retrieve` | Recuperar Digimon |
+| POST | `/digimon/{digimonId}/store` | Enviar Digimon HATCHED para o Storage |
+| POST | `/digimon/{digimonId}/retrieve` | Tornar Digimon armazenado o parceiro ativo |
 | GET | `/digimon/storage` | Consultar Storage |
 
 ---
@@ -575,6 +581,8 @@ Raid de Clã é uma atividade coletiva do Clã contra um alvo compartilhado.
 
 - o jogador consulta a Raid associada ao seu Clã;
 - ataques contribuem para o progresso coletivo;
+- não existe limite diário de ataques; cada jogador respeita cooldown de cinco minutos entre ataques somente quando `dro.gameplay.boss-cooldown-enabled` e `dro.gameplay.clan-raid.cooldown-enabled` estão habilitados;
+- no perfil alpha, a flag `dro.gameplay.auto-boss-respawn-after-defeat-enabled` abre automaticamente uma nova Raid após a derrota, preservando o histórico da instância anterior;
 - o sistema aplica as regras de disponibilidade e participação configuradas;
 - ferramentas administrativas existem para contingência/reset operacional.
 
@@ -709,7 +717,7 @@ A abertura:
 
 | Método | Rota | Descrição |
 |---|---|---|
-| POST | `/inventory/chests/open` | Abrir baú possuído pelo jogador |
+| POST | `/inventory/chests/open` | Abrir um ou mais baús do mesmo tipo possuídos pelo jogador |
 
 ### Administração
 

@@ -36,9 +36,70 @@ logging:
     org.springframework.jdbc: INFO
 
 dro:
+  digitama:
+    # Controle temporário dos Digimons BABY elegíveis nos pools de Digitama.
+    # A origem será migrada futuramente para available_contents.
+    baby-digimons:
+      Algomon Baby I: true
+      Bombmon: true
+      Bommon: true
+      Botamon: true
+      Bubbmon: true
+      Chibickmon: true
+      Chicomon: true
+      Choromon: true
+      Cocomon: true
+      Cotsucomon: true
+      Curimon: true
+      Dodomon: true
+      Dokimon: true
+      Fufumon: true
+      Fukamon: true
+      Fusamon: true
+      Jyarimon: true
+      Keemon: true
+      Kekomon: true
+      Ketomon: true
+      Kuramon: true
+      Leafmon: true
+      Mokumon: true
+      Nyokimon: true
+      Pabumon: true
+      Paomon: true
+      Pafumon: true
+      Peti Meramon: true
+      Petitmon: true
+      Pichimon: true
+      Pipimon: true
+      Pitchmon: true
+      Popomon: true
+      Poyomon: true
+      Punimon: true
+      Pupumon: true
+      Pururumon: true
+      Pusumon: true
+      Puttimon: true
+      Puwamon: true
+      Puyomon: true
+      Pyonmon: true
+      Relemon: true
+      Sakumon: true
+      Sunamon: true
+      Tomorimon: true
+      Torikara Ballmon: true
+      Tsubumon: true
+      Yolkmon: true
+      Yukimi Botamon: true
+      Yuramon: true
+      Zerimon: true
+      Zurumon: true
+
   gameplay:
+    auto-boss-respawn-after-defeat-enabled: false
+    boss-cooldown-enabled: ${DRO_BOSS_COOLDOWN_ENABLED:true}
+
     clan-raid:
-      daily-attack-limit: ${DRO_CLAN_RAID_DAILY_ATTACK_LIMIT:3}
+      cooldown-enabled: ${DRO_CLAN_RAID_COOLDOWN_ENABLED:true}
 
     energy:
       consumption-enabled: ${DRO_ENERGY_CONSUMPTION_ENABLED:true}
@@ -47,7 +108,7 @@ dro:
       daily-challenge-limit: ${DRO_ARENA_DAILY_CHALLENGE_LIMIT:5}
 
     world-boss:
-      daily-attack-limit: ${DRO_WORLD_BOSS_DAILY_ATTACK_LIMIT:3}
+      cooldown-enabled: ${DRO_WORLD_BOSS_COOLDOWN_ENABLED:true}
 
   registration:
     invite-required: ${DRO_REGISTRATION_INVITE_REQUIRED:false}

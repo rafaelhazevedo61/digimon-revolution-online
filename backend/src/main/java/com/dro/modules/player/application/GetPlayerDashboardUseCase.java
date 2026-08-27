@@ -5,6 +5,7 @@ import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.DigimonInfos;
 import com.dro.modules.digimon.infra.DigimonInfosRepository;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.equipment.api.dto.response.DigimonEquipmentResponse;
 import com.dro.modules.equipment.api.dto.response.EquipmentResponse;
 import com.dro.modules.equipment.domain.Equipment;
@@ -28,7 +29,6 @@ import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.player.api.dto.response.ActiveMissionResponse;
 import com.dro.modules.player.api.dto.response.InventorySummaryResponse;
-import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.player.api.dto.response.PlayerDashboardResponse;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
@@ -98,11 +98,10 @@ public class GetPlayerDashboardUseCase {
 
         IncubationSlotsResponse incubation = buildIncubation(playerId, player);
 
-        long activeCount = digimonRepository.countByPlayerIdAndStatus(playerId, DigimonStatus.ACTIVE);
         long storedCount = digimonRepository.countByPlayerIdAndStatus(playerId, DigimonStatus.STORED);
+        int activeCount = activeDigimon == null ? 0 : 1;
         var slotInfo = new PlayerDashboardResponse.SlotInfoResponse(
-                (int) activeCount, player.getMaxDigimonSlots(),
-                (int) storedCount, player.getMaxStorageSlots()
+                activeCount, 1, (int) storedCount, player.getMaxStorageSlots()
         );
 
         return new PlayerDashboardResponse(
@@ -111,6 +110,7 @@ public class GetPlayerDashboardUseCase {
                 player.getEmail(),
                 player.getCreatedAt(),
                 player.getUserType().name(),
+                player.getDigitalData(),
                 activeDigimon,
                 equippedItems,
                 setBonus,
@@ -130,7 +130,7 @@ public class GetPlayerDashboardUseCase {
         Digimon d = digimonRepository.findById(player.getActiveDigimonId())
                 .orElse(null);
 
-        if (d == null) {
+        if (d == null || d.getStatus() != DigimonStatus.ACTIVE) {
             return null;
         }
 

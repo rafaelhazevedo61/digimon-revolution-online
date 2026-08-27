@@ -1,6 +1,7 @@
 package com.dro.modules.shop.application;
 
 import com.dro.modules.equipment.infra.EquipmentTemplateRepository;
+import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.shop.api.dto.request.CreateShopProductRequest;
@@ -33,9 +34,11 @@ public class CreateShopProductUseCase {
         if (shopProductRepository.existsById(request.code())) {
             throw new ConflictException("O produto da loja já existe: " + request.code());
         }
-        validateProductTypeFields(request);
+        String itemDefinitionCode = resolveItemDefinitionCode(request.code(), request.itemType(), request.itemDefinitionCode());
+        ItemType resolvedItemType = resolveItemType(request.itemType(), itemDefinitionCode);
+        validateProductTypeFields(request, itemDefinitionCode, resolvedItemType);
         LocalDateTime now = LocalDateTime.now();
-        ShopProductEntity entity = ShopProductEntity.builder().code(request.code()).name(request.name()).description(request.description()).productType(request.productType()).category(request.category()).itemType(request.itemType()).itemDefinitionCode(resolveItemDefinitionCode(request.code(), request.itemType(), request.itemDefinitionCode())).equipmentTemplateName(request.equipmentTemplateName()).price(request.price()).sellPrice(request.sellPrice()).createdAt(now).updatedAt(now).createdBy("admin").updatedBy("admin").newEntity(true).build();
+        ShopProductEntity entity = ShopProductEntity.builder().code(request.code()).name(request.name()).description(request.description()).productType(request.productType()).category(request.category()).itemType(resolvedItemType).itemDefinitionCode(itemDefinitionCode).equipmentTemplateName(request.equipmentTemplateName()).price(request.price()).sellPrice(request.sellPrice()).createdAt(now).updatedAt(now).createdBy("admin").updatedBy("admin").newEntity(true).build();
         try {
             shopProductRepository.saveAndFlush(entity);
         } catch (DataIntegrityViolationException e) {
@@ -44,7 +47,7 @@ public class CreateShopProductUseCase {
         return AdminShopProductResponse.from(entity);
     }
 
-    private void validateProductTypeFields(CreateShopProductRequest request) {
+    private void validateProductTypeFields(CreateShopProductRequest request, String definitionCode, ItemType resolvedItemType) {
         if (request.productType() == ShopProductType.EQUIPMENT) {
             if (request.equipmentTemplateName() == null || request.equipmentTemplateName().isBlank()) {
                 throw new BadRequestException("O modelo de equipamento é obrigatório para produtos do tipo Equipamento");
@@ -54,18 +57,39 @@ public class CreateShopProductUseCase {
             }
         }
         if (request.productType() == ShopProductType.ITEM) {
-            if (request.itemType() == null) {
-                throw new BadRequestException("O tipo do item é obrigatório para produtos do tipo Item");
+            if (resolvedItemType == null) {
+                throw new BadRequestException("Informe o tipo do item ou o código da definição do item");
+            }
+            if (definitionCode != null && itemDefinitionRepository.findByCode(definitionCode).isEmpty()) {
+                throw new NotFoundException("Definição do item não encontrada: " + definitionCode);
             }
             if (request.category() == ShopProductCategory.CHEST) {
-                if (request.itemType() != ItemType.LOOT_CHEST) {
+                if (resolvedItemType != ItemType.LOOT_CHEST) {
                     throw new BadRequestException("Produtos da categoria Baú devem usar o tipo de item LOOT_CHEST");
                 }
-                String definitionCode = resolveItemDefinitionCode(request.code(), request.itemType(), request.itemDefinitionCode());
-                if (itemDefinitionRepository.findByCode(definitionCode).filter(definition -> "CHEST".equalsIgnoreCase(definition.getCategory())).isEmpty()) {
+                if (definitionCode == null || itemDefinitionRepository.findByCode(definitionCode).filter(definition -> "CHEST".equalsIgnoreCase(definition.getCategory())).isEmpty()) {
                     throw new NotFoundException("Definição do item de baú não encontrada: " + definitionCode);
                 }
             }
+        }
+    }
+
+    private ItemType resolveItemType(ItemType requestedType, String definitionCode) {
+        if (requestedType != null) {
+            return requestedType;
+        }
+        if (definitionCode == null || definitionCode.isBlank()) {
+            return null;
+        }
+        ItemDefinition definition = itemDefinitionRepository.findByCode(definitionCode)
+                .orElseThrow(() -> new NotFoundException("Definição do item não encontrada: " + definitionCode));
+        if ("CHEST".equalsIgnoreCase(definition.getCategory())) {
+            return ItemType.LOOT_CHEST;
+        }
+        try {
+            return ItemType.valueOf(definition.getCode().trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ItemType.EVOLUTION_MATERIAL;
         }
     }
 

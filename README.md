@@ -401,8 +401,13 @@ O backend pode ser configurado sem alterar o `application.yml` por meio das vari
 | `DRO_JWT_SECRET` | Chave secreta usada para assinar JWT | Definida pelo `application.yml` apenas no desenvolvimento |
 | `DRO_JWT_ISSUER` | Emissor do JWT | `digimon-revolution-online` |
 | `DRO_JWT_EXPIRATION_MINUTES` | Tempo de expiração do token | `1440` |
+| `DRO_BOSS_COOLDOWN_ENABLED` | Liga/desliga globalmente o cooldown de ataques do Boss Mundial e da Raid de Clã | `true` |
+| `DRO_WORLD_BOSS_COOLDOWN_ENABLED` | Liga/desliga o cooldown do tipo Boss Mundial | `true` |
+| `DRO_CLAN_RAID_COOLDOWN_ENABLED` | Liga/desliga o cooldown do tipo Raid de Clã | `true` |
 
 Em produção, substitua obrigatoriamente a senha do banco e o segredo JWT por valores mantidos em um gerenciador de segredos. Não versione credenciais reais.
+
+O cooldown do Boss Mundial só é aplicado quando `DRO_BOSS_COOLDOWN_ENABLED=true` e `DRO_WORLD_BOSS_COOLDOWN_ENABLED=true`. Na Raid de Clã, a regra equivalente usa `DRO_CLAN_RAID_COOLDOWN_ENABLED=true`. A duração continua sendo lida de `cooldown_minutes` no catálogo do boss, com fallback de cinco minutos quando necessário. A flag global tem precedência para desligar os dois fluxos, e as flags por tipo permitem desligar apenas um deles sem alterar o catálogo.
 
 ## Testes e qualidade
 

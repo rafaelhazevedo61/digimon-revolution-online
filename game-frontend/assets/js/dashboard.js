@@ -50,8 +50,8 @@ function renderDashContent(data) {
     `}
 
     <!-- Resources -->
-    ${d ? `
     <div class="grid grid-cols-2 gap-3 mb-4">
+      ${d ? `
       <div class="card-sm text-center">
         <p class="text-xs text-slate-500">Bits</p>
         <p class="text-lg font-bold text-yellow-400">${d.bits}</p>
@@ -60,8 +60,12 @@ function renderDashContent(data) {
         <p class="text-xs text-slate-500">Energia</p>
         <p class="text-lg font-bold text-green-400">${d.energy}/${d.maxEnergy}${d.clanBonusMaxEnergy ? `<span class="text-xs text-cyan-400">+${d.clanBonusMaxEnergy}</span>` : ""}</p>
       </div>
+      ` : ""}
+      <div class="card-sm text-center">
+        <p class="text-xs text-slate-500">Dados Digitais</p>
+        <p class="text-lg font-bold text-cyan-400">${Number(data.digitalData || 0).toLocaleString()}</p>
+      </div>
     </div>
-    ` : ""}
 
     <!-- Equipped items -->
     ${d ? `
@@ -77,7 +81,7 @@ function renderDashContent(data) {
     <div class="grid grid-cols-3 gap-2 mb-4">
       <button class="btn-primary w-full" onclick="navigateTo('evolution')">⚡ Evoluir</button>
       <button class="w-full py-2 rounded-lg font-bold text-sm" style="background:#854d0e;color:#fbbf24" onclick="navigateTo('rebirth')">🔄 Rebirth</button>
-      <button class="w-full py-2 rounded-lg font-bold text-sm" style="background:#164e63;color:#67e8f9" onclick="navigateTo('inventory')">🎒 Inventário</button>
+      <button class="w-full py-2 rounded-lg font-bold text-sm" style="background:#164e63;color:#67e8f9" onclick="navigateTo('storage')">📦 Storage</button>
     </div>
     ` : ""}
 
@@ -174,8 +178,9 @@ function renderDigimonCard(d) {
           <span>XP</span>
           <span>${d.experience} / ${xpNeeded}</span>
         </div>
-        <div class="xp-bar">
+        <div class="xp-bar xp-bar-with-label" role="progressbar" aria-valuenow="${xpPercent}" aria-valuemin="0" aria-valuemax="100" aria-label="${xpPercent}% da experiência para o próximo nível">
           <div class="xp-bar-fill" style="width: ${xpPercent}%"></div>
+          <span class="xp-bar-label">${xpPercent}%</span>
         </div>
       </div>
 
@@ -432,7 +437,15 @@ function formatItemType(t) {
     DIGITAMA_STARTER: "Digitama Inicial",
     DIGITAMA_FIRE: "Digitama de Fogo",
     DIGITAMA_WATER: "Digitama de Água",
-    DIGITAMA_NATURE: "Digitama de Natureza",
+    DIGITAMA_NATURE: "Digitama de Planta",
+    DIGITAMA_EARTH: "Digitama de Terra",
+    DIGITAMA_WIND: "Digitama de Vento",
+    DIGITAMA_LIGHT: "Digitama de Luz",
+    DIGITAMA_DARK: "Digitama de Trevas",
+    DIGITAMA_THUNDER: "Digitama de Trovão",
+    DIGITAMA_NEUTRAL: "Digitama Neutro",
+    DIGITAMA_ICE: "Digitama de Gelo",
+    DIGITAMA_STEEL: "Digitama de Metal",
     INCUBATOR_COMMON: "Incubadora Comum",
     INCUBATOR_RARE: "Incubadora Rara",
     INCUBATOR_EPIC: "Incubadora Épica"

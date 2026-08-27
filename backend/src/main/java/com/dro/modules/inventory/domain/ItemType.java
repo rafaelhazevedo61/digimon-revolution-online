@@ -11,12 +11,21 @@ public enum ItemType {
     // Recursos
     TRAINING_STONE,
     DATA_CORE,
+    CODE_INFINITE,
 
     // Digitamas
     DIGITAMA_STARTER,
     DIGITAMA_FIRE,
     DIGITAMA_WATER,
     DIGITAMA_NATURE,
+    DIGITAMA_EARTH,
+    DIGITAMA_WIND,
+    DIGITAMA_LIGHT,
+    DIGITAMA_DARK,
+    DIGITAMA_THUNDER,
+    DIGITAMA_NEUTRAL,
+    DIGITAMA_ICE,
+    DIGITAMA_STEEL,
 
     // Incubadoras
     INCUBATOR_COMMON,
@@ -25,6 +34,14 @@ public enum ItemType {
 
     // Expansão da incubadora
     INCUBATION_SLOT_UNLOCK,
+
+    // Discos de XP instantâneo
+    XP_DISC_1,
+    XP_DISC_3,
+    XP_DISC_5,
+    XP_DISC_10,
+    XP_DISC_15,
+    XP_DISC_20,
 
     // Fragmentos (legado — mantidos para compatibilidade)
     FRAGMENT_ROOKIE,

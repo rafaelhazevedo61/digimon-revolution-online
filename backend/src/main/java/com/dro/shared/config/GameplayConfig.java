@@ -15,6 +15,8 @@ public class GameplayConfig {
     private Arena arena = new Arena();
     private WorldBoss worldBoss = new WorldBoss();
     private ClanRaid clanRaid = new ClanRaid();
+    private boolean autoBossRespawnAfterDefeatEnabled = false;
+    private boolean bossCooldownEnabled = true;
 
     public Energy getEnergy() {
         return energy;
@@ -48,20 +50,36 @@ public class GameplayConfig {
         this.clanRaid = clanRaid;
     }
 
+    public boolean isAutoBossRespawnAfterDefeatEnabled() {
+        return autoBossRespawnAfterDefeatEnabled;
+    }
+
+    public void setAutoBossRespawnAfterDefeatEnabled(boolean autoBossRespawnAfterDefeatEnabled) {
+        this.autoBossRespawnAfterDefeatEnabled = autoBossRespawnAfterDefeatEnabled;
+    }
+
+    public boolean isBossCooldownEnabled() {
+        return bossCooldownEnabled;
+    }
+
+    public void setBossCooldownEnabled(boolean bossCooldownEnabled) {
+        this.bossCooldownEnabled = bossCooldownEnabled;
+    }
+
+    public boolean isWorldBossCooldownEnabled() {
+        return bossCooldownEnabled && worldBoss.isCooldownEnabled();
+    }
+
+    public boolean isClanRaidCooldownEnabled() {
+        return bossCooldownEnabled && clanRaid.isCooldownEnabled();
+    }
+
     public boolean isEnergyConsumptionEnabled() {
         return energy.isConsumptionEnabled();
     }
 
     public int getArenaDailyChallengeLimit() {
         return arena.getDailyChallengeLimit();
-    }
-
-    public int getWorldBossDailyAttackLimit() {
-        return worldBoss.getDailyAttackLimit();
-    }
-
-    public int getClanRaidDailyAttackLimit() {
-        return clanRaid.getDailyAttackLimit();
     }
 
     public static class Energy {
@@ -92,27 +110,27 @@ public class GameplayConfig {
 
     public static class WorldBoss {
 
-        private int dailyAttackLimit = 3;
+        private boolean cooldownEnabled = true;
 
-        public int getDailyAttackLimit() {
-            return dailyAttackLimit;
+        public boolean isCooldownEnabled() {
+            return cooldownEnabled;
         }
 
-        public void setDailyAttackLimit(int dailyAttackLimit) {
-            this.dailyAttackLimit = dailyAttackLimit;
+        public void setCooldownEnabled(boolean cooldownEnabled) {
+            this.cooldownEnabled = cooldownEnabled;
         }
     }
 
     public static class ClanRaid {
 
-        private int dailyAttackLimit = 3;
+        private boolean cooldownEnabled = true;
 
-        public int getDailyAttackLimit() {
-            return dailyAttackLimit;
+        public boolean isCooldownEnabled() {
+            return cooldownEnabled;
         }
 
-        public void setDailyAttackLimit(int dailyAttackLimit) {
-            this.dailyAttackLimit = dailyAttackLimit;
+        public void setCooldownEnabled(boolean cooldownEnabled) {
+            this.cooldownEnabled = cooldownEnabled;
         }
     }
 }

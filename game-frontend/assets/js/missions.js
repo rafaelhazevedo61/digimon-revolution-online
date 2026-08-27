@@ -8,6 +8,31 @@ const AREA_INFO = {
 };
 
 const STAGE_ORDER = ["BABY", "BABY_II", "ROOKIE", "CHAMPION", "ULTIMATE", "MEGA"];
+const AREA_ORDER = ["NATIVE_FOREST", "GEAR_SAVANNA", "FACTORIAL_TOWN", "FREEZELAND", "SERVER_DESERT", "INFINITY_MOUNTAIN"];
+
+function areaProgressionRank(area) {
+  return AREA_ORDER.indexOf(String(area || ""));
+}
+
+function stageProgressionRank(stage) {
+  return STAGE_ORDER.indexOf(String(stage || ""));
+}
+
+function missionNumber(mission) {
+  const id = String(mission && (mission.id || mission.missionId) || "");
+  const match = id.match(/_(\d+)$/);
+  return match ? Number(match[1]) : -1;
+}
+
+function compareMissionsByProgression(a, b) {
+  const levelDifference = (Number(b.requiredLevel) || 0) - (Number(a.requiredLevel) || 0);
+  if (levelDifference !== 0) return levelDifference;
+
+  const numberDifference = missionNumber(b) - missionNumber(a);
+  if (numberDifference !== 0) return numberDifference;
+
+  return String(b.id || b.missionId || "").localeCompare(String(a.id || a.missionId || ""));
+}
 
 async function renderMissionsPage() {
   const app = document.getElementById("app");
@@ -126,9 +151,18 @@ function missionRewardLabel(reward) {
     POTION_SMALL: "Poção Pequena",
     TRAINING_STONE: "Pedra de Treino",
     DATA_CORE: "Núcleo de Dados",
+    DIGITAMA_STARTER: "Digitama Inicial",
     DIGITAMA_FIRE: "Digitama de Fogo",
     DIGITAMA_WATER: "Digitama de Água",
-    DIGITAMA_NATURE: "Digitama de Natureza",
+    DIGITAMA_NATURE: "Digitama de Planta",
+    DIGITAMA_EARTH: "Digitama de Terra",
+    DIGITAMA_WIND: "Digitama de Vento",
+    DIGITAMA_LIGHT: "Digitama de Luz",
+    DIGITAMA_DARK: "Digitama de Trevas",
+    DIGITAMA_THUNDER: "Digitama de Trovão",
+    DIGITAMA_NEUTRAL: "Digitama Neutro",
+    DIGITAMA_ICE: "Digitama de Gelo",
+    DIGITAMA_STEEL: "Digitama de Metal",
     INCUBATOR_COMMON: "Incubadora Comum",
     INCUBATOR_RARE: "Incubadora Rara",
     INCUBATOR_EPIC: "Incubadora Épica",
@@ -137,14 +171,274 @@ function missionRewardLabel(reward) {
   return labels[reward && reward.item] || (reward && reward.item) || "Recompensa";
 }
 
+function missionRewardChestCode(reward) {
+  const code = String(reward && reward.itemCode || "").trim();
+  if (reward && reward.item === "LOOT_CHEST" && code) return code;
+  return code.startsWith("CHEST_") ? code : null;
+}
+
 function missionRewardIcon(reward) {
-  if (reward && (reward.item === "LOOT_CHEST" || String(reward.itemCode || "").startsWith("CHEST_"))) {
+  if (reward && (reward.item === "LOOT_CHEST" || missionRewardChestCode(reward))) {
     return "🎁";
   }
   if (reward && String(reward.item || "").startsWith("DIGITAMA")) return "🥚";
   if (reward && String(reward.item || "").startsWith("INCUBATOR")) return "📦";
   if (reward && String(reward.item || "").includes("FRAGMENT")) return "🧩";
   return "✨";
+}
+
+function missionFriendlyCode(code) {
+  return String(code || "")
+    .toLowerCase()
+    .split("_")
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function missionLootItemLabel(item) {
+  const itemType = String(item && item.itemType || "");
+  const itemCode = String(item && (item.itemCode || item.materialCode) || itemType);
+  if (item && item.itemName && ![itemType, itemCode].includes(String(item.itemName))) return item.itemName;
+  if (typeof invItemName === "function" && itemType) {
+    const inventoryName = invItemName(itemType);
+    if (inventoryName && inventoryName !== itemType) return inventoryName;
+  }
+
+  if (itemCode.startsWith("FRAGMENT_")) {
+    return `Fragmento ${missionFriendlyCode(itemCode.slice("FRAGMENT_".length))}`;
+  }
+  if (itemCode === "EVOLUTION_MATERIAL") return "Material de Evolução";
+  if (itemCode === "LOOT_CHEST") return "Baú";
+  return missionFriendlyCode(itemCode) || "Recompensa";
+}
+
+function missionLootItemIcon(item) {
+  const itemType = String(item && item.itemType || item && item.itemCode || "");
+  if (typeof invItemEmoji === "function") return invItemEmoji(itemType);
+
+  if (itemType.startsWith("DIGITAMA")) return "🥚";
+  if (itemType.startsWith("INCUBATOR")) return "📦";
+  if (itemType.startsWith("FRAGMENT") || itemType === "EVOLUTION_MATERIAL") return "🧩";
+  if (itemType === "LOOT_CHEST") return "🎁";
+  return "✨";
+}
+
+function missionLootRarityLabel(rarity) {
+  return typeof formatRarity === "function" ? formatRarity(rarity) : missionFriendlyCode(rarity);
+}
+
+function missionLootRarityClass(rarity) {
+  const normalized = String(rarity || "common").toLowerCase();
+  return `badge-${normalized}`;
+}
+
+function missionLootQuantityLabel(item) {
+  const min = Number(item && (item.minQuantity ?? item.quantity)) || 0;
+  const max = Number(item && (item.maxQuantity ?? item.quantity)) || min;
+  return min === max ? `x${min}` : `x${min}–${max}`;
+}
+
+function missionLootItemMarkup(item, includeWeight = false) {
+  const weightMarkup = includeWeight && Number(item && item.weight) > 0
+    ? `<span class="text-xs text-slate-500">Peso ${Number(item.weight)}</span>`
+    : "";
+  return `
+    <div class="flex items-center gap-3 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-3">
+      <span class="text-2xl" aria-hidden="true">${missionLootItemIcon(item)}</span>
+      <div class="min-w-0 flex-1">
+        <p class="font-semibold text-slate-100 truncate">${escapeHtml(missionLootItemLabel(item))}</p>
+        <div class="flex items-center gap-2 mt-1 flex-wrap">
+          <span class="badge ${missionLootRarityClass(item && item.rarity)}">${escapeHtml(missionLootRarityLabel(item && item.rarity))}</span>
+          ${weightMarkup}
+        </div>
+      </div>
+      <span class="font-bold text-cyan-300 whitespace-nowrap">${missionLootQuantityLabel(item)}</span>
+    </div>
+  `;
+}
+
+function missionRaritySort(a, b) {
+  const order = ["COMMON", "RARE", "EPIC", "LEGENDARY"];
+  return order.indexOf(String(a && a.rarity || "").toUpperCase()) - order.indexOf(String(b && b.rarity || "").toUpperCase());
+}
+
+function missionRenderLootPreview(preview) {
+  const fixedRewards = Array.isArray(preview && preview.fixedRewards) ? preview.fixedRewards : [];
+  const chest = preview && preview.chest;
+  const legacyChances = Array.isArray(preview && preview.lootChances) ? preview.lootChances : [];
+  const legacyItems = Array.isArray(preview && preview.lootItems) ? [...preview.lootItems].sort(missionRaritySort) : [];
+  const chestItems = chest && Array.isArray(chest.items) ? [...chest.items].sort(missionRaritySort) : [];
+  const hasLegacyLoot = !chest && (legacyChances.length > 0 || legacyItems.length > 0);
+
+  const fixedMarkup = fixedRewards.length > 0
+    ? `
+      <section class="mb-5">
+        <h4 class="text-sm font-bold text-slate-300 mb-2">Itens garantidos</h4>
+        <div class="space-y-2">
+          ${fixedRewards.map(item => missionLootItemMarkup({
+            ...item,
+            quantity: item.quantity,
+            rarity: "COMMON"
+          })).join("")}
+        </div>
+      </section>
+    `
+    : "";
+
+  const chestMarkup = chest
+    ? `
+      <section class="mb-5">
+        <div class="rounded-lg border border-cyan-700 bg-cyan-950/30 px-3 py-3 mb-3">
+          <div class="flex items-start gap-3">
+            <span class="text-3xl" aria-hidden="true">🎁</span>
+            <div class="min-w-0">
+              <h4 class="font-bold text-cyan-200">${escapeHtml(chest.name || "Baú da missão")}</h4>
+              ${chest.description ? `<p class="text-xs text-cyan-100/70 mt-1">${escapeHtml(chest.description)}</p>` : ""}
+              <p class="text-xs text-cyan-300 mt-2">Ao concluir, você recebe 1 baú. Cada abertura entrega entre ${Number(chest.minItems) || 0} e ${Number(chest.maxItems) || 0} itens.</p>
+            </div>
+          </div>
+        </div>
+        <h4 class="text-sm font-bold text-slate-300 mb-2">Possíveis itens do baú</h4>
+        ${chestItems.length > 0
+          ? `<div class="space-y-2">${chestItems.map(item => missionLootItemMarkup(item, true)).join("")}</div>`
+          : `<p class="text-sm text-slate-400">Nenhum item ativo foi configurado neste baú.</p>`}
+        ${Array.isArray(chest.rarityWeights) && chest.rarityWeights.length > 0 ? `
+          <div class="mt-3 rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-3">
+            <p class="text-xs font-bold text-slate-300 mb-2">Pesos das raridades</p>
+            <div class="flex gap-2 flex-wrap">
+              ${chest.rarityWeights.map(weight => `<span class="badge ${missionLootRarityClass(weight.rarity)}">${escapeHtml(missionLootRarityLabel(weight.rarity))}: ${Number(weight.weight) || 0}</span>`).join("")}
+            </div>
+            <p class="text-xs text-slate-500 mt-2">Os valores são pesos relativos do sorteio, não percentuais fixos por abertura.</p>
+          </div>
+        ` : ""}
+      </section>
+    `
+    : "";
+
+  const legacyMarkup = hasLegacyLoot
+    ? `
+      <section class="mb-5">
+        <h4 class="text-sm font-bold text-slate-300 mb-2">Loot aleatório da missão</h4>
+        ${legacyChances.length > 0 ? `
+          <p class="text-xs text-slate-400 mb-2">Chance por raridade</p>
+          <div class="flex gap-2 flex-wrap mb-3">
+            ${legacyChances.map(chance => `<span class="badge ${missionLootRarityClass(chance.rarity)}">${escapeHtml(missionLootRarityLabel(chance.rarity))}: ${Number(chance.chance) || 0}%</span>`).join("")}
+          </div>
+        ` : ""}
+        ${legacyItems.length > 0
+          ? `<div class="space-y-2">${legacyItems.map(item => missionLootItemMarkup(item)).join("")}</div>`
+          : `<p class="text-sm text-slate-400">Nenhum item aleatório foi configurado.</p>`}
+      </section>
+    `
+    : "";
+
+  const hasAnyReward = fixedRewards.length > 0 || chest || hasLegacyLoot;
+  const overlay = document.createElement("div");
+  overlay.id = "mission-loot-modal";
+  overlay.className = "fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/75";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-labelledby", "mission-loot-title");
+  overlay.innerHTML = `
+    <div class="card w-full max-w-lg max-h-[88vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="flex items-start justify-between gap-4 mb-5">
+        <div>
+          <p class="text-xs uppercase tracking-wider text-cyan-400 font-bold">Recompensas possíveis</p>
+          <h3 id="mission-loot-title" class="text-xl font-bold mt-1">${escapeHtml(preview && preview.missionName || "Missão")}</h3>
+        </div>
+        <button type="button" class="text-slate-400 hover:text-white text-2xl leading-none" aria-label="Fechar" onclick="document.getElementById('mission-loot-modal')?.remove()">&times;</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-5">
+        <div class="rounded-lg border border-purple-800 bg-purple-950/40 px-3 py-3 text-center">
+          <p class="text-xs text-purple-300">XP base</p>
+          <p class="text-xl font-bold text-purple-200 mt-1">+${Number(preview && preview.xpReward) || 0}</p>
+        </div>
+        <div class="rounded-lg border border-yellow-800 bg-yellow-950/40 px-3 py-3 text-center">
+          <p class="text-xs text-yellow-300">Bits base</p>
+          <p class="text-xl font-bold text-yellow-200 mt-1">+${Number(preview && preview.bitsReward) || 0}</p>
+        </div>
+      </div>
+
+      ${fixedMarkup}
+      ${chestMarkup}
+      ${legacyMarkup}
+      ${!hasAnyReward ? `<p class="text-sm text-slate-400">Nenhuma recompensa de item foi configurada para esta missão.</p>` : ""}
+
+      <button type="button" class="btn-secondary w-full mt-2" onclick="document.getElementById('mission-loot-modal')?.remove()">Fechar</button>
+    </div>
+  `;
+  overlay.addEventListener("click", event => {
+    if (event.target === overlay) overlay.remove();
+  });
+  document.body.appendChild(overlay);
+}
+
+async function missionShowLootPreview(missionId, button) {
+  if (!missionId || (button && button.disabled)) return;
+
+  const existing = document.getElementById("mission-loot-modal");
+  if (existing) existing.remove();
+
+  const originalText = button ? button.textContent : "Ver recompensas";
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Carregando...";
+  }
+
+  try {
+    const preview = await apiGet(`/missions/${encodeURIComponent(missionId)}/loot`);
+    missionRenderLootPreview(preview);
+  } catch (err) {
+    showToast(err.message, "error");
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalText || "Ver recompensas";
+    }
+  }
+}
+
+async function missionOpenRewardChest(chestCode, quantity = 1, button) {
+  if (!chestCode || typeof invOpenChest !== "function") {
+    showToast("Abertura de baú indisponível.", "error");
+    return;
+  }
+  if (button && button.disabled) return;
+
+  const requestedQuantity = Number.parseInt(quantity, 10) || 1;
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Abrindo...";
+  }
+
+  const result = await invOpenChest(chestCode, requestedQuantity);
+  if (result && button) {
+    button.textContent = requestedQuantity > 1 ? "Baús abertos" : "Baú aberto";
+  } else if (button) {
+    button.disabled = false;
+    button.textContent = requestedQuantity > 1 ? `Abrir ${requestedQuantity} baús` : "Abrir baú";
+  }
+}
+
+async function repeatMissionFromReward(missionId) {
+  const button = document.getElementById("mission-repeat-button");
+  if (!missionId || !button) return;
+
+  button.disabled = true;
+  button.textContent = "Iniciando...";
+
+  try {
+    await apiPost("/missions/start", { missionId });
+    document.getElementById("mission-claim-modal")?.remove();
+    showToast("Missão repetida!");
+    navigateTo("dashboard");
+  } catch (err) {
+    showToast(err.message, "error");
+    button.disabled = false;
+    button.textContent = "Repetir missão";
+  }
 }
 
 function showMissionClaimModal(result) {
@@ -155,16 +449,21 @@ function showMissionClaimModal(result) {
   const missionName = formatMissionName({ id: result && result.missionId });
   const hasFriendlyMissionName = missionName !== "Missão";
   const rewardMarkup = rewards.length > 0
-    ? rewards.map(reward => {
-        const isChest = reward.item === "LOOT_CHEST" || String(reward.itemCode || "").startsWith("CHEST_");
+      ? rewards.map(reward => {
+        const chestCode = missionRewardChestCode(reward);
+        const chestQuantity = Math.max(1, Number(reward.quantity) || 1);
+        const isChest = reward.item === "LOOT_CHEST" || !!chestCode;
         return `
           <div class="flex items-center gap-3 rounded-lg border ${isChest ? "border-cyan-700 bg-cyan-950/40" : "border-slate-700 bg-slate-900/60"} px-3 py-3">
             <span class="text-2xl" aria-hidden="true">${missionRewardIcon(reward)}</span>
             <div class="min-w-0 flex-1">
               <p class="font-semibold ${isChest ? "text-cyan-200" : "text-slate-100"}">${escapeHtml(missionRewardLabel(reward))}</p>
-              ${isChest ? "<p class=\"text-xs text-cyan-400 mt-1\">Abra pelo Inventário para revelar o loot</p>" : ""}
+              ${isChest ? "<p class=\"text-xs text-cyan-400 mt-1\">Abra aqui ou pelo Inventário para revelar o loot</p>" : ""}
             </div>
-            <span class="font-bold text-cyan-300">x${Number(reward.quantity) || 0}</span>
+            <div class="flex flex-col items-end gap-2">
+              <span class="font-bold text-cyan-300">x${Number(reward.quantity) || 0}</span>
+              ${chestCode ? `<button type="button" class="btn-sm btn-secondary whitespace-nowrap" onclick="missionOpenRewardChest('${escapeAttr(chestCode)}', ${chestQuantity}, this)">${chestQuantity > 1 ? `Abrir ${chestQuantity} baús` : "Abrir baú"}</button>` : ""}
+            </div>
           </div>
         `;
       }).join("")
@@ -210,7 +509,14 @@ function showMissionClaimModal(result) {
         <div class="space-y-2">${rewardMarkup}</div>
       </div>
 
-      <button class="btn-primary w-full mt-5" onclick="document.getElementById('mission-claim-modal')?.remove()">Continuar</button>
+      ${result && result.missionId ? `
+        <div class="flex flex-col sm:flex-row gap-2 mt-5">
+          <button id="mission-repeat-button" class="btn-primary flex-1" onclick="repeatMissionFromReward('${escapeAttr(result.missionId)}')">Repetir missão</button>
+          <button class="btn-secondary flex-1" onclick="document.getElementById('mission-claim-modal')?.remove()">Continuar</button>
+        </div>
+      ` : `
+        <button class="btn-primary w-full mt-5" onclick="document.getElementById('mission-claim-modal')?.remove()">Continuar</button>
+      `}
     </div>
   `;
   overlay.addEventListener("click", event => {
@@ -251,7 +557,9 @@ function renderAreaCards(areas) {
   const container = document.getElementById("areas-list");
 
   const sorted = [...areas].sort((a, b) => {
-    return STAGE_ORDER.indexOf(a.requiredStage) - STAGE_ORDER.indexOf(b.requiredStage);
+    const areaDifference = areaProgressionRank(b.area) - areaProgressionRank(a.area);
+    if (areaDifference !== 0) return areaDifference;
+    return stageProgressionRank(b.requiredStage) - stageProgressionRank(a.requiredStage);
   });
 
   container.innerHTML = sorted.map(a => {
@@ -335,7 +643,9 @@ function renderMissionCards(missions, area) {
     return;
   }
 
-  container.innerHTML = missions.map(m => `
+  const sortedMissions = [...missions].sort(compareMissionsByProgression);
+
+  container.innerHTML = sortedMissions.map(m => `
     <div class="card mb-3">
       <div class="flex justify-between items-start mb-2">
         <div class="flex-1">
@@ -352,9 +662,14 @@ function renderMissionCards(missions, area) {
         <span>⏱️ ${formatTime(m.durationSeconds)}</span>
       </div>
 
-      <button class="btn-primary w-full text-sm" onclick="startMission('${m.id}', '${area}')">
-        Iniciar Missão
-      </button>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <button type="button" class="btn-secondary flex-1 text-sm" onclick="missionShowLootPreview('${escapeAttr(m.id)}', this)">
+          Ver recompensas
+        </button>
+        <button type="button" class="btn-primary flex-1 text-sm" onclick="startMission('${escapeAttr(m.id)}', '${escapeAttr(area)}')">
+          Iniciar Missão
+        </button>
+      </div>
     </div>
   `).join("");
 }

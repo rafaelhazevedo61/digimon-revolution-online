@@ -9,6 +9,14 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Adicionado
 
+- **Imagens do catálogo de Digimons**: migration incremental preenche URLs públicas para 63 espécies que estavam sem imagem, preservando URLs já configuradas e cobrindo todo o catálogo atual com referências verificadas da DAPI e do Wikimon.
+
+- **Painel de Primeiros passos recolhível**: o jogador pode minimizar o tutorial no dashboard, mantendo apenas o título e o botão para expandir; a preferência fica persistida no navegador.
+
+- **Digitamas elementais**: Fogo, Água, Planta, Terra, Vento, Luz, Trevas, Trovão, Neutro, Gelo e Metal passaram a ter pools próprios; a seleção inicial exibe todas as opções e bloqueia as que não possuem Digimon BABY elegível.
+  - A elegibilidade temporária dos 53 Digimons BABY é controlada por flags booleanas em `application.yml`; entradas `false` não participam do sorteio.
+  - O Digitama de Metal fica visível, porém bloqueado, até que um Digimon BABY do elemento `STEEL` seja cadastrado.
+
 - **Incubadora em paralelo**: três slots fixos sempre visíveis, com o slot 1 desbloqueado por padrão e slots 2 e 3 preparados para futura liberação por progressão.
   - Incubações independentes por slot, com timers e claims individuais.
   - Consulta da incubadora retornando estados bloqueado, livre, em andamento e pronto para cada posição.
@@ -29,12 +37,28 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Corrigido
 
+- **Digitama de Gelo**: corrigido o binding das flags YAML para nomes de Digimons BABY com espaços, fazendo `Yukimi Botamon` ser reconhecido corretamente como elegível quando sua flag está `true`.
+
+- **Tela de Missões**: áreas agora aparecem da maior progressão para a menor e, dentro de cada área, as missões são ordenadas pelo maior requisito de nível para o menor, usando o número da missão como desempate; cada missão também permite consultar suas recompensas possíveis em um modal, exibindo XP/Bits e o conteúdo do baú atual, ou itens fixos e loot aleatório apenas no fluxo legado de missões sem baú.
+- **Navegação principal do game frontend**: Inventário passou a ocupar o atalho de Digimon na barra de rodapé, enquanto o acesso a Storage passou a ocupar o botão de Digimon nas ações do dashboard; a tela de seleção de Digimons permanece reservada a fluxos internos.
+- **Atalho de incubação no inventário**: Incubadoras exibem o botão Usar, que encaminha o jogador para a tela de Incubação sem consumir o item diretamente; Digitamas permanecem sem esse botão.
+- **Ativo único e Storage**: o jogador passa a ter no máximo um Digimon ativo; o Digimon recém-chocado fica em estado `HATCHED` até a escolha entre `Tornar ativo` e `Enviar para Storage`, e a troca envia o parceiro anterior para o Storage automaticamente. A tela de Storage exibe a imagem dos Digimons e usa a ação `Tornar ativo`.
 - **Premiação global de eventos**: administradores podem selecionar todos os jogadores do servidor, visualizar a quantidade elegível antes da confirmação e gerar uma mensagem individual para cada conta do tipo `PLAYER`.
 - **Busca de jogadores nas ferramentas administrativas**: a etapa de seleção do jogador no fluxo de grant agora mantém o filtro por username, exibe o total encontrado e permite navegar entre páginas de resultados, sem limitar o operador aos dez primeiros jogadores.
 - **Identificador de origem da premiação**: o formulário administrativo agora oferece geração automática de identificador, mantendo a edição manual e a idempotência por jogador.
 - **Seleção de itens na premiação de eventos**: o item deixou de depender de uma lista fixa no formulário e passou a ser escolhido em modal com pesquisa, catálogo pré-carregado, paginação e resumo do item selecionado.
 - **Catálogo completo na premiação de eventos**: o modal passou a exibir todas as definições de `item_definitions`, incluindo itens específicos como fragmentos e baús, com entrega persistida pelo código da definição.
 - **Múltiplos itens por premiação**: administradores podem adicionar até 10 itens distintos no mesmo envio e definir a quantidade individual de cada item.
+- **Produtos de itens específicos na loja**: o cadastro aceita `itemDefinitionCode` sem exigir um `itemType` genérico incompatível; o tipo é derivado automaticamente para itens como o Expansor de Slot de Incubação.
+- **Repetição de missões**: o modal de recompensa agora permite iniciar novamente a mesma missão diretamente, sem retornar ao menu de missões.
+- **Abertura direta de baús de missão**: recompensas de baú agora exibem um botão para abrir o baú no próprio modal, com o loot apresentado pelo fluxo existente de inventário.
+- **Abertura em lote de baús**: o jogador pode informar a quantidade de baús do mesmo tipo no inventário ou abrir em lote a quantidade recebida na recompensa, com consolidação do loot e retry idempotente.
+- **Discos de XP instantâneo**: adicionados os seis itens `XP_DISC_1`, `XP_DISC_3`, `XP_DISC_5`, `XP_DISC_10`, `XP_DISC_15` e `XP_DISC_20`, que concedem imediatamente o percentual correspondente da XP necessária para o próximo nível do Digimon.
+  - Uso individual ou em lotes de até 100 unidades do mesmo tipo, com consumo atômico, XP total e quantidade processada informados na resposta.
+- **Restart automático de bosses no alpha**: após a derrota, o Boss Mundial e a Raid de Clã passam a abrir um novo ciclo automaticamente quando `dro.gameplay.auto-boss-respawn-after-defeat-enabled` está ativo; a flag permanece desligada por padrão fora do perfil alpha.
+- **Cooldown da Raid de Clã**: reativado o intervalo entre ataques com a mesma regra do Boss Mundial, usando cinco minutos como configuração do boss e como fallback para valores antigos.
+- **Flags de cooldown dos bosses**: adicionada `DRO_BOSS_COOLDOWN_ENABLED`/`dro.gameplay.boss-cooldown-enabled` como controle global, além de `DRO_WORLD_BOSS_COOLDOWN_ENABLED`/`dro.gameplay.world-boss.cooldown-enabled` e `DRO_CLAN_RAID_COOLDOWN_ENABLED`/`dro.gameplay.clan-raid.cooldown-enabled` para controle individual por tipo; `cooldown_enabled` foi removido do banco e `cooldown_minutes` continua definindo a duração no catálogo.
+- **Tentativas de Boss Mundial e Raid de Clã**: removido o limite diário de ataques do backend, frontend, contratos e configuração; ambos os sistemas agora ficam limitados somente pelo cooldown efetivo e pela derrota do ciclo.
 
 ## [0.0.3-SNAPSHOT]
 
