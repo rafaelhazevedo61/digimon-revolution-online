@@ -13,6 +13,7 @@ import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,7 +29,15 @@ public class GetDigimonUseCase {
     public List<DigimonResponse> execute(String token) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         var digimons = digimonRepository.findByPlayerId(playerId);
-        return digimons.stream().filter(d -> d.getStatus() == DigimonStatus.ACTIVE).map(d -> {
+        return digimons.stream()
+                .filter(d -> d.getStatus() != DigimonStatus.REBORN)
+                .sorted(Comparator.comparingInt(d -> switch (d.getStatus()) {
+                    case ACTIVE -> 0;
+                    case HATCHED -> 1;
+                    case STORED -> 2;
+                    case REBORN -> 3;
+                }))
+                .map(d -> {
             List<Equipment> equipped = getEquippedItems(d);
             DigimonInfos info = d.getDigimonInfoId() != null ? digimonInfosRepository.findById(d.getDigimonInfoId()).orElse(null) : null;
             return new DigimonResponse(d.getId(), d.getName(), d.getType(), d.getStage(), d.getLevel(), d.getExperience(), d.getHp(), d.getAttack(), d.getDefense(), d.getIvHp(), d.getIvAttack(), d.getIvDefense(), d.getGrade(), d.getRarity(), d.getPersonality(), d.getTrait(), d.getEnergy(), d.getMaxEnergy(), d.getBits(), d.getRebirthCount(), d.getRebornedFrom(), d.getStatus(), d.getDigimonInfoId(), info != null ? info.getAttribute().name() : null, info != null ? info.getElement().name() : null, info != null ? info.getImageUrl() : null, EquipmentRules.totalBonusHp(equipped), EquipmentRules.totalBonusAttack(equipped), EquipmentRules.totalBonusDefense(equipped), 0, 0, 0, 0);

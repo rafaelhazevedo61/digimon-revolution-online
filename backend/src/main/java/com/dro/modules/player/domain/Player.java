@@ -64,7 +64,7 @@ public class Player {
         player.email = email;
         player.password = password;
         player.createdAt = createdAt;
-        player.maxDigimonSlots = 3;
+        player.maxDigimonSlots = 1;
         player.maxStorageSlots = 50;
         player.unlockedIncubationSlots = 1;
         player.userType = UserType.PLAYER;
@@ -250,7 +250,7 @@ public class Player {
     }
 
     private static int $default$maxDigimonSlots() {
-        return 3;
+        return 1;
     }
 
     private static int $default$maxStorageSlots() {

@@ -20,6 +20,11 @@ public class DigimonFactory {
 
     public static Digimon createBaby(UUID playerId, DigitamaType digitamaType,
                                      DigimonInfos digimon) {
+        return createBaby(playerId, digitamaType, digimon, DigimonStatus.ACTIVE);
+    }
+
+    public static Digimon createBaby(UUID playerId, DigitamaType digitamaType,
+                                     DigimonInfos digimon, DigimonStatus initialStatus) {
 
 //        String babyName = DigitamaHatchRules.rollBabyName(digitamaType);
 //        String type = digitamaType.name();
@@ -86,7 +91,7 @@ public class DigimonFactory {
                 .maxEnergy(maxEnergy)
                 .trait(trait)
                 .lastEnergyUpdate(Instant.now())
-                .status(DigimonStatus.ACTIVE)
+                .status(initialStatus)
                 .digimonInfoId(digimon.getId())
                 .build();
     }

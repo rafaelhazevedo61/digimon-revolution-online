@@ -56,7 +56,6 @@ class ClaimIncubationUseCaseTest {
         Player player = Player.builder()
                 .id(playerId)
                 .activeDigimonId(activeDigimonId)
-                .maxDigimonSlots(3)
                 .build();
         Incubation incubation = Incubation.builder()
                 .id(incubationId)
@@ -87,7 +86,6 @@ class ClaimIncubationUseCaseTest {
         when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
         when(incubationRepository.findByIdAndPlayerIdForUpdate(incubationId, playerId))
                 .thenReturn(Optional.of(incubation));
-        when(digimonRepository.countByPlayerIdAndStatus(playerId, DigimonStatus.ACTIVE)).thenReturn(0L);
         when(digitamaPoolRepository.findByCodeAndActiveTrueAndContentActiveTrue(anyString()))
                 .thenReturn(Optional.of(pool));
 
@@ -101,7 +99,7 @@ class ClaimIncubationUseCaseTest {
 
         assertNotNull(digimon);
         assertEquals(playerId, digimon.getPlayerId());
-        assertEquals(DigimonStatus.ACTIVE, digimon.getStatus());
+        assertEquals(DigimonStatus.HATCHED, digimon.getStatus());
         assertEquals(IncubationStatus.CLAIMED, incubation.getStatus());
         verify(incubationRepository).findByIdAndPlayerIdForUpdate(eq(incubationId), eq(playerId));
         verify(incubationRepository).save(incubation);

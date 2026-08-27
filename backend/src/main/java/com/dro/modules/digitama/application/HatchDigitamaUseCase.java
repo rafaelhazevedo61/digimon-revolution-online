@@ -40,7 +40,7 @@ public class HatchDigitamaUseCase {
     public Digimon execute(String token) {
         try {
             UUID playerId = TokenExtractor.extractPlayerId(token);
-            Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+            Player player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
             if (player.getSelectedDigitama() == null) {
                 throw new BadRequestException("No digitama selected");
             }

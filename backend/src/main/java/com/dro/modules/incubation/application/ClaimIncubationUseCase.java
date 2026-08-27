@@ -56,10 +56,8 @@ public class ClaimIncubationUseCase {
             validateIncubationFinished(incubation);
         }
 
-        validateDigimonSlots(player);
         Digimon digimon = createDigimonFromIncubation(playerId, incubation);
         digimonRepository.save(digimon);
-        setActiveIfFirstDigimon(player, digimon);
         finalizeIncubation(incubation);
         tutorialService.completeStep(playerId, TutorialStep.HATCH_DIGIMON);
         return digimon;
@@ -85,22 +83,9 @@ public class ClaimIncubationUseCase {
                 .orElseThrow(() -> new NotFoundException("Digitama pool not found: " + poolCode));
         DigitamaPoolEntry entry = DigitamaPoolRoller.roll(pool.getEntries());
         var infos = entry.getDigimonInfo();
-        return DigimonFactory.createBaby(playerId, digitamaType, infos);
+        return DigimonFactory.createBaby(playerId, digitamaType, infos, DigimonStatus.HATCHED);
     }
 
-    private void setActiveIfFirstDigimon(Player player, Digimon digimon) {
-        if (player.getActiveDigimonId() == null) {
-            player.setActiveDigimonId(digimon.getId());
-            playerRepository.save(player);
-        }
-    }
-
-    private void validateDigimonSlots(Player player) {
-        long activeCount = digimonRepository.countByPlayerIdAndStatus(player.getId(), DigimonStatus.ACTIVE);
-        if (activeCount >= player.getMaxDigimonSlots()) {
-            throw new BadRequestException("Slots de Digimon cheios (" + activeCount + "/" + player.getMaxDigimonSlots() + "). Guarde um Digimon no Storage para liberar espaço.");
-        }
-    }
 
     private void forceReadyIfInProgress(Incubation incubation) {
         if (incubation.getStatus() == IncubationStatus.IN_PROGRESS) {
