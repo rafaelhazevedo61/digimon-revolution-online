@@ -101,6 +101,7 @@ class OpenChestUseCaseTest {
         );
 
         assertThat(response.requestId()).isEqualTo("request-1");
+        assertThat(response.quantity()).isEqualTo(1);
         assertThat(response.replayed()).isFalse();
         assertThat(response.message()).isEqualTo("Baú aberto com sucesso!");
         assertThat(response.chestCode()).isEqualTo(chestCode);
@@ -123,6 +124,41 @@ class OpenChestUseCaseTest {
     }
 
     @Test
+    void executeOpensMultipleChestsInOneTransactionAndAggregatesRewards() {
+        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
+        String chestCode = "CHEST_MISSION_NATIVE_FOREST";
+        ItemDefinition chestDefinition = itemDefinition(1L, chestCode, "Baú Floresta Nativa", "CHEST", 99);
+        ItemDefinition rewardDefinition = itemDefinition(2L, "FRAGMENT_AGUMON", "Fragmento do Agumon", "EVOLUTION_MATERIAL", 999);
+        ChestDefinitionEntity chest = chest(chestCode, chestDefinition, rewardDefinition);
+        Player player = Player.builder().id(playerId).activeDigimonId(digimonId).build();
+        Digimon digimon = Digimon.builder().id(digimonId).playerId(playerId).build();
+        InventoryItem chestInventory = inventory(digimonId, ItemType.LOOT_CHEST, chestDefinition, 5);
+
+        stubCommon(playerId, digimonId, player, digimon, chest, chestInventory, rewardDefinition);
+        when(chestOpeningRepository.saveAndFlush(any(ChestOpeningEntity.class)))
+                .thenAnswer(invocation -> {
+                    ChestOpeningEntity opening = invocation.getArgument(0);
+                    opening.setId(11L);
+                    return opening;
+                });
+
+        ChestOpeningResponse response = openChestUseCase.execute(
+                token(playerId),
+                new OpenChestRequest(chestCode, "request-batch-1", 3)
+        );
+
+        assertThat(response.quantity()).isEqualTo(3);
+        assertThat(response.replayed()).isFalse();
+        assertThat(response.items()).hasSize(1);
+        assertThat(response.items().get(0).itemCode()).isEqualTo("FRAGMENT_AGUMON");
+        assertThat(response.items().get(0).quantity()).isEqualTo(3);
+        assertThat(chestInventory.getQuantity()).isEqualTo(2);
+        verify(chestLootRoller, times(3)).roll(chest.getLootTable());
+        verify(chestOpeningRepository).saveAndFlush(any(ChestOpeningEntity.class));
+    }
+
+    @Test
     void executeReturnsPreviousOpeningWithoutConsumingAgainOnRetry() {
         UUID playerId = UUID.randomUUID();
         String chestCode = "CHEST_MISSION_NATIVE_FOREST";
@@ -133,6 +169,7 @@ class OpenChestUseCaseTest {
                 .requestId("request-1")
                 .playerId(playerId)
                 .chestDefinition(chest)
+                .quantity(3)
                 .rarity(LootRarity.COMMON)
                 .source("PLAYER_INVENTORY")
                 .build();
@@ -144,6 +181,7 @@ class OpenChestUseCaseTest {
         );
 
         assertThat(response.requestId()).isEqualTo("request-1");
+        assertThat(response.quantity()).isEqualTo(3);
         assertThat(response.replayed()).isTrue();
         assertThat(response.message()).isEqualTo(
                 "Esta abertura já havia sido processada. O resultado original foi retornado."

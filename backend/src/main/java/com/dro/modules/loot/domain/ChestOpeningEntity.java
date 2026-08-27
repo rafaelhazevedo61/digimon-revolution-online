@@ -28,6 +28,8 @@ public class ChestOpeningEntity {
 
 
     private ChestDefinitionEntity chestDefinition;
+    @Column(nullable = false)
+    private int quantity;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private LootRarity rarity;
@@ -55,6 +57,7 @@ public class ChestOpeningEntity {
         private String requestId;
         private UUID playerId;
         private ChestDefinitionEntity chestDefinition;
+        private int quantity = 1;
         private LootRarity rarity;
         private String source;
         private LocalDateTime openedAt;
@@ -99,6 +102,14 @@ public class ChestOpeningEntity {
         /**
          * @return {@code this}.
          */
+        public ChestOpeningEntity.ChestOpeningEntityBuilder quantity(final int quantity) {
+            this.quantity = quantity;
+            return this;
+        }
+
+        /**
+         * @return {@code this}.
+         */
         public ChestOpeningEntity.ChestOpeningEntityBuilder rarity(final LootRarity rarity) {
             this.rarity = rarity;
             return this;
@@ -132,12 +143,12 @@ public class ChestOpeningEntity {
         public ChestOpeningEntity build() {
             List<ChestOpeningItemEntity> items$value = this.items$value;
             if (!this.items$set) items$value = ChestOpeningEntity.$default$items();
-            return new ChestOpeningEntity(this.id, this.requestId, this.playerId, this.chestDefinition, this.rarity, this.source, this.openedAt, items$value);
+            return new ChestOpeningEntity(this.id, this.requestId, this.playerId, this.chestDefinition, this.quantity, this.rarity, this.source, this.openedAt, items$value);
         }
 
         @Override
         public String toString() {
-            return "ChestOpeningEntity.ChestOpeningEntityBuilder(id=" + this.id + ", requestId=" + this.requestId + ", playerId=" + this.playerId + ", chestDefinition=" + this.chestDefinition + ", rarity=" + this.rarity + ", source=" + this.source + ", openedAt=" + this.openedAt + ", items$value=" + this.items$value + ")";
+            return "ChestOpeningEntity.ChestOpeningEntityBuilder(id=" + this.id + ", requestId=" + this.requestId + ", playerId=" + this.playerId + ", chestDefinition=" + this.chestDefinition + ", quantity=" + this.quantity + ", rarity=" + this.rarity + ", source=" + this.source + ", openedAt=" + this.openedAt + ", items$value=" + this.items$value + ")";
         }
     }
 
@@ -159,6 +170,10 @@ public class ChestOpeningEntity {
 
     public ChestDefinitionEntity getChestDefinition() {
         return this.chestDefinition;
+    }
+
+    public int getQuantity() {
+        return this.quantity;
     }
 
     public LootRarity getRarity() {
@@ -193,6 +208,10 @@ public class ChestOpeningEntity {
         this.chestDefinition = chestDefinition;
     }
 
+    public void setQuantity(final int quantity) {
+        this.quantity = quantity;
+    }
+
     public void setRarity(final LootRarity rarity) {
         this.rarity = rarity;
     }
@@ -210,14 +229,16 @@ public class ChestOpeningEntity {
     }
 
     public ChestOpeningEntity() {
+        this.quantity = 1;
         this.items = ChestOpeningEntity.$default$items();
     }
 
-    public ChestOpeningEntity(final Long id, final String requestId, final UUID playerId, final ChestDefinitionEntity chestDefinition, final LootRarity rarity, final String source, final LocalDateTime openedAt, final List<ChestOpeningItemEntity> items) {
+    public ChestOpeningEntity(final Long id, final String requestId, final UUID playerId, final ChestDefinitionEntity chestDefinition, final int quantity, final LootRarity rarity, final String source, final LocalDateTime openedAt, final List<ChestOpeningItemEntity> items) {
         this.id = id;
         this.requestId = requestId;
         this.playerId = playerId;
         this.chestDefinition = chestDefinition;
+        this.quantity = quantity;
         this.rarity = rarity;
         this.source = source;
         this.openedAt = openedAt;

@@ -153,24 +153,25 @@ function missionRewardIcon(reward) {
   return "✨";
 }
 
-async function missionOpenRewardChest(chestCode, button) {
+async function missionOpenRewardChest(chestCode, quantity = 1, button) {
   if (!chestCode || typeof invOpenChest !== "function") {
     showToast("Abertura de baú indisponível.", "error");
     return;
   }
   if (button && button.disabled) return;
 
+  const requestedQuantity = Number.parseInt(quantity, 10) || 1;
   if (button) {
     button.disabled = true;
     button.textContent = "Abrindo...";
   }
 
-  const result = await invOpenChest(chestCode);
+  const result = await invOpenChest(chestCode, requestedQuantity);
   if (result && button) {
-    button.textContent = "Baú aberto";
+    button.textContent = requestedQuantity > 1 ? "Baús abertos" : "Baú aberto";
   } else if (button) {
     button.disabled = false;
-    button.textContent = "Abrir baú";
+    button.textContent = requestedQuantity > 1 ? `Abrir ${requestedQuantity} baús` : "Abrir baú";
   }
 }
 
@@ -203,6 +204,7 @@ function showMissionClaimModal(result) {
   const rewardMarkup = rewards.length > 0
       ? rewards.map(reward => {
         const chestCode = missionRewardChestCode(reward);
+        const chestQuantity = Math.max(1, Number(reward.quantity) || 1);
         const isChest = reward.item === "LOOT_CHEST" || !!chestCode;
         return `
           <div class="flex items-center gap-3 rounded-lg border ${isChest ? "border-cyan-700 bg-cyan-950/40" : "border-slate-700 bg-slate-900/60"} px-3 py-3">
@@ -213,7 +215,7 @@ function showMissionClaimModal(result) {
             </div>
             <div class="flex flex-col items-end gap-2">
               <span class="font-bold text-cyan-300">x${Number(reward.quantity) || 0}</span>
-              ${chestCode ? `<button type="button" class="btn-sm btn-secondary whitespace-nowrap" onclick="missionOpenRewardChest('${escapeAttr(chestCode)}', this)">Abrir baú</button>` : ""}
+              ${chestCode ? `<button type="button" class="btn-sm btn-secondary whitespace-nowrap" onclick="missionOpenRewardChest('${escapeAttr(chestCode)}', ${chestQuantity}, this)">${chestQuantity > 1 ? `Abrir ${chestQuantity} baús` : "Abrir baú"}</button>` : ""}
             </div>
           </div>
         `;
