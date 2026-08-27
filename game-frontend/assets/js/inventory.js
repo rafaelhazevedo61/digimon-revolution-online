@@ -89,14 +89,17 @@ function invRenderItems() {
     const chestQuantityInputId = chestCode ? `inv-chest-quantity-${String(chestCode).replace(/[^a-zA-Z0-9_-]/g, "-")}` : null;
     const xpDiskQuantityInputId = isXpDiskItem ? `inv-xp-disk-quantity-${String(item.itemType).replace(/[^a-zA-Z0-9_-]/g, "-")}` : null;
     const maxUseQuantity = Math.min(100, Math.max(1, Number(item.quantity) || 1));
-    const incubationOnly = category === "DIGITAMA" || category === "INCUBATOR"
-      || item.itemType.startsWith("DIGITAMA_") || item.itemType.startsWith("INCUBATOR_");
+    const digitamaItem = category === "DIGITAMA" || item.itemType.startsWith("DIGITAMA_");
+    const incubatorItem = category === "INCUBATOR" || item.itemType.startsWith("INCUBATOR_");
+    const incubationOnly = digitamaItem || incubatorItem;
     const usable = !incubationOnly && (def ? def.usable : invIsUsable(item.itemType));
     const action = isChest && chestCode ? `
       <div class="flex items-center gap-2">
         <input id="${chestQuantityInputId}" class="input w-16 text-center" type="number" min="1" max="${maxUseQuantity}" value="1" aria-label="Quantidade de baús" />
         <button class="btn-sm btn-primary whitespace-nowrap" onclick="invOpenChest('${escapeHtml(chestCode)}', document.getElementById('${chestQuantityInputId}').value)">Abrir</button>
       </div>
+    ` : incubatorItem ? `
+      <button class="btn-sm btn-primary whitespace-nowrap" onclick="navigateTo('incubation')">Usar</button>
     ` : isXpDiskItem ? `
       <div class="flex items-center gap-2">
         <input id="${xpDiskQuantityInputId}" class="input w-16 text-center" type="number" min="1" max="${maxUseQuantity}" value="1" aria-label="Quantidade de Discos de XP" />
