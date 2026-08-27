@@ -9,6 +9,12 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Adicionado
 
+- **Painel de Primeiros passos recolhível**: o jogador pode minimizar o tutorial no dashboard, mantendo apenas o título e o botão para expandir; a preferência fica persistida no navegador.
+
+- **Digitamas elementais**: Fogo, Água, Planta, Terra, Vento, Luz, Trevas, Trovão, Neutro, Gelo e Metal passaram a ter pools próprios; a seleção inicial exibe todas as opções e bloqueia as que não possuem Digimon BABY elegível.
+  - A elegibilidade temporária dos 53 Digimons BABY é controlada por flags booleanas em `application.yml`; entradas `false` não participam do sorteio.
+  - O Digitama de Metal fica visível, porém bloqueado, até que um Digimon BABY do elemento `STEEL` seja cadastrado.
+
 - **Incubadora em paralelo**: três slots fixos sempre visíveis, com o slot 1 desbloqueado por padrão e slots 2 e 3 preparados para futura liberação por progressão.
   - Incubações independentes por slot, com timers e claims individuais.
   - Consulta da incubadora retornando estados bloqueado, livre, em andamento e pronto para cada posição.
@@ -28,6 +34,8 @@ e o projeto segue versionamento incremental por entregas (PRs).
   - Migrations `V74` (rating, estatísticas e tabela `arena_matches`) e `V75`/`V76` (flag `is_bot`, jogador de sistema e seed de bots).
 
 ### Corrigido
+
+- **Digitama de Gelo**: corrigido o binding das flags YAML para nomes de Digimons BABY com espaços, fazendo `Yukimi Botamon` ser reconhecido corretamente como elegível quando sua flag está `true`.
 
 - **Tela de Missões**: áreas agora aparecem da maior progressão para a menor e, dentro de cada área, as missões são ordenadas pelo maior requisito de nível para o menor, usando o número da missão como desempate; cada missão também permite consultar suas recompensas possíveis em um modal, exibindo XP/Bits e o conteúdo do baú atual, ou itens fixos e loot aleatório apenas no fluxo legado de missões sem baú.
 - **Navegação principal do game frontend**: Inventário passou a ocupar o atalho de Digimon na barra de rodapé, enquanto o acesso a Storage passou a ocupar o botão de Digimon nas ações do dashboard; a tela de seleção de Digimons permanece reservada a fluxos internos.

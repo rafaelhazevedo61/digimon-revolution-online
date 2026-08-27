@@ -46,6 +46,9 @@ class ClaimIncubationUseCaseTest {
     private com.dro.modules.digitama.infra.DigitamaPoolRepository digitamaPoolRepository;
 
     @Mock
+    private com.dro.modules.digitama.application.DigitamaPoolEligibilityService digitamaPoolEligibilityService;
+
+    @Mock
     private TutorialService tutorialService;
 
     @Test
@@ -70,6 +73,8 @@ class ClaimIncubationUseCaseTest {
         DigimonInfos infos = new DigimonInfos();
         infos.setId(1L);
         infos.setName("Agumon");
+        infos.setStage(com.dro.modules.digimon.domain.enums.Stage.BABY);
+        infos.setElement(com.dro.modules.digimon.domain.enums.Element.FIRE);
         infos.setBaseHp(100);
         infos.setBaseAtk(50);
         infos.setBaseDef(40);
@@ -79,7 +84,7 @@ class ClaimIncubationUseCaseTest {
                 .active(true)
                 .build();
         DigitamaPool pool = DigitamaPool.builder()
-                .code("FIRE")
+                .code("DIGITAMA_FIRE")
                 .entries(List.of(entry))
                 .build();
 
@@ -88,12 +93,15 @@ class ClaimIncubationUseCaseTest {
                 .thenReturn(Optional.of(incubation));
         when(digitamaPoolRepository.findByCodeAndActiveTrueAndContentActiveTrue(anyString()))
                 .thenReturn(Optional.of(pool));
+        when(digitamaPoolEligibilityService.getEligibleEntries(pool))
+                .thenReturn(List.of(entry));
 
         Digimon digimon = new ClaimIncubationUseCase(
                 incubationRepository,
                 digimonRepository,
                 playerRepository,
                 digitamaPoolRepository,
+                digitamaPoolEligibilityService,
                 tutorialService
         ).execute(JwtTestToken.create(playerId), incubationId);
 

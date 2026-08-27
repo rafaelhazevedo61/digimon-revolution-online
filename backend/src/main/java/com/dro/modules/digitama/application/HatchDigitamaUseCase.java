@@ -34,6 +34,7 @@ public class HatchDigitamaUseCase {
     private final DigimonRepository digimonRepository;
     private final DigitamaHistoryRepository historyRepository;
     private final DigitamaPoolRepository digitamaPoolRepository;
+    private final DigitamaPoolEligibilityService digitamaPoolEligibilityService;
     private final TutorialService tutorialService;
 
     @Transactional
@@ -49,7 +50,9 @@ public class HatchDigitamaUseCase {
             }
             String selectedDigitamaCode = player.getSelectedDigitama().getPoolCode();
             DigitamaPool pool = digitamaPoolRepository.findByCodeAndActiveTrueAndContentActiveTrue(selectedDigitamaCode).orElseThrow(() -> new NotFoundException("Digitama pool not found or inactive: " + selectedDigitamaCode));
-            DigitamaPoolEntry selectedEntry = DigitamaPoolRoller.roll(pool.getEntries());
+            DigitamaPoolEntry selectedEntry = DigitamaPoolRoller.roll(
+                    digitamaPoolEligibilityService.getEligibleEntries(pool)
+            );
             DigimonInfos infos = selectedEntry.getDigimonInfo();
             Digimon digimon = DigimonFactory.createBaby(playerId, player.getSelectedDigitama(), infos);
             if (digimon == null) {
@@ -69,11 +72,19 @@ public class HatchDigitamaUseCase {
         }
     }
 
-    public HatchDigitamaUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final DigitamaHistoryRepository historyRepository, final DigitamaPoolRepository digitamaPoolRepository, final TutorialService tutorialService) {
+    public HatchDigitamaUseCase(
+            final PlayerRepository playerRepository,
+            final DigimonRepository digimonRepository,
+            final DigitamaHistoryRepository historyRepository,
+            final DigitamaPoolRepository digitamaPoolRepository,
+            final DigitamaPoolEligibilityService digitamaPoolEligibilityService,
+            final TutorialService tutorialService
+    ) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.historyRepository = historyRepository;
         this.digitamaPoolRepository = digitamaPoolRepository;
+        this.digitamaPoolEligibilityService = digitamaPoolEligibilityService;
         this.tutorialService = tutorialService;
     }
 }
