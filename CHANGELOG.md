@@ -9,6 +9,8 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Adicionado
 
+- **Painel de Primeiros passos recolhível**: o jogador pode minimizar o tutorial no dashboard, mantendo apenas o título e o botão para expandir; a preferência fica persistida no navegador.
+
 - **Digitamas elementais**: Fogo, Água, Planta, Terra, Vento, Luz, Trevas, Trovão, Neutro, Gelo e Metal passaram a ter pools próprios; a seleção inicial exibe todas as opções e bloqueia as que não possuem Digimon BABY elegível.
   - A elegibilidade temporária dos 53 Digimons BABY é controlada por flags booleanas em `application.yml`; entradas `false` não participam do sorteio.
   - O Digitama de Metal fica visível, porém bloqueado, até que um Digimon BABY do elemento `STEEL` seja cadastrado.
