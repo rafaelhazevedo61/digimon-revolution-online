@@ -62,6 +62,7 @@ class ActivateDigimonUseCaseTest {
         assertEquals(DigimonStatus.ACTIVE, selected.getStatus());
         assertEquals(selectedId, player.getActiveDigimonId());
         verify(digimonRepository).save(previous);
+        verify(digimonRepository).flush();
         verify(digimonRepository).save(selected);
         verify(playerRepository).save(player);
     }

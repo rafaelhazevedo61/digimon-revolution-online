@@ -70,10 +70,18 @@ public class ActivateDigimonUseCase {
             return;
         }
 
+        boolean movedPreviousActive = false;
         for (Digimon activeDigimon : activeDigimons) {
             if (!activeDigimon.getId().equals(digimon.getId())) {
                 moveToStorage(player, activeDigimon, digimon);
+                movedPreviousActive = true;
             }
+        }
+
+        // A constraint parcial permite apenas um ACTIVE por jogador. Persistimos
+        // o parceiro anterior como STORED antes de promover o selecionado.
+        if (movedPreviousActive) {
+            digimonRepository.flush();
         }
 
         digimon.setStatus(DigimonStatus.ACTIVE);
