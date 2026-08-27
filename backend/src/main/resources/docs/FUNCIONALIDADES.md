@@ -308,7 +308,7 @@ A loja utiliza um catálogo persistido de produtos ativos.
 - produtos de item e equipamento;
 - preços e disponibilidade administráveis via painel.
 
-Preços, itens e regras específicas de catálogo devem ser consultados em `shop_products` e na implementação dos use cases.
+Preços, itens e regras específicas de catálogo devem ser consultados em `shop_products` e na implementação dos use cases. Para um item específico, como `INCUBATION_SLOT_UNLOCK`, o `itemDefinitionCode` identifica a definição; o `itemType` pode ser omitido no formulário e é derivado pelo backend quando o código corresponde a um tipo conhecido.
 
 ### Endpoints
 
