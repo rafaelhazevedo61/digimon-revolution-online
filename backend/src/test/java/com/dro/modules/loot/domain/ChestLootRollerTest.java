@@ -82,6 +82,61 @@ class ChestLootRollerTest {
     }
 
     @Test
+    void rollReturnsExactlyOneDigitamaWithFixedQuantity() {
+        LootTableEntity table = baseTable(1, 1);
+        table.getRarityWeights().forEach(weight -> weight.setWeight(
+                weight.getRarity() == LootRarity.COMMON ? 100 : 0
+        ));
+        List.of(
+                ItemType.DIGITAMA_STARTER,
+                ItemType.DIGITAMA_FIRE,
+                ItemType.DIGITAMA_WATER,
+                ItemType.DIGITAMA_NATURE,
+                ItemType.DIGITAMA_EARTH,
+                ItemType.DIGITAMA_WIND,
+                ItemType.DIGITAMA_LIGHT,
+                ItemType.DIGITAMA_DARK,
+                ItemType.DIGITAMA_THUNDER,
+                ItemType.DIGITAMA_NEUTRAL,
+                ItemType.DIGITAMA_ICE,
+                ItemType.DIGITAMA_STEEL
+        ).forEach(itemType -> table.getEntries().add(entry(
+                LootRarity.COMMON,
+                itemType.name(),
+                null,
+                1,
+                1,
+                1
+        )));
+
+        ChestLootRoller.ChestLootRoll result = new ChestLootRoller(new Random(23)).roll(table);
+
+        assertThat(result.items()).hasSize(1);
+        assertThat(result.items().get(0).itemType()).isIn(ItemType.values());
+        assertThat(result.items().get(0).itemType().name()).startsWith("DIGITAMA_");
+        assertThat(result.items().get(0).materialCode()).isNull();
+        assertThat(result.items().get(0).quantity()).isEqualTo(1);
+    }
+
+    @Test
+    void rollReturnsOneFragmentWithQuantityBetweenOneAndFive() {
+        LootTableEntity table = baseTable(1, 1);
+        table.getRarityWeights().forEach(weight -> weight.setWeight(
+                weight.getRarity() == LootRarity.COMMON ? 100 : 0
+        ));
+        table.getEntries().add(entry(LootRarity.COMMON, "EVOLUTION_MATERIAL", "FRAGMENT_A", 1, 1, 5));
+        table.getEntries().add(entry(LootRarity.COMMON, "EVOLUTION_MATERIAL", "FRAGMENT_B", 1, 1, 5));
+        table.getEntries().add(entry(LootRarity.COMMON, "EVOLUTION_MATERIAL", "FRAGMENT_C", 1, 1, 5));
+
+        ChestLootRoller.ChestLootRoll result = new ChestLootRoller(new Random(24)).roll(table);
+
+        assertThat(result.items()).hasSize(1);
+        assertThat(result.items().get(0).itemType()).isEqualTo(ItemType.EVOLUTION_MATERIAL);
+        assertThat(result.items().get(0).materialCode()).isIn("FRAGMENT_A", "FRAGMENT_B", "FRAGMENT_C");
+        assertThat(result.items().get(0).quantity()).isBetween(1, 5);
+    }
+
+    @Test
     void rollRejectsAConfigurationAboveFourItems() {
         LootTableEntity table = tableWithThreeEntriesPerRarity(1, 5);
 

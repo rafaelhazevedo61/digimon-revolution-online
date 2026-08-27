@@ -41,7 +41,7 @@ public class GetEvolutionOptionsUseCase {
         if (digimon.getDigimonInfoId() == null) {
             throw new BadRequestException("Digimon has no linked DigimonInfo. Cannot determine evolution options.");
         }
-        List<EvolutionLine> lines = evolutionLineRepository.findByActiveTrueAndSteps_DigimonInfo_Id(digimon.getDigimonInfoId());
+        List<EvolutionLine> lines = evolutionLineRepository.findByActiveTrueAndContentActiveTrueAndSteps_DigimonInfo_Id(digimon.getDigimonInfoId());
         List<EvolutionOptionResponse> options = new ArrayList<>();
         for (EvolutionLine line : lines) {
             findNextStep(line, digimon).ifPresent(nextStep -> {
