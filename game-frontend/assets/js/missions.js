@@ -147,6 +147,25 @@ function missionRewardIcon(reward) {
   return "✨";
 }
 
+async function repeatMissionFromReward(missionId) {
+  const button = document.getElementById("mission-repeat-button");
+  if (!missionId || !button) return;
+
+  button.disabled = true;
+  button.textContent = "Iniciando...";
+
+  try {
+    await apiPost("/missions/start", { missionId });
+    document.getElementById("mission-claim-modal")?.remove();
+    showToast("Missão repetida!");
+    navigateTo("dashboard");
+  } catch (err) {
+    showToast(err.message, "error");
+    button.disabled = false;
+    button.textContent = "Repetir missão";
+  }
+}
+
 function showMissionClaimModal(result) {
   const existing = document.getElementById("mission-claim-modal");
   if (existing) existing.remove();
@@ -210,7 +229,14 @@ function showMissionClaimModal(result) {
         <div class="space-y-2">${rewardMarkup}</div>
       </div>
 
-      <button class="btn-primary w-full mt-5" onclick="document.getElementById('mission-claim-modal')?.remove()">Continuar</button>
+      ${result && result.missionId ? `
+        <div class="flex flex-col sm:flex-row gap-2 mt-5">
+          <button id="mission-repeat-button" class="btn-primary flex-1" onclick="repeatMissionFromReward('${escapeAttr(result.missionId)}')">Repetir missão</button>
+          <button class="btn-secondary flex-1" onclick="document.getElementById('mission-claim-modal')?.remove()">Continuar</button>
+        </div>
+      ` : `
+        <button class="btn-primary w-full mt-5" onclick="document.getElementById('mission-claim-modal')?.remove()">Continuar</button>
+      `}
     </div>
   `;
   overlay.addEventListener("click", event => {
