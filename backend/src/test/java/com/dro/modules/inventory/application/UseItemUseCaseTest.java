@@ -130,6 +130,112 @@ class UseItemUseCaseTest {
         verify(digimonRepository).save(digimon);
     }
 
+    @Test
+    void consumesMultipleXpDisksAndReturnsAccumulatedExperience() {
+        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
+        Player player = createPlayer(playerId, digimonId, 1);
+        Digimon digimon = Digimon.builder()
+                .id(digimonId)
+                .playerId(playerId)
+                .level(10)
+                .experience(0)
+                .build();
+        InventoryItem item = InventoryItem.builder()
+                .id(UUID.randomUUID())
+                .digimonId(digimonId)
+                .itemType(ItemType.XP_DISC_10)
+                .quantity(5)
+                .build();
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(inventoryRepository.findByDigimonIdAndItemTypeForUpdate(digimonId, ItemType.XP_DISC_10))
+                .thenReturn(Optional.of(item));
+
+        UseItemResponse response = useItemUseCase.execute(tokenFor(playerId), ItemType.XP_DISC_10, 3);
+
+        assertThat(response.itemType()).isEqualTo(ItemType.XP_DISC_10);
+        assertThat(response.quantity()).isEqualTo(3);
+        assertThat(response.xpGranted()).isEqualTo(300);
+        assertThat(response.previousLevel()).isEqualTo(10);
+        assertThat(response.currentLevel()).isEqualTo(10);
+        assertThat(response.levelUp()).isFalse();
+        assertThat(digimon.getExperience()).isEqualTo(300);
+        assertThat(item.getQuantity()).isEqualTo(2);
+        verify(inventoryRepository).save(item);
+        verify(digimonRepository).save(digimon);
+    }
+
+    @Test
+    void processesAllDisksInBatchAndReportsLevelUp() {
+        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
+        Player player = createPlayer(playerId, digimonId, 1);
+        Digimon digimon = Digimon.builder()
+                .id(digimonId)
+                .playerId(playerId)
+                .level(10)
+                .experience(0)
+                .build();
+        InventoryItem item = InventoryItem.builder()
+                .id(UUID.randomUUID())
+                .digimonId(digimonId)
+                .itemType(ItemType.XP_DISC_10)
+                .quantity(10)
+                .build();
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(inventoryRepository.findByDigimonIdAndItemTypeForUpdate(digimonId, ItemType.XP_DISC_10))
+                .thenReturn(Optional.of(item));
+
+        UseItemResponse response = useItemUseCase.execute(tokenFor(playerId), ItemType.XP_DISC_10, 10);
+
+        assertThat(response.quantity()).isEqualTo(10);
+        assertThat(response.xpGranted()).isEqualTo(1000);
+        assertThat(response.previousLevel()).isEqualTo(10);
+        assertThat(response.currentLevel()).isEqualTo(11);
+        assertThat(response.levelUp()).isTrue();
+        assertThat(digimon.getExperience()).isZero();
+        verify(inventoryRepository).delete(item);
+        verify(digimonRepository).save(digimon);
+    }
+
+    @Test
+    void rejectsBatchWhenInventoryDoesNotHaveEnoughDisksWithoutChangingState() {
+        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
+        Player player = createPlayer(playerId, digimonId, 1);
+        Digimon digimon = Digimon.builder()
+                .id(digimonId)
+                .playerId(playerId)
+                .level(10)
+                .experience(0)
+                .build();
+        InventoryItem item = InventoryItem.builder()
+                .id(UUID.randomUUID())
+                .digimonId(digimonId)
+                .itemType(ItemType.XP_DISC_20)
+                .quantity(2)
+                .build();
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(inventoryRepository.findByDigimonIdAndItemTypeForUpdate(digimonId, ItemType.XP_DISC_20))
+                .thenReturn(Optional.of(item));
+
+        assertThatThrownBy(() -> useItemUseCase.execute(tokenFor(playerId), ItemType.XP_DISC_20, 3))
+                .isInstanceOf(com.dro.shared.exception.UnprocessableException.class)
+                .hasMessageContaining("Not enough items");
+
+        assertThat(item.getQuantity()).isEqualTo(2);
+        assertThat(digimon.getExperience()).isZero();
+        verify(inventoryRepository, never()).delete(item);
+        verify(inventoryRepository, never()).save(item);
+        verify(digimonRepository, never()).save(digimon);
+    }
+
     @ParameterizedTest
     @CsvSource({
             "XP_DISC_1, 10",

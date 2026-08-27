@@ -4,6 +4,7 @@ import com.dro.modules.inventory.domain.ItemType;
 
 public record UseItemResponse(
         ItemType itemType,
+        int quantity,
         int xpGranted,
         int previousLevel,
         int currentLevel,

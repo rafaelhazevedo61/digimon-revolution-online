@@ -90,7 +90,7 @@ public class InventoryController {
 
     @PostMapping("/use")
     public ResponseEntity<UseItemResponse> useItem(@RequestHeader("Authorization") String authorization, @RequestBody @Valid UseItemRequest request) {
-        return ResponseEntity.ok(useItemUseCase.execute(authorization, request.itemType()));
+        return ResponseEntity.ok(useItemUseCase.execute(authorization, request.itemType(), request.quantity()));
     }
 
     public InventoryController(final InventoryRepository repository, final UseItemUseCase useItemUseCase, final OpenChestUseCase openChestUseCase, final PlayerRepository playerRepository) {
