@@ -29,6 +29,7 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Corrigido
 
+- **Ordenação da tela de Missões**: áreas agora aparecem da maior progressão para a menor e, dentro de cada área, as missões são ordenadas pelo maior requisito de nível para o menor, usando o número da missão como desempate.
 - **Navegação principal do game frontend**: Inventário passou a ocupar o atalho de Digimon na barra de rodapé, enquanto o acesso a Storage passou a ocupar o botão de Digimon nas ações do dashboard; a tela de seleção de Digimons permanece reservada a fluxos internos.
 - **Atalho de incubação no inventário**: Incubadoras exibem o botão Usar, que encaminha o jogador para a tela de Incubação sem consumir o item diretamente; Digitamas permanecem sem esse botão.
 - **Ativo único e Storage**: o jogador passa a ter no máximo um Digimon ativo; o Digimon recém-chocado fica em estado `HATCHED` até a escolha entre `Tornar ativo` e `Enviar para Storage`, e a troca envia o parceiro anterior para o Storage automaticamente. A tela de Storage exibe a imagem dos Digimons e usa a ação `Tornar ativo`.

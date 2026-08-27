@@ -8,6 +8,31 @@ const AREA_INFO = {
 };
 
 const STAGE_ORDER = ["BABY", "BABY_II", "ROOKIE", "CHAMPION", "ULTIMATE", "MEGA"];
+const AREA_ORDER = ["NATIVE_FOREST", "GEAR_SAVANNA", "FACTORIAL_TOWN", "FREEZELAND", "SERVER_DESERT", "INFINITY_MOUNTAIN"];
+
+function areaProgressionRank(area) {
+  return AREA_ORDER.indexOf(String(area || ""));
+}
+
+function stageProgressionRank(stage) {
+  return STAGE_ORDER.indexOf(String(stage || ""));
+}
+
+function missionNumber(mission) {
+  const id = String(mission && (mission.id || mission.missionId) || "");
+  const match = id.match(/_(\d+)$/);
+  return match ? Number(match[1]) : -1;
+}
+
+function compareMissionsByProgression(a, b) {
+  const levelDifference = (Number(b.requiredLevel) || 0) - (Number(a.requiredLevel) || 0);
+  if (levelDifference !== 0) return levelDifference;
+
+  const numberDifference = missionNumber(b) - missionNumber(a);
+  if (numberDifference !== 0) return numberDifference;
+
+  return String(b.id || b.missionId || "").localeCompare(String(a.id || a.missionId || ""));
+}
 
 async function renderMissionsPage() {
   const app = document.getElementById("app");
@@ -310,7 +335,9 @@ function renderAreaCards(areas) {
   const container = document.getElementById("areas-list");
 
   const sorted = [...areas].sort((a, b) => {
-    return STAGE_ORDER.indexOf(a.requiredStage) - STAGE_ORDER.indexOf(b.requiredStage);
+    const areaDifference = areaProgressionRank(b.area) - areaProgressionRank(a.area);
+    if (areaDifference !== 0) return areaDifference;
+    return stageProgressionRank(b.requiredStage) - stageProgressionRank(a.requiredStage);
   });
 
   container.innerHTML = sorted.map(a => {
@@ -394,7 +421,9 @@ function renderMissionCards(missions, area) {
     return;
   }
 
-  container.innerHTML = missions.map(m => `
+  const sortedMissions = [...missions].sort(compareMissionsByProgression);
+
+  container.innerHTML = sortedMissions.map(m => `
     <div class="card mb-3">
       <div class="flex justify-between items-start mb-2">
         <div class="flex-1">
