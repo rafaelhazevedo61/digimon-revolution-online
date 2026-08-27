@@ -161,8 +161,8 @@ public class RebirthUseCase {
     }
 
     private void validateCodeInfiniteInvestment(int hp, int attack, int defense) {
-        if (hp < 0 || attack < 0 || defense < 0 || hp + attack + defense > RebirthRules.calculateMaxCodeInfiniteInvestment()) {
-            throw new BadRequestException("Code Infinite investment must be non-negative and total at most 100");
+        if (hp < 0 || attack < 0 || defense < 0) {
+            throw new BadRequestException("O investimento de Códigos Infinitos não pode ser negativo");
         }
     }
 

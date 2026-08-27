@@ -54,14 +54,14 @@ dadosDigitais = max(1, floor((baseEstagio × nivelFator × ivFator) / 10000))
 
 ## Código Infinito no Rebirth
 
-A regra de design aprovada é `10 Códigos Infinitos = +1 ponto de IV mínimo`. O bônus será aplicado ao intervalo de sorteio do novo Digimon, nunca diretamente ao IV final. O limite recomendado é de 100 Códigos Infinitos por Rebirth, distribuídos entre HP, ATK e DEF.
+A regra de design aprovada é `10 Códigos Infinitos = +1 ponto de IV mínimo`. O bônus será aplicado ao intervalo de sorteio do novo Digimon, nunca diretamente ao IV final. O jogador pode distribuir seu saldo disponível entre HP, ATK e DEF, sempre respeitando o teto de IV 100 em cada atributo.
 
 ```text
 bonusIv = floor(codigosInvestidosNoAtributo / 10)
 ivMinimoFinal = min(ivMinimoBase + bonusIv, 100)
 ```
 
-A seleção por atributo está disponível no request e na tela de Rebirth. O servidor valida o limite total, verifica o saldo de Código Infinito no inventário do Digimon e consome o item de forma transacional. O bônus é aplicado ao IV mínimo antes do sorteio, sempre limitado a 100.
+A seleção por atributo está disponível no request e na tela de Rebirth. O servidor verifica o saldo total de Código Infinito no inventário do Digimon e consome o item de forma transacional. O bônus é aplicado ao IV mínimo antes do sorteio, sempre limitado a 100. O saldo é compartilhado entre HP, ATK e DEF; portanto, usar 100 em HP deixa o restante disponível para ATK ou DEF.
 
 ## Alterações realizadas
 
