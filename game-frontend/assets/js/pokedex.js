@@ -138,38 +138,18 @@ function dexRender() {
     return;
   }
 
-  let html = dexEntries.map(d => {
-    const stage = dexStageName(d.stage);
-
-    return `
-      <div class="card-sm mb-2 flex items-center gap-3 cursor-pointer" onclick="dexShowDetail(${d.id})">
-        ${renderDigimonVisual(d.imageUrl, d.stage, "w-12 h-12", "text-2xl")}
-        <div class="flex-1 min-w-0">
-          <p class="font-bold text-sm truncate">${escapeHtml(d.name)}</p>
-          <div class="flex gap-1 mt-1 flex-wrap">
-            <span class="badge badge-${d.stage.toLowerCase()}">${stage}</span>
-            ${d.rarity ? `<span class="badge badge-${d.rarity.toLowerCase()}">${escapeHtml(formatRarity(d.rarity))}</span>` : ""}
-            <span class="badge badge-common">${escapeHtml(formatAttribute(d.attribute))}</span>
-            <span class="badge badge-common">${dexElementLabel(d.element)}</span>
+  let html = `
+    <div class="grid grid-cols-4 gap-1.5" aria-label="Digimons disponíveis">
+      ${dexEntries.map(d => `
+        <button type="button" class="card-sm group text-center p-1 cursor-pointer transition-all hover:border-cyan-500 hover:bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-cyan-400" onclick="dexShowDetail(${d.id})" aria-label="Ver detalhes de ${escapeAttr(d.name)}">
+          <div class="w-full aspect-square rounded-lg overflow-hidden bg-slate-900/70 flex items-center justify-center group-hover:bg-slate-900 transition-colors">
+            ${renderDigimonVisual(d.imageUrl, d.stage, "w-full h-full", "text-5xl")}
           </div>
-        </div>
-        <div class="grid grid-cols-3 gap-1 text-center" style="min-width:120px">
-          <div>
-            <p class="text-xs text-slate-500">HP</p>
-            <p class="text-xs font-bold text-red-400">${d.baseHp}</p>
-          </div>
-          <div>
-            <p class="text-xs text-slate-500">ATK</p>
-            <p class="text-xs font-bold text-orange-400">${d.baseAtk}</p>
-          </div>
-          <div>
-            <p class="text-xs text-slate-500">DEF</p>
-            <p class="text-xs font-bold text-blue-400">${d.baseDef}</p>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join("");
+          <p class="font-bold text-[10px] sm:text-[11px] text-center truncate mt-1" title="${escapeAttr(d.name)}">${escapeHtml(d.name)}</p>
+        </button>
+      `).join("")}
+    </div>
+  `;
 
   if (dexHasMore) {
     html += `
