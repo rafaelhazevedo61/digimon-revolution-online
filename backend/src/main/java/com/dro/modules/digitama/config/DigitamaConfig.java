@@ -34,6 +34,6 @@ public class DigitamaConfig {
     }
 
     private String normalize(String value) {
-        return value.trim().toUpperCase(Locale.ROOT);
+        return value.trim().toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]", "");
     }
 }

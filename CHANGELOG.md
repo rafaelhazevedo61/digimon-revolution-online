@@ -33,6 +33,8 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Corrigido
 
+- **Digitama de Gelo**: corrigido o binding das flags YAML para nomes de Digimons BABY com espaços, fazendo `Yukimi Botamon` ser reconhecido corretamente como elegível quando sua flag está `true`.
+
 - **Tela de Missões**: áreas agora aparecem da maior progressão para a menor e, dentro de cada área, as missões são ordenadas pelo maior requisito de nível para o menor, usando o número da missão como desempate; cada missão também permite consultar suas recompensas possíveis em um modal, exibindo XP/Bits e o conteúdo do baú atual, ou itens fixos e loot aleatório apenas no fluxo legado de missões sem baú.
 - **Navegação principal do game frontend**: Inventário passou a ocupar o atalho de Digimon na barra de rodapé, enquanto o acesso a Storage passou a ocupar o botão de Digimon nas ações do dashboard; a tela de seleção de Digimons permanece reservada a fluxos internos.
 - **Atalho de incubação no inventário**: Incubadoras exibem o botão Usar, que encaminha o jogador para a tela de Incubação sem consumir o item diretamente; Digitamas permanecem sem esse botão.
