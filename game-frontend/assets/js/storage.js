@@ -45,6 +45,7 @@ async function renderStoragePage() {
             <p class="font-bold text-sm truncate">${escapeHtml(d.name)}</p>
             <p class="text-xs text-slate-400">Lv.${d.level} | ${escapeHtml(d.stage)} | ${formatRarity(d.rarity)}</p>
             <p class="text-xs text-slate-500">HP ${d.hp} ATK ${d.attack} DEF ${d.defense}</p>
+            <p class="text-xs text-cyan-300 mt-1">Sacrifício: +${calculateDigitalDataPreview(d)} Dados Digitais</p>
           </div>
           <div class="flex flex-col gap-1">
             <button class="btn-sm"
@@ -65,6 +66,25 @@ async function renderStoragePage() {
       <div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>
     `;
   }
+}
+
+function calculateDigitalDataPreview(digimon) {
+  const stageBase = {
+    BABY: 1,
+    BABY_II: 2,
+    ROOKIE: 5,
+    CHAMPION: 12,
+    ULTIMATE: 30,
+    MEGA: 60
+  }[digimon.stage] || 1;
+  const level = Math.min(Math.max(Number(digimon.level) || 1, 1), 100);
+  const ivHp = Math.min(Math.max(Number(digimon.ivHp) || 0, 0), 100);
+  const ivAttack = Math.min(Math.max(Number(digimon.ivAttack) || 0, 0), 100);
+  const ivDefense = Math.min(Math.max(Number(digimon.ivDefense) || 0, 0), 100);
+  const averageIv = Math.floor((ivHp + ivAttack + ivDefense) / 3);
+  const levelFactor = 25 + Math.floor((75 * level) / 100);
+  const ivFactor = 50 + Math.floor(averageIv / 2);
+  return Math.max(1, Math.floor((stageBase * levelFactor * ivFactor) / 10000));
 }
 
 async function storageSacrifice(digimonId, digimonName) {
