@@ -31,19 +31,20 @@ public class GetMissionLootPreviewUseCase {
                 .orElseThrow(() -> new NotFoundException("Mission not found"));
 
         Map<String, ItemDefinition> itemDefinitions = new HashMap<>();
-        List<MissionLootPreviewResponse.FixedReward> fixedRewards = mission.getRewards().stream()
-                .map(reward -> {
-                    String itemType = reward.getItemType().name();
-                    return new MissionLootPreviewResponse.FixedReward(
-                            itemType,
-                            itemType,
-                            resolveItemName(itemType, itemType, itemDefinitions),
-                            reward.getBaseQuantity()
-                    );
-                })
-                .toList();
-
         ChestDefinitionEntity chest = mission.getChestDefinition();
+        List<MissionLootPreviewResponse.FixedReward> fixedRewards = chest == null
+                ? mission.getRewards().stream()
+                        .map(reward -> {
+                            String itemType = reward.getItemType().name();
+                            return new MissionLootPreviewResponse.FixedReward(
+                                    itemType,
+                                    itemType,
+                                    resolveItemName(itemType, itemType, itemDefinitions),
+                                    reward.getBaseQuantity()
+                            );
+                        })
+                        .toList()
+                : List.of();
         MissionLootPreviewResponse.ChestPreview chestPreview = chest == null
                 ? null
                 : toChestPreview(chest, itemDefinitions);

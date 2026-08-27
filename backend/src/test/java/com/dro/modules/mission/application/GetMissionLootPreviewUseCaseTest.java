@@ -134,6 +134,12 @@ class GetMissionLootPreviewUseCaseTest {
                 .name("Missão da Montanha")
                 .area(Area.INFINITY_MOUNTAIN)
                 .requiredLevel(70)
+                .rewards(List.of(
+                        MissionRewardEntity.builder()
+                                .itemType(ItemType.TRAINING_STONE)
+                                .baseQuantity(1)
+                                .build()
+                ))
                 .chestDefinition(chest)
                 .build();
 
@@ -145,6 +151,7 @@ class GetMissionLootPreviewUseCaseTest {
         GetMissionLootPreviewUseCase useCase = new GetMissionLootPreviewUseCase(missionRepository, itemRepository);
         MissionLootPreviewResponse result = useCase.execute(makeToken(), missionId);
 
+        assertEquals(List.of(), result.fixedRewards());
         assertNotNull(result.chest());
         assertEquals("CHEST_MISSION_IM_3", result.chest().code());
         assertEquals(1, result.chest().minItems());
