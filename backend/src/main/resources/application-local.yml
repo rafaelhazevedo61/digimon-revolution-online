@@ -12,7 +12,7 @@ logging:
     org.springframework.jdbc: DEBUG
 
 dro:
-  app-version: ${DRO_APP_VERSION:0.0.1-SNAPSHOT}
+  app-version: ${DRO_APP_VERSION:0.0.6-SNAPSHOT}
   gameplay:
     auto-boss-respawn-after-defeat-enabled: true
     boss-cooldown-enabled: ${DRO_BOSS_COOLDOWN_ENABLED:true}
