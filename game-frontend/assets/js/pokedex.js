@@ -139,7 +139,7 @@ function dexRender() {
   }
 
   let html = `
-    <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-1.5" aria-label="Digimons disponíveis">
+    <div class="grid grid-cols-4 gap-1.5" aria-label="Digimons disponíveis">
       ${dexEntries.map(d => `
         <button type="button" class="card-sm group text-left p-1 cursor-pointer transition-all hover:border-cyan-500 hover:bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-cyan-400" onclick="dexShowDetail(${d.id})" aria-label="Ver detalhes de ${escapeAttr(d.name)}">
           <div class="w-full aspect-square rounded-lg overflow-hidden bg-slate-900/70 flex items-center justify-center group-hover:bg-slate-900 transition-colors">
