@@ -10,6 +10,8 @@ public record RebirthPreviewResponse(
         int newRebirthCount,
         int costBits,
         int costDataCore,
+        int costDigitalData,
+        int currentDigitalData,
         int currentBits,
         int remainingBitsAfterRebirth,
         IvRangeResponse hpIvRange,

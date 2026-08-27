@@ -63,10 +63,12 @@ public class RebirthUseCase {
         int newRebirthCount = currentRebirthCount + 1;
         int bitsCost = RebirthRules.calculateBitsCost(currentRebirthCount);
         int dataCoreCost = RebirthRules.calculateDataCoreCost(currentRebirthCount);
+        int digitalDataCost = RebirthRules.calculateDigitalDataCost(currentRebirthCount);
         validateBits(oldDigimon, bitsCost);
+        validateDigitalData(player, digitalDataCost);
         InventoryItem dataCore = findDataCore(digimonId);
         validateDataCore(dataCore, dataCoreCost);
-        consumeCosts(oldDigimon, dataCore, bitsCost, dataCoreCost);
+        consumeCosts(player, oldDigimon, dataCore, bitsCost, dataCoreCost, digitalDataCost);
         Digimon newDigimon = createRebornDigimon(playerId, oldDigimon, newRebirthCount);
         oldDigimon.setStatus(DigimonStatus.REBORN);
         oldDigimon.setBits(0);
@@ -132,15 +134,25 @@ public class RebirthUseCase {
         return inventoryRepository.findByDigimonIdAndItemType(digimonId, ItemType.DATA_CORE).orElseThrow(() -> new NotFoundException("Data Core not found in inventory"));
     }
 
+    private void validateDigitalData(Player player, int digitalDataCost) {
+        if (player.getDigitalData() < digitalDataCost) {
+            throw new UnprocessableException("Not enough Digital Data to perform Rebirth");
+        }
+    }
+
     private void validateDataCore(InventoryItem dataCore, int dataCoreCost) {
         if (dataCore.getQuantity() < dataCoreCost) {
             throw new UnprocessableException("Not enough Data Core to perform Rebirth");
         }
     }
 
-    private void consumeCosts(Digimon digimon, InventoryItem dataCore, int bitsCost, int dataCoreCost) {
+    private void consumeCosts(Player player, Digimon digimon, InventoryItem dataCore, int bitsCost, int dataCoreCost, int digitalDataCost) {
         digimon.setBits(digimon.getBits() - bitsCost);
         dataCore.setQuantity(dataCore.getQuantity() - dataCoreCost);
+        if (!player.spendDigitalData(digitalDataCost)) {
+            throw new UnprocessableException("Not enough Digital Data to perform Rebirth");
+        }
+        playerRepository.save(player);
     }
 
     private Digimon createRebornDigimon(UUID playerId, Digimon oldDigimon, int newRebirthCount) {

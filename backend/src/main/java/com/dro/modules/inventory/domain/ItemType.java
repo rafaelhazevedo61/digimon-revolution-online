@@ -11,6 +11,7 @@ public enum ItemType {
     // Recursos
     TRAINING_STONE,
     DATA_CORE,
+    CODE_INFINITE,
 
     // Digitamas
     DIGITAMA_STARTER,
