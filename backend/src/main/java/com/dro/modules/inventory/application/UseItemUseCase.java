@@ -49,7 +49,7 @@ public class UseItemUseCase {
 
         boolean xpDisk = isXpDisk(type);
         int quantity = resolveQuantity(xpDisk, requestedQuantity);
-        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+        Player player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         if (player.getActiveDigimonId() == null) {
             throw new BadRequestException("No active digimon selected");
         }
@@ -60,6 +60,22 @@ public class UseItemUseCase {
         }
         if (item.getQuantity() < quantity) {
             throw new UnprocessableException("Not enough items in inventory");
+        }
+
+        int storageExpansion = storageExpansionAmount(type);
+        if (storageExpansion > 0) {
+            consume(item, 1);
+            player.setMaxStorageSlots(player.getMaxStorageSlots() + storageExpansion);
+            playerRepository.save(player);
+            return new UseItemResponse(
+                    type,
+                    1,
+                    0,
+                    digimon.getLevel(),
+                    digimon.getLevel(),
+                    false,
+                    "Storage expandido em +" + storageExpansion + " espaço(s)!"
+            );
         }
 
         int previousLevel = digimon.getLevel();
@@ -105,6 +121,15 @@ public class UseItemUseCase {
             throw new BadRequestException("A quantidade de Discos de XP deve estar entre 1 e " + MAX_BATCH_QUANTITY);
         }
         return quantity;
+    }
+
+    private int storageExpansionAmount(ItemType type) {
+        return switch (type) {
+            case STORAGE_SLOT_1 -> 1;
+            case STORAGE_SLOT_5 -> 5;
+            case STORAGE_SLOT_10 -> 10;
+            default -> 0;
+        };
     }
 
     private int calculateXpDiskAmount(int xpToNextLevel, int percentage) {
