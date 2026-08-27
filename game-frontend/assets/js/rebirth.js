@@ -1,9 +1,11 @@
 let rebirthDigimonId = null;
 let rebirthPreview = null;
+let rebirthCodeAllocation = { hp: 0, attack: 0, defense: 0 };
 
 async function renderRebirthPage() {
   const app = document.getElementById("app");
   showBottomNav("dashboard");
+  rebirthCodeAllocation = { hp: 0, attack: 0, defense: 0 };
 
   app.innerHTML = `
     <div class="page-container">
@@ -42,9 +44,9 @@ async function renderRebirthPage() {
 function rebirthRender(digimon) {
   const content = document.getElementById("rebirth-content");
   const p = rebirthPreview;
-  const availableCodeInfinite = Number(p.currentCodeInfinite ?? 0);
+  const availableCodeInfinite = Math.max(0, Number(p.currentCodeInfinite ?? 0));
   const codeInfiniteDisabled = availableCodeInfinite <= 0 ? "disabled" : "";
-  const codeInfiniteMax = Math.min(100, Math.max(0, availableCodeInfinite));
+  const codeInfiniteMax = Math.min(100, availableCodeInfinite);
 
   const stageMap = { BABY: "Baby", BABY_II: "Baby II", ROOKIE: "Rookie", CHAMPION: "Champion", ULTIMATE: "Ultimate", MEGA: "Mega" };
   const formatStg = s => stageMap[s] || s;
@@ -68,12 +70,10 @@ function rebirthRender(digimon) {
       </div>
     </div>
 
-    <!-- Rebirth info -->
     <div class="card mb-4" style="border-color:#854d0e">
       <h3 class="font-bold text-amber-400 mb-3">🔄 Rebirth #${p.newRebirthCount}</h3>
       <p class="text-xs text-slate-400 mb-4">O Digimon renasce como um novo ovo, mantendo bônus de IV e stats acumulados.</p>
 
-      <!-- Costs -->
       <div class="mb-4">
         <p class="text-xs font-bold text-slate-300 mb-2">Custo:</p>
         <div class="grid grid-cols-3 gap-2">
@@ -95,7 +95,6 @@ function rebirthRender(digimon) {
         </div>
       </div>
 
-      <!-- Stat Multiplier -->
       <div class="mb-4">
         <p class="text-xs font-bold text-slate-300 mb-2">Bônus de Stats:</p>
         <div class="card-sm text-center">
@@ -105,42 +104,54 @@ function rebirthRender(digimon) {
         </div>
       </div>
 
-      <!-- Infinite Code investment -->
       <div class="mb-4">
-        <p class="text-xs font-bold text-slate-300 mb-2">Código Infinito (10 = +1 IV mínimo):</p>
-        <div class="grid grid-cols-3 gap-2">
-          <label class="card-sm text-center text-xs text-slate-400">HP<input id="code-infinite-hp" type="number" min="0" max="${codeInfiniteMax}" value="0" ${codeInfiniteDisabled} class="w-full mt-1 text-center bg-slate-800 rounded p-1 text-red-300"></label>
-          <label class="card-sm text-center text-xs text-slate-400">ATK<input id="code-infinite-attack" type="number" min="0" max="${codeInfiniteMax}" value="0" ${codeInfiniteDisabled} class="w-full mt-1 text-center bg-slate-800 rounded p-1 text-orange-300"></label>
-          <label class="card-sm text-center text-xs text-slate-400">DEF<input id="code-infinite-defense" type="number" min="0" max="${codeInfiniteMax}" value="0" ${codeInfiniteDisabled} class="w-full mt-1 text-center bg-slate-800 rounded p-1 text-blue-300"></label>
+        <div class="flex justify-between items-center mb-2">
+          <p class="text-xs font-bold text-slate-300">Refinar IV com Código Infinito</p>
+          <span class="text-xs font-bold text-violet-300">Disponíveis: ${availableCodeInfinite}</span>
         </div>
-        <p class="text-xs text-slate-400 mt-2">Você tem: <span class="font-bold text-violet-300">${availableCodeInfinite}</span> Código(s) Infinito(s)</p>
-        ${availableCodeInfinite === 0 ? '<p class="text-xs text-amber-400 mt-1">Você não possui Códigos Infinitos disponíveis para investir.</p>' : ''}
-        <p class="text-xs text-slate-500 mt-1">Máximo total por Rebirth: 100 Códigos Infinitos. O saldo disponível é validado no servidor.</p>
+        <p class="text-xs text-slate-500 mb-3">A cada 10 códigos investidos, o IV mínimo do atributo sobe 1 ponto.</p>
+
+        <div class="flex gap-1 flex-wrap mb-3">
+          <button class="btn-sm" ${codeInfiniteDisabled} onclick="rebirthDistributeCodes('balanced')">Equilibrar</button>
+          <button class="btn-sm" ${codeInfiniteDisabled} onclick="rebirthDistributeCodes('hp')">Focar HP</button>
+          <button class="btn-sm" ${codeInfiniteDisabled} onclick="rebirthDistributeCodes('attack')">Focar ATK</button>
+          <button class="btn-sm" ${codeInfiniteDisabled} onclick="rebirthDistributeCodes('defense')">Focar DEF</button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-2">
+          ${rebirthCodeAttributeCard("hp", "HP", "red", p.hpIvRange.min, codeInfiniteDisabled, codeInfiniteMax)}
+          ${rebirthCodeAttributeCard("attack", "ATK", "orange", p.attackIvRange.min, codeInfiniteDisabled, codeInfiniteMax)}
+          ${rebirthCodeAttributeCard("defense", "DEF", "blue", p.defenseIvRange.min, codeInfiniteDisabled, codeInfiniteMax)}
+        </div>
+
+        <div class="card-sm mt-3 text-center">
+          <p id="code-allocation-summary" class="text-xs text-slate-400">Nenhum Código Infinito será usado</p>
+          <p class="text-xs text-slate-500 mt-1">Restantes: <span id="code-infinite-remaining" class="font-bold text-violet-300">${availableCodeInfinite}</span></p>
+        </div>
+        ${availableCodeInfinite === 0 ? '<p class="text-xs text-amber-400 mt-2">Você não possui Códigos Infinitos disponíveis para investir.</p>' : ''}
       </div>
 
-      <!-- IV Ranges -->
       <div class="mb-4">
         <p class="text-xs font-bold text-slate-300 mb-2">IVs após Rebirth (mín — máx):</p>
         <div class="grid grid-cols-3 gap-2">
           <div class="card-sm text-center">
             <p class="text-xs text-slate-500">HP</p>
-            <p class="text-sm font-bold text-red-400">${p.hpIvRange.min} — ${p.hpIvRange.max}</p>
+            <p class="text-sm font-bold text-red-400"><span id="rebirth-hp-min">${p.hpIvRange.min}</span> — ${p.hpIvRange.max}</p>
             <p class="text-xs text-slate-600">Atual: ${digimon.ivHp}</p>
           </div>
           <div class="card-sm text-center">
             <p class="text-xs text-slate-500">ATK</p>
-            <p class="text-sm font-bold text-orange-400">${p.attackIvRange.min} — ${p.attackIvRange.max}</p>
+            <p class="text-sm font-bold text-orange-400"><span id="rebirth-attack-min">${p.attackIvRange.min}</span> — ${p.attackIvRange.max}</p>
             <p class="text-xs text-slate-600">Atual: ${digimon.ivAttack}</p>
           </div>
           <div class="card-sm text-center">
             <p class="text-xs text-slate-500">DEF</p>
-            <p class="text-sm font-bold text-blue-400">${p.defenseIvRange.min} — ${p.defenseIvRange.max}</p>
+            <p class="text-sm font-bold text-blue-400"><span id="rebirth-defense-min">${p.defenseIvRange.min}</span> — ${p.defenseIvRange.max}</p>
             <p class="text-xs text-slate-600">Atual: ${digimon.ivDefense}</p>
           </div>
         </div>
       </div>
 
-      <!-- Bits remaining -->
       ${p.eligible ? `
       <div class="mb-4">
         <div class="flex justify-between text-xs text-slate-400">
@@ -151,7 +162,6 @@ function rebirthRender(digimon) {
       ` : ""}
     </div>
 
-    <!-- Action -->
     <div class="mb-4">
       ${p.eligible ? `
         <button class="btn-primary w-full text-lg py-3" id="rebirth-btn" onclick="rebirthExecute()">
@@ -167,6 +177,101 @@ function rebirthRender(digimon) {
   `;
 
   content.innerHTML = html;
+  rebirthUpdateCodeUI();
+}
+
+function rebirthCodeAttributeCard(attribute, label, color, baseMinimum, disabled, maxCodes) {
+  return `
+    <div class="card-sm">
+      <div class="flex justify-between items-center mb-2">
+        <span class="font-bold text-${color}-300">${label}</span>
+        <span class="text-xs text-slate-400"><span id="code-alloc-${attribute}">0</span> códigos</span>
+      </div>
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-xs text-slate-500">IV mínimo: <span id="code-iv-${attribute}" class="font-bold text-${color}-300">${baseMinimum}</span></span>
+        <div class="flex gap-1">
+          <button class="btn-sm px-2" ${disabled} onclick="rebirthAdjustCode('${attribute}', -10)">−10</button>
+          <button class="btn-sm px-2" ${disabled} onclick="rebirthAdjustCode('${attribute}', -1)">−1</button>
+          <button class="btn-sm px-2" ${disabled} onclick="rebirthAdjustCode('${attribute}', 1)">+1</button>
+          <button class="btn-sm px-2" ${disabled} onclick="rebirthAdjustCode('${attribute}', 10)">+10</button>
+          <button class="btn-sm px-2" ${disabled} onclick="rebirthFocusCode('${attribute}')">Tudo</button>
+        </div>
+      </div>
+      <div class="mt-2 h-1.5 rounded bg-slate-800 overflow-hidden">
+        <div id="code-progress-${attribute}" class="h-full bg-${color}-400" style="width:0%"></div>
+      </div>
+    </div>
+  `;
+}
+
+function rebirthAdjustCode(attribute, amount) {
+  const available = Math.max(0, Number(rebirthPreview?.currentCodeInfinite ?? 0));
+  if (available <= 0 || !Object.prototype.hasOwnProperty.call(rebirthCodeAllocation, attribute)) return;
+
+  const maximum = Math.min(100, available);
+  const currentTotal = rebirthCodeAllocation.hp + rebirthCodeAllocation.attack + rebirthCodeAllocation.defense;
+  const roomForAttribute = maximum - currentTotal + rebirthCodeAllocation[attribute];
+  rebirthCodeAllocation[attribute] = Math.max(0, Math.min(rebirthCodeAllocation[attribute] + amount, roomForAttribute));
+  rebirthUpdateCodeUI();
+}
+
+function rebirthFocusCode(attribute) {
+  const available = Math.max(0, Number(rebirthPreview?.currentCodeInfinite ?? 0));
+  if (available <= 0 || !Object.prototype.hasOwnProperty.call(rebirthCodeAllocation, attribute)) return;
+  const maximum = Math.min(100, available);
+  rebirthCodeAllocation = { hp: 0, attack: 0, defense: 0 };
+  rebirthCodeAllocation[attribute] = maximum;
+  rebirthUpdateCodeUI();
+}
+
+function rebirthDistributeCodes(mode) {
+  const available = Math.max(0, Number(rebirthPreview?.currentCodeInfinite ?? 0));
+  if (available <= 0) return;
+
+  const maximum = Math.min(100, available);
+  if (mode === "balanced") {
+    const each = Math.floor(maximum / 3);
+    const remainder = maximum - (each * 3);
+    rebirthCodeAllocation = { hp: each + (remainder > 0 ? 1 : 0), attack: each + (remainder > 1 ? 1 : 0), defense: each };
+  } else if (Object.prototype.hasOwnProperty.call(rebirthCodeAllocation, mode)) {
+    rebirthCodeAllocation = { hp: 0, attack: 0, defense: 0 };
+    rebirthCodeAllocation[mode] = maximum;
+  }
+  rebirthUpdateCodeUI();
+}
+
+function rebirthUpdateCodeUI() {
+  const p = rebirthPreview;
+  if (!p) return;
+  const available = Math.max(0, Number(p.currentCodeInfinite ?? 0));
+  const used = rebirthCodeAllocation.hp + rebirthCodeAllocation.attack + rebirthCodeAllocation.defense;
+  const remaining = Math.max(0, available - used);
+  const attributes = [
+    ["hp", p.hpIvRange.min],
+    ["attack", p.attackIvRange.min],
+    ["defense", p.defenseIvRange.min]
+  ];
+
+  attributes.forEach(([attribute, baseMinimum]) => {
+    const amount = rebirthCodeAllocation[attribute];
+    const ivMinimum = Math.min(100, baseMinimum + Math.floor(amount / 10));
+    const allocationElement = document.getElementById(`code-alloc-${attribute}`);
+    const ivElement = document.getElementById(`code-iv-${attribute}`);
+    const rangeElement = document.getElementById(`rebirth-${attribute}-min`);
+    const progressElement = document.getElementById(`code-progress-${attribute}`);
+    if (allocationElement) allocationElement.textContent = amount;
+    if (ivElement) ivElement.textContent = ivMinimum;
+    if (rangeElement) rangeElement.textContent = ivMinimum;
+    if (progressElement) progressElement.style.width = `${Math.min(100, (amount / 100) * 100)}%`;
+  });
+
+  const summary = document.getElementById("code-allocation-summary");
+  const remainingElement = document.getElementById("code-infinite-remaining");
+  if (summary) summary.textContent = used > 0 ? `Serão usados ${used} Código${used === 1 ? "" : "s"} Infinito${used === 1 ? "" : "s"}` : "Nenhum Código Infinito será usado";
+  if (remainingElement) remainingElement.textContent = remaining;
+
+  const button = document.getElementById("rebirth-btn");
+  if (button && used > 0) button.textContent = `🔄 Renascer usando ${used} Código${used === 1 ? "" : "s"} Infinito${used === 1 ? "" : "s"}`;
 }
 
 async function rebirthExecute() {
@@ -174,14 +279,16 @@ async function rebirthExecute() {
   if (btn) { btn.disabled = true; btn.textContent = "Renascendo..."; }
 
   try {
-    const codeInfiniteHp = Number(document.getElementById("code-infinite-hp")?.value || 0);
-    const codeInfiniteAttack = Number(document.getElementById("code-infinite-attack")?.value || 0);
-    const codeInfiniteDefense = Number(document.getElementById("code-infinite-defense")?.value || 0);
-    await apiPost("/digimon/rebirth", { digimonId: rebirthDigimonId, codeInfiniteHp, codeInfiniteAttack, codeInfiniteDefense });
+    await apiPost("/digimon/rebirth", {
+      digimonId: rebirthDigimonId,
+      codeInfiniteHp: rebirthCodeAllocation.hp,
+      codeInfiniteAttack: rebirthCodeAllocation.attack,
+      codeInfiniteDefense: rebirthCodeAllocation.defense
+    });
     showToast("Rebirth realizado com sucesso! Seu Digimon renasceu.");
     navigateTo("dashboard");
   } catch (err) {
     showToast(err.message, "error");
-    if (btn) { btn.disabled = false; btn.textContent = "🔄 Renascer!"; }
+    if (btn) { btn.disabled = false; rebirthUpdateCodeUI(); }
   }
 }
