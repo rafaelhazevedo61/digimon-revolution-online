@@ -137,6 +137,7 @@ public final class EventRewardMessageText {
                 case POTION_SMALL -> "Poção pequena";
                 case TRAINING_STONE -> "Pedra de treinamento";
                 case DATA_CORE -> "Núcleo de dados";
+                case CODE_INFINITE -> "Código Infinito";
                 case DIGITAMA_STARTER -> "Digitama inicial";
                 case DIGITAMA_FIRE -> "Digitama de fogo";
                 case DIGITAMA_WATER -> "Digitama de água";

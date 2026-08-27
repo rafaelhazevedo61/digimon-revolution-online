@@ -198,6 +198,34 @@ public class RebirthRules {
         return rebirthCount + 1;
     }
 
+    /** Custo de Dados Digitais: primeiro Rebirth exige 25 unidades. */
+    public static int calculateDigitalDataCost(int rebirthCount) {
+        if (rebirthCount < 0) {
+            throw new IllegalArgumentException("Rebirth count cannot be negative");
+        }
+        if (rebirthCount <= 4) {
+            return switch (rebirthCount) {
+                case 0 -> 25;
+                case 1 -> 50;
+                case 2 -> 80;
+                case 3 -> 120;
+                default -> 170;
+            };
+        }
+        return (int) Math.floor(170 * Math.pow(1.35, rebirthCount - 4));
+    }
+
+    public static int calculateCodeInfiniteIvBonus(int codeInfiniteAmount) {
+        if (codeInfiniteAmount < 0) {
+            throw new IllegalArgumentException("Code Infinite amount cannot be negative");
+        }
+        return codeInfiniteAmount / 10;
+    }
+
+    public static int calculateMaxCodeInfiniteInvestment() {
+        return 100;
+    }
+
     /*
      * Define se o estágio atual do Digimon permite Rebirth.
      *

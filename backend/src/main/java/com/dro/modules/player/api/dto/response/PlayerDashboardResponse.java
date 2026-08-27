@@ -18,6 +18,7 @@ public record PlayerDashboardResponse(
         String email,
         LocalDateTime createdAt,
         String userType,
+        int digitalData,
         DigimonResponse activeDigimon,
         List<EquipmentResponse> equippedItems,
         DigimonEquipmentResponse.SetBonusResponse setBonus,

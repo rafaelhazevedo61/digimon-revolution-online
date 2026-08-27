@@ -35,6 +35,7 @@ public class DigimonController {
     private final StoreDigimonUseCase storeDigimonUseCase;
     private final RetrieveDigimonUseCase retrieveDigimonUseCase;
     private final GetEvolutionOptionsUseCase getEvolutionOptionsUseCase;
+    private final SacrificeDigimonUseCase sacrificeDigimonUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<List<DigimonResponse>> me(@RequestHeader("Authorization") String authorization) {
@@ -61,7 +62,7 @@ public class DigimonController {
 
     @PostMapping("/rebirth")
     public ResponseEntity<Map<String, String>> rebirth(@RequestHeader("Authorization") String authorization, @RequestBody @Valid RebirthDigimonRequest request) {
-        rebirthUseCase.execute(authorization, request.digimonId());
+        rebirthUseCase.execute(authorization, request.digimonId(), request.codeInfiniteHpOrZero(), request.codeInfiniteAttackOrZero(), request.codeInfiniteDefenseOrZero());
         return ResponseEntity.ok(Map.of("message", "Digimon reborn successfully"));
     }
 
@@ -97,6 +98,12 @@ public class DigimonController {
         return ResponseEntity.ok(DigimonResponse.from(digimon));
     }
 
+    @PostMapping("/{digimonId}/sacrifice")
+    public ResponseEntity<Map<String, Object>> sacrifice(@RequestHeader("Authorization") String authorization, @PathVariable UUID digimonId) {
+        int reward = sacrificeDigimonUseCase.execute(authorization, digimonId);
+        return ResponseEntity.ok(Map.of("message", "Digimon sacrificed successfully", "digitalDataReceived", reward));
+    }
+
     @PostMapping("/{digimonId}/retrieve")
     public ResponseEntity<DigimonResponse> retrieve(@RequestHeader("Authorization") String authorization, @PathVariable UUID digimonId) {
         var digimon = retrieveDigimonUseCase.execute(authorization, digimonId);
@@ -108,7 +115,7 @@ public class DigimonController {
         return ResponseEntity.ok(useCase.executeStorage(authorization));
     }
 
-    public DigimonController(final GetDigimonUseCase useCase, final GetDigimonByIdUseCase getDigimonByIdUseCase, final SelectActiveDigimonUseCase selectUseCase, final EvolveDigimonUseCase evolveDigimonUseCase, final RebirthUseCase rebirthUseCase, final GetDigimonLineageUseCase getDigimonLineageUseCase, final RebirthPreviewUseCase rebirthPreviewUseCase, final RenameDigimonUseCase renameDigimonUseCase, final StoreDigimonUseCase storeDigimonUseCase, final RetrieveDigimonUseCase retrieveDigimonUseCase, final GetEvolutionOptionsUseCase getEvolutionOptionsUseCase) {
+    public DigimonController(final GetDigimonUseCase useCase, final GetDigimonByIdUseCase getDigimonByIdUseCase, final SelectActiveDigimonUseCase selectUseCase, final EvolveDigimonUseCase evolveDigimonUseCase, final RebirthUseCase rebirthUseCase, final GetDigimonLineageUseCase getDigimonLineageUseCase, final RebirthPreviewUseCase rebirthPreviewUseCase, final RenameDigimonUseCase renameDigimonUseCase, final StoreDigimonUseCase storeDigimonUseCase, final RetrieveDigimonUseCase retrieveDigimonUseCase, final GetEvolutionOptionsUseCase getEvolutionOptionsUseCase, final SacrificeDigimonUseCase sacrificeDigimonUseCase) {
         this.useCase = useCase;
         this.getDigimonByIdUseCase = getDigimonByIdUseCase;
         this.selectUseCase = selectUseCase;
@@ -120,5 +127,6 @@ public class DigimonController {
         this.storeDigimonUseCase = storeDigimonUseCase;
         this.retrieveDigimonUseCase = retrieveDigimonUseCase;
         this.getEvolutionOptionsUseCase = getEvolutionOptionsUseCase;
+        this.sacrificeDigimonUseCase = sacrificeDigimonUseCase;
     }
 }

@@ -1,6 +1,7 @@
 package com.dro.modules.mission.application;
 
 import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.mission.api.dto.response.AreaResponse;
@@ -32,7 +33,11 @@ public class AreaUseCase {
     }
 
     private Stage getHighestStage(UUID playerId) {
-        return digimonRepository.findByPlayerId(playerId).stream().map(Digimon::getStage).max(Enum::compareTo).orElse(Stage.BABY);
+        return digimonRepository.findByPlayerId(playerId).stream()
+                .filter(d -> d.getStatus() != DigimonStatus.SACRIFICED && d.getStatus() != DigimonStatus.REBORN)
+                .map(Digimon::getStage)
+                .max(Enum::compareTo)
+                .orElse(Stage.BABY);
     }
 
     public AreaUseCase(final DigimonRepository digimonRepository) {
