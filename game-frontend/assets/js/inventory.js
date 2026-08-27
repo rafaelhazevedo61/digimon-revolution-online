@@ -97,6 +97,8 @@ function invRenderItems() {
         <input id="${chestQuantityInputId}" class="input w-16 text-center" type="number" min="1" max="${maxUseQuantity}" value="1" aria-label="Quantidade de baús" />
         <button class="btn-sm btn-primary whitespace-nowrap" onclick="invOpenChest('${escapeHtml(chestCode)}', document.getElementById('${chestQuantityInputId}').value)">Abrir</button>
       </div>
+    ` : incubationOnly ? `
+      <button class="btn-sm btn-primary whitespace-nowrap" onclick="navigateTo('incubation')">Usar</button>
     ` : isXpDiskItem ? `
       <div class="flex items-center gap-2">
         <input id="${xpDiskQuantityInputId}" class="input w-16 text-center" type="number" min="1" max="${maxUseQuantity}" value="1" aria-label="Quantidade de Discos de XP" />
