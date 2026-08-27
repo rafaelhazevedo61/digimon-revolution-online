@@ -164,6 +164,9 @@ public class RebirthUseCase {
         if (hp < 0 || attack < 0 || defense < 0) {
             throw new BadRequestException("O investimento de Códigos Infinitos não pode ser negativo");
         }
+        if (hp > 100 || attack > 100 || defense > 100) {
+            throw new BadRequestException("O investimento máximo é de 100 Códigos Infinitos por atributo");
+        }
     }
 
     private void validateCodeInfinite(InventoryItem codeInfinite, int cost) {

@@ -109,7 +109,7 @@ function rebirthRender(digimon) {
           <p class="text-xs font-bold text-slate-300">Refinar IV com Código Infinito</p>
           <span class="text-xs font-bold text-violet-300">Disponíveis: ${availableCodeInfinite}</span>
         </div>
-        <p class="text-xs text-slate-500 mb-3">A cada 10 códigos investidos, o IV mínimo do atributo sobe 1 ponto.</p>
+        <p class="text-xs text-slate-500 mb-3">A cada 10 códigos investidos, o IV mínimo do atributo sobe 1 ponto. Limite: 100 por atributo.</p>
 
         <div class="grid grid-cols-2 gap-2 mb-3">
           <button class="btn-secondary text-xs" ${codeInfiniteDisabled} onclick="rebirthDistributeCodes('balanced')">Equilibrar</button>
@@ -208,18 +208,22 @@ function rebirthAdjustCode(attribute, amount) {
   const available = Math.max(0, Number(rebirthPreview?.currentCodeInfinite ?? 0));
   if (available <= 0 || !Object.prototype.hasOwnProperty.call(rebirthCodeAllocation, attribute)) return;
 
-  const maximum = available;
+  const attributeMaximum = 100;
   const currentTotal = rebirthCodeAllocation.hp + rebirthCodeAllocation.attack + rebirthCodeAllocation.defense;
-  const roomForAttribute = maximum - currentTotal + rebirthCodeAllocation[attribute];
-  rebirthCodeAllocation[attribute] = Math.max(0, Math.min(rebirthCodeAllocation[attribute] + amount, roomForAttribute));
+  const currentValue = rebirthCodeAllocation[attribute];
+  const remainingBalance = Math.max(0, available - currentTotal);
+  const nextValue = amount > 0
+    ? Math.min(attributeMaximum, currentValue + Math.min(amount, remainingBalance))
+    : Math.max(0, currentValue + amount);
+  rebirthCodeAllocation[attribute] = nextValue;
   rebirthUpdateCodeUI();
 }
 
 function rebirthFocusCode(attribute) {
   const available = Math.max(0, Number(rebirthPreview?.currentCodeInfinite ?? 0));
   if (available <= 0 || !Object.prototype.hasOwnProperty.call(rebirthCodeAllocation, attribute)) return;
-  const maximum = available;
-  rebirthCodeAllocation = { hp: 0, attack: 0, defense: 0 };
+  const otherAttributesTotal = rebirthCodeAllocation.hp + rebirthCodeAllocation.attack + rebirthCodeAllocation.defense - rebirthCodeAllocation[attribute];
+  const maximum = Math.min(100, Math.max(0, available - otherAttributesTotal));
   rebirthCodeAllocation[attribute] = maximum;
   rebirthUpdateCodeUI();
 }
@@ -228,11 +232,18 @@ function rebirthDistributeCodes(mode) {
   const available = Math.max(0, Number(rebirthPreview?.currentCodeInfinite ?? 0));
   if (available <= 0) return;
 
-  const maximum = available;
+  const maximum = Math.min(available, 300);
   if (mode === "balanced") {
-    const each = Math.floor(maximum / 3);
-    const remainder = maximum - (each * 3);
-    rebirthCodeAllocation = { hp: each + (remainder > 0 ? 1 : 0), attack: each + (remainder > 1 ? 1 : 0), defense: each };
+    const each = Math.min(100, Math.floor(maximum / 3));
+    let remainder = maximum - (each * 3);
+    const allocation = { hp: each, attack: each, defense: each };
+    ["hp", "attack", "defense"].forEach(attribute => {
+      if (remainder > 0 && allocation[attribute] < 100) {
+        allocation[attribute] += 1;
+        remainder -= 1;
+      }
+    });
+    rebirthCodeAllocation = allocation;
   } else if (Object.prototype.hasOwnProperty.call(rebirthCodeAllocation, mode)) {
     rebirthCodeAllocation = { hp: 0, attack: 0, defense: 0 };
     rebirthCodeAllocation[mode] = maximum;
@@ -262,7 +273,7 @@ function rebirthUpdateCodeUI() {
     if (allocationElement) allocationElement.textContent = amount;
     if (ivElement) ivElement.textContent = ivMinimum;
     if (rangeElement) rangeElement.textContent = ivMinimum;
-    if (progressElement) progressElement.style.width = `${available > 0 ? Math.min(100, (amount / available) * 100) : 0}%`;
+    if (progressElement) progressElement.style.width = `${Math.min(100, (amount / 100) * 100)}%`;
   });
 
   const summary = document.getElementById("code-allocation-summary");
