@@ -84,11 +84,15 @@ function invRenderItems() {
     const catBadge = def ? invCategoryBadge(category) : invItemCategory(item.itemType);
     const chestCode = category === "CHEST" ? def.code : null;
     const isChest = item.itemType === "LOOT_CHEST" || !!chestCode;
+    const chestQuantityInputId = chestCode ? `inv-chest-quantity-${String(chestCode).replace(/[^a-zA-Z0-9_-]/g, "-")}` : null;
     const incubationOnly = category === "DIGITAMA" || category === "INCUBATOR"
       || item.itemType.startsWith("DIGITAMA_") || item.itemType.startsWith("INCUBATOR_");
     const usable = !incubationOnly && (def ? def.usable : invIsUsable(item.itemType));
     const action = isChest && chestCode ? `
-      <button class="btn-sm btn-primary" onclick="invOpenChest('${escapeHtml(chestCode)}')">Abrir</button>
+      <div class="flex items-center gap-2">
+        <input id="${chestQuantityInputId}" class="input w-16 text-center" type="number" min="1" max="${Math.max(1, Number(item.quantity) || 1)}" value="1" aria-label="Quantidade de baús" />
+        <button class="btn-sm btn-primary whitespace-nowrap" onclick="invOpenChest('${escapeHtml(chestCode)}', document.getElementById('${chestQuantityInputId}').value)">Abrir</button>
+      </div>
     ` : usable ? `
       <button class="btn-sm btn-primary" onclick="invUseItem('${escapeHtml(item.itemType)}')">Usar</button>
     ` : "";
@@ -232,9 +236,14 @@ function createChestRequestId() {
   return `chest-open-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-async function invOpenChest(chestCode) {
+async function invOpenChest(chestCode, quantity = 1) {
   if (!chestCode) {
     showToast("Definição do baú não encontrada.", "error");
+    return null;
+  }
+  const requestedQuantity = Number.parseInt(quantity, 10);
+  if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1) {
+    showToast("Informe uma quantidade válida de baús.", "error");
     return null;
   }
   if (invChestOpeningInProgress) return null;
@@ -243,6 +252,7 @@ async function invOpenChest(chestCode) {
   try {
     const result = await apiPost("/inventory/chests/open", {
       chestCode,
+      quantity: requestedQuantity,
       requestId: createChestRequestId()
     });
     invShowChestOpeningResult(result);
@@ -261,7 +271,8 @@ function invShowChestOpeningResult(result) {
   if (existing) existing.remove();
 
   const items = Array.isArray(result && result.items) ? result.items : [];
-  const title = result && result.replayed ? "Abertura já processada" : "Baú aberto!";
+  const chestQuantity = Math.max(1, Number(result && result.quantity) || 1);
+  const title = result && result.replayed ? "Abertura já processada" : chestQuantity > 1 ? "Baús abertos!" : "Baú aberto!";
   const message = result && result.message ? result.message : "Recompensas recebidas";
 
   const overlay = document.createElement("div");
@@ -276,7 +287,7 @@ function invShowChestOpeningResult(result) {
       <div class="text-center mb-4">
         <div class="text-5xl mb-2">🎁</div>
         <h3 class="text-xl font-bold">${escapeHtml(title)}</h3>
-        <p class="text-sm text-slate-400 mt-1">${escapeHtml(result && result.chestName || "Baú")}</p>
+        <p class="text-sm text-slate-400 mt-1">${escapeHtml(result && result.chestName || "Baú")} · ${chestQuantity} ${chestQuantity === 1 ? "baú" : "baús"}</p>
         <p class="text-xs text-slate-500 mt-2">Cada item possui sua própria raridade</p>
       </div>
       <div class="card-sm mb-4">

@@ -9,7 +9,8 @@ import java.util.List;
  *
  * <p>O campo {@code rarity} permanece como a primeira raridade sorteada para
  * compatibilidade com consumidores antigos. Em aberturas mistas, a raridade
- * autoritativa está em cada item de {@code items}.</p>
+ * autoritativa está em cada item de {@code items}. O campo {@code quantity}
+ * informa quantos baús foram processados pela chave idempotente.</p>
  */
 public record ChestOpeningResponse(
         String requestId,
@@ -17,6 +18,7 @@ public record ChestOpeningResponse(
         String chestName,
         LootRarity rarity,
         List<ChestOpeningItemResponse> items,
+        int quantity,
         boolean replayed,
         String message
 ) {

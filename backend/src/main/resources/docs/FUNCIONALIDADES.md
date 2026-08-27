@@ -329,7 +329,7 @@ O inventário utilizado pela jornada está associado ao Digimon ativo e integra 
 - itens catalogados são enriquecidos por `item_definitions`;
 - itens podem possuir categorias diferentes;
 - alguns itens são consumíveis diretamente;
-- baús são abertos através de operação transacional específica;
+- baús são abertos através de operação transacional específica, individualmente ou em lotes de até 100 unidades do mesmo tipo;
 - concessões administrativas ficam sob `/admin`, não no namespace público do jogador.
 
 ### Endpoints
@@ -338,7 +338,7 @@ O inventário utilizado pela jornada está associado ao Digimon ativo e integra 
 |---|---|---|
 | GET | `/inventory` | Inventário do Digimon ativo |
 | POST | `/inventory/use` | Utilizar item suportado, incluindo `INCUBATION_SLOT_UNLOCK` para aumentar em um o limite de slots de incubação do jogador |
-| POST | `/inventory/chests/open` | Abrir um baú do inventário |
+| POST | `/inventory/chests/open` | Abrir um ou mais baús do mesmo tipo; `quantity` é opcional, assume 1 e aceita até 100 |
 | GET | `/items` | Catálogo público de definições de item |
 
 ---
@@ -713,7 +713,7 @@ A abertura:
 
 | Método | Rota | Descrição |
 |---|---|---|
-| POST | `/inventory/chests/open` | Abrir baú possuído pelo jogador |
+| POST | `/inventory/chests/open` | Abrir um ou mais baús do mesmo tipo possuídos pelo jogador |
 
 ### Administração
 
