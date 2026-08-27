@@ -5,7 +5,7 @@ async function renderStoragePage() {
   app.innerHTML = `
     <div class="page-container">
       <div class="flex items-center gap-2 mb-4 px-1">
-        <button class="btn-sm" style="background:#334155;color:#94a3b8" onclick="navigateTo('digimon-select')">← Voltar</button>
+        <button class="btn-sm" style="background:#334155;color:#94a3b8" onclick="navigateTo('dashboard')">← Voltar</button>
         <h2 class="text-lg font-bold">Storage</h2>
       </div>
       <div id="storage-info" class="mb-3"></div>
