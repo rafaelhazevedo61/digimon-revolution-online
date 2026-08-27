@@ -4,6 +4,7 @@ import com.dro.modules.digimon.domain.DigitalDataRules;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.player.domain.Player;
@@ -22,6 +23,7 @@ public class SacrificeDigimonUseCase {
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
     private final MissionInstanceRepository missionInstanceRepository;
+    private final InventoryRepository inventoryRepository;
 
     @Transactional
     public int execute(String token, UUID digimonId) {
@@ -49,13 +51,16 @@ public class SacrificeDigimonUseCase {
                 digimon.getIvHp(), digimon.getIvAttack(), digimon.getIvDefense());
         player.addDigitalData(reward);
         playerRepository.save(player);
-        digimonRepository.delete(digimon);
+        inventoryRepository.deleteByDigimonId(digimon.getId());
+        digimon.setStatus(DigimonStatus.SACRIFICED);
+        digimonRepository.save(digimon);
         return reward;
     }
 
-    public SacrificeDigimonUseCase(DigimonRepository digimonRepository, PlayerRepository playerRepository, MissionInstanceRepository missionInstanceRepository) {
+    public SacrificeDigimonUseCase(DigimonRepository digimonRepository, PlayerRepository playerRepository, MissionInstanceRepository missionInstanceRepository, InventoryRepository inventoryRepository) {
         this.digimonRepository = digimonRepository;
         this.playerRepository = playerRepository;
         this.missionInstanceRepository = missionInstanceRepository;
+        this.inventoryRepository = inventoryRepository;
     }
 }
