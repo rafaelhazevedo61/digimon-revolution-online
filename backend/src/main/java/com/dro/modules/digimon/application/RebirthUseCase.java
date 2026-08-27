@@ -225,7 +225,7 @@ public class RebirthUseCase {
             return null;
         }
         // Find the evolution line and return the first (baby) step's DigimonInfos ID
-        List<EvolutionLine> lines = evolutionLineRepository.findByActiveTrueAndSteps_DigimonInfo_Id(infoId);
+        List<EvolutionLine> lines = evolutionLineRepository.findByActiveTrueAndContentActiveTrueAndSteps_DigimonInfo_Id(infoId);
         if (!lines.isEmpty()) {
             return lines.get(0).getSteps().stream().min(java.util.Comparator.comparingInt(EvolutionLineStep::getStepOrder)).map(step -> step.getDigimonInfo().getId()).orElse(null);
         }

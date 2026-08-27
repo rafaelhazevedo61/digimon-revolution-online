@@ -28,6 +28,22 @@ public interface EvolutionLineRepository extends JpaRepository<EvolutionLine, Lo
     List<EvolutionLine> findByActiveTrueAndSteps_DigimonInfo_Id(Long digimonInfoId);
 
     @EntityGraph(attributePaths = {
+            "content",
+            "steps",
+            "steps.digimonInfo",
+            "steps.materials"
+    })
+    List<EvolutionLine> findByActiveTrueAndContentActiveTrueAndSteps_DigimonInfo_Id(Long digimonInfoId);
+
+    @EntityGraph(attributePaths = {
+            "content",
+            "steps",
+            "steps.digimonInfo",
+            "steps.materials"
+    })
+    Optional<EvolutionLine> findByIdAndActiveTrueAndContentActiveTrue(Long id);
+
+    @EntityGraph(attributePaths = {
             "steps",
             "steps.digimonInfo",
             "steps.materials"
