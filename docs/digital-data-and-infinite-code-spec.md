@@ -34,7 +34,7 @@ O primeiro Rebirth continua exigindo nível 100 e estágio Champion ou superior,
 
 ## Cálculo de Dados Digitais por sacrifício
 
-O fluxo de sacrifício no Storage será implementado em etapa posterior. A regra já está centralizada em `DigitalDataRules` para evitar fórmulas duplicadas:
+O fluxo de sacrifício no Storage aceita apenas Digimons com status `STORED`, nunca o parceiro ativo, e bloqueia Digimons em missões em andamento. A operação é transacional: calcula a recompensa, credita a moeda na conta e remove o Digimon. A regra está centralizada em `DigitalDataRules` para evitar fórmulas duplicadas:
 
 ```text
 ivMedio = floor((ivHp + ivAttack + ivDefense) / 3)
@@ -61,7 +61,7 @@ bonusIv = floor(codigosInvestidosNoAtributo / 10)
 ivMinimoFinal = min(ivMinimoBase + bonusIv, 100)
 ```
 
-A integração da seleção por atributo no request e na tela de Rebirth deve ser concluída junto do fluxo transacional de consumo do item. Neste PR o item já está cadastrado para que os drops possam ser configurados manualmente pelo Admin.
+A seleção por atributo está disponível no request e na tela de Rebirth. O servidor valida o limite total, verifica o saldo de Código Infinito no inventário do Digimon e consome o item de forma transacional. O bônus é aplicado ao IV mínimo antes do sorteio, sempre limitado a 100.
 
 ## Alterações realizadas
 
@@ -71,10 +71,13 @@ A integração da seleção por atributo no request e na tela de Rebirth deve se
 - Criada a regra `DigitalDataRules`.
 - Criada a migration `V137__add_digital_data_currency_and_code_infinite.sql`.
 - Rebirth passou a validar e consumir Dados Digitais desde o primeiro ciclo.
+- Adicionado o endpoint `POST /digimon/{digimonId}/sacrifice` para Digimons armazenados.
+- A tela de Storage passou a exibir a ação de sacrifício com confirmação irreversível.
+- A tela e a API de Rebirth passaram a distribuir e consumir Código Infinito por atributo.
 - Nenhuma loot table foi alterada.
 
 ## Alterações deliberadamente não realizadas
 
 As tabelas de drops existentes não foram modificadas. A remoção de Data Core das áreas anteriores à Infinity Mountain e a inclusão de Código Infinito na Infinity Mountain serão feitas manualmente pelo Admin, conforme o planejamento.
 
-O sacrifício de Digimons no Storage e a seleção visual de Código Infinito por atributo permanecem como próxima etapa funcional, pois exigem novos endpoints, validações de exclusão permanente, auditoria e atualização da tela de Rebirth.
+Auditoria detalhada por evento ainda pode ser adicionada em uma etapa posterior. A operação já possui transação, bloqueio pessimista dos registros e confirmação explícita na interface.

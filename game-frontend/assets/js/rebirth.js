@@ -73,7 +73,7 @@ function rebirthRender(digimon) {
       <!-- Costs -->
       <div class="mb-4">
         <p class="text-xs font-bold text-slate-300 mb-2">Custo:</p>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-3 gap-2">
           <div class="card-sm text-center">
             <p class="text-xs text-slate-500">Bits</p>
             <p class="font-bold ${p.currentBits >= p.costBits ? 'text-yellow-400' : 'text-red-400'}">${p.costBits.toLocaleString()}</p>
@@ -82,6 +82,11 @@ function rebirthRender(digimon) {
           <div class="card-sm text-center">
             <p class="text-xs text-slate-500">Data Core</p>
             <p class="font-bold text-purple-400">${p.costDataCore}</p>
+          </div>
+          <div class="card-sm text-center">
+            <p class="text-xs text-slate-500">Dados Digitais</p>
+            <p class="font-bold ${p.currentDigitalData >= p.costDigitalData ? 'text-cyan-400' : 'text-red-400'}">${p.costDigitalData}</p>
+            <p class="text-xs text-slate-500">Você tem: ${p.currentDigitalData}</p>
           </div>
         </div>
       </div>
@@ -94,6 +99,17 @@ function rebirthRender(digimon) {
           <p class="font-bold text-green-400">x${p.statMultiplier.toFixed(2)}</p>
           <p class="text-xs text-slate-500">+${Math.round((p.statMultiplier - 1) * 100)}% em HP, ATK e DEF</p>
         </div>
+      </div>
+
+      <!-- Infinite Code investment -->
+      <div class="mb-4">
+        <p class="text-xs font-bold text-slate-300 mb-2">Código Infinito (10 = +1 IV mínimo):</p>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="card-sm text-center text-xs text-slate-400">HP<input id="code-infinite-hp" type="number" min="0" max="100" value="0" class="w-full mt-1 text-center bg-slate-800 rounded p-1 text-red-300"></label>
+          <label class="card-sm text-center text-xs text-slate-400">ATK<input id="code-infinite-attack" type="number" min="0" max="100" value="0" class="w-full mt-1 text-center bg-slate-800 rounded p-1 text-orange-300"></label>
+          <label class="card-sm text-center text-xs text-slate-400">DEF<input id="code-infinite-defense" type="number" min="0" max="100" value="0" class="w-full mt-1 text-center bg-slate-800 rounded p-1 text-blue-300"></label>
+        </div>
+        <p class="text-xs text-slate-500 mt-1">Máximo total por Rebirth: 100 Códigos Infinitos. Saldo disponível é validado no servidor.</p>
       </div>
 
       <!-- IV Ranges -->
@@ -152,7 +168,10 @@ async function rebirthExecute() {
   if (btn) { btn.disabled = true; btn.textContent = "Renascendo..."; }
 
   try {
-    await apiPost("/digimon/rebirth", { digimonId: rebirthDigimonId });
+    const codeInfiniteHp = Number(document.getElementById("code-infinite-hp")?.value || 0);
+    const codeInfiniteAttack = Number(document.getElementById("code-infinite-attack")?.value || 0);
+    const codeInfiniteDefense = Number(document.getElementById("code-infinite-defense")?.value || 0);
+    await apiPost("/digimon/rebirth", { digimonId: rebirthDigimonId, codeInfiniteHp, codeInfiniteAttack, codeInfiniteDefense });
     showToast("Rebirth realizado com sucesso! Seu Digimon renasceu.");
     navigateTo("dashboard");
   } catch (err) {

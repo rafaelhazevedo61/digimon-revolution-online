@@ -51,6 +51,10 @@ public class RebirthUseCase {
 
     @Transactional
     public void execute(String token, UUID digimonId) {
+        execute(token, digimonId, 0, 0, 0);
+    }
+
+    public void execute(String token, UUID digimonId, int codeInfiniteHp, int codeInfiniteAttack, int codeInfiniteDefense) {
         UUID playerId = extractPlayerId(token);
         Player player = findPlayer(playerId);
         Digimon oldDigimon = findDigimon(digimonId);
@@ -64,17 +68,22 @@ public class RebirthUseCase {
         int bitsCost = RebirthRules.calculateBitsCost(currentRebirthCount);
         int dataCoreCost = RebirthRules.calculateDataCoreCost(currentRebirthCount);
         int digitalDataCost = RebirthRules.calculateDigitalDataCost(currentRebirthCount);
+        validateCodeInfiniteInvestment(codeInfiniteHp, codeInfiniteAttack, codeInfiniteDefense);
+        int codeInfiniteCost = codeInfiniteHp + codeInfiniteAttack + codeInfiniteDefense;
         validateBits(oldDigimon, bitsCost);
         validateDigitalData(player, digitalDataCost);
         InventoryItem dataCore = findDataCore(digimonId);
         validateDataCore(dataCore, dataCoreCost);
-        consumeCosts(player, oldDigimon, dataCore, bitsCost, dataCoreCost, digitalDataCost);
-        Digimon newDigimon = createRebornDigimon(playerId, oldDigimon, newRebirthCount);
+        InventoryItem codeInfinite = findCodeInfinite(digimonId, codeInfiniteCost);
+        validateCodeInfinite(codeInfinite, codeInfiniteCost);
+        consumeCosts(player, oldDigimon, dataCore, codeInfinite, bitsCost, dataCoreCost, digitalDataCost, codeInfiniteCost);
+        Digimon newDigimon = createRebornDigimon(playerId, oldDigimon, newRebirthCount, codeInfiniteHp, codeInfiniteAttack, codeInfiniteDefense);
         oldDigimon.setStatus(DigimonStatus.REBORN);
         oldDigimon.setBits(0);
         digimonRepository.save(oldDigimon);
         digimonRepository.save(newDigimon);
         inventoryRepository.save(dataCore);
+        if (codeInfinite != null && codeInfiniteCost > 0) inventoryRepository.save(codeInfinite);
         if (player.getClanId() != null) {
             clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.REBIRTHS_DONE);
         }
@@ -146,23 +155,41 @@ public class RebirthUseCase {
         }
     }
 
-    private void consumeCosts(Player player, Digimon digimon, InventoryItem dataCore, int bitsCost, int dataCoreCost, int digitalDataCost) {
+    private InventoryItem findCodeInfinite(UUID digimonId, int required) {
+        return inventoryRepository.findByDigimonIdAndItemType(digimonId, ItemType.CODE_INFINITE)
+                .orElseGet(() -> required == 0 ? null : null);
+    }
+
+    private void validateCodeInfiniteInvestment(int hp, int attack, int defense) {
+        if (hp < 0 || attack < 0 || defense < 0 || hp + attack + defense > RebirthRules.calculateMaxCodeInfiniteInvestment()) {
+            throw new BadRequestException("Code Infinite investment must be non-negative and total at most 100");
+        }
+    }
+
+    private void validateCodeInfinite(InventoryItem codeInfinite, int cost) {
+        if (cost > 0 && (codeInfinite == null || codeInfinite.getQuantity() < cost)) {
+            throw new UnprocessableException("Not enough Code Infinite to refine Rebirth");
+        }
+    }
+
+    private void consumeCosts(Player player, Digimon digimon, InventoryItem dataCore, InventoryItem codeInfinite, int bitsCost, int dataCoreCost, int digitalDataCost, int codeInfiniteCost) {
         digimon.setBits(digimon.getBits() - bitsCost);
         dataCore.setQuantity(dataCore.getQuantity() - dataCoreCost);
+        if (codeInfinite != null) codeInfinite.setQuantity(codeInfinite.getQuantity() - codeInfiniteCost);
         if (!player.spendDigitalData(digitalDataCost)) {
             throw new UnprocessableException("Not enough Digital Data to perform Rebirth");
         }
         playerRepository.save(player);
     }
 
-    private Digimon createRebornDigimon(UUID playerId, Digimon oldDigimon, int newRebirthCount) {
+    private Digimon createRebornDigimon(UUID playerId, Digimon oldDigimon, int newRebirthCount, int codeInfiniteHp, int codeInfiniteAttack, int codeInfiniteDefense) {
         Rarity rarity = RarityRoller.rollForRebirth(oldDigimon.getRarity(), newRebirthCount);
         Personality personality = PersonalityRoller.roll();
         Trait trait = TraitRoller.rollForRebirth(newRebirthCount);
         int rarityMinimumIv = RarityRules.getMinimumIv(rarity);
-        int ivHp = rollInheritedIv(oldDigimon.getIvHp(), rarityMinimumIv, newRebirthCount);
-        int ivAttack = rollInheritedIv(oldDigimon.getIvAttack(), rarityMinimumIv, newRebirthCount);
-        int ivDefense = rollInheritedIv(oldDigimon.getIvDefense(), rarityMinimumIv, newRebirthCount);
+        int ivHp = rollInheritedIv(oldDigimon.getIvHp(), rarityMinimumIv, newRebirthCount, codeInfiniteHp);
+        int ivAttack = rollInheritedIv(oldDigimon.getIvAttack(), rarityMinimumIv, newRebirthCount, codeInfiniteAttack);
+        int ivDefense = rollInheritedIv(oldDigimon.getIvDefense(), rarityMinimumIv, newRebirthCount, codeInfiniteDefense);
         DigimonGrade grade = DigimonGradeRules.calculate(ivHp, ivAttack, ivDefense);
         Long babyInfoId = resolveBabyDigimonInfoId(oldDigimon);
         DigimonInfos babyInfo = babyInfoId != null ? digimonInfosRepository.findById(babyInfoId).orElse(null) : null;
@@ -202,8 +229,9 @@ public class RebirthUseCase {
         return null;
     }
 
-    private int rollInheritedIv(int previousIv, int rarityMinimumIv, int rebirthCount) {
+    private int rollInheritedIv(int previousIv, int rarityMinimumIv, int rebirthCount, int codeInfiniteAmount) {
         int inheritedMinimum = RebirthRules.calculateInheritedIvMinimum(previousIv, rarityMinimumIv, rebirthCount);
+        inheritedMinimum = Math.min(MAX_IV, inheritedMinimum + RebirthRules.calculateCodeInfiniteIvBonus(codeInfiniteAmount));
         return inheritedMinimum + random.nextInt((MAX_IV - inheritedMinimum) + 1);
     }
 
