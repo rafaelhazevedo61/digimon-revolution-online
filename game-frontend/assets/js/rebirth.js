@@ -81,7 +81,8 @@ function rebirthRender(digimon) {
           </div>
           <div class="card-sm text-center">
             <p class="text-xs text-slate-500">Data Core</p>
-            <p class="font-bold text-purple-400">${p.costDataCore}</p>
+            <p class="font-bold ${p.currentDataCore >= p.costDataCore ? 'text-purple-400' : 'text-red-400'}">${p.costDataCore}</p>
+            <p class="text-xs ${p.currentDataCore >= p.costDataCore ? 'text-slate-500' : 'text-red-400'}">Você tem: ${p.currentDataCore}</p>
           </div>
           <div class="card-sm text-center">
             <p class="text-xs text-slate-500">Dados Digitais</p>
@@ -109,7 +110,8 @@ function rebirthRender(digimon) {
           <label class="card-sm text-center text-xs text-slate-400">ATK<input id="code-infinite-attack" type="number" min="0" max="100" value="0" class="w-full mt-1 text-center bg-slate-800 rounded p-1 text-orange-300"></label>
           <label class="card-sm text-center text-xs text-slate-400">DEF<input id="code-infinite-defense" type="number" min="0" max="100" value="0" class="w-full mt-1 text-center bg-slate-800 rounded p-1 text-blue-300"></label>
         </div>
-        <p class="text-xs text-slate-500 mt-1">Máximo total por Rebirth: 100 Códigos Infinitos. Saldo disponível é validado no servidor.</p>
+        <p class="text-xs text-slate-400 mt-2">Você tem: <span class="font-bold text-violet-300">${p.currentCodeInfinite ?? 0}</span> Código(s) Infinito(s)</p>
+        <p class="text-xs text-slate-500 mt-1">Máximo total por Rebirth: 100 Códigos Infinitos. O saldo disponível é validado no servidor.</p>
       </div>
 
       <!-- IV Ranges -->

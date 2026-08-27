@@ -38,8 +38,12 @@ public class RebirthPreviewUseCase {
         int newRebirthCount = currentRebirthCount + 1;
         int costBits = RebirthRules.calculateBitsCost(currentRebirthCount);
         int costDataCore = RebirthRules.calculateDataCoreCost(currentRebirthCount);
+        int currentDataCore = inventoryRepository.findByDigimonIdAndItemType(digimonId, ItemType.DATA_CORE)
+                .map(InventoryItem::getQuantity).orElse(0);
         int costDigitalData = RebirthRules.calculateDigitalDataCost(currentRebirthCount);
         int currentDigitalData = playerRepository.findById(playerId).map(Player::getDigitalData).orElse(0);
+        int currentCodeInfinite = inventoryRepository.findByDigimonIdAndItemType(digimonId, ItemType.CODE_INFINITE)
+                .map(InventoryItem::getQuantity).orElse(0);
         int currentBits = digimon.getBits();
         int remainingBitsAfterRebirth = Math.max(0, currentBits - costBits);
         int rarityMinimumIv = RebirthRules.calculateIvBonus(newRebirthCount);
@@ -49,7 +53,7 @@ public class RebirthPreviewUseCase {
         double statMultiplier = RebirthRules.calculateStatMultiplier(newRebirthCount);
         String ineligibilityReason = getIneligibilityReason(digimon, costBits, costDataCore, costDigitalData, currentDigitalData);
         boolean eligible = ineligibilityReason == null;
-        return new RebirthPreviewResponse(eligible, ineligibilityReason, currentRebirthCount, newRebirthCount, costBits, costDataCore, costDigitalData, currentDigitalData, currentBits, remainingBitsAfterRebirth, hpRange, attackRange, defenseRange, statMultiplier);
+        return new RebirthPreviewResponse(eligible, ineligibilityReason, currentRebirthCount, newRebirthCount, costBits, costDataCore, currentDataCore, costDigitalData, currentDigitalData, currentCodeInfinite, currentBits, remainingBitsAfterRebirth, hpRange, attackRange, defenseRange, statMultiplier);
     }
 
     private UUID extractPlayerId(String token) {
