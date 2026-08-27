@@ -329,6 +329,7 @@ O inventário utilizado pela jornada está associado ao Digimon ativo e integra 
 - itens catalogados são enriquecidos por `item_definitions`;
 - itens podem possuir categorias diferentes;
 - alguns itens são consumíveis diretamente;
+- os Discos de XP `XP_DISC_1`, `XP_DISC_3`, `XP_DISC_5`, `XP_DISC_10`, `XP_DISC_15` e `XP_DISC_20` concedem XP instantaneamente ao Digimon ativo;
 - baús são abertos através de operação transacional específica, individualmente ou em lotes de até 100 unidades do mesmo tipo;
 - concessões administrativas ficam sob `/admin`, não no namespace público do jogador.
 
@@ -337,7 +338,7 @@ O inventário utilizado pela jornada está associado ao Digimon ativo e integra 
 | Método | Rota | Descrição |
 |---|---|---|
 | GET | `/inventory` | Inventário do Digimon ativo |
-| POST | `/inventory/use` | Utilizar item suportado, incluindo `INCUBATION_SLOT_UNLOCK` para aumentar em um o limite de slots de incubação do jogador |
+| POST | `/inventory/use` | Utilizar item suportado, incluindo `INCUBATION_SLOT_UNLOCK` e os seis Discos de XP; a resposta informa o efeito aplicado |
 | POST | `/inventory/chests/open` | Abrir um ou mais baús do mesmo tipo; `quantity` é opcional, assume 1 e aceita até 100 |
 | GET | `/items` | Catálogo público de definições de item |
 

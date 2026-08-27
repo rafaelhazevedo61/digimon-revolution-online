@@ -1,6 +1,7 @@
 package com.dro.modules.inventory.api;
 
 import com.dro.modules.inventory.api.dto.request.UseItemRequest;
+import com.dro.modules.inventory.api.dto.response.UseItemResponse;
 import com.dro.modules.inventory.application.UseItemUseCase;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
@@ -76,7 +77,8 @@ public class InventoryController {
         if (itemType.name().startsWith("INCUBATOR_")) return "INCUBATOR";
         if (itemType == ItemType.LOOT_CHEST) return "CHEST";
         if (itemType == ItemType.EVOLUTION_MATERIAL) return "EVOLUTION_MATERIAL";
-        if (itemType == ItemType.POTION_SMALL || itemType == ItemType.INCUBATION_SLOT_UNLOCK) return "CONSUMABLE";
+        if (itemType == ItemType.POTION_SMALL || itemType == ItemType.INCUBATION_SLOT_UNLOCK
+                || itemType.name().startsWith("XP_DISC_")) return "CONSUMABLE";
         if (itemType == ItemType.TRAINING_STONE || itemType == ItemType.DATA_CORE || itemType == ItemType.REFINEMENT_STONE) return "MATERIAL";
         return "OTHER";
     }
@@ -87,9 +89,8 @@ public class InventoryController {
     }
 
     @PostMapping("/use")
-    public ResponseEntity<Void> useItem(@RequestHeader("Authorization") String authorization, @RequestBody @Valid UseItemRequest request) {
-        useItemUseCase.execute(authorization, request.itemType());
-        return ResponseEntity.ok().build();
+    public ResponseEntity<UseItemResponse> useItem(@RequestHeader("Authorization") String authorization, @RequestBody @Valid UseItemRequest request) {
+        return ResponseEntity.ok(useItemUseCase.execute(authorization, request.itemType()));
     }
 
     public InventoryController(final InventoryRepository repository, final UseItemUseCase useItemUseCase, final OpenChestUseCase openChestUseCase, final PlayerRepository playerRepository) {

@@ -219,10 +219,15 @@ async function invReloadItems() {
 
 async function invUseItem(itemType) {
   try {
-    await apiPost("/inventory/use", { itemType: itemType });
-    showToast(itemType === "INCUBATION_SLOT_UNLOCK"
-      ? "Slot de incubação desbloqueado!"
-      : `${invItemName(itemType)} usado!`);
+    const result = await apiPost("/inventory/use", { itemType: itemType });
+    if (result && result.xpGranted > 0) {
+      const levelMessage = result.levelUp ? ` Nível ${result.currentLevel}!` : "";
+      showToast(`${invItemName(itemType)} utilizado: +${result.xpGranted} XP.${levelMessage}`);
+    } else {
+      showToast(itemType === "INCUBATION_SLOT_UNLOCK"
+        ? "Slot de incubação desbloqueado!"
+        : `${invItemName(itemType)} usado!`);
+    }
     await invReloadItems();
   } catch (err) {
     showToast(err.message, "error");
@@ -327,6 +332,12 @@ function invItemName(itemType) {
     INCUBATOR_RARE: "Incubadora Rara",
     INCUBATOR_EPIC: "Incubadora Épica",
     INCUBATION_SLOT_UNLOCK: "Expansor de Slot de Incubação",
+    XP_DISC_1: "Disco de XP +1%",
+    XP_DISC_3: "Disco de XP +3%",
+    XP_DISC_5: "Disco de XP +5%",
+    XP_DISC_10: "Disco de XP +10%",
+    XP_DISC_15: "Disco de XP +15%",
+    XP_DISC_20: "Disco de XP +20%",
     FRAGMENT_ROOKIE: "Fragmento Rookie",
     FRAGMENT_CHAMPION: "Fragmento Champion",
     FRAGMENT_ULTIMATE: "Fragmento Ultimate",
@@ -343,6 +354,8 @@ function invItemEmoji(itemType) {
     DIGITAMA_STARTER: "🥚", DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿",
     INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "📦", INCUBATOR_EPIC: "📦",
     INCUBATION_SLOT_UNLOCK: "🔓",
+    XP_DISC_1: "💿", XP_DISC_3: "💿", XP_DISC_5: "💿",
+    XP_DISC_10: "💿", XP_DISC_15: "💿", XP_DISC_20: "💿",
     FRAGMENT_ROOKIE: "🧩", FRAGMENT_CHAMPION: "🧩", FRAGMENT_ULTIMATE: "🧩", FRAGMENT_MEGA: "🧩",
     EVOLUTION_MATERIAL: "⭐",
     LOOT_CHEST: "🎁"
@@ -351,12 +364,14 @@ function invItemEmoji(itemType) {
 }
 
 function invIsUsable(itemType) {
-  const usable = ["POTION_SMALL", "TRAINING_STONE", "DATA_CORE", "INCUBATION_SLOT_UNLOCK"];
+  const usable = ["POTION_SMALL", "TRAINING_STONE", "DATA_CORE", "INCUBATION_SLOT_UNLOCK",
+    "XP_DISC_1", "XP_DISC_3", "XP_DISC_5", "XP_DISC_10", "XP_DISC_15", "XP_DISC_20"];
   return usable.includes(itemType);
 }
 
 function invItemCategory(itemType) {
   if (itemType === "POTION_SMALL" || itemType === "INCUBATION_SLOT_UNLOCK") return "common";
+  if (itemType.startsWith("XP_DISC_")) return "rare";
   if (itemType.startsWith("DIGITAMA_")) return "rare";
   if (itemType.startsWith("INCUBATOR_")) return "epic";
   if (itemType.startsWith("FRAGMENT_")) return "champion";
@@ -368,6 +383,7 @@ function invItemCategory(itemType) {
 function invItemCategoryName(itemType) {
   if (itemType === "POTION_SMALL") return "Poção";
   if (itemType === "INCUBATION_SLOT_UNLOCK") return "Incubação";
+  if (itemType.startsWith("XP_DISC_")) return "Experiência";
   if (itemType === "TRAINING_STONE" || itemType === "DATA_CORE") return "Material";
   if (itemType.startsWith("DIGITAMA_")) return "Digitama";
   if (itemType.startsWith("INCUBATOR_")) return "Incubadora";

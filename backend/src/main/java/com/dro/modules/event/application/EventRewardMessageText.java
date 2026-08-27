@@ -145,6 +145,12 @@ public final class EventRewardMessageText {
                 case INCUBATOR_RARE -> "Incubadora rara";
                 case INCUBATOR_EPIC -> "Incubadora épica";
                 case INCUBATION_SLOT_UNLOCK -> "Expansor de slot de incubação";
+                case XP_DISC_1 -> "Disco de XP +1%";
+                case XP_DISC_3 -> "Disco de XP +3%";
+                case XP_DISC_5 -> "Disco de XP +5%";
+                case XP_DISC_10 -> "Disco de XP +10%";
+                case XP_DISC_15 -> "Disco de XP +15%";
+                case XP_DISC_20 -> "Disco de XP +20%";
                 case FRAGMENT_ROOKIE -> "Fragmento Rookie";
                 case FRAGMENT_CHAMPION -> "Fragmento Champion";
                 case FRAGMENT_ULTIMATE -> "Fragmento Ultimate";

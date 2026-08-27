@@ -1,0 +1,42 @@
+INSERT INTO item_definitions (
+    code, name, description, category, stackable, buy_price, sell_price,
+    tradable, sellable, usable, max_stack, rarity, icon
+)
+VALUES
+    ('XP_DISC_1',
+     'Disco de XP +1%',
+     'Concede instantaneamente 1% da experiência necessária para o próximo nível do Digimon.',
+     'CONSUMABLE', TRUE, NULL, NULL, TRUE, TRUE, TRUE, 99, 'COMMON', 'xp_disc_1'),
+    ('XP_DISC_3',
+     'Disco de XP +3%',
+     'Concede instantaneamente 3% da experiência necessária para o próximo nível do Digimon.',
+     'CONSUMABLE', TRUE, NULL, NULL, TRUE, TRUE, TRUE, 99, 'COMMON', 'xp_disc_3'),
+    ('XP_DISC_5',
+     'Disco de XP +5%',
+     'Concede instantaneamente 5% da experiência necessária para o próximo nível do Digimon.',
+     'CONSUMABLE', TRUE, NULL, NULL, TRUE, TRUE, TRUE, 99, 'RARE', 'xp_disc_5'),
+    ('XP_DISC_10',
+     'Disco de XP +10%',
+     'Concede instantaneamente 10% da experiência necessária para o próximo nível do Digimon.',
+     'CONSUMABLE', TRUE, NULL, NULL, TRUE, TRUE, TRUE, 99, 'RARE', 'xp_disc_10'),
+    ('XP_DISC_15',
+     'Disco de XP +15%',
+     'Concede instantaneamente 15% da experiência necessária para o próximo nível do Digimon.',
+     'CONSUMABLE', TRUE, NULL, NULL, TRUE, TRUE, TRUE, 99, 'EPIC', 'xp_disc_15'),
+    ('XP_DISC_20',
+     'Disco de XP +20%',
+     'Concede instantaneamente 20% da experiência necessária para o próximo nível do Digimon.',
+     'CONSUMABLE', TRUE, NULL, NULL, TRUE, TRUE, TRUE, 99, 'LEGENDARY', 'xp_disc_20')
+ON CONFLICT (code) DO UPDATE SET
+    name = EXCLUDED.name,
+    description = EXCLUDED.description,
+    category = EXCLUDED.category,
+    stackable = EXCLUDED.stackable,
+    buy_price = EXCLUDED.buy_price,
+    sell_price = EXCLUDED.sell_price,
+    tradable = EXCLUDED.tradable,
+    sellable = EXCLUDED.sellable,
+    usable = EXCLUDED.usable,
+    max_stack = EXCLUDED.max_stack,
+    rarity = EXCLUDED.rarity,
+    icon = EXCLUDED.icon;
