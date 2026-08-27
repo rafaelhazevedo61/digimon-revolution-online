@@ -37,8 +37,8 @@ public class GetAvailableMissionsUseCase {
                 .sorted(Comparator
                         .comparingInt((MissionDefinitionEntity mission) -> mission.getArea().ordinal())
                         .reversed()
-                        .thenComparing(Comparator.comparingInt(GetAvailableMissionsUseCase::missionNumber).reversed())
                         .thenComparing(Comparator.comparingInt(MissionDefinitionEntity::getRequiredLevel).reversed())
+                        .thenComparing(Comparator.comparingInt(GetAvailableMissionsUseCase::missionNumber).reversed())
                         .thenComparing(MissionDefinitionEntity::getId, Comparator.reverseOrder()))
                 .map(m -> new MissionResponse(m.getId(), m.getName(), m.getDescription(), m.getArea().name(), m.getRequiredLevel(), m.getBaseXp(), m.getBaseBits(), m.getEnergyCost(), m.getDurationSeconds()))
                 .toList();

@@ -25,11 +25,11 @@ function missionNumber(mission) {
 }
 
 function compareMissionsByProgression(a, b) {
-  const numberDifference = missionNumber(b) - missionNumber(a);
-  if (numberDifference !== 0) return numberDifference;
-
   const levelDifference = (Number(b.requiredLevel) || 0) - (Number(a.requiredLevel) || 0);
   if (levelDifference !== 0) return levelDifference;
+
+  const numberDifference = missionNumber(b) - missionNumber(a);
+  if (numberDifference !== 0) return numberDifference;
 
   return String(b.id || b.missionId || "").localeCompare(String(a.id || a.missionId || ""));
 }

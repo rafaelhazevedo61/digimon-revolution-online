@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 class GetAvailableMissionsUseCaseTest {
 
     @Test
-    void returnsMissionsByAreaAndMissionProgressionDescending() {
+    void returnsMissionsByAreaAndRequiredLevelDescending() {
         UUID playerId = UUID.randomUUID();
         UUID activeDigimonId = UUID.randomUUID();
         Player player = mock(Player.class);
@@ -43,7 +43,7 @@ class GetAvailableMissionsUseCaseTest {
         when(digimonRepository.findById(activeDigimonId)).thenReturn(Optional.of(digimon));
         when(missionDefinitionRepository.findByActiveTrue()).thenReturn(List.of(
                 mission("MISSION_NF_1", Area.NATIVE_FOREST, Stage.BABY, 1),
-                mission("MISSION_IM_1", Area.INFINITY_MOUNTAIN, Stage.MEGA, 60),
+                mission("MISSION_IM_1", Area.INFINITY_MOUNTAIN, Stage.MEGA, 70),
                 mission("MISSION_NF_3", Area.NATIVE_FOREST, Stage.BABY, 5),
                 mission("MISSION_SD_1", Area.SERVER_DESERT, Stage.ULTIMATE, 50),
                 mission("MISSION_IM_2", Area.INFINITY_MOUNTAIN, Stage.MEGA, 65),
@@ -60,8 +60,8 @@ class GetAvailableMissionsUseCaseTest {
 
         assertEquals(
                 List.of(
-                        "MISSION_IM_2",
                         "MISSION_IM_1",
+                        "MISSION_IM_2",
                         "MISSION_SD_1",
                         "MISSION_NF_3",
                         "MISSION_NF_2",
