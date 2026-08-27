@@ -90,10 +90,10 @@ public class RebirthPreviewUseCase {
         }
         int dataCoreQuantity = inventoryRepository.findByDigimonIdAndItemType(digimon.getId(), ItemType.DATA_CORE).map(InventoryItem::getQuantity).orElse(0);
         if (dataCoreQuantity < costDataCore) {
-            return "Not enough Data Core to perform Rebirth";
+            return "Núcleos de Dados insuficientes para realizar o Rebirth";
         }
         if (currentDigitalData < costDigitalData) {
-            return "Not enough Digital Data to perform Rebirth";
+            return "Dados Digitais insuficientes para realizar o Rebirth";
         }
         return null;
     }

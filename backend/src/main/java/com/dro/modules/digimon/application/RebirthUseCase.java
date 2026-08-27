@@ -145,13 +145,13 @@ public class RebirthUseCase {
 
     private void validateDigitalData(Player player, int digitalDataCost) {
         if (player.getDigitalData() < digitalDataCost) {
-            throw new UnprocessableException("Not enough Digital Data to perform Rebirth");
+            throw new UnprocessableException("Dados Digitais insuficientes para realizar o Rebirth");
         }
     }
 
     private void validateDataCore(InventoryItem dataCore, int dataCoreCost) {
         if (dataCore.getQuantity() < dataCoreCost) {
-            throw new UnprocessableException("Not enough Data Core to perform Rebirth");
+            throw new UnprocessableException("Núcleos de Dados insuficientes para realizar o Rebirth");
         }
     }
 
@@ -168,7 +168,7 @@ public class RebirthUseCase {
 
     private void validateCodeInfinite(InventoryItem codeInfinite, int cost) {
         if (cost > 0 && (codeInfinite == null || codeInfinite.getQuantity() < cost)) {
-            throw new UnprocessableException("Not enough Code Infinite to refine Rebirth");
+            throw new UnprocessableException("Códigos Infinitos insuficientes para refinar o Rebirth");
         }
     }
 
@@ -177,7 +177,7 @@ public class RebirthUseCase {
         dataCore.setQuantity(dataCore.getQuantity() - dataCoreCost);
         if (codeInfinite != null) codeInfinite.setQuantity(codeInfinite.getQuantity() - codeInfiniteCost);
         if (!player.spendDigitalData(digitalDataCost)) {
-            throw new UnprocessableException("Not enough Digital Data to perform Rebirth");
+            throw new UnprocessableException("Dados Digitais insuficientes para realizar o Rebirth");
         }
         playerRepository.save(player);
     }

@@ -42,6 +42,9 @@ async function renderRebirthPage() {
 function rebirthRender(digimon) {
   const content = document.getElementById("rebirth-content");
   const p = rebirthPreview;
+  const availableCodeInfinite = Number(p.currentCodeInfinite ?? 0);
+  const codeInfiniteDisabled = availableCodeInfinite <= 0 ? "disabled" : "";
+  const codeInfiniteMax = Math.min(100, Math.max(0, availableCodeInfinite));
 
   const stageMap = { BABY: "Baby", BABY_II: "Baby II", ROOKIE: "Rookie", CHAMPION: "Champion", ULTIMATE: "Ultimate", MEGA: "Mega" };
   const formatStg = s => stageMap[s] || s;
@@ -106,11 +109,12 @@ function rebirthRender(digimon) {
       <div class="mb-4">
         <p class="text-xs font-bold text-slate-300 mb-2">Código Infinito (10 = +1 IV mínimo):</p>
         <div class="grid grid-cols-3 gap-2">
-          <label class="card-sm text-center text-xs text-slate-400">HP<input id="code-infinite-hp" type="number" min="0" max="100" value="0" class="w-full mt-1 text-center bg-slate-800 rounded p-1 text-red-300"></label>
-          <label class="card-sm text-center text-xs text-slate-400">ATK<input id="code-infinite-attack" type="number" min="0" max="100" value="0" class="w-full mt-1 text-center bg-slate-800 rounded p-1 text-orange-300"></label>
-          <label class="card-sm text-center text-xs text-slate-400">DEF<input id="code-infinite-defense" type="number" min="0" max="100" value="0" class="w-full mt-1 text-center bg-slate-800 rounded p-1 text-blue-300"></label>
+          <label class="card-sm text-center text-xs text-slate-400">HP<input id="code-infinite-hp" type="number" min="0" max="${codeInfiniteMax}" value="0" ${codeInfiniteDisabled} class="w-full mt-1 text-center bg-slate-800 rounded p-1 text-red-300"></label>
+          <label class="card-sm text-center text-xs text-slate-400">ATK<input id="code-infinite-attack" type="number" min="0" max="${codeInfiniteMax}" value="0" ${codeInfiniteDisabled} class="w-full mt-1 text-center bg-slate-800 rounded p-1 text-orange-300"></label>
+          <label class="card-sm text-center text-xs text-slate-400">DEF<input id="code-infinite-defense" type="number" min="0" max="${codeInfiniteMax}" value="0" ${codeInfiniteDisabled} class="w-full mt-1 text-center bg-slate-800 rounded p-1 text-blue-300"></label>
         </div>
-        <p class="text-xs text-slate-400 mt-2">Você tem: <span class="font-bold text-violet-300">${p.currentCodeInfinite ?? 0}</span> Código(s) Infinito(s)</p>
+        <p class="text-xs text-slate-400 mt-2">Você tem: <span class="font-bold text-violet-300">${availableCodeInfinite}</span> Código(s) Infinito(s)</p>
+        ${availableCodeInfinite === 0 ? '<p class="text-xs text-amber-400 mt-1">Você não possui Códigos Infinitos disponíveis para investir.</p>' : ''}
         <p class="text-xs text-slate-500 mt-1">Máximo total por Rebirth: 100 Códigos Infinitos. O saldo disponível é validado no servidor.</p>
       </div>
 
