@@ -3,6 +3,8 @@ package com.dro.modules.inventory.api;
 import com.dro.modules.inventory.api.dto.request.UseItemRequest;
 import com.dro.modules.inventory.api.dto.response.UseItemResponse;
 import com.dro.modules.inventory.application.UseItemUseCase;
+import com.dro.modules.digimon.api.dto.response.RarityRerollResponse;
+import com.dro.modules.digimon.application.RarityRerollUseCase;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.loot.api.dto.request.OpenChestRequest;
@@ -30,6 +32,7 @@ public class InventoryController {
     private final UseItemUseCase useItemUseCase;
     private final OpenChestUseCase openChestUseCase;
     private final PlayerRepository playerRepository;
+    private final RarityRerollUseCase rarityRerollUseCase;
 
     @GetMapping
     public ResponseEntity<?> getInventory(@RequestHeader("Authorization") String authorization) {
@@ -88,15 +91,31 @@ public class InventoryController {
         return ResponseEntity.ok(openChestUseCase.execute(authorization, request));
     }
 
+    @PostMapping("/rarity-reroll/start")
+    public ResponseEntity<RarityRerollResponse> startRarityReroll(@RequestHeader("Authorization") String authorization) {
+        return ResponseEntity.ok(rarityRerollUseCase.start(authorization));
+    }
+
+    @PostMapping("/rarity-reroll/{id}/accept")
+    public ResponseEntity<RarityRerollResponse> acceptRarityReroll(@RequestHeader("Authorization") String authorization, @PathVariable UUID id) {
+        return ResponseEntity.ok(rarityRerollUseCase.accept(authorization, id));
+    }
+
+    @PostMapping("/rarity-reroll/{id}/keep")
+    public ResponseEntity<RarityRerollResponse> keepRarityReroll(@RequestHeader("Authorization") String authorization, @PathVariable UUID id) {
+        return ResponseEntity.ok(rarityRerollUseCase.keep(authorization, id));
+    }
+
     @PostMapping("/use")
     public ResponseEntity<UseItemResponse> useItem(@RequestHeader("Authorization") String authorization, @RequestBody @Valid UseItemRequest request) {
         return ResponseEntity.ok(useItemUseCase.execute(authorization, request.itemType(), request.quantity()));
     }
 
-    public InventoryController(final InventoryRepository repository, final UseItemUseCase useItemUseCase, final OpenChestUseCase openChestUseCase, final PlayerRepository playerRepository) {
+    public InventoryController(final InventoryRepository repository, final UseItemUseCase useItemUseCase, final OpenChestUseCase openChestUseCase, final PlayerRepository playerRepository, final RarityRerollUseCase rarityRerollUseCase) {
         this.repository = repository;
         this.useItemUseCase = useItemUseCase;
         this.openChestUseCase = openChestUseCase;
         this.playerRepository = playerRepository;
+        this.rarityRerollUseCase = rarityRerollUseCase;
     }
 }

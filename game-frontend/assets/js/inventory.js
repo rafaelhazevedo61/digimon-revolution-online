@@ -553,6 +553,10 @@ async function invReloadItems() {
 }
 
 async function invUseItem(itemType, quantity = null) {
+  if (itemType === "RARITY_REROLL") {
+    await invStartRarityReroll();
+    return;
+  }
   const isXpDiskItem = invIsXpDisk(itemType);
   const isBatchUsableItem = isXpDiskItem || itemType === "POTION_SMALL" || itemType === "TRAINING_STONE";
   let requestedQuantity = 1;
@@ -719,7 +723,8 @@ function invItemName(itemType) {
     FRAGMENT_ULTIMATE: "Fragmento Ultimate",
     FRAGMENT_MEGA: "Fragmento Mega",
     EVOLUTION_MATERIAL: "Material de Evolução",
-    LOOT_CHEST: "Baú"
+    LOOT_CHEST: "Baú",
+    RARITY_REROLL: "Reroll de Raridade"
   };
   return map[itemType] || itemType;
 }
@@ -737,7 +742,8 @@ function invItemEmoji(itemType) {
     XP_DISC_10: "💿", XP_DISC_15: "💿", XP_DISC_20: "💿",
     FRAGMENT_ROOKIE: "🧩", FRAGMENT_CHAMPION: "🧩", FRAGMENT_ULTIMATE: "🧩", FRAGMENT_MEGA: "🧩",
     EVOLUTION_MATERIAL: "⭐",
-    LOOT_CHEST: "🎁"
+    LOOT_CHEST: "🎁",
+    RARITY_REROLL: "✨"
   };
   return map[itemType] || "📦";
 }
@@ -745,7 +751,7 @@ function invItemEmoji(itemType) {
 function invIsUsable(itemType) {
   const usable = ["POTION_SMALL", "TRAINING_STONE", "DATA_CORE", "INCUBATION_SLOT_UNLOCK",
     "STORAGE_SLOT_1", "STORAGE_SLOT_5", "STORAGE_SLOT_10",
-    "XP_DISC_1", "XP_DISC_3", "XP_DISC_5", "XP_DISC_10", "XP_DISC_15", "XP_DISC_20"];
+    "XP_DISC_1", "XP_DISC_3", "XP_DISC_5", "XP_DISC_10", "XP_DISC_15", "XP_DISC_20", "RARITY_REROLL"];
   return usable.includes(itemType);
 }
 
@@ -757,6 +763,7 @@ function invItemCategory(itemType) {
   if (itemType.startsWith("INCUBATOR_")) return "epic";
   if (itemType.startsWith("FRAGMENT_")) return "champion";
   if (itemType === "EVOLUTION_MATERIAL") return "legendary";
+  if (itemType === "RARITY_REROLL") return "epic";
   if (itemType === "LOOT_CHEST") return "rare";
   return "common";
 }
@@ -772,7 +779,42 @@ function invItemCategoryName(itemType) {
   if (itemType.startsWith("FRAGMENT_")) return "Fragmento";
   if (itemType === "EVOLUTION_MATERIAL") return "Evolução";
   if (itemType === "LOOT_CHEST") return "Baú";
+  if (itemType === "RARITY_REROLL") return "Reroll";
   return "Item";
+}
+
+async function invStartRarityReroll() {
+  if (invItemUseInProgress) return;
+  invItemUseInProgress = true;
+  try {
+    const result = await apiPost("/inventory/rarity-reroll/start", {});
+    invShowRarityRerollModal(result);
+    await invReloadItems();
+  } catch (err) {
+    showToast(err.message || "Não foi possível gerar o reroll.", "error");
+  } finally {
+    invItemUseInProgress = false;
+  }
+}
+
+function invShowRarityRerollModal(result) {
+  document.getElementById("rarity-reroll-overlay")?.remove();
+  const overlay = document.createElement("div");
+  overlay.id = "rarity-reroll-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(2,6,23,.82);z-index:70;display:flex;align-items:center;justify-content:center;padding:1rem;";
+  overlay.innerHTML = `<div class="card w-full max-w-md" role="dialog" aria-modal="true"><div class="flex justify-between items-start gap-4 mb-5"><div><p class="text-xs uppercase tracking-wider text-fuchsia-400 font-bold">Reroll de raridade</p><h3 class="text-xl font-bold mt-1">Escolha o destino</h3></div><button class="text-slate-400 hover:text-white text-2xl" aria-label="Fechar" onclick="document.getElementById('rarity-reroll-overlay')?.remove()">&times;</button></div><div class="grid grid-cols-2 gap-3 mb-4"><div class="rounded-lg border border-slate-700 bg-slate-900/70 p-4 text-center"><p class="text-xs text-slate-400">Raridade atual</p><p class="text-lg font-bold text-slate-200 mt-2">${formatRarity(result.currentRarity)}</p></div><div class="rounded-lg border border-fuchsia-700 bg-fuchsia-950/40 p-4 text-center"><p class="text-xs text-fuchsia-300">Nova raridade</p><p class="text-lg font-bold text-fuchsia-200 mt-2">${formatRarity(result.newRarity)}</p></div></div><p class="text-sm text-slate-300 mb-5">Aceitar substitui a raridade atual. Para manter a anterior, será cobrado <strong class="text-amber-300">${Number(result.keepCostBits).toLocaleString('pt-BR')} Bits</strong>.</p><div class="grid grid-cols-2 gap-3"><button class="btn-secondary" onclick="invResolveRarityReroll('${result.rerollId}','keep')">Manter anterior</button><button class="btn-primary" onclick="invResolveRarityReroll('${result.rerollId}','accept')">Aceitar nova</button></div></div>`;
+  overlay.onclick = (event) => { if (event.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}
+
+async function invResolveRarityReroll(id, action) {
+  const overlay = document.getElementById("rarity-reroll-overlay");
+  try {
+    const result = await apiPost(`/inventory/rarity-reroll/${id}/${action}`, {});
+    overlay?.remove();
+    showToast(result.message || "Reroll processado com sucesso.");
+    await invReloadItems();
+  } catch (err) { showToast(err.message || "Não foi possível processar o reroll.", "error"); }
 }
 
 // ==================== EQUIPMENT TAB ====================

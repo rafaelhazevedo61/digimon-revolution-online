@@ -96,6 +96,8 @@ dro:
       Zurumon: true
 
   gameplay:
+    rarity-reroll:
+      keep-cost-bits: ${DRO_RARITY_REROLL_KEEP_COST_BITS:5000}
     username-change:
       # Índice 0 representa a primeira troca; valores posteriores continuam crescentes.
       costs: ${DRO_USERNAME_CHANGE_COSTS:1000,5000,10000}
