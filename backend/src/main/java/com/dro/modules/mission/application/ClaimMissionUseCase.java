@@ -34,6 +34,8 @@ import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.util.TokenExtractor;
+import com.dro.shared.gameplay.WeekendDoubleRewardRules;
+import java.time.Instant;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -134,19 +136,20 @@ public class ClaimMissionUseCase {
         double xpMultiplier = clanId != null ? clanBonusService.getMissionXpMultiplier(clanId) : 1.0;
         double bitsMultiplier = clanId != null ? clanBonusService.getMissionBitsMultiplier(clanId) : 1.0;
 
-        int xpGained = (int) Math.floor(calculateScaledXp(
+        Instant rewardTime = Instant.now();
+        int xpGained = WeekendDoubleRewardRules.multiplyXp((int) Math.floor(calculateScaledXp(
                 mission.getBaseXp(),
                 completionCount
-        ) * xpMultiplier);
+        ) * xpMultiplier), rewardTime);
 
         digimon.gainExperience(xpGained);
 
         boolean levelUp = digimon.getLevel() > previousLevel;
 
-        int bitsGained = (int) Math.floor(calculateScaledBits(
+        int bitsGained = WeekendDoubleRewardRules.multiplyBits((int) Math.floor(calculateScaledBits(
                 mission.getBaseBits(),
                 completionCount
-        ) * bitsMultiplier);
+        ) * bitsMultiplier), rewardTime);
 
         if (bitsGained > 0) {
             digimon.setBits(digimon.getBits() + bitsGained);
