@@ -1,8 +1,10 @@
 package com.dro.modules.ranking.application;
 
 import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.domain.DigimonInfos;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.digimon.infra.DigimonInfosRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.ranking.api.dto.response.RankingEntryResponse;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 public class GetRankingUseCase {
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
+    private final DigimonInfosRepository digimonInfosRepository;
     private static final int DEFAULT_SIZE = 10;
     private static final int MAX_SIZE = 50;
 
@@ -54,17 +57,20 @@ public class GetRankingUseCase {
         List<Digimon> digimons = page.getContent();
         List<UUID> playerIds = digimons.stream().map(Digimon::getPlayerId).distinct().toList();
         Map<UUID, String> playerNames = playerRepository.findAllById(playerIds).stream().collect(Collectors.toMap(Player::getId, Player::getUsername));
+        List<Long> digimonInfoIds = digimons.stream().map(Digimon::getDigimonInfoId).filter(java.util.Objects::nonNull).distinct().toList();
+        Map<Long, String> imageUrls = digimonInfosRepository.findAllById(digimonInfoIds).stream().collect(Collectors.toMap(DigimonInfos::getId, DigimonInfos::getImageUrl));
         List<RankingEntryResponse> entries = new java.util.ArrayList<>();
         for (int i = 0; i < digimons.size(); i++) {
             Digimon d = digimons.get(i);
             int position = pageNumber * pageSize + i + 1;
-            entries.add(new RankingEntryResponse(position, d.getName(), d.getStage(), d.getLevel(), d.getGrade(), d.getRebirthCount(), playerNames.getOrDefault(d.getPlayerId(), "Unknown"), d.getId(), d.getPlayerId()));
+            entries.add(new RankingEntryResponse(position, d.getName(), d.getStage(), imageUrls.get(d.getDigimonInfoId()), d.getLevel(), d.getGrade(), d.getRebirthCount(), playerNames.getOrDefault(d.getPlayerId(), "Unknown"), d.getId(), d.getPlayerId()));
         }
         return entries;
     }
 
-    public GetRankingUseCase(final DigimonRepository digimonRepository, final PlayerRepository playerRepository) {
+    public GetRankingUseCase(final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final DigimonInfosRepository digimonInfosRepository) {
         this.digimonRepository = digimonRepository;
         this.playerRepository = playerRepository;
+        this.digimonInfosRepository = digimonInfosRepository;
     }
 }
