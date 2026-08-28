@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
  */
 @Component
 public class ClanRaidResponseMapper {
+    private static final int RECENT_ATTACK_LIMIT = 5;
     private final BossDefinitionRepository bossDefinitionRepository;
     private final ClanRaidAttackRepository clanRaidAttackRepository;
     private final PlayerRepository playerRepository;
@@ -46,7 +47,7 @@ public class ClanRaidResponseMapper {
                 && nextAttackCandidate.isAfter(Instant.now())
                 ? nextAttackCandidate
                 : null;
-        List<ClanRaidAttackResponse> recentAttacks = attacks.stream().limit(20).map(this::toAttackResponse).toList();
+        List<ClanRaidAttackResponse> recentAttacks = attacks.stream().limit(RECENT_ATTACK_LIMIT).map(this::toAttackResponse).toList();
         return new ClanRaidResponse(
                 raid.getId(), raid.getClanId(), boss.getCode(), boss.getName(), boss.getImageUrl(),
                 raid.getMaxHp(), raid.getRemainingHp(), raid.getStatus(), raid.getCreatedAt(), raid.getDefeatedAt(),
