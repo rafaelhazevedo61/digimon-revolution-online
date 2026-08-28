@@ -102,7 +102,8 @@ class ClaimIncubationUseCaseTest {
                 playerRepository,
                 digitamaPoolRepository,
                 digitamaPoolEligibilityService,
-                tutorialService
+                tutorialService,
+                null
         ).execute(JwtTestToken.create(playerId), incubationId);
 
         assertNotNull(digimon);
