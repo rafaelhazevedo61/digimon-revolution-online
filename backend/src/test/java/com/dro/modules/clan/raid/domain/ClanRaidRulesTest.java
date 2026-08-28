@@ -19,22 +19,24 @@ class ClanRaidRulesTest {
     }
 
     @Test
-    void calculateDamage_neverExceedsMaxPercent() {
+    void calculateDamage_staysWithinClanRaidRange() {
         int maxHp = 10000;
 
         int damage = ClanRaidRules.calculateDamage(maxHp, 100);
-        int maxExpected = (int) Math.round(maxHp * 0.05);
+        int minExpected = (int) Math.round(maxHp * 0.0075);
+        int maxExpected = (int) Math.round(maxHp * 0.0775);
 
-        assertTrue(damage >= 1, "Damage should be at least 1");
-        assertTrue(damage <= maxExpected, "Damage should not exceed 5% of max HP");
+        assertTrue(damage >= minExpected, "Damage should respect the Clan Raid minimum");
+        assertTrue(damage <= maxExpected, "Damage should stay within the Clan Raid maximum");
     }
 
     @Test
-    void calculateDamage_lowWinChanceStillDealsSmallDamage() {
-        int maxHp = 10000;
+    void calculateDamage_lowWinChanceStillDealsUsefulDamage() {
+        int maxHp = 50000;
         int damage = ClanRaidRules.calculateDamage(maxHp, 5);
 
-        assertTrue(damage >= 5 && damage <= 25, "Low win chance should deal between 0.05% and 0.25% damage");
+        assertTrue(damage >= 375 && damage <= 550,
+                "A 50,000 HP raid with 5% chance should deal between 375 and 550 damage");
     }
 
     @Test
