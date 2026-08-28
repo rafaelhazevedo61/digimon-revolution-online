@@ -1,8 +1,10 @@
 package com.dro.modules.digimon.api;
 
+import com.dro.modules.digimon.api.dto.request.BulkSacrificeDigimonRequest;
 import com.dro.modules.digimon.api.dto.request.EvolveDigimonRequest;
 import com.dro.modules.digimon.api.dto.request.RebirthDigimonRequest;
 import com.dro.modules.digimon.api.dto.request.RenameDigimonRequest;
+import com.dro.modules.digimon.api.dto.response.BulkSacrificeDigimonResponse;
 import com.dro.modules.digimon.api.dto.response.DigimonLineageResponse;
 import com.dro.modules.digimon.api.dto.response.DigimonResponse;
 import com.dro.modules.digimon.api.dto.request.SelectDigimonRequest;
@@ -36,6 +38,7 @@ public class DigimonController {
     private final RetrieveDigimonUseCase retrieveDigimonUseCase;
     private final GetEvolutionOptionsUseCase getEvolutionOptionsUseCase;
     private final SacrificeDigimonUseCase sacrificeDigimonUseCase;
+    private final BulkSacrificeDigimonUseCase bulkSacrificeDigimonUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<List<DigimonResponse>> me(@RequestHeader("Authorization") String authorization) {
@@ -104,6 +107,14 @@ public class DigimonController {
         return ResponseEntity.ok(Map.of("message", "Digimon sacrificed successfully", "digitalDataReceived", reward));
     }
 
+    @PostMapping("/sacrifice/bulk")
+    public ResponseEntity<BulkSacrificeDigimonResponse> bulkSacrifice(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody @Valid BulkSacrificeDigimonRequest request
+    ) {
+        return ResponseEntity.ok(bulkSacrificeDigimonUseCase.execute(authorization, request.digimonIds()));
+    }
+
     @PostMapping("/{digimonId}/retrieve")
     public ResponseEntity<DigimonResponse> retrieve(@RequestHeader("Authorization") String authorization, @PathVariable UUID digimonId) {
         var digimon = retrieveDigimonUseCase.execute(authorization, digimonId);
@@ -115,7 +126,7 @@ public class DigimonController {
         return ResponseEntity.ok(useCase.executeStorage(authorization));
     }
 
-    public DigimonController(final GetDigimonUseCase useCase, final GetDigimonByIdUseCase getDigimonByIdUseCase, final SelectActiveDigimonUseCase selectUseCase, final EvolveDigimonUseCase evolveDigimonUseCase, final RebirthUseCase rebirthUseCase, final GetDigimonLineageUseCase getDigimonLineageUseCase, final RebirthPreviewUseCase rebirthPreviewUseCase, final RenameDigimonUseCase renameDigimonUseCase, final StoreDigimonUseCase storeDigimonUseCase, final RetrieveDigimonUseCase retrieveDigimonUseCase, final GetEvolutionOptionsUseCase getEvolutionOptionsUseCase, final SacrificeDigimonUseCase sacrificeDigimonUseCase) {
+    public DigimonController(final GetDigimonUseCase useCase, final GetDigimonByIdUseCase getDigimonByIdUseCase, final SelectActiveDigimonUseCase selectUseCase, final EvolveDigimonUseCase evolveDigimonUseCase, final RebirthUseCase rebirthUseCase, final GetDigimonLineageUseCase getDigimonLineageUseCase, final RebirthPreviewUseCase rebirthPreviewUseCase, final RenameDigimonUseCase renameDigimonUseCase, final StoreDigimonUseCase storeDigimonUseCase, final RetrieveDigimonUseCase retrieveDigimonUseCase, final GetEvolutionOptionsUseCase getEvolutionOptionsUseCase, final SacrificeDigimonUseCase sacrificeDigimonUseCase, final BulkSacrificeDigimonUseCase bulkSacrificeDigimonUseCase) {
         this.useCase = useCase;
         this.getDigimonByIdUseCase = getDigimonByIdUseCase;
         this.selectUseCase = selectUseCase;
@@ -128,5 +139,6 @@ public class DigimonController {
         this.retrieveDigimonUseCase = retrieveDigimonUseCase;
         this.getEvolutionOptionsUseCase = getEvolutionOptionsUseCase;
         this.sacrificeDigimonUseCase = sacrificeDigimonUseCase;
+        this.bulkSacrificeDigimonUseCase = bulkSacrificeDigimonUseCase;
     }
 }
