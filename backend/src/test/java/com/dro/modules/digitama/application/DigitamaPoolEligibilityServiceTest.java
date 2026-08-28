@@ -40,6 +40,21 @@ class DigitamaPoolEligibilityServiceTest {
     }
 
     @Test
+    void steelPoolAcceptsOnlyMetalKoromonWhenEnabledByConfig() {
+        DigitamaConfig config = new DigitamaConfig();
+        config.setBabyDigimons(Map.of("MetalKoromon", true));
+        DigitamaPoolEligibilityService service = new DigitamaPoolEligibilityService(config);
+        DigitamaPoolEntry metalKoromon = entry(info("MetalKoromon", Stage.BABY, Element.STEEL), true, 50);
+        DigitamaPoolEntry disabledSteelBaby = entry(info("Disabled Steel Baby", Stage.BABY, Element.STEEL), true, 50);
+        DigitamaPool pool = DigitamaPool.builder()
+                .code("DIGITAMA_STEEL")
+                .entries(List.of(metalKoromon, disabledSteelBaby))
+                .build();
+
+        assertEquals(List.of(metalKoromon), service.getEligibleEntries(pool));
+    }
+
+    @Test
     void starterPoolAcceptsBabiesFromAnyElementWhenEnabled() {
         DigitamaConfig config = new DigitamaConfig();
         config.setBabyDigimons(Map.of("Fire Baby", true, "Water Baby", true));
