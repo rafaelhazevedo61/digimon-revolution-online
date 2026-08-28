@@ -4,15 +4,112 @@ let invDigimonId = null;
 let invTab = "items"; // "items" or "equipment"
 let invChestOpeningInProgress = false;
 let invItemUseInProgress = false;
+let invFilterState = {
+  search: "",
+  category: "ALL",
+  fragmentStage: "ALL",
+  rarity: "ALL",
+  slot: "ALL",
+  sort: "name-asc",
+  open: false
+};
 
 async function renderInventoryPage() {
   const app = document.getElementById("app");
   showBottomNav("inventory");
 
   app.innerHTML = `
-    <div class="page-container">
-      <div class="flex items-center justify-between mb-4 px-1">
-        <h2 class="text-lg font-bold">Inventário</h2>
+      <div class="page-container">
+      <div class="flex items-center justify-between gap-2 mb-4 px-1">
+        <h2 class="text-lg font-bold truncate">Inventário</h2>
+        <button
+          id="inv-config-btn"
+          type="button"
+          class="btn-sm whitespace-nowrap"
+          style="background:#334155;color:#cbd5e1"
+          aria-expanded="false"
+        >
+          ⚙ Configurar
+        </button>
+      </div>
+
+      <div id="inv-config-panel" class="card-sm mb-3 hidden">
+        <form id="inv-search-form" class="flex flex-col sm:flex-row gap-2 mb-3">
+          <input
+            id="inv-search"
+            class="input flex-1"
+            type="search"
+            value="${escapeHtml(invFilterState.search)}"
+            placeholder="Pesquisar item ou equipamento..."
+            aria-label="Pesquisar no Inventário"
+          />
+          <div class="flex gap-2">
+            <button type="submit" class="btn-primary flex-1 sm:flex-none">Buscar</button>
+            <button id="inv-clear-search" type="button" class="btn-secondary flex-1 sm:flex-none">Limpar</button>
+          </div>
+        </form>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label class="text-xs text-slate-400 flex flex-col min-w-0">
+            <span class="min-h-8 leading-4 flex items-start">Categoria dos itens</span>
+            <select id="inv-category-filter" class="input mt-1" aria-label="Filtrar itens por categoria">
+              <option value="ALL">Todas as categorias</option>
+              <option value="CONSUMABLE">Consumíveis</option>
+              <option value="MATERIAL">Materiais</option>
+              <option value="EVOLUTION_MATERIAL">Evolução</option>
+              <option value="FRAGMENT">Fragmentos</option>
+              <option value="DIGITAMA">Digitamas</option>
+              <option value="INCUBATOR">Incubadoras</option>
+              <option value="CHEST">Baús</option>
+              <option value="OTHER">Outros</option>
+            </select>
+          </label>
+          <label id="inv-fragment-stage-filter-wrapper" class="text-xs text-slate-400 flex flex-col min-w-0 hidden">
+            <span class="min-h-8 leading-4 flex items-start">Estágio do fragmento</span>
+            <select id="inv-fragment-stage-filter" class="input mt-1" aria-label="Filtrar fragmentos por estágio">
+              <option value="ALL">Todos os estágios</option>
+              <option value="BABY_II">Baby II</option>
+              <option value="ROOKIE">Rookie</option>
+              <option value="CHAMPION">Champion</option>
+              <option value="ULTIMATE">Ultimate</option>
+              <option value="MEGA">Mega</option>
+            </select>
+          </label>
+          <label class="text-xs text-slate-400 flex flex-col min-w-0">
+            <span class="min-h-8 leading-4 flex items-start">Raridade</span>
+            <select id="inv-rarity-filter" class="input mt-1" aria-label="Filtrar por raridade">
+              <option value="ALL">Todas as raridades</option>
+              <option value="LEGENDARY">Lendária</option>
+              <option value="EPIC">Épica</option>
+              <option value="RARE">Rara</option>
+              <option value="COMMON">Comum</option>
+            </select>
+          </label>
+          <label class="text-xs text-slate-400 flex flex-col min-w-0">
+            <span class="min-h-8 leading-4 flex items-start">Slot de equipamento</span>
+            <select id="inv-slot-filter" class="input mt-1" aria-label="Filtrar equipamentos por slot">
+              <option value="ALL">Todos os slots</option>
+              <option value="WEAPON">Armas</option>
+              <option value="ARMOR">Armaduras</option>
+              <option value="ACCESSORY">Acessórios</option>
+            </select>
+          </label>
+          <label class="text-xs text-slate-400 flex flex-col min-w-0">
+            <span class="min-h-8 leading-4 flex items-start">Ordenar por</span>
+            <select id="inv-sort" class="input mt-1" aria-label="Ordenar Inventário">
+              <option value="name-asc">Nome: A–Z</option>
+              <option value="name-desc">Nome: Z–A</option>
+              <option value="quantity-desc">Quantidade: maior para menor</option>
+              <option value="quantity-asc">Quantidade: menor para maior</option>
+              <option value="category-asc">Categoria: A–Z</option>
+              <option value="rarity-desc">Raridade: maior para menor</option>
+              <option value="rarity-asc">Raridade: menor para maior</option>
+              <option value="level-desc">Tier do equipamento: maior para menor</option>
+              <option value="refinement-desc">Refinamento: maior para menor</option>
+            </select>
+          </label>
+        </div>
+        <p id="inv-filter-summary" class="text-xs text-slate-500 mt-3"></p>
       </div>
 
       <!-- Tabs -->
@@ -21,11 +118,25 @@ async function renderInventoryPage() {
         <button class="tab-btn" data-tab="equipment" onclick="invSwitchTab('equipment')">Equipamentos</button>
       </div>
 
+      <div id="inv-category-tabs" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+        <button class="tab-btn w-full" data-category="ALL" onclick="invSwitchCategory('ALL')">Todos</button>
+        <button class="tab-btn w-full" data-category="CONSUMABLE" onclick="invSwitchCategory('CONSUMABLE')">Consumíveis</button>
+        <button class="tab-btn w-full" data-category="MATERIAL" onclick="invSwitchCategory('MATERIAL')">Materiais</button>
+        <button class="tab-btn w-full" data-category="EVOLUTION_MATERIAL" onclick="invSwitchCategory('EVOLUTION_MATERIAL')">Evolução</button>
+        <button class="tab-btn w-full" data-category="FRAGMENT" onclick="invSwitchCategory('FRAGMENT')">Fragmentos</button>
+        <button class="tab-btn w-full" data-category="DIGITAMA" onclick="invSwitchCategory('DIGITAMA')">Digitamas</button>
+        <button class="tab-btn w-full" data-category="INCUBATOR" onclick="invSwitchCategory('INCUBATOR')">Incubadoras</button>
+        <button class="tab-btn w-full" data-category="CHEST" onclick="invSwitchCategory('CHEST')">Baús</button>
+        <button class="tab-btn w-full" data-category="OTHER" onclick="invSwitchCategory('OTHER')">Outros</button>
+      </div>
+
       <div id="inv-content">
         <div class="card animate-pulse"><div class="h-32"></div></div>
       </div>
     </div>
   `;
+
+  invSetupFilterControls();
 
   try {
     const [inventory, dashboard] = await Promise.all([
@@ -43,7 +154,7 @@ async function renderInventoryPage() {
     }
 
     invTab = "items";
-    invRenderItems();
+    invRenderActiveTab();
   } catch (err) {
     document.getElementById("inv-content").innerHTML = `
       <div class="card border-red-900">
@@ -58,37 +169,223 @@ function invSwitchTab(tab) {
   document.querySelectorAll("#inv-tabs .tab-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.tab === tab);
   });
-  if (tab === "items") {
+  invRenderActiveTab();
+}
+
+function invSwitchCategory(category) {
+  invFilterState.category = category;
+  invSyncFilterControls();
+  invRenderActiveTab();
+}
+
+function invSyncCategoryTabs() {
+  document.querySelectorAll("#inv-category-tabs .tab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.category === invFilterState.category);
+  });
+}
+
+function invSetupFilterControls() {
+  invFilterState.open = false;
+  document.getElementById("inv-config-btn")?.addEventListener("click", invToggleConfig);
+  document.getElementById("inv-search-form")?.addEventListener("submit", invSubmitSearch);
+  document.getElementById("inv-clear-search")?.addEventListener("click", invClearSearch);
+  document.getElementById("inv-category-filter")?.addEventListener("change", (event) => {
+    invFilterState.category = event.target.value;
+    invRenderActiveTab();
+  });
+  document.getElementById("inv-fragment-stage-filter")?.addEventListener("change", (event) => {
+    invFilterState.fragmentStage = event.target.value;
+    invRenderActiveTab();
+  });
+  document.getElementById("inv-rarity-filter")?.addEventListener("change", (event) => {
+    invFilterState.rarity = event.target.value;
+    invRenderActiveTab();
+  });
+  document.getElementById("inv-slot-filter")?.addEventListener("change", (event) => {
+    invFilterState.slot = event.target.value;
+    invRenderActiveTab();
+  });
+  document.getElementById("inv-sort")?.addEventListener("change", (event) => {
+    invFilterState.sort = event.target.value;
+    invRenderActiveTab();
+  });
+  invSyncFilterControls();
+  invUpdateFilterVisibility();
+}
+
+function invToggleConfig() {
+  const panel = document.getElementById("inv-config-panel");
+  const button = document.getElementById("inv-config-btn");
+  if (!panel || !button) return;
+
+  invFilterState.open = panel.classList.contains("hidden");
+  panel.classList.toggle("hidden", !invFilterState.open);
+  button.setAttribute("aria-expanded", String(invFilterState.open));
+}
+
+function invSubmitSearch(event) {
+  event.preventDefault();
+  invFilterState.search = document.getElementById("inv-search")?.value.trim() || "";
+  invRenderActiveTab();
+}
+
+function invClearSearch() {
+  invFilterState.search = "";
+  const input = document.getElementById("inv-search");
+  if (input) input.value = "";
+  invRenderActiveTab();
+}
+
+function invSyncFilterControls() {
+  const search = document.getElementById("inv-search");
+  const category = document.getElementById("inv-category-filter");
+  const fragmentStage = document.getElementById("inv-fragment-stage-filter");
+  const rarity = document.getElementById("inv-rarity-filter");
+  const slot = document.getElementById("inv-slot-filter");
+  const sort = document.getElementById("inv-sort");
+  if (search) search.value = invFilterState.search;
+  if (category) category.value = invFilterState.category;
+  if (fragmentStage) fragmentStage.value = invFilterState.fragmentStage;
+  if (rarity) rarity.value = invFilterState.rarity;
+  invSyncCategoryTabs();
+  if (slot) slot.value = invFilterState.slot;
+  if (sort) sort.value = invFilterState.sort;
+}
+
+function invRenderActiveTab() {
+  invUpdateFilterVisibility();
+  if (invTab === "items") {
     invRenderItems();
   } else {
     invRenderEquipment();
   }
 }
 
+function invUpdateFilterVisibility() {
+  const category = document.getElementById("inv-category-filter");
+  const categoryTabs = document.getElementById("inv-category-tabs");
+  const slot = document.getElementById("inv-slot-filter");
+  const fragmentStageWrapper = document.getElementById("inv-fragment-stage-filter-wrapper");
+  const isFragmentCategory = invFilterState.category === "FRAGMENT";
+  if (category) category.disabled = invTab !== "items";
+  if (categoryTabs) categoryTabs.classList.toggle("hidden", invTab !== "items");
+  if (fragmentStageWrapper) fragmentStageWrapper.classList.toggle("hidden", invTab !== "items" || !isFragmentCategory);
+  if (slot) slot.disabled = invTab !== "equipment";
+}
+
+function invUpdateFilterSummary(visible, total, label) {
+  const summary = document.getElementById("inv-filter-summary");
+  if (!summary) return;
+  summary.textContent = `Exibindo ${visible} de ${total} ${label}${total === 1 ? "" : "s"}.`;
+}
+
+function invNormalize(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function invResolvedCategory(item) {
+  const type = String(item?.itemType || "").toUpperCase();
+  const definitionCode = String(item?.itemDefinition?.code || "").toUpperCase();
+  if (type.startsWith("FRAGMENT_") || definitionCode.startsWith("FRAGMENT_")) return "FRAGMENT";
+
+  const definitionCategory = item?.itemDefinition?.category;
+  if (definitionCategory) return String(definitionCategory).toUpperCase();
+
+  if (type.startsWith("DIGITAMA_")) return "DIGITAMA";
+  if (type.startsWith("INCUBATOR_")) return "INCUBATOR";
+  if (type === "LOOT_CHEST") return "CHEST";
+  if (type === "EVOLUTION_MATERIAL") return "EVOLUTION_MATERIAL";
+  if (type.startsWith("FRAGMENT_")) return "FRAGMENT";
+  if (type === "POTION_SMALL" || type.startsWith("XP_DISC_") || type.startsWith("STORAGE_SLOT_") || type === "INCUBATION_SLOT_UNLOCK") return "CONSUMABLE";
+  if (type === "TRAINING_STONE" || type === "DATA_CORE" || type === "REFINEMENT_STONE") return "MATERIAL";
+  return "OTHER";
+}
+
+function invItemDisplayName(item) {
+  return item?.itemDefinition?.name || invItemName(item?.itemType);
+}
+
+function invFragmentStage(item) {
+  const type = String(item?.itemType || "").toUpperCase();
+  const icon = String(item?.itemDefinition?.icon || "").toUpperCase();
+
+  if (type === "FRAGMENT_BABY_II" || icon.includes("BABY2") || icon.includes("BABY_II")) return "BABY_II";
+  if (type === "FRAGMENT_ROOKIE" || icon.includes("ROOKIE")) return "ROOKIE";
+  if (type === "FRAGMENT_CHAMPION" || icon.includes("CHAMPION")) return "CHAMPION";
+  if (type === "FRAGMENT_ULTIMATE" || icon.includes("ULTIMATE")) return "ULTIMATE";
+  if (type === "FRAGMENT_MEGA" || icon.includes("MEGA")) return "MEGA";
+  return null;
+}
+
+function invGetFilteredItems() {
+  const search = invNormalize(invFilterState.search);
+  return invAggregateItems(invItems)
+    .filter(item => Number(item.quantity) > 0)
+    .filter(item => {
+      const matchesSearch = !search || [
+        invItemDisplayName(item),
+        item.itemType,
+        item.itemDefinition?.code,
+        item.itemDefinition?.category,
+        item.itemDefinition?.rarity
+      ].some(value => invNormalize(value).includes(search));
+      const matchesCategory = invFilterState.category === "ALL" || invResolvedCategory(item) === invFilterState.category;
+      const matchesFragmentStage = invFilterState.category !== "FRAGMENT"
+        || invFilterState.fragmentStage === "ALL"
+        || invFragmentStage(item) === invFilterState.fragmentStage;
+      const itemRarity = String(item.itemDefinition?.rarity || "").toUpperCase();
+      const matchesRarity = invFilterState.rarity === "ALL" || itemRarity === invFilterState.rarity;
+      return matchesSearch && matchesCategory && matchesFragmentStage && matchesRarity;
+    });
+}
+
+function invRarityRank(rarity) {
+  return {
+    COMMON: 1,
+    RARE: 2,
+    EPIC: 3,
+    LEGENDARY: 4
+  }[String(rarity || "").toUpperCase()] || 0;
+}
+
+function invCompareText(a, b) {
+  return String(a || "").localeCompare(String(b || ""), "pt-BR", { sensitivity: "base" });
+}
+
 // ==================== ITEMS TAB ====================
 
 function invRenderItems() {
   const content = document.getElementById("inv-content");
-  const items = invSortItems(invAggregateItems(invItems).filter(i => i.quantity > 0));
+  const allItems = invAggregateItems(invItems).filter(i => i.quantity > 0);
+  const items = invSortItems(invGetFilteredItems());
+  invUpdateFilterSummary(items.length, allItems.length, "item");
 
   if (items.length === 0) {
-    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">Nenhum item no inventário.</p>`;
+    const message = allItems.length === 0
+      ? "Nenhum item no inventário."
+      : "Nenhum item corresponde aos filtros atuais.";
+    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${message}</p>`;
     return;
   }
 
   content.innerHTML = items.map(item => {
     const def = item.itemDefinition;
     const isXpDiskItem = invIsXpDisk(item.itemType);
+    const isBatchUsableItem = isXpDiskItem || item.itemType === "POTION_SMALL" || item.itemType === "TRAINING_STONE";
     const name = def ? def.name : invItemName(item.itemType);
     const emoji = isXpDiskItem ? invItemEmoji(item.itemType) : def ? invCategoryEmoji(def.category) : invItemEmoji(item.itemType);
     const catName = def ? invCategoryLabel(def.category) : invItemCategoryName(item.itemType);
-    const category = def ? String(def.category || "").toUpperCase() : "";
+    const category = invResolvedCategory(item);
     const catBadge = def ? invCategoryBadge(category) : invItemCategory(item.itemType);
-    const chestCode = category === "CHEST" ? def.code : null;
+    const chestCode = category === "CHEST" && def ? def.code : null;
     const isChest = item.itemType === "LOOT_CHEST" || !!chestCode;
     const chestQuantityInputId = chestCode ? `inv-chest-quantity-${String(chestCode).replace(/[^a-zA-Z0-9_-]/g, "-")}` : null;
-    const xpDiskQuantityInputId = isXpDiskItem ? `inv-xp-disk-quantity-${String(item.itemType).replace(/[^a-zA-Z0-9_-]/g, "-")}` : null;
-    const maxUseQuantity = Math.min(100, Math.max(1, Number(item.quantity) || 1));
+    const batchQuantityInputId = isBatchUsableItem ? `inv-batch-quantity-${String(item.itemType).replace(/[^a-zA-Z0-9_-]/g, "-")}` : null;
+    const maxUseQuantity = Math.max(1, Number(item.quantity) || 1);
     const digitamaItem = category === "DIGITAMA" || item.itemType.startsWith("DIGITAMA_");
     const incubatorItem = category === "INCUBATOR" || item.itemType.startsWith("INCUBATOR_");
     const incubationOnly = digitamaItem || incubatorItem;
@@ -100,10 +397,10 @@ function invRenderItems() {
       </div>
     ` : incubatorItem ? `
       <button class="btn-sm btn-primary whitespace-nowrap" onclick="navigateTo('incubation')">Usar</button>
-    ` : isXpDiskItem ? `
+    ` : isBatchUsableItem ? `
       <div class="flex items-center gap-2">
-        <input id="${xpDiskQuantityInputId}" class="input w-16 text-center" type="number" min="1" max="${maxUseQuantity}" value="1" aria-label="Quantidade de Discos de XP" />
-        <button class="btn-sm btn-primary whitespace-nowrap" onclick="invUseItem('${escapeHtml(item.itemType)}', document.getElementById('${xpDiskQuantityInputId}').value)">Usar</button>
+        <input id="${batchQuantityInputId}" class="input w-16 text-center" type="number" min="1" max="${maxUseQuantity}" value="1" aria-label="Quantidade de ${escapeAttr(name)}" />
+        <button class="btn-sm btn-primary whitespace-nowrap" onclick="invUseItem('${escapeHtml(item.itemType)}', document.getElementById('${batchQuantityInputId}').value)">Usar</button>
       </div>
     ` : usable ? `
       <button class="btn-sm btn-primary" onclick="invUseItem('${escapeHtml(item.itemType)}')">Usar</button>
@@ -162,7 +459,9 @@ function invItemCategoryOrder(item) {
               ? "FRAGMENT"
               : (String(item.itemType || "") === "POTION_SMALL" || String(item.itemType || "").startsWith("XP_DISC_"))
                 ? "CONSUMABLE"
-                : String(item.itemType || "") === "TRAINING_STONE" || String(item.itemType || "") === "DATA_CORE"
+                : String(item.itemType || "").startsWith("STORAGE_SLOT_")
+                  ? "CONSUMABLE"
+                  : String(item.itemType || "") === "TRAINING_STONE" || String(item.itemType || "") === "DATA_CORE"
                 || String(item.itemType || "") === "REFINEMENT_STONE"
                 ? "MATERIAL"
                 : "OTHER";
@@ -182,19 +481,43 @@ function invItemCategoryOrder(item) {
 
 function invSortItems(items) {
   return [...items].sort((a, b) => {
-    const categoryDifference = invItemCategoryOrder(a) - invItemCategoryOrder(b);
-    if (categoryDifference !== 0) return categoryDifference;
+    const aName = invItemDisplayName(a);
+    const bName = invItemDisplayName(b);
+    const aCategory = invResolvedCategory(a);
+    const bCategory = invResolvedCategory(b);
+    const aRarity = a.itemDefinition?.rarity;
+    const bRarity = b.itemDefinition?.rarity;
+    let comparison = 0;
 
-    const aDefinition = a.itemDefinition || {};
-    const bDefinition = b.itemDefinition || {};
-    const aName = aDefinition.name || invItemName(a.itemType);
-    const bName = bDefinition.name || invItemName(b.itemType);
-    const nameDifference = aName.localeCompare(bName, "pt-BR", { sensitivity: "base" });
-    if (nameDifference !== 0) return nameDifference;
+    switch (invFilterState.sort) {
+      case "name-desc":
+        comparison = -invCompareText(aName, bName);
+        break;
+      case "quantity-desc":
+        comparison = (Number(b.quantity) || 0) - (Number(a.quantity) || 0);
+        break;
+      case "quantity-asc":
+        comparison = (Number(a.quantity) || 0) - (Number(b.quantity) || 0);
+        break;
+      case "category-asc":
+        comparison = invCompareText(invCategoryLabel(aCategory), invCategoryLabel(bCategory));
+        break;
+      case "rarity-desc":
+        comparison = invRarityRank(bRarity) - invRarityRank(aRarity);
+        break;
+      case "rarity-asc":
+        comparison = invRarityRank(aRarity) - invRarityRank(bRarity);
+        break;
+      case "name-asc":
+      default:
+        comparison = invCompareText(aName, bName);
+        break;
+    }
 
-    const aCode = aDefinition.code || a.itemType || "";
-    const bCode = bDefinition.code || b.itemType || "";
-    return aCode.localeCompare(bCode, "pt-BR", { sensitivity: "base" });
+    if (comparison !== 0) return comparison;
+    const aCode = a.itemDefinition?.code || a.itemType || "";
+    const bCode = b.itemDefinition?.code || b.itemType || "";
+    return invCompareText(aCode, bCode);
   });
 }
 
@@ -225,17 +548,18 @@ function invCategoryBadge(category) {
 async function invReloadItems() {
   invItems = await apiGet("/inventory") || [];
   if (document.getElementById("inv-content")) {
-    invRenderItems();
+    invRenderActiveTab();
   }
 }
 
 async function invUseItem(itemType, quantity = null) {
   const isXpDiskItem = invIsXpDisk(itemType);
+  const isBatchUsableItem = isXpDiskItem || itemType === "POTION_SMALL" || itemType === "TRAINING_STONE";
   let requestedQuantity = 1;
-  if (isXpDiskItem) {
+  if (isBatchUsableItem) {
     requestedQuantity = quantity == null ? 1 : Number.parseInt(quantity, 10);
-    if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1 || requestedQuantity > 100) {
-      showToast("Informe uma quantidade válida de Discos de XP (1 a 100).", "error");
+    if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1 || requestedQuantity > 999) {
+      showToast("Informe uma quantidade válida (1 a 999).", "error");
       return;
     }
   }
@@ -244,7 +568,7 @@ async function invUseItem(itemType, quantity = null) {
   invItemUseInProgress = true;
   try {
     const payload = { itemType: itemType };
-    if (isXpDiskItem) payload.quantity = requestedQuantity;
+    if (isBatchUsableItem) payload.quantity = requestedQuantity;
     const result = await apiPost("/inventory/use", payload);
     const usedQuantity = Math.max(1, Number(result && result.quantity) || requestedQuantity);
     const levelMessage = result && result.levelUp ? ` Nível ${result.currentLevel}!` : "";
@@ -252,11 +576,16 @@ async function invUseItem(itemType, quantity = null) {
       const quantityMessage = usedQuantity === 1 ? "1 unidade utilizada" : `${usedQuantity} unidades utilizadas`;
       showToast(`${invItemName(itemType)}: ${quantityMessage}, +${result.xpGranted} XP.${levelMessage}`);
     } else {
-      showToast(itemType === "INCUBATION_SLOT_UNLOCK"
-        ? "Slot de incubação desbloqueado!"
-        : `${invItemName(itemType)} usado!`);
+      showToast(result && result.message
+        ? result.message
+        : itemType === "INCUBATION_SLOT_UNLOCK"
+          ? "Slot de incubação desbloqueado!"
+          : `${invItemName(itemType)} usado!`);
     }
     await invReloadItems();
+    if (result && typeof showNewlyUnlockedContent === "function") {
+      showNewlyUnlockedContent(result.newlyUnlockedContent);
+    }
   } catch (err) {
     showToast(err.message, "error");
   } finally {
@@ -318,15 +647,16 @@ function invShowChestOpeningResult(result) {
   };
 
   overlay.innerHTML = `
-    <div class="card w-full max-w-md border-cyan-800 shadow-2xl">
-      <div class="text-center mb-4">
+    <div class="card w-full max-w-md max-h-[88vh] border-cyan-800 shadow-2xl flex flex-col overflow-hidden">
+      <div class="text-center mb-4 shrink-0">
         <div class="text-5xl mb-2">🎁</div>
         <h3 class="text-xl font-bold">${escapeHtml(title)}</h3>
         <p class="text-sm text-slate-400 mt-1">${escapeHtml(result && result.chestName || "Baú")} · ${chestQuantity} ${chestQuantity === 1 ? "baú" : "baús"}</p>
         <p class="text-xs text-slate-500 mt-2">Cada item possui sua própria raridade</p>
       </div>
-      <div class="card-sm mb-4">
-        <p class="text-xs text-slate-400 mb-2">Recompensas</p>
+      <div class="card-sm mb-4 flex min-h-0 max-h-[52vh] flex-col overflow-hidden shrink-0">
+        <p class="text-xs text-slate-400 mb-2 shrink-0">Recompensas</p>
+        <div class="min-h-0 overflow-y-auto overscroll-contain pr-3">
         ${items.length > 0 ? items.map(item => `
           <div class="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
             <div class="min-w-0">
@@ -339,9 +669,10 @@ function invShowChestOpeningResult(result) {
             <span class="font-bold text-cyan-300 ml-3">x${item.quantity}</span>
           </div>
         `).join("") : `<p class="text-sm text-slate-400">Nenhum item foi informado.</p>`}
+        </div>
       </div>
-      <p class="text-xs text-slate-400 mb-4">${escapeHtml(message)}</p>
-      <button class="btn-primary w-full" onclick="document.getElementById('chest-opening-overlay').remove()">Continuar</button>
+      <p class="text-xs text-slate-400 text-center mb-4 shrink-0">${escapeHtml(message)}</p>
+      <button class="btn-primary w-full shrink-0" onclick="document.getElementById('chest-opening-overlay').remove()">Continuar</button>
     </div>
   `;
 
@@ -374,6 +705,9 @@ function invItemName(itemType) {
     INCUBATOR_RARE: "Incubadora Rara",
     INCUBATOR_EPIC: "Incubadora Épica",
     INCUBATION_SLOT_UNLOCK: "Expansor de Slot de Incubação",
+    STORAGE_SLOT_1: "+1 Storage",
+    STORAGE_SLOT_5: "+5 Storage",
+    STORAGE_SLOT_10: "+10 Storage",
     XP_DISC_1: "Disco de XP +1%",
     XP_DISC_3: "Disco de XP +3%",
     XP_DISC_5: "Disco de XP +5%",
@@ -398,6 +732,7 @@ function invItemEmoji(itemType) {
     DIGITAMA_THUNDER: "⚡", DIGITAMA_NEUTRAL: "⚪", DIGITAMA_ICE: "❄️", DIGITAMA_STEEL: "⚙️",
     INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "📦", INCUBATOR_EPIC: "📦",
     INCUBATION_SLOT_UNLOCK: "🔓",
+    STORAGE_SLOT_1: "🗄️", STORAGE_SLOT_5: "🗄️", STORAGE_SLOT_10: "🗄️",
     XP_DISC_1: "💿", XP_DISC_3: "💿", XP_DISC_5: "💿",
     XP_DISC_10: "💿", XP_DISC_15: "💿", XP_DISC_20: "💿",
     FRAGMENT_ROOKIE: "🧩", FRAGMENT_CHAMPION: "🧩", FRAGMENT_ULTIMATE: "🧩", FRAGMENT_MEGA: "🧩",
@@ -409,12 +744,14 @@ function invItemEmoji(itemType) {
 
 function invIsUsable(itemType) {
   const usable = ["POTION_SMALL", "TRAINING_STONE", "DATA_CORE", "INCUBATION_SLOT_UNLOCK",
+    "STORAGE_SLOT_1", "STORAGE_SLOT_5", "STORAGE_SLOT_10",
     "XP_DISC_1", "XP_DISC_3", "XP_DISC_5", "XP_DISC_10", "XP_DISC_15", "XP_DISC_20"];
   return usable.includes(itemType);
 }
 
 function invItemCategory(itemType) {
-  if (itemType === "POTION_SMALL" || itemType === "INCUBATION_SLOT_UNLOCK") return "common";
+  if (itemType === "POTION_SMALL" || itemType === "INCUBATION_SLOT_UNLOCK"
+      || itemType.startsWith("STORAGE_SLOT_")) return "common";
   if (itemType.startsWith("XP_DISC_")) return "rare";
   if (itemType.startsWith("DIGITAMA_")) return "rare";
   if (itemType.startsWith("INCUBATOR_")) return "epic";
@@ -427,6 +764,7 @@ function invItemCategory(itemType) {
 function invItemCategoryName(itemType) {
   if (itemType === "POTION_SMALL") return "Poção";
   if (itemType === "INCUBATION_SLOT_UNLOCK") return "Incubação";
+  if (itemType.startsWith("STORAGE_SLOT_")) return "Storage";
   if (itemType.startsWith("XP_DISC_")) return "Experiência";
   if (itemType === "TRAINING_STONE" || itemType === "DATA_CORE") return "Material";
   if (itemType.startsWith("DIGITAMA_")) return "Digitama";
@@ -455,21 +793,71 @@ function invSetBadge(setCode) {
   return map[setCode] || "common";
 }
 
-function invRenderEquipment() {
-  const content = document.getElementById("inv-content");
+function invGetFilteredEquipments() {
+  const search = invNormalize(invFilterState.search);
+  return invEquipments.filter(equipment => {
+    const matchesSearch = !search || [
+      equipment.name,
+      equipment.setCode,
+      equipment.slot,
+      equipment.rarity,
+      equipment.tier,
+      equipment.refinementLevel
+    ].some(value => invNormalize(value).includes(search));
+    const matchesSlot = invFilterState.slot === "ALL" || String(equipment.slot || "").toUpperCase() === invFilterState.slot;
+    const matchesRarity = invFilterState.rarity === "ALL" || String(equipment.rarity || "").toUpperCase() === invFilterState.rarity;
+    return matchesSearch && matchesSlot && matchesRarity;
+  });
+}
 
-  if (invEquipments.length === 0) {
-    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">Nenhum equipamento no inventário.</p>`;
-    return;
-  }
-
-  // Show equipped first, then unequipped
-  const sorted = [...invEquipments].sort((a, b) => {
+function invSortEquipments(equipments) {
+  return [...equipments].sort((a, b) => {
     if (a.equipped && !b.equipped) return -1;
     if (!a.equipped && b.equipped) return 1;
-    const slotOrder = { WEAPON: 0, ARMOR: 1, ACCESSORY: 2 };
-    return (slotOrder[a.slot] || 0) - (slotOrder[b.slot] || 0);
+
+    const aName = a.name || "";
+    const bName = b.name || "";
+    let comparison = 0;
+    switch (invFilterState.sort) {
+      case "name-desc":
+        comparison = -invCompareText(aName, bName);
+        break;
+      case "rarity-desc":
+        comparison = invRarityRank(b.rarity) - invRarityRank(a.rarity);
+        break;
+      case "rarity-asc":
+        comparison = invRarityRank(a.rarity) - invRarityRank(b.rarity);
+        break;
+      case "level-desc":
+        comparison = (Number(b.tier) || 0) - (Number(a.tier) || 0);
+        break;
+      case "refinement-desc":
+        comparison = (Number(b.refinementLevel) || 0) - (Number(a.refinementLevel) || 0);
+        break;
+      case "name-asc":
+      default:
+        comparison = invCompareText(aName, bName);
+        break;
+    }
+
+    if (comparison !== 0) return comparison;
+    return invCompareText(aName, bName);
   });
+}
+
+function invRenderEquipment() {
+  const content = document.getElementById("inv-content");
+  const filtered = invGetFilteredEquipments();
+  const sorted = invSortEquipments(filtered);
+  invUpdateFilterSummary(sorted.length, invEquipments.length, "equipamento");
+
+  if (sorted.length === 0) {
+    const message = invEquipments.length === 0
+      ? "Nenhum equipamento no inventário."
+      : "Nenhum equipamento corresponde aos filtros atuais.";
+    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${message}</p>`;
+    return;
+  }
 
   content.innerHTML = sorted.map(eq => {
     const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };

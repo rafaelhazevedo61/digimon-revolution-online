@@ -1,6 +1,8 @@
 package com.dro.modules.boss.application;
 
 import com.dro.modules.boss.api.dto.response.BossChallengeResponse;
+import com.dro.modules.activitycalendar.application.ActivityCalendarService;
+import com.dro.modules.activitycalendar.domain.ActivitySource;
 import com.dro.modules.boss.api.dto.response.DropRewardResponse;
 import com.dro.modules.boss.domain.*;
 import com.dro.modules.boss.infra.BossAttemptRepository;
@@ -28,6 +30,7 @@ import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
+import com.dro.shared.gameplay.WeekendDoubleRewardRules;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
@@ -56,6 +59,7 @@ public class ChallengeBossUseCase {
     private final GlobalDamageBuffService globalDamageBuffService;
     private final TransactionAuditPublisher transactionAuditPublisher;
     private final GameplayConfig gameplayConfig;
+    private final ActivityCalendarService activityCalendarService;
 
     @Transactional
     public BossChallengeResponse execute(String token, String bossCode, UUID digimonId) {
@@ -111,15 +115,16 @@ public class ChallengeBossUseCase {
             int roll = ThreadLocalRandom.current().nextInt(1, 101);
             victory = roll <= winChance;
         }
+        Instant rewardTime = Instant.now();
         int xpGained;
         int bitsGained;
         ChestDefinitionEntity rewardChest = null;
         List<DropRewardResponse> drops = new ArrayList<>();
         if (victory) {
             rewardChest = resolveRewardChest(boss);
-            xpGained = boss.getBaseXpReward();
+            xpGained = WeekendDoubleRewardRules.multiplyXp(boss.getBaseXpReward(), rewardTime);
             double bitsMultiplier = clanId != null ? clanBonusService.getMissionBitsMultiplier(clanId) : 1.0;
-            bitsGained = (int) Math.floor(boss.getBaseBitsReward() * bitsMultiplier);
+            bitsGained = WeekendDoubleRewardRules.multiplyBits((int) Math.floor(boss.getBaseBitsReward() * bitsMultiplier), rewardTime);
             addItemUseCase.addMaterial(digimon.getId(), rewardChest.getItemDefinition(), 1);
             drops.add(new DropRewardResponse("CHEST", rewardChest.getCode(), rewardChest.getName(), 1, null));
             drops.addAll(rollLegacyEquipmentDrops(boss, digimon.getId(), clanId));
@@ -127,7 +132,7 @@ public class ChallengeBossUseCase {
                 clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.BOSSES_DEFEATED);
             }
         } else {
-            xpGained = (int) Math.round(boss.getBaseXpReward() * boss.getDefeatXpPercent() / 100.0);
+            xpGained = WeekendDoubleRewardRules.multiplyXp((int) Math.round(boss.getBaseXpReward() * boss.getDefeatXpPercent() / 100.0), rewardTime);
             bitsGained = 0;
         }
         digimon.gainExperience(xpGained);
@@ -135,6 +140,7 @@ public class ChallengeBossUseCase {
         digimonRepository.save(digimon);
         BossAttemptEntity attempt = BossAttemptEntity.builder().id(UUID.randomUUID()).playerId(playerId).digimonId(digimonId).bossId(boss.getId()).status(victory ? BossAttemptStatus.VICTORY : BossAttemptStatus.DEFEAT).damageDealt((int) digimonPower).xpGained(xpGained).bitsGained(bitsGained).createdAt(Instant.now()).build();
         bossAttemptRepository.save(attempt);
+        if (activityCalendarService != null) activityCalendarService.recordActivity(playerId, ActivitySource.BOSS_CHALLENGE, attempt.getId().toString());
         transactionAuditPublisher.success("boss-challenge:" + attempt.getId(), "BOSS_CHALLENGED", "BossAttempt", attempt.getId().toString(), buildAuditPayload(playerId, boss, attempt, rewardChest, drops));
         return new BossChallengeResponse(boss.getCode(), boss.getName(), victory ? "VICTORY" : "DEFEAT", winChance, digimonPower, bossPower, xpGained, bitsGained, rewardChest != null ? rewardChest.getCode() : null, rewardChest != null ? rewardChest.getName() : null, drops);
     }
@@ -234,7 +240,7 @@ public class ChallengeBossUseCase {
         return Math.max(1, (int) Math.floor(baseCost * multiplier));
     }
 
-    public ChallengeBossUseCase(final BossDefinitionRepository bossDefinitionRepository, final BossAttemptRepository bossAttemptRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final EquipmentRepository equipmentRepository, final AddItemUseCase addItemUseCase, final ChestDefinitionRepository chestDefinitionRepository, final GrantEquipmentUseCase grantEquipmentUseCase, final EquipmentRarityProfileService equipmentRarityProfileService, final ClanBonusService clanBonusService, final ClanMissionProgressTracker clanMissionProgressTracker, final GlobalDamageBuffService globalDamageBuffService, final TransactionAuditPublisher transactionAuditPublisher, final GameplayConfig gameplayConfig) {
+    public ChallengeBossUseCase(final BossDefinitionRepository bossDefinitionRepository, final BossAttemptRepository bossAttemptRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final EquipmentRepository equipmentRepository, final AddItemUseCase addItemUseCase, final ChestDefinitionRepository chestDefinitionRepository, final GrantEquipmentUseCase grantEquipmentUseCase, final EquipmentRarityProfileService equipmentRarityProfileService, final ClanBonusService clanBonusService, final ClanMissionProgressTracker clanMissionProgressTracker, final GlobalDamageBuffService globalDamageBuffService, final TransactionAuditPublisher transactionAuditPublisher, final GameplayConfig gameplayConfig, final ActivityCalendarService activityCalendarService) {
         this.bossDefinitionRepository = bossDefinitionRepository;
         this.bossAttemptRepository = bossAttemptRepository;
         this.digimonRepository = digimonRepository;
@@ -249,5 +255,6 @@ public class ChallengeBossUseCase {
         this.globalDamageBuffService = globalDamageBuffService;
         this.transactionAuditPublisher = transactionAuditPublisher;
         this.gameplayConfig = gameplayConfig;
+        this.activityCalendarService = activityCalendarService;
     }
 }

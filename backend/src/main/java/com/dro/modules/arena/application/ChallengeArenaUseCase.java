@@ -8,6 +8,8 @@ import com.dro.modules.arena.infra.ArenaMatchRepository;
 import com.dro.modules.clan.application.ClanBonusService;
 import com.dro.modules.clan.application.ClanMissionProgressTracker;
 import com.dro.modules.clan.domain.enums.ClanMissionObjectiveType;
+import com.dro.modules.activitycalendar.application.ActivityCalendarService;
+import com.dro.modules.activitycalendar.domain.ActivitySource;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
@@ -24,6 +26,7 @@ import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
+import com.dro.shared.gameplay.WeekendDoubleRewardRules;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,6 +54,7 @@ public class ChallengeArenaUseCase {
     private final ChestDefinitionRepository chestDefinitionRepository;
     private final TransactionAuditPublisher transactionAuditPublisher;
     private final GameplayConfig gameplayConfig;
+    private final ActivityCalendarService activityCalendarService;
 
     /**
      * Executa um desafio de Arena e persiste todos os efeitos da partida.
@@ -141,7 +145,10 @@ public class ChallengeArenaUseCase {
                 clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.ARENA_WINS);
             }
             attacker.setArenaWins(attacker.getArenaWins() + 1);
-            bitsGained = ArenaRules.winBits(attackerRatingBefore, defenderRatingBefore);
+            bitsGained = WeekendDoubleRewardRules.multiplyBits(
+                    ArenaRules.winBits(attackerRatingBefore, defenderRatingBefore),
+                    Instant.now()
+            );
             attacker.setBits(attacker.getBits() + bitsGained);
             arenaCoinsGained = ArenaRules.winArenaCoins(winChance);
             addItemUseCase.addMaterial(attacker.getId(), rewardChest.getItemDefinition(), 1);
@@ -171,6 +178,7 @@ public class ChallengeArenaUseCase {
         int defenderRatingChange = defenderRatingAfter - defenderRatingBefore;
         ArenaMatch match = ArenaMatch.builder().id(UUID.randomUUID()).attackerPlayerId(playerId).attackerDigimonId(attacker.getId()).defenderPlayerId(defender.getPlayerId()).defenderDigimonId(defender.getId()).attackerWon(victory).attackerPower((int) Math.round(attackerPower)).defenderPower((int) Math.round(defenderPower)).winChance(winChance).attackerRatingChange(attackerRatingChange).attackerRatingAfter(attackerRatingAfter).defenderRatingChange(defenderRatingChange).defenderRatingAfter(defenderRatingAfter).bitsGained(bitsGained).rewardChest(rewardChest).createdAt(Instant.now()).build();
         arenaMatchRepository.save(match);
+        if (activityCalendarService != null) activityCalendarService.recordActivity(playerId, ActivitySource.ARENA_MATCH, match.getId().toString());
         transactionAuditPublisher.success("arena-challenge:" + match.getId(), "ARENA_CHALLENGED", "ArenaMatch", match.getId().toString(), buildAuditPayload(playerId, attacker, defender, match, rewardChest));
         return new ArenaMatchResponse(victory, defender.getName(), winChance, attackerPower, defenderPower, attackerRatingChange, attackerRatingAfter, bitsGained, arenaCoinsGained, player.getArenaCoins(), ArenaRules.tierFor(attackerRatingAfter).getLabel(), rewardChest != null ? rewardChest.getCode() : null, rewardChest != null ? rewardChest.getName() : null);
     }
@@ -209,7 +217,7 @@ public class ChallengeArenaUseCase {
         return Math.max(1, (int) Math.floor(baseCost * multiplier));
     }
 
-    public ChallengeArenaUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ArenaMatchRepository arenaMatchRepository, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final ClanMissionProgressTracker clanMissionProgressTracker, final GlobalDamageBuffService globalDamageBuffService, final AddItemUseCase addItemUseCase, final ChestDefinitionRepository chestDefinitionRepository, final TransactionAuditPublisher transactionAuditPublisher, final GameplayConfig gameplayConfig) {
+    public ChallengeArenaUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ArenaMatchRepository arenaMatchRepository, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final ClanMissionProgressTracker clanMissionProgressTracker, final GlobalDamageBuffService globalDamageBuffService, final AddItemUseCase addItemUseCase, final ChestDefinitionRepository chestDefinitionRepository, final TransactionAuditPublisher transactionAuditPublisher, final GameplayConfig gameplayConfig, final ActivityCalendarService activityCalendarService) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.arenaMatchRepository = arenaMatchRepository;
@@ -221,5 +229,6 @@ public class ChallengeArenaUseCase {
         this.chestDefinitionRepository = chestDefinitionRepository;
         this.transactionAuditPublisher = transactionAuditPublisher;
         this.gameplayConfig = gameplayConfig;
+        this.activityCalendarService = activityCalendarService;
     }
 }

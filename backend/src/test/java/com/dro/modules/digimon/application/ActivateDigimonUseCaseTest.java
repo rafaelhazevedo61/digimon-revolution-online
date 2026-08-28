@@ -3,7 +3,7 @@ package com.dro.modules.digimon.application;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
-import com.dro.modules.equipment.infra.EquipmentRepository;
+import com.dro.modules.equipment.domain.EquipmentSlot;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.security.JwtTestToken;
@@ -29,8 +29,6 @@ class ActivateDigimonUseCaseTest {
     @Mock
     private DigimonRepository digimonRepository;
 
-    @Mock
-    private EquipmentRepository equipmentRepository;
 
     @Test
     void execute_movesPreviousActiveToStorageBeforeActivatingSelectedDigimon() {
@@ -43,6 +41,12 @@ class ActivateDigimonUseCaseTest {
                 .maxStorageSlots(50)
                 .build();
         Digimon previous = digimon(previousId, playerId, DigimonStatus.ACTIVE);
+        UUID weaponId = UUID.randomUUID();
+        UUID armorId = UUID.randomUUID();
+        UUID accessoryId = UUID.randomUUID();
+        previous.setEquipmentBySlot(EquipmentSlot.WEAPON, weaponId);
+        previous.setEquipmentBySlot(EquipmentSlot.ARMOR, armorId);
+        previous.setEquipmentBySlot(EquipmentSlot.ACCESSORY, accessoryId);
         Digimon selected = digimon(selectedId, playerId, DigimonStatus.HATCHED);
 
         when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
@@ -52,13 +56,16 @@ class ActivateDigimonUseCaseTest {
         when(digimonRepository.countByPlayerIdAndStatus(playerId, DigimonStatus.STORED)).thenReturn(0L);
 
         ActivateDigimonUseCase useCase = new ActivateDigimonUseCase(
-                playerRepository, digimonRepository, equipmentRepository
+                playerRepository, digimonRepository
         );
 
         Digimon result = useCase.execute(JwtTestToken.create(playerId), selectedId);
 
         assertEquals(selectedId, result.getId());
         assertEquals(DigimonStatus.STORED, previous.getStatus());
+        assertEquals(weaponId, previous.getEquipmentIdBySlot(EquipmentSlot.WEAPON));
+        assertEquals(armorId, previous.getEquipmentIdBySlot(EquipmentSlot.ARMOR));
+        assertEquals(accessoryId, previous.getEquipmentIdBySlot(EquipmentSlot.ACCESSORY));
         assertEquals(DigimonStatus.ACTIVE, selected.getStatus());
         assertEquals(selectedId, player.getActiveDigimonId());
         verify(digimonRepository).save(previous);
@@ -88,7 +95,7 @@ class ActivateDigimonUseCaseTest {
                 .thenReturn(1L);
 
         ActivateDigimonUseCase useCase = new ActivateDigimonUseCase(
-                playerRepository, digimonRepository, equipmentRepository
+                playerRepository, digimonRepository
         );
 
         useCase.executeStored(JwtTestToken.create(playerId), selectedId);

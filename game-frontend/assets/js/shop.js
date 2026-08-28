@@ -71,24 +71,56 @@ function shopSetMode(mode) {
 function shopRenderBuyMode() {
   const content = document.getElementById("shop-content");
   content.innerHTML = `
-    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4" id="shop-tabs">
-      <button class="tab-btn w-full" data-cat="potions" onclick="shopSwitchTab('potions')">Poções</button>
-      <button class="tab-btn w-full" data-cat="materials" onclick="shopSwitchTab('materials')">Materiais</button>
-      <button class="tab-btn w-full" data-cat="equipments" onclick="shopSwitchTab('equipments')">Equip.</button>
-      <button class="tab-btn w-full" data-cat="consumables" onclick="shopSwitchTab('consumables')">Consumíveis</button>
-      <button class="tab-btn w-full" data-cat="chests" onclick="shopSwitchTab('chests')">Baús</button>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4" id="shop-tabs">
+      <button class="tab-btn w-full" data-cat="ALL" onclick="shopSwitchTab('ALL')">Todos</button>
+      <button class="tab-btn w-full" data-cat="CONSUMABLE" onclick="shopSwitchTab('CONSUMABLE')">Consumíveis</button>
+      <button class="tab-btn w-full" data-cat="MATERIAL" onclick="shopSwitchTab('MATERIAL')">Materiais</button>
+      <button class="tab-btn w-full" data-cat="EVOLUTION_MATERIAL" onclick="shopSwitchTab('EVOLUTION_MATERIAL')">Evolução</button>
+      <button class="tab-btn w-full" data-cat="FRAGMENT" onclick="shopSwitchTab('FRAGMENT')">Fragmentos</button>
+      <button class="tab-btn w-full" data-cat="DIGITAMA" onclick="shopSwitchTab('DIGITAMA')">Digitamas</button>
+      <button class="tab-btn w-full" data-cat="INCUBATOR" onclick="shopSwitchTab('INCUBATOR')">Incubadoras</button>
+      <button class="tab-btn w-full" data-cat="CHEST" onclick="shopSwitchTab('CHEST')">Baús</button>
+      <button class="tab-btn w-full" data-cat="OTHER" onclick="shopSwitchTab('OTHER')">Outros</button>
+      <button class="tab-btn w-full" data-cat="EQUIPMENT" onclick="shopSwitchTab('EQUIPMENT')">Equipamentos</button>
     </div>
     <div id="shop-list"></div>
   `;
-  shopSwitchTab("potions");
+  shopSwitchTab("ALL");
 }
-
+function shopAllProducts() {
+  const products = [
+    ...(shopData.potions || []),
+    ...(shopData.materials || []),
+    ...(shopData.fragments || []),
+    ...(shopData.consumables || []),
+    ...(shopData.equipments || []),
+    ...(shopData.chests || [])
+  ];
+  return [...new Map(products.map(product => [product.code, product])).values()];
+}
+function shopProductsForCategory(category) {
+  const products = shopAllProducts();
+  if (category === "ALL") return products;
+  return products.filter(product => {
+    const itemType = String(product.itemType || "").toUpperCase();
+    const productCategory = String(product.category || "").toUpperCase();
+    if (category === "CONSUMABLE") return productCategory === "POTION" || productCategory === "CONSUMABLE";
+    if (category === "MATERIAL") return productCategory === "MATERIAL" && itemType !== "EVOLUTION_MATERIAL";
+    if (category === "EVOLUTION_MATERIAL") return itemType === "EVOLUTION_MATERIAL";
+    if (category === "FRAGMENT") return productCategory === "FRAGMENT" || itemType.startsWith("FRAGMENT_");
+    if (category === "DIGITAMA") return itemType.startsWith("DIGITAMA_");
+    if (category === "INCUBATOR") return itemType.startsWith("INCUBATOR_");
+    if (category === "CHEST") return productCategory === "CHEST" || itemType === "LOOT_CHEST";
+    if (category === "EQUIPMENT") return productCategory === "EQUIPMENT" || product.productType === "EQUIPMENT";
+    if (category === "OTHER") return !["CONSUMABLE", "MATERIAL", "EVOLUTION_MATERIAL", "FRAGMENT", "DIGITAMA", "INCUBATOR", "CHEST", "EQUIPMENT"].some(group => shopProductsForCategory(group).some(item => item.code === product.code));
+    return false;
+  });
+}
 function shopSwitchTab(cat) {
   document.querySelectorAll("#shop-tabs .tab-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.cat === cat);
   });
-
-  const items = shopData[cat] || [];
+  const items = shopProductsForCategory(cat);
   const container = document.getElementById("shop-list");
 
   if (items.length === 0) {
@@ -127,14 +159,7 @@ function shopItemEmoji(p) {
 }
 
 function shopOpenBuy(code) {
-  const allItems = [
-    ...(shopData.potions || []),
-    ...(shopData.materials || []),
-    ...(shopData.equipments || []),
-    ...(shopData.consumables || []),
-    ...(shopData.chests || [])
-  ];
-  const product = allItems.find(p => p.code === code);
+  const product = shopAllProducts().find(p => p.code === code);
   if (!product) return;
 
   const isEquip = product.productType === "EQUIPMENT";

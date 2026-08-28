@@ -7,6 +7,12 @@ async function renderMorePage() {
       label: "Combate",
       items: [
         {
+          route: "activity-calendar",
+          icon: "📅",
+          title: "Calendário de Atividades",
+          desc: "Complete metas diárias e ganhe baús",
+        },
+        {
           route: "bosses",
           icon: "👹",
           title: "Bosses",

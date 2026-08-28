@@ -37,7 +37,7 @@ public class DigitamaHatchRules {
             Map.entry(DigitamaType.THUNDER, List.of("Choromon", "Dokimon")),
             Map.entry(DigitamaType.NEUTRAL, List.of("Botamon", "Cocomon", "Curimon", "Paomon", "Pyonmon", "Tomorimon", "Torikara Ballmon", "Zerimon")),
             Map.entry(DigitamaType.ICE, List.of("Yukimi Botamon")),
-            Map.entry(DigitamaType.STEEL, List.of())
+            Map.entry(DigitamaType.STEEL, List.of("MetalKoromon"))
     );
 
     private static final Random random = new Random();

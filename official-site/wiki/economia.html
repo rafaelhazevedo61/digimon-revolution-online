@@ -54,17 +54,19 @@
 
             <section>
               <h2>Loja</h2>
-              <p>A loja vende dois tipos de produtos:</p>
+              <p>A loja vende itens e equipamentos a partir dos produtos disponíveis no catálogo do jogo:</p>
               <ul>
-                <li><strong>Itens:</strong> poções, Digitamas, incubadoras, fragmentos e materiais. Podem ser comprados em quantidade.</li>
-                <li><strong>Equipamentos:</strong> vendidos como templates, sempre na raridade Common. Limitado a 1 unidade por compra.</li>
+                <li><strong>Itens:</strong> poções, Digitamas elementais, incubadoras, expansores de slot, discos de XP, fragmentos e materiais. Itens podem ser comprados em quantidade quando o produto permitir.</li>
+                <li><strong>Equipamentos:</strong> vendidos como templates, sempre na raridade Common. A compra é limitada a 1 unidade por operação.</li>
               </ul>
-              <p>Também é possível vender itens e equipamentos do inventário para recuperar Bits. Equipamentos equipados não podem ser vendidos.</p>
+              <p>Também é possível vender itens e equipamentos do inventário para recuperar Bits. Equipamentos equipados não podem ser vendidos. O preço exibido na Loja é o preço vigente do produto do catálogo; a definição do item fornece seus metadados, enquanto o produto comercial define a oferta da loja.</p>
             </section>
 
             <section>
               <h2>Inventário</h2>
-              <p>O inventário é vinculado ao Digimon ativo. Cada item possui uma definição com nome, descrição, preço de venda e flag de vendável.</p>
+              <p>O inventário é vinculado ao Digimon ativo. Cada item possui uma definição com nome, descrição, preço de venda e flag de vendável. Itens empilháveis usam limite máximo de <strong>999 unidades por pilha</strong>, reduzindo a fragmentação causada por abertura e uso de grandes quantidades.</p>
+              <p>A tela de Inventário possui um painel de configuração com busca textual, filtros por categoria, slot, raridade e estágio, além de opções de ordenação. A configuração é aplicada localmente à consulta da tela e pode ser alterada a qualquer momento.</p>
+              <p>Itens compatíveis podem ser usados em lote. O jogador informa a quantidade e confirma a operação; a tela mostra a quantidade disponível e impede o uso acima do estoque. O uso em lote está disponível para <strong>baús</strong>, <strong>discos de XP</strong>, <strong>poções</strong> e <strong>pedras de treino</strong>.</p>
               <p>Os materiais de evolução são diferenciados por <code>material_code</code> e consumidos automaticamente ao evoluir.</p>
             </section>
 
@@ -75,12 +77,26 @@
                 <tbody>
                   <tr><td>Poções</td><td>Potion Small</td></tr>
                   <tr><td>Recursos</td><td>Training Stone, Data Core</td></tr>
-                  <tr><td>Digitamas</td><td>Starter, Fire, Water, Nature</td></tr>
+                  <tr><td>Digitamas</td><td>Digitamas elementais; tipos sem Baby elegível permanecem visíveis, mas bloqueados para seleção</td></tr>
                   <tr><td>Incubadoras</td><td>Common (5 min), Rare (2 min), Epic (30 s)</td></tr>
-                  <tr><td>Fragmentos</td><td>Rookie, Champion, Ultimate, Mega</td></tr>
+                  <tr><td>Expansores</td><td>Itens consumíveis que liberam um slot adicional de incubação para o jogador</td></tr>
+                  <tr><td>Discos de XP</td><td>1%, 3%, 5%, 10%, 15% e 20% da experiência necessária ao próximo nível</td></tr>
+                  <tr><td>Fragmentos</td><td>Baby II, Rookie, Champion, Ultimate e Mega</td></tr>
                   <tr><td>Materiais</td><td>Evolution Material, Refinement Stone</td></tr>
                 </tbody>
               </table>
+            </section>
+
+            <section>
+              <h2>Baús e recompensas aleatórias</h2>
+              <p>Os baús de fragmentos e Digitamas são alimentados por <strong>loot tables editáveis no painel administrativo</strong>. O baú de fragmentos de cada estágio pode sortear qualquer fragmento elegível daquele estágio, enquanto o baú de Digitama entrega sempre uma Digitama por abertura.</p>
+              <p>Uma abertura de baú de fragmentos concede de <strong>1 a 5 unidades do mesmo fragmento</strong>. A distribuição final depende da loot table vigente no servidor, e não de uma lista fixa no frontend. Baús podem ser abertos individualmente ou em lote quando houver unidades suficientes.</p>
+            </section>
+
+            <section>
+              <h2>Discos de XP</h2>
+              <p>Os discos de XP concedem experiência imediatamente ao Digimon ativo. Eles não ativam um bônus temporário nem aumentam a experiência obtida ao longo do tempo: o percentual representa uma fração da experiência necessária para o próximo nível no momento do uso.</p>
+              <p>Existem discos de <strong>1%, 3%, 5%, 10%, 15% e 20%</strong>. O jogador pode usar vários discos de uma vez, limitado ao estoque disponível e às validações do servidor. A barra de experiência do Dashboard exibe o percentual atual no centro da barra.</p>
             </section>
 
             <section>

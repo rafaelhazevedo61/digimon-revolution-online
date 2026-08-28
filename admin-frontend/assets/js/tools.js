@@ -103,24 +103,24 @@ async function renderToolsPage() {
           <div id="admin-damage-buff-result" class="text-sm mt-2"></div>
         </div>
         <div class="bg-slate-900 rounded-lg p-4 border border-slate-800">
+          <p class="text-sm text-slate-300 mb-2">Evento de Double XP e Bits</p>
+          <div id="admin-weekend-double-reward-status" class="text-sm mb-3 text-slate-400">Carregando...</div>
+          <div class="flex gap-2">
+            <button id="admin-weekend-double-reward-btn" onclick="adminToggleWeekendDoubleReward()" class="btn-primary flex-1 py-2">Ligar/Desligar</button>
+            <button onclick="adminUseAutomaticWeekendDoubleReward()" class="btn-secondary flex-1 py-2">Automático</button>
+          </div>
+          <div id="admin-weekend-double-reward-result" class="text-sm mt-2"></div>
+        </div>
+
+        <div class="bg-slate-900 rounded-lg p-4 border border-slate-800">
           <p class="text-sm text-slate-300 mb-2">Resetar ataques diários da Arena (todos os jogadores)</p>
           <button onclick="adminResetArena()" class="btn-primary w-full py-2">Resetar Arena</button>
           <div id="admin-reset-arena-result" class="text-sm mt-2"></div>
         </div>
         <div class="bg-slate-900 rounded-lg p-4 border border-slate-800">
-          <p class="text-sm text-slate-300 mb-2">Resetar ataques da Raid de Clã (todos os clãs)</p>
-          <button onclick="adminResetClanRaid()" class="btn-primary w-full py-2">Resetar Raid</button>
-          <div id="admin-reset-raid-result" class="text-sm mt-2"></div>
-        </div>
-        <div class="bg-slate-900 rounded-lg p-4 border border-slate-800">
           <p class="text-sm text-slate-300 mb-2">Completar todas as missões de clã em andamento</p>
           <button onclick="adminCompleteClanMissions()" class="btn-primary w-full py-2">Completar Missões</button>
           <div id="admin-complete-missions-result" class="text-sm mt-2"></div>
-        </div>
-        <div class="bg-slate-900 rounded-lg p-4 border border-slate-800">
-          <p class="text-sm text-slate-300 mb-2">Resetar tentativas do Boss Mundial (servidor)</p>
-          <button onclick="adminResetWorldBoss()" class="btn-primary w-full py-2">Resetar Boss Mundial</button>
-          <div id="admin-reset-world-boss-result" class="text-sm mt-2"></div>
         </div>
         <div class="bg-slate-900 rounded-lg p-4 border border-amber-900/60">
           <p class="text-sm text-slate-300 mb-1">Forçar novo ciclo do Boss Mundial</p>
@@ -138,6 +138,7 @@ async function renderToolsPage() {
   });
 
   adminLoadDamageBuff();
+  adminLoadWeekendDoubleReward();
 }
 
 async function toolsSearchPlayers(page = 0) {
@@ -390,6 +391,48 @@ async function adminLoadDamageBuff() {
   }
 }
 
+async function adminLoadWeekendDoubleReward() {
+  try {
+    const result = await apiGet("/admin/server/weekend-double-reward");
+    const status = document.getElementById("admin-weekend-double-reward-status");
+    const btn = document.getElementById("admin-weekend-double-reward-btn");
+    if (status) {
+      const mode = result.manualOverride ? "controle manual" : "programação automática";
+      status.innerHTML = result.active
+        ? `<span class="text-green-400 font-semibold">Evento ativo (2x XP e 2x Bits — ${mode})</span>`
+        : `<span class="text-slate-400">Evento desligado (${mode})</span>`;
+    }
+    if (btn) btn.textContent = result.active ? "Desligar evento" : "Ligar evento";
+  } catch (err) {
+    const status = document.getElementById("admin-weekend-double-reward-status");
+    if (status) status.innerHTML = `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
+  }
+}
+
+async function adminToggleWeekendDoubleReward() {
+  try {
+    const result = await apiPost("/admin/server/weekend-double-reward/toggle");
+    await adminLoadWeekendDoubleReward();
+    document.getElementById("admin-weekend-double-reward-result").innerHTML =
+      `<span class="text-green-400">Evento ${result.active ? "ligado" : "desligado"} manualmente.</span>`;
+  } catch (err) {
+    document.getElementById("admin-weekend-double-reward-result").innerHTML =
+      `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
+  }
+}
+
+async function adminUseAutomaticWeekendDoubleReward() {
+  try {
+    const result = await apiPost("/admin/server/weekend-double-reward/automatic");
+    await adminLoadWeekendDoubleReward();
+    document.getElementById("admin-weekend-double-reward-result").innerHTML =
+      `<span class="text-green-400">Programação automática restaurada. Evento ${result.active ? "ativo" : "desligado"} agora.</span>`;
+  } catch (err) {
+    document.getElementById("admin-weekend-double-reward-result").innerHTML =
+      `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
+  }
+}
+
 async function adminToggleDamageBuff() {
   try {
     const result = await apiPost("/admin/server/damage-buff/toggle");
@@ -409,28 +452,6 @@ async function adminResetArena() {
       `<span class="text-green-400">${escapeHtml(result.message)} (${result.playersReset} jogadores)</span>`;
   } catch (err) {
     document.getElementById("admin-reset-arena-result").innerHTML =
-      `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
-  }
-}
-
-async function adminResetClanRaid() {
-  try {
-    const result = await apiPost("/admin/tools/reset-clan-raid-daily");
-    document.getElementById("admin-reset-raid-result").innerHTML =
-      `<span class="text-green-400">${escapeHtml(result.message)} (${result.raidsReset} raids)</span>`;
-  } catch (err) {
-    document.getElementById("admin-reset-raid-result").innerHTML =
-      `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
-  }
-}
-
-async function adminResetWorldBoss() {
-  try {
-    const result = await apiPost("/admin/tools/reset-world-boss-daily");
-    document.getElementById("admin-reset-world-boss-result").innerHTML =
-      `<span class="text-green-400">${escapeHtml(result.message)} (${result.instancesReset} instância)</span>`;
-  } catch (err) {
-    document.getElementById("admin-reset-world-boss-result").innerHTML =
       `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
   }
 }

@@ -22,7 +22,12 @@ function renderMailPage() {
           <p class="text-xs text-slate-400">Mensagens não lidas</p>
           <p class="text-xl font-bold text-cyan-300" id="mail-unread-count">--</p>
         </div>
-        <span class="text-3xl" aria-hidden="true">✉️</span>
+        <div class="flex items-center gap-2">
+          <button id="mail-mark-all-read" class="btn-sm text-xs" onclick="mailMarkAllRead()">
+            Marcar todas como lidas
+          </button>
+          <span class="text-3xl" aria-hidden="true">✉️</span>
+        </div>
       </div>
 
       <div class="flex gap-2 mb-4" id="mail-folder-tabs">
@@ -39,8 +44,40 @@ function renderMailPage() {
   `;
 
   mailPage = 0;
+  mailUpdateMarkAllReadButton();
   mailLoadFolder();
   mailRefreshUnreadCount();
+}
+
+function mailUpdateMarkAllReadButton() {
+  const button = document.getElementById("mail-mark-all-read");
+  if (button) button.classList.toggle("hidden", mailFolder !== "inbox");
+}
+
+async function mailMarkAllRead() {
+  const button = document.getElementById("mail-mark-all-read");
+  if (!button || mailFolder !== "inbox") return;
+  button.disabled = true;
+  button.textContent = "Marcando...";
+  try {
+    const result = await apiPost("/mail/read-all", {});
+    const markedCount = Number(result.markedCount || 0);
+    showToast(
+      markedCount > 0
+        ? `${markedCount} mensagem(ns) marcada(s) como lida(s).`
+        : "Nenhuma mensagem elegível foi encontrada. Recompensas com loot pendente foram preservadas.",
+      "success"
+    );
+    await mailLoadFolder();
+    await mailRefreshUnreadCount();
+  } catch (err) {
+    showToast(err.message, "error");
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Marcar todas como lidas";
+    }
+  }
 }
 
 async function mailRefreshUnreadCount() {
@@ -64,6 +101,7 @@ async function mailRefreshUnreadCount() {
 function mailSetFolder(folder) {
   mailFolder = folder === "sent" ? "sent" : "inbox";
   mailPage = 0;
+  mailUpdateMarkAllReadButton();
   document.querySelectorAll("#mail-folder-tabs .tab-btn").forEach(button => {
     button.classList.toggle("active", button.dataset.folder === mailFolder);
   });

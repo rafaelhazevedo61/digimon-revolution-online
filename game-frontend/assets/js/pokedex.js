@@ -3,6 +3,8 @@ let dexEntries = [];
 let dexLoading = false;
 let dexHasMore = true;
 let dexFilters = { name: "", stage: "", attribute: "", element: "" };
+let dexEvolutionLinesCache = null;
+let dexEvolutionLinesLoading = false;
 
 async function renderPokedexPage() {
   const app = document.getElementById("app");
@@ -138,38 +140,18 @@ function dexRender() {
     return;
   }
 
-  let html = dexEntries.map(d => {
-    const stage = dexStageName(d.stage);
-
-    return `
-      <div class="card-sm mb-2 flex items-center gap-3 cursor-pointer" onclick="dexShowDetail(${d.id})">
-        ${renderDigimonVisual(d.imageUrl, d.stage, "w-12 h-12", "text-2xl")}
-        <div class="flex-1 min-w-0">
-          <p class="font-bold text-sm truncate">${escapeHtml(d.name)}</p>
-          <div class="flex gap-1 mt-1 flex-wrap">
-            <span class="badge badge-${d.stage.toLowerCase()}">${stage}</span>
-            ${d.rarity ? `<span class="badge badge-${d.rarity.toLowerCase()}">${escapeHtml(formatRarity(d.rarity))}</span>` : ""}
-            <span class="badge badge-common">${escapeHtml(formatAttribute(d.attribute))}</span>
-            <span class="badge badge-common">${dexElementLabel(d.element)}</span>
+  let html = `
+    <div class="grid grid-cols-4 gap-1.5" aria-label="Digimons disponíveis">
+      ${dexEntries.map(d => `
+        <button type="button" class="card-sm group text-center p-1 cursor-pointer transition-all hover:border-cyan-500 hover:bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-cyan-400" onclick="dexShowDetail(${d.id})" aria-label="Ver detalhes de ${escapeAttr(d.name)}">
+          <div class="w-full aspect-square rounded-lg overflow-hidden bg-slate-900/70 flex items-center justify-center group-hover:bg-slate-900 transition-colors">
+            ${renderDigimonVisual(d.imageUrl, d.stage, "w-full h-full", "text-5xl")}
           </div>
-        </div>
-        <div class="grid grid-cols-3 gap-1 text-center" style="min-width:120px">
-          <div>
-            <p class="text-xs text-slate-500">HP</p>
-            <p class="text-xs font-bold text-red-400">${d.baseHp}</p>
-          </div>
-          <div>
-            <p class="text-xs text-slate-500">ATK</p>
-            <p class="text-xs font-bold text-orange-400">${d.baseAtk}</p>
-          </div>
-          <div>
-            <p class="text-xs text-slate-500">DEF</p>
-            <p class="text-xs font-bold text-blue-400">${d.baseDef}</p>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join("");
+          <p class="font-bold text-[10px] sm:text-[11px] text-center truncate mt-1" title="${escapeAttr(d.name)}">${escapeHtml(d.name)}</p>
+        </button>
+      `).join("")}
+    </div>
+  `;
 
   if (dexHasMore) {
     html += `
@@ -189,6 +171,102 @@ async function dexLoadMore() {
   await dexLoadPage();
 }
 
+async function dexShowEvolutionLines(digimonInfoId) {
+  const current = dexEntries.find(entry => entry.id === digimonInfoId);
+  if (!current) return;
+
+  const overlay = document.createElement("div");
+  overlay.id = "dex-evolution-overlay";
+  overlay.className = "fixed inset-0 z-[60] flex items-end justify-center";
+  overlay.style.background = "rgba(0,0,0,0.7)";
+  overlay.onclick = (event) => { if (event.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="w-full max-w-2xl rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:88vh;overflow-y:auto" onclick="event.stopPropagation()">
+      <div class="flex justify-between items-center mb-3">
+        <div>
+          <h3 class="font-bold text-lg">Linha evolutiva</h3>
+          <p class="text-xs text-slate-400">${escapeHtml(current.name)}</p>
+        </div>
+        <button class="text-slate-400 text-xl" onclick="document.getElementById('dex-evolution-overlay').remove()">&times;</button>
+      </div>
+      <div id="dex-evolution-content" class="space-y-3">
+        <div class="card animate-pulse"><div class="h-24"></div></div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  try {
+    if (!dexEvolutionLinesCache) {
+      dexEvolutionLinesLoading = true;
+      dexEvolutionLinesCache = await apiGet("/evolution-lines/available");
+    }
+    const lines = (dexEvolutionLinesCache || [])
+      .filter(line => (line.steps || []).some(step => step.digimonInfoId === digimonInfoId));
+    const content = document.getElementById("dex-evolution-content");
+    if (!content) return;
+
+    if (lines.length === 0) {
+      content.innerHTML = `<div class="card text-center"><p class="text-slate-400">Nenhuma linha evolutiva cadastrada para este Digimon.</p></div>`;
+      return;
+    }
+
+    content.innerHTML = lines.map(line => {
+      const steps = [...(line.steps || [])].sort((a, b) => a.order - b.order);
+      return `
+        <div class="card">
+          <div class="mb-3">
+            <h4 class="font-bold text-cyan-300">${escapeHtml(line.name || line.code || "Linha evolutiva")}</h4>
+            ${line.description ? `<p class="text-xs text-slate-400 mt-1">${escapeHtml(line.description)}</p>` : ""}
+          </div>
+          <div class="flex flex-col gap-2">
+            ${steps.map((step, index) => `
+              <div class="flex items-center gap-2">
+                <button type="button" class="flex-1 rounded-lg border ${step.digimonInfoId === digimonInfoId ? "border-cyan-400 bg-cyan-950/50" : "border-slate-700 bg-slate-900/60"} p-2 text-left hover:border-cyan-400 transition-colors" onclick="event.stopPropagation(); dexShowEvolutionStep(${step.digimonInfoId}, this.dataset.name)" data-name="${escapeAttr(step.digimon || "")}">
+                  <div class="flex items-center gap-2">
+                    <div class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center shrink-0">
+                      ${renderDigimonVisual(step.imageUrl, step.stage, "w-full h-full", "text-2xl")}
+                    </div>
+                    <div class="min-w-0">
+                      <p class="font-bold text-sm truncate">${escapeHtml(step.digimon || "Digimon não definido")}</p>
+                      <p class="text-xs text-slate-400">${escapeHtml(dexStageName(step.stage))}</p>
+                    </div>
+                    ${step.digimonInfoId === digimonInfoId ? `<span class="ml-auto badge badge-common">Atual</span>` : ""}
+                  </div>
+                </button>
+                ${index < steps.length - 1 ? `<span class="text-cyan-400 text-lg" aria-hidden="true">↓</span>` : ""}
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }).join("");
+  } catch (err) {
+    const content = document.getElementById("dex-evolution-content");
+    if (content) content.innerHTML = `<div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>`;
+  } finally {
+    dexEvolutionLinesLoading = false;
+  }
+}
+
+async function dexShowEvolutionStep(infoId, name) {
+  let entry = dexEntries.find(e => e.id === infoId);
+  if (!entry && name) {
+    try {
+      const data = await apiGet(`/digimon-infos?name=${encodeURIComponent(name)}&page=0&size=1`);
+      entry = (data.items || []).find(e => e.id === infoId) || data.items?.[0];
+      if (entry && !dexEntries.some(e => e.id === entry.id)) dexEntries.push(entry);
+    } catch (err) {
+      showToast(err.message, "error");
+      return;
+    }
+  }
+  if (!entry) return;
+  const evolutionOverlay = document.getElementById("dex-evolution-overlay");
+  if (evolutionOverlay) evolutionOverlay.remove();
+  await dexShowDetail(entry.id);
+}
+
 async function dexShowDetail(infoId) {
   const d = dexEntries.find(e => e.id === infoId);
   if (!d) return;
@@ -201,6 +279,15 @@ async function dexShowDetail(infoId) {
 
   const stage = dexStageName(d.stage);
   const total = d.baseHp + d.baseAtk + d.baseDef;
+  const digitamaOrigins = Array.isArray(d.digitamaOrigins) ? d.digitamaOrigins : [];
+  const digitamaOriginsMarkup = d.stage === "BABY" ? `
+    <div class="card mb-3 border-cyan-900 bg-cyan-950/20">
+      <h4 class="text-xs text-cyan-300 font-bold mb-2">DIGI EGG DE ORIGEM</h4>
+      ${digitamaOrigins.length > 0
+        ? `<div class="flex flex-wrap gap-2">${digitamaOrigins.map(origin => `<span class="badge badge-common" title="${escapeAttr(origin.code || "")}">${escapeHtml(origin.name || origin.code || "Digi Egg")}</span>`).join("")}</div>`
+        : `<p class="text-xs text-slate-400">Nenhuma Digi Egg elegível no momento.</p>`}
+    </div>
+  ` : "";
 
   const maxStat = Math.max(d.baseHp, d.baseAtk, d.baseDef, 1);
   const hpPct = Math.round((d.baseHp / maxStat) * 100);
@@ -208,7 +295,7 @@ async function dexShowDetail(infoId) {
   const defPct = Math.round((d.baseDef / maxStat) * 100);
 
   overlay.innerHTML = `
-    <div class="w-full max-w-md rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:80vh;overflow-y:auto">
+    <div class="w-full max-w-md rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:80vh;overflow-y:auto" onclick="event.stopPropagation()">
       <div class="flex justify-between items-center mb-3">
         <h3 class="font-bold text-lg">Detalhes</h3>
         <button class="text-slate-400 text-xl" onclick="document.getElementById('dex-modal-overlay').remove()">&times;</button>
@@ -225,8 +312,11 @@ async function dexShowDetail(infoId) {
             <span class="badge badge-common">${dexElementLabel(d.element)}</span>
             <span class="badge badge-common">${escapeHtml(d.specie)}</span>
           </div>
+          <button type="button" class="btn-sm btn-primary mt-2 w-full" onclick="dexShowEvolutionLines(${d.id})">Ver linha evolutiva</button>
         </div>
       </div>
+
+      ${digitamaOriginsMarkup}
 
       <div class="card mb-3">
         <h4 class="text-xs text-slate-500 font-bold mb-2">BASE STATS</h4>

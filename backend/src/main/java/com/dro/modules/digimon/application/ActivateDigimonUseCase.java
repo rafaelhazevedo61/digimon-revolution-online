@@ -3,9 +3,6 @@ package com.dro.modules.digimon.application;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
-import com.dro.modules.equipment.domain.Equipment;
-import com.dro.modules.equipment.domain.EquipmentSlot;
-import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
@@ -25,7 +22,6 @@ import java.util.UUID;
 public class ActivateDigimonUseCase {
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
-    private final EquipmentRepository equipmentRepository;
 
     @Transactional
     public Digimon execute(String token, UUID digimonId) {
@@ -96,33 +92,15 @@ public class ActivateDigimonUseCase {
         if (storedCount - selectedStorageSlot >= player.getMaxStorageSlots()) {
             throw new BadRequestException("Storage cheio (" + storedCount + "/" + player.getMaxStorageSlots() + ").");
         }
-        unequipAll(currentActive);
         currentActive.setStatus(DigimonStatus.STORED);
         digimonRepository.save(currentActive);
     }
 
-    private void unequipAll(Digimon digimon) {
-        for (EquipmentSlot slot : EquipmentSlot.values()) {
-            UUID equipmentId = digimon.getEquipmentIdBySlot(slot);
-            if (equipmentId == null) {
-                continue;
-            }
-            Equipment equipment = equipmentRepository.findById(equipmentId).orElse(null);
-            if (equipment != null) {
-                equipment.unequip();
-                equipmentRepository.save(equipment);
-            }
-            digimon.clearSlot(slot);
-        }
-    }
-
     public ActivateDigimonUseCase(
             final PlayerRepository playerRepository,
-            final DigimonRepository digimonRepository,
-            final EquipmentRepository equipmentRepository
+            final DigimonRepository digimonRepository
     ) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
-        this.equipmentRepository = equipmentRepository;
     }
 }

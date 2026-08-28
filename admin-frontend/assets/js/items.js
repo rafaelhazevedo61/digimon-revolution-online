@@ -336,7 +336,7 @@ function renderItemEditModal(item) {
               </div>
               <div>
                 <label class="text-sm text-slate-400">Acúmulo máximo</label>
-                <input id="item-edit-max-stack" class="input mt-1" type="number" min="1" value="${item.maxStack ?? ""}" ${item.stackable ? "" : "disabled"} />
+                <input id="item-edit-max-stack" class="input mt-1" type="number" min="1" max="999" value="${item.maxStack ?? ""}" ${item.stackable ? "" : "disabled"} />
               </div>
               <div>
                 <label class="text-sm text-slate-400">Ícone</label>
@@ -388,8 +388,8 @@ async function submitItemEdit(event, id) {
     const maxStack = stackable ? Number(maxStackValue) : null;
     const errorDiv = document.getElementById("item-edit-error");
 
-    if (stackable && (!Number.isInteger(maxStack) || maxStack < 1)) {
-        showItemEditError(errorDiv, "Informe um stack máximo maior que zero para itens acumuláveis.");
+    if (stackable && (!Number.isInteger(maxStack) || maxStack < 1 || maxStack > 999)) {
+        showItemEditError(errorDiv, "Informe um stack máximo entre 1 e 999 para itens acumuláveis.");
         return;
     }
 

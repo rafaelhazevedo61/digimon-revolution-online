@@ -68,14 +68,14 @@ public class EvolveDigimonUseCase {
 
     private EvolutionLine resolveEvolutionLine(Digimon digimon, Long evolutionLineId) {
         if (evolutionLineId != null) {
-            EvolutionLine line = evolutionLineRepository.findByIdAndActiveTrue(evolutionLineId).orElseThrow(() -> new NotFoundException("Evolution line not found or inactive"));
+            EvolutionLine line = evolutionLineRepository.findByIdAndActiveTrueAndContentActiveTrue(evolutionLineId).orElseThrow(() -> new NotFoundException("Evolution line not found or inactive"));
             boolean digimonInLine = line.getSteps().stream().anyMatch(step -> step.getDigimonInfo().getId().equals(digimon.getDigimonInfoId()));
             if (!digimonInLine) {
                 throw new BadRequestException("Digimon does not belong to the specified evolution line");
             }
             return line;
         }
-        List<EvolutionLine> lines = evolutionLineRepository.findByActiveTrueAndSteps_DigimonInfo_Id(digimon.getDigimonInfoId());
+        List<EvolutionLine> lines = evolutionLineRepository.findByActiveTrueAndContentActiveTrueAndSteps_DigimonInfo_Id(digimon.getDigimonInfoId());
         List<EvolutionLine> linesWithNextStep = lines.stream().filter(line -> hasNextStep(line, digimon)).toList();
         if (linesWithNextStep.isEmpty()) {
             throw new BadRequestException("No evolution line found for this Digimon");

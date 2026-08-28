@@ -35,6 +35,11 @@ public enum ItemType {
     // Expansão da incubadora
     INCUBATION_SLOT_UNLOCK,
 
+    // Expansão permanente do Storage
+    STORAGE_SLOT_1,
+    STORAGE_SLOT_5,
+    STORAGE_SLOT_10,
+
     // Discos de XP instantâneo
     XP_DISC_1,
     XP_DISC_3,

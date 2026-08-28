@@ -21,6 +21,7 @@ import java.util.Set;
 @Service
 public class UpdateItemDefinitionUseCase {
     private static final Set<String> OFFICIAL_RARITIES = Set.of("COMMON", "RARE", "EPIC", "LEGENDARY");
+    private static final int MAX_STACK_QUANTITY = 999;
     private final ItemDefinitionRepository itemDefinitionRepository;
 
     @CacheEvict(cacheNames = "itemDefinitions", allEntries = true)
@@ -35,6 +36,9 @@ public class UpdateItemDefinitionUseCase {
         }
         if (Boolean.TRUE.equals(request.stackable()) && (request.maxStack() == null || request.maxStack() < 1)) {
             throw new BadRequestException("O acúmulo máximo é obrigatório para itens acumuláveis");
+        }
+        if (Boolean.TRUE.equals(request.stackable()) && request.maxStack() > MAX_STACK_QUANTITY) {
+            throw new BadRequestException("O acúmulo máximo não pode exceder " + MAX_STACK_QUANTITY);
         }
         item.setName(name);
         item.setDescription(normalizeOptional(request.description()));

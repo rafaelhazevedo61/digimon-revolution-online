@@ -118,8 +118,10 @@ As imagens utilizadas pelo portal devem permanecer em `assets/img/` ou em subdir
 - `assets/js/gallery.js`: renderização da galeria.
 - `assets/js/wiki-stats-calc.js`: recursos interativos específicos da Wiki.
 
-## Diretriz de manutenção
+## Documentação relacionada e diretriz de manutenção
+
+A documentação técnica do aplicativo dos jogadores está em [`../game-frontend/README.md`](../game-frontend/README.md). Ela descreve rotas, ordem de carregamento, integração HTTP, sessão, PWA e os fluxos atuais de Incubação, Storage, Inventário, Digimon Info e Correio.
 
 A documentação deste arquivo deve acompanhar a estrutura real de `official-site/`. Ao criar, remover ou reorganizar uma página pública, atualize esta árvore e a seção correspondente no mesmo PR.
 
-Conteúdo funcional divulgado no site e na Wiki também deve ser revisado quando uma mecânica mudar no jogo, evitando divergências entre implementação e documentação pública.
+Conteúdo funcional divulgado no site e na Wiki também deve ser revisado quando uma mecânica mudar no jogo, evitando divergências entre implementação e documentação pública. Para alterações de gameplay, confira especialmente [`wiki/sistemas.html`](wiki/sistemas.html), [`wiki/economia.html`](wiki/economia.html) e [`wiki/estagios.html`](wiki/estagios.html).

@@ -9,10 +9,14 @@ import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.modules.digimon.domain.enums.Stage;
+import com.dro.modules.mission.application.NewlyUnlockedContentService;
+import com.dro.modules.mission.api.dto.response.NewlyUnlockedContentResponse;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.util.TokenExtractor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,10 +28,11 @@ import java.util.UUID;
 @Service
 public class UseItemUseCase {
     private static final int GENERIC_ITEM_XP = 50;
-    private static final int MAX_BATCH_QUANTITY = 100;
+    private static final int MAX_BATCH_QUANTITY = 999;
     private final InventoryRepository inventoryRepository;
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
+    private final NewlyUnlockedContentService newlyUnlockedContentService;
 
     @Transactional
     public UseItemResponse execute(String token, ItemType type) {
@@ -47,9 +52,10 @@ public class UseItemUseCase {
             return unlockIncubationSlot(playerId);
         }
 
+        boolean batchUsableItem = isBatchUsableItem(type);
         boolean xpDisk = isXpDisk(type);
-        int quantity = resolveQuantity(xpDisk, requestedQuantity);
-        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+        int quantity = resolveQuantity(batchUsableItem, requestedQuantity);
+        Player player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         if (player.getActiveDigimonId() == null) {
             throw new BadRequestException("No active digimon selected");
         }
@@ -62,7 +68,25 @@ public class UseItemUseCase {
             throw new UnprocessableException("Not enough items in inventory");
         }
 
+        int storageExpansion = storageExpansionAmount(type);
+        if (storageExpansion > 0) {
+            consume(item, 1);
+            player.setMaxStorageSlots(player.getMaxStorageSlots() + storageExpansion);
+            playerRepository.save(player);
+            return new UseItemResponse(
+                    type,
+                    1,
+                    0,
+                    digimon.getLevel(),
+                    digimon.getLevel(),
+                    false,
+                    "Storage expandido em +" + storageExpansion + " espaço(s)!",
+                    NewlyUnlockedContentResponse.empty()
+            );
+        }
+
         int previousLevel = digimon.getLevel();
+        Stage previousStage = digimon.getStage();
         int xpGranted = 0;
         if (xpDisk) {
             int percentage = xpDiskPercentage(type);
@@ -76,15 +100,20 @@ public class UseItemUseCase {
                 xpGranted += diskXp;
             }
         } else {
-            xpGranted = GENERIC_ITEM_XP;
-            digimon.gainExperience(xpGranted);
+            xpGranted = GENERIC_ITEM_XP * quantity;
+            for (int index = 0; index < quantity; index++) {
+                digimon.gainExperience(GENERIC_ITEM_XP);
+            }
         }
 
         consume(item, quantity);
         digimonRepository.save(digimon);
-        String message = xpDisk
-                ? quantity > 1 ? "Discos de XP utilizados com sucesso." : "Disco de XP utilizado com sucesso."
+        String message = batchUsableItem && quantity > 1
+                ? "Itens utilizados com sucesso."
                 : "Item utilizado com sucesso.";
+        NewlyUnlockedContentResponse newlyUnlockedContent = newlyUnlockedContentService == null
+                ? NewlyUnlockedContentResponse.empty()
+                : newlyUnlockedContentService.detect(digimon, previousLevel, previousStage);
         return new UseItemResponse(
                 type,
                 quantity,
@@ -92,19 +121,29 @@ public class UseItemUseCase {
                 previousLevel,
                 digimon.getLevel(),
                 digimon.getLevel() > previousLevel,
-                message
+                message,
+                newlyUnlockedContent
         );
     }
 
-    private int resolveQuantity(boolean xpDisk, Integer requestedQuantity) {
-        if (!xpDisk) {
+    private int resolveQuantity(boolean batchUsableItem, Integer requestedQuantity) {
+        if (!batchUsableItem) {
             return 1;
         }
         int quantity = requestedQuantity == null ? 1 : requestedQuantity;
         if (quantity < 1 || quantity > MAX_BATCH_QUANTITY) {
-            throw new BadRequestException("A quantidade de Discos de XP deve estar entre 1 e " + MAX_BATCH_QUANTITY);
+            throw new BadRequestException("A quantidade do item deve estar entre 1 e " + MAX_BATCH_QUANTITY);
         }
         return quantity;
+    }
+
+    private int storageExpansionAmount(ItemType type) {
+        return switch (type) {
+            case STORAGE_SLOT_1 -> 1;
+            case STORAGE_SLOT_5 -> 5;
+            case STORAGE_SLOT_10 -> 10;
+            default -> 0;
+        };
     }
 
     private int calculateXpDiskAmount(int xpToNextLevel, int percentage) {
@@ -150,8 +189,13 @@ public class UseItemUseCase {
                 digimon.getLevel(),
                 digimon.getLevel(),
                 false,
-                "Slot de incubação desbloqueado!"
+                "Slot de incubação desbloqueado!",
+                NewlyUnlockedContentResponse.empty()
         );
+    }
+
+    private boolean isBatchUsableItem(ItemType type) {
+        return isXpDisk(type) || type == ItemType.POTION_SMALL || type == ItemType.TRAINING_STONE;
     }
 
     private boolean isXpDisk(ItemType type) {
@@ -184,8 +228,14 @@ public class UseItemUseCase {
     }
 
     public UseItemUseCase(final InventoryRepository inventoryRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository) {
+        this(inventoryRepository, digimonRepository, playerRepository, null);
+    }
+
+    @Autowired
+    public UseItemUseCase(final InventoryRepository inventoryRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final NewlyUnlockedContentService newlyUnlockedContentService) {
         this.inventoryRepository = inventoryRepository;
         this.digimonRepository = digimonRepository;
         this.playerRepository = playerRepository;
+        this.newlyUnlockedContentService = newlyUnlockedContentService;
     }
 }
