@@ -23,6 +23,7 @@ import com.dro.modules.tutorial.application.TutorialService;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -108,6 +109,7 @@ public class ClaimIncubationUseCase {
         incubationRepository.save(incubation);
     }
 
+    @Autowired
     public ClaimIncubationUseCase(
             final IncubationRepository incubationRepository,
             final DigimonRepository digimonRepository,
