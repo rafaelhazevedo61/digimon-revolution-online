@@ -608,15 +608,16 @@ function invShowChestOpeningResult(result) {
   };
 
   overlay.innerHTML = `
-    <div class="card w-full max-w-md border-cyan-800 shadow-2xl">
-      <div class="text-center mb-4">
+    <div class="card w-full max-w-md max-h-[88vh] border-cyan-800 shadow-2xl flex flex-col overflow-hidden">
+      <div class="text-center mb-4 shrink-0">
         <div class="text-5xl mb-2">🎁</div>
         <h3 class="text-xl font-bold">${escapeHtml(title)}</h3>
         <p class="text-sm text-slate-400 mt-1">${escapeHtml(result && result.chestName || "Baú")} · ${chestQuantity} ${chestQuantity === 1 ? "baú" : "baús"}</p>
         <p class="text-xs text-slate-500 mt-2">Cada item possui sua própria raridade</p>
       </div>
-      <div class="card-sm mb-4">
-        <p class="text-xs text-slate-400 mb-2">Recompensas</p>
+      <div class="card-sm mb-4 flex min-h-0 max-h-[52vh] flex-col overflow-hidden shrink-0">
+        <p class="text-xs text-slate-400 mb-2 shrink-0">Recompensas</p>
+        <div class="min-h-0 overflow-y-auto overscroll-contain pr-1">
         ${items.length > 0 ? items.map(item => `
           <div class="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
             <div class="min-w-0">
@@ -629,9 +630,10 @@ function invShowChestOpeningResult(result) {
             <span class="font-bold text-cyan-300 ml-3">x${item.quantity}</span>
           </div>
         `).join("") : `<p class="text-sm text-slate-400">Nenhum item foi informado.</p>`}
+        </div>
       </div>
-      <p class="text-xs text-slate-400 mb-4">${escapeHtml(message)}</p>
-      <button class="btn-primary w-full" onclick="document.getElementById('chest-opening-overlay').remove()">Continuar</button>
+      <p class="text-xs text-slate-400 mb-4 shrink-0">${escapeHtml(message)}</p>
+      <button class="btn-primary w-full shrink-0" onclick="document.getElementById('chest-opening-overlay').remove()">Continuar</button>
     </div>
   `;
 
