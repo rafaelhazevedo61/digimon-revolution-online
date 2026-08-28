@@ -24,6 +24,41 @@ async function renderSettingsPage() {
         ></div>
 
         <div class="mb-6 p-3 rounded-lg bg-slate-900/50 border border-slate-800">
+          <p class="text-xs text-slate-400">Username atual</p>
+          <p id="current-username-value" class="font-medium text-slate-200 mt-1">Carregando...</p>
+          <p id="username-change-cost" class="text-xs text-amber-300 mt-2">Custo da próxima troca: carregando...</p>
+          <p id="username-change-bits" class="text-xs text-slate-400 mt-1">Bits disponíveis: carregando...</p>
+        </div>
+
+        <form
+          id="change-username-form"
+          onsubmit="settingsChangeUsername(event)"
+          class="mb-8"
+        >
+          <div class="mb-4">
+            <label class="label" for="new-username">Novo username</label>
+            <input
+              id="new-username"
+              type="text"
+              class="input"
+              placeholder="Seu novo username"
+              autocomplete="nickname"
+              minlength="3"
+              maxlength="50"
+              required
+            />
+          </div>
+
+          <p class="text-xs text-slate-500 mb-4">
+            A troca custa Bits do seu Digimon ativo. O valor aumenta a cada nova troca.
+          </p>
+
+          <button type="submit" class="btn-secondary w-full" id="change-username-btn">
+            Alterar username
+          </button>
+        </form>
+
+        <div class="mb-6 p-3 rounded-lg bg-slate-900/50 border border-slate-800">
           <p class="text-xs text-slate-400">E-mail atual</p>
           <p id="current-email-value" class="font-medium text-slate-200 mt-1">Carregando...</p>
         </div>
@@ -170,6 +205,51 @@ async function renderSettingsPage() {
   document
     .getElementById("logout-all-btn")
     ?.addEventListener("click", settingsLogoutAll);
+
+  settingsLoadUsernameChangeInfo();
+}
+
+async function settingsLoadUsernameChangeInfo() {
+  try {
+    const info = await apiGet("/players/me/change-username");
+    document.getElementById("current-username-value").textContent = info.username;
+    document.getElementById("username-change-cost").textContent = `Custo da próxima troca: ${info.cost.toLocaleString("pt-BR")} Bits`;
+    document.getElementById("username-change-bits").textContent = `Bits disponíveis: ${info.availableBits.toLocaleString("pt-BR")}`;
+  } catch (err) {
+    document.getElementById("current-username-value").textContent = "Não disponível";
+    document.getElementById("username-change-cost").textContent = err.message || "Não foi possível carregar o custo.";
+  }
+}
+
+async function settingsChangeUsername(event) {
+  event.preventDefault();
+  const errorDiv = document.getElementById("settings-error");
+  const successDiv = document.getElementById("settings-success");
+  const btn = document.getElementById("change-username-btn");
+  const newUsername = document.getElementById("new-username").value.trim();
+  errorDiv.classList.add("hidden");
+  successDiv.classList.add("hidden");
+  if (newUsername.length < 3 || newUsername.length > 50) {
+    errorDiv.textContent = "O username deve ter entre 3 e 50 caracteres.";
+    errorDiv.classList.remove("hidden");
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = "Alterando...";
+  try {
+    const result = await apiPost("/players/me/change-username", { newUsername });
+    if (result?.token) setToken(result.token);
+    document.getElementById("change-username-form").reset();
+    successDiv.textContent = `Username alterado com sucesso. Foram cobrados ${result.cost.toLocaleString("pt-BR")} Bits.`;
+    successDiv.classList.remove("hidden");
+    await settingsLoadUsernameChangeInfo();
+  } catch (err) {
+    errorDiv.textContent = err.message || "Erro ao alterar username.";
+    errorDiv.classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Alterar username";
+  }
 }
 
 async function settingsChangeEmail(event) {

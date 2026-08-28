@@ -33,6 +33,7 @@ public interface PlayerRepository extends JpaRepository<Player, UUID>, JpaSpecif
     boolean existsByEmailIgnoreCase(String email);
 
     boolean existsByUsername(String username);
+    boolean existsByUsernameIgnoreCase(String username);
 
     List<Player> findByClanId(UUID clanId);
 

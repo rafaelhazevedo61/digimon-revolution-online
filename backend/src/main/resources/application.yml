@@ -96,6 +96,9 @@ dro:
       Zurumon: true
 
   gameplay:
+    username-change:
+      # Índice 0 representa a primeira troca; valores posteriores continuam crescentes.
+      costs: ${DRO_USERNAME_CHANGE_COSTS:1000,5000,10000}
     auto-boss-respawn-after-defeat-enabled: false
     boss-cooldown-enabled: ${DRO_BOSS_COOLDOWN_ENABLED:true}
 
