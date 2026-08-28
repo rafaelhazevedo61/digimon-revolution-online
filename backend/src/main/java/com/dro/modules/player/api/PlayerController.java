@@ -1,10 +1,13 @@
 package com.dro.modules.player.api;
 
+import com.dro.modules.player.api.dto.request.ChangeEmailRequest;
 import com.dro.modules.player.api.dto.request.ChangePasswordRequest;
+import com.dro.modules.player.api.dto.response.ChangeEmailResponse;
 import com.dro.modules.player.api.dto.response.ChangePasswordResponse;
 import com.dro.modules.player.api.dto.response.PlayerDashboardResponse;
 import com.dro.modules.player.api.dto.response.PlayerResponse;
 import com.dro.modules.player.api.dto.response.PlayerStartupResponse;
+import com.dro.modules.player.application.ChangePlayerEmailUseCase;
 import com.dro.modules.player.application.ChangePlayerPasswordUseCase;
 import com.dro.modules.player.application.GetPlayerDashboardUseCase;
 import com.dro.modules.player.application.GetPlayerStartupUseCase;
@@ -23,6 +26,7 @@ public class PlayerController {
     private final GetPlayerUseCase useCase;
     private final GetPlayerDashboardUseCase dashboardUseCase;
     private final GetPlayerStartupUseCase startupUseCase;
+    private final ChangePlayerEmailUseCase changePlayerEmailUseCase;
     private final ChangePlayerPasswordUseCase changePlayerPasswordUseCase;
     private final RevokePlayerSessionsUseCase revokePlayerSessionsUseCase;
 
@@ -41,6 +45,11 @@ public class PlayerController {
         return ResponseEntity.ok(startupUseCase.execute(authorization));
     }
 
+    @PostMapping("/me/change-email")
+    public ResponseEntity<ChangeEmailResponse> changeEmail(@RequestHeader("Authorization") String authorization, @RequestBody @Valid ChangeEmailRequest request) {
+        return ResponseEntity.ok(changePlayerEmailUseCase.execute(authorization, request));
+    }
+
     @PostMapping("/me/change-password")
     public ResponseEntity<ChangePasswordResponse> changePassword(@RequestHeader("Authorization") String authorization, @RequestBody @Valid ChangePasswordRequest request) {
         return ResponseEntity.ok(changePlayerPasswordUseCase.execute(authorization, request));
@@ -52,10 +61,11 @@ public class PlayerController {
         return ResponseEntity.ok().build();
     }
 
-    public PlayerController(final GetPlayerUseCase useCase, final GetPlayerDashboardUseCase dashboardUseCase, final GetPlayerStartupUseCase startupUseCase, final ChangePlayerPasswordUseCase changePlayerPasswordUseCase, final RevokePlayerSessionsUseCase revokePlayerSessionsUseCase) {
+    public PlayerController(final GetPlayerUseCase useCase, final GetPlayerDashboardUseCase dashboardUseCase, final GetPlayerStartupUseCase startupUseCase, final ChangePlayerEmailUseCase changePlayerEmailUseCase, final ChangePlayerPasswordUseCase changePlayerPasswordUseCase, final RevokePlayerSessionsUseCase revokePlayerSessionsUseCase) {
         this.useCase = useCase;
         this.dashboardUseCase = dashboardUseCase;
         this.startupUseCase = startupUseCase;
+        this.changePlayerEmailUseCase = changePlayerEmailUseCase;
         this.changePlayerPasswordUseCase = changePlayerPasswordUseCase;
         this.revokePlayerSessionsUseCase = revokePlayerSessionsUseCase;
     }

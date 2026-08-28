@@ -23,6 +23,53 @@ async function renderSettingsPage() {
           class="hidden mb-4 p-3 rounded-lg bg-green-950/50 border border-green-900 text-green-300 text-sm"
         ></div>
 
+        <div class="mb-6 p-3 rounded-lg bg-slate-900/50 border border-slate-800">
+          <p class="text-xs text-slate-400">E-mail atual</p>
+          <p id="current-email-value" class="font-medium text-slate-200 mt-1">Carregando...</p>
+        </div>
+
+        <form
+          id="change-email-form"
+          onsubmit="settingsChangeEmail(event)"
+          class="mb-8"
+        >
+          <div class="mb-4">
+            <label class="label" for="new-email">Novo e-mail</label>
+            <input
+              id="new-email"
+              type="email"
+              class="input"
+              placeholder="seu-email@exemplo.com"
+              autocomplete="email"
+              required
+            />
+          </div>
+
+          <div class="mb-4">
+            <label class="label" for="email-current-password">Senha atual</label>
+            <input
+              id="email-current-password"
+              type="password"
+              class="input"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+
+          <p class="text-xs text-slate-500 mb-4">
+            Por segurança, confirme sua senha atual. As outras sessões serão encerradas e este dispositivo continuará conectado.
+          </p>
+
+          <button
+            type="submit"
+            class="btn-secondary w-full"
+            id="change-email-btn"
+          >
+            Alterar e-mail
+          </button>
+        </form>
+
         <form
           id="change-password-form"
           onsubmit="settingsChangePassword(event)"
@@ -114,9 +161,64 @@ async function renderSettingsPage() {
     </div>
   `;
 
+  const currentEmail = parseJwtPayload(getToken())?.email;
+  const currentEmailValue = document.getElementById("current-email-value");
+  if (currentEmailValue) {
+    currentEmailValue.textContent = currentEmail || "Não disponível";
+  }
+
   document
     .getElementById("logout-all-btn")
     ?.addEventListener("click", settingsLogoutAll);
+}
+
+async function settingsChangeEmail(event) {
+  event.preventDefault();
+
+  const errorDiv = document.getElementById("settings-error");
+  const successDiv = document.getElementById("settings-success");
+  const btn = document.getElementById("change-email-btn");
+  const newEmail = document.getElementById("new-email").value.trim();
+  const currentPassword = document.getElementById("email-current-password").value;
+
+  errorDiv.classList.add("hidden");
+  successDiv.classList.add("hidden");
+
+  if (!newEmail) {
+    errorDiv.textContent = "Informe o novo e-mail.";
+    errorDiv.classList.remove("hidden");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Alterando...";
+
+  try {
+    const result = await apiPost("/players/me/change-email", {
+      currentPassword,
+      newEmail
+    });
+
+    if (result?.token) {
+      setToken(result.token);
+    }
+
+    const updatedEmail = result?.email || newEmail.toLowerCase();
+    const currentEmailValue = document.getElementById("current-email-value");
+    if (currentEmailValue) {
+      currentEmailValue.textContent = updatedEmail;
+    }
+
+    document.getElementById("change-email-form").reset();
+    successDiv.textContent = "E-mail alterado com sucesso.";
+    successDiv.classList.remove("hidden");
+  } catch (err) {
+    errorDiv.textContent = err.message || "Erro ao alterar e-mail.";
+    errorDiv.classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Alterar e-mail";
+  }
 }
 
 async function settingsChangePassword(event) {
