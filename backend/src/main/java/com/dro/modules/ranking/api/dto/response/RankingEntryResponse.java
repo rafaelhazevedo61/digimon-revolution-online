@@ -12,6 +12,7 @@ public record RankingEntryResponse(
         int position,
         String digimonName,
         Stage digimonStage,
+        String imageUrl,
         int level,
         DigimonGrade grade,
         int rebirthCount,

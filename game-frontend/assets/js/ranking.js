@@ -109,7 +109,7 @@ function rankRender() {
     return `
       <div class="card-sm mb-2 flex items-center gap-3 cursor-pointer ${isOwn ? "border-cyan-500 bg-cyan-950/30" : ""}" onclick="rankShowPreview('${e.digimonId}')">
         <div class="w-8 text-center text-lg">${posIcon}</div>
-        <div class="text-2xl">🐉</div>
+        ${renderDigimonVisual(e.imageUrl, e.digimonStage, "w-12 h-12", "text-3xl")}
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <p class="font-bold text-sm truncate">${escapeHtml(e.digimonName)}</p>
