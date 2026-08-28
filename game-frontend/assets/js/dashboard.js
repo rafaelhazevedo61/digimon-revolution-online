@@ -41,6 +41,8 @@ function renderDashContent(data) {
 
     <div id="dash-mail-notice"></div>
 
+    <div id="dash-weekend-double-reward"></div>
+
     <div id="tutorial-card"></div>
 
     ${d ? renderDigimonCard(d) : `
@@ -107,6 +109,39 @@ function renderDashContent(data) {
   startIncubationTimer(data.incubation);
   loadTutorialCard();
   loadDashboardMailNotice();
+  loadDashboardWeekendDoubleReward();
+}
+
+async function loadDashboardWeekendDoubleReward() {
+  const banner = document.getElementById("dash-weekend-double-reward");
+  if (!banner) return;
+
+  try {
+    const result = await apiGet("/events/weekend-double-reward");
+    if (!result || !result.active) {
+      banner.innerHTML = "";
+      return;
+    }
+
+    banner.innerHTML = `
+      <div
+        class="card-sm w-full mb-4 text-left border-amber-400/80 bg-gradient-to-r from-amber-950/90 via-yellow-950/70 to-amber-900/50 shadow-lg shadow-amber-950/40"
+        role="status"
+        aria-label="Evento de Double XP e Double Bits ativo"
+      >
+        <div class="flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <p class="text-[0.65rem] uppercase tracking-[0.18em] font-bold text-amber-300">Evento ativo</p>
+            <p class="font-bold text-sm text-yellow-100 mt-1">Dobro de XP &amp; Bits</p>
+            <p class="text-xs text-amber-200/80 mt-1">Apenas XP e Bits recebem bônus neste fim de semana</p>
+          </div>
+          <span class="shrink-0 rounded-lg border border-yellow-300/60 bg-yellow-400/20 px-2 py-1 text-lg font-black text-yellow-200">2×</span>
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    banner.innerHTML = "";
+  }
 }
 
 async function loadDashboardMailNotice() {

@@ -30,6 +30,7 @@ import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
+import com.dro.shared.gameplay.WeekendDoubleRewardRules;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
@@ -114,15 +115,16 @@ public class ChallengeBossUseCase {
             int roll = ThreadLocalRandom.current().nextInt(1, 101);
             victory = roll <= winChance;
         }
+        Instant rewardTime = Instant.now();
         int xpGained;
         int bitsGained;
         ChestDefinitionEntity rewardChest = null;
         List<DropRewardResponse> drops = new ArrayList<>();
         if (victory) {
             rewardChest = resolveRewardChest(boss);
-            xpGained = boss.getBaseXpReward();
+            xpGained = WeekendDoubleRewardRules.multiplyXp(boss.getBaseXpReward(), rewardTime);
             double bitsMultiplier = clanId != null ? clanBonusService.getMissionBitsMultiplier(clanId) : 1.0;
-            bitsGained = (int) Math.floor(boss.getBaseBitsReward() * bitsMultiplier);
+            bitsGained = WeekendDoubleRewardRules.multiplyBits((int) Math.floor(boss.getBaseBitsReward() * bitsMultiplier), rewardTime);
             addItemUseCase.addMaterial(digimon.getId(), rewardChest.getItemDefinition(), 1);
             drops.add(new DropRewardResponse("CHEST", rewardChest.getCode(), rewardChest.getName(), 1, null));
             drops.addAll(rollLegacyEquipmentDrops(boss, digimon.getId(), clanId));
@@ -130,7 +132,7 @@ public class ChallengeBossUseCase {
                 clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.BOSSES_DEFEATED);
             }
         } else {
-            xpGained = (int) Math.round(boss.getBaseXpReward() * boss.getDefeatXpPercent() / 100.0);
+            xpGained = WeekendDoubleRewardRules.multiplyXp((int) Math.round(boss.getBaseXpReward() * boss.getDefeatXpPercent() / 100.0), rewardTime);
             bitsGained = 0;
         }
         digimon.gainExperience(xpGained);

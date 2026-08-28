@@ -25,6 +25,7 @@ import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
+import com.dro.shared.gameplay.WeekendDoubleRewardRules;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
@@ -105,8 +106,9 @@ public class AttackWorldBossUseCase {
         int winChance = WorldBossRules.calculateWinChance(digimonPower, bossPower);
         int damage = (int) Math.round(WorldBossRules.calculateDamage(instance.getMaxHp(), winChance) * globalDamageBuffService.getMultiplier());
         int actualDamage = Math.min(damage, instance.getRemainingHp());
-        int xpGained = WorldBossRules.hitXp(boss.getBaseXpReward(), boss.getDefeatXpPercent());
-        int bitsGained = WorldBossRules.hitBits(boss.getBaseBitsReward(), boss.getDefeatXpPercent());
+        Instant rewardTime = Instant.now();
+        int xpGained = WeekendDoubleRewardRules.multiplyXp(WorldBossRules.hitXp(boss.getBaseXpReward(), boss.getDefeatXpPercent()), rewardTime);
+        int bitsGained = WeekendDoubleRewardRules.multiplyBits(WorldBossRules.hitBits(boss.getBaseBitsReward(), boss.getDefeatXpPercent()), rewardTime);
         digimon.gainExperience(xpGained);
         digimon.setBits(digimon.getBits() + bitsGained);
         instance.setRemainingHp(instance.getRemainingHp() - actualDamage);
@@ -118,8 +120,8 @@ public class AttackWorldBossUseCase {
             defeated = true;
             instance.setStatus(WorldBossStatus.DEFEATED);
             instance.setDefeatedAt(Instant.now());
-            defeatedRewardXp = boss.getBaseXpReward();
-            defeatedRewardBits = boss.getBaseBitsReward();
+            defeatedRewardXp = WeekendDoubleRewardRules.multiplyXp(boss.getBaseXpReward(), rewardTime);
+            defeatedRewardBits = WeekendDoubleRewardRules.multiplyBits(boss.getBaseBitsReward(), rewardTime);
             digimon.gainExperience(defeatedRewardXp);
             digimon.setBits(digimon.getBits() + defeatedRewardBits);
         }

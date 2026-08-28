@@ -26,6 +26,7 @@ import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
+import com.dro.shared.gameplay.WeekendDoubleRewardRules;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -144,7 +145,10 @@ public class ChallengeArenaUseCase {
                 clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.ARENA_WINS);
             }
             attacker.setArenaWins(attacker.getArenaWins() + 1);
-            bitsGained = ArenaRules.winBits(attackerRatingBefore, defenderRatingBefore);
+            bitsGained = WeekendDoubleRewardRules.multiplyBits(
+                    ArenaRules.winBits(attackerRatingBefore, defenderRatingBefore),
+                    Instant.now()
+            );
             attacker.setBits(attacker.getBits() + bitsGained);
             arenaCoinsGained = ArenaRules.winArenaCoins(winChance);
             addItemUseCase.addMaterial(attacker.getId(), rewardChest.getItemDefinition(), 1);
