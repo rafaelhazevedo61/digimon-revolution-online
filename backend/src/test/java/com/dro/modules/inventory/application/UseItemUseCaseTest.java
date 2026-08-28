@@ -1,6 +1,10 @@
 package com.dro.modules.inventory.application;
 
 import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.domain.enums.Element;
+import com.dro.modules.digimon.domain.enums.Personality;
+import com.dro.modules.digimon.domain.enums.Rarity;
+import com.dro.modules.digimon.domain.enums.Trait;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.api.dto.response.UseItemResponse;
 import com.dro.modules.inventory.domain.InventoryItem;
@@ -20,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -307,6 +312,44 @@ class UseItemUseCaseTest {
         verify(inventoryRepository, never()).delete(item);
         verify(inventoryRepository, never()).save(item);
         verify(digimonRepository, never()).save(digimon);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ItemType.class, names = {"POTION_SMALL", "TRAINING_STONE"})
+    void consumesMultipleGenericItemsAndReturnsAccumulatedExperience(ItemType itemType) {
+        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
+        Player player = createPlayer(playerId, digimonId, 1);
+        Digimon digimon = Digimon.builder()
+                .id(digimonId)
+                .playerId(playerId)
+                .level(10)
+                .experience(0)
+                .rarity(Rarity.COMMON)
+                .personality(Personality.DURABLE)
+                .trait(Trait.ENERGETIC)
+                .build();
+        InventoryItem item = InventoryItem.builder()
+                .id(UUID.randomUUID())
+                .digimonId(digimonId)
+                .itemType(itemType)
+                .quantity(5)
+                .build();
+
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(inventoryRepository.findByDigimonIdAndItemTypeForUpdate(digimonId, itemType))
+                .thenReturn(Optional.of(item));
+
+        UseItemResponse response = useItemUseCase.execute(tokenFor(playerId), itemType, 3);
+
+        assertThat(response.itemType()).isEqualTo(itemType);
+        assertThat(response.quantity()).isEqualTo(3);
+        assertThat(response.xpGranted()).isEqualTo(150);
+        assertThat(digimon.getExperience()).isEqualTo(150);
+        assertThat(item.getQuantity()).isEqualTo(2);
+        verify(inventoryRepository).save(item);
+        verify(digimonRepository).save(digimon);
     }
 
     @Test
