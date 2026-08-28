@@ -308,8 +308,11 @@
 
             <section id="incubacao">
               <h2>Incubação</h2>
-              <p>Após escolher uma Digitama, o jogador usa uma incubadora para iniciar o processo. Cada incubadora tem um tempo de espera: Common (5 min), Rare (2 min) e Epic (30 s). O resgate cria o Digimon com raridade, personalidade, trait e IVs sorteados.</p>
-              <p>O resgate só é permitido se houver espaço nos slots ativos (máximo 3).</p>
+              <p>Após escolher uma Digitama, o jogador usa uma incubadora para iniciar o processo. Cada incubadora tem um tempo de espera: Common (5 min), Rare (2 min) e Epic (30 s). Cada slot possui seu próprio contador regressivo, calculado a partir do tempo real restante; iniciar outro ovo não substitui nem sobrepõe o timer de um slot já em andamento.</p>
+              <p>A tela de Incubação exibe três slots. O jogador começa com <strong>um slot desbloqueado</strong>; os demais permanecem visíveis como bloqueados até que sejam liberados por um item expansor. O limite pertence ao jogador, e não ao Digimon ativo. Depois de desbloqueado, cada slot pode incubar um ovo em paralelo.</p>
+              <p>Quando o contador termina, o jogador abre o resultado pelo próprio slot e escolhe uma única destinação: <strong>Tornar ativo</strong> ou <strong>Enviar para Storage</strong>. O resgate não cria um Digimon perdido ou pendente: a escolha é confirmada no momento do claim e o novo Digimon é colocado imediatamente no destino selecionado.</p>
+              <p>O jogo mantém apenas <strong>um Digimon ativo por jogador</strong>. Ao tornar o recém-chocado ativo, o Digimon que estava ativo anteriormente é enviado automaticamente para o Storage. Se o jogador escolher Storage, o novo Digimon permanece guardado até ser ativado pela tela de Storage.</p>
+              <p>No Dashboard aparecem apenas os slots de incubação que estão sendo usados ou que já estão prontos para resgate. Para administrar os três slots, liberar expansões e iniciar novos ovos, use a tela completa de <strong>Incubação</strong>.</p>
             </section>
 
             <section id="equipamentos">
@@ -330,7 +333,7 @@
               <p>O <strong>Correio</strong> é a caixa de mensagens persistentes do Mundo Digital. Nas mensagens comuns entre jogadores, você pode escrever e receber apenas texto, sem anexos, Bits, itens ou equipamentos. O sistema também recebe mensagens especiais do jogo, como convites de clã, comunicados administrativos e premiações de eventos.</p>
 
               <h3>Como funciona</h3>
-              <p>A tela possui as abas <strong>Entrada</strong> e <strong>Enviadas</strong>. A Entrada reúne as mensagens recebidas; Enviadas guarda as mensagens que você escreveu. O envelope mostra a quantidade de mensagens não lidas, e uma mensagem é marcada como lida quando você a abre.</p>
+              <p>A tela possui as abas <strong>Entrada</strong> e <strong>Enviadas</strong>. A Entrada reúne as mensagens recebidas; Enviadas guarda as mensagens que você escreveu. O envelope mostra a quantidade de mensagens não lidas, e uma mensagem é marcada como lida quando você a abre. A Entrada também oferece <strong>“Marcar comuns como lidas”</strong>: a ação marca em lote somente mensagens comuns, preservando mensagens de sistema que ainda possuem uma ação ou recompensa pendente.</p>
               <p>Na primeira versão, não há botão <strong>Responder</strong> nem conversas encadeadas. Para responder a alguém, abra <strong>Nova mensagem</strong> e informe novamente o nome do jogador.</p>
               <ol>
                 <li>Abra <strong>Mais → Correio</strong>.</li>
