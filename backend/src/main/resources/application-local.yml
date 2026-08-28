@@ -14,6 +14,8 @@ logging:
 dro:
   app-version: ${DRO_APP_VERSION:0.0.6-SNAPSHOT}
   gameplay:
+    rarity-reroll:
+      keep-cost-bits: ${DRO_RARITY_REROLL_KEEP_COST_BITS:5000}
     auto-boss-respawn-after-defeat-enabled: true
     boss-cooldown-enabled: ${DRO_BOSS_COOLDOWN_ENABLED:true}
 

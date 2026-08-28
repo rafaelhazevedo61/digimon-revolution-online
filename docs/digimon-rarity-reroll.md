@@ -9,7 +9,7 @@ Ao usar o Dado de Raridade, o item é consumido e uma nova proposta de raridade 
 | Aceitar nova raridade | Atualiza a raridade do Digimon para a proposta | 0 |
 | Manter raridade anterior | Mantém o valor atual e encerra a proposta | 5.000 por padrão |
 
-O custo para manter a raridade é configurável por `DRO_RARITY_REROLL_KEEP_COST_BITS`. O Dado utiliza uma matriz explícita de transição, sem alterar as probabilidades de hatch ou rebirth. A raridade atual nunca é repetida:
+O custo para manter a raridade é configurável por `DRO_RARITY_REROLL_KEEP_COST_BITS`. A configuração está presente em `application.yml`, `application-alpha.yml` e `application-local.yml`, sempre dentro de `dro.gameplay.rarity-reroll.keep-cost-bits`. O valor padrão é 5.000 Bits e pode ser sobrescrito pela variável de ambiente. O Dado utiliza uma matriz explícita de transição, sem alterar as probabilidades de hatch ou rebirth. A raridade atual nunca é repetida:
 
 | Raridade atual | Comum | Rara | Épica | Lendária | Sem alteração |
 |---|---:|---:|---:|---:|---:|
