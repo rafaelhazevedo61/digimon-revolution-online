@@ -90,6 +90,27 @@
               <h2>Missões</h2>
               <p>As missões têm <strong>duração real</strong> e consomem energia. Cada área possui dificuldades (Easy, Normal, Hard), requisitos de estágio e recompensas próprias de XP, Bits, itens fixos e loot aleatório. O conteúdo atual inclui áreas e missões para todos os estágios até <strong>Mega</strong>.</p>
               <p>Áreas desbloqueadas por estágio: Native Forest (Baby), Gear Savanna e Factorial Town (Rookie), Freezeland (Champion), Server Desert (Ultimate) e Infinity Mountain (Mega).</p>
+
+              <h3>Recompensas progressivas por conclusão</h3>
+              <p>Além da recompensa base configurada para cada missão, o jogo aplica um aumento progressivo conforme o jogador conclui a mesma missão novamente. O cálculo considera a quantidade de conclusões anteriores daquela missão para aquele jogador:</p>
+              <blockquote>
+                <p><strong>Multiplicador de progresso = 1 + (conclusões anteriores × 1%)</strong></p>
+              </blockquote>
+              <p>Na primeira conclusão, não há aumento: o jogador recebe 100% da recompensa base. A cada conclusão posterior, o multiplicador aumenta em 1 ponto percentual. O contador é individual por jogador e por missão; concluir uma missão não altera o multiplicador de outra.</p>
+              <table>
+                <thead>
+                  <tr><th>Conclusões anteriores</th><th>Multiplicador</th><th>Exemplo: 100 XP</th><th>Exemplo: 50 Bits</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>0</td><td>100%</td><td>100 XP</td><td>50 Bits</td></tr>
+                  <tr><td>1</td><td>101%</td><td>101 XP</td><td>50 Bits</td></tr>
+                  <tr><td>10</td><td>110%</td><td>110 XP</td><td>55 Bits</td></tr>
+                  <tr><td>50</td><td>150%</td><td>150 XP</td><td>75 Bits</td></tr>
+                  <tr><td>100</td><td>200%</td><td>200 XP</td><td>100 Bits</td></tr>
+                </tbody>
+              </table>
+              <p>Esse multiplicador é aplicado ao XP e aos Bits da missão e também às recompensas fixas de itens, quando existirem. Ele não duplica automaticamente baús: uma missão que concede um baú continua entregando uma unidade do baú, e o conteúdo recebido depende da Loot Table configurada para esse baú.</p>
+              <p>Outros bônus podem ser aplicados depois do progresso da missão, como bônus de clã e eventos temporários de XP e Bits. Esses bônus são independentes do multiplicador por conclusão e não alteram o contador de repetições da missão.</p>
             </section>
 
             <section id="digievolucao">
