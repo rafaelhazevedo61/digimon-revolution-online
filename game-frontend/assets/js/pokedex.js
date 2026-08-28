@@ -181,7 +181,7 @@ async function dexShowEvolutionLines(digimonInfoId) {
   overlay.style.background = "rgba(0,0,0,0.7)";
   overlay.onclick = (event) => { if (event.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
-    <div class="w-full max-w-2xl rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:88vh;overflow-y:auto">
+    <div class="w-full max-w-2xl rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:88vh;overflow-y:auto" onclick="event.stopPropagation()">
       <div class="flex justify-between items-center mb-3">
         <div>
           <h3 class="font-bold text-lg">Linha evolutiva</h3>
@@ -222,7 +222,7 @@ async function dexShowEvolutionLines(digimonInfoId) {
           <div class="flex flex-col gap-2">
             ${steps.map((step, index) => `
               <div class="flex items-center gap-2">
-                <button type="button" class="flex-1 rounded-lg border ${step.digimonInfoId === digimonInfoId ? "border-cyan-400 bg-cyan-950/50" : "border-slate-700 bg-slate-900/60"} p-2 text-left hover:border-cyan-400 transition-colors" onclick="dexShowEvolutionStep(${step.digimonInfoId}, this.dataset.name)" data-name="${escapeAttr(step.digimon || "")}">
+                <button type="button" class="flex-1 rounded-lg border ${step.digimonInfoId === digimonInfoId ? "border-cyan-400 bg-cyan-950/50" : "border-slate-700 bg-slate-900/60"} p-2 text-left hover:border-cyan-400 transition-colors" onclick="event.stopPropagation(); dexShowEvolutionStep(${step.digimonInfoId}, this.dataset.name)" data-name="${escapeAttr(step.digimon || "")}">
                   <div class="flex items-center gap-2">
                     <div class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center shrink-0">
                       ${renderDigimonVisual(step.imageUrl, step.stage, "w-full h-full", "text-2xl")}
@@ -295,7 +295,7 @@ async function dexShowDetail(infoId) {
   const defPct = Math.round((d.baseDef / maxStat) * 100);
 
   overlay.innerHTML = `
-    <div class="w-full max-w-md rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:80vh;overflow-y:auto">
+    <div class="w-full max-w-md rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:80vh;overflow-y:auto" onclick="event.stopPropagation()">
       <div class="flex justify-between items-center mb-3">
         <h3 class="font-bold text-lg">Detalhes</h3>
         <button class="text-slate-400 text-xl" onclick="document.getElementById('dex-modal-overlay').remove()">&times;</button>
