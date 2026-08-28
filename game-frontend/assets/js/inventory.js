@@ -267,10 +267,13 @@ function invNormalize(value) {
 }
 
 function invResolvedCategory(item) {
+  const type = String(item?.itemType || "").toUpperCase();
+  const definitionCode = String(item?.itemDefinition?.code || "").toUpperCase();
+  if (type.startsWith("FRAGMENT_") || definitionCode.startsWith("FRAGMENT_")) return "FRAGMENT";
+
   const definitionCategory = item?.itemDefinition?.category;
   if (definitionCategory) return String(definitionCategory).toUpperCase();
 
-  const type = String(item?.itemType || "").toUpperCase();
   if (type.startsWith("DIGITAMA_")) return "DIGITAMA";
   if (type.startsWith("INCUBATOR_")) return "INCUBATOR";
   if (type === "LOOT_CHEST") return "CHEST";
