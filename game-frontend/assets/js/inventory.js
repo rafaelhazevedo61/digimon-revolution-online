@@ -617,7 +617,7 @@ function invShowChestOpeningResult(result) {
       </div>
       <div class="card-sm mb-4 flex min-h-0 max-h-[52vh] flex-col overflow-hidden shrink-0">
         <p class="text-xs text-slate-400 mb-2 shrink-0">Recompensas</p>
-        <div class="min-h-0 overflow-y-auto overscroll-contain pr-1">
+        <div class="min-h-0 overflow-y-auto overscroll-contain pr-3">
         ${items.length > 0 ? items.map(item => `
           <div class="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
             <div class="min-w-0">
