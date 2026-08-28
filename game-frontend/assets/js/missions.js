@@ -687,7 +687,7 @@ async function startMission(missionId, area) {
   try {
     await apiPost("/missions/start", { missionId: missionId });
     showToast("Missão iniciada!");
-    await refreshCurrentPage();
+    navigateTo("missions");
   } catch (err) {
     showToast(err.message, "error");
   }
