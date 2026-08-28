@@ -752,8 +752,8 @@ function renderClanCreate() {
       <label class="block text-sm text-slate-400 mb-1">Nome do Clã</label>
       <input type="text" id="clan-create-name" class="input w-full mb-3" maxlength="30" placeholder="Ex: DRO Heroes">
 
-      <label class="block text-sm text-slate-400 mb-1">Tag (2-5 caracteres)</label>
-      <input type="text" id="clan-create-tag" class="input w-full mb-3" maxlength="5" placeholder="Ex: DRO">
+      <label class="block text-sm text-slate-400 mb-1">Tag (2-3 caracteres)</label>
+      <input type="text" id="clan-create-tag" class="input w-full mb-3" maxlength="3" placeholder="Ex: DRO">
 
       <label class="block text-sm text-slate-400 mb-1">Descrição (opcional)</label>
       <textarea id="clan-create-desc" class="input w-full mb-4" maxlength="280" rows="3" placeholder="Descreva seu clã..."></textarea>

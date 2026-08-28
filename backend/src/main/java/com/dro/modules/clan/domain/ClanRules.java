@@ -19,7 +19,7 @@ import java.util.UUID;
 public final class ClanRules {
     public static final int MAX_NAME_LENGTH = 30;
     public static final int MIN_TAG_LENGTH = 2;
-    public static final int MAX_TAG_LENGTH = 5;
+    public static final int MAX_TAG_LENGTH = 3;
     public static final int MAX_DESCRIPTION_LENGTH = 280;
     public static final int INITIAL_MAX_MEMBERS = 5;
     public static final int CREATE_COST = 0; // bits; 0 no MVP, ajustável aqui
@@ -46,7 +46,7 @@ public final class ClanRules {
     }
 
     /**
-     * Verifica tag alfanumérica entre 2 e 5 caracteres.
+     * Verifica tag alfanumérica entre 2 e 3 caracteres.
      */
     public static boolean isTagValid(String tag) {
         return tag != null && tag.length() >= MIN_TAG_LENGTH && tag.length() <= MAX_TAG_LENGTH && tag.matches("^[A-Za-z0-9]+$");
