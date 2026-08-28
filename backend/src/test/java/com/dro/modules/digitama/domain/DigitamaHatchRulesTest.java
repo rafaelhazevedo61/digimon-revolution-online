@@ -32,6 +32,13 @@ class DigitamaHatchRulesTest {
     }
 
     @Test
+    void getPossibleBabies_steel_returnsOnlyMetalBabies() {
+        List<String> babies = DigitamaHatchRules.getPossibleBabies(DigitamaType.STEEL);
+        assertEquals(1, babies.size());
+        assertEquals(List.of("MetalKoromon"), babies);
+    }
+
+    @Test
     void rollBabyName_fire_returnsValidBaby() {
         for (int i = 0; i < 50; i++) {
             String name = DigitamaHatchRules.rollBabyName(DigitamaType.FIRE);
@@ -71,6 +78,11 @@ class DigitamaHatchRulesTest {
     @Test
     void toDigitamaType_nature() {
         assertEquals(DigitamaType.NATURE, DigitamaHatchRules.toDigitamaType(ItemType.DIGITAMA_NATURE));
+    }
+
+    @Test
+    void toDigitamaType_steel() {
+        assertEquals(DigitamaType.STEEL, DigitamaHatchRules.toDigitamaType(ItemType.DIGITAMA_STEEL));
     }
 
     @Test
