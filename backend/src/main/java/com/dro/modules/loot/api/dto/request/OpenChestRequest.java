@@ -20,7 +20,7 @@ public record OpenChestRequest(
         @Size(max = 120)
         String requestId,
         @Min(1)
-        @Max(100)
+        @Max(999)
         Integer quantity
 ) {
     public OpenChestRequest(String chestCode, String requestId) {

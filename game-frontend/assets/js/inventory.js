@@ -88,7 +88,7 @@ function invRenderItems() {
     const isChest = item.itemType === "LOOT_CHEST" || !!chestCode;
     const chestQuantityInputId = chestCode ? `inv-chest-quantity-${String(chestCode).replace(/[^a-zA-Z0-9_-]/g, "-")}` : null;
     const xpDiskQuantityInputId = isXpDiskItem ? `inv-xp-disk-quantity-${String(item.itemType).replace(/[^a-zA-Z0-9_-]/g, "-")}` : null;
-    const maxUseQuantity = Math.min(100, Math.max(1, Number(item.quantity) || 1));
+    const maxUseQuantity = Math.min(999, Math.max(1, Number(item.quantity) || 1));
     const digitamaItem = category === "DIGITAMA" || item.itemType.startsWith("DIGITAMA_");
     const incubatorItem = category === "INCUBATOR" || item.itemType.startsWith("INCUBATOR_");
     const incubationOnly = digitamaItem || incubatorItem;
@@ -236,8 +236,8 @@ async function invUseItem(itemType, quantity = null) {
   let requestedQuantity = 1;
   if (isXpDiskItem) {
     requestedQuantity = quantity == null ? 1 : Number.parseInt(quantity, 10);
-    if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1 || requestedQuantity > 100) {
-      showToast("Informe uma quantidade válida de Discos de XP (1 a 100).", "error");
+    if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1 || requestedQuantity > 999) {
+      showToast("Informe uma quantidade válida de Discos de XP (1 a 999).", "error");
       return;
     }
   }

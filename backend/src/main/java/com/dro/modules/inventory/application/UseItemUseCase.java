@@ -24,7 +24,7 @@ import java.util.UUID;
 @Service
 public class UseItemUseCase {
     private static final int GENERIC_ITEM_XP = 50;
-    private static final int MAX_BATCH_QUANTITY = 100;
+    private static final int MAX_BATCH_QUANTITY = 999;
     private final InventoryRepository inventoryRepository;
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
