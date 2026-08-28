@@ -7,6 +7,7 @@ let invItemUseInProgress = false;
 let invFilterState = {
   search: "",
   category: "ALL",
+  fragmentStage: "ALL",
   rarity: "ALL",
   slot: "ALL",
   sort: "name-asc",
@@ -61,6 +62,17 @@ async function renderInventoryPage() {
               <option value="INCUBATOR">Incubadoras</option>
               <option value="CHEST">Baús</option>
               <option value="OTHER">Outros</option>
+            </select>
+          </label>
+          <label id="inv-fragment-stage-filter-wrapper" class="text-xs text-slate-400 flex flex-col min-w-0 hidden">
+            <span class="min-h-8 leading-4 flex items-start">Estágio do fragmento</span>
+            <select id="inv-fragment-stage-filter" class="input mt-1" aria-label="Filtrar fragmentos por estágio">
+              <option value="ALL">Todos os estágios</option>
+              <option value="BABY_II">Baby II</option>
+              <option value="ROOKIE">Rookie</option>
+              <option value="CHAMPION">Champion</option>
+              <option value="ULTIMATE">Ultimate</option>
+              <option value="MEGA">Mega</option>
             </select>
           </label>
           <label class="text-xs text-slate-400 flex flex-col min-w-0">
@@ -181,6 +193,10 @@ function invSetupFilterControls() {
     invFilterState.category = event.target.value;
     invRenderActiveTab();
   });
+  document.getElementById("inv-fragment-stage-filter")?.addEventListener("change", (event) => {
+    invFilterState.fragmentStage = event.target.value;
+    invRenderActiveTab();
+  });
   document.getElementById("inv-rarity-filter")?.addEventListener("change", (event) => {
     invFilterState.rarity = event.target.value;
     invRenderActiveTab();
@@ -223,11 +239,13 @@ function invClearSearch() {
 function invSyncFilterControls() {
   const search = document.getElementById("inv-search");
   const category = document.getElementById("inv-category-filter");
+  const fragmentStage = document.getElementById("inv-fragment-stage-filter");
   const rarity = document.getElementById("inv-rarity-filter");
   const slot = document.getElementById("inv-slot-filter");
   const sort = document.getElementById("inv-sort");
   if (search) search.value = invFilterState.search;
   if (category) category.value = invFilterState.category;
+  if (fragmentStage) fragmentStage.value = invFilterState.fragmentStage;
   if (rarity) rarity.value = invFilterState.rarity;
   invSyncCategoryTabs();
   if (slot) slot.value = invFilterState.slot;
@@ -247,8 +265,11 @@ function invUpdateFilterVisibility() {
   const category = document.getElementById("inv-category-filter");
   const categoryTabs = document.getElementById("inv-category-tabs");
   const slot = document.getElementById("inv-slot-filter");
+  const fragmentStageWrapper = document.getElementById("inv-fragment-stage-filter-wrapper");
+  const isFragmentCategory = invFilterState.category === "FRAGMENT";
   if (category) category.disabled = invTab !== "items";
   if (categoryTabs) categoryTabs.classList.toggle("hidden", invTab !== "items");
+  if (fragmentStageWrapper) fragmentStageWrapper.classList.toggle("hidden", invTab !== "items" || !isFragmentCategory);
   if (slot) slot.disabled = invTab !== "equipment";
 }
 
@@ -267,10 +288,13 @@ function invNormalize(value) {
 }
 
 function invResolvedCategory(item) {
+  const type = String(item?.itemType || "").toUpperCase();
+  const definitionCode = String(item?.itemDefinition?.code || "").toUpperCase();
+  if (type.startsWith("FRAGMENT_") || definitionCode.startsWith("FRAGMENT_")) return "FRAGMENT";
+
   const definitionCategory = item?.itemDefinition?.category;
   if (definitionCategory) return String(definitionCategory).toUpperCase();
 
-  const type = String(item?.itemType || "").toUpperCase();
   if (type.startsWith("DIGITAMA_")) return "DIGITAMA";
   if (type.startsWith("INCUBATOR_")) return "INCUBATOR";
   if (type === "LOOT_CHEST") return "CHEST";
@@ -283,6 +307,18 @@ function invResolvedCategory(item) {
 
 function invItemDisplayName(item) {
   return item?.itemDefinition?.name || invItemName(item?.itemType);
+}
+
+function invFragmentStage(item) {
+  const type = String(item?.itemType || "").toUpperCase();
+  const icon = String(item?.itemDefinition?.icon || "").toUpperCase();
+
+  if (type === "FRAGMENT_BABY_II" || icon.includes("BABY2") || icon.includes("BABY_II")) return "BABY_II";
+  if (type === "FRAGMENT_ROOKIE" || icon.includes("ROOKIE")) return "ROOKIE";
+  if (type === "FRAGMENT_CHAMPION" || icon.includes("CHAMPION")) return "CHAMPION";
+  if (type === "FRAGMENT_ULTIMATE" || icon.includes("ULTIMATE")) return "ULTIMATE";
+  if (type === "FRAGMENT_MEGA" || icon.includes("MEGA")) return "MEGA";
+  return null;
 }
 
 function invGetFilteredItems() {
@@ -298,9 +334,12 @@ function invGetFilteredItems() {
         item.itemDefinition?.rarity
       ].some(value => invNormalize(value).includes(search));
       const matchesCategory = invFilterState.category === "ALL" || invResolvedCategory(item) === invFilterState.category;
+      const matchesFragmentStage = invFilterState.category !== "FRAGMENT"
+        || invFilterState.fragmentStage === "ALL"
+        || invFragmentStage(item) === invFilterState.fragmentStage;
       const itemRarity = String(item.itemDefinition?.rarity || "").toUpperCase();
       const matchesRarity = invFilterState.rarity === "ALL" || itemRarity === invFilterState.rarity;
-      return matchesSearch && matchesCategory && matchesRarity;
+      return matchesSearch && matchesCategory && matchesFragmentStage && matchesRarity;
     });
 }
 
