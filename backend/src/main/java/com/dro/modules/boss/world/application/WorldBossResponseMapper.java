@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
  */
 @Component
 public class WorldBossResponseMapper {
+    private static final int RECENT_ATTACK_LIMIT = 5;
     private final BossDefinitionRepository bossDefinitionRepository;
     private final WorldBossAttackRepository worldBossAttackRepository;
     private final PlayerRepository playerRepository;
@@ -38,7 +39,7 @@ public class WorldBossResponseMapper {
         boolean cooldownEnabled = gameplayConfig.isWorldBossCooldownEnabled();
         Instant nextAttackCandidate = myAttacks.isEmpty() || myAttacks.get(0).getCreatedAt() == null ? null : myAttacks.get(0).getCreatedAt().plus(Duration.ofMinutes(attackCooldownMinutes));
         Instant nextAttackAvailableAt = cooldownEnabled && instance.getStatus() == com.dro.modules.boss.world.domain.WorldBossStatus.ACTIVE && nextAttackCandidate != null && nextAttackCandidate.isAfter(Instant.now()) ? nextAttackCandidate : null;
-        List<WorldBossAttackResponse> recentAttacks = worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(instance.getId()).stream().limit(20).map(this::toAttackResponse).toList();
+        List<WorldBossAttackResponse> recentAttacks = worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(instance.getId()).stream().limit(RECENT_ATTACK_LIMIT).map(this::toAttackResponse).toList();
         return new WorldBossResponse(instance.getId(), boss.getCode(), boss.getName(), boss.getImageUrl(), instance.getMaxHp(), instance.getRemainingHp(), instance.getStatus(), instance.getCreatedAt(), instance.getDefeatedAt(), attackCooldownMinutes, cooldownEnabled, nextAttackAvailableAt, myTotalDamage, buildRanking(instance.getId()), recentAttacks, worldBossRewardService.findPlayerRewards(instance.getId(), viewerPlayerId));
     }
 
