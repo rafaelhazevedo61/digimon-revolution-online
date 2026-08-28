@@ -2,6 +2,7 @@ package com.dro.modules.digimon.domain;
 
 import com.dro.modules.digimon.domain.enums.Rarity;
 
+import java.util.Optional;
 import java.util.Random;
 
 /**
@@ -47,11 +48,35 @@ public class RarityRoller {
     }
 
     /**
-     * Sorteio exclusivo do Dado de Raridade. As raridades altas são mais difíceis
-     * que no hatch comum e não reutilizam os bônus progressivos de Rebirth.
+     * Sorteio explícito do Dado de Raridade. O resultado nunca repete a raridade
+     * atual. Para Digimons Comuns, existe também a possibilidade de o dado não
+     * alterar a raridade.
      */
-    public static Rarity rollForRarityDie() {
-        return rollByWeights(900, 80, 18, 2);
+    public static Optional<Rarity> rollForRarityDie(Rarity currentRarity) {
+        int roll = random.nextInt(10000);
+        return switch (currentRarity) {
+            case COMMON -> {
+                if (roll < 7000) yield Optional.empty();
+                if (roll < 9800) yield Optional.of(Rarity.RARE);
+                if (roll < 9980) yield Optional.of(Rarity.EPIC);
+                yield Optional.of(Rarity.LEGENDARY);
+            }
+            case RARE -> {
+                if (roll < 9800) yield Optional.of(Rarity.COMMON);
+                if (roll < 9980) yield Optional.of(Rarity.EPIC);
+                yield Optional.of(Rarity.LEGENDARY);
+            }
+            case EPIC -> {
+                if (roll < 7129) yield Optional.of(Rarity.COMMON);
+                if (roll < 9980) yield Optional.of(Rarity.RARE);
+                yield Optional.of(Rarity.LEGENDARY);
+            }
+            case LEGENDARY -> {
+                if (roll < 6500) yield Optional.of(Rarity.COMMON);
+                if (roll < 9000) yield Optional.of(Rarity.RARE);
+                yield Optional.of(Rarity.EPIC);
+            }
+        };
     }
 
     /**

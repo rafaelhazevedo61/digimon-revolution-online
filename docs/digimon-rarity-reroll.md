@@ -9,16 +9,16 @@ Ao usar o Dado de Raridade, o item é consumido e uma nova proposta de raridade 
 | Aceitar nova raridade | Atualiza a raridade do Digimon para a proposta | 0 |
 | Manter raridade anterior | Mantém o valor atual e encerra a proposta | 5.000 por padrão |
 
-O custo para manter a raridade é configurável por `DRO_RARITY_REROLL_KEEP_COST_BITS`. O Dado utiliza uma distribuição exclusiva e mais difícil, sem alterar as probabilidades de hatch ou rebirth:
+O custo para manter a raridade é configurável por `DRO_RARITY_REROLL_KEEP_COST_BITS`. O Dado utiliza uma matriz explícita de transição, sem alterar as probabilidades de hatch ou rebirth. A raridade atual nunca é repetida:
 
-| Raridade | Peso | Percentual bruto |
-|---|---:|---:|
-| `COMMON` | 900 | 90% |
-| `RARE` | 80 | 8% |
-| `EPIC` | 18 | 1,8% |
-| `LEGENDARY` | 2 | 0,2% |
+| Raridade atual | Comum | Rara | Épica | Lendária | Sem alteração |
+|---|---:|---:|---:|---:|---:|
+| `COMMON` | — | 28% | 1,8% | 0,2% | 70% |
+| `RARE` | 98% | — | 1,8% | 0,2% | — |
+| `EPIC` | 71,29% | 28,51% | — | 0,2% | — |
+| `LEGENDARY` | 65% | 25% | 10% | — | — |
 
-Uma raridade igual à atual é descartada para que a proposta sempre apresente uma mudança real. Por isso, o percentual efetivo é normalizado entre as três raridades possíveis restantes e depende da raridade atual do Digimon.
+Quando o Digimon é Comum, existe 70% de chance de o Dado ser consumido sem alterar a raridade. Nos demais casos, uma nova raridade é sempre escolhida. A linha da Épica mantém a proporção aproximada 70/28 usada como referência na queda da Lendária, ajustada para preservar os 0,2% de avanço para Lendária.
 
 A tabela `digimon_rarity_rerolls` registra jogador, Digimon, raridade atual, nova raridade, estado e timestamps. As confirmações utilizam bloqueio pessimista e só aceitam propostas com estado `PENDING`, evitando confirmação duplicada ou cobrança concorrente.
 
