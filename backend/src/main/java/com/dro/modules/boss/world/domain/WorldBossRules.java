@@ -1,7 +1,6 @@
 package com.dro.modules.boss.world.domain;
 
 import com.dro.modules.boss.domain.BossCombatRules;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Regras de ataques contra o Boss Mundial.
@@ -12,8 +11,8 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class WorldBossRules {
     public static final int DEFAULT_ATTACK_COOLDOWN_MINUTES = BossCombatRules.DEFAULT_ATTACK_COOLDOWN_MINUTES;
-    public static final double DAMAGE_PERCENT_PER_WIN_CHANCE = 0.05;
-    public static final double MIN_DAMAGE_PERCENT = 0.05;
+    public static final double DAMAGE_PERCENT_PER_WIN_CHANCE = BossCombatRules.DAMAGE_PERCENT_PER_WIN_CHANCE;
+    public static final double MIN_DAMAGE_PERCENT = BossCombatRules.MIN_DAMAGE_PERCENT;
 
     /**
      * Retorna o cooldown efetivo, aplicando cinco minutos quando o cadastro não o configurou.
@@ -30,9 +29,7 @@ public final class WorldBossRules {
      * @return dano inteiro mínimo de 1
      */
     public static int calculateDamage(int maxHp, int winChance) {
-        double maxPercent = Math.max(MIN_DAMAGE_PERCENT, winChance * DAMAGE_PERCENT_PER_WIN_CHANCE);
-        double percent = maxPercent <= MIN_DAMAGE_PERCENT ? MIN_DAMAGE_PERCENT : ThreadLocalRandom.current().nextDouble(MIN_DAMAGE_PERCENT, maxPercent);
-        return (int) Math.max(1, Math.round(maxHp * percent / 100.0));
+        return BossCombatRules.calculateVariableDamage(maxHp, winChance);
     }
 
     /**
