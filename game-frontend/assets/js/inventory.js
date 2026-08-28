@@ -106,6 +106,18 @@ async function renderInventoryPage() {
         <button class="tab-btn" data-tab="equipment" onclick="invSwitchTab('equipment')">Equipamentos</button>
       </div>
 
+      <div id="inv-category-tabs" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+        <button class="tab-btn w-full" data-category="ALL" onclick="invSwitchCategory('ALL')">Todos</button>
+        <button class="tab-btn w-full" data-category="CONSUMABLE" onclick="invSwitchCategory('CONSUMABLE')">Consumíveis</button>
+        <button class="tab-btn w-full" data-category="MATERIAL" onclick="invSwitchCategory('MATERIAL')">Materiais</button>
+        <button class="tab-btn w-full" data-category="EVOLUTION_MATERIAL" onclick="invSwitchCategory('EVOLUTION_MATERIAL')">Evolução</button>
+        <button class="tab-btn w-full" data-category="FRAGMENT" onclick="invSwitchCategory('FRAGMENT')">Fragmentos</button>
+        <button class="tab-btn w-full" data-category="DIGITAMA" onclick="invSwitchCategory('DIGITAMA')">Digitamas</button>
+        <button class="tab-btn w-full" data-category="INCUBATOR" onclick="invSwitchCategory('INCUBATOR')">Incubadoras</button>
+        <button class="tab-btn w-full" data-category="CHEST" onclick="invSwitchCategory('CHEST')">Baús</button>
+        <button class="tab-btn w-full" data-category="OTHER" onclick="invSwitchCategory('OTHER')">Outros</button>
+      </div>
+
       <div id="inv-content">
         <div class="card animate-pulse"><div class="h-32"></div></div>
       </div>
@@ -146,6 +158,18 @@ function invSwitchTab(tab) {
     btn.classList.toggle("active", btn.dataset.tab === tab);
   });
   invRenderActiveTab();
+}
+
+function invSwitchCategory(category) {
+  invFilterState.category = category;
+  invSyncFilterControls();
+  invRenderActiveTab();
+}
+
+function invSyncCategoryTabs() {
+  document.querySelectorAll("#inv-category-tabs .tab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.category === invFilterState.category);
+  });
 }
 
 function invSetupFilterControls() {
@@ -205,6 +229,7 @@ function invSyncFilterControls() {
   if (search) search.value = invFilterState.search;
   if (category) category.value = invFilterState.category;
   if (rarity) rarity.value = invFilterState.rarity;
+  invSyncCategoryTabs();
   if (slot) slot.value = invFilterState.slot;
   if (sort) sort.value = invFilterState.sort;
 }
@@ -220,8 +245,10 @@ function invRenderActiveTab() {
 
 function invUpdateFilterVisibility() {
   const category = document.getElementById("inv-category-filter");
+  const categoryTabs = document.getElementById("inv-category-tabs");
   const slot = document.getElementById("inv-slot-filter");
   if (category) category.disabled = invTab !== "items";
+  if (categoryTabs) categoryTabs.classList.toggle("hidden", invTab !== "items");
   if (slot) slot.disabled = invTab !== "equipment";
 }
 
