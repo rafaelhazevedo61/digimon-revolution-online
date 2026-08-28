@@ -47,6 +47,14 @@ public class RarityRoller {
     }
 
     /**
+     * Sorteio exclusivo do Dado de Raridade. As raridades altas são mais difíceis
+     * que no hatch comum e não reutilizam os bônus progressivos de Rebirth.
+     */
+    public static Rarity rollForRarityDie() {
+        return rollByWeights(900, 80, 18, 2);
+    }
+
+    /**
      * Sorteia uma raridade específica para o fluxo de Rebirth.
      *
      * Primeiro tenta herdar a raridade anterior.
@@ -81,30 +89,17 @@ public class RarityRoller {
         int epicWeight = 8 + (cappedRebirth / 2);
         int legendaryWeight = 2 + legendaryBonus;
 
-        int totalWeight =
-                commonWeight
-                        + rareWeight
-                        + epicWeight
-                        + legendaryWeight;
+        return rollByWeights(commonWeight, rareWeight, epicWeight, legendaryWeight);
+    }
 
+    private static Rarity rollByWeights(int commonWeight, int rareWeight, int epicWeight, int legendaryWeight) {
+        int totalWeight = commonWeight + rareWeight + epicWeight + legendaryWeight;
         int roll = random.nextInt(totalWeight) + 1;
-
-        if (roll <= commonWeight) {
-            return Rarity.COMMON;
-        }
-
+        if (roll <= commonWeight) return Rarity.COMMON;
         roll -= commonWeight;
-
-        if (roll <= rareWeight) {
-            return Rarity.RARE;
-        }
-
+        if (roll <= rareWeight) return Rarity.RARE;
         roll -= rareWeight;
-
-        if (roll <= epicWeight) {
-            return Rarity.EPIC;
-        }
-
+        if (roll <= epicWeight) return Rarity.EPIC;
         return Rarity.LEGENDARY;
     }
 }

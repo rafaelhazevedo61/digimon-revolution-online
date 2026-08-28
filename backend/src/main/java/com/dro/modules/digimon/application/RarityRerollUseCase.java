@@ -37,7 +37,7 @@ public class RarityRerollUseCase {
         InventoryItem item = inventory.findByDigimonIdAndItemTypeForUpdate(d.getId(), ItemType.RARITY_REROLL).orElseThrow(() -> new NotFoundException("Item não encontrado."));
         if (item.getQuantity() <= 0) throw new BadRequestException("Você não possui este item.");
         item.setQuantity(item.getQuantity() - 1); if (item.getQuantity() == 0) inventory.delete(item); else inventory.save(item);
-        Rarity next; do { next = RarityRoller.roll(); } while (next == d.getRarity());
+        Rarity next; do { next = RarityRoller.rollForRarityDie(); } while (next == d.getRarity());
         RarityReroll rr = rerolls.save(new RarityReroll(UUID.randomUUID(), playerId, d.getId(), d.getRarity(), next));
         return response(rr, d.getBits(), "Escolha se deseja aceitar a nova raridade ou manter a anterior usando o Dado de Raridade.");
     }

@@ -9,7 +9,16 @@ Ao usar o Dado de Raridade, o item é consumido e uma nova proposta de raridade 
 | Aceitar nova raridade | Atualiza a raridade do Digimon para a proposta | 0 |
 | Manter raridade anterior | Mantém o valor atual e encerra a proposta | 5.000 por padrão |
 
-O custo para manter a raridade é configurável por `DRO_RARITY_REROLL_KEEP_COST_BITS`. O sorteio utiliza as mesmas raridades globais (`COMMON`, `RARE`, `EPIC`, `LEGENDARY`) e uma raridade igual à atual é descartada para que a proposta sempre apresente uma mudança real.
+O custo para manter a raridade é configurável por `DRO_RARITY_REROLL_KEEP_COST_BITS`. O Dado utiliza uma distribuição exclusiva e mais difícil, sem alterar as probabilidades de hatch ou rebirth:
+
+| Raridade | Peso | Percentual bruto |
+|---|---:|---:|
+| `COMMON` | 900 | 90% |
+| `RARE` | 80 | 8% |
+| `EPIC` | 18 | 1,8% |
+| `LEGENDARY` | 2 | 0,2% |
+
+Uma raridade igual à atual é descartada para que a proposta sempre apresente uma mudança real. Por isso, o percentual efetivo é normalizado entre as três raridades possíveis restantes e depende da raridade atual do Digimon.
 
 A tabela `digimon_rarity_rerolls` registra jogador, Digimon, raridade atual, nova raridade, estado e timestamps. As confirmações utilizam bloqueio pessimista e só aceitam propostas com estado `PENDING`, evitando confirmação duplicada ou cobrança concorrente.
 
