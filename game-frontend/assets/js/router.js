@@ -50,6 +50,15 @@ function navigateTo(route, params = {}) {
   renderer(params);
 }
 
+async function refreshCurrentPage() {
+  const rawHash = window.location.hash.replace("#", "");
+  const [route, queryString] = rawHash.split("?");
+  const params = Object.fromEntries(new URLSearchParams(queryString || ""));
+  const renderer = routes[route] || routes.dashboard;
+  window._routeParams = params;
+  await renderer(params);
+}
+
 function setupRouter() {
   const rawHash = window.location.hash.replace("#", "");
 

@@ -433,7 +433,7 @@ async function repeatMissionFromReward(missionId) {
     await apiPost("/missions/start", { missionId });
     document.getElementById("mission-claim-modal")?.remove();
     showToast("Missão repetida!");
-    navigateTo("dashboard");
+    await refreshCurrentPage();
   } catch (err) {
     showToast(err.message, "error");
     button.disabled = false;
@@ -687,7 +687,7 @@ async function startMission(missionId, area) {
   try {
     await apiPost("/missions/start", { missionId: missionId });
     showToast("Missão iniciada!");
-    navigateTo("dashboard");
+    await refreshCurrentPage();
   } catch (err) {
     showToast(err.message, "error");
   }
