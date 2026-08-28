@@ -2,13 +2,17 @@ package com.dro.modules.player.api;
 
 import com.dro.modules.player.api.dto.request.ChangeEmailRequest;
 import com.dro.modules.player.api.dto.request.ChangePasswordRequest;
+import com.dro.modules.player.api.dto.request.ChangeUsernameRequest;
 import com.dro.modules.player.api.dto.response.ChangeEmailResponse;
 import com.dro.modules.player.api.dto.response.ChangePasswordResponse;
+import com.dro.modules.player.api.dto.response.ChangeUsernameResponse;
+import com.dro.modules.player.api.dto.response.UsernameChangeInfoResponse;
 import com.dro.modules.player.api.dto.response.PlayerDashboardResponse;
 import com.dro.modules.player.api.dto.response.PlayerResponse;
 import com.dro.modules.player.api.dto.response.PlayerStartupResponse;
 import com.dro.modules.player.application.ChangePlayerEmailUseCase;
 import com.dro.modules.player.application.ChangePlayerPasswordUseCase;
+import com.dro.modules.player.application.ChangeUsernameUseCase;
 import com.dro.modules.player.application.GetPlayerDashboardUseCase;
 import com.dro.modules.player.application.GetPlayerStartupUseCase;
 import com.dro.modules.player.application.GetPlayerUseCase;
@@ -28,6 +32,7 @@ public class PlayerController {
     private final GetPlayerStartupUseCase startupUseCase;
     private final ChangePlayerEmailUseCase changePlayerEmailUseCase;
     private final ChangePlayerPasswordUseCase changePlayerPasswordUseCase;
+    private final ChangeUsernameUseCase changeUsernameUseCase;
     private final RevokePlayerSessionsUseCase revokePlayerSessionsUseCase;
 
     @GetMapping("/me")
@@ -50,6 +55,16 @@ public class PlayerController {
         return ResponseEntity.ok(changePlayerEmailUseCase.execute(authorization, request));
     }
 
+    @GetMapping("/me/change-username")
+    public ResponseEntity<UsernameChangeInfoResponse> usernameChangeInfo(@RequestHeader("Authorization") String authorization) {
+        return ResponseEntity.ok(changeUsernameUseCase.preview(authorization));
+    }
+
+    @PostMapping("/me/change-username")
+    public ResponseEntity<ChangeUsernameResponse> changeUsername(@RequestHeader("Authorization") String authorization, @RequestBody @Valid ChangeUsernameRequest request) {
+        return ResponseEntity.ok(changeUsernameUseCase.execute(authorization, request));
+    }
+
     @PostMapping("/me/change-password")
     public ResponseEntity<ChangePasswordResponse> changePassword(@RequestHeader("Authorization") String authorization, @RequestBody @Valid ChangePasswordRequest request) {
         return ResponseEntity.ok(changePlayerPasswordUseCase.execute(authorization, request));
@@ -61,12 +76,13 @@ public class PlayerController {
         return ResponseEntity.ok().build();
     }
 
-    public PlayerController(final GetPlayerUseCase useCase, final GetPlayerDashboardUseCase dashboardUseCase, final GetPlayerStartupUseCase startupUseCase, final ChangePlayerEmailUseCase changePlayerEmailUseCase, final ChangePlayerPasswordUseCase changePlayerPasswordUseCase, final RevokePlayerSessionsUseCase revokePlayerSessionsUseCase) {
+    public PlayerController(final GetPlayerUseCase useCase, final GetPlayerDashboardUseCase dashboardUseCase, final GetPlayerStartupUseCase startupUseCase, final ChangePlayerEmailUseCase changePlayerEmailUseCase, final ChangePlayerPasswordUseCase changePlayerPasswordUseCase, final ChangeUsernameUseCase changeUsernameUseCase, final RevokePlayerSessionsUseCase revokePlayerSessionsUseCase) {
         this.useCase = useCase;
         this.dashboardUseCase = dashboardUseCase;
         this.startupUseCase = startupUseCase;
         this.changePlayerEmailUseCase = changePlayerEmailUseCase;
         this.changePlayerPasswordUseCase = changePlayerPasswordUseCase;
+        this.changeUsernameUseCase = changeUsernameUseCase;
         this.revokePlayerSessionsUseCase = revokePlayerSessionsUseCase;
     }
 }
