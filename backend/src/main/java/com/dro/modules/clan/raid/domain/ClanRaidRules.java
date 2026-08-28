@@ -1,24 +1,21 @@
 package com.dro.modules.clan.raid.domain;
 
 import com.dro.modules.boss.domain.BossCombatRules;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Componente da camada de conjunto de regras de domínio do módulo de Clãs.
  */
 public final class ClanRaidRules {
     public static final int DEFAULT_ATTACK_COOLDOWN_MINUTES = BossCombatRules.DEFAULT_ATTACK_COOLDOWN_MINUTES;
-    public static final double DAMAGE_PERCENT_PER_WIN_CHANCE = 0.15;
-    public static final int MIN_DAMAGE_PERCENT = 1;
+    public static final double DAMAGE_PERCENT_PER_WIN_CHANCE = BossCombatRules.DAMAGE_PERCENT_PER_WIN_CHANCE;
+    public static final double MIN_DAMAGE_PERCENT = BossCombatRules.MIN_DAMAGE_PERCENT;
 
     public static int attackCooldownMinutes(int configuredMinutes) {
         return BossCombatRules.attackCooldownMinutes(configuredMinutes);
     }
 
     public static int calculateDamage(int maxHp, int winChance) {
-        int maxPercent = Math.max(MIN_DAMAGE_PERCENT, (int) Math.round(winChance * DAMAGE_PERCENT_PER_WIN_CHANCE));
-        int percent = ThreadLocalRandom.current().nextInt(MIN_DAMAGE_PERCENT, maxPercent + 1);
-        return (int) Math.max(1, Math.round(maxHp * percent / 100.0));
+        return BossCombatRules.calculateVariableDamage(maxHp, winChance);
     }
 
     public static int hitXp(int baseXpReward, int defeatXpPercent) {
