@@ -632,7 +632,7 @@ function invShowChestOpeningResult(result) {
         `).join("") : `<p class="text-sm text-slate-400">Nenhum item foi informado.</p>`}
         </div>
       </div>
-      <p class="text-xs text-slate-400 mb-4 shrink-0">${escapeHtml(message)}</p>
+      <p class="text-xs text-slate-400 text-center mb-4 shrink-0">${escapeHtml(message)}</p>
       <button class="btn-primary w-full shrink-0" onclick="document.getElementById('chest-opening-overlay').remove()">Continuar</button>
     </div>
   `;
