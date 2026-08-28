@@ -51,8 +51,8 @@ public interface MailMessageRepository extends JpaRepository<MailMessage, UUID> 
     );
 
     /**
-     * Marca como lidas as mensagens recebidas que não possuem ação pendente.
-     * Convites e recompensas continuam não lidos até serem processados.
+     * Marca como lidas todas as mensagens recebidas, exceto premiações de
+     * evento que ainda possuem loot pendente para resgate.
      *
      * @return quantidade de mensagens atualizadas
      */
@@ -63,7 +63,12 @@ public interface MailMessageRepository extends JpaRepository<MailMessage, UUID> 
             WHERE m.recipient.id = :recipientId
               AND m.recipientDeleted = false
               AND m.readAt IS NULL
-              AND m.actionType IS NULL
+              AND (
+                    m.actionType IS NULL
+                    OR m.sourceType IS NULL
+                    OR m.sourceType <> 'EVENT_REWARD'
+                    OR m.actionType <> 'EVENT_REWARD_CLAIM'
+                  )
             """)
     int markAllEligibleAsRead(
             @Param("recipientId") UUID recipientId,
