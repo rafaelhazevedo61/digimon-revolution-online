@@ -133,7 +133,7 @@ async function loadDashboardWeekendDoubleReward() {
           <div class="min-w-0">
             <p class="text-[0.65rem] uppercase tracking-[0.18em] font-bold text-amber-300">Evento ativo</p>
             <p class="font-bold text-sm text-yellow-100 mt-1">Double XP &amp; Double Bits</p>
-            <p class="text-xs text-amber-200/80 mt-1">Recompensas em dobro neste fim de semana</p>
+            <p class="text-xs text-amber-200/80 mt-1">Apenas XP e Bits recebem bônus neste fim de semana</p>
           </div>
           <span class="shrink-0 rounded-lg border border-yellow-300/60 bg-yellow-400/20 px-2 py-1 text-lg font-black text-yellow-200">2×</span>
         </div>
