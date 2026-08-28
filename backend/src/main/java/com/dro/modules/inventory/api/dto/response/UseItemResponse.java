@@ -9,6 +9,7 @@ public record UseItemResponse(
         int previousLevel,
         int currentLevel,
         boolean levelUp,
-        String message
+        String message,
+        com.dro.modules.mission.api.dto.response.NewlyUnlockedContentResponse newlyUnlockedContent
 ) {
 }

@@ -9,6 +9,9 @@ import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.modules.digimon.domain.enums.Stage;
+import com.dro.modules.mission.application.NewlyUnlockedContentService;
+import com.dro.modules.mission.api.dto.response.NewlyUnlockedContentResponse;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnprocessableException;
@@ -28,6 +31,7 @@ public class UseItemUseCase {
     private final InventoryRepository inventoryRepository;
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
+    private final NewlyUnlockedContentService newlyUnlockedContentService;
 
     @Transactional
     public UseItemResponse execute(String token, ItemType type) {
@@ -75,11 +79,13 @@ public class UseItemUseCase {
                     digimon.getLevel(),
                     digimon.getLevel(),
                     false,
-                    "Storage expandido em +" + storageExpansion + " espaço(s)!"
+                    "Storage expandido em +" + storageExpansion + " espaço(s)!",
+                    NewlyUnlockedContentResponse.empty()
             );
         }
 
         int previousLevel = digimon.getLevel();
+        Stage previousStage = digimon.getStage();
         int xpGranted = 0;
         if (xpDisk) {
             int percentage = xpDiskPercentage(type);
@@ -104,6 +110,9 @@ public class UseItemUseCase {
         String message = batchUsableItem && quantity > 1
                 ? "Itens utilizados com sucesso."
                 : "Item utilizado com sucesso.";
+        NewlyUnlockedContentResponse newlyUnlockedContent = newlyUnlockedContentService == null
+                ? NewlyUnlockedContentResponse.empty()
+                : newlyUnlockedContentService.detect(digimon, previousLevel, previousStage);
         return new UseItemResponse(
                 type,
                 quantity,
@@ -111,7 +120,8 @@ public class UseItemUseCase {
                 previousLevel,
                 digimon.getLevel(),
                 digimon.getLevel() > previousLevel,
-                message
+                message,
+                newlyUnlockedContent
         );
     }
 
@@ -178,7 +188,8 @@ public class UseItemUseCase {
                 digimon.getLevel(),
                 digimon.getLevel(),
                 false,
-                "Slot de incubação desbloqueado!"
+                "Slot de incubação desbloqueado!",
+                NewlyUnlockedContentResponse.empty()
         );
     }
 
@@ -216,8 +227,13 @@ public class UseItemUseCase {
     }
 
     public UseItemUseCase(final InventoryRepository inventoryRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository) {
+        this(inventoryRepository, digimonRepository, playerRepository, null);
+    }
+
+    public UseItemUseCase(final InventoryRepository inventoryRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final NewlyUnlockedContentService newlyUnlockedContentService) {
         this.inventoryRepository = inventoryRepository;
         this.digimonRepository = digimonRepository;
         this.playerRepository = playerRepository;
+        this.newlyUnlockedContentService = newlyUnlockedContentService;
     }
 }

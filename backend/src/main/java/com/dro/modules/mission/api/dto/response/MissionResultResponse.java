@@ -10,5 +10,6 @@ public record MissionResultResponse(
         int xpGained,
         int bitsGained,
         boolean levelUp,
-        List<RewardResponse> rewards
+        List<RewardResponse> rewards,
+        NewlyUnlockedContentResponse newlyUnlockedContent
 ) {}

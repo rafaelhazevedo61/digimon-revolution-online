@@ -512,10 +512,10 @@ function showMissionClaimModal(result) {
       ${result && result.missionId ? `
         <div class="flex flex-col sm:flex-row gap-2 mt-5">
           <button id="mission-repeat-button" class="btn-primary flex-1" onclick="repeatMissionFromReward('${escapeAttr(result.missionId)}')">Repetir missão</button>
-          <button class="btn-secondary flex-1" onclick="document.getElementById('mission-claim-modal')?.remove()">Continuar</button>
+          <button id="mission-claim-continue" class="btn-secondary flex-1">Continuar</button>
         </div>
       ` : `
-        <button class="btn-primary w-full mt-5" onclick="document.getElementById('mission-claim-modal')?.remove()">Continuar</button>
+        <button id="mission-claim-continue" class="btn-primary w-full mt-5">Continuar</button>
       `}
     </div>
   `;
@@ -523,6 +523,15 @@ function showMissionClaimModal(result) {
     if (event.target === overlay) overlay.remove();
   });
   document.body.appendChild(overlay);
+  const continueButton = overlay.querySelector("#mission-claim-continue");
+  if (continueButton) {
+    continueButton.addEventListener("click", () => {
+      overlay.remove();
+      if (typeof showNewlyUnlockedContent === "function") {
+        showNewlyUnlockedContent(result.newlyUnlockedContent);
+      }
+    });
+  }
 }
 
 let missionsPageTimerInterval = null;
