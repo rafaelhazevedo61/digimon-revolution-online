@@ -2,6 +2,8 @@ package com.dro.modules.digimon.api.dto.response;
 
 import com.dro.modules.digimon.domain.DigimonInfos;
 
+import java.util.List;
+
 /**
  * Contrato de dados do módulo de Digimon.
  */
@@ -15,9 +17,14 @@ public record DigimonInfoResponse(
         int baseHp,
         int baseAtk,
         int baseDef,
-        String imageUrl
+        String imageUrl,
+        List<DigitamaOriginResponse> digitamaOrigins
 ) {
     public static DigimonInfoResponse from(DigimonInfos digimonInfo) {
+        return from(digimonInfo, List.of());
+    }
+
+    public static DigimonInfoResponse from(DigimonInfos digimonInfo, List<DigitamaOriginResponse> digitamaOrigins) {
         return new DigimonInfoResponse(
                 digimonInfo.getId(),
                 digimonInfo.getName(),
@@ -28,7 +35,8 @@ public record DigimonInfoResponse(
                 digimonInfo.getBaseHp(),
                 digimonInfo.getBaseAtk(),
                 digimonInfo.getBaseDef(),
-                digimonInfo.getImageUrl()
+                digimonInfo.getImageUrl(),
+                digitamaOrigins == null ? List.of() : List.copyOf(digitamaOrigins)
         );
     }
 }

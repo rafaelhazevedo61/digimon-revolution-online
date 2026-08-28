@@ -181,6 +181,15 @@ async function dexShowDetail(infoId) {
 
   const stage = dexStageName(d.stage);
   const total = d.baseHp + d.baseAtk + d.baseDef;
+  const digitamaOrigins = Array.isArray(d.digitamaOrigins) ? d.digitamaOrigins : [];
+  const digitamaOriginsMarkup = d.stage === "BABY" ? `
+    <div class="card mb-3 border-cyan-900 bg-cyan-950/20">
+      <h4 class="text-xs text-cyan-300 font-bold mb-2">DIGI EGG DE ORIGEM</h4>
+      ${digitamaOrigins.length > 0
+        ? `<div class="flex flex-wrap gap-2">${digitamaOrigins.map(origin => `<span class="badge badge-common" title="${escapeAttr(origin.code || "")}">${escapeHtml(origin.name || origin.code || "Digi Egg")}</span>`).join("")}</div>`
+        : `<p class="text-xs text-slate-400">Nenhuma Digi Egg elegível no momento.</p>`}
+    </div>
+  ` : "";
 
   const maxStat = Math.max(d.baseHp, d.baseAtk, d.baseDef, 1);
   const hpPct = Math.round((d.baseHp / maxStat) * 100);
@@ -207,6 +216,8 @@ async function dexShowDetail(infoId) {
           </div>
         </div>
       </div>
+
+      ${digitamaOriginsMarkup}
 
       <div class="card mb-3">
         <h4 class="text-xs text-slate-500 font-bold mb-2">BASE STATS</h4>
