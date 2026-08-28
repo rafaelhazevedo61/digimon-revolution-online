@@ -190,6 +190,13 @@ body {
 .badge-epic { background: rgba(168, 85, 247, 0.15); color: #c4b5fd; }
 .badge-legendary { background: rgba(234, 179, 8, 0.15); color: #fde047; }
 
+.rarity-box { border: 1px solid; border-radius: 0.5rem; }
+.rarity-box-label { color: inherit; opacity: 0.8; }
+.rarity-box-common { background: rgba(100, 116, 139, 0.2); border-color: rgba(148, 163, 184, 0.55); color: #cbd5e1; }
+.rarity-box-rare { background: rgba(59, 130, 246, 0.18); border-color: rgba(96, 165, 250, 0.65); color: #bfdbfe; }
+.rarity-box-epic { background: rgba(168, 85, 247, 0.18); border-color: rgba(192, 132, 252, 0.65); color: #e9d5ff; }
+.rarity-box-legendary { background: rgba(234, 179, 8, 0.18); border-color: rgba(250, 204, 21, 0.7); color: #fef08a; }
+
 .badge-xs {
   display: inline-block;
   padding: 0.1rem 0.4rem;

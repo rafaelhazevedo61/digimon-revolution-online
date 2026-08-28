@@ -807,15 +807,27 @@ function invRarityBadgeClass(rarity) {
   return map[String(rarity || "").toUpperCase()] || "badge-common";
 }
 
+function invRarityBoxClass(rarity) {
+  const map = {
+    COMMON: "rarity-box-common",
+    RARE: "rarity-box-rare",
+    EPIC: "rarity-box-epic",
+    LEGENDARY: "rarity-box-legendary"
+  };
+  return map[String(rarity || "").toUpperCase()] || "rarity-box-common";
+}
+
 function invShowRarityRerollModal(result) {
   document.getElementById("rarity-reroll-overlay")?.remove();
   const currentRarityClass = invRarityBadgeClass(result.currentRarity);
   const newRarityClass = invRarityBadgeClass(result.newRarity);
+  const currentRarityBoxClass = invRarityBoxClass(result.currentRarity);
+  const newRarityBoxClass = invRarityBoxClass(result.newRarity);
   const overlay = document.createElement("div");
   overlay.id = "rarity-reroll-overlay";
   overlay.style.cssText = "position:fixed;inset:0;background:rgba(2,6,23,.82);z-index:70;display:flex;align-items:center;justify-content:center;padding:1rem;";
   overlay.innerHTML = `<div class="card w-full max-w-md" role="dialog" aria-modal="true"><div class="flex justify-between items-start gap-4 mb-5"><div><p class="text-xs uppercase tracking-wider text-fuchsia-400 font-bold">Dado de Raridade</p>
-<h3 class="text-xl font-bold mt-1">Escolha o destino</h3></div><button class="text-slate-400 hover:text-white text-2xl" aria-label="Fechar" onclick="document.getElementById('rarity-reroll-overlay')?.remove()">&times;</button></div><div class="grid grid-cols-2 gap-3 mb-4"><div class="rounded-lg border border-slate-700 bg-slate-900/70 p-4 text-center"><p class="text-xs text-slate-400">Raridade atual</p><p class="mt-2"><span class="badge ${currentRarityClass}">${formatRarity(result.currentRarity)}</span></p></div><div class="rounded-lg border border-slate-700 bg-slate-900/70 p-4 text-center"><p class="text-xs text-slate-400">Nova raridade</p><p class="mt-2"><span class="badge ${newRarityClass}">${formatRarity(result.newRarity)}</span></p></div></div><p class="text-sm text-slate-300 mb-5">Aceitar substitui a raridade atual. Para manter a anterior, será cobrado <strong class="text-amber-300">${Number(result.keepCostBits).toLocaleString('pt-BR')} Bits</strong>.</p><div class="grid grid-cols-2 gap-3"><button class="btn-secondary" onclick="invResolveRarityReroll('${result.rerollId}','keep')">Manter anterior</button><button class="btn-primary" onclick="invResolveRarityReroll('${result.rerollId}','accept')">Aceitar nova</button></div></div>`;
+<h3 class="text-xl font-bold mt-1">Escolha o destino</h3></div><button class="text-slate-400 hover:text-white text-2xl" aria-label="Fechar" onclick="document.getElementById('rarity-reroll-overlay')?.remove()">&times;</button></div><div class="grid grid-cols-2 gap-3 mb-4"><div class="rarity-box ${currentRarityBoxClass} p-4 text-center"><p class="rarity-box-label text-xs">Raridade atual</p><p class="mt-2"><span class="badge ${currentRarityClass}">${formatRarity(result.currentRarity)}</span></p></div><div class="rarity-box ${newRarityBoxClass} p-4 text-center"><p class="rarity-box-label text-xs">Nova raridade</p><p class="mt-2"><span class="badge ${newRarityClass}">${formatRarity(result.newRarity)}</span></p></div></div><p class="text-sm text-slate-300 mb-5">Aceitar substitui a raridade atual. Para manter a anterior, será cobrado <strong class="text-amber-300">${Number(result.keepCostBits).toLocaleString('pt-BR')} Bits</strong>.</p><div class="grid grid-cols-2 gap-3"><button class="btn-secondary" onclick="invResolveRarityReroll('${result.rerollId}','keep')">Manter anterior</button><button class="btn-primary" onclick="invResolveRarityReroll('${result.rerollId}','accept')">Aceitar nova</button></div></div>`;
   overlay.onclick = (event) => { if (event.target === overlay) overlay.remove(); };
   document.body.appendChild(overlay);
 }
