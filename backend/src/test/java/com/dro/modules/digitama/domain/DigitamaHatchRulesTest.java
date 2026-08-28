@@ -34,8 +34,8 @@ class DigitamaHatchRulesTest {
     @Test
     void getPossibleBabies_steel_returnsOnlyMetalBabies() {
         List<String> babies = DigitamaHatchRules.getPossibleBabies(DigitamaType.STEEL);
-        assertEquals(2, babies.size());
-        assertTrue(babies.containsAll(List.of("MetalKoromon", "Mekamon")));
+        assertEquals(1, babies.size());
+        assertEquals(List.of("MetalKoromon"), babies);
     }
 
     @Test
