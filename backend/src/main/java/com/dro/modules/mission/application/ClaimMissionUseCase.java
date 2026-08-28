@@ -38,6 +38,7 @@ import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.util.TokenExtractor;
 import com.dro.shared.gameplay.WeekendDoubleRewardRules;
 import java.time.Instant;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,6 +89,7 @@ public class ClaimMissionUseCase {
                 itemDefinitionRepository, transactionAuditPublisher, activityCalendarService, null);
     }
 
+    @Autowired
     public ClaimMissionUseCase(
             MissionInstanceRepository missionInstanceRepository,
             DigimonRepository digimonRepository,

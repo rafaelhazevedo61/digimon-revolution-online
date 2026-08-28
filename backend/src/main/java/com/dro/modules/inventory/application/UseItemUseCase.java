@@ -16,6 +16,7 @@ import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.util.TokenExtractor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -230,6 +231,7 @@ public class UseItemUseCase {
         this(inventoryRepository, digimonRepository, playerRepository, null);
     }
 
+    @Autowired
     public UseItemUseCase(final InventoryRepository inventoryRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final NewlyUnlockedContentService newlyUnlockedContentService) {
         this.inventoryRepository = inventoryRepository;
         this.digimonRepository = digimonRepository;
