@@ -1,5 +1,35 @@
 window.DRO_NEWS = [
   {
+    id: 'update-quality-of-life-2026-08',
+    type: 'ATUALIZAÇÃO',
+    title: 'Qualidade de vida — filtros, uso em lote e linhas evolutivas',
+    summary: 'A Alpha recebeu melhorias para organizar o inventário e o Storage, acelerar o uso de itens, consultar origens e acompanhar linhas evolutivas.',
+    date: '2026-08-28',
+    version: 'Alpha — Agosto 2026',
+    featured: true,
+    content: [
+      { heading: 'Inventário e Storage', items: [
+        'Inventário e Storage agora possuem busca, filtros e opções de ordenação para localizar itens e Digimons com mais facilidade.',
+        'O inventário passou a trabalhar com pilhas de até 999 unidades para itens empilháveis.',
+        'Poções, pedras de treino, discos de XP e baús podem ser usados ou abertos em lote quando houver quantidade disponível.'
+      ]},
+      { heading: 'Progressão e Digimon Info', items: [
+        'Discos de XP de 1%, 3%, 5%, 10%, 15% e 20% concedem experiência imediatamente ao Digimon ativo.',
+        'A barra de experiência exibe o percentual atual no centro, facilitando o acompanhamento do próximo nível.',
+        'Digimon Info passou a mostrar a Digitama de origem dos Digimons Baby elegíveis.',
+        'Linhas evolutivas podem ser consultadas em uma visualização com imagens e navegação entre as formas cadastradas.'
+      ]},
+      { heading: 'Correio e conta', items: [
+        'O Correio recebeu a ação “Marcar comuns como lidas”, preservando mensagens que ainda possuem recompensa ou ação pendente.',
+        'A tela de Configurações permite alterar o e-mail da conta mediante confirmação da senha e renovar a sessão.'
+      ]},
+      { heading: 'Arena', items: [
+        'A Arena recebeu novos oponentes controlados pelo servidor para ampliar a disponibilidade de desafios nas faixas mais altas de rating.',
+        'O lobby identifica quando o oponente encontrado é um bot.'
+      ]}
+    ]
+  },
+  {
     id: 'patch-0-7-0',
     type: 'PATCH NOTES',
     title: 'Patch 0.7.0 — Baús, recompensas e melhorias da Alpha',
