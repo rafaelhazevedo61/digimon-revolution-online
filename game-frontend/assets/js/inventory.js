@@ -48,9 +48,9 @@ async function renderInventoryPage() {
           </div>
         </form>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-          <label class="text-xs text-slate-400">
-            Categoria dos itens
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label class="text-xs text-slate-400 flex flex-col min-w-0">
+            <span class="min-h-8 leading-4 flex items-start">Categoria dos itens</span>
             <select id="inv-category-filter" class="input mt-1" aria-label="Filtrar itens por categoria">
               <option value="ALL">Todas as categorias</option>
               <option value="CONSUMABLE">Consumíveis</option>
@@ -63,8 +63,8 @@ async function renderInventoryPage() {
               <option value="OTHER">Outros</option>
             </select>
           </label>
-          <label class="text-xs text-slate-400">
-            Raridade
+          <label class="text-xs text-slate-400 flex flex-col min-w-0">
+            <span class="min-h-8 leading-4 flex items-start">Raridade</span>
             <select id="inv-rarity-filter" class="input mt-1" aria-label="Filtrar por raridade">
               <option value="ALL">Todas as raridades</option>
               <option value="LEGENDARY">Lendária</option>
@@ -73,8 +73,8 @@ async function renderInventoryPage() {
               <option value="COMMON">Comum</option>
             </select>
           </label>
-          <label class="text-xs text-slate-400">
-            Slot de equipamento
+          <label class="text-xs text-slate-400 flex flex-col min-w-0">
+            <span class="min-h-8 leading-4 flex items-start">Slot de equipamento</span>
             <select id="inv-slot-filter" class="input mt-1" aria-label="Filtrar equipamentos por slot">
               <option value="ALL">Todos os slots</option>
               <option value="WEAPON">Armas</option>
@@ -82,8 +82,8 @@ async function renderInventoryPage() {
               <option value="ACCESSORY">Acessórios</option>
             </select>
           </label>
-          <label class="text-xs text-slate-400">
-            Ordenar por
+          <label class="text-xs text-slate-400 flex flex-col min-w-0">
+            <span class="min-h-8 leading-4 flex items-start">Ordenar por</span>
             <select id="inv-sort" class="input mt-1" aria-label="Ordenar Inventário">
               <option value="name-asc">Nome: A–Z</option>
               <option value="name-desc">Nome: Z–A</option>

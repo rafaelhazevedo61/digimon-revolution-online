@@ -46,9 +46,9 @@ async function renderStoragePage() {
           </div>
         </form>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <label class="text-xs text-slate-400">
-            Estágio
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label class="text-xs text-slate-400 flex flex-col min-w-0">
+            <span class="min-h-8 leading-4 flex items-start">Estágio</span>
             <select id="storage-stage-filter" class="input mt-1" aria-label="Filtrar por estágio">
               <option value="ALL">Todos os estágios</option>
               <option value="MEGA">Mega</option>
@@ -59,8 +59,8 @@ async function renderStoragePage() {
               <option value="BABY">Baby</option>
             </select>
           </label>
-          <label class="text-xs text-slate-400">
-            Raridade
+          <label class="text-xs text-slate-400 flex flex-col min-w-0">
+            <span class="min-h-8 leading-4 flex items-start">Raridade</span>
             <select id="storage-rarity-filter" class="input mt-1" aria-label="Filtrar por raridade">
               <option value="ALL">Todas as raridades</option>
               <option value="LEGENDARY">${formatRarity("LEGENDARY")}</option>
@@ -69,8 +69,8 @@ async function renderStoragePage() {
               <option value="COMMON">${formatRarity("COMMON")}</option>
             </select>
           </label>
-          <label class="text-xs text-slate-400">
-            Ordenar por
+          <label class="text-xs text-slate-400 flex flex-col min-w-0">
+            <span class="min-h-8 leading-4 flex items-start">Ordenar por</span>
             <select id="storage-sort" class="input mt-1" aria-label="Ordenar Storage">
               <option value="level-desc">Nível: maior para menor</option>
               <option value="level-asc">Nível: menor para maior</option>
