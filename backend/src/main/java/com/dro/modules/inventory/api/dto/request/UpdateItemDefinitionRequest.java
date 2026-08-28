@@ -1,5 +1,6 @@
 package com.dro.modules.inventory.api.dto.request;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,7 +19,7 @@ public record UpdateItemDefinitionRequest(
         @NotNull Boolean tradable,
         @NotNull Boolean sellable,
         @NotNull Boolean usable,
-        @Min(1) Integer maxStack,
+        @Min(1) @Max(999) Integer maxStack,
         @NotBlank @Size(max = 20) String rarity,
         @Size(max = 120) String icon
 ) {

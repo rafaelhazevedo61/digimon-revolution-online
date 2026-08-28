@@ -12,6 +12,6 @@ public record UseItemRequest(
         @NotNull
         ItemType itemType,
         @Min(1)
-        @Max(100)
+        @Max(999)
         Integer quantity
 ) {}

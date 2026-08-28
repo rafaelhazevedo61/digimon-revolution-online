@@ -102,6 +102,30 @@ class ItemDefinitionAdminUseCaseTest {
     }
 
     @Test
+    void updateRejectsStackableItemAboveMaximumStack() {
+        ItemDefinition item = baseItem();
+        when(itemDefinitionRepository.findById(7L)).thenReturn(Optional.of(item));
+
+        assertThrows(BadRequestException.class, () -> updateItemDefinitionUseCase.execute(
+                7L,
+                new UpdateItemDefinitionRequest(
+                        "Baú de Fragmentos - Rookie",
+                        null,
+                        "CHEST",
+                        true,
+                        null,
+                        null,
+                        true,
+                        true,
+                        true,
+                        1000,
+                        "COMMON",
+                        null
+                )
+        ));
+    }
+
+    @Test
     void updateRejectsStackableItemWithoutMaximumStack() {
         ItemDefinition item = baseItem();
         when(itemDefinitionRepository.findById(7L)).thenReturn(Optional.of(item));

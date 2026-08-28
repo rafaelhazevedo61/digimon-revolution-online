@@ -46,7 +46,7 @@ import java.util.UUID;
 @Service
 public class OpenChestUseCase {
     private static final String OPENING_SOURCE = "PLAYER_INVENTORY";
-    private static final int MAX_BATCH_QUANTITY = 100;
+    private static final int MAX_BATCH_QUANTITY = 999;
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final InventoryRepository inventoryRepository;
