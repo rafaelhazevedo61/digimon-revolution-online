@@ -170,7 +170,7 @@ public final class EventRewardMessageText {
                 case EVOLUTION_MATERIAL -> "Material de evolução";
                 case LOOT_CHEST -> "Baú temático";
                 case REFINEMENT_STONE -> "Pedra de refinamento";
-                case RARITY_REROLL -> "Reroll de raridade";
+                case RARITY_REROLL -> "Dado de Raridade";
             };
         } catch (IllegalArgumentException exception) {
             return itemType;

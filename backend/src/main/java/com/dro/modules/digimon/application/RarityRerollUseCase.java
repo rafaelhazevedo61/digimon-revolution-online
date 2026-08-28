@@ -39,18 +39,18 @@ public class RarityRerollUseCase {
         item.setQuantity(item.getQuantity() - 1); if (item.getQuantity() == 0) inventory.delete(item); else inventory.save(item);
         Rarity next; do { next = RarityRoller.roll(); } while (next == d.getRarity());
         RarityReroll rr = rerolls.save(new RarityReroll(UUID.randomUUID(), playerId, d.getId(), d.getRarity(), next));
-        return response(rr, d.getBits(), "Escolha se deseja aceitar a nova raridade ou manter a anterior.");
+        return response(rr, d.getBits(), "Escolha se deseja aceitar a nova raridade ou manter a anterior usando o Dado de Raridade.");
     }
 
     @Transactional
     public RarityRerollResponse accept(String token, UUID id) {
-        UUID pid = TokenExtractor.extractPlayerId(token); RarityReroll rr = rerolls.findPendingForUpdate(id, pid, RerollStatus.PENDING).orElseThrow(() -> new NotFoundException("Proposta de reroll não encontrada."));
+        UUID pid = TokenExtractor.extractPlayerId(token); RarityReroll rr = rerolls.findPendingForUpdate(id, pid, RerollStatus.PENDING).orElseThrow(() -> new NotFoundException("Proposta do Dado de Raridade não encontrada."));
         Digimon d = digimons.findByIdForUpdate(rr.getDigimonId()).orElseThrow(() -> new NotFoundException("Digimon não encontrado.")); d.setRarity(rr.getNewRarity()); rr.accept(); digimons.save(d); rerolls.save(rr); return response(rr, d.getBits(), "Nova raridade aceita com sucesso.");
     }
 
     @Transactional
     public RarityRerollResponse keep(String token, UUID id) {
-        UUID pid = TokenExtractor.extractPlayerId(token); Player p = players.findByIdForUpdate(pid).orElseThrow(() -> new NotFoundException("Player not found")); RarityReroll rr = rerolls.findPendingForUpdate(id, pid, RerollStatus.PENDING).orElseThrow(() -> new NotFoundException("Proposta de reroll não encontrada.")); Digimon d = digimons.findByIdForUpdate(rr.getDigimonId()).orElseThrow(() -> new NotFoundException("Digimon não encontrado.")); if (d.getBits() < keepCostBits) throw new BadRequestException("Você não possui Bits suficientes para manter a raridade anterior."); d.setBits(d.getBits() - keepCostBits); rr.keep(); digimons.save(d); rerolls.save(rr); return response(rr, d.getBits(), "Raridade anterior mantida.");
+        UUID pid = TokenExtractor.extractPlayerId(token); Player p = players.findByIdForUpdate(pid).orElseThrow(() -> new NotFoundException("Player not found")); RarityReroll rr = rerolls.findPendingForUpdate(id, pid, RerollStatus.PENDING).orElseThrow(() -> new NotFoundException("Proposta do Dado de Raridade não encontrada.")); Digimon d = digimons.findByIdForUpdate(rr.getDigimonId()).orElseThrow(() -> new NotFoundException("Digimon não encontrado.")); if (d.getBits() < keepCostBits) throw new BadRequestException("Você não possui Bits suficientes para manter a raridade anterior."); d.setBits(d.getBits() - keepCostBits); rr.keep(); digimons.save(d); rerolls.save(rr); return response(rr, d.getBits(), "Raridade anterior mantida com o Dado de Raridade.");
     }
 
     private RarityRerollResponse response(RarityReroll rr, int bits, String message) { return new RarityRerollResponse(rr.getId(), rr.getCurrentRarity(), rr.getNewRarity(), keepCostBits, bits, message); }

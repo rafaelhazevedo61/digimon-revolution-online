@@ -724,7 +724,7 @@ function invItemName(itemType) {
     FRAGMENT_MEGA: "Fragmento Mega",
     EVOLUTION_MATERIAL: "Material de Evolução",
     LOOT_CHEST: "Baú",
-    RARITY_REROLL: "Reroll de Raridade"
+    RARITY_REROLL: "Dado de Raridade"
   };
   return map[itemType] || itemType;
 }
@@ -743,7 +743,7 @@ function invItemEmoji(itemType) {
     FRAGMENT_ROOKIE: "🧩", FRAGMENT_CHAMPION: "🧩", FRAGMENT_ULTIMATE: "🧩", FRAGMENT_MEGA: "🧩",
     EVOLUTION_MATERIAL: "⭐",
     LOOT_CHEST: "🎁",
-    RARITY_REROLL: "✨"
+    RARITY_REROLL: "🎲"
   };
   return map[itemType] || "📦";
 }
@@ -779,7 +779,7 @@ function invItemCategoryName(itemType) {
   if (itemType.startsWith("FRAGMENT_")) return "Fragmento";
   if (itemType === "EVOLUTION_MATERIAL") return "Evolução";
   if (itemType === "LOOT_CHEST") return "Baú";
-  if (itemType === "RARITY_REROLL") return "Reroll";
+  if (itemType === "RARITY_REROLL") return "Raridade";
   return "Item";
 }
 
@@ -791,7 +791,7 @@ async function invStartRarityReroll() {
     invShowRarityRerollModal(result);
     await invReloadItems();
   } catch (err) {
-    showToast(err.message || "Não foi possível gerar o reroll.", "error");
+    showToast(err.message || "Não foi possível usar o Dado de Raridade.", "error");
   } finally {
     invItemUseInProgress = false;
   }
@@ -814,7 +814,8 @@ function invShowRarityRerollModal(result) {
   const overlay = document.createElement("div");
   overlay.id = "rarity-reroll-overlay";
   overlay.style.cssText = "position:fixed;inset:0;background:rgba(2,6,23,.82);z-index:70;display:flex;align-items:center;justify-content:center;padding:1rem;";
-  overlay.innerHTML = `<div class="card w-full max-w-md" role="dialog" aria-modal="true"><div class="flex justify-between items-start gap-4 mb-5"><div><p class="text-xs uppercase tracking-wider text-fuchsia-400 font-bold">Reroll de raridade</p><h3 class="text-xl font-bold mt-1">Escolha o destino</h3></div><button class="text-slate-400 hover:text-white text-2xl" aria-label="Fechar" onclick="document.getElementById('rarity-reroll-overlay')?.remove()">&times;</button></div><div class="grid grid-cols-2 gap-3 mb-4"><div class="rounded-lg border border-slate-700 bg-slate-900/70 p-4 text-center"><p class="text-xs text-slate-400">Raridade atual</p><p class="mt-2"><span class="badge ${currentRarityClass}">${formatRarity(result.currentRarity)}</span></p></div><div class="rounded-lg border border-slate-700 bg-slate-900/70 p-4 text-center"><p class="text-xs text-slate-400">Nova raridade</p><p class="mt-2"><span class="badge ${newRarityClass}">${formatRarity(result.newRarity)}</span></p></div></div><p class="text-sm text-slate-300 mb-5">Aceitar substitui a raridade atual. Para manter a anterior, será cobrado <strong class="text-amber-300">${Number(result.keepCostBits).toLocaleString('pt-BR')} Bits</strong>.</p><div class="grid grid-cols-2 gap-3"><button class="btn-secondary" onclick="invResolveRarityReroll('${result.rerollId}','keep')">Manter anterior</button><button class="btn-primary" onclick="invResolveRarityReroll('${result.rerollId}','accept')">Aceitar nova</button></div></div>`;
+  overlay.innerHTML = `<div class="card w-full max-w-md" role="dialog" aria-modal="true"><div class="flex justify-between items-start gap-4 mb-5"><div><p class="text-xs uppercase tracking-wider text-fuchsia-400 font-bold">Dado de Raridade</p>
+<h3 class="text-xl font-bold mt-1">Escolha o destino</h3></div><button class="text-slate-400 hover:text-white text-2xl" aria-label="Fechar" onclick="document.getElementById('rarity-reroll-overlay')?.remove()">&times;</button></div><div class="grid grid-cols-2 gap-3 mb-4"><div class="rounded-lg border border-slate-700 bg-slate-900/70 p-4 text-center"><p class="text-xs text-slate-400">Raridade atual</p><p class="mt-2"><span class="badge ${currentRarityClass}">${formatRarity(result.currentRarity)}</span></p></div><div class="rounded-lg border border-slate-700 bg-slate-900/70 p-4 text-center"><p class="text-xs text-slate-400">Nova raridade</p><p class="mt-2"><span class="badge ${newRarityClass}">${formatRarity(result.newRarity)}</span></p></div></div><p class="text-sm text-slate-300 mb-5">Aceitar substitui a raridade atual. Para manter a anterior, será cobrado <strong class="text-amber-300">${Number(result.keepCostBits).toLocaleString('pt-BR')} Bits</strong>.</p><div class="grid grid-cols-2 gap-3"><button class="btn-secondary" onclick="invResolveRarityReroll('${result.rerollId}','keep')">Manter anterior</button><button class="btn-primary" onclick="invResolveRarityReroll('${result.rerollId}','accept')">Aceitar nova</button></div></div>`;
   overlay.onclick = (event) => { if (event.target === overlay) overlay.remove(); };
   document.body.appendChild(overlay);
 }
@@ -824,9 +825,10 @@ async function invResolveRarityReroll(id, action) {
   try {
     const result = await apiPost(`/inventory/rarity-reroll/${id}/${action}`, {});
     overlay?.remove();
-    showToast(result.message || "Reroll processado com sucesso.");
+    showToast(result.message || "Dado de Raridade processado com sucesso.");
     await invReloadItems();
-  } catch (err) { showToast(err.message || "Não foi possível processar o reroll.", "error"); }
+  } catch (err) { showToast(err.message || "Não foi possível processar o Dado de Raridade.", "error");
+ }
 }
 
 // ==================== EQUIPMENT TAB ====================
