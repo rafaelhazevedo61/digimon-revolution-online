@@ -10,10 +10,10 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Marca em lote as mensagens comuns recebidas como lidas.
+ * Marca em lote as mensagens recebidas como lidas.
  *
- * <p>Mensagens com ação pendente permanecem não lidas para que convites e
- * recompensas disponíveis não sejam ocultados pela ação em lote.</p>
+ * <p>Somente mensagens de premiação de evento com loot pendente permanecem
+ * não lidas para que o resgate não seja ocultado pela ação em lote.</p>
  */
 @Service
 public class MarkAllMailReadUseCase {

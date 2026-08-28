@@ -117,8 +117,8 @@ public class MailController {
     }
 
     /**
-     * Marca como lidas todas as mensagens comuns recebidas.
-     * Mensagens com convite ou recompensa pendente permanecem não lidas.
+     * Marca como lidas todas as mensagens recebidas, exceto mensagens de
+     * premiação de evento com loot pendente para resgate.
      *
      * @param authorization token JWT do destinatário
      * @return quantidade de mensagens marcadas como lidas

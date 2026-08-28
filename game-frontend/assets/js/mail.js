@@ -24,7 +24,7 @@ function renderMailPage() {
         </div>
         <div class="flex items-center gap-2">
           <button id="mail-mark-all-read" class="btn-sm text-xs" onclick="mailMarkAllRead()">
-            Marcar comuns como lidas
+            Marcar todas como lidas
           </button>
           <span class="text-3xl" aria-hidden="true">✉️</span>
         </div>
@@ -65,7 +65,7 @@ async function mailMarkAllRead() {
     showToast(
       markedCount > 0
         ? `${markedCount} mensagem(ns) marcada(s) como lida(s).`
-        : "Nenhuma mensagem comum foi marcada. Mensagens com ação pendente foram preservadas.",
+        : "Nenhuma mensagem elegível foi encontrada. Recompensas com loot pendente foram preservadas.",
       "success"
     );
     await mailLoadFolder();
@@ -75,7 +75,7 @@ async function mailMarkAllRead() {
   } finally {
     if (button) {
       button.disabled = false;
-      button.textContent = "Marcar comuns como lidas";
+      button.textContent = "Marcar todas como lidas";
     }
   }
 }
