@@ -156,17 +156,17 @@
                 <li>Estar com status ativo. Um Digimon que já renasceu não pode ser renascido novamente; o novo Digimon criado será usado para os próximos ciclos.</li>
                 <li>Não estar participando de uma missão em andamento.</li>
                 <li>Ter Bits suficientes no próprio Digimon.</li>
-                <li>Ter Data Cores suficientes no inventário vinculado ao Digimon.</li>
+                <li>Ter Data Cores e Dados Digitais suficientes para o próximo Rebirth.</li>
               </ul>
               <p>A tela de Rebirth verifica tudo antes da confirmação e mostra exatamente o que está faltando. Se algum requisito não for atendido, o botão <strong>“Renascer!”</strong> fica bloqueado.</p>
 
               <h3>Custos progressivos</h3>
-              <p>O custo aumenta conforme o número do próximo Rebirth. O primeiro renascimento custa 10.000 Bits e 1 Data Core; o segundo custa 20.000 Bits e 2 Data Cores; o terceiro custa 30.000 Bits e 3 Data Cores, e assim por diante.</p>
-              <ul>
-                <li><strong>Bits:</strong> 10.000 × o número do Rebirth que será realizado.</li>
-                <li><strong>Data Cores:</strong> quantidade igual ao número do Rebirth que será realizado.</li>
-              </ul>
-              <p>Os Bits são descontados do Digimon antigo. O saldo que sobrar é transferido para o novo Digimon, e a prévia mostra quanto restará depois do processo. Os Data Cores são retirados do inventário. O custo continua aumentando mesmo depois do limite de atributos: o 11º Rebirth custa 110.000 Bits e 11 Data Cores, enquanto o 12º custa 120.000 Bits e 12 Data Cores.</p>
+              <p>O custo é calculado pelo servidor conforme o número do próximo Rebirth e aparece na prévia antes da confirmação. A operação utiliza <strong>Bits do próprio Digimon</strong>, <strong>Data Cores</strong> e <strong>Dados Digitais do jogador</strong>. O primeiro Rebirth começa em 10.000 Bits, 1 Data Core e 25 Dados Digitais; os custos aumentam nos ciclos seguintes.</p>
+              <p>Os Bits são descontados do Digimon antigo e o saldo restante é transferido para o novo Digimon. Data Cores e Dados Digitais são consumidos dos recursos do jogador. Como os custos são progressivos, a tela de Rebirth deve ser consultada antes de cada confirmação para mostrar os valores vigentes.</p>
+
+              <h3>Código Infinito e refinamento de IV</h3>
+              <p>O jogador pode investir opcionalmente <strong>Códigos Infinitos</strong> durante o Rebirth, distribuindo-os entre HP, ATK e DEF. A cada 10 códigos investidos em um atributo, o IV mínimo possível do novo Digimon aumenta 1 ponto, respeitando o limite de 100 por atributo e a quantidade disponível.</p>
+              <p>O Código Infinito não fixa o IV final: ele eleva o piso de um novo sorteio dentro da faixa exibida pela prévia. Os botões de distribuição permitem equilibrar o investimento ou concentrá-lo em um único atributo.</p>
 
               <h3>O que nasce depois do Rebirth</h3>
               <p>O resultado é um novo Digimon no estágio <strong>Baby</strong>, no <strong>level 1</strong>, com zero de experiência e com a mesma linha ou tipo de origem. Se o Digimon antigo era o ativo, o novo assume automaticamente o lugar dele como Digimon ativo.</p>
@@ -473,7 +473,7 @@ WinChance = clamp(round(digimonPower / bossPower * 100), 5, 95)</code></pre>
                 <li>Multiplicador de Honor Marks</li>
               </ul>
               <p>Cada membro pode fazer <strong>missões diárias individuais</strong> uma vez por dia. Existe também um <strong>ranking de contribuição</strong> de Honor Marks.</p>
-              <p>A <strong>Raid de Clã</strong> é um boss compartilhado pelo clã com HP coletivo. Cada membro pode atacar até 3 vezes por dia gastando energia. O dano é acumulado e, ao derrotar o boss, o clã recebe Honor Marks e XP. O ranking de dano mostra quem mais contribuiu.</p>
+              <p>A <strong>Raid de Clã</strong> é um boss compartilhado pelo clã com HP coletivo. Não existe limite diário de ataques: cada membro pode realizar novos ataques quando o <strong>cooldown individual de 5 minutos</strong> terminar, desde que possua energia suficiente e a raid continue disponível. O dano é acumulado e, ao derrotar o boss, o clã recebe Honor Marks e XP. O ranking de dano mostra quem mais contribuiu.</p>
             </section>
 
             <section id="boss-mundial">
@@ -486,12 +486,12 @@ WinChance = clamp(round(digimonPower / bossPower * 100), 5, 95)</code></pre>
 
               <h3>Uma única batalha para todo o servidor</h3>
               <p>A barra de HP exibida na tela representa a vida do boss para <strong>todos os jogadores</strong>. Cada ataque reduz essa mesma barra, e o dano causado fica registrado na contribuição do jogador. Quando o HP chega a zero, o boss é considerado derrotado para o servidor inteiro.</p>
-              <p>O boss do dia permanece disponível até ser derrotado ou até a virada diária. Depois disso, uma nova batalha é iniciada no próximo ciclo. Se a tela mostrar <strong>“Boss Mundial derrotado hoje!”</strong>, não será possível realizar novos ataques até o próximo dia.</p>
+              <p>O boss permanece disponível até ser derrotado. Na configuração atual da Alpha, quando o Boss Mundial é derrotado, um novo ciclo pode ser reiniciado automaticamente pelo servidor. A disponibilidade e o estado do ciclo são sempre confirmados pela tela do evento.</p>
 
-              <h3>Limite de ataques e custo de energia</h3>
-              <p>Cada jogador pode realizar <strong>até 3 ataques por dia</strong>. As tentativas são individuais: o ataque de outro jogador não consome as suas. As tentativas também não são compartilhadas entre seus Digimons e não se acumulam para o dia seguinte.</p>
-              <p>Cada ataque consome energia. No Apocalymon, o custo normal é de <strong>20 de energia por ataque</strong>. Bônus do seu clã que reduzem o custo de energia podem diminuir esse valor. Se você não tiver energia suficiente, o ataque não será realizado e a tentativa diária não será consumida.</p>
-              <p>A tela informa quantos ataques você já usou, quantos ainda estão disponíveis e quanto dano você acumulou no boss atual. Depois de usar as três tentativas, o botão de ataque é substituído pelo aviso <strong>“Limite diário de ataques atingido. Volte amanhã.”</strong></p>
+              <h3>Cooldown e custo de energia</h3>
+              <p>Não existe limite diário de ataques. Depois de um ataque válido, o jogador precisa aguardar um <strong>cooldown individual de 5 minutos</strong> para atacar novamente. O cooldown é do jogador e não é compartilhado com outros participantes ou Digimons.</p>
+              <p>Cada ataque consome energia. No Apocalymon, o custo normal é de <strong>20 de energia por ataque</strong>. Bônus do seu clã que reduzem o custo de energia podem diminuir esse valor. Se você não tiver energia suficiente, o ataque não será realizado.</p>
+              <p>A tela informa o cooldown restante, o dano acumulado no boss atual e o estado global da batalha. Enquanto o cooldown estiver ativo, o botão de ataque fica indisponível até que os 5 minutos terminem.</p>
 
               <h3>Como o dano é definido</h3>
               <p>O dano depende principalmente da força do seu Digimon em comparação com a força do boss. HP, ATK e DEF do Digimon entram nessa comparação, assim como os bônus dos equipamentos equipados e os bônus de atributos concedidos pelo clã. Equipar, evoluir e fortalecer o Digimon aumenta suas chances de causar golpes mais fortes.</p>
@@ -536,23 +536,23 @@ WinChance = clamp(round(digimonPower / bossPower * 100), 5, 95)</code></pre>
               <p>O jogador que aplicar o <strong>golpe final</strong>, isto é, o ataque que reduzir o HP do boss a zero, recebe também um bônus adicional de <strong>5.000 XP e 200 Bits</strong>. Esse bônus é somado à recompensa normal do ataque final; ele não substitui os 250 XP e 10 Bits recebidos pelo hit.</p>
 
               <h3>Ranking global e últimos ataques</h3>
-              <p>O <strong>Ranking de Dano Global</strong> organiza os jogadores pela soma de todo o dano causado no boss do dia. Cada um dos seus três ataques pode aumentar sua posição, e o ranking pode mudar a qualquer momento conforme outros jogadores participam.</p>
+              <p>O <strong>Ranking de Dano Global</strong> organiza os jogadores pela soma de todo o dano causado no boss do ciclo atual. Cada ataque válido pode aumentar sua posição, e o ranking pode mudar a qualquer momento conforme outros jogadores participam.</p>
               <p>A seção <strong>“Últimos ataques”</strong> mostra as contribuições mais recentes do servidor. Use-a para acompanhar o ritmo da batalha, descobrir se o boss está recebendo dano e verificar quando a comunidade está próxima da vitória. O ranking mede contribuição de dano, não a quantidade de ataques realizados.</p>
 
               <h3>O que aparece no resultado do ataque</h3>
               <p>Depois de atacar, o jogo abre a janela <strong>“Resultado do Ataque”</strong>. Ela mostra o dano causado, a quantidade de XP e Bits recebida, sua chance de vitória naquele golpe e o HP restante do boss. Se o ataque tiver sido o final, a mesma janela destaca o bônus extra de derrota.</p>
-              <p>Ao fechar o resultado, a tela atualiza a barra de HP, suas tentativas restantes, seu dano acumulado, o ranking global e a lista de ataques recentes.</p>
+              <p>Ao fechar o resultado, a tela atualiza a barra de HP, o cooldown restante, seu dano acumulado, o ranking global e a lista de ataques recentes.</p>
 
-              <h3>Como aproveitar melhor suas tentativas</h3>
+              <h3>Como aproveitar melhor seus ataques</h3>
               <ul>
                 <li>Use seu Digimon mais forte e mantenha-o como Digimon ativo antes de abrir a tela do boss.</li>
                 <li>Equipe armas, armaduras e acessórios que aumentem seus atributos antes de atacar.</li>
                 <li>Considere os bônus de HP, ATK e DEF do seu clã, pois eles também ajudam na comparação contra o boss.</li>
-                <li>Reserve energia suficiente para aproveitar as três tentativas do dia.</li>
+                <li>Administre sua energia e retorne após o cooldown de 5 minutos para continuar contribuindo.</li>
                 <li>Não espere necessariamente o golpe final: todos os ataques concedem XP, Bits e pontos para o ranking.</li>
                 <li>Acompanhe o HP restante e os últimos ataques para saber como a batalha está evoluindo.</li>
               </ul>
-              <p>O Boss Mundial é uma oportunidade diária de contribuir com o servidor, receber recompensas e disputar posições no ranking. Volte todos os dias, fortaleça seu Digimon e ajude a comunidade a derrotar o próximo desafio.</p>
+              <p>O Boss Mundial é uma oportunidade contínua de contribuir com o servidor, receber recompensas e disputar posições no ranking. Fortaleça seu Digimon, administre sua energia e retorne após cada cooldown para ajudar a comunidade a derrotar o desafio atual.</p>
             </section>
             </div>
           </article>
