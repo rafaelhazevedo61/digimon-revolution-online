@@ -5,11 +5,13 @@ import com.dro.modules.mail.api.dto.request.SendMailMessageRequest;
 import com.dro.modules.mail.api.dto.response.MailActionResponse;
 import com.dro.modules.mail.api.dto.response.MailMessagePageResponse;
 import com.dro.modules.mail.api.dto.response.MailMessageResponse;
+import com.dro.modules.mail.api.dto.response.MarkAllMailReadResponse;
 import com.dro.modules.mail.application.DeleteMailMessageUseCase;
 import com.dro.modules.mail.application.GetMailMessageUseCase;
 import com.dro.modules.mail.application.GetUnreadMailCountUseCase;
 import com.dro.modules.mail.application.ListMailMessagesUseCase;
 import com.dro.modules.mail.application.MarkMailReadUseCase;
+import com.dro.modules.mail.application.MarkAllMailReadUseCase;
 import com.dro.modules.mail.application.ProcessMailActionUseCase;
 import com.dro.modules.mail.application.SendMailMessageUseCase;
 import jakarta.validation.Valid;
@@ -32,6 +34,7 @@ public class MailController {
     private final SendMailMessageUseCase sendMailMessageUseCase;
     private final GetMailMessageUseCase getMailMessageUseCase;
     private final MarkMailReadUseCase markMailReadUseCase;
+    private final MarkAllMailReadUseCase markAllMailReadUseCase;
     private final DeleteMailMessageUseCase deleteMailMessageUseCase;
     private final GetUnreadMailCountUseCase getUnreadMailCountUseCase;
     private final ProcessMailActionUseCase processMailActionUseCase;
@@ -114,6 +117,18 @@ public class MailController {
     }
 
     /**
+     * Marca como lidas todas as mensagens comuns recebidas.
+     * Mensagens com convite ou recompensa pendente permanecem não lidas.
+     *
+     * @param authorization token JWT do destinatário
+     * @return quantidade de mensagens marcadas como lidas
+     */
+    @PostMapping("/read-all")
+    public ResponseEntity<MarkAllMailReadResponse> markAllRead(@RequestHeader("Authorization") String authorization) {
+        return ResponseEntity.ok(markAllMailReadUseCase.execute(authorization));
+    }
+
+    /**
      * Processa uma ação especial da mensagem, como resgatar prêmio ou responder a convite.
      *
      * @param authorization token JWT do jogador destinatário
@@ -141,11 +156,12 @@ public class MailController {
         return ResponseEntity.noContent().build();
     }
 
-    public MailController(final ListMailMessagesUseCase listMailMessagesUseCase, final SendMailMessageUseCase sendMailMessageUseCase, final GetMailMessageUseCase getMailMessageUseCase, final MarkMailReadUseCase markMailReadUseCase, final DeleteMailMessageUseCase deleteMailMessageUseCase, final GetUnreadMailCountUseCase getUnreadMailCountUseCase, final ProcessMailActionUseCase processMailActionUseCase) {
+    public MailController(final ListMailMessagesUseCase listMailMessagesUseCase, final SendMailMessageUseCase sendMailMessageUseCase, final GetMailMessageUseCase getMailMessageUseCase, final MarkMailReadUseCase markMailReadUseCase, final MarkAllMailReadUseCase markAllMailReadUseCase, final DeleteMailMessageUseCase deleteMailMessageUseCase, final GetUnreadMailCountUseCase getUnreadMailCountUseCase, final ProcessMailActionUseCase processMailActionUseCase) {
         this.listMailMessagesUseCase = listMailMessagesUseCase;
         this.sendMailMessageUseCase = sendMailMessageUseCase;
         this.getMailMessageUseCase = getMailMessageUseCase;
         this.markMailReadUseCase = markMailReadUseCase;
+        this.markAllMailReadUseCase = markAllMailReadUseCase;
         this.deleteMailMessageUseCase = deleteMailMessageUseCase;
         this.getUnreadMailCountUseCase = getUnreadMailCountUseCase;
         this.processMailActionUseCase = processMailActionUseCase;

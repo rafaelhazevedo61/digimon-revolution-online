@@ -50,6 +50,26 @@ public interface MailMessageRepository extends JpaRepository<MailMessage, UUID> 
             @Param("playerId") UUID playerId
     );
 
+    /**
+     * Marca como lidas as mensagens recebidas que não possuem ação pendente.
+     * Convites e recompensas continuam não lidos até serem processados.
+     *
+     * @return quantidade de mensagens atualizadas
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            UPDATE MailMessage m
+            SET m.readAt = :readAt
+            WHERE m.recipient.id = :recipientId
+              AND m.recipientDeleted = false
+              AND m.readAt IS NULL
+              AND m.actionType IS NULL
+            """)
+    int markAllEligibleAsRead(
+            @Param("recipientId") UUID recipientId,
+            @Param("readAt") LocalDateTime readAt
+    );
+
     /** Conta mensagens comuns enviadas depois do instante usado pelo rate limit. */
     long countBySenderIdAndCreatedAtAfter(UUID senderId, LocalDateTime createdAt);
 
