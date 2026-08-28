@@ -25,6 +25,8 @@ import com.dro.modules.clan.application.ClanMissionProgressTracker;
 import com.dro.modules.clan.domain.enums.ClanMissionObjectiveType;
 import com.dro.modules.activitycalendar.application.ActivityCalendarService;
 import com.dro.modules.activitycalendar.domain.ActivitySource;
+import com.dro.modules.digimon.domain.enums.Stage;
+import com.dro.modules.mission.api.dto.response.NewlyUnlockedContentResponse;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.tutorial.application.TutorialService;
@@ -36,6 +38,7 @@ import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.util.TokenExtractor;
 import com.dro.shared.gameplay.WeekendDoubleRewardRules;
 import java.time.Instant;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,6 +67,7 @@ public class ClaimMissionUseCase {
     private final ItemDefinitionRepository itemDefinitionRepository;
     private final TransactionAuditPublisher transactionAuditPublisher;
     private final ActivityCalendarService activityCalendarService;
+    private final NewlyUnlockedContentService newlyUnlockedContentService;
 
     public ClaimMissionUseCase(
             MissionInstanceRepository missionInstanceRepository,
@@ -80,6 +84,28 @@ public class ClaimMissionUseCase {
             TransactionAuditPublisher transactionAuditPublisher,
             ActivityCalendarService activityCalendarService
     ) {
+        this(missionInstanceRepository, digimonRepository, progressRepository, addItemUseCase, missionDefinitionRepository,
+                tutorialService, clanBonusService, clanMissionProgressTracker, playerRepository, chestDefinitionRepository,
+                itemDefinitionRepository, transactionAuditPublisher, activityCalendarService, null);
+    }
+
+    @Autowired
+    public ClaimMissionUseCase(
+            MissionInstanceRepository missionInstanceRepository,
+            DigimonRepository digimonRepository,
+            PlayerMissionProgressRepository progressRepository,
+            AddItemUseCase addItemUseCase,
+            MissionDefinitionRepository missionDefinitionRepository,
+            TutorialService tutorialService,
+            ClanBonusService clanBonusService,
+            ClanMissionProgressTracker clanMissionProgressTracker,
+            PlayerRepository playerRepository,
+            ChestDefinitionRepository chestDefinitionRepository,
+            ItemDefinitionRepository itemDefinitionRepository,
+            TransactionAuditPublisher transactionAuditPublisher,
+            ActivityCalendarService activityCalendarService,
+            NewlyUnlockedContentService newlyUnlockedContentService
+    ) {
         this.missionInstanceRepository = missionInstanceRepository;
         this.digimonRepository = digimonRepository;
         this.progressRepository = progressRepository;
@@ -93,6 +119,7 @@ public class ClaimMissionUseCase {
         this.itemDefinitionRepository = itemDefinitionRepository;
         this.transactionAuditPublisher = transactionAuditPublisher;
         this.activityCalendarService = activityCalendarService;
+        this.newlyUnlockedContentService = newlyUnlockedContentService;
     }
 
     @Transactional
@@ -128,6 +155,7 @@ public class ClaimMissionUseCase {
         int completionCount = progress.getCompletionCount();
 
         int previousLevel = digimon.getLevel();
+        Stage previousStage = digimon.getStage();
 
         Player player = playerRepository.findById(playerId)
                 .orElse(null);
@@ -174,6 +202,9 @@ public class ClaimMissionUseCase {
         missionInstanceRepository.save(instance);
         digimonRepository.save(digimon);
         if (activityCalendarService != null) activityCalendarService.recordActivity(playerId, ActivitySource.MISSION_COMPLETED, missionInstanceId.toString());
+        NewlyUnlockedContentResponse newlyUnlockedContent = newlyUnlockedContentService == null
+                ? NewlyUnlockedContentResponse.empty()
+                : newlyUnlockedContentService.detect(digimon, previousLevel, previousStage);
 
         if (clanId != null) {
             clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.MISSIONS_COMPLETED);
@@ -194,7 +225,8 @@ public class ClaimMissionUseCase {
                 xpGained,
                 bitsGained,
                 levelUp,
-                rewards
+                rewards,
+                newlyUnlockedContent
         );
     }
 

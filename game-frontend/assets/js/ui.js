@@ -50,6 +50,28 @@ function showToast(message, type = "success") {
  * Optional second argument overrides title/button labels/danger style:
  * showConfirm("Dissolver o clã?", { title: "Dissolver Clã", confirmText: "Dissolver", danger: true })
  */
+function showNewlyUnlockedContent(content) {
+  const missions = Array.isArray(content && content.missions) ? content.missions : [];
+  const areas = Array.isArray(content && content.areas) ? content.areas : [];
+  if (missions.length === 0 && areas.length === 0) return;
+
+  const existing = document.getElementById("newly-unlocked-content-modal");
+  if (existing) existing.remove();
+  const areaNames = { NATIVE_FOREST: "Floresta Nativa", GEAR_SAVANNA: "Savana Gear", FACTORIAL_TOWN: "Cidade Fatorial", FREEZELAND: "Terra Congelada", SERVER_DESERT: "Deserto Server", INFINITY_MOUNTAIN: "Montanha Infinita" };
+  const areaLabel = area => areaNames[String(area || "")] || String(area || "Área desconhecida");
+  const stageLabel = stage => typeof formatStage === "function" ? formatStage(stage) : String(stage || "não informado");
+  const missionRows = missions.map(m => `<div class="rounded-lg border border-cyan-800 bg-cyan-950/40 px-3 py-2"><p class="font-semibold text-cyan-100">${escapeHtml(m.name || m.id)}</p><p class="text-xs text-cyan-300 mt-1">${escapeHtml(areaLabel(m.area))} · Disponível no nível ${Number(m.requiredLevel) || 0}</p></div>`).join("");
+  const areaRows = areas.map(a => `<div class="rounded-lg border border-purple-800 bg-purple-950/40 px-3 py-2"><p class="font-semibold text-purple-100">${escapeHtml(areaLabel(a.area))}</p><p class="text-xs text-purple-300 mt-1">Área liberada · Stage mínimo: ${escapeHtml(stageLabel(a.requiredStage))}</p></div>`).join("");
+  const overlay = document.createElement("div");
+  overlay.id = "newly-unlocked-content-modal";
+  overlay.className = "fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/75";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.innerHTML = `<div class="card w-full max-w-lg max-h-[88vh] overflow-y-auto" onclick="event.stopPropagation()"><div class="flex items-start justify-between gap-4 mb-5"><div><p class="text-xs uppercase tracking-wider text-emerald-400 font-bold">Novo conteúdo disponível</p><h3 class="text-xl font-bold mt-1">Você desbloqueou novidades!</h3><p class="text-sm text-slate-400 mt-1">Confira o que ficou disponível após o avanço do seu Digimon.</p></div><button class="text-slate-400 hover:text-white text-2xl leading-none" aria-label="Fechar" onclick="document.getElementById('newly-unlocked-content-modal')?.remove()">&times;</button></div>${areas.length ? `<h4 class="text-sm font-bold text-purple-300 mb-2">Novas áreas</h4><div class="space-y-2 mb-5">${areaRows}</div>` : ""}${missions.length ? `<h4 class="text-sm font-bold text-cyan-300 mb-2">Novas missões</h4><div class="space-y-2">${missionRows}</div>` : ""}<button class="btn-primary w-full mt-5" onclick="document.getElementById('newly-unlocked-content-modal')?.remove()">Continuar</button></div>`;
+  overlay.addEventListener("click", event => { if (event.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
 function showConfirm(message, options = {}) {
   const {
     title = "Confirmação",

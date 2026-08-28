@@ -544,6 +544,9 @@ async function invUseItem(itemType, quantity = null) {
           : `${invItemName(itemType)} usado!`);
     }
     await invReloadItems();
+    if (result && typeof showNewlyUnlockedContent === "function") {
+      showNewlyUnlockedContent(result.newlyUnlockedContent);
+    }
   } catch (err) {
     showToast(err.message, "error");
   } finally {
