@@ -5,6 +5,8 @@ import com.dro.modules.boss.domain.BossCombatRules;
 import com.dro.modules.boss.domain.BossDefinitionEntity;
 import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.modules.clan.application.ClanBonusService;
+import com.dro.modules.activitycalendar.application.ActivityCalendarService;
+import com.dro.modules.activitycalendar.domain.ActivitySource;
 import com.dro.modules.clan.domain.Clan;
 import com.dro.modules.clan.domain.ClanRules;
 import com.dro.modules.clan.infra.ClanRepository;
@@ -46,6 +48,7 @@ public class AttackClanRaidUseCase {
     private final ClanBonusService clanBonusService;
     private final GlobalDamageBuffService globalDamageBuffService;
     private final GameplayConfig gameplayConfig;
+    private final ActivityCalendarService activityCalendarService;
 
     @Transactional
     public AttackClanRaidResponse execute(String token) {
@@ -121,6 +124,7 @@ public class AttackClanRaidUseCase {
         digimonRepository.save(digimon);
         clanRaidRepository.save(raid);
         clanRaidAttackRepository.save(attack);
+        if (activityCalendarService != null) activityCalendarService.recordActivity(playerId, ActivitySource.CLAN_RAID_ATTACK, attack.getId().toString());
         return new AttackClanRaidResponse(raid.getId(), boss.getCode(), boss.getName(), actualDamage, raid.getRemainingHp(), raid.getMaxHp(), defeated, winChance, xpGained, bitsGained, clanHonorMarksGained, clanXpGained);
     }
 
@@ -141,7 +145,7 @@ public class AttackClanRaidUseCase {
         return Math.max(1, (int) Math.floor(baseCost * multiplier));
     }
 
-    public AttackClanRaidUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ClanRepository clanRepository, final BossDefinitionRepository bossDefinitionRepository, final ClanRaidRepository clanRaidRepository, final ClanRaidAttackRepository clanRaidAttackRepository, final ClanRaidService clanRaidService, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final GlobalDamageBuffService globalDamageBuffService, final GameplayConfig gameplayConfig) {
+    public AttackClanRaidUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ClanRepository clanRepository, final BossDefinitionRepository bossDefinitionRepository, final ClanRaidRepository clanRaidRepository, final ClanRaidAttackRepository clanRaidAttackRepository, final ClanRaidService clanRaidService, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final GlobalDamageBuffService globalDamageBuffService, final GameplayConfig gameplayConfig, final ActivityCalendarService activityCalendarService) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.clanRepository = clanRepository;
@@ -153,5 +157,6 @@ public class AttackClanRaidUseCase {
         this.clanBonusService = clanBonusService;
         this.globalDamageBuffService = globalDamageBuffService;
         this.gameplayConfig = gameplayConfig;
+        this.activityCalendarService = activityCalendarService;
     }
 }

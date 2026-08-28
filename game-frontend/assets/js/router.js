@@ -2,6 +2,7 @@ const routes = {
   login: renderLoginPage,
   starter: renderStarterPage,
   dashboard: renderDashboardPage,
+  "activity-calendar": renderActivityCalendarPage,
   missions: renderMissionsPage,
   "mission-area": renderMissionAreaPage,
   "digimon-select": renderDigimonSelectPage,

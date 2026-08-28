@@ -1,6 +1,8 @@
 package com.dro.modules.incubation.application;
 
 import com.dro.modules.digitama.application.DigitamaPoolEligibilityService;
+import com.dro.modules.activitycalendar.application.ActivityCalendarService;
+import com.dro.modules.activitycalendar.domain.ActivitySource;
 import com.dro.modules.digitama.domain.DigitamaHatchRules;
 import com.dro.modules.digitama.domain.DigitamaPool;
 import com.dro.modules.digitama.domain.DigitamaPoolEntry;
@@ -38,6 +40,7 @@ public class ClaimIncubationUseCase {
     private final DigitamaPoolRepository digitamaPoolRepository;
     private final DigitamaPoolEligibilityService digitamaPoolEligibilityService;
     private final TutorialService tutorialService;
+    private final ActivityCalendarService activityCalendarService;
 
     @Transactional
     public Digimon execute(String token, UUID incubationId) {
@@ -62,6 +65,9 @@ public class ClaimIncubationUseCase {
         digimonRepository.save(digimon);
         finalizeIncubation(incubation);
         tutorialService.completeStep(playerId, TutorialStep.HATCH_DIGIMON);
+        if (activityCalendarService != null) {
+            activityCalendarService.recordActivity(playerId, ActivitySource.DIGITAMA_HATCHED, incubationId.toString());
+        }
         return digimon;
     }
 
@@ -108,7 +114,8 @@ public class ClaimIncubationUseCase {
             final PlayerRepository playerRepository,
             final DigitamaPoolRepository digitamaPoolRepository,
             final DigitamaPoolEligibilityService digitamaPoolEligibilityService,
-            final TutorialService tutorialService
+            final TutorialService tutorialService,
+            final ActivityCalendarService activityCalendarService
     ) {
         this.incubationRepository = incubationRepository;
         this.digimonRepository = digimonRepository;
@@ -116,5 +123,7 @@ public class ClaimIncubationUseCase {
         this.digitamaPoolRepository = digitamaPoolRepository;
         this.digitamaPoolEligibilityService = digitamaPoolEligibilityService;
         this.tutorialService = tutorialService;
+        this.activityCalendarService = activityCalendarService;
     }
+
 }

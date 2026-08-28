@@ -23,6 +23,8 @@ import com.dro.modules.mission.infra.PlayerMissionProgressRepository;
 import com.dro.modules.clan.application.ClanBonusService;
 import com.dro.modules.clan.application.ClanMissionProgressTracker;
 import com.dro.modules.clan.domain.enums.ClanMissionObjectiveType;
+import com.dro.modules.activitycalendar.application.ActivityCalendarService;
+import com.dro.modules.activitycalendar.domain.ActivitySource;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.tutorial.application.TutorialService;
@@ -59,6 +61,7 @@ public class ClaimMissionUseCase {
     private final ChestDefinitionRepository chestDefinitionRepository;
     private final ItemDefinitionRepository itemDefinitionRepository;
     private final TransactionAuditPublisher transactionAuditPublisher;
+    private final ActivityCalendarService activityCalendarService;
 
     public ClaimMissionUseCase(
             MissionInstanceRepository missionInstanceRepository,
@@ -72,7 +75,8 @@ public class ClaimMissionUseCase {
             PlayerRepository playerRepository,
             ChestDefinitionRepository chestDefinitionRepository,
             ItemDefinitionRepository itemDefinitionRepository,
-            TransactionAuditPublisher transactionAuditPublisher
+            TransactionAuditPublisher transactionAuditPublisher,
+            ActivityCalendarService activityCalendarService
     ) {
         this.missionInstanceRepository = missionInstanceRepository;
         this.digimonRepository = digimonRepository;
@@ -86,6 +90,7 @@ public class ClaimMissionUseCase {
         this.chestDefinitionRepository = chestDefinitionRepository;
         this.itemDefinitionRepository = itemDefinitionRepository;
         this.transactionAuditPublisher = transactionAuditPublisher;
+        this.activityCalendarService = activityCalendarService;
     }
 
     @Transactional
@@ -165,6 +170,7 @@ public class ClaimMissionUseCase {
 
         missionInstanceRepository.save(instance);
         digimonRepository.save(digimon);
+        if (activityCalendarService != null) activityCalendarService.recordActivity(playerId, ActivitySource.MISSION_COMPLETED, missionInstanceId.toString());
 
         if (clanId != null) {
             clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.MISSIONS_COMPLETED);

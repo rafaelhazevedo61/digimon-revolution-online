@@ -1,6 +1,8 @@
 package com.dro.modules.boss.application;
 
 import com.dro.modules.boss.api.dto.response.BossChallengeResponse;
+import com.dro.modules.activitycalendar.application.ActivityCalendarService;
+import com.dro.modules.activitycalendar.domain.ActivitySource;
 import com.dro.modules.boss.api.dto.response.DropRewardResponse;
 import com.dro.modules.boss.domain.*;
 import com.dro.modules.boss.infra.BossAttemptRepository;
@@ -56,6 +58,7 @@ public class ChallengeBossUseCase {
     private final GlobalDamageBuffService globalDamageBuffService;
     private final TransactionAuditPublisher transactionAuditPublisher;
     private final GameplayConfig gameplayConfig;
+    private final ActivityCalendarService activityCalendarService;
 
     @Transactional
     public BossChallengeResponse execute(String token, String bossCode, UUID digimonId) {
@@ -135,6 +138,7 @@ public class ChallengeBossUseCase {
         digimonRepository.save(digimon);
         BossAttemptEntity attempt = BossAttemptEntity.builder().id(UUID.randomUUID()).playerId(playerId).digimonId(digimonId).bossId(boss.getId()).status(victory ? BossAttemptStatus.VICTORY : BossAttemptStatus.DEFEAT).damageDealt((int) digimonPower).xpGained(xpGained).bitsGained(bitsGained).createdAt(Instant.now()).build();
         bossAttemptRepository.save(attempt);
+        if (activityCalendarService != null) activityCalendarService.recordActivity(playerId, ActivitySource.BOSS_CHALLENGE, attempt.getId().toString());
         transactionAuditPublisher.success("boss-challenge:" + attempt.getId(), "BOSS_CHALLENGED", "BossAttempt", attempt.getId().toString(), buildAuditPayload(playerId, boss, attempt, rewardChest, drops));
         return new BossChallengeResponse(boss.getCode(), boss.getName(), victory ? "VICTORY" : "DEFEAT", winChance, digimonPower, bossPower, xpGained, bitsGained, rewardChest != null ? rewardChest.getCode() : null, rewardChest != null ? rewardChest.getName() : null, drops);
     }
@@ -234,7 +238,7 @@ public class ChallengeBossUseCase {
         return Math.max(1, (int) Math.floor(baseCost * multiplier));
     }
 
-    public ChallengeBossUseCase(final BossDefinitionRepository bossDefinitionRepository, final BossAttemptRepository bossAttemptRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final EquipmentRepository equipmentRepository, final AddItemUseCase addItemUseCase, final ChestDefinitionRepository chestDefinitionRepository, final GrantEquipmentUseCase grantEquipmentUseCase, final EquipmentRarityProfileService equipmentRarityProfileService, final ClanBonusService clanBonusService, final ClanMissionProgressTracker clanMissionProgressTracker, final GlobalDamageBuffService globalDamageBuffService, final TransactionAuditPublisher transactionAuditPublisher, final GameplayConfig gameplayConfig) {
+    public ChallengeBossUseCase(final BossDefinitionRepository bossDefinitionRepository, final BossAttemptRepository bossAttemptRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final EquipmentRepository equipmentRepository, final AddItemUseCase addItemUseCase, final ChestDefinitionRepository chestDefinitionRepository, final GrantEquipmentUseCase grantEquipmentUseCase, final EquipmentRarityProfileService equipmentRarityProfileService, final ClanBonusService clanBonusService, final ClanMissionProgressTracker clanMissionProgressTracker, final GlobalDamageBuffService globalDamageBuffService, final TransactionAuditPublisher transactionAuditPublisher, final GameplayConfig gameplayConfig, final ActivityCalendarService activityCalendarService) {
         this.bossDefinitionRepository = bossDefinitionRepository;
         this.bossAttemptRepository = bossAttemptRepository;
         this.digimonRepository = digimonRepository;
@@ -249,5 +253,6 @@ public class ChallengeBossUseCase {
         this.globalDamageBuffService = globalDamageBuffService;
         this.transactionAuditPublisher = transactionAuditPublisher;
         this.gameplayConfig = gameplayConfig;
+        this.activityCalendarService = activityCalendarService;
     }
 }
