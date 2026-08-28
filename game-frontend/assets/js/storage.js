@@ -1,4 +1,6 @@
 let storageDigimons = [];
+let storageSelectedDigimonIds = new Set();
+
 let storageFilterState = {
   search: "",
   stage: "ALL",
@@ -8,6 +10,7 @@ let storageFilterState = {
 };
 
 async function renderStoragePage() {
+  storageSelectedDigimonIds.clear();
   const app = document.getElementById("app");
   showBottomNav("digimons");
   storageFilterState.open = false;
@@ -87,6 +90,7 @@ async function renderStoragePage() {
       </div>
 
       <div id="storage-info" class="mb-3"></div>
+      <div id="storage-bulk-actions" class="mb-3"></div>
       <div id="storage-list">
         <div class="card animate-pulse"><div class="h-20"></div></div>
       </div>
@@ -146,6 +150,7 @@ async function renderStoragePage() {
     `;
 
     storageRenderList();
+    storageUpdateBulkActions();
   } catch (err) {
     document.getElementById("storage-list").innerHTML = `
       <div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>
@@ -203,6 +208,16 @@ function storageRenderList() {
 
   container.innerHTML = filtered.map(d => `
       <div class="card mb-2 flex items-center gap-3">
+        <label class="shrink-0 flex items-center justify-center cursor-pointer" title="Selecionar Digimon para sacrifício">
+          <input
+            type="checkbox"
+            class="storage-sacrifice-checkbox h-5 w-5 accent-cyan-500"
+            data-digimon-id="${escapeAttr(d.id)}"
+            ${storageSelectedDigimonIds.has(String(d.id)) ? "checked" : ""}
+            onchange="storageToggleSelection('${escapeAttr(d.id)}', this.checked)"
+            aria-label="Selecionar ${escapeAttr(d.name || "Digimon")} para sacrifício"
+          />
+        </label>
         ${renderDigimonVisual(d.imageUrl, d.stage, "w-16 h-16", "text-4xl")}
         <div class="flex-1 min-w-0">
           <p class="font-bold text-sm truncate">${escapeHtml(d.name)}</p>
@@ -224,6 +239,45 @@ function storageRenderList() {
         </div>
       </div>
     `).join("");
+
+  storageUpdateBulkActions();
+}
+
+function storageUpdateBulkActions() {
+  const container = document.getElementById("storage-bulk-actions");
+  if (!container) return;
+
+  const selected = storageDigimons.filter(d => storageSelectedDigimonIds.has(String(d.id)));
+  const count = selected.length;
+  const totalReward = selected.reduce((sum, digimon) => sum + calculateDigitalDataPreview(digimon), 0);
+
+  container.innerHTML = count === 0 ? "" : `
+    <div class="card-sm border-cyan-700 bg-cyan-950/30">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <p class="font-bold text-sm text-cyan-200">${count} Digimon${count === 1 ? " selecionado" : "s selecionados"}</p>
+          <p class="text-xs text-cyan-300 mt-1">Total estimado: +${totalReward.toLocaleString()} Dados Digitais</p>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" class="btn-secondary" onclick="storageClearSelection()">Limpar</button>
+          <button type="button" class="btn-sm" style="background:#7f1d1d;color:#fecaca" onclick="storageSacrificeSelected()">Sacrificar selecionados</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function storageToggleSelection(digimonId, selected) {
+  const id = String(digimonId);
+  if (selected) storageSelectedDigimonIds.add(id);
+  else storageSelectedDigimonIds.delete(id);
+  storageUpdateBulkActions();
+}
+
+function storageClearSelection() {
+  storageSelectedDigimonIds.clear();
+  document.querySelectorAll(".storage-sacrifice-checkbox").forEach(input => { input.checked = false; });
+  storageUpdateBulkActions();
 }
 
 function storageGetFilteredDigimons() {
@@ -330,6 +384,34 @@ async function storageSacrifice(digimonId, encodedDigimonName) {
     const result = await apiPost(`/digimon/${digimonId}/sacrifice`, {});
     showToast(`Digimon sacrificado. +${result.digitalDataReceived} Dados Digitais.`);
     renderStoragePage();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function storageSacrificeSelected() {
+  const selected = storageDigimons.filter(d => storageSelectedDigimonIds.has(String(d.id)));
+  if (selected.length === 0) return;
+
+  const totalReward = selected.reduce((sum, digimon) => sum + calculateDigitalDataPreview(digimon), 0);
+  const confirmed = await showConfirm(
+    `Sacrificar ${selected.length} Digimons? Esta ação é permanente e não pode ser desfeita.\n\nTotal estimado: +${totalReward.toLocaleString()} Dados Digitais.`,
+    {
+      title: "Sacrificar Digimons em lote",
+      confirmText: "Sacrificar selecionados",
+      cancelText: "Cancelar",
+      danger: true
+    }
+  );
+  if (!confirmed) return;
+
+  try {
+    const result = await apiPost("/digimon/sacrifice/bulk", {
+      digimonIds: selected.map(digimon => digimon.id)
+    });
+    storageSelectedDigimonIds.clear();
+    showToast(`${result.sacrificedCount} Digimon${result.sacrificedCount === 1 ? " sacrificado" : "sacrificados"}. +${result.digitalDataReceived} Dados Digitais.`);
+    await renderStoragePage();
   } catch (err) {
     showToast(err.message, "error");
   }

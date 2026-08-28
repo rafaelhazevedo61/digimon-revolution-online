@@ -27,6 +27,10 @@ public interface DigimonRepository extends JpaRepository<Digimon, UUID> {
     List<Digimon> findByPlayerIdAndStatus(UUID playerId, DigimonStatus status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT d FROM Digimon d WHERE d.playerId = :playerId AND d.id IN :digimonIds")
+    List<Digimon> findAllByIdForUpdate(@Param("playerId") UUID playerId, @Param("digimonIds") List<UUID> digimonIds);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT d FROM Digimon d WHERE d.playerId = :playerId AND d.status = :status")
     List<Digimon> findByPlayerIdAndStatusForUpdate(@Param("playerId") UUID playerId, @Param("status") DigimonStatus status);
 
