@@ -47,8 +47,9 @@ public class UseItemUseCase {
             return unlockIncubationSlot(playerId);
         }
 
+        boolean batchUsableItem = isBatchUsableItem(type);
         boolean xpDisk = isXpDisk(type);
-        int quantity = resolveQuantity(xpDisk, requestedQuantity);
+        int quantity = resolveQuantity(batchUsableItem, requestedQuantity);
         Player player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         if (player.getActiveDigimonId() == null) {
             throw new BadRequestException("No active digimon selected");
@@ -92,14 +93,16 @@ public class UseItemUseCase {
                 xpGranted += diskXp;
             }
         } else {
-            xpGranted = GENERIC_ITEM_XP;
-            digimon.gainExperience(xpGranted);
+            xpGranted = GENERIC_ITEM_XP * quantity;
+            for (int index = 0; index < quantity; index++) {
+                digimon.gainExperience(GENERIC_ITEM_XP);
+            }
         }
 
         consume(item, quantity);
         digimonRepository.save(digimon);
-        String message = xpDisk
-                ? quantity > 1 ? "Discos de XP utilizados com sucesso." : "Disco de XP utilizado com sucesso."
+        String message = batchUsableItem && quantity > 1
+                ? "Itens utilizados com sucesso."
                 : "Item utilizado com sucesso.";
         return new UseItemResponse(
                 type,
@@ -112,13 +115,13 @@ public class UseItemUseCase {
         );
     }
 
-    private int resolveQuantity(boolean xpDisk, Integer requestedQuantity) {
-        if (!xpDisk) {
+    private int resolveQuantity(boolean batchUsableItem, Integer requestedQuantity) {
+        if (!batchUsableItem) {
             return 1;
         }
         int quantity = requestedQuantity == null ? 1 : requestedQuantity;
         if (quantity < 1 || quantity > MAX_BATCH_QUANTITY) {
-            throw new BadRequestException("A quantidade de Discos de XP deve estar entre 1 e " + MAX_BATCH_QUANTITY);
+            throw new BadRequestException("A quantidade do item deve estar entre 1 e " + MAX_BATCH_QUANTITY);
         }
         return quantity;
     }
@@ -177,6 +180,10 @@ public class UseItemUseCase {
                 false,
                 "Slot de incubação desbloqueado!"
         );
+    }
+
+    private boolean isBatchUsableItem(ItemType type) {
+        return isXpDisk(type) || type == ItemType.POTION_SMALL || type == ItemType.TRAINING_STONE;
     }
 
     private boolean isXpDisk(ItemType type) {

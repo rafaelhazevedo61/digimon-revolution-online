@@ -309,6 +309,7 @@ function invRenderItems() {
   content.innerHTML = items.map(item => {
     const def = item.itemDefinition;
     const isXpDiskItem = invIsXpDisk(item.itemType);
+    const isBatchUsableItem = isXpDiskItem || item.itemType === "POTION_SMALL" || item.itemType === "TRAINING_STONE";
     const name = def ? def.name : invItemName(item.itemType);
     const emoji = isXpDiskItem ? invItemEmoji(item.itemType) : def ? invCategoryEmoji(def.category) : invItemEmoji(item.itemType);
     const catName = def ? invCategoryLabel(def.category) : invItemCategoryName(item.itemType);
@@ -317,7 +318,7 @@ function invRenderItems() {
     const chestCode = category === "CHEST" && def ? def.code : null;
     const isChest = item.itemType === "LOOT_CHEST" || !!chestCode;
     const chestQuantityInputId = chestCode ? `inv-chest-quantity-${String(chestCode).replace(/[^a-zA-Z0-9_-]/g, "-")}` : null;
-    const xpDiskQuantityInputId = isXpDiskItem ? `inv-xp-disk-quantity-${String(item.itemType).replace(/[^a-zA-Z0-9_-]/g, "-")}` : null;
+    const batchQuantityInputId = isBatchUsableItem ? `inv-batch-quantity-${String(item.itemType).replace(/[^a-zA-Z0-9_-]/g, "-")}` : null;
     const maxUseQuantity = Math.max(1, Number(item.quantity) || 1);
     const digitamaItem = category === "DIGITAMA" || item.itemType.startsWith("DIGITAMA_");
     const incubatorItem = category === "INCUBATOR" || item.itemType.startsWith("INCUBATOR_");
@@ -330,10 +331,10 @@ function invRenderItems() {
       </div>
     ` : incubatorItem ? `
       <button class="btn-sm btn-primary whitespace-nowrap" onclick="navigateTo('incubation')">Usar</button>
-    ` : isXpDiskItem ? `
+    ` : isBatchUsableItem ? `
       <div class="flex items-center gap-2">
-        <input id="${xpDiskQuantityInputId}" class="input w-16 text-center" type="number" min="1" max="${maxUseQuantity}" value="1" aria-label="Quantidade de Discos de XP" />
-        <button class="btn-sm btn-primary whitespace-nowrap" onclick="invUseItem('${escapeHtml(item.itemType)}', document.getElementById('${xpDiskQuantityInputId}').value)">Usar</button>
+        <input id="${batchQuantityInputId}" class="input w-16 text-center" type="number" min="1" max="${maxUseQuantity}" value="1" aria-label="Quantidade de ${escapeAttr(name)}" />
+        <button class="btn-sm btn-primary whitespace-nowrap" onclick="invUseItem('${escapeHtml(item.itemType)}', document.getElementById('${batchQuantityInputId}').value)">Usar</button>
       </div>
     ` : usable ? `
       <button class="btn-sm btn-primary" onclick="invUseItem('${escapeHtml(item.itemType)}')">Usar</button>
@@ -487,11 +488,12 @@ async function invReloadItems() {
 
 async function invUseItem(itemType, quantity = null) {
   const isXpDiskItem = invIsXpDisk(itemType);
+  const isBatchUsableItem = isXpDiskItem || itemType === "POTION_SMALL" || itemType === "TRAINING_STONE";
   let requestedQuantity = 1;
-  if (isXpDiskItem) {
+  if (isBatchUsableItem) {
     requestedQuantity = quantity == null ? 1 : Number.parseInt(quantity, 10);
-    if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1 || requestedQuantity > 100) {
-      showToast("Informe uma quantidade válida de Discos de XP (1 a 100).", "error");
+    if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1 || requestedQuantity > 999) {
+      showToast("Informe uma quantidade válida (1 a 999).", "error");
       return;
     }
   }
@@ -500,7 +502,7 @@ async function invUseItem(itemType, quantity = null) {
   invItemUseInProgress = true;
   try {
     const payload = { itemType: itemType };
-    if (isXpDiskItem) payload.quantity = requestedQuantity;
+    if (isBatchUsableItem) payload.quantity = requestedQuantity;
     const result = await apiPost("/inventory/use", payload);
     const usedQuantity = Math.max(1, Number(result && result.quantity) || requestedQuantity);
     const levelMessage = result && result.levelUp ? ` Nível ${result.currentLevel}!` : "";
