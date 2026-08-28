@@ -10,6 +10,7 @@ public record AvailableEvolutionLineStepResponse(
         String stage,
         String attribute,
         String element,
-        String specie
+        String specie,
+        String imageUrl
 ) {
 }

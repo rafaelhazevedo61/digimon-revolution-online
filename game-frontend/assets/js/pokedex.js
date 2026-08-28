@@ -225,7 +225,7 @@ async function dexShowEvolutionLines(digimonInfoId) {
                 <button type="button" class="flex-1 rounded-lg border ${step.digimonInfoId === digimonInfoId ? "border-cyan-400 bg-cyan-950/50" : "border-slate-700 bg-slate-900/60"} p-2 text-left hover:border-cyan-400 transition-colors" onclick="dexShowEvolutionStep(${step.digimonInfoId}, this.dataset.name)" data-name="${escapeAttr(step.digimon || "")}">
                   <div class="flex items-center gap-2">
                     <div class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center shrink-0">
-                      ${renderDigimonVisual(null, step.stage, "w-full h-full", "text-2xl")}
+                      ${renderDigimonVisual(step.imageUrl, step.stage, "w-full h-full", "text-2xl")}
                     </div>
                     <div class="min-w-0">
                       <p class="font-bold text-sm truncate">${escapeHtml(step.digimon || "Digimon não definido")}</p>

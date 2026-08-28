@@ -28,7 +28,7 @@ public class GetAvailableEvolutionLinesUseCase {
 
     private AvailableEvolutionLineStepResponse toStepResponse(EvolutionLineStep step) {
         DigimonInfos digimonInfo = step.getDigimonInfo();
-        return new AvailableEvolutionLineStepResponse(step.getStepOrder(), digimonInfo.getId(), digimonInfo.getName(), step.getStage().name(), digimonInfo.getAttribute().name(), digimonInfo.getElement().name(), digimonInfo.getSpecie().name());
+        return new AvailableEvolutionLineStepResponse(step.getStepOrder(), digimonInfo.getId(), digimonInfo.getName(), step.getStage().name(), digimonInfo.getAttribute().name(), digimonInfo.getElement().name(), digimonInfo.getSpecie().name(), digimonInfo.getImageUrl());
     }
 
     public GetAvailableEvolutionLinesUseCase(final EvolutionLineRepository evolutionLineRepository) {
