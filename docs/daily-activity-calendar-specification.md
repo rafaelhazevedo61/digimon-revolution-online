@@ -263,7 +263,7 @@ A primeira etapa deve criar o módulo de domínio e as migrations das tabelas de
 
 A terceira etapa deve integrar missão, Arena, Clan Raid, World Boss, Boss e Incubação na ordem indicada na seção 7. Em seguida, devem ser adicionados o controller autenticado, DTOs, resgate transacional, auditoria e testes de integração. A quinta etapa deve adicionar a tela do calendário e o tratamento dos estados visuais. Por fim, deve ser feito o cadastro manual do Chest e da Loot Table no Admin, sem seed de loot.
 
-A migration deverá usar o próximo número disponível no branch no momento do desenvolvimento. No estado analisado, as migrations chegam a `V148`, mas esse número deve ser confirmado novamente antes de criar qualquer arquivo para evitar colisão com trabalho paralelo. [10]
+A migration deverá usar o próximo número disponível no branch no momento do desenvolvimento. No estado analisado antes da implementação, as migrations chegavam a `V157`; por isso, esta implementação usa `V158__add_activity_calendar.sql` somente se o arquivo não colidir com a branch de destino. Antes do merge, o número deve ser reconfirmado caso novas migrations tenham sido publicadas em paralelo. [10]
 
 ## 14. Decisões ainda abertas
 

@@ -5,6 +5,8 @@ import com.dro.modules.boss.domain.BossCombatRules;
 import com.dro.modules.boss.domain.BossDefinitionEntity;
 import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.modules.boss.world.api.dto.response.AttackWorldBossResponse;
+import com.dro.modules.activitycalendar.application.ActivityCalendarService;
+import com.dro.modules.activitycalendar.domain.ActivitySource;
 import com.dro.modules.boss.world.api.dto.response.WorldBossRewardResponse;
 import com.dro.modules.boss.world.domain.WorldBossAttack;
 import com.dro.modules.boss.world.domain.WorldBossInstance;
@@ -49,6 +51,7 @@ public class AttackWorldBossUseCase {
     private final GlobalDamageBuffService globalDamageBuffService;
     private final TransactionAuditPublisher transactionAuditPublisher;
     private final GameplayConfig gameplayConfig;
+    private final ActivityCalendarService activityCalendarService;
 
     @Transactional
     public AttackWorldBossResponse execute(String token, String idempotencyKey) {
@@ -130,6 +133,7 @@ public class AttackWorldBossUseCase {
         digimonRepository.save(digimon);
         worldBossInstanceRepository.save(instance);
         worldBossAttackRepository.save(attack);
+        if (activityCalendarService != null) activityCalendarService.recordActivity(playerId, ActivitySource.WORLD_BOSS_ATTACK, attack.getId().toString());
         List<WorldBossRewardResponse> rewards = worldBossRewardService.grant(boss, instance, attack, defeated);
         transactionAuditPublisher.success("world-boss-attack:" + attack.getId(), "WORLD_BOSS_ATTACKED", "WorldBossAttack", attack.getId().toString(), buildAuditPayload(playerId, boss, instance, attack, rewards));
         return toResponse(boss, instance, attack, rewards);
@@ -180,7 +184,7 @@ public class AttackWorldBossUseCase {
         return Math.max(1, (int) Math.floor(baseCost * multiplier));
     }
 
-    public AttackWorldBossUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final BossDefinitionRepository bossDefinitionRepository, final WorldBossInstanceRepository worldBossInstanceRepository, final WorldBossAttackRepository worldBossAttackRepository, final WorldBossService worldBossService, final WorldBossRewardService worldBossRewardService, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final GlobalDamageBuffService globalDamageBuffService, final TransactionAuditPublisher transactionAuditPublisher, final GameplayConfig gameplayConfig) {
+    public AttackWorldBossUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final BossDefinitionRepository bossDefinitionRepository, final WorldBossInstanceRepository worldBossInstanceRepository, final WorldBossAttackRepository worldBossAttackRepository, final WorldBossService worldBossService, final WorldBossRewardService worldBossRewardService, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final GlobalDamageBuffService globalDamageBuffService, final TransactionAuditPublisher transactionAuditPublisher, final GameplayConfig gameplayConfig, final ActivityCalendarService activityCalendarService) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.bossDefinitionRepository = bossDefinitionRepository;
@@ -193,5 +197,6 @@ public class AttackWorldBossUseCase {
         this.globalDamageBuffService = globalDamageBuffService;
         this.transactionAuditPublisher = transactionAuditPublisher;
         this.gameplayConfig = gameplayConfig;
+        this.activityCalendarService = activityCalendarService;
     }
 }

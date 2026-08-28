@@ -110,6 +110,24 @@ dro:
     world-boss:
       cooldown-enabled: ${DRO_WORLD_BOSS_COOLDOWN_ENABLED:true}
 
+    activity-calendar:
+      enabled: ${DRO_ACTIVITY_CALENDAR_ENABLED:true}
+      daily-goal: ${DRO_ACTIVITY_CALENDAR_DAILY_GOAL:10}
+      reward-chest-code: ${DRO_ACTIVITY_CALENDAR_REWARD_CHEST_CODE:CHEST_ACTIVITY_CALENDAR}
+      monthly-completion-chest-code: ${DRO_ACTIVITY_CALENDAR_MONTHLY_CHEST_CODE:CHEST_ACTIVITY_CALENDAR_MONTHLY}
+      mission-completed: ${DRO_ACTIVITY_CALENDAR_POINTS_MISSION:1}
+      arena-match: ${DRO_ACTIVITY_CALENDAR_POINTS_ARENA:1}
+      clan-raid-attack: ${DRO_ACTIVITY_CALENDAR_POINTS_CLAN_RAID:1}
+      world-boss-attack: ${DRO_ACTIVITY_CALENDAR_POINTS_WORLD_BOSS:1}
+      boss-challenge: ${DRO_ACTIVITY_CALENDAR_POINTS_BOSS:1}
+      digitama-hatched: ${DRO_ACTIVITY_CALENDAR_POINTS_HATCH:1}
+      mission-limit: ${DRO_ACTIVITY_CALENDAR_LIMIT_MISSION:0}
+      arena-limit: ${DRO_ACTIVITY_CALENDAR_LIMIT_ARENA:0}
+      clan-raid-limit: ${DRO_ACTIVITY_CALENDAR_LIMIT_CLAN_RAID:0}
+      world-boss-limit: ${DRO_ACTIVITY_CALENDAR_LIMIT_WORLD_BOSS:0}
+      boss-limit: ${DRO_ACTIVITY_CALENDAR_LIMIT_BOSS:0}
+      hatch-limit: ${DRO_ACTIVITY_CALENDAR_LIMIT_HATCH:0}
+
   registration:
     invite-required: ${DRO_REGISTRATION_INVITE_REQUIRED:false}
 
