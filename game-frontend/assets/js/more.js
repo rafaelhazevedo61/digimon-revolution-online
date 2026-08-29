@@ -7,13 +7,6 @@ async function renderMorePage() {
       label: "Combate",
       items: [
         {
-          route: "activity-calendar",
-          icon: "📅",
-          iconImage: "assets/img/calendario-atividades.webp",
-          title: "Calendário de Atividades",
-          desc: "Complete metas diárias e ganhe baús",
-        },
-        {
           route: "bosses",
           iconImage: "assets/img/batalhadochefe.webp",
           title: "Chefes",
@@ -32,6 +25,24 @@ async function renderMorePage() {
           iconImage: "assets/img/chefe-mundial.webp",
           title: "Chefe Mundial",
           desc: "Boss compartilhado do servidor",
+        },
+      ],
+    },
+    {
+      label: "Atividades",
+      items: [
+        {
+          route: "activity-calendar",
+          icon: "📅",
+          iconImage: "assets/img/calendario-atividades.webp",
+          title: "Calendário de Atividades",
+          desc: "Complete metas diárias e ganhe baús",
+        },
+        {
+          route: "rebirth",
+          icon: "🔄",
+          title: "Renascimento",
+          desc: "Renasça seu Digimon e aprimore seus atributos",
         },
       ],
     },
@@ -61,12 +72,12 @@ async function renderMorePage() {
       ],
     },
     {
-      label: "Mercado",
+      label: "Comércio",
       items: [
         {
           route: "auction-house",
           icon: "🏪",
-          title: "Casa de Leilões",
+          title: "Mercado",
           desc: "Compre e venda itens com jogadores",
         },
       ],
