@@ -46,8 +46,8 @@ class ClanRaidServiceTest {
     void getOrCreateToday_keepsDefeatedRaidWhenAutomaticRespawnIsDisabled() {
         UUID clanId = UUID.randomUUID();
         ClanRaid defeated = raid(clanId, ClanRaidStatus.DEFEATED);
+        defeated.setDefeatedAt(Instant.now().minusSeconds(3599));
         when(clanRaidRepository.findFirstByClanIdOrderByCreatedAtDesc(clanId)).thenReturn(Optional.of(defeated));
-        when(gameplayConfig.isAutoBossRespawnAfterDefeatEnabled()).thenReturn(false);
 
         ClanRaid result = service.getOrCreateToday(clanId);
 
@@ -78,7 +78,6 @@ class ClanRaidServiceTest {
                 .active(true)
                 .build();
         when(clanRaidRepository.findFirstByClanIdOrderByCreatedAtDesc(clanId)).thenReturn(Optional.of(defeated));
-        when(gameplayConfig.isAutoBossRespawnAfterDefeatEnabled()).thenReturn(true);
         when(bossDefinitionRepository.findAllActive()).thenReturn(List.of(boss));
         when(clanRaidRepository.save(any(ClanRaid.class))).thenAnswer(invocation -> invocation.getArgument(0));
 

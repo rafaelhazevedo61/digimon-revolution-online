@@ -156,7 +156,7 @@ public class AttackWorldBossUseCase {
         String finalName = playerRepository.findById(finalBlow.getPlayerId()).map(Player::getUsername).orElse("Desconhecido");
         String topName = playerRepository.findById(topPlayer).map(Player::getUsername).orElse("Desconhecido");
         long duration = instance.getDefeatedAt() == null ? 0 : Math.max(0, Duration.between(instance.getCreatedAt(), instance.getDefeatedAt()).getSeconds());
-        return new BossDefeatSummaryResponse(finalBlow.getPlayerId(), finalName, topPlayer, topName, totals.get(topPlayer), attacks.size(), duration);
+        return new BossDefeatSummaryResponse(finalBlow.getPlayerId(), finalName, topPlayer, topName, totals.get(topPlayer), attacks.size(), duration, instance.getDefeatedAt().plus(Duration.ofHours(1)));
     }
 
     private String normalizeRequestId(String idempotencyKey) {
