@@ -36,8 +36,8 @@ public class SacrificeDigimonUseCase {
         if (!playerId.equals(digimon.getPlayerId())) {
             throw new BadRequestException("Digimon does not belong to player");
         }
-        if (digimon.getStatus() != DigimonStatus.STORED) {
-            throw new BadRequestException("Only stored Digimons can be sacrificed");
+        if (digimon.getStatus() != DigimonStatus.STORED && digimon.getStatus() != DigimonStatus.HATCHED) {
+            throw new BadRequestException("Only stored or newly hatched Digimons can be sacrificed");
         }
         if (digimon.getId().equals(player.getActiveDigimonId())) {
             throw new BadRequestException("The active Digimon cannot be sacrificed");
