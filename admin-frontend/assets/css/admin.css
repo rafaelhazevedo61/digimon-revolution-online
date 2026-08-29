@@ -238,6 +238,28 @@
     max-width: 56rem;
   }
 
+  .loot-table-modal {
+    max-width: 72rem;
+  }
+
+  .loot-selected-item {
+    min-height: 3.25rem;
+  }
+
+  .loot-selected-item-label {
+    display: block;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+  }
+
+  @media (max-width: 768px) {
+    .loot-table-modal {
+      max-width: calc(100vw - 2rem);
+      padding: 1rem;
+    }
+  }
+
   .modal-catalog {
     max-width: 48rem;
   }

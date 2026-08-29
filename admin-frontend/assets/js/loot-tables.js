@@ -175,7 +175,7 @@ function lootTableRenderModal(title, data, isEdit) {
 
   root.innerHTML = `
     <div class="modal-overlay" onclick="lootTableCloseModal()">
-      <div class="modal-content modal-wide" onclick="event.stopPropagation()">
+      <div class="modal-content modal-wide loot-table-modal" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between gap-4 mb-6">
           <div>
             <h3 class="text-xl font-bold">${escapeHtml(title)}</h3>
@@ -261,11 +261,11 @@ function lootTableRenderEntryRow(entry) {
   return `
     <div class="card-sm loot-entry-row" data-entry-id="${escapeAttr(entry._uiId || entry.id || "new")}">
       <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-        <div class="md:col-span-3 min-w-0">
+        <div class="md:col-span-4 min-w-0">
           <label class="text-xs text-slate-500">Item catalogado</label>
           <input type="hidden" class="loot-entry-item" value="${escapeAttr(selectedCode)}" />
           <div class="loot-selected-item card-sm mt-1 min-w-0 flex items-center justify-between gap-2">
-            <span class="min-w-0 truncate" title="${escapeAttr(selectedLabel)}">${escapeHtml(selectedLabel)}</span>
+            <span class="min-w-0 loot-selected-item-label" title="${escapeAttr(selectedLabel)}">${escapeHtml(selectedLabel)}</span>
             <button type="button" class="btn-sm btn-secondary shrink-0" onclick="lootTableOpenItemPicker('${escapeAttr(entry._uiId || entry.id || "new")}')">Buscar item</button>
           </div>
         </div>
@@ -398,7 +398,7 @@ function lootTableSelectItem(code) {
   const item = lootTableState.catalog.find(candidate => candidate.code === code);
   if (!row || !item) return;
   const hiddenInput = row.querySelector(".loot-entry-item");
-  const label = row.querySelector(".loot-selected-item span");
+  const label = row.querySelector(".loot-selected-item-label");
   if (hiddenInput) hiddenInput.value = item.code;
   if (label) {
     label.textContent = `${item.name} — ${item.code}`;
