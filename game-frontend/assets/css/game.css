@@ -492,6 +492,17 @@ body {
 .text-center { text-align: center; }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* Nomes de inventário preservam duas linhas e o nome completo fica no tooltip. */
+.inventory-item-name {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}
+
 /* ===================== PWA Standalone ===================== */
 @media (display-mode: standalone) {
   body { padding-top: env(safe-area-inset-top); }

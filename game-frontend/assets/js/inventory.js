@@ -410,7 +410,7 @@ function invRenderItems() {
       <div class="card-sm mb-2 flex items-center gap-3">
         <div class="text-2xl">${emoji}</div>
         <div class="flex-1 min-w-0">
-          <p class="font-bold text-sm truncate">${escapeHtml(name)}</p>
+          <p class="font-bold text-sm inventory-item-name" title="${escapeAttr(name)}" aria-label="${escapeAttr(name)}">${escapeHtml(name)}</p>
           <div class="flex gap-2 mt-1">
             <span class="text-xs text-slate-400">Qtd: ${item.quantity}</span>
             <span class="badge badge-${catBadge}">${escapeHtml(catName)}</span>
@@ -949,7 +949,7 @@ function invRenderEquipment() {
           <div class="text-2xl">${emoji}</div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
-              <p class="font-bold text-sm truncate">${escapeHtml(eq.name)}${refLabel}</p>
+              <p class="font-bold text-sm inventory-item-name" title="${escapeAttr(`${eq.name}${refLabel}`)}" aria-label="${escapeAttr(`${eq.name}${refLabel}`)}">${escapeHtml(eq.name)}${refLabel}</p>
               ${eq.equipped ? '<span class="badge badge-success">Equipado</span>' : ''}
             </div>
             <div class="flex gap-2 mt-1 flex-wrap">
