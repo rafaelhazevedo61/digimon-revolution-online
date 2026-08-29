@@ -492,6 +492,38 @@ body {
 .text-center { text-align: center; }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+.inventory-chest-controls {
+  flex: 0 0 auto;
+}
+
+.inventory-quantity-input {
+  width: 3.5rem;
+  min-width: 3.5rem;
+  height: 2rem;
+  padding: 0.25rem 0.2rem;
+  border-radius: 0.55rem;
+  font-size: 0.8rem;
+}
+
+.inventory-chest-open-btn {
+  min-width: 2.75rem;
+  height: 2rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.45rem;
+  font-size: 0.7rem;
+}
+
+/* Nomes de inventário preservam duas linhas e o nome completo fica no tooltip. */
+.inventory-item-name {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}
+
 /* ===================== PWA Standalone ===================== */
 @media (display-mode: standalone) {
   body { padding-top: env(safe-area-inset-top); }

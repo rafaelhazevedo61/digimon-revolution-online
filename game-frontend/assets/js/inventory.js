@@ -391,9 +391,9 @@ function invRenderItems() {
     const incubationOnly = digitamaItem || incubatorItem;
     const usable = !incubationOnly && (def ? def.usable : invIsUsable(item.itemType));
     const action = isChest && chestCode ? `
-      <div class="flex items-center gap-2">
-        <input id="${chestQuantityInputId}" class="input w-16 text-center" type="number" min="1" max="${maxUseQuantity}" value="1" aria-label="Quantidade de baús" />
-        <button class="btn-sm btn-primary whitespace-nowrap" onclick="invOpenChest('${escapeHtml(chestCode)}', document.getElementById('${chestQuantityInputId}').value)">Abrir</button>
+      <div class="inventory-chest-controls flex items-center gap-1">
+        <input id="${chestQuantityInputId}" class="input inventory-quantity-input text-center" type="number" min="1" max="${maxUseQuantity}" value="1" aria-label="Quantidade de baús" />
+        <button class="btn-sm btn-primary inventory-chest-open-btn whitespace-nowrap" onclick="invOpenChest('${escapeHtml(chestCode)}', document.getElementById('${chestQuantityInputId}').value)">Abrir</button>
       </div>
     ` : incubatorItem ? `
       <button class="btn-sm btn-primary whitespace-nowrap" onclick="navigateTo('incubation')">Usar</button>
@@ -410,7 +410,7 @@ function invRenderItems() {
       <div class="card-sm mb-2 flex items-center gap-3">
         <div class="text-2xl">${emoji}</div>
         <div class="flex-1 min-w-0">
-          <p class="font-bold text-sm truncate">${escapeHtml(name)}</p>
+          <p class="font-bold text-sm inventory-item-name" title="${escapeAttr(name)}" aria-label="${escapeAttr(name)}">${escapeHtml(name)}</p>
           <div class="flex gap-2 mt-1">
             <span class="text-xs text-slate-400">Qtd: ${item.quantity}</span>
             <span class="badge badge-${catBadge}">${escapeHtml(catName)}</span>
@@ -949,7 +949,7 @@ function invRenderEquipment() {
           <div class="text-2xl">${emoji}</div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
-              <p class="font-bold text-sm truncate">${escapeHtml(eq.name)}${refLabel}</p>
+              <p class="font-bold text-sm inventory-item-name" title="${escapeAttr(`${eq.name}${refLabel}`)}" aria-label="${escapeAttr(`${eq.name}${refLabel}`)}">${escapeHtml(eq.name)}${refLabel}</p>
               ${eq.equipped ? '<span class="badge badge-success">Equipado</span>' : ''}
             </div>
             <div class="flex gap-2 mt-1 flex-wrap">
