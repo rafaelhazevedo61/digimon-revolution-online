@@ -36,6 +36,10 @@ public interface DigimonRepository extends JpaRepository<Digimon, UUID> {
 
     long countByPlayerIdAndStatus(UUID playerId, DigimonStatus status);
 
+    long countByPlayerIdIsNull();
+
+    long countByStatus(DigimonStatus status);
+
     @Query("SELECT d FROM Digimon d WHERE d.status = :status AND d.bot = false " +
             "ORDER BY d.level DESC, d.experience DESC")
     Page<Digimon> findByStatusOrderByLevelDescExperienceDesc(@Param("status") DigimonStatus status, Pageable pageable);

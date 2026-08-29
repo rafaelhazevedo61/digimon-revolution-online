@@ -43,6 +43,8 @@ public interface PlayerRepository extends JpaRepository<Player, UUID>, JpaSpecif
 
     long countByClanId(UUID clanId);
 
+    long countByActiveDigimonIdIsNull();
+
     long countByUserType(UserType userType);
 
     boolean existsByUserType(UserType userType);
