@@ -159,13 +159,14 @@ BEGIN
     END IF;
 END $$;
 
-UPDATE inventory_equipments
-SET digimon_id = NULL
-WHERE equipped = FALSE;
-
 DROP INDEX IF EXISTS idx_inventory_equipments_digimon_id;
 ALTER TABLE inventory_equipments ALTER COLUMN player_id SET NOT NULL;
 ALTER TABLE inventory_equipments ADD CONSTRAINT fk_inventory_equipments_player FOREIGN KEY (player_id) REFERENCES players(id);
 ALTER TABLE inventory_equipments ALTER COLUMN digimon_id DROP NOT NULL;
+
+UPDATE inventory_equipments
+SET digimon_id = NULL
+WHERE equipped = FALSE;
+
 CREATE INDEX idx_inventory_equipments_player_id ON inventory_equipments(player_id);
 CREATE INDEX idx_inventory_equipments_equipped_digimon ON inventory_equipments(digimon_id) WHERE equipped = TRUE;
