@@ -316,22 +316,29 @@ async function toolsLoadSelects() {
 }
 
 function toolsRunWithConfirmation(buttonId, resultId, message, busyLabel, action) {
-  if (!window.confirm(message)) return;
   const button = document.getElementById(buttonId);
   const result = document.getElementById(resultId);
-  if (!button) return;
-  const originalLabel = button.textContent;
-  button.disabled = true;
-  button.textContent = busyLabel;
-  Promise.resolve()
-    .then(action)
-    .finally(() => {
-      button.disabled = false;
-      button.textContent = originalLabel;
-    })
-    .catch(error => {
-      if (result) result.innerHTML = `<span class="text-red-400">${escapeHtml(error.message)}</span>`;
-    });
+  if (!button || typeof openConfirmModal !== "function") return;
+
+  openConfirmModal({
+    title: "Confirmar operação administrativa",
+    message,
+    confirmText: "Confirmar",
+    cancelText: "Cancelar",
+    onConfirm: async () => {
+      const originalLabel = button.textContent;
+      button.disabled = true;
+      button.textContent = busyLabel;
+      try {
+        await action();
+      } catch (error) {
+        if (result) result.innerHTML = `<span class="text-red-400">${escapeHtml(error.message)}</span>`;
+      } finally {
+        button.disabled = false;
+        button.textContent = originalLabel;
+      }
+    }
+  });
 }
 
 async function toolsAddXp() {
