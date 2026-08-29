@@ -6,6 +6,7 @@ import com.dro.modules.arena.api.dto.response.ArenaHistoryEntryResponse;
 import com.dro.modules.arena.api.dto.response.ArenaLobbyResponse;
 import com.dro.modules.arena.api.dto.response.ArenaMatchResponse;
 import com.dro.modules.arena.api.dto.response.ArenaRankingEntryResponse;
+import com.dro.modules.arena.api.dto.response.ArenaSeasonRankingEntryResponse;
 import com.dro.modules.arena.api.dto.response.ArenaShopResponse;
 import com.dro.modules.arena.api.dto.response.PlayerArenaStatisticsResponse;
 import com.dro.modules.arena.api.dto.response.BuyArenaShopResponse;
@@ -14,6 +15,7 @@ import com.dro.modules.arena.application.ChallengeArenaUseCase;
 import com.dro.modules.arena.application.GetArenaHistoryUseCase;
 import com.dro.modules.arena.application.GetArenaLobbyUseCase;
 import com.dro.modules.arena.application.GetArenaRankingUseCase;
+import com.dro.modules.arena.application.GetArenaSeasonRankingUseCase;
 import com.dro.modules.arena.application.GetArenaShopUseCase;
 import com.dro.modules.arena.application.PlayerArenaStatisticsService;
 import com.dro.shared.util.TokenExtractor;
@@ -31,6 +33,7 @@ public class ArenaController {
     private final GetArenaLobbyUseCase getArenaLobbyUseCase;
     private final ChallengeArenaUseCase challengeArenaUseCase;
     private final GetArenaRankingUseCase getArenaRankingUseCase;
+    private final GetArenaSeasonRankingUseCase getArenaSeasonRankingUseCase;
     private final GetArenaHistoryUseCase getArenaHistoryUseCase;
     private final GetArenaShopUseCase getArenaShopUseCase;
     private final BuyArenaShopProductUseCase buyArenaShopProductUseCase;
@@ -49,6 +52,11 @@ public class ArenaController {
     @GetMapping("/ranking")
     public ResponseEntity<List<ArenaRankingEntryResponse>> getRanking(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(getArenaRankingUseCase.execute(page, size));
+    }
+
+    @GetMapping("/season-ranking")
+    public ResponseEntity<List<ArenaSeasonRankingEntryResponse>> getSeasonRanking(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(getArenaSeasonRankingUseCase.execute(page, size));
     }
 
     @GetMapping("/history")
@@ -71,10 +79,11 @@ public class ArenaController {
         return ResponseEntity.ok(buyArenaShopProductUseCase.execute(authorization, request));
     }
 
-    public ArenaController(final GetArenaLobbyUseCase getArenaLobbyUseCase, final ChallengeArenaUseCase challengeArenaUseCase, final GetArenaRankingUseCase getArenaRankingUseCase, final GetArenaHistoryUseCase getArenaHistoryUseCase, final GetArenaShopUseCase getArenaShopUseCase, final BuyArenaShopProductUseCase buyArenaShopProductUseCase, final PlayerArenaStatisticsService playerArenaStatisticsService) {
+    public ArenaController(final GetArenaLobbyUseCase getArenaLobbyUseCase, final ChallengeArenaUseCase challengeArenaUseCase, final GetArenaRankingUseCase getArenaRankingUseCase, final GetArenaSeasonRankingUseCase getArenaSeasonRankingUseCase, final GetArenaHistoryUseCase getArenaHistoryUseCase, final GetArenaShopUseCase getArenaShopUseCase, final BuyArenaShopProductUseCase buyArenaShopProductUseCase, final PlayerArenaStatisticsService playerArenaStatisticsService) {
         this.getArenaLobbyUseCase = getArenaLobbyUseCase;
         this.challengeArenaUseCase = challengeArenaUseCase;
         this.getArenaRankingUseCase = getArenaRankingUseCase;
+        this.getArenaSeasonRankingUseCase = getArenaSeasonRankingUseCase;
         this.getArenaHistoryUseCase = getArenaHistoryUseCase;
         this.getArenaShopUseCase = getArenaShopUseCase;
         this.buyArenaShopProductUseCase = buyArenaShopProductUseCase;
