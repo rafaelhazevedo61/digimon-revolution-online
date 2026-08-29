@@ -30,6 +30,10 @@ function localizeGameMessage(message) {
   return translations[String(message || "")] || message;
 }
 
+function renderChestIcon(sizeClass = "w-10 h-10") {
+  return `<img src="assets/img/baus.webp" alt="Baú" class="${sizeClass} object-contain shrink-0" />`;
+}
+
 let playerPaginationEnabled = true;
 
 async function loadPlayerPaginationPreference() {

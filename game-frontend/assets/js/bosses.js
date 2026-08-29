@@ -155,7 +155,7 @@ function openBossDetail(bossCode) {
   if (boss.chestCode && boss.chestName) {
     dropsHtml += `
       <div class="flex justify-between text-xs py-1 border-b border-slate-700">
-        <span class="text-cyan-400 font-semibold">🎁 ${escapeHtml(boss.chestName)}</span>
+        <span class="text-cyan-400 font-semibold flex items-center gap-2">${renderChestIcon("w-8 h-8")} ${escapeHtml(boss.chestName)}</span>
         <span class="text-slate-400">100%</span>
       </div>
     `;
@@ -302,7 +302,7 @@ function renderBossResult(result) {
   if (result.chestCode && result.chestName) {
     dropsHtml += `
       <div class="flex justify-between text-sm py-1.5 border-b border-slate-700">
-        <span class="text-cyan-400 font-semibold">🎁 ${escapeHtml(result.chestName)}</span>
+        <span class="text-cyan-400 font-semibold flex items-center gap-2">${renderChestIcon("w-8 h-8")} ${escapeHtml(result.chestName)}</span>
         <span class="text-slate-400">x1</span>
       </div>
     `;

@@ -179,7 +179,7 @@ function missionRewardChestCode(reward) {
 
 function missionRewardIcon(reward) {
   if (reward && (reward.item === "LOOT_CHEST" || missionRewardChestCode(reward))) {
-    return "🎁";
+    return renderChestIcon("w-10 h-10");
   }
   if (reward && String(reward.item || "").startsWith("DIGITAMA")) return "🥚";
   if (reward && String(reward.item || "").startsWith("INCUBATOR")) return "📦";
@@ -220,7 +220,7 @@ function missionLootItemIcon(item) {
   if (itemType.startsWith("DIGITAMA")) return "🥚";
   if (itemType.startsWith("INCUBATOR")) return "📦";
   if (itemType.startsWith("FRAGMENT") || itemType === "EVOLUTION_MATERIAL") return "🧩";
-  if (itemType === "LOOT_CHEST") return "🎁";
+  if (itemType === "LOOT_CHEST") return renderChestIcon("w-10 h-10");
   return "✨";
 }
 
@@ -291,7 +291,7 @@ function missionRenderLootPreview(preview) {
       <section class="mb-5">
         <div class="rounded-lg border border-cyan-700 bg-cyan-950/30 px-3 py-3 mb-3">
           <div class="flex items-start gap-3">
-            <span class="text-3xl" aria-hidden="true">🎁</span>
+            ${renderChestIcon("w-14 h-14")}
             <div class="min-w-0">
               <h4 class="font-bold text-cyan-200">${escapeHtml(chest.name || "Baú da missão")}</h4>
               ${chest.description ? `<p class="text-xs text-cyan-100/70 mt-1">${escapeHtml(chest.description)}</p>` : ""}

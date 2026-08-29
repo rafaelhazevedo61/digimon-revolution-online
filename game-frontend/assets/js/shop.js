@@ -153,7 +153,7 @@ function shopItemEmoji(p) {
     DIGITAMA_THUNDER: "⚡", DIGITAMA_NEUTRAL: "⚪", DIGITAMA_ICE: "❄️", DIGITAMA_STEEL: "⚙️",
     INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "📦", INCUBATOR_EPIC: "📦",
     FRAGMENT_ROOKIE: "🧩", FRAGMENT_CHAMPION: "🧩", FRAGMENT_ULTIMATE: "🧩", FRAGMENT_MEGA: "🧩",
-    EVOLUTION_MATERIAL: "⭐", LOOT_CHEST: "🎁"
+    EVOLUTION_MATERIAL: "⭐", LOOT_CHEST: renderChestIcon("w-10 h-10")
   };
   return map[p.itemType] || "📦";
 }
@@ -274,7 +274,7 @@ async function shopRenderSellMode() {
 function shopSellItemEmoji(category) {
   const map = {
     CONSUMABLE: "🧪", MATERIAL: "🔮", FRAGMENT: "🧩",
-    EVOLUTION_MATERIAL: "⭐", DIGITAMA: "🥚", INCUBATOR: "📦", CHEST: "🎁"
+    EVOLUTION_MATERIAL: "⭐", DIGITAMA: "🥚", INCUBATOR: "📦", CHEST: renderChestIcon("w-10 h-10")
   };
   return map[category] || "📦";
 }
