@@ -65,10 +65,10 @@ DECLARE
     unresolved_count INTEGER;
     unresolved_ids TEXT;
 BEGIN
-    SELECT COUNT(*), string_agg(id::text, ', ' ORDER BY id)
+    SELECT COUNT(*), string_agg(inventory.id::text, ', ' ORDER BY inventory.id)
     INTO unresolved_count, unresolved_ids
-    FROM inventory_items
-    WHERE player_id IS NULL;
+    FROM inventory_items inventory
+    WHERE inventory.player_id IS NULL;
 
     IF unresolved_count > 0 THEN
         RAISE EXCEPTION
@@ -81,14 +81,14 @@ END $$;
 
 CREATE TEMP TABLE inventory_catalogued_consolidation ON COMMIT DROP AS
 SELECT
-    player_id,
-    item_definition_id,
-    MIN(id::text)::uuid AS survivor_id,
-    LEAST(SUM(quantity), COALESCE(MAX(definition.max_stack), 2147483647))::int AS consolidated_quantity
+    inventory.player_id,
+    inventory.item_definition_id,
+    MIN(inventory.id::text)::uuid AS survivor_id,
+    LEAST(SUM(inventory.quantity), COALESCE(MAX(definition.max_stack), 2147483647))::int AS consolidated_quantity
 FROM inventory_items inventory
 JOIN item_definitions definition ON definition.id = inventory.item_definition_id
 WHERE inventory.item_definition_id IS NOT NULL
-GROUP BY player_id, item_definition_id;
+GROUP BY inventory.player_id, inventory.item_definition_id;
 
 DELETE FROM inventory_items duplicate
 USING inventory_catalogued_consolidation consolidation
@@ -103,13 +103,13 @@ WHERE inventory.id = consolidation.survivor_id;
 
 CREATE TEMP TABLE inventory_legacy_consolidation ON COMMIT DROP AS
 SELECT
-    player_id,
-    item_type,
-    MIN(id::text)::uuid AS survivor_id,
-    SUM(quantity)::int AS consolidated_quantity
-FROM inventory_items
-WHERE item_definition_id IS NULL
-GROUP BY player_id, item_type;
+    inventory.player_id,
+    inventory.item_type,
+    MIN(inventory.id::text)::uuid AS survivor_id,
+    SUM(inventory.quantity)::int AS consolidated_quantity
+FROM inventory_items inventory
+WHERE inventory.item_definition_id IS NULL
+GROUP BY inventory.player_id, inventory.item_type;
 
 DELETE FROM inventory_items duplicate
 USING inventory_legacy_consolidation consolidation
@@ -146,10 +146,10 @@ DECLARE
     unresolved_count INTEGER;
     unresolved_ids TEXT;
 BEGIN
-    SELECT COUNT(*), string_agg(id::text, ', ' ORDER BY id)
+    SELECT COUNT(*), string_agg(equipment.id::text, ', ' ORDER BY equipment.id)
     INTO unresolved_count, unresolved_ids
-    FROM equipments
-    WHERE player_id IS NULL;
+    FROM equipments equipment
+    WHERE equipment.player_id IS NULL;
 
     IF unresolved_count > 0 THEN
         RAISE EXCEPTION
