@@ -54,6 +54,7 @@ public class RebirthUseCase {
         execute(token, digimonId, 0, 0, 0);
     }
 
+    @Transactional
     public void execute(String token, UUID digimonId, int codeInfiniteHp, int codeInfiniteAttack, int codeInfiniteDefense) {
         UUID playerId = extractPlayerId(token);
         Player player = findPlayer(playerId);
