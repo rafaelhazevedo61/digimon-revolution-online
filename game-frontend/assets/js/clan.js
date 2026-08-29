@@ -613,7 +613,7 @@ function clanStorageRenderDepositModalResults() {
       const itemId = Number(definition.id);
       const selected = itemId === Number(clanStorageDepositSelectedItemId);
       return `
-        <button type="button" class="card-sm w-full text-left clan-storage-deposit-option ${selected ? "border-cyan-500 bg-cyan-950/30" : "hover:border-cyan-600"}" data-clan-storage-deposit-item-id="${escapeAttr(String(itemId))}">
+        <button type="button" class="card-sm w-full text-left clan-storage-deposit-option overflow-hidden ${selected ? "border-cyan-500 bg-cyan-950/30" : "hover:border-cyan-600"}" data-clan-storage-deposit-item-id="${escapeAttr(String(itemId))}">
           <div class="flex items-center gap-3">
             <span class="w-9 h-9 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center">${clanStorageDepositItemIcon(item)}</span>
             <span class="min-w-0 flex-1">
@@ -650,7 +650,8 @@ function clanStorageRenderDepositModalResults() {
 }
 
 function clanStorageDepositItemIcon(item) {
-  const icon = String(item.itemDefinition?.icon || "").trim();
+  const definition = item.itemDefinition || {};
+  const icon = String(definition.icon || "").trim();
   const isImageUrl = icon.startsWith("http://")
     || icon.startsWith("https://")
     || icon.startsWith("/")
@@ -658,9 +659,34 @@ function clanStorageDepositItemIcon(item) {
     || icon.startsWith("../")
     || icon.startsWith("assets/")
     || /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(icon);
-  return isImageUrl
-    ? `<img src="${escapeAttr(icon)}" alt="" class="w-7 h-7 object-contain" onerror="this.style.display='none'">`
-    : `<span class="text-xl" aria-hidden="true">${escapeHtml(icon || "📦")}</span>`;
+  if (isImageUrl) {
+    return `<img src="${escapeAttr(icon)}" alt="" class="w-7 h-7 object-contain" onerror="this.style.display='none'">`;
+  }
+
+  const emojiByIcon = {
+    xp_disc_15: "💿",
+    xp_disc_20: "💿",
+    xp_disc_30: "💿",
+    incubation_slot_unlock: "🔓",
+    training_stone: "💎",
+    potion_small: "🧪",
+    data_core: "🔮",
+    digitama_starter: "🥚",
+    incubator_common: "📦",
+    incubator_rare: "📦",
+    incubator_epic: "📦"
+  };
+  const emojiByCategory = {
+    CONSUMABLE: "🧪",
+    MATERIAL: "🧱",
+    EVOLUTION_MATERIAL: "🧬",
+    FRAGMENT: "🧩",
+    DIGITAMA: "🥚",
+    INCUBATOR: "📦",
+    CHEST: "🗝️"
+  };
+  const emoji = emojiByIcon[icon.toLowerCase()] || emojiByCategory[String(definition.category || "").toUpperCase()] || "📦";
+  return `<span class="text-xl leading-none" aria-hidden="true">${emoji}</span>`;
 }
 
 function clanStorageSelectDepositItem(itemDefinitionId) {
