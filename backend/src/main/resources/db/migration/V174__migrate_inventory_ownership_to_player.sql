@@ -1,18 +1,81 @@
 -- Migra a posse de itens e equipamentos do Digimon para o jogador.
 -- O excedente acima de item_definitions.max_stack é descartado conforme a regra de negócio.
+--
+-- A migration não atribui órfãos a um jogador arbitrário. Ela tenta recuperar o dono
+-- por relações históricas não destrutivas e aborta com os IDs pendentes quando não
+-- houver evidência suficiente.
 
 ALTER TABLE inventory_items ADD COLUMN player_id UUID;
 
+-- Caso normal: o Digimon ainda existe.
 UPDATE inventory_items inventory
 SET player_id = digimon.player_id
 FROM digimons digimon
 WHERE inventory.digimon_id = digimon.id
   AND inventory.player_id IS NULL;
 
+-- Recupera itens cujo Digimon original foi substituído por rebirth. Só aceita a
+-- relação quando ela aponta para exatamente um jogador distinto.
+WITH rebirth_candidates AS (
+    SELECT inventory.id AS inventory_item_id,
+           MIN(current_digimon.player_id) AS player_id
+    FROM inventory_items inventory
+    JOIN digimons current_digimon
+      ON current_digimon.reborned_from = inventory.digimon_id
+    WHERE inventory.player_id IS NULL
+      AND NOT EXISTS (
+          SELECT 1
+          FROM digimons original_digimon
+          WHERE original_digimon.id = inventory.digimon_id
+      )
+    GROUP BY inventory.id
+    HAVING COUNT(DISTINCT current_digimon.player_id) = 1
+)
+UPDATE inventory_items inventory
+SET player_id = candidates.player_id
+FROM rebirth_candidates candidates
+WHERE inventory.id = candidates.inventory_item_id
+  AND inventory.player_id IS NULL;
+
+-- Recupera casos em que o histórico de missões é a única relação remanescente.
+-- Também exige exatamente um jogador distinto para evitar transferências indevidas.
+WITH mission_candidates AS (
+    SELECT inventory.id AS inventory_item_id,
+           MIN(mission.player_id) AS player_id
+    FROM inventory_items inventory
+    JOIN mission_instances mission
+      ON mission.digimon_id = inventory.digimon_id
+    WHERE inventory.player_id IS NULL
+      AND NOT EXISTS (
+          SELECT 1
+          FROM digimons original_digimon
+          WHERE original_digimon.id = inventory.digimon_id
+      )
+    GROUP BY inventory.id
+    HAVING COUNT(DISTINCT mission.player_id) = 1
+)
+UPDATE inventory_items inventory
+SET player_id = candidates.player_id
+FROM mission_candidates candidates
+WHERE inventory.id = candidates.inventory_item_id
+  AND inventory.player_id IS NULL;
+
 DO $$
+DECLARE
+    unresolved_count INTEGER;
+    unresolved_ids TEXT;
 BEGIN
-    IF EXISTS (SELECT 1 FROM inventory_items WHERE player_id IS NULL) THEN
-        RAISE EXCEPTION 'inventory_items possui registros sem jogador proprietário';
+    SELECT COUNT(*), string_agg(id::text, ', ' ORDER BY id)
+    INTO unresolved_count, unresolved_ids
+    FROM inventory_items
+    WHERE player_id IS NULL;
+
+    IF unresolved_count > 0 THEN
+        RAISE EXCEPTION
+            'inventory_items possui % registros sem jogador proprietário. IDs: %. '
+            'Recupere o vínculo ou cadastre um mapeamento confiável antes de repetir a migration.',
+            unresolved_count,
+            unresolved_ids;
     END IF;
 END $$;
 
@@ -79,9 +142,20 @@ WHERE equipment.digimon_id = digimon.id
   AND equipment.player_id IS NULL;
 
 DO $$
+DECLARE
+    unresolved_count INTEGER;
+    unresolved_ids TEXT;
 BEGIN
-    IF EXISTS (SELECT 1 FROM equipments WHERE player_id IS NULL) THEN
-        RAISE EXCEPTION 'equipments possui registros sem jogador proprietário';
+    SELECT COUNT(*), string_agg(id::text, ', ' ORDER BY id)
+    INTO unresolved_count, unresolved_ids
+    FROM equipments
+    WHERE player_id IS NULL;
+
+    IF unresolved_count > 0 THEN
+        RAISE EXCEPTION
+            'equipments possui % registros sem jogador proprietário. IDs: %',
+            unresolved_count,
+            unresolved_ids;
     END IF;
 END $$;
 
