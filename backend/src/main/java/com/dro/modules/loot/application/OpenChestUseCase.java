@@ -80,7 +80,7 @@ public class OpenChestUseCase {
         ChestDefinitionEntity chest = chestDefinitionRepository.findWithCatalogByCode(request.chestCode()).filter(ChestDefinitionEntity::isActive).orElseThrow(() -> new NotFoundException("Chest not found or inactive"));
         InventoryItem chestInventory = inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, chest.getItemDefinition().getId()).orElseThrow(() -> new NotFoundException("Chest not found in inventory"));
         if (chestInventory.getItemType() != ItemType.LOOT_CHEST || chestInventory.getQuantity() < quantity) {
-            throw new UnprocessableException("Not enough chests in inventory");
+            throw new UnprocessableException("Você não possui baús suficientes para abrir essa quantidade.");
         }
 
         List<ChestOpeningItemEntity> openingItems = new ArrayList<>();

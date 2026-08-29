@@ -159,6 +159,35 @@ class OpenChestUseCaseTest {
     }
 
     @Test
+    void executeRejectsBatchWhenRequestedQuantityExceedsChestBalance() {
+        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
+        String chestCode = "CHEST_MISSION_NATIVE_FOREST";
+        ItemDefinition chestDefinition = itemDefinition(1L, chestCode, "Baú Floresta Nativa", "CHEST", 99);
+        ItemDefinition rewardDefinition = itemDefinition(2L, "FRAGMENT_AGUMON", "Fragmento do Agumon", "EVOLUTION_MATERIAL", 999);
+        ChestDefinitionEntity chest = chest(chestCode, chestDefinition, rewardDefinition);
+        Player player = Player.builder().id(playerId).activeDigimonId(digimonId).build();
+        Digimon digimon = Digimon.builder().id(digimonId).playerId(playerId).build();
+        InventoryItem chestInventory = inventory(digimonId, ItemType.LOOT_CHEST, chestDefinition, 2);
+        when(chestOpeningRepository.findByRequestId("request-insufficient")).thenReturn(Optional.empty());
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(chestDefinitionRepository.findWithCatalogByCode(chestCode)).thenReturn(Optional.of(chest));
+        when(inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, 1L))
+                .thenReturn(Optional.of(chestInventory));
+
+        assertThatThrownBy(() -> openChestUseCase.execute(
+                token(playerId),
+                new OpenChestRequest(chestCode, "request-insufficient", 3)
+        )).isInstanceOf(UnprocessableException.class)
+                .hasMessage("Você não possui baús suficientes para abrir essa quantidade.");
+
+        assertThat(chestInventory.getQuantity()).isEqualTo(2);
+        verify(chestOpeningRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(transactionAuditPublisher);
+    }
+
+    @Test
     void executeReturnsPreviousOpeningWithoutConsumingAgainOnRetry() {
         UUID playerId = UUID.randomUUID();
         String chestCode = "CHEST_MISSION_NATIVE_FOREST";
