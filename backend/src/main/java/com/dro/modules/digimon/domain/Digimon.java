@@ -2,6 +2,7 @@ package com.dro.modules.digimon.domain;
 
 import com.dro.modules.digimon.domain.enums.*;
 import com.dro.shared.exception.UnprocessableException;
+import com.dro.modules.player.domain.Player;
 import jakarta.persistence.*;
 import java.time.Duration;
 import java.time.Instant;
@@ -12,9 +13,10 @@ import java.util.UUID;
  * Parceiro Digimon persistente e principal unidade de progressão do jogador.
  *
  * <p>O Digimon concentra estágio, nível, experiência, IVs, raridade,
- * personalidade, trait, energia, Bits, Rebirth e referências aos equipamentos
- * por slot. Inventário e operações de combate devem respeitar o vínculo entre
- * este registro e seu {@code playerId}.</p>
+ * personalidade, trait, energia, Rebirth e referências aos equipamentos
+ * por slot. O saldo de Bits pertence ao Player; o campo legado é mantido apenas
+ * durante a migração. Inventário e operações de combate devem respeitar o vínculo
+ * entre este registro e seu {@code playerId}.</p>
  */
 @Entity
 @Table(name = "digimons")
@@ -24,6 +26,9 @@ public class Digimon {
     private UUID id;
     @Column(nullable = false)
     private UUID playerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_id", insertable = false, updatable = false)
+    private Player player;
     @Column(nullable = false)
     private String name;
     @Column(nullable = false)
@@ -65,6 +70,8 @@ public class Digimon {
     private int maxEnergy;
     @Column(name = "last_energy_update", nullable = false)
     private Instant lastEnergyUpdate;
+    /** Campo legado; o saldo oficial fica em Player.bits. */
+    @Deprecated
     @Column(nullable = false)
     private int bits;
     @Column(name = "rebirth_count", nullable = false)
@@ -449,12 +456,23 @@ public class Digimon {
         this.lastEnergyUpdate = lastEnergyUpdate;
     }
 
+    /**
+     * Retorna o saldo global do jogador quando a relação está disponível.
+     * O campo local permanece apenas como compatibilidade com fixtures legadas.
+     */
     public int getBits() {
-        return bits;
+        return player != null ? player.getBits() : bits;
     }
 
+    /**
+     * Atualiza o saldo global do jogador quando a relação está disponível.
+     */
     public void setBits(int bits) {
-        this.bits = bits;
+        if (player != null) {
+            player.setBits(bits);
+        } else {
+            this.bits = bits;
+        }
     }
 
     public int getRebirthCount() {
