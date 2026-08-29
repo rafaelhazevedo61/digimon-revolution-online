@@ -24,7 +24,7 @@ public class Digimon {
     private static final int MAX_LEVEL = DigimonLevelRules.MAX_LEVEL;
     @Id
     private UUID id;
-    @Column(nullable = false)
+    @Column(name = "player_id", nullable = false)
     private UUID playerId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", insertable = false, updatable = false)
