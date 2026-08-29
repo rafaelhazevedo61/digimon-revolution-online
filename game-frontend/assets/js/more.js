@@ -22,6 +22,7 @@ async function renderMorePage() {
         {
           route: "arena",
           icon: "⚔️",
+          iconImage: "assets/img/arena.webp",
           title: "Arena",
           desc: "Duele contra outros jogadores",
         },
