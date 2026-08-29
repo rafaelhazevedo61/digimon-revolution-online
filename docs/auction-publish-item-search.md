@@ -7,3 +7,10 @@ Dentro do modal, a busca é feita sobre os itens elegíveis já carregados do en
 A paginação altera somente a apresentação da lista; a quantidade disponível continua sendo obtida do inventário atual. Ao selecionar um item, o limite máximo do campo de quantidade é atualizado conforme o saldo daquele item. Se a busca não encontrar resultados, a publicação fica bloqueada até que um item válido seja selecionado.
 
 A publicação continua usando `POST /auction/listings` com `itemDefinitionId`, `quantity`, `unitPrice` e `durationHours`. Nenhuma regra de segurança ou validação do backend foi removida; o backend permanece responsável por confirmar posse, quantidade, negociabilidade, empilhamento, Bits e limites do anúncio.
+
+
+## Correção dos Fragmentos de Mega
+
+Os Fragmentos de Mega não apareciam no modal de publicação porque suas definições possuíam `tradable = FALSE`, embora fossem itens empilháveis. Como o frontend e o backend da Casa de Leilões validam a propriedade `tradable`, o bloqueio ocorria corretamente segundo o cadastro existente.
+
+A migration `V173__enable_mega_fragments_in_auction.sql` altera `tradable` para `TRUE` nos itens da categoria `EVOLUTION_MATERIAL` com o ícone `fragment_mega_specific`. A alteração é limitada aos Fragmentos de Mega e não remove as validações de posse, quantidade ou empilhamento da publicação.
