@@ -110,6 +110,7 @@ async function renderMorePage() {
       items: [
         {
           route: "settings",
+          iconClass: "more-icon-settings",
           iconImage: "assets/img/configuracoes.webp",
           title: "Configurações",
           desc: "Conta e preferências",
@@ -120,7 +121,7 @@ async function renderMorePage() {
 
   const renderItem = (item) => `
         <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('${item.route}')">
-          ${item.iconImage ? `<img src="${item.iconImage}" alt="" class="w-12 h-12 object-contain shrink-0" />` : `<span class="text-2xl">${item.icon}</span>`}
+          ${item.iconImage ? `<img src="${item.iconImage}" alt="" class="w-12 h-12 object-contain shrink-0 ${item.iconClass || ""}" />` : `<span class="text-2xl">${item.icon}</span>`}
           <div class="flex-1">
             <p class="font-bold text-sm">${item.title}${item.badgeId ? ` <span id="${item.badgeId}" class="badge hidden align-middle"></span>` : ""}</p>
             <p class="text-xs text-slate-400">${item.desc}</p>

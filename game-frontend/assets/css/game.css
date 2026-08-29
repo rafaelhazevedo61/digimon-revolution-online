@@ -396,6 +396,9 @@ body {
 .nav-btn:hover { color: #94a3b8; }
 .nav-btn.active { color: #06b6d4; }
 
+/* Keep oversized menu artwork visually consistent with the other cards. */
+.more-icon-settings { transform: scale(0.72); }
+
 /* ===================== Animations ===================== */
 @keyframes fade-in {
   from { opacity: 0; transform: translateX(-50%) translateY(-0.5rem); }
