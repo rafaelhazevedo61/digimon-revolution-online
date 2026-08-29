@@ -136,14 +136,20 @@ async function renderToolsPage() {
           <button onclick="adminCompleteClanMissions()" class="btn-primary w-full py-2">Completar Missões</button>
           <div id="admin-complete-missions-result" class="text-sm mt-2"></div>
         </div>
-        <div class="bg-slate-900 rounded-lg p-4 border border-amber-900/60">
+          <div class="bg-slate-900 rounded-lg p-4 border border-amber-900/60">
           <p class="text-sm text-slate-300 mb-1">Forçar novo ciclo do Boss Mundial</p>
           <p class="text-xs text-slate-500 mb-2">Disponível somente depois que o Boss atual for derrotado. O histórico anterior será preservado.</p>
           <button onclick="adminForceNewWorldBossCycle()" class="btn-primary w-full py-2">Abrir novo ciclo</button>
-          <div id="admin-force-world-boss-result" class="text-sm mt-2"></div>
+              <div id="admin-force-world-boss-result" class="text-sm mt-2"></div>
+            </div>
+          </div>
+          <div class="bg-slate-900 rounded-lg p-4 border border-emerald-900/60">
+            <p class="text-sm text-slate-300 mb-1">Forçar novo ciclo da Incursão</p>
+            <p class="text-xs text-slate-500 mb-2">Usa o clã do jogador selecionado. Disponível somente depois que a incursão estiver derrotada.</p>
+            <button id="admin-force-clan-raid-btn" onclick="adminForceNewClanRaidCycle()" class="btn-primary w-full py-2">Abrir novo ciclo</button>
+            <div id="admin-force-clan-raid-result" class="text-sm mt-2"></div>
+          </div>
         </div>
-      </div>
-    </div>
   `;
 
   document.getElementById("tools-player-search-btn").addEventListener("click", toolsSearchPlayers);
@@ -514,6 +520,28 @@ async function adminForceNewWorldBossCycle() {
     resultElement.innerHTML =
       `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
   }
+}
+
+async function adminForceNewClanRaidCycle() {
+  const selectedPlayer = toolsState.players.find(player => String(player.id) === String(toolsState.selectedPlayerId));
+  const resultElement = document.getElementById("admin-force-clan-raid-result");
+  if (!selectedPlayer?.clanId) {
+    resultElement.innerHTML =
+      `<span class="text-red-400">O jogador selecionado não pertence a um clã.</span>`;
+    return;
+  }
+
+  toolsRunWithConfirmation(
+    "admin-force-clan-raid-btn",
+    "admin-force-clan-raid-result",
+    "Abrir um novo ciclo da Incursão agora para o clã do jogador selecionado? O ciclo atual precisa estar derrotado e o histórico será preservado.",
+    "Abrindo novo ciclo...",
+    async () => {
+      const result = await apiPost(`/admin/tools/force-new-clan-raid-cycle/${selectedPlayer.clanId}`);
+      resultElement.innerHTML =
+        `<span class="text-green-400">${escapeHtml(result.message)}</span>`;
+    }
+  );
 }
 
 async function adminCompleteClanMissions() {

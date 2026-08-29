@@ -52,7 +52,7 @@ public class AdminBossController {
         ChestDefinitionEntity worldAttemptChest = requiresWorldRewardChests(bossType) ? resolveActiveChest(request.worldAttemptChestCode()) : null;
         ChestDefinitionEntity worldTopDamageChest = requiresWorldRewardChests(bossType) ? resolveActiveChest(request.worldTopDamageChestCode()) : null;
         ChestDefinitionEntity worldFinalBlowChest = requiresWorldRewardChests(bossType) ? resolveActiveChest(request.worldFinalBlowChestCode()) : null;
-        BossDefinitionEntity boss = BossDefinitionEntity.builder().code(request.code()).name(request.name()).bossType(bossType).requiredStage(Stage.valueOf(request.requiredStage())).requiredLevel(request.requiredLevel()).requiredRebirths(request.requiredRebirths()).hp(request.hp()).atk(request.atk()).def(request.def()).energyCost(request.energyCost()).cooldownMinutes(request.cooldownMinutes()).baseXpReward(request.baseXpReward()).baseBitsReward(request.baseBitsReward()).defeatXpPercent(request.defeatXpPercent() != null ? request.defeatXpPercent() : 10).imageUrl(request.imageUrl()).chestDefinition(rewardChest).worldAttemptChestDefinition(worldAttemptChest).worldTopDamageChestDefinition(worldTopDamageChest).worldFinalBlowChestDefinition(worldFinalBlowChest).active(true).build();
+        BossDefinitionEntity boss = BossDefinitionEntity.builder().code(request.code()).name(request.name()).bossType(bossType).requiredStage(Stage.valueOf(request.requiredStage())).requiredLevel(request.requiredLevel()).requiredRebirths(request.requiredRebirths()).hp(request.hp()).atk(request.atk()).def(request.def()).energyCost(request.energyCost()).cooldownMinutes(request.cooldownMinutes()).baseXpReward(request.baseXpReward()).baseBitsReward(request.baseBitsReward()).clanHonorMarksReward(request.clanHonorMarksReward()).defeatXpPercent(request.defeatXpPercent() != null ? request.defeatXpPercent() : 10).imageUrl(request.imageUrl()).chestDefinition(rewardChest).worldAttemptChestDefinition(worldAttemptChest).worldTopDamageChestDefinition(worldTopDamageChest).worldFinalBlowChestDefinition(worldFinalBlowChest).active(true).build();
         return ResponseEntity.ok(bossDefinitionRepository.save(boss));
     }
 
@@ -72,6 +72,7 @@ public class AdminBossController {
         if (request.cooldownMinutes() != null) boss.setCooldownMinutes(request.cooldownMinutes());
         if (request.baseXpReward() != null) boss.setBaseXpReward(request.baseXpReward());
         if (request.baseBitsReward() != null) boss.setBaseBitsReward(request.baseBitsReward());
+        if (request.clanHonorMarksReward() != null) boss.setClanHonorMarksReward(request.clanHonorMarksReward());
         if (request.defeatXpPercent() != null) boss.setDefeatXpPercent(request.defeatXpPercent());
         if (request.imageUrl() != null) boss.setImageUrl(request.imageUrl());
         if (request.active() != null) boss.setActive(request.active());

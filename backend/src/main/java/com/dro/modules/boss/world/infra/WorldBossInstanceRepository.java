@@ -18,4 +18,7 @@ public interface WorldBossInstanceRepository extends JpaRepository<WorldBossInst
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<WorldBossInstance> findFirstByBossDateOrderByCreatedAtDesc(LocalDate bossDate);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<WorldBossInstance> findFirstByOrderByCreatedAtDesc();
 }

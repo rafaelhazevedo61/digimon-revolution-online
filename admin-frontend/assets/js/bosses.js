@@ -115,6 +115,7 @@ function renderBossesTable() {
             <th class="py-2 px-2">HP/ATK/DEF</th>
             <th class="py-2 px-2">XP</th>
             <th class="py-2 px-2">Bits</th>
+            <th class="py-2 px-2">Marcas de Honra (Incursão)</th>
             <th class="py-2 px-2">Chance Equipamento</th>
             <th class="py-2 px-2">Cooldown</th>
             <th class="py-2 px-2">Baú de Recompensa</th>
@@ -133,6 +134,7 @@ function renderBossesTable() {
               <td class="py-2 px-2 text-xs">${b.hp}/${b.atk}/${b.def}</td>
               <td class="py-2 px-2 text-yellow-400">${b.baseXpReward}</td>
               <td class="py-2 px-2 text-amber-400">${b.baseBitsReward}</td>
+              <td class="py-2 px-2 text-purple-400">${b.bossType === "CLAN" ? b.clanHonorMarksReward : "—"}</td>
               <td class="py-2 px-2">${equipmentPoolSummary(b)}</td>
               <td class="py-2 px-2">${cooldownSummary(b)}</td>
               <td class="py-2 px-2">${bossChestSummary(b)}</td>
@@ -364,6 +366,10 @@ function openBossForm(id = null) {
               <input id="bf-bits" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.baseBitsReward ?? 100}" required>
             </div>
             <div>
+              <label class="text-xs text-slate-400">Marcas de Honra (Incursão)</label>
+              <input id="bf-honor-marks" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.clanHonorMarksReward ?? (boss?.bossType === "CLAN" ? 100 : 0)}" required>
+            </div>
+            <div>
               <label class="text-xs text-slate-400">Defeat XP %</label>
               <input id="bf-defeatxp" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.defeatXpPercent ?? 10}" required>
             </div>
@@ -469,6 +475,7 @@ async function saveBoss(event) {
     cooldownMinutes: parseInt(document.getElementById("bf-cooldown").value),
     baseXpReward: parseInt(document.getElementById("bf-xp").value),
     baseBitsReward: parseInt(document.getElementById("bf-bits").value),
+    clanHonorMarksReward: parseInt(document.getElementById("bf-honor-marks").value),
     defeatXpPercent: parseInt(document.getElementById("bf-defeatxp").value),
     imageUrl: document.getElementById("bf-image").value || null,
     chestCode: document.getElementById("bf-chest").value || null,

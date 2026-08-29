@@ -1,6 +1,7 @@
 package com.dro.modules.boss.world.api.dto.response;
 
 import com.dro.modules.boss.world.domain.WorldBossStatus;
+import com.dro.modules.boss.api.dto.response.BossDefeatSummaryResponse;
 
 import java.time.Instant;
 import java.util.List;
@@ -25,6 +26,7 @@ public record WorldBossResponse(
         long myTotalDamage,
         List<WorldBossRankingEntryResponse> ranking,
         List<WorldBossAttackResponse> recentAttacks,
-        List<WorldBossRewardResponse> myRewards
+        List<WorldBossRewardResponse> myRewards,
+        BossDefeatSummaryResponse defeatSummary
 ) {
 }

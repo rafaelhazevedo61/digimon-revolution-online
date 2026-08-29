@@ -23,7 +23,15 @@ function showBottomNav(activeRoute) {
   }
 }
 
+function localizeGameMessage(message) {
+  const translations = {
+    "The world boss has already been defeated today": "O Chefe Mundial foi derrotado. O próximo renascimento ocorrerá uma hora após a derrota."
+  };
+  return translations[String(message || "")] || message;
+}
+
 function showToast(message, type = "success") {
+  message = localizeGameMessage(message);
   const existing = document.querySelector(".toast");
   if (existing) existing.remove();
 

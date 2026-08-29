@@ -11,6 +11,7 @@ import com.dro.modules.clan.domain.Clan;
 import com.dro.modules.clan.domain.ClanRules;
 import com.dro.modules.clan.infra.ClanRepository;
 import com.dro.modules.clan.raid.api.dto.response.AttackClanRaidResponse;
+import com.dro.modules.boss.api.dto.response.BossDefeatSummaryResponse;
 import com.dro.modules.clan.raid.domain.ClanRaid;
 import com.dro.modules.clan.raid.domain.ClanRaidAttack;
 import com.dro.modules.clan.raid.domain.ClanRaidRules;
@@ -116,7 +117,7 @@ public class AttackClanRaidUseCase {
             raid.setDefeatedAt(Instant.now());
             Clan clan = clanRepository.findById(player.getClanId()).orElseThrow(() -> new NotFoundException("Clan not found"));
             double honorMarksMultiplier = 1.0 + clanBonusService.getHonorMarksBonusPercent(clan.getId());
-            clanHonorMarksGained = (int) Math.floor(boss.getBaseBitsReward() * honorMarksMultiplier);
+            clanHonorMarksGained = (int) Math.floor(boss.getClanHonorMarksReward() * honorMarksMultiplier);
             clanXpGained = boss.getBaseXpReward();
             clan.setHonorMarks(clan.getHonorMarks() + clanHonorMarksGained);
             ClanRules.addExperience(clan, clanXpGained);
@@ -127,7 +128,18 @@ public class AttackClanRaidUseCase {
         clanRaidRepository.save(raid);
         clanRaidAttackRepository.save(attack);
         if (activityCalendarService != null) activityCalendarService.recordActivity(playerId, ActivitySource.CLAN_RAID_ATTACK, attack.getId().toString());
-        return new AttackClanRaidResponse(raid.getId(), boss.getCode(), boss.getName(), actualDamage, raid.getRemainingHp(), raid.getMaxHp(), defeated, winChance, xpGained, bitsGained, clanHonorMarksGained, clanXpGained);
+        return new AttackClanRaidResponse(raid.getId(), boss.getCode(), boss.getName(), actualDamage, raid.getRemainingHp(), raid.getMaxHp(), defeated, winChance, xpGained, bitsGained, clanHonorMarksGained, clanXpGained, buildDefeatSummary(raid, attack));
+    }
+
+    private BossDefeatSummaryResponse buildDefeatSummary(ClanRaid raid, ClanRaidAttack finalBlow) {
+        if (raid.getStatus() != ClanRaidStatus.DEFEATED) return null;
+        var attacks = clanRaidAttackRepository.findByClanRaidIdOrderByCreatedAtDesc(raid.getId());
+        var totals = attacks.stream().collect(java.util.stream.Collectors.groupingBy(ClanRaidAttack::getPlayerId, java.util.stream.Collectors.summingLong(ClanRaidAttack::getDamage)));
+        UUID topPlayer = totals.entrySet().stream().max(java.util.Map.Entry.<UUID, Long>comparingByValue()).orElseThrow().getKey();
+        String finalName = playerRepository.findById(finalBlow.getPlayerId()).map(Player::getUsername).orElse("Desconhecido");
+        String topName = playerRepository.findById(topPlayer).map(Player::getUsername).orElse("Desconhecido");
+        long duration = raid.getDefeatedAt() == null ? 0 : Math.max(0, Duration.between(raid.getCreatedAt(), raid.getDefeatedAt()).getSeconds());
+        return new BossDefeatSummaryResponse(finalBlow.getPlayerId(), finalName, topPlayer, topName, totals.get(topPlayer), attacks.size(), duration, raid.getDefeatedAt().plus(Duration.ofHours(1)));
     }
 
     private void validateRequirements(BossDefinitionEntity boss, Digimon digimon) {
