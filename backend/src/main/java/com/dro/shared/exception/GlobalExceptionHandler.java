@@ -228,7 +228,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.CONFLICT.value(),
                 HttpStatus.CONFLICT.getReasonPhrase(),
                 ApiErrorCode.CONFLICT,
-                "O estado do Digimon foi alterado por outra operação. Atualize a tela e tente novamente.",
+                "A operação não pôde ser concluída porque os dados já foram alterados. Atualize a tela e tente novamente.",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
