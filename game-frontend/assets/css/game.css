@@ -382,9 +382,22 @@ body {
   border-radius: 0.5rem;
 }
 
-.nav-btn .nav-icon { font-size: 1.25rem; }
+.nav-btn .nav-icon {
+  display: flex;
+  width: 1.5rem;
+  height: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+.nav-btn .nav-icon.nav-image { object-fit: contain; }
+.nav-btn .nav-icon.nav-backpack { transform: scale(1.2); }
 .nav-btn:hover { color: #94a3b8; }
 .nav-btn.active { color: #06b6d4; }
+
+/* Keep oversized menu artwork visually consistent with the other cards. */
+.more-icon-settings { transform: scale(1.25); }
 
 /* ===================== Animations ===================== */
 @keyframes fade-in {

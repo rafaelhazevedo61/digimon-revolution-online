@@ -442,8 +442,13 @@ function invCompareText(a, b) {
 function invRenderItems() {
   const content = document.getElementById("inv-content");
   const page = invPageData.items;
-  const items = page.content || [];
-  invUpdateFilterSummary(invGetPageSummary("items", page.totalElements), page.totalElements, "item");
+  const filteredItems = playerPaginationEnabled ? null : invSortItems(invGetFilteredItems());
+  const items = playerPaginationEnabled ? (page.content || []) : filteredItems;
+  invUpdateFilterSummary(
+    playerPaginationEnabled ? invGetPageSummary("items", page.totalElements) : items.length,
+    playerPaginationEnabled ? page.totalElements : items.length,
+    "item"
+  );
 
   if (items.length === 0) {
     content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${page.totalElements === 0 ? "Nenhum item no inventário." : "Nenhum item nesta página."}</p>`;
@@ -486,7 +491,7 @@ function invRenderItems() {
 
     return `
       <div class="card-sm mb-2 flex items-center gap-3">
-        <div class="text-2xl">${emoji}</div>
+        <div class="shrink-0">${isChest ? renderChestIcon("w-14 h-14") : emoji}</div>
         <div class="flex-1 min-w-0">
           <p class="font-bold text-sm inventory-item-name" title="${escapeAttr(name)}" aria-label="${escapeAttr(name)}">${escapeHtml(name)}</p>
           <div class="flex gap-2 mt-1">
@@ -514,6 +519,7 @@ function invGetPageSummary(tab, total) {
 }
 
 function invRenderPagination(tab, total, backendTotalPages = null) {
+  if (!playerPaginationEnabled) return "";
   const totalPages = backendTotalPages == null ? Math.ceil(total / invPagination.pageSize) : backendTotalPages;
   if (totalPages <= 1) return "";
   const currentPage = invPagination[tab];
@@ -627,7 +633,7 @@ function invSortItems(items) {
 function invCategoryEmoji(category) {
   const map = {
     CONSUMABLE: "🧪", MATERIAL: "🔮", FRAGMENT: "🧩",
-    EVOLUTION_MATERIAL: "⭐", DIGITAMA: "🥚", INCUBATOR: "📦", CHEST: "🎁"
+    EVOLUTION_MATERIAL: "⭐", DIGITAMA: "🥚", INCUBATOR: "📦", CHEST: renderChestIcon("w-10 h-10")
   };
   return map[category] || "📦";
 }
@@ -754,7 +760,7 @@ function invShowChestOpeningResult(result) {
   overlay.innerHTML = `
     <div class="card w-full max-w-md max-h-[88vh] border-cyan-800 shadow-2xl flex flex-col overflow-hidden">
       <div class="text-center mb-4 shrink-0">
-        <div class="text-5xl mb-2">🎁</div>
+        <div class="flex justify-center mb-2">${renderChestIcon("w-24 h-24")}</div>
         <h3 class="text-xl font-bold">${escapeHtml(title)}</h3>
         <p class="text-sm text-slate-400 mt-1">${escapeHtml(result && result.chestName || "Baú")} · ${chestQuantity} ${chestQuantity === 1 ? "baú" : "baús"}</p>
         <p class="text-xs text-slate-500 mt-2">Cada item possui sua própria raridade</p>
@@ -843,7 +849,7 @@ function invItemEmoji(itemType) {
     XP_DISC_10: "💿", XP_DISC_15: "💿", XP_DISC_20: "💿",
     FRAGMENT_ROOKIE: "🧩", FRAGMENT_CHAMPION: "🧩", FRAGMENT_ULTIMATE: "🧩", FRAGMENT_MEGA: "🧩",
     EVOLUTION_MATERIAL: "⭐",
-    LOOT_CHEST: "🎁",
+    LOOT_CHEST: renderChestIcon("w-10 h-10"),
     RARITY_REROLL: "🎲"
   };
   return map[itemType] || "📦";
@@ -1022,8 +1028,13 @@ function invSortEquipments(equipments) {
 function invRenderEquipment() {
   const content = document.getElementById("inv-content");
   const page = invPageData.equipment;
-  const equipments = page.content || [];
-  invUpdateFilterSummary(invGetPageSummary("equipment", page.totalElements), page.totalElements, "equipamento");
+  const filteredEquipments = playerPaginationEnabled ? null : invSortEquipments(invGetFilteredEquipments());
+  const equipments = playerPaginationEnabled ? (page.content || []) : filteredEquipments;
+  invUpdateFilterSummary(
+    playerPaginationEnabled ? invGetPageSummary("equipment", page.totalElements) : equipments.length,
+    playerPaginationEnabled ? page.totalElements : equipments.length,
+    "equipamento"
+  );
 
   if (equipments.length === 0) {
     content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${page.totalElements === 0 ? "Nenhum equipamento no inventário." : "Nenhum equipamento nesta página."}</p>`;
