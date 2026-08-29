@@ -31,6 +31,7 @@ public record DigimonResponse(
         int rebirthCount,
         UUID rebornedFrom,
         DigimonStatus status,
+        boolean locked,
         Long digimonInfoId,
         String attribute,
         String element,
@@ -55,7 +56,7 @@ public record DigimonResponse(
                 d.getIvHp(), d.getIvAttack(), d.getIvDefense(),
                 d.getGrade(), d.getRarity(), d.getPersonality(), d.getTrait(),
                 d.getEnergy(), d.getMaxEnergy(), d.getBits(),
-                d.getRebirthCount(), d.getRebornedFrom(), d.getStatus(),
+                d.getRebirthCount(), d.getRebornedFrom(), d.getStatus(), d.isLocked(),
                 d.getDigimonInfoId(), null, null, null, 0, 0, 0, 0, 0, 0, 0,
                 d.isRarityChangedByDie(), d.getOriginalRarityBeforeDie(), d.getRarityChangedByDieAt()
         );

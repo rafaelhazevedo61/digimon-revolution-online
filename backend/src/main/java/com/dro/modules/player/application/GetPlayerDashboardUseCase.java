@@ -182,6 +182,7 @@ public class GetPlayerDashboardUseCase {
                 d.getRebirthCount(),
                 d.getRebornedFrom(),
                 d.getStatus(),
+                d.isLocked(),
                 d.getDigimonInfoId(),
                 info != null ? info.getAttribute().name() : null,
                 info != null ? info.getElement().name() : null,

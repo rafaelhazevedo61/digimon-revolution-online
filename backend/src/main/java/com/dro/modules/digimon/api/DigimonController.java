@@ -39,6 +39,7 @@ public class DigimonController {
     private final GetEvolutionOptionsUseCase getEvolutionOptionsUseCase;
     private final SacrificeDigimonUseCase sacrificeDigimonUseCase;
     private final BulkSacrificeDigimonUseCase bulkSacrificeDigimonUseCase;
+    private final ToggleDigimonLockUseCase toggleDigimonLockUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<List<DigimonResponse>> me(@RequestHeader("Authorization") String authorization) {
@@ -115,6 +116,11 @@ public class DigimonController {
         return ResponseEntity.ok(bulkSacrificeDigimonUseCase.execute(authorization, request.digimonIds()));
     }
 
+    @PatchMapping("/{digimonId}/lock")
+    public ResponseEntity<DigimonResponse> toggleLock(@RequestHeader("Authorization") String authorization, @PathVariable UUID digimonId) {
+        return ResponseEntity.ok(DigimonResponse.from(toggleDigimonLockUseCase.execute(authorization, digimonId)));
+    }
+
     @PostMapping("/{digimonId}/retrieve")
     public ResponseEntity<DigimonResponse> retrieve(@RequestHeader("Authorization") String authorization, @PathVariable UUID digimonId) {
         var digimon = retrieveDigimonUseCase.execute(authorization, digimonId);
@@ -126,7 +132,7 @@ public class DigimonController {
         return ResponseEntity.ok(useCase.executeStorage(authorization));
     }
 
-    public DigimonController(final GetDigimonUseCase useCase, final GetDigimonByIdUseCase getDigimonByIdUseCase, final SelectActiveDigimonUseCase selectUseCase, final EvolveDigimonUseCase evolveDigimonUseCase, final RebirthUseCase rebirthUseCase, final GetDigimonLineageUseCase getDigimonLineageUseCase, final RebirthPreviewUseCase rebirthPreviewUseCase, final RenameDigimonUseCase renameDigimonUseCase, final StoreDigimonUseCase storeDigimonUseCase, final RetrieveDigimonUseCase retrieveDigimonUseCase, final GetEvolutionOptionsUseCase getEvolutionOptionsUseCase, final SacrificeDigimonUseCase sacrificeDigimonUseCase, final BulkSacrificeDigimonUseCase bulkSacrificeDigimonUseCase) {
+    public DigimonController(final GetDigimonUseCase useCase, final GetDigimonByIdUseCase getDigimonByIdUseCase, final SelectActiveDigimonUseCase selectUseCase, final EvolveDigimonUseCase evolveDigimonUseCase, final RebirthUseCase rebirthUseCase, final GetDigimonLineageUseCase getDigimonLineageUseCase, final RebirthPreviewUseCase rebirthPreviewUseCase, final RenameDigimonUseCase renameDigimonUseCase, final StoreDigimonUseCase storeDigimonUseCase, final RetrieveDigimonUseCase retrieveDigimonUseCase, final GetEvolutionOptionsUseCase getEvolutionOptionsUseCase, final SacrificeDigimonUseCase sacrificeDigimonUseCase, final BulkSacrificeDigimonUseCase bulkSacrificeDigimonUseCase, final ToggleDigimonLockUseCase toggleDigimonLockUseCase) {
         this.useCase = useCase;
         this.getDigimonByIdUseCase = getDigimonByIdUseCase;
         this.selectUseCase = selectUseCase;
@@ -140,5 +146,6 @@ public class DigimonController {
         this.getEvolutionOptionsUseCase = getEvolutionOptionsUseCase;
         this.sacrificeDigimonUseCase = sacrificeDigimonUseCase;
         this.bulkSacrificeDigimonUseCase = bulkSacrificeDigimonUseCase;
+        this.toggleDigimonLockUseCase = toggleDigimonLockUseCase;
     }
 }
