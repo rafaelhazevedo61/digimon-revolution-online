@@ -16,7 +16,7 @@ async function renderMorePage() {
           route: "bosses",
           icon: "👹",
           title: "Chefes",
-          desc: "Desafie bosses poderosos",
+          desc: "Desafie chefes poderosos",
         },
         {
           route: "arena",
