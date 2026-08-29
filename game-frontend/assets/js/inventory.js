@@ -825,7 +825,7 @@ function invShowRarityRerollModal(result) {
   const currentRarityBoxClass = invRarityBoxClass(result.currentRarity);
   const newRarityBoxClass = invRarityBoxClass(result.newRarity);
   const actionButtons = result.rerollId
-    ? `<div class="grid grid-cols-2 gap-3"><button class="btn-secondary" onclick="invResolveRarityReroll('${result.rerollId}','keep')">Manter anterior</button><button class="btn-primary" onclick="invResolveRarityReroll('${result.rerollId}','accept')">Aceitar nova</button></div>`
+    ? `<div class="grid grid-cols-1 gap-2"><button class="btn-primary" onclick="invResolveRarityReroll('${result.rerollId}','accept')">Aceitar nova</button><button class="btn-secondary" onclick="invResolveRarityReroll('${result.rerollId}','keep',false)">Manter e fechar</button><button class="btn-secondary" onclick="invResolveRarityReroll('${result.rerollId}','keep',true)">Manter e usar outro Dado</button></div>`
     : `<div class="rounded-lg border border-slate-700 bg-slate-900/70 p-3 text-center text-sm text-slate-300 mb-4">${result.message || "O Dado de Raridade não alterou a raridade do Digimon."}</div><button class="btn-secondary w-full" onclick="document.getElementById('rarity-reroll-overlay')?.remove()">Fechar</button>`;
   const overlay = document.createElement("div");
   overlay.id = "rarity-reroll-overlay";
@@ -836,13 +836,14 @@ function invShowRarityRerollModal(result) {
   document.body.appendChild(overlay);
 }
 
-async function invResolveRarityReroll(id, action) {
+async function invResolveRarityReroll(id, action, retry = false) {
   const overlay = document.getElementById("rarity-reroll-overlay");
   try {
     const result = await apiPost(`/inventory/rarity-reroll/${id}/${action}`, {});
     overlay?.remove();
     showToast(result.message || "Dado de Raridade processado com sucesso.");
     await invReloadItems();
+    if (action === "keep" && retry) await invStartRarityReroll();
   } catch (err) { showToast(err.message || "Não foi possível processar o Dado de Raridade.", "error");
  }
 }

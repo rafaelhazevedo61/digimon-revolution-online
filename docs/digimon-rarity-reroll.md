@@ -32,3 +32,8 @@ Quando o jogador aceita uma nova raridade pelo Dado, o Digimon passa a registrar
 A migration `V172__add_rarity_die_indicator.sql` adiciona os campos `rarity_changed_by_die`, `original_rarity_before_die` e `rarity_changed_by_die_at` à tabela `digimons`. O indicador não recalcula IVs ou atributos já armazenados.
 
 Nas listas e resumos do Dashboard, Storage, Ranking e Evolução, um ícone discreto de dado é exibido ao lado da raridade. O Dashboard exibe somente esse indicativo compacto, sem mostrar a raridade original, a data ou a observação sobre IVs e atributos. O tooltip e os modais de detalhes continuam disponíveis nas telas apropriadas, onde o jogador pode consultar a origem da alteração.
+
+
+## Manter e usar outro Dado
+
+Quando existe uma proposta pendente, o jogador pode aceitar a nova raridade, manter a raridade anterior e fechar o fluxo, ou manter a raridade anterior e iniciar imediatamente outro Dado. A opção **Manter e usar outro Dado** cobra o custo configurado de Bits, encerra a proposta atual e abre uma nova tentativa somente após a confirmação bem-sucedida. Caso não exista outro Dado no inventário, a nova tentativa falha com a mensagem padrão de item insuficiente, sem alterar a raridade atual.
