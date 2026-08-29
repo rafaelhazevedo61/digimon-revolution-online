@@ -1,5 +1,7 @@
 let storageDigimons = [];
 let storageSelectedDigimonIds = new Set();
+const STORAGE_PAGE_SIZE = 20;
+let storageCurrentPage = 1;
 
 let storageFilterState = {
   search: "",
@@ -11,6 +13,7 @@ let storageFilterState = {
 
 async function renderStoragePage() {
   storageSelectedDigimonIds.clear();
+  storageCurrentPage = 1;
   const app = document.getElementById("app");
   showBottomNav("digimons");
   storageFilterState.open = false;
@@ -94,6 +97,7 @@ async function renderStoragePage() {
       <div id="storage-list">
         <div class="card animate-pulse"><div class="h-20"></div></div>
       </div>
+      <div id="storage-pagination" class="mt-4"></div>
     </div>
   `;
 
@@ -110,18 +114,21 @@ async function renderStoragePage() {
     .getElementById("storage-stage-filter")
     ?.addEventListener("change", (event) => {
       storageFilterState.stage = event.target.value;
+      storageCurrentPage = 1;
       storageRenderList();
     });
   document
     .getElementById("storage-rarity-filter")
     ?.addEventListener("change", (event) => {
       storageFilterState.rarity = event.target.value;
+      storageCurrentPage = 1;
       storageRenderList();
     });
   document
     .getElementById("storage-sort")
     ?.addEventListener("change", (event) => {
       storageFilterState.sort = event.target.value;
+      storageCurrentPage = 1;
       storageRenderList();
     });
   storageSyncFilterControls();
@@ -171,11 +178,13 @@ function storageToggleConfig() {
 function storageSubmitSearch(event) {
   event.preventDefault();
   storageFilterState.search = document.getElementById("storage-search")?.value.trim() || "";
+  storageCurrentPage = 1;
   storageRenderList();
 }
 
 function storageClearSearch() {
   storageFilterState.search = "";
+  storageCurrentPage = 1;
   const input = document.getElementById("storage-search");
   if (input) input.value = "";
   storageRenderList();
@@ -195,20 +204,26 @@ function storageRenderList() {
   if (!container) return;
 
   const filtered = storageGetFilteredDigimons();
-  const total = storageDigimons.length;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / STORAGE_PAGE_SIZE));
+  storageCurrentPage = Math.min(Math.max(1, storageCurrentPage), totalPages);
+  const pageStart = (storageCurrentPage - 1) * STORAGE_PAGE_SIZE;
+  const pageItems = filtered.slice(pageStart, pageStart + STORAGE_PAGE_SIZE);
   const summary = document.getElementById("storage-filter-summary");
   if (summary) {
-    summary.textContent = `Exibindo ${filtered.length} de ${total} Digimon${total === 1 ? "" : "s"}.`;
+    summary.textContent = filtered.length === 0
+      ? "Nenhum Digimon encontrado."
+      : `Exibindo ${pageStart + 1}-${Math.min(pageStart + STORAGE_PAGE_SIZE, filtered.length)} de ${filtered.length} Digimon${filtered.length === 1 ? "" : "s"}.`;
   }
 
   if (filtered.length === 0) {
-    container.innerHTML = `<div class="card text-center text-slate-400 text-sm">${total === 0 ? "Armazém Digimon vazio" : "Nenhum Digimon corresponde aos filtros atuais."}
+    container.innerHTML = `<div class="card text-center text-slate-400 text-sm">${storageDigimons.length === 0 ? "Armazém Digimon vazio" : "Nenhum Digimon corresponde aos filtros atuais."}
 </div>`;
+    storageRenderPagination(0, 1);
     storageUpdateBulkActions();
     return;
   }
 
-  container.innerHTML = filtered.map(d => {
+  container.innerHTML = pageItems.map(d => {
     const locked = d.locked === true;
     const selected = storageSelectedDigimonIds.has(String(d.id));
     return `
@@ -258,7 +273,33 @@ function storageRenderList() {
     `;
   }).join("");
 
+  storageRenderPagination(filtered.length, totalPages);
   storageUpdateBulkActions();
+}
+
+function storageRenderPagination(totalItems, totalPages) {
+  const container = document.getElementById("storage-pagination");
+  if (!container) return;
+  if (totalItems <= STORAGE_PAGE_SIZE) {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="flex items-center justify-center gap-3">
+      <button type="button" class="btn-secondary" onclick="storageGoToPage(${storageCurrentPage - 1})" ${storageCurrentPage === 1 ? "disabled" : ""}>Anterior</button>
+      <span class="text-sm text-slate-400 whitespace-nowrap">Página ${storageCurrentPage} de ${totalPages}</span>
+      <button type="button" class="btn-secondary" onclick="storageGoToPage(${storageCurrentPage + 1})" ${storageCurrentPage === totalPages ? "disabled" : ""}>Próxima</button>
+    </div>
+  `;
+}
+
+function storageGoToPage(page) {
+  const totalPages = Math.max(1, Math.ceil(storageGetFilteredDigimons().length / STORAGE_PAGE_SIZE));
+  const nextPage = Math.min(Math.max(1, Number(page) || 1), totalPages);
+  if (nextPage === storageCurrentPage) return;
+  storageCurrentPage = nextPage;
+  storageRenderList();
 }
 
 function storageUpdateBulkActions() {
