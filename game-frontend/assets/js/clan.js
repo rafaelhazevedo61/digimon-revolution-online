@@ -1161,7 +1161,7 @@ function startClanRaidCooldownCountdown(nextAttackAt) {
 }
 
 function formatBossAliveDuration(seconds) { const total = Math.max(0, Number(seconds) || 0); const days = Math.floor(total / 86400); const hours = Math.floor((total % 86400) / 3600); const minutes = Math.floor((total % 3600) / 60); const secs = total % 60; return `${days}d ${hours}h ${minutes}m ${secs}s`; }
-function formatBossDateTime(value) { return value ? new Date(value).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "medium" }) : "Não informado"; }
+function formatBossDateTime(value) { if (!value) return "Não informado"; const date = new Date(value); return `${date.toLocaleDateString("pt-BR")} - ${date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`; }
 
 function showRaidAttackModal(result) {
   const existing = document.getElementById("raid-attack-modal");
