@@ -28,4 +28,6 @@ public interface ArenaMatchRepository extends JpaRepository<ArenaMatch, UUID> {
     long deleteByCreatedAtGreaterThanEqual(Instant since);
 
     List<ArenaMatch> findByCreatedAtGreaterThanEqual(Instant since);
+
+    List<ArenaMatch> findByCreatedAtBetween(Instant start, Instant end);
 }

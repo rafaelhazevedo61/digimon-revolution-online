@@ -228,7 +228,8 @@ function renderArenaResult(result) {
   `;
 }
 
-async function renderArenaRankingPage() {
+async function renderArenaRankingPage(mode = "current") {
+  const seasonMode = mode === "season";
   const app = document.getElementById("app");
   showBottomNav("more");
 
@@ -239,10 +240,11 @@ async function renderArenaRankingPage() {
         <button class="text-sm text-cyan-400" onclick="navigateTo('arena')">Voltar</button>
       </div>
       <div class="flex gap-2 mb-4" role="tablist" aria-label="Tipo de classificação">
-        <button type="button" class="tab-btn active flex-1" role="tab" aria-selected="true">Atual</button>
-        <button type="button" class="tab-btn flex-1 opacity-60 cursor-not-allowed" role="tab" aria-selected="false" disabled title="Ranking por temporada em breve">Temporada <span class="text-[10px]">(em breve)</span></button>
+        <button type="button" class="tab-btn ${seasonMode ? "flex-1" : "active flex-1"}" role="tab" aria-selected="${!seasonMode}" onclick="renderArenaRankingPage('current')">Atual</button>
+        <button type="button" class="tab-btn ${seasonMode ? "active flex-1" : "flex-1"}" role="tab" aria-selected="${seasonMode}" onclick="renderArenaRankingPage('season')">Temporada</button>
       </div>
-      <div id="arena-player-history" class="card-sm mb-4 hidden"></div>
+      <div class="text-xs text-slate-400 mb-3 px-1">${seasonMode ? "Temporada experimental: 01/08/2026 - 31/12/2026" : "Classificação pela pontuação atual de cada Digimon ativo ou armazenado."}</div>
+      <div id="arena-player-history" class="card-sm mb-4 ${seasonMode ? "hidden" : ""}"></div>
       <div id="arena-ranking-list">
         <div class="card animate-pulse mb-3"><div class="h-16"></div></div>
       </div>
@@ -251,8 +253,8 @@ async function renderArenaRankingPage() {
 
   try {
     const [ranking, statistics] = await Promise.all([
-      apiGet("/arena/ranking", { page: 0, size: 50 }),
-      apiGet("/arena/statistics").catch(() => null)
+      apiGet(seasonMode ? "/arena/season-ranking" : "/arena/ranking", { page: 0, size: 50 }),
+      seasonMode ? Promise.resolve(null) : apiGet("/arena/statistics").catch(() => null)
     ]);
     const history = document.getElementById("arena-player-history");
     if (history && statistics) {
@@ -270,21 +272,10 @@ async function renderArenaRankingPage() {
     container.innerHTML = ranking.map(e => {
       const mine = myId && e.playerId === myId;
       const medal = e.position === 1 ? "🥇" : e.position === 2 ? "🥈" : e.position === 3 ? "🥉" : `#${e.position}`;
-      return `
-        <div class="card-sm mb-2 flex items-center gap-3 ${mine ? "border-cyan-500" : ""}">
-          <span class="w-8 text-center text-sm font-bold">${medal}</span>
-          <div class="flex-1 min-w-0">
-            <span class="font-bold text-sm">${escapeHtml(e.digimonName)}</span>
-            ${arenaTierBadge(e.tier)}
-            ${mine ? `<span class="ml-1 text-[10px] text-cyan-400">(voce)</span>` : ""}
-            <div class="text-xs text-slate-400 mt-0.5">
-              @${escapeHtml(e.playerName)} · ${escapeHtml(ARENA_STAGE_LABELS[e.stage] || e.stage)} Lv.${e.level}
-              · <span class="text-green-400">${e.wins}V</span>/<span class="text-red-400">${e.losses}D</span>
-            </div>
-          </div>
-          <span class="text-cyan-400 font-bold text-sm">${e.rating}</span>
-        </div>
-      `;
+      if (seasonMode) {
+        return `<div class="card-sm mb-2 flex items-center gap-3 ${mine ? "border-cyan-500" : ""}"><span class="w-8 text-center text-sm font-bold">${medal}</span><div class="flex-1 min-w-0"><span class="font-bold text-sm">@${escapeHtml(e.playerName)}</span>${mine ? `<span class="ml-1 text-[10px] text-cyan-400">(voce)</span>` : ""}<div class="text-xs text-slate-400 mt-0.5"><span class="text-green-400">${e.wins}V</span>/<span class="text-red-400">${e.losses}D</span> · ganhos ${Number(e.pointsWon || 0).toLocaleString("pt-BR")} · perdas ${Number(e.pointsLost || 0).toLocaleString("pt-BR")}</div></div><span class="text-cyan-400 font-bold text-sm">${Number(e.netPoints || 0).toLocaleString("pt-BR")}</span></div>`;
+      }
+      return `<div class="card-sm mb-2 flex items-center gap-3 ${mine ? "border-cyan-500" : ""}"><span class="w-8 text-center text-sm font-bold">${medal}</span><div class="flex-1 min-w-0"><span class="font-bold text-sm">${escapeHtml(e.digimonName)}</span>${arenaTierBadge(e.tier)}${mine ? `<span class="ml-1 text-[10px] text-cyan-400">(voce)</span>` : ""}<div class="text-xs text-slate-400 mt-0.5">@${escapeHtml(e.playerName)} · ${escapeHtml(ARENA_STAGE_LABELS[e.stage] || e.stage)} Lv.${e.level} · <span class="text-green-400">${e.wins}V</span>/<span class="text-red-400">${e.losses}D</span></div></div><span class="text-cyan-400 font-bold text-sm">${e.rating}</span></div>`;
     }).join("");
   } catch (err) {
     document.getElementById("arena-ranking-list").innerHTML = `
