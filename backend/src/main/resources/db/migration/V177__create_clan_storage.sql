@@ -35,6 +35,10 @@ CREATE INDEX idx_clan_storage_history_clan_created_at
 
 -- Capacidade inicial: 20 slots. Cada nível do upgrade adiciona 10 slots.
 -- O custo segue a progressão genérica dos upgrades de clã.
+-- V82 criou effect_per_level como DECIMAL(5,4), cujo limite inteiro é 9.
+-- O upgrade de armazenamento precisa registrar 10,0000 por nível.
+ALTER TABLE clan_upgrade_types
+    ALTER COLUMN effect_per_level TYPE DECIMAL(6,4);
 INSERT INTO clan_upgrade_types (
     code, name, description, unlocked_at_clan_level, max_level,
     base_honor_marks_cost, cost_multiplier, effect_per_level, effect_type, stat
