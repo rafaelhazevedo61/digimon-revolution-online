@@ -442,8 +442,13 @@ function invCompareText(a, b) {
 function invRenderItems() {
   const content = document.getElementById("inv-content");
   const page = invPageData.items;
-  const items = page.content || [];
-  invUpdateFilterSummary(invGetPageSummary("items", page.totalElements), page.totalElements, "item");
+  const filteredItems = playerPaginationEnabled ? null : invSortItems(invGetFilteredItems());
+  const items = playerPaginationEnabled ? (page.content || []) : filteredItems;
+  invUpdateFilterSummary(
+    playerPaginationEnabled ? invGetPageSummary("items", page.totalElements) : items.length,
+    playerPaginationEnabled ? page.totalElements : items.length,
+    "item"
+  );
 
   if (items.length === 0) {
     content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${page.totalElements === 0 ? "Nenhum item no inventário." : "Nenhum item nesta página."}</p>`;
@@ -514,6 +519,7 @@ function invGetPageSummary(tab, total) {
 }
 
 function invRenderPagination(tab, total, backendTotalPages = null) {
+  if (!playerPaginationEnabled) return "";
   const totalPages = backendTotalPages == null ? Math.ceil(total / invPagination.pageSize) : backendTotalPages;
   if (totalPages <= 1) return "";
   const currentPage = invPagination[tab];
@@ -1022,8 +1028,13 @@ function invSortEquipments(equipments) {
 function invRenderEquipment() {
   const content = document.getElementById("inv-content");
   const page = invPageData.equipment;
-  const equipments = page.content || [];
-  invUpdateFilterSummary(invGetPageSummary("equipment", page.totalElements), page.totalElements, "equipamento");
+  const filteredEquipments = playerPaginationEnabled ? null : invSortEquipments(invGetFilteredEquipments());
+  const equipments = playerPaginationEnabled ? (page.content || []) : filteredEquipments;
+  invUpdateFilterSummary(
+    playerPaginationEnabled ? invGetPageSummary("equipment", page.totalElements) : equipments.length,
+    playerPaginationEnabled ? page.totalElements : equipments.length,
+    "equipamento"
+  );
 
   if (equipments.length === 0) {
     content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${page.totalElements === 0 ? "Nenhum equipamento no inventário." : "Nenhum equipamento nesta página."}</p>`;
