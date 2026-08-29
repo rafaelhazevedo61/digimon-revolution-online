@@ -38,7 +38,11 @@ public class AddItemUseCase {
 
     @Transactional
     public void addMaterial(UUID ownerId, ItemDefinition itemDefinition, int quantity) {
-        UUID playerId = resolvePlayerId(ownerId);
+        addMaterialToPlayer(resolvePlayerId(ownerId), itemDefinition, quantity);
+    }
+
+    @Transactional
+    public void addMaterialToPlayer(UUID playerId, ItemDefinition itemDefinition, int quantity) {
         var existing = repository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, itemDefinition.getId());
         int currentQuantity = existing.map(InventoryItem::getQuantity).orElse(0);
         int requestedQuantity = currentQuantity + quantity;

@@ -7,6 +7,7 @@ import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.evolution.domain.EvolutionLine;
 import com.dro.modules.evolution.domain.EvolutionLineStep;
 import com.dro.modules.evolution.infra.EvolutionLineRepository;
+import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
@@ -46,6 +47,7 @@ public class RebirthUseCase {
     private final MissionInstanceRepository missionInstanceRepository;
     private final DigimonInfosRepository digimonInfosRepository;
     private final EvolutionLineRepository evolutionLineRepository;
+    private final EquipmentRepository equipmentRepository;
     private final ClanMissionProgressTracker clanMissionProgressTracker;
     private final Random random = new Random();
 
@@ -61,6 +63,7 @@ public class RebirthUseCase {
         Digimon oldDigimon = findDigimon(digimonId);
         validateOwner(oldDigimon, playerId);
         validateStatus(oldDigimon);
+        validateNoEquippedEquipment(oldDigimon);
         validateLevel(oldDigimon);
         validateStage(oldDigimon);
         validateActiveMission(oldDigimon);
@@ -114,6 +117,13 @@ public class RebirthUseCase {
     private void validateStatus(Digimon digimon) {
         if (digimon.getStatus() != DigimonStatus.ACTIVE) {
             throw new BadRequestException("Only active Digimons can perform Rebirth");
+        }
+    }
+
+    private void validateNoEquippedEquipment(Digimon digimon) {
+        long equippedCount = equipmentRepository.findByDigimonIdAndEquippedTrue(digimon.getId()).size();
+        if (equippedCount > 0) {
+            throw new ConflictException("Remova todos os equipamentos equipados antes de realizar o Rebirth");
         }
     }
 
@@ -248,13 +258,14 @@ public class RebirthUseCase {
         }
     }
 
-    public RebirthUseCase(final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final InventoryRepository inventoryRepository, final MissionInstanceRepository missionInstanceRepository, final DigimonInfosRepository digimonInfosRepository, final EvolutionLineRepository evolutionLineRepository, final ClanMissionProgressTracker clanMissionProgressTracker) {
+    public RebirthUseCase(final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final InventoryRepository inventoryRepository, final MissionInstanceRepository missionInstanceRepository, final DigimonInfosRepository digimonInfosRepository, final EvolutionLineRepository evolutionLineRepository, final EquipmentRepository equipmentRepository, final ClanMissionProgressTracker clanMissionProgressTracker) {
         this.digimonRepository = digimonRepository;
         this.playerRepository = playerRepository;
         this.inventoryRepository = inventoryRepository;
         this.missionInstanceRepository = missionInstanceRepository;
         this.digimonInfosRepository = digimonInfosRepository;
         this.evolutionLineRepository = evolutionLineRepository;
+        this.equipmentRepository = equipmentRepository;
         this.clanMissionProgressTracker = clanMissionProgressTracker;
     }
 }

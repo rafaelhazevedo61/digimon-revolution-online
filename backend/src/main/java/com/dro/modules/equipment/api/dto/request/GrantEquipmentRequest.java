@@ -10,7 +10,7 @@ import java.util.UUID;
  * Contrato de dados do módulo de Equipamentos.
  */
 public record GrantEquipmentRequest(
-        @NotNull UUID digimonId,
+        @NotNull UUID playerId,
         @NotBlank String templateName,
         EquipmentRarity rarity
 ) {

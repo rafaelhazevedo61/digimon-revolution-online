@@ -10,7 +10,7 @@ import java.util.UUID;
  * Contrato de dados do módulo de Inventário.
  */
 public record GrantItemRequest(
-        @NotNull UUID digimonId,
+        @NotNull UUID playerId,
         @NotBlank String itemCode,
         @Min(1) int quantity
 ) {

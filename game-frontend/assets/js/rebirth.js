@@ -1,11 +1,13 @@
 let rebirthDigimonId = null;
 let rebirthPreview = null;
 let rebirthCodeAllocation = { hp: 0, attack: 0, defense: 0 };
+let rebirthEquippedEquipmentCount = 0;
 
 async function renderRebirthPage() {
   const app = document.getElementById("app");
   showBottomNav("dashboard");
   rebirthCodeAllocation = { hp: 0, attack: 0, defense: 0 };
+  rebirthEquippedEquipmentCount = 0;
 
   app.innerHTML = `
     <div class="page-container">
@@ -31,7 +33,8 @@ async function renderRebirthPage() {
 
     rebirthDigimonId = d.id;
     rebirthPreview = await apiGet(`/digimon/${d.id}/rebirth-preview`);
-    rebirthRender(d);
+    rebirthEquippedEquipmentCount = Number(rebirthPreview.equippedEquipmentCount || 0);
+    rebirthRender(d, rebirthEquippedEquipmentCount);
   } catch (err) {
     document.getElementById("rebirth-content").innerHTML = `
       <div class="card border-red-900">
@@ -41,7 +44,7 @@ async function renderRebirthPage() {
   }
 }
 
-function rebirthRender(digimon) {
+function rebirthRender(digimon, equippedEquipmentCount = 0) {
   const content = document.getElementById("rebirth-content");
   const p = rebirthPreview;
   const availableCodeInfinite = Math.max(0, Number(p.currentCodeInfinite ?? 0));
@@ -163,7 +166,15 @@ function rebirthRender(digimon) {
     </div>
 
     <div class="mb-4">
-      ${p.eligible ? `
+      ${equippedEquipmentCount > 0 ? `
+        <div class="rounded-lg border border-red-900/70 bg-red-950/30 p-3 mb-3 text-sm text-red-200">
+          <p class="font-semibold">Rebirth bloqueado</p>
+          <p class="text-xs text-red-200/80 mt-1">Este Digimon possui ${equippedEquipmentCount} equipamento(s) equipado(s). Desequipe todos antes de realizar o Rebirth para não sacrificá-los junto com o Digimon.</p>
+        </div>
+        <button class="btn-primary w-full opacity-50 cursor-not-allowed py-3" disabled>
+          Desequipe os equipamentos para continuar
+        </button>
+      ` : p.eligible ? `
         <button class="btn-primary w-full text-lg py-3" id="rebirth-btn" onclick="rebirthExecute()">
           🔄 Renascer!
         </button>

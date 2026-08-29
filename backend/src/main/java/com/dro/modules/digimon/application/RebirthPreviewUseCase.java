@@ -5,6 +5,7 @@ import com.dro.modules.digimon.api.dto.response.RebirthPreviewResponse;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.RebirthRules;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
@@ -26,6 +27,7 @@ public class RebirthPreviewUseCase {
     private static final int MAX_IV = 100;
     private static final int REQUIRED_LEVEL = 100;
     private final DigimonRepository digimonRepository;
+    private final EquipmentRepository equipmentRepository;
     private final InventoryRepository inventoryRepository;
     private final MissionInstanceRepository missionInstanceRepository;
     private final PlayerRepository playerRepository;
@@ -45,15 +47,16 @@ public class RebirthPreviewUseCase {
         int currentCodeInfinite = inventoryRepository.findByDigimonIdAndItemType(digimonId, ItemType.CODE_INFINITE)
                 .map(InventoryItem::getQuantity).orElse(0);
         int currentBits = digimon.getBits();
+        int equippedEquipmentCount = equipmentRepository.findByDigimonIdAndEquippedTrue(digimonId).size();
         int remainingBitsAfterRebirth = Math.max(0, currentBits - costBits);
         int rarityMinimumIv = RebirthRules.calculateIvBonus(newRebirthCount);
         IvRangeResponse hpRange = calculateIvRange(digimon.getIvHp(), rarityMinimumIv, newRebirthCount);
         IvRangeResponse attackRange = calculateIvRange(digimon.getIvAttack(), rarityMinimumIv, newRebirthCount);
         IvRangeResponse defenseRange = calculateIvRange(digimon.getIvDefense(), rarityMinimumIv, newRebirthCount);
         double statMultiplier = RebirthRules.calculateStatMultiplier(newRebirthCount);
-        String ineligibilityReason = getIneligibilityReason(digimon, costBits, costDataCore, costDigitalData, currentDigitalData);
+        String ineligibilityReason = getIneligibilityReason(digimon, costBits, costDataCore, costDigitalData, currentDigitalData, equippedEquipmentCount);
         boolean eligible = ineligibilityReason == null;
-        return new RebirthPreviewResponse(eligible, ineligibilityReason, currentRebirthCount, newRebirthCount, costBits, costDataCore, currentDataCore, costDigitalData, currentDigitalData, currentCodeInfinite, currentBits, remainingBitsAfterRebirth, hpRange, attackRange, defenseRange, statMultiplier);
+        return new RebirthPreviewResponse(eligible, ineligibilityReason, currentRebirthCount, newRebirthCount, costBits, costDataCore, currentDataCore, costDigitalData, currentDigitalData, currentCodeInfinite, currentBits, remainingBitsAfterRebirth, hpRange, attackRange, defenseRange, statMultiplier, equippedEquipmentCount);
     }
 
     private UUID extractPlayerId(String token) {
@@ -71,9 +74,12 @@ public class RebirthPreviewUseCase {
         return new IvRangeResponse(min, MAX_IV);
     }
 
-    private String getIneligibilityReason(Digimon digimon, int costBits, int costDataCore, int costDigitalData, int currentDigitalData) {
+    private String getIneligibilityReason(Digimon digimon, int costBits, int costDataCore, int costDigitalData, int currentDigitalData, int equippedEquipmentCount) {
         if (digimon.getStatus().name().equals("REBORN")) {
             return "Only active Digimons can perform Rebirth";
+        }
+        if (equippedEquipmentCount > 0) {
+            return "Remova todos os equipamentos equipados antes de realizar o Rebirth";
         }
         if (digimon.getLevel() < REQUIRED_LEVEL) {
             return "Digimon must be level 100 to perform Rebirth";
@@ -98,8 +104,9 @@ public class RebirthPreviewUseCase {
         return null;
     }
 
-    public RebirthPreviewUseCase(final DigimonRepository digimonRepository, final InventoryRepository inventoryRepository, final MissionInstanceRepository missionInstanceRepository, final PlayerRepository playerRepository) {
+    public RebirthPreviewUseCase(final DigimonRepository digimonRepository, final EquipmentRepository equipmentRepository, final InventoryRepository inventoryRepository, final MissionInstanceRepository missionInstanceRepository, final PlayerRepository playerRepository) {
         this.digimonRepository = digimonRepository;
+        this.equipmentRepository = equipmentRepository;
         this.inventoryRepository = inventoryRepository;
         this.missionInstanceRepository = missionInstanceRepository;
         this.playerRepository = playerRepository;

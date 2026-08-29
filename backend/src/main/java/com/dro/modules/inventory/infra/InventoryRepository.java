@@ -18,6 +18,11 @@ import java.util.UUID;
 public interface InventoryRepository extends JpaRepository<InventoryItem, UUID> {
     List<InventoryItem> findByPlayerId(UUID playerId);
     void deleteByPlayerId(UUID playerId);
+
+    long countByPlayerIdIsNull();
+
+    @Query("SELECT COALESCE(SUM(item.quantity), 0) FROM InventoryItem item")
+    long sumQuantities();
     /** @deprecated Inventário não deve ser excluído ao remover um Digimon. */
     @Deprecated
     default void deleteByDigimonId(UUID digimonId) { /* no-op: ownership is player-scoped */ }

@@ -27,12 +27,16 @@ public class GrantEquipmentUseCase {
     public UUID execute(UUID digimonId, String templateName, EquipmentRarity rarityOverride) {
         Digimon digimon = digimonRepository.findById(digimonId)
                 .orElseThrow(() -> new NotFoundException("Digimon not found"));
+        return executeForPlayer(digimon.getPlayerId(), templateName, rarityOverride);
+    }
+
+    public UUID executeForPlayer(UUID playerId, String templateName, EquipmentRarity rarityOverride) {
         EquipmentTemplate template = equipmentTemplateRepository.findByName(templateName)
                 .map(EquipmentTemplateMapper::toTemplate)
                 .orElseThrow(() -> new NotFoundException("Equipment template not found: " + templateName));
         EquipmentRarity rarity = rarityOverride != null ? rarityOverride
                 : (template.getRarity() != null ? template.getRarity() : EquipmentRarityRules.rollRarity());
-        Equipment equipment = Equipment.builder().id(UUID.randomUUID()).playerId(digimon.getPlayerId())
+        Equipment equipment = Equipment.builder().id(UUID.randomUUID()).playerId(playerId)
                 .digimonId(null).name(template.getName()).slot(template.getSlot()).rarity(rarity)
                 .setCode(template.getSetCode()).tier(template.getTier()).bonusHp(template.getBonusHp())
                 .bonusAttack(template.getBonusAttack()).bonusDefense(template.getBonusDefense())

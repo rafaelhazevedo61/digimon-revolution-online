@@ -19,6 +19,7 @@ public record RebirthPreviewResponse(
         IvRangeResponse hpIvRange,
         IvRangeResponse attackIvRange,
         IvRangeResponse defenseIvRange,
-        double statMultiplier
+        double statMultiplier,
+        int equippedEquipmentCount
 ) {
 }

@@ -3,7 +3,8 @@ const lootTableState = {
   catalog: [],
   activeOnly: false,
   editing: null,
-  modal: null
+  modal: null,
+  itemPicker: { entryId: null, search: "", page: 0, pageSize: 12 }
 };
 
 const LOOT_TABLE_RARITIES = [
@@ -168,10 +169,13 @@ function lootTableRenderModal(title, data, isEdit) {
   lootTableState.modal = data;
   const weights = Object.fromEntries((data.rarityWeights || []).map(weight => [weight.rarity, weight.weight]));
   const entries = data.entries && data.entries.length > 0 ? data.entries : [lootTableEmptyEntry()];
+  entries.forEach((entry, index) => {
+    if (!entry._uiId) entry._uiId = entry.id || `loot-entry-${Date.now()}-${index}`;
+  });
 
   root.innerHTML = `
     <div class="modal-overlay" onclick="lootTableCloseModal()">
-      <div class="modal-content modal-wide" onclick="event.stopPropagation()">
+      <div class="modal-content modal-wide loot-table-modal" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between gap-4 mb-6">
           <div>
             <h3 class="text-xl font-bold">${escapeHtml(title)}</h3>
@@ -252,42 +256,45 @@ function lootTableRenderModal(title, data, isEdit) {
 
 function lootTableRenderEntryRow(entry) {
   const selectedCode = entry.itemCode || entry.materialCode || entry.itemType || "";
+  const selectedItem = lootTableState.catalog.find(item => item.code === selectedCode);
+  const selectedLabel = selectedItem ? `${selectedItem.name} — ${selectedItem.code}` : "Nenhum item selecionado";
+  const entryId = entry._uiId || entry.id || "new";
   return `
-    <div class="card-sm loot-entry-row" data-entry-id="${escapeAttr(entry.id || "new")}">
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-        <div class="md:col-span-3">
+    <div class="card-sm loot-entry-row" data-entry-id="${escapeAttr(entryId)}">
+      <div class="loot-entry-layout">
+        <div class="loot-entry-item-field min-w-0">
           <label class="text-xs text-slate-500">Item catalogado</label>
-          <select class="input mt-1 loot-entry-item" required>
-            <option value="">Selecione um item</option>
-            ${lootTableState.catalog.map(item => `
-              <option value="${escapeAttr(item.code)}" ${item.code === selectedCode ? "selected" : ""}>
-                ${escapeHtml(item.name)} — ${escapeHtml(item.code)}
-              </option>
-            `).join("")}
-          </select>
+          <input type="hidden" class="loot-entry-item" value="${escapeAttr(selectedCode)}" />
+          <div class="loot-selected-item card-sm mt-1 min-w-0 flex items-center justify-between gap-2">
+            <span class="min-w-0 loot-selected-item-label" title="${escapeAttr(selectedLabel)}">${escapeHtml(selectedLabel)}</span>
+            <button type="button" class="btn-sm btn-secondary shrink-0" onclick="lootTableOpenItemPicker('${escapeAttr(entryId)}')">Buscar item</button>
+          </div>
         </div>
-        <div class="md:col-span-2">
+        <div class="loot-entry-rarity-field">
           <label class="text-xs text-slate-500">Raridade</label>
           <select class="input mt-1 loot-entry-rarity" required>
             ${lootTableRarityOptions(entry.rarity)}
           </select>
         </div>
-        <div>
-          <label class="text-xs text-slate-500">Peso</label>
-          <input class="input mt-1 loot-entry-weight" type="number" min="1" value="${Number(entry.weight || 1)}" required />
-        </div>
-        <div>
-          <label class="text-xs text-slate-500">Mín.</label>
-          <input class="input mt-1 loot-entry-min" type="number" min="1" value="${Number(entry.minQuantity || 1)}" required />
-        </div>
-        <div>
-          <label class="text-xs text-slate-500">Máx.</label>
-          <input class="input mt-1 loot-entry-max" type="number" min="1" value="${Number(entry.maxQuantity || 1)}" required />
-        </div>
-        <label class="md:col-span-2 flex items-center gap-2 text-xs text-slate-400 pb-2">
-          <input class="loot-entry-active accent-cyan-500" type="checkbox" ${entry.active !== false ? "checked" : ""} /> Ativo
+        <label class="loot-entry-active-field flex items-center gap-2 text-xs text-slate-400">
+          <input class="loot-entry-active accent-cyan-500" type="checkbox" ${entry.active !== false ? "checked" : ""} />
+          <span>Ativo</span>
         </label>
-        <button type="button" class="btn-sm btn-danger md:col-span-2" onclick="lootTableRemoveEntryRow(this)">Remover</button>
+        <button type="button" class="btn-sm btn-danger loot-entry-remove" onclick="lootTableRemoveEntryRow(this)">Remover</button>
+        <div class="loot-entry-quantity-fields">
+          <label>
+            <span class="text-xs text-slate-500">Peso</span>
+            <input class="input mt-1 loot-entry-weight" type="number" min="1" value="${Number(entry.weight || 1)}" required />
+          </label>
+          <label>
+            <span class="text-xs text-slate-500">Quantidade mínima</span>
+            <input class="input mt-1 loot-entry-min" type="number" min="1" value="${Number(entry.minQuantity || 1)}" required />
+          </label>
+          <label>
+            <span class="text-xs text-slate-500">Quantidade máxima</span>
+            <input class="input mt-1 loot-entry-max" type="number" min="1" value="${Number(entry.maxQuantity || 1)}" required />
+          </label>
+        </div>
       </div>
     </div>
   `;
@@ -295,6 +302,7 @@ function lootTableRenderEntryRow(entry) {
 
 function lootTableEmptyEntry() {
   return {
+    _uiId: `loot-entry-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     rarity: "COMMON",
     itemType: "",
     materialCode: null,
@@ -310,6 +318,97 @@ function lootTableAddEntryRow() {
   const container = document.getElementById("loot-entries");
   if (!container) return;
   container.insertAdjacentHTML("beforeend", lootTableRenderEntryRow(lootTableEmptyEntry()));
+}
+
+function lootTableFilteredCatalog() {
+  const search = String(lootTableState.itemPicker.search || "").toLowerCase();
+  if (!search) return lootTableState.catalog;
+  return lootTableState.catalog.filter(item => [item.name, item.code, item.category]
+    .filter(Boolean)
+    .some(value => String(value).toLowerCase().includes(search)));
+}
+
+function lootTableOpenItemPicker(entryId) {
+  lootTableCloseItemPicker();
+  lootTableState.itemPicker = { entryId, search: "", page: 0, pageSize: 12 };
+  const overlay = document.createElement("div");
+  overlay.id = "loot-item-picker-modal";
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-content modal-wide" onclick="event.stopPropagation()">
+      <div class="flex items-start justify-between gap-4 mb-5">
+        <div>
+          <h3 class="text-xl font-bold">Selecionar item</h3>
+          <p class="text-sm text-slate-400 mt-1">Pesquise pelo nome, código ou categoria do item catalogado.</p>
+        </div>
+        <button type="button" class="text-slate-400 hover:text-white text-2xl" aria-label="Fechar" data-loot-picker-close>&times;</button>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2 mb-4">
+        <input id="loot-item-picker-search" class="input flex-1" placeholder="Pesquisar por nome ou código" autocomplete="off" />
+        <button type="button" class="btn-primary" data-loot-picker-search>Pesquisar</button>
+      </div>
+      <div id="loot-item-picker-results" class="space-y-2 min-h-48"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.addEventListener("click", event => { if (event.target === overlay) lootTableCloseItemPicker(); });
+  overlay.querySelector("[data-loot-picker-close]").addEventListener("click", lootTableCloseItemPicker);
+  overlay.querySelector("[data-loot-picker-search]").addEventListener("click", () => {
+    lootTableState.itemPicker.search = document.getElementById("loot-item-picker-search")?.value.trim() || "";
+    lootTableState.itemPicker.page = 0;
+    lootTableRenderItemPickerResults();
+  });
+  overlay.querySelector("#loot-item-picker-search").addEventListener("keydown", event => {
+    if (event.key === "Enter") overlay.querySelector("[data-loot-picker-search]").click();
+    if (event.key === "Escape") lootTableCloseItemPicker();
+  });
+  lootTableRenderItemPickerResults();
+  overlay.querySelector("#loot-item-picker-search").focus();
+}
+
+function lootTableCloseItemPicker() {
+  document.getElementById("loot-item-picker-modal")?.remove();
+  lootTableState.itemPicker.entryId = null;
+}
+
+function lootTableChangeItemPickerPage(delta) {
+  const filtered = lootTableFilteredCatalog();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / lootTableState.itemPicker.pageSize));
+  lootTableState.itemPicker.page = Math.max(0, Math.min(totalPages - 1, lootTableState.itemPicker.page + delta));
+  lootTableRenderItemPickerResults();
+}
+
+function lootTableRenderItemPickerResults() {
+  const container = document.getElementById("loot-item-picker-results");
+  if (!container) return;
+  const filtered = lootTableFilteredCatalog();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / lootTableState.itemPicker.pageSize));
+  lootTableState.itemPicker.page = Math.min(lootTableState.itemPicker.page, totalPages - 1);
+  const start = lootTableState.itemPicker.page * lootTableState.itemPicker.pageSize;
+  const pageItems = filtered.slice(start, start + lootTableState.itemPicker.pageSize);
+  const row = [...document.querySelectorAll(".loot-entry-row")]
+    .find(candidate => candidate.dataset.entryId === lootTableState.itemPicker.entryId);
+  const selectedCode = row?.querySelector(".loot-entry-item")?.value || "";
+  const results = pageItems.length
+    ? pageItems.map(item => `<button type="button" class="card-sm w-full text-left hover:border-cyan-600 ${item.code === selectedCode ? "border-cyan-500 bg-cyan-950/30" : ""}" data-loot-picker-code="${escapeAttr(item.code)}"><div class="flex items-center justify-between gap-3"><span class="min-w-0"><span class="block text-cyan-300 font-medium truncate">${escapeHtml(item.name)}</span><span class="block text-xs text-slate-500">${escapeHtml(item.code)} · ${escapeHtml(item.category || "Item")}${item.rarity ? ` · ${escapeHtml(item.rarity)}` : ""}</span></span><span class="text-xs text-slate-400 shrink-0">Selecionar</span></div></button>`).join("")
+    : `<p class="text-slate-500">Nenhum item encontrado.</p>`;
+  container.innerHTML = `<div class="flex items-center justify-between gap-3 mb-2"><p class="text-xs text-slate-500">${filtered.length} item(ns) encontrado(s)</p><div class="flex items-center gap-2"><button type="button" class="btn-secondary text-xs" ${lootTableState.itemPicker.page === 0 ? "disabled" : ""} onclick="lootTableChangeItemPickerPage(-1)">Anterior</button><span class="text-xs text-slate-400 whitespace-nowrap">Página ${lootTableState.itemPicker.page + 1} de ${totalPages}</span><button type="button" class="btn-secondary text-xs" ${lootTableState.itemPicker.page >= totalPages - 1 ? "disabled" : ""} onclick="lootTableChangeItemPickerPage(1)">Próxima</button></div></div><div class="space-y-2">${results}</div>`;
+  container.querySelectorAll("[data-loot-picker-code]").forEach(button => button.addEventListener("click", () => lootTableSelectItem(button.dataset.lootPickerCode)));
+}
+
+function lootTableSelectItem(code) {
+  const row = [...document.querySelectorAll(".loot-entry-row")]
+    .find(candidate => candidate.dataset.entryId === lootTableState.itemPicker.entryId);
+  const item = lootTableState.catalog.find(candidate => candidate.code === code);
+  if (!row || !item) return;
+  const hiddenInput = row.querySelector(".loot-entry-item");
+  const label = row.querySelector(".loot-selected-item-label");
+  if (hiddenInput) hiddenInput.value = item.code;
+  if (label) {
+    label.textContent = `${item.name} — ${item.code}`;
+    label.title = `${item.name} — ${item.code}`;
+  }
+  lootTableCloseItemPicker();
 }
 
 function lootTableRemoveEntryRow(button) {
@@ -422,6 +521,7 @@ async function lootTableToggleActive(code) {
 }
 
 function lootTableCloseModal() {
+  lootTableCloseItemPicker();
   const root = document.getElementById("loot-tables-modal");
   if (root) root.innerHTML = "";
   lootTableState.modal = null;

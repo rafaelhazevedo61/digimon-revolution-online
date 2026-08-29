@@ -113,7 +113,7 @@ USABLE="${USABLE:-VALOR}"
 # curl --fail-with-body -i -X POST "${BASE_URL}/admin/equipment-templates" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"name": "example-name", "setCode": "example-setCode", "tier": 1, "slot": "WEAPON", "rarity": "COMMON", "bonusHp": 1, "bonusAttack": 1, "bonusDefense": 1}'
 
 # AdminEquipmentTemplateController.grant (POST /admin/equipment-templates/grant)
-# curl --fail-with-body -i -X POST "${BASE_URL}/admin/equipment-templates/grant" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"digimonId": "00000000-0000-0000-0000-000000000000", "templateName": "example-templateName", "rarity": "COMMON"}'
+# curl --fail-with-body -i -X POST "${BASE_URL}/admin/equipment-templates/grant" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"playerId": "00000000-0000-0000-0000-000000000000", "templateName": "example-templateName", "rarity": "COMMON"}'
 
 # AdminEquipmentTemplateController.getByName (GET /admin/equipment-templates/{name})
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/equipment-templates/${NAME}" -H "Authorization: Bearer ${ADMIN_TOKEN}"
@@ -125,7 +125,7 @@ USABLE="${USABLE:-VALOR}"
 # curl --fail-with-body -i -X PATCH "${BASE_URL}/admin/equipment-templates/${NAME}/toggle-active" -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
 # AdminInventoryController.grantItem (POST /admin/inventory/grant)
-# curl --fail-with-body -i -X POST "${BASE_URL}/admin/inventory/grant" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"digimonId": "00000000-0000-0000-0000-000000000000", "itemCode": "example-itemCode", "quantity": 1}'
+# curl --fail-with-body -i -X POST "${BASE_URL}/admin/inventory/grant" -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" -d '{"playerId": "00000000-0000-0000-0000-000000000000", "itemCode": "example-itemCode", "quantity": 1}'
 
 # AdminInventoryController.listItemDefinitions (GET /admin/inventory/item-definitions)
 # curl --fail-with-body -i -X GET "${BASE_URL}/admin/inventory/item-definitions" -H "Authorization: Bearer ${ADMIN_TOKEN}"
