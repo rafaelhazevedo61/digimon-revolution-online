@@ -20,7 +20,7 @@ async function renderStoragePage() {
       <div class="flex items-center justify-between gap-2 mb-4 px-1">
         <div class="flex items-center gap-2 min-w-0">
           <button class="btn-sm" style="background:#334155;color:#94a3b8" onclick="navigateTo('dashboard')">← Voltar</button>
-          <h2 class="text-lg font-bold truncate">Storage</h2>
+          <h2 class="text-lg font-bold truncate">Armazém Digimon</h2>
         </div>
         <button
           id="storage-config-btn"
@@ -41,7 +41,7 @@ async function renderStoragePage() {
             type="search"
             value="${escapeHtml(storageFilterState.search)}"
             placeholder="Pesquisar Digimon por nome..."
-            aria-label="Pesquisar Digimon no Storage"
+            aria-label="Pesquisar Digimon no Armazém Digimon"
           />
           <div class="flex gap-2">
             <button type="submit" class="btn-primary flex-1 sm:flex-none">Buscar</button>
@@ -74,7 +74,7 @@ async function renderStoragePage() {
           </label>
           <label class="text-xs text-slate-400 flex flex-col min-w-0">
             <span class="min-h-8 leading-4 flex items-start">Ordenar por</span>
-            <select id="storage-sort" class="input mt-1" aria-label="Ordenar Storage">
+            <select id="storage-sort" class="input mt-1" aria-label="Ordenar Armazém Digimon">
               <option value="level-desc">Nível: maior para menor</option>
               <option value="level-asc">Nível: menor para maior</option>
               <option value="stage-desc">Estágio: maior para menor</option>
@@ -202,7 +202,8 @@ function storageRenderList() {
   }
 
   if (filtered.length === 0) {
-    container.innerHTML = `<div class="card text-center text-slate-400 text-sm">${total === 0 ? "Storage vazio" : "Nenhum Digimon corresponde aos filtros atuais."}</div>`;
+    container.innerHTML = `<div class="card text-center text-slate-400 text-sm">${total === 0 ? "Armazém Digimon vazio" : "Nenhum Digimon corresponde aos filtros atuais."}
+</div>`;
     return;
   }
 

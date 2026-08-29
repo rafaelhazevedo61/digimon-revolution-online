@@ -15,8 +15,8 @@ async function renderMorePage() {
         {
           route: "bosses",
           icon: "👹",
-          title: "Bosses",
-          desc: "Desafie bosses poderosos",
+          title: "Chefes",
+          desc: "Desafie chefes poderosos",
         },
         {
           route: "arena",
@@ -27,7 +27,7 @@ async function renderMorePage() {
         {
           route: "world-boss",
           icon: "🌍",
-          title: "Boss Mundial",
+          title: "Chefe Mundial",
           desc: "Boss compartilhado do servidor",
         },
       ],
@@ -51,7 +51,7 @@ async function renderMorePage() {
         {
           route: "ranking",
           icon: "🏆",
-          title: "Ranking",
+          title: "Classificação",
           desc: "Top jogadores",
         },
       ],
@@ -79,13 +79,13 @@ async function renderMorePage() {
         {
           route: "storage",
           icon: "📦",
-          title: "Storage",
+          title: "Armazém Digimon",
           desc: "Gerenciar Digimons armazenados e tornar um parceiro ativo",
         },
         {
           route: "pokedex",
           icon: "📖",
-          title: "Digimon Info",
+          title: "Biblioteca Digimon",
           desc: "Catálogo de todos os Digimons",
         },
       ],

@@ -17,7 +17,7 @@ async function renderPokedexPage() {
 
   app.innerHTML = `
     <div class="page-container">
-      <h2 class="text-lg font-bold mb-4 px-1">📖 Digimon Info</h2>
+      <h2 class="text-lg font-bold mb-4 px-1">📖 Biblioteca Digimon</h2>
 
       <div class="card mb-4" id="dex-filters">
         <div class="mb-2">

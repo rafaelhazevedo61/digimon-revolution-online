@@ -582,7 +582,7 @@ function renderAreaCards(areas) {
           <span class="text-3xl">${info.emoji}</span>
           <div class="flex-1">
             <h3 class="font-bold">${info.name}</h3>
-            <p class="text-xs text-slate-400">Stage mínimo: ${formatStage(a.requiredStage)}</p>
+            <p class="text-xs text-slate-400">Estágio mínimo: ${formatStage(a.requiredStage)}</p>
           </div>
           ${locked ? `<span class="text-xl">🔒</span>` : `<span class="text-slate-400">›</span>`}
         </div>
