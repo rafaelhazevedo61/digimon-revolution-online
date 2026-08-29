@@ -29,11 +29,15 @@ async function renderToolsPage() {
     </div>
 
     <div id="tools-digimon-section" class="card mb-6 hidden">
-      <h3 class="text-lg font-semibold text-cyan-400 mb-4">2. Selecionar Digimon</h3>
+      <h3 class="text-lg font-semibold text-cyan-400 mb-4">2. Selecionar Digimon para XP</h3>
       <div id="tools-digimon-list"></div>
     </div>
 
     <div id="tools-actions-section" class="hidden">
+      <div class="mb-4 rounded-lg border border-cyan-900/60 bg-cyan-950/20 px-4 py-3 text-sm text-slate-300">
+        <strong class="text-cyan-300">Ações do jogador selecionado.</strong>
+        Grant Item e Grant Equipment usam diretamente o inventário global do jogador. A seleção de Digimon abaixo é necessária apenas para Add XP.
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
         <div class="card">
@@ -226,7 +230,13 @@ function toolsRenderPlayerList() {
 
 async function toolsSelectPlayer(playerId) {
   toolsState.selectedPlayerId = playerId;
+  toolsState.selectedDigimonId = null;
   toolsRenderPlayerList();
+
+  const actionsSection = document.getElementById("tools-actions-section");
+  actionsSection.classList.remove("hidden");
+  await toolsLoadSelects();
+  toolsBindActionButtons();
 
   const digimonSection = document.getElementById("tools-digimon-section");
   digimonSection.classList.remove("hidden");
@@ -267,12 +277,10 @@ function toolsRenderDigimonList() {
 async function toolsSelectDigimon(digimonId) {
   toolsState.selectedDigimonId = digimonId;
   toolsRenderDigimonList();
+  toolsBindActionButtons();
+}
 
-  const actionsSection = document.getElementById("tools-actions-section");
-  actionsSection.classList.remove("hidden");
-
-  await toolsLoadSelects();
-
+function toolsBindActionButtons() {
   document.getElementById("tools-xp-btn").onclick = toolsAddXp;
   document.getElementById("tools-equip-btn").onclick = toolsGrantEquipment;
   document.getElementById("tools-item-btn").onclick = toolsGrantItem;
@@ -307,6 +315,10 @@ async function toolsLoadSelects() {
 }
 
 async function toolsAddXp() {
+  if (!toolsState.selectedDigimonId) {
+    document.getElementById("tools-xp-result").innerHTML = `<span class="text-red-400">Selecione um Digimon para conceder XP.</span>`;
+    return;
+  }
   const amount = parseInt(document.getElementById("tools-xp-amount").value);
   if (!amount || amount <= 0) {
     document.getElementById("tools-xp-result").innerHTML = `<span class="text-red-400">Informe um valor valido.</span>`;
@@ -324,6 +336,10 @@ async function toolsAddXp() {
 }
 
 async function toolsGrantEquipment() {
+  if (!toolsState.selectedPlayerId) {
+    document.getElementById("tools-equip-result").innerHTML = `<span class="text-red-400">Selecione um jogador.</span>`;
+    return;
+  }
   const templateName = document.getElementById("tools-equip-template").value;
   if (!templateName) {
     document.getElementById("tools-equip-result").innerHTML = `<span class="text-red-400">Selecione um template.</span>`;
@@ -333,7 +349,7 @@ async function toolsGrantEquipment() {
   const rarity = document.getElementById("tools-equip-rarity").value || null;
 
   try {
-    const body = { digimonId: toolsState.selectedDigimonId, templateName };
+    const body = { playerId: toolsState.selectedPlayerId, templateName };
     if (rarity) body.rarity = rarity;
 
     const result = await apiPost("/admin/equipment-templates/grant", body);
@@ -346,6 +362,10 @@ async function toolsGrantEquipment() {
 }
 
 async function toolsGrantItem() {
+  if (!toolsState.selectedPlayerId) {
+    document.getElementById("tools-item-result").innerHTML = `<span class="text-red-400">Selecione um jogador.</span>`;
+    return;
+  }
   const itemCode = document.getElementById("tools-item-code").value;
   const quantity = parseInt(document.getElementById("tools-item-qty").value);
 
@@ -360,7 +380,7 @@ async function toolsGrantItem() {
 
   try {
     const result = await apiPost("/admin/inventory/grant", {
-      digimonId: toolsState.selectedDigimonId,
+      playerId: toolsState.selectedPlayerId,
       itemCode,
       quantity
     });
