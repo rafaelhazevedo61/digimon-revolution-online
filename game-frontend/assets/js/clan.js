@@ -204,6 +204,8 @@ function clanShowTab(tab) {
     clanRenderMembersTab();
   } else if (tab === "upgrades") {
     clanLoadUpgrades();
+  } else if (tab === "storage") {
+    clanLoadStorage();
   } else if (tab === "missions") {
     clanLoadMissions();
   } else if (tab === "raid") {
@@ -268,6 +270,7 @@ function renderClanDetailHtml(clan, opts = {}) {
     <div class="flex gap-2 mb-3 overflow-x-auto">
       <button id="clan-tab-members" class="clan-tab-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-cyan-600 text-white" onclick="clanShowTab('members')">Membros</button>
       <button id="clan-tab-upgrades" class="clan-tab-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('upgrades')">Melhorias</button>
+      ${showMemberTabs ? `<button id="clan-tab-storage" class="clan-tab-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('storage')">Armazém</button>` : ""}
       ${showMemberTabs ? `<button id="clan-tab-missions" class="clan-tab-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('missions')">Missões</button>` : ""}
       ${showMemberTabs ? `<button id="clan-tab-raid" class="clan-tab-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('raid')">Raid</button>` : ""}
     </div>
@@ -388,8 +391,8 @@ async function clanLoadUpgrades() {
 }
 
 function formatEffect(u) {
-  if (u.code === "MAX_ENERGY_BONUS" || u.code === "MEMBER_CAPACITY") {
-    return `+${Math.round(u.totalEffect)}`;
+  if (u.code === "MAX_ENERGY_BONUS" || u.code === "MEMBER_CAPACITY" || u.code === "CLAN_STORAGE_CAPACITY") {
+    return `+${Math.round(u.totalEffect)}${u.code === "CLAN_STORAGE_CAPACITY" ? " slots" : ""}`;
   }
   return `+${(u.totalEffect * 100).toFixed(0)}%`;
 }
@@ -401,6 +404,114 @@ async function clanBuyUpgrade(clanId, code) {
     const clan = await apiGet(`/clans/${clanId}`);
     renderClanDetail(clan);
     clanShowTab("upgrades");
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function clanLoadStorage() {
+  const clan = currentClan;
+  const container = safeContent("clan-tab-content");
+  if (!container || !clan) return;
+  container.innerHTML = `<div class="card animate-pulse"><div class="h-48"></div></div>`;
+
+  try {
+    const [storage, inventory] = await Promise.all([
+      apiGet(`/clans/${clan.id}/storage`),
+      apiGet("/inventory")
+    ]);
+    const isLeader = clan.myRole && clan.myRole.role === "LEADER";
+    const isOfficer = clan.myRole && clan.myRole.role === "OFFICER";
+    const canWithdraw = isLeader || isOfficer;
+    const depositableItems = (inventory || []).filter(item => item.quantity > 0 && item.itemDefinition && item.itemDefinition.tradable && item.itemDefinition.id);
+
+    let html = `
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="font-bold">Armazém do Clã</h3>
+        <span class="text-xs text-slate-400">${storage.usedSlots}/${storage.capacity} slots</span>
+      </div>
+      <div class="card-sm mb-3">
+        <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Capacidade utilizada</span><span class="text-cyan-400">${storage.availableSlots} livres</span></div>
+        <div class="w-full bg-slate-800 rounded-full h-2"><div class="bg-cyan-500 h-2 rounded-full" style="width:${storage.capacity ? Math.min(100, Math.round(storage.usedSlots / storage.capacity * 100)) : 0}%"></div></div>
+        <p class="text-xs text-purple-400 mt-2">${storage.honorMarks} Marcas de Honra disponíveis</p>
+      </div>
+    `;
+
+    html += `
+      <form class="card-sm mb-4" onsubmit="clanStorageDeposit(event, '${clan.id}')">
+        <p class="font-bold text-sm mb-1">Depositar item</p>
+        <p class="text-xs text-slate-400 mb-2">Qualquer membro pode depositar itens negociáveis do próprio inventário.</p>
+        ${depositableItems.length ? `
+          <div class="flex gap-2">
+            <select id="clan-storage-deposit-item" class="input flex-1 min-w-0" required>
+              ${depositableItems.map(item => `<option value="${item.itemDefinition.id}">${escapeHtml(item.itemDefinition.name || item.itemDefinition.code)} (${item.quantity})</option>`).join("")}
+            </select>
+            <input id="clan-storage-deposit-quantity" class="input w-20" type="number" min="1" max="999" value="1" required>
+          </div>
+          <button class="btn-primary w-full mt-2 text-sm" type="submit">Depositar</button>
+        ` : `<p class="text-xs text-slate-500">Nenhum item negociável disponível para depósito.</p>`}
+      </form>
+    `;
+
+    html += `<h4 class="font-bold text-sm mb-2">Itens armazenados</h4>`;
+    if (!storage.items || storage.items.length === 0) {
+      html += `<p class="text-slate-400 text-sm mb-4">O armazém está vazio.</p>`;
+    } else {
+      html += storage.items.map(item => `
+        <div class="card-sm mb-2 flex items-center gap-3">
+          ${item.icon ? `<img src="${escapeAttr(item.icon)}" class="w-8 h-8 object-contain" onerror="this.style.display='none'">` : ""}
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-sm truncate">${escapeHtml(item.name || item.code)}</p>
+            <p class="text-xs text-slate-400">Quantidade: ${item.quantity}${item.maxStack ? `/${item.maxStack}` : ""}</p>
+          </div>
+          ${canWithdraw ? `<button class="btn-secondary text-xs py-1 px-2" onclick="clanStorageWithdraw('${clan.id}', ${item.itemDefinitionId}, '${escapeAttr(item.name || item.code)}', ${item.quantity})">Retirar</button>` : ""}
+        </div>
+      `).join("");
+    }
+
+    html += `<details class="card-sm mt-4"><summary class="cursor-pointer font-bold text-sm">Histórico de movimentações</summary>`;
+    if (!storage.history || storage.history.length === 0) {
+      html += `<p class="text-slate-500 text-xs mt-3">Nenhuma movimentação registrada.</p>`;
+    } else {
+      html += `<div class="mt-3">${storage.history.map(entry => `
+        <div class="border-t border-slate-800 py-2 text-xs">
+          <div class="flex justify-between gap-2"><span class="${entry.action === "DEPOSIT" ? "text-green-400" : "text-amber-400"}">${entry.action === "DEPOSIT" ? "Depósito" : "Retirada"}</span><span class="text-slate-500">${new Date(entry.createdAt).toLocaleString()}</span></div>
+          <p class="text-slate-300">${escapeHtml(entry.actorUsername)} · ${escapeHtml(entry.itemName)} × ${entry.quantity}</p>
+        </div>
+      `).join("")}</div>`;
+    }
+    html += `</details>`;
+    container.innerHTML = html;
+  } catch (err) {
+    container.innerHTML = `<div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>`;
+  }
+}
+
+async function clanStorageDeposit(event, clanId) {
+  event.preventDefault();
+  const itemDefinitionId = Number(document.getElementById("clan-storage-deposit-item")?.value);
+  const quantity = Number(document.getElementById("clan-storage-deposit-quantity")?.value);
+  try {
+    await apiPost(`/clans/${clanId}/storage/deposit`, { itemDefinitionId, quantity });
+    showToast("Item depositado no armazém.", "success");
+    await clanLoadStorage();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function clanStorageWithdraw(clanId, itemDefinitionId, itemName, availableQuantity) {
+  const value = window.prompt(`Quantidade de ${itemName} para retirar (máximo ${availableQuantity}):`, "1");
+  if (value === null) return;
+  const quantity = Number(value);
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > availableQuantity) {
+    showToast("Quantidade inválida.", "error");
+    return;
+  }
+  try {
+    await apiPost(`/clans/${clanId}/storage/withdraw`, { itemDefinitionId, quantity });
+    showToast("Item retirado do armazém.", "success");
+    await clanLoadStorage();
   } catch (err) {
     showToast(err.message, "error");
   }
