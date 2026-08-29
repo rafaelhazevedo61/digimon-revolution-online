@@ -29,6 +29,7 @@ async function renderMorePage() {
         {
           route: "world-boss",
           icon: "🌍",
+          iconImage: "assets/img/chefe-mundial.webp",
           title: "Chefe Mundial",
           desc: "Boss compartilhado do servidor",
         },
