@@ -17,6 +17,9 @@ let clanStorageDepositSearch = "";
 let clanStorageDepositPage = 0;
 let clanStorageDepositSelectedItemId = null;
 const clanStorageDepositPageSize = 6;
+let clanStorageHistory = [];
+let clanStorageHistoryPage = 0;
+const clanStorageHistoryPageSize = 8;
 
 const clanActionHandlers = {
   promote: clanPromote,
@@ -431,6 +434,8 @@ async function clanLoadStorage() {
     const depositableItems = (inventory || []).filter(item => item.quantity > 0 && item.itemDefinition && item.itemDefinition.tradable && item.itemDefinition.id);
     clanStorageDepositItems = depositableItems;
     clanStorageDepositSelectedItemId = null;
+    clanStorageHistory = Array.isArray(storage.history) ? storage.history : [];
+    clanStorageHistoryPage = 0;
 
     let html = `
       <div class="flex items-center justify-between mb-2">
@@ -475,22 +480,50 @@ async function clanLoadStorage() {
       `).join("");
     }
 
-    html += `<details class="card-sm mt-4"><summary class="cursor-pointer font-bold text-sm">Histórico de movimentações</summary>`;
-    if (!storage.history || storage.history.length === 0) {
-      html += `<p class="text-slate-500 text-xs mt-3">Nenhuma movimentação registrada.</p>`;
-    } else {
-      html += `<div class="mt-3">${storage.history.map(entry => `
-        <div class="border-t border-slate-800 py-2 text-xs">
-          <div class="flex justify-between gap-2"><span class="${entry.action === "DEPOSIT" ? "text-green-400" : "text-amber-400"}">${entry.action === "DEPOSIT" ? "Depósito" : "Retirada"}</span><span class="text-slate-500">${new Date(entry.createdAt).toLocaleString()}</span></div>
-          <p class="text-slate-300">${escapeHtml(entry.actorUsername)} · ${escapeHtml(entry.itemName)} × ${entry.quantity}</p>
-        </div>
-      `).join("")}</div>`;
-    }
-    html += `</details>`;
+    html += `<details class="card-sm mt-4"><summary class="cursor-pointer font-bold text-sm">Histórico de movimentações</summary><div id="clan-storage-history-list" class="mt-3">${clanStorageRenderHistoryHtml()}</div></details>`;
     container.innerHTML = html;
   } catch (err) {
     container.innerHTML = `<div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>`;
   }
+}
+
+function clanStorageRenderHistoryHtml() {
+  if (clanStorageHistory.length === 0) {
+    return `<p class="text-slate-500 text-xs">Nenhuma movimentação registrada.</p>`;
+  }
+
+  const totalPages = Math.max(1, Math.ceil(clanStorageHistory.length / clanStorageHistoryPageSize));
+  clanStorageHistoryPage = Math.min(clanStorageHistoryPage, totalPages - 1);
+  const start = clanStorageHistoryPage * clanStorageHistoryPageSize;
+  const pageEntries = clanStorageHistory.slice(start, start + clanStorageHistoryPageSize);
+  const end = start + pageEntries.length;
+  const rows = pageEntries.map(entry => `
+    <div class="border-t border-slate-800 py-2 text-xs">
+      <div class="flex justify-between gap-2"><span class="${entry.action === "DEPOSIT" ? "text-green-400" : "text-amber-400"}">${entry.action === "DEPOSIT" ? "Depósito" : "Retirada"}</span><span class="text-slate-500">${new Date(entry.createdAt).toLocaleString()}</span></div>
+      <p class="text-slate-300">${escapeHtml(entry.actorUsername)} · ${escapeHtml(entry.itemName)} × ${entry.quantity}</p>
+    </div>
+  `).join("");
+
+  return `
+    <div class="flex items-center justify-between gap-3 mb-2">
+      <p class="text-xs text-slate-500">${start + 1}-${end} de ${clanStorageHistory.length} movimentação(ões)</p>
+      ${totalPages > 1 ? `
+        <div class="flex items-center gap-2">
+          <button type="button" class="btn-secondary text-xs" onclick="clanStorageChangeHistoryPage(-1)" ${clanStorageHistoryPage === 0 ? "disabled" : ""}>Anterior</button>
+          <span class="text-xs text-slate-400 whitespace-nowrap">${clanStorageHistoryPage + 1}/${totalPages}</span>
+          <button type="button" class="btn-secondary text-xs" onclick="clanStorageChangeHistoryPage(1)" ${clanStorageHistoryPage >= totalPages - 1 ? "disabled" : ""}>Próxima</button>
+        </div>
+      ` : ""}
+    </div>
+    <div>${rows}</div>
+  `;
+}
+
+function clanStorageChangeHistoryPage(delta) {
+  const totalPages = Math.max(1, Math.ceil(clanStorageHistory.length / clanStorageHistoryPageSize));
+  clanStorageHistoryPage = Math.max(0, Math.min(totalPages - 1, clanStorageHistoryPage + delta));
+  const container = document.getElementById("clan-storage-history-list");
+  if (container) container.innerHTML = clanStorageRenderHistoryHtml();
 }
 
 async function clanStorageDeposit(event, clanId) {
