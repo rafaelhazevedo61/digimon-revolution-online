@@ -15,7 +15,7 @@ async function renderMorePage() {
         },
         {
           route: "bosses",
-          icon: "👹",
+          iconImage: "assets/img/batalhadochefe.webp",
           title: "Chefes",
           desc: "Desafie chefes poderosos",
         },
@@ -48,13 +48,13 @@ async function renderMorePage() {
         },
         {
           route: "clans",
-          icon: "🛡️",
+          iconImage: "assets/img/cla.webp",
           title: "Clãs",
           desc: "Crie ou entre em um clã",
         },
         {
           route: "ranking",
-          icon: "🏆",
+          iconImage: "assets/img/ranking.webp",
           title: "Classificação",
           desc: "Top jogadores",
         },
@@ -76,7 +76,7 @@ async function renderMorePage() {
       items: [
         {
           route: "incubation",
-          icon: "🥚",
+          iconImage: "assets/img/incubacao.webp",
           title: "Incubação",
           desc: "Chocar novas digitamas",
         },
