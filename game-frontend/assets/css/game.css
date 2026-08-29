@@ -525,3 +525,10 @@ body {
   font-size: 0.75rem;
   line-height: 1.45;
 }
+
+
+.auction-item-modal {
+  max-width: 40rem;
+  max-height: min(85vh, 42rem);
+  overflow-y: auto;
+}
