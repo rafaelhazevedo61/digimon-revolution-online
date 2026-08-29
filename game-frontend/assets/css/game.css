@@ -383,6 +383,7 @@ body {
 }
 
 .nav-btn .nav-icon { font-size: 1.25rem; }
+.nav-btn .nav-icon.nav-image { width: 1.5rem; height: 1.5rem; object-fit: contain; }
 .nav-btn:hover { color: #94a3b8; }
 .nav-btn.active { color: #06b6d4; }
 
