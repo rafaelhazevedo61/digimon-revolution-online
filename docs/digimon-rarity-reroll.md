@@ -23,3 +23,12 @@ Quando o Digimon é Comum, existe 70% de chance de o Dado ser consumido sem alte
 A tabela `digimon_rarity_rerolls` registra jogador, Digimon, raridade atual, nova raridade, estado e timestamps. As confirmações utilizam bloqueio pessimista e só aceitam propostas com estado `PENDING`, evitando confirmação duplicada ou cobrança concorrente.
 
 Os endpoints permanecem `POST /inventory/rarity-reroll/start`, `POST /inventory/rarity-reroll/{id}/accept` e `POST /inventory/rarity-reroll/{id}/keep`. A interface do inventário agora mostra o ícone de dado (`🎲`), o nome **Dado de Raridade** e o modal com a comparação das raridades e o custo de manutenção.
+
+
+## Indicativo de raridade alterada
+
+Quando o jogador aceita uma nova raridade pelo Dado, o Digimon passa a registrar a origem da alteração. A primeira raridade original é preservada, mesmo que o Dado seja utilizado novamente no futuro.
+
+A migration `V172__add_rarity_die_indicator.sql` adiciona os campos `rarity_changed_by_die`, `original_rarity_before_die` e `rarity_changed_by_die_at` à tabela `digimons`. O indicador não recalcula IVs ou atributos já armazenados.
+
+Nas listas e resumos do Dashboard, Storage, Ranking e Evolução, um ícone discreto de dado é exibido ao lado da raridade. O tooltip informa que a raridade foi alterada pelo Dado. Nos modais de detalhes, o jogador vê a raridade original, a data da primeira alteração e a observação de que IVs e atributos do nascimento permaneceram inalterados.

@@ -496,3 +496,32 @@ body {
 @media (display-mode: standalone) {
   body { padding-top: env(safe-area-inset-top); }
 }
+
+
+/* ===================== Raridade alterada pelo Dado ===================== */
+.rarity-die-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-left: 0.15rem;
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  border-radius: 9999px;
+  background: rgba(120, 53, 15, 0.35);
+  color: #fde68a;
+  font-size: 0.72rem;
+  line-height: 1;
+  cursor: help;
+  vertical-align: middle;
+}
+
+.rarity-die-details {
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: 0.75rem;
+  background: rgba(120, 53, 15, 0.18);
+  color: #fef3c7;
+  padding: 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}

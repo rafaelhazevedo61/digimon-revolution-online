@@ -15,6 +15,7 @@ import com.dro.shared.util.TokenExtractor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -48,7 +49,7 @@ public class RarityRerollUseCase {
     @Transactional
     public RarityRerollResponse accept(String token, UUID id) {
         UUID pid = TokenExtractor.extractPlayerId(token); RarityReroll rr = rerolls.findPendingForUpdate(id, pid, RerollStatus.PENDING).orElseThrow(() -> new NotFoundException("Proposta do Dado de Raridade não encontrada."));
-        Digimon d = digimons.findByIdForUpdate(rr.getDigimonId()).orElseThrow(() -> new NotFoundException("Digimon não encontrado.")); d.setRarity(rr.getNewRarity()); rr.accept(); digimons.save(d); rerolls.save(rr); return response(rr, d.getBits(), "Nova raridade aceita com sucesso.");
+        Digimon d = digimons.findByIdForUpdate(rr.getDigimonId()).orElseThrow(() -> new NotFoundException("Digimon não encontrado.")); d.markRarityChangedByDie(rr.getCurrentRarity(), LocalDateTime.now()); d.setRarity(rr.getNewRarity()); rr.accept(); digimons.save(d); rerolls.save(rr); return response(rr, d.getBits(), "Nova raridade aceita com sucesso.");
     }
 
     @Transactional

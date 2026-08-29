@@ -49,6 +49,13 @@ public class Digimon {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Rarity rarity;
+    @Column(name = "rarity_changed_by_die", nullable = false)
+    private boolean rarityChangedByDie;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "original_rarity_before_die")
+    private Rarity originalRarityBeforeDie;
+    @Column(name = "rarity_changed_by_die_at")
+    private LocalDateTime rarityChangedByDieAt;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Personality personality;
@@ -388,6 +395,26 @@ public class Digimon {
 
     public void setRarity(Rarity rarity) {
         this.rarity = rarity;
+    }
+
+    public boolean isRarityChangedByDie() {
+        return rarityChangedByDie;
+    }
+
+    public Rarity getOriginalRarityBeforeDie() {
+        return originalRarityBeforeDie;
+    }
+
+    public LocalDateTime getRarityChangedByDieAt() {
+        return rarityChangedByDieAt;
+    }
+
+    public void markRarityChangedByDie(Rarity originalRarity, LocalDateTime changedAt) {
+        if (!this.rarityChangedByDie) {
+            this.originalRarityBeforeDie = originalRarity;
+            this.rarityChangedByDieAt = changedAt;
+            this.rarityChangedByDie = true;
+        }
     }
 
     public Personality getPersonality() {

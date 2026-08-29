@@ -194,7 +194,10 @@ public class GetPlayerDashboardUseCase {
                 clanBonusHp,
                 clanBonusAttack,
                 clanBonusDefense,
-                clanBonusMaxEnergy
+                clanBonusMaxEnergy,
+                d.isRarityChangedByDie(),
+                d.getOriginalRarityBeforeDie(),
+                d.getRarityChangedByDieAt()
         );
     }
 
