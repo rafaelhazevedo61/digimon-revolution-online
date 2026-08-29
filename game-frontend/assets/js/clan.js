@@ -20,6 +20,10 @@ const clanStorageDepositPageSize = 6;
 let clanStorageHistory = [];
 let clanStorageHistoryPage = 0;
 const clanStorageHistoryPageSize = 8;
+let clanStorageItems = [];
+let clanStorageItemsSearch = "";
+let clanStorageItemsPage = 0;
+const clanStorageItemsPageSize = 8;
 
 const clanActionHandlers = {
   promote: clanPromote,
@@ -436,6 +440,9 @@ async function clanLoadStorage() {
     clanStorageDepositSelectedItemId = null;
     clanStorageHistory = Array.isArray(storage.history) ? storage.history : [];
     clanStorageHistoryPage = 0;
+    clanStorageItems = Array.isArray(storage.items) ? storage.items : [];
+    clanStorageItemsSearch = "";
+    clanStorageItemsPage = 0;
 
     let html = `
       <div class="flex items-center justify-between mb-2">
@@ -445,7 +452,6 @@ async function clanLoadStorage() {
       <div class="card-sm mb-3">
         <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Capacidade utilizada</span><span class="text-cyan-400">${storage.availableSlots} livres</span></div>
         <div class="w-full bg-slate-800 rounded-full h-2"><div class="bg-cyan-500 h-2 rounded-full" style="width:${storage.capacity ? Math.min(100, Math.round(storage.usedSlots / storage.capacity * 100)) : 0}%"></div></div>
-        <p class="text-xs text-purple-400 mt-2">${storage.honorMarks} Marcas de Honra disponíveis</p>
       </div>
     `;
 
@@ -464,27 +470,90 @@ async function clanLoadStorage() {
       </div>
     `;
 
-    html += `<h4 class="font-bold text-sm mb-2">Itens armazenados</h4>`;
-    if (!storage.items || storage.items.length === 0) {
-      html += `<p class="text-slate-400 text-sm mb-4">O armazém está vazio.</p>`;
-    } else {
-      html += storage.items.map(item => `
-        <div class="card-sm mb-2 flex items-center gap-3">
-          ${item.icon ? `<img src="${escapeAttr(item.icon)}" class="w-8 h-8 object-contain" onerror="this.style.display='none'">` : ""}
-          <div class="flex-1 min-w-0">
-            <p class="font-bold text-sm truncate">${escapeHtml(item.name || item.code)}</p>
-            <p class="text-xs text-slate-400">Quantidade: ${item.quantity}${item.maxStack ? `/${item.maxStack}` : ""}</p>
-          </div>
-          ${canWithdraw ? `<button class="btn-secondary text-xs py-1 px-2" onclick="clanStorageWithdraw('${clan.id}', ${item.itemDefinitionId}, '${escapeAttr(item.name || item.code)}', ${item.quantity})">Retirar</button>` : ""}
-        </div>
-      `).join("");
-    }
+    html += `
+      <div class="flex items-center justify-between gap-3 mb-2">
+        <h4 class="font-bold text-sm">Itens armazenados</h4>
+        <span class="text-xs text-slate-500">${clanStorageItems.length} ${clanStorageItems.length === 1 ? "item armazenado" : "itens armazenados"}</span>
+      </div>
+      <form id="clan-storage-items-search-form" class="flex flex-col sm:flex-row gap-2 mb-3" onsubmit="clanStorageSearchItems(event)">
+        <input id="clan-storage-items-search" class="input flex-1 min-w-0" type="search" placeholder="Buscar item armazenado..." aria-label="Buscar item armazenado" autocomplete="off">
+        <button type="submit" class="btn-primary w-full sm:w-auto shrink-0">Buscar</button>
+      </form>
+      <div id="clan-storage-items-list">${clanStorageRenderItemsHtml()}</div>
+    `;
 
     html += `<details class="card-sm mt-4"><summary class="cursor-pointer font-bold text-sm">Histórico de movimentações</summary><div id="clan-storage-history-list" class="mt-3">${clanStorageRenderHistoryHtml()}</div></details>`;
     container.innerHTML = html;
   } catch (err) {
     container.innerHTML = `<div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>`;
   }
+}
+
+function clanStorageFilteredItems() {
+  if (!clanStorageItemsSearch) return clanStorageItems;
+  return clanStorageItems.filter(item => {
+    return [item.name, item.code, item.category]
+      .filter(Boolean)
+      .some(value => String(value).toLowerCase().includes(clanStorageItemsSearch));
+  });
+}
+
+function clanStorageRenderItemsHtml() {
+  const filteredItems = clanStorageFilteredItems();
+  if (filteredItems.length === 0) {
+    return clanStorageItems.length === 0
+      ? `<p class="text-slate-400 text-sm mb-4">O armazém está vazio.</p>`
+      : `<p class="text-slate-500 text-sm mb-4">Nenhum item encontrado para essa busca.</p>`;
+  }
+
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / clanStorageItemsPageSize));
+  clanStorageItemsPage = Math.min(clanStorageItemsPage, totalPages - 1);
+  const start = clanStorageItemsPage * clanStorageItemsPageSize;
+  const pageItems = filteredItems.slice(start, start + clanStorageItemsPageSize);
+  const end = start + pageItems.length;
+  const itemLabel = filteredItems.length === 1 ? "item" : "itens";
+  const canWithdraw = currentClan && currentClan.myRole && ["LEADER", "OFFICER"].includes(currentClan.myRole.role);
+  const clanId = currentClan ? currentClan.id : "";
+  const rows = pageItems.map(item => `
+    <div class="card-sm mb-2 flex items-center gap-3 overflow-hidden">
+      ${item.icon ? `<img src="${escapeAttr(item.icon)}" class="w-8 h-8 object-contain shrink-0" onerror="this.style.display='none'">` : ""}
+      <div class="flex-1 min-w-0">
+        <p class="font-bold text-sm truncate">${escapeHtml(item.name || item.code)}</p>
+        <p class="text-xs text-slate-400 truncate">Quantidade: ${item.quantity}${item.maxStack ? `/${item.maxStack}` : ""}</p>
+      </div>
+      ${canWithdraw ? `<button class="btn-secondary text-xs py-1 px-2 shrink-0" onclick="clanStorageWithdraw('${clanId}', ${item.itemDefinitionId}, '${escapeAttr(item.name || item.code)}', ${item.quantity})">Retirar</button>` : ""}
+    </div>
+  `).join("");
+
+  return `
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+      <p class="text-xs text-slate-500">${start + 1}-${end} de ${filteredItems.length} ${itemLabel}</p>
+      ${totalPages > 1 ? `
+        <div class="flex items-center gap-2">
+          <button type="button" class="btn-secondary text-xs" onclick="clanStorageChangeItemsPage(-1)" ${clanStorageItemsPage === 0 ? "disabled" : ""}>Anterior</button>
+          <span class="text-xs text-slate-400 whitespace-nowrap">${clanStorageItemsPage + 1}/${totalPages}</span>
+          <button type="button" class="btn-secondary text-xs" onclick="clanStorageChangeItemsPage(1)" ${clanStorageItemsPage >= totalPages - 1 ? "disabled" : ""}>Próxima</button>
+        </div>
+      ` : ""}
+    </div>
+    <div>${rows}</div>
+  `;
+}
+
+function clanStorageSearchItems(event) {
+  event.preventDefault();
+  clanStorageItemsSearch = document.getElementById("clan-storage-items-search")?.value.trim().toLowerCase() || "";
+  clanStorageItemsPage = 0;
+  const container = document.getElementById("clan-storage-items-list");
+  if (container) container.innerHTML = clanStorageRenderItemsHtml();
+}
+
+function clanStorageChangeItemsPage(delta) {
+  const filteredItems = clanStorageFilteredItems();
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / clanStorageItemsPageSize));
+  clanStorageItemsPage = Math.max(0, Math.min(totalPages - 1, clanStorageItemsPage + delta));
+  const container = document.getElementById("clan-storage-items-list");
+  if (container) container.innerHTML = clanStorageRenderItemsHtml();
 }
 
 function clanStorageRenderHistoryHtml() {
