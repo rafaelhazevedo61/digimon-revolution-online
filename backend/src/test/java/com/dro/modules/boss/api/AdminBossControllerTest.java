@@ -63,7 +63,7 @@ class AdminBossControllerTest {
 
         var response = controller.update(7L, new UpdateBossRequest(
                 null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, 42,
+                null,                 null, null, null, null, null, null, null, 42,
                 null, null, null
         ));
 
@@ -95,7 +95,7 @@ class AdminBossControllerTest {
 
         controller.update(9L, new UpdateBossRequest(
                 null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null,
                 attempt.getCode(), topDamage.getCode(), finalBlow.getCode()
         ));
 

@@ -1,6 +1,7 @@
 package com.dro.modules.clan.raid.application;
 
 import com.dro.modules.boss.domain.BossDefinitionEntity;
+import com.dro.modules.boss.api.dto.response.BossDefeatSummaryResponse;
 import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.modules.clan.raid.api.dto.response.ClanRaidAttackResponse;
 import com.dro.modules.clan.raid.api.dto.response.ClanRaidRankingEntryResponse;
@@ -52,8 +53,20 @@ public class ClanRaidResponseMapper {
                 raid.getId(), raid.getClanId(), boss.getCode(), boss.getName(), boss.getImageUrl(),
                 raid.getMaxHp(), raid.getRemainingHp(), raid.getStatus(), raid.getCreatedAt(), raid.getDefeatedAt(),
                 attackCooldownMinutes, cooldownEnabled, nextAttackAvailableAt,
-                myTotalDamage, buildRanking(raid.getId()), recentAttacks
+                myTotalDamage, buildRanking(raid.getId()), recentAttacks,
+                buildDefeatSummary(raid, attacks)
         );
+    }
+
+    private BossDefeatSummaryResponse buildDefeatSummary(ClanRaid raid, List<ClanRaidAttack> attacks) {
+        if (raid.getStatus() != ClanRaidStatus.DEFEATED || attacks.isEmpty()) return null;
+        ClanRaidAttack finalBlow = attacks.stream().max(Comparator.comparing(ClanRaidAttack::getCreatedAt)).orElseThrow();
+        Map<UUID, Long> totals = attacks.stream().collect(Collectors.groupingBy(ClanRaidAttack::getPlayerId, Collectors.summingLong(ClanRaidAttack::getDamage)));
+        UUID topPlayer = totals.entrySet().stream().max(Map.Entry.<UUID, Long>comparingByValue()).orElseThrow().getKey();
+        String finalName = playerRepository.findById(finalBlow.getPlayerId()).map(Player::getUsername).orElse("Desconhecido");
+        String topName = playerRepository.findById(topPlayer).map(Player::getUsername).orElse("Desconhecido");
+        long duration = raid.getDefeatedAt() == null ? 0 : Math.max(0, Duration.between(raid.getCreatedAt(), raid.getDefeatedAt()).getSeconds());
+        return new BossDefeatSummaryResponse(finalBlow.getPlayerId(), finalName, topPlayer, topName, totals.get(topPlayer), attacks.size(), duration, raid.getDefeatedAt().plus(Duration.ofHours(1)));
     }
 
     private List<ClanRaidRankingEntryResponse> buildRanking(UUID raidId) {

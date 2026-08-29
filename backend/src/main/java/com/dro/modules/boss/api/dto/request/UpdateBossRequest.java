@@ -19,6 +19,7 @@ public record UpdateBossRequest(
         Integer cooldownMinutes,
         Integer baseXpReward,
         Integer baseBitsReward,
+        Integer clanHonorMarksReward,
         Integer defeatXpPercent,
         String imageUrl,
         Boolean active,

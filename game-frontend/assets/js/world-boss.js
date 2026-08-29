@@ -42,6 +42,10 @@ function renderWorldBossContent(boss) {
     ? Math.min(100, Math.round((boss.remainingHp / boss.maxHp) * 100))
     : 100;
   const defeated = boss.status === "DEFEATED" || boss.remainingHp <= 0;
+  const summary = boss.defeatSummary;
+  const formatAliveDuration = (seconds) => { const total = Math.max(0, Number(seconds) || 0); const days = Math.floor(total / 86400); const hours = Math.floor((total % 86400) / 3600); const minutes = Math.floor((total % 3600) / 60); const secs = total % 60; return `${days}d ${hours}h ${minutes}m ${secs}s`; };
+  const formatBossDateTime = (value) => { if (!value) return "Não informado"; const date = new Date(value); return `${date.toLocaleDateString("pt-BR")} - ${date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`; };
+  const defeatSummaryHtml = defeated && summary ? `<div class="mt-3 rounded-lg border border-green-800/70 bg-green-950/20 p-3 text-xs"><p class="font-bold text-green-300 mb-2">Resumo da derrota</p><div class="grid grid-cols-2 gap-2"><div class="rounded-md bg-slate-900/60 p-2"><p class="text-[10px] uppercase text-slate-500">Golpe final</p><p class="mt-1 font-semibold text-white">${escapeHtml(summary.finalBlowUsername || "Desconhecido")}</p></div><div class="rounded-md bg-slate-900/60 p-2"><p class="text-[10px] uppercase text-slate-500">Maior dano</p><p class="mt-1 font-semibold text-white">${escapeHtml(summary.topDamageUsername || "Desconhecido")}<br><span class="text-cyan-300">${Number(summary.topDamage || 0).toLocaleString("pt-BR")} de dano</span></p></div><div class="rounded-md bg-slate-900/60 p-2"><p class="text-[10px] uppercase text-slate-500">Ataques totais</p><p class="mt-1 font-semibold text-white">${Number(summary.totalAttacks || 0).toLocaleString("pt-BR")}</p></div><div class="rounded-md bg-slate-900/60 p-2"><p class="text-[10px] uppercase text-slate-500">Tempo vivo</p><p class="mt-1 font-semibold text-white">${formatAliveDuration(summary.aliveDurationSeconds)}</p></div><div class="col-span-2 rounded-md bg-slate-900/60 p-2"><p class="text-[10px] uppercase text-slate-500">Próximo ciclo</p><p class="mt-1 font-semibold text-amber-300">${formatBossDateTime(summary.nextCycleAt)}</p></div></div></div>` : "";
   const cooldownMinutes = Number.isFinite(Number(boss.attackCooldownMinutes)) && Number(boss.attackCooldownMinutes) > 0
     ? Number(boss.attackCooldownMinutes)
     : 5;
@@ -127,7 +131,7 @@ function renderWorldBossContent(boss) {
       <p class="text-xs text-slate-400 mb-3">Seu dano: <span class="text-cyan-400">${boss.myTotalDamage.toLocaleString()}</span></p>
 
       ${attackButtonHtml}
-      ${defeated ? `<p class="text-xs text-green-400 text-center">Chefe Mundial derrotado. Aguarde o próximo ciclo.</p>` : ""}
+      ${defeated ? `<p class="text-xs text-green-400 text-center">Chefe Mundial derrotado. O próximo renascimento ocorrerá uma hora após a derrota.</p>${defeatSummaryHtml}` : ""}
 
     </div>
 
@@ -207,6 +211,8 @@ function createWorldBossRequestId() {
   return `world-boss-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function formatBossDateTime(value) { if (!value) return "Não informado"; const date = new Date(value); return `${date.toLocaleDateString("pt-BR")} - ${date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`; }
+
 function showWorldBossAttackModal(result) {
   const existing = document.getElementById("world-boss-attack-modal");
   if (existing) existing.remove();
@@ -238,6 +244,8 @@ function showWorldBossAttackModal(result) {
       <div class="space-y-2">${rewardRows}</div>
     </section>
   ` : "";
+  const defeatSummary = result.defeatSummary;
+  const defeatSummaryHtml = result.defeated && defeatSummary ? `<div class="mt-3 rounded-lg border border-green-800/70 bg-green-950/20 p-3 text-xs"><p class="font-bold text-green-300 mb-2">Resumo da derrota</p><div class="grid grid-cols-2 gap-2"><div class="rounded-md bg-slate-800/70 p-2"><p class="text-[10px] uppercase text-slate-500">Golpe final</p><p class="mt-1 font-semibold text-white">${escapeHtml(defeatSummary.finalBlowUsername || "Desconhecido")}</p></div><div class="rounded-md bg-slate-800/70 p-2"><p class="text-[10px] uppercase text-slate-500">Maior dano</p><p class="mt-1 font-semibold text-white">${escapeHtml(defeatSummary.topDamageUsername || "Desconhecido")}<br><span class="text-cyan-300">${Number(defeatSummary.topDamage || 0).toLocaleString("pt-BR")} de dano</span></p></div><div class="rounded-md bg-slate-800/70 p-2"><p class="text-[10px] uppercase text-slate-500">Ataques totais</p><p class="mt-1 font-semibold text-white">${Number(defeatSummary.totalAttacks || 0).toLocaleString("pt-BR")}</p></div><div class="rounded-md bg-slate-800/70 p-2"><p class="text-[10px] uppercase text-slate-500">Tempo vivo</p><p class="mt-1 font-semibold text-white">${formatAliveDuration(defeatSummary.aliveDurationSeconds)}</p></div><div class="col-span-2 rounded-md bg-slate-800/70 p-2"><p class="text-[10px] uppercase text-slate-500">Próximo ciclo</p><p class="mt-1 font-semibold text-amber-300">${formatBossDateTime(defeatSummary.nextCycleAt)}</p></div></div></div>` : "";
   const defeatBonusHtml = result.defeated ? `
     <div class="mt-4 rounded-lg border border-green-800/70 bg-green-950/30 p-3">
       <p class="text-sm font-bold text-green-300">Chefe derrotado</p>
@@ -269,6 +277,7 @@ function showWorldBossAttackModal(result) {
         </div>
       </div>
       ${defeatBonusHtml}
+      ${defeatSummaryHtml}
       ${rewardSectionHtml}
       <section class="mt-4 grid grid-cols-2 gap-2 border-t border-slate-800 pt-3" aria-label="Detalhes do ataque">
         <div class="rounded-lg bg-slate-800/60 p-2 text-center">

@@ -10,6 +10,7 @@ import java.util.UUID;
  */
 public record AdminPlayerResponse(
         UUID id,
+        UUID clanId,
         String username,
         String email,
         LocalDateTime createdAt,
@@ -21,6 +22,7 @@ public record AdminPlayerResponse(
     public static AdminPlayerResponse from(Player player) {
         return new AdminPlayerResponse(
                 player.getId(),
+                player.getClanId(),
                 player.getUsername(),
                 player.getEmail(),
                 player.getCreatedAt(),
