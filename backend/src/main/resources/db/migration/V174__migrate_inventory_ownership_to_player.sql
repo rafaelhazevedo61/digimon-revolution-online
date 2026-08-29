@@ -18,7 +18,7 @@ WHERE inventory.digimon_id = digimon.id
 -- relação quando ela aponta para exatamente um jogador distinto.
 WITH rebirth_candidates AS (
     SELECT inventory.id AS inventory_item_id,
-           MIN(current_digimon.player_id) AS player_id
+           (ARRAY_AGG(current_digimon.player_id ORDER BY current_digimon.player_id))[1] AS player_id
     FROM inventory_items inventory
     JOIN digimons current_digimon
       ON current_digimon.reborned_from = inventory.digimon_id
@@ -41,7 +41,7 @@ WHERE inventory.id = candidates.inventory_item_id
 -- Também exige exatamente um jogador distinto para evitar transferências indevidas.
 WITH mission_candidates AS (
     SELECT inventory.id AS inventory_item_id,
-           MIN(mission.player_id) AS player_id
+           (ARRAY_AGG(mission.player_id ORDER BY mission.player_id))[1] AS player_id
     FROM inventory_items inventory
     JOIN mission_instances mission
       ON mission.digimon_id = inventory.digimon_id
