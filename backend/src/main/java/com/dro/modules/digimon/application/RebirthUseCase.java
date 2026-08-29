@@ -74,18 +74,17 @@ public class RebirthUseCase {
         int digitalDataCost = RebirthRules.calculateDigitalDataCost(currentRebirthCount);
         validateCodeInfiniteInvestment(codeInfiniteHp, codeInfiniteAttack, codeInfiniteDefense);
         int codeInfiniteCost = codeInfiniteHp + codeInfiniteAttack + codeInfiniteDefense;
-        validateBits(oldDigimon, bitsCost);
+        validateBits(player, bitsCost);
         validateDigitalData(player, digitalDataCost);
         InventoryItem dataCore = findDataCore(digimonId);
         validateDataCore(dataCore, dataCoreCost);
         InventoryItem codeInfinite = findCodeInfinite(digimonId, codeInfiniteCost);
         validateCodeInfinite(codeInfinite, codeInfiniteCost);
-        consumeCosts(player, oldDigimon, dataCore, codeInfinite, bitsCost, dataCoreCost, digitalDataCost, codeInfiniteCost);
+        consumeCosts(player, dataCore, codeInfinite, bitsCost, dataCoreCost, digitalDataCost, codeInfiniteCost);
         Digimon newDigimon = createRebornDigimon(playerId, oldDigimon, newRebirthCount, codeInfiniteHp, codeInfiniteAttack, codeInfiniteDefense);
         // A constraint do banco permite apenas um Digimon ACTIVE por jogador.
         // Libere o slot e force o UPDATE antes de inserir o novo Digimon ACTIVE.
         oldDigimon.setStatus(DigimonStatus.REBORN);
-        oldDigimon.setBits(0);
         digimonRepository.saveAndFlush(oldDigimon);
         digimonRepository.save(newDigimon);
         inventoryRepository.save(dataCore);
@@ -146,8 +145,8 @@ public class RebirthUseCase {
         }
     }
 
-    private void validateBits(Digimon digimon, int bitsCost) {
-        if (digimon.getBits() < bitsCost) {
+    private void validateBits(Player player, int bitsCost) {
+        if (player.getBits() < bitsCost) {
             throw new UnprocessableException("Not enough Bits to perform Rebirth");
         }
     }
@@ -188,8 +187,10 @@ public class RebirthUseCase {
         }
     }
 
-    private void consumeCosts(Player player, Digimon digimon, InventoryItem dataCore, InventoryItem codeInfinite, int bitsCost, int dataCoreCost, int digitalDataCost, int codeInfiniteCost) {
-        digimon.setBits(digimon.getBits() - bitsCost);
+    private void consumeCosts(Player player, InventoryItem dataCore, InventoryItem codeInfinite, int bitsCost, int dataCoreCost, int digitalDataCost, int codeInfiniteCost) {
+        if (!player.spendBits(bitsCost)) {
+            throw new UnprocessableException("Not enough Bits to perform Rebirth");
+        }
         dataCore.setQuantity(dataCore.getQuantity() - dataCoreCost);
         if (codeInfinite != null) codeInfinite.setQuantity(codeInfinite.getQuantity() - codeInfiniteCost);
         if (!player.spendDigitalData(digitalDataCost)) {
