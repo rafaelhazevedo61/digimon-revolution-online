@@ -52,6 +52,13 @@ async function renderStoragePage() {
       </form>
 
       <div id="storage-config-panel" class="card-sm mb-3 hidden">
+        <div class="mb-3 rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-2">
+          <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+            <input id="storage-pagination-enabled" type="checkbox" class="accent-cyan-500" checked>
+            Usar paginação no armazém
+          </label>
+          <p class="text-xs text-slate-500 mt-1">Desative para exibir todos os Digimons de uma vez.</p>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label class="text-xs text-slate-400 flex flex-col min-w-0">
             <span class="min-h-8 leading-4 flex items-start">Estágio</span>
@@ -132,6 +139,21 @@ async function renderStoragePage() {
       storageRenderList();
     });
   storageSyncFilterControls();
+  await loadPlayerPaginationPreference();
+  const paginationToggle = document.getElementById("storage-pagination-enabled");
+  if (paginationToggle) {
+    paginationToggle.checked = playerPaginationEnabled;
+    paginationToggle.addEventListener("change", async () => {
+      paginationToggle.disabled = true;
+      try {
+        await savePlayerPaginationPreference(paginationToggle.checked);
+        storageCurrentPage = 1;
+        storageRenderList();
+      } finally {
+        paginationToggle.disabled = false;
+      }
+    });
+  }
 
   try {
     const [stored, dashboard] = await Promise.all([
@@ -204,15 +226,17 @@ function storageRenderList() {
   if (!container) return;
 
   const filtered = storageGetFilteredDigimons();
-  const totalPages = Math.max(1, Math.ceil(filtered.length / STORAGE_PAGE_SIZE));
+  const totalPages = playerPaginationEnabled ? Math.max(1, Math.ceil(filtered.length / STORAGE_PAGE_SIZE)) : 1;
   storageCurrentPage = Math.min(Math.max(1, storageCurrentPage), totalPages);
-  const pageStart = (storageCurrentPage - 1) * STORAGE_PAGE_SIZE;
-  const pageItems = filtered.slice(pageStart, pageStart + STORAGE_PAGE_SIZE);
+  const pageStart = playerPaginationEnabled ? (storageCurrentPage - 1) * STORAGE_PAGE_SIZE : 0;
+  const pageItems = playerPaginationEnabled ? filtered.slice(pageStart, pageStart + STORAGE_PAGE_SIZE) : filtered;
   const summary = document.getElementById("storage-filter-summary");
   if (summary) {
     summary.textContent = filtered.length === 0
       ? "Nenhum Digimon encontrado."
-      : `Exibindo ${pageStart + 1}-${Math.min(pageStart + STORAGE_PAGE_SIZE, filtered.length)} de ${filtered.length} Digimon${filtered.length === 1 ? "" : "s"}.`;
+      : playerPaginationEnabled
+        ? `Exibindo ${pageStart + 1}-${Math.min(pageStart + STORAGE_PAGE_SIZE, filtered.length)} de ${filtered.length} Digimon${filtered.length === 1 ? "" : "s"}.`
+        : `Exibindo todos os ${filtered.length} Digimon${filtered.length === 1 ? "" : "s"}.`;
   }
 
   if (filtered.length === 0) {
@@ -280,7 +304,7 @@ function storageRenderList() {
 function storageRenderPagination(totalItems, totalPages) {
   const container = document.getElementById("storage-pagination");
   if (!container) return;
-  if (totalItems <= STORAGE_PAGE_SIZE) {
+  if (!playerPaginationEnabled || totalItems <= STORAGE_PAGE_SIZE) {
     container.innerHTML = "";
     return;
   }
@@ -295,6 +319,7 @@ function storageRenderPagination(totalItems, totalPages) {
 }
 
 function storageGoToPage(page) {
+  if (!playerPaginationEnabled) return;
   const totalPages = Math.max(1, Math.ceil(storageGetFilteredDigimons().length / STORAGE_PAGE_SIZE));
   const nextPage = Math.min(Math.max(1, Number(page) || 1), totalPages);
   if (nextPage === storageCurrentPage) return;
