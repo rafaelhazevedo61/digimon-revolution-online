@@ -497,8 +497,8 @@ body {
 }
 
 .inventory-quantity-input {
-  width: 2.75rem;
-  min-width: 2.75rem;
+  width: 3.5rem;
+  min-width: 3.5rem;
   height: 2rem;
   padding: 0.25rem 0.2rem;
   border-radius: 0.55rem;
