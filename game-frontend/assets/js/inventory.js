@@ -4,6 +4,7 @@ let invDigimonId = null;
 let invTab = "items"; // "items" or "equipment"
 let invChestOpeningInProgress = false;
 let invItemUseInProgress = false;
+let invPagination = { items: 0, equipment: 0, pageSize: 10 };
 let invFilterState = {
   search: "",
   category: "ALL",
@@ -166,6 +167,7 @@ async function renderInventoryPage() {
 
 function invSwitchTab(tab) {
   invTab = tab;
+  invPagination[tab] = 0;
   document.querySelectorAll("#inv-tabs .tab-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.tab === tab);
   });
@@ -174,6 +176,7 @@ function invSwitchTab(tab) {
 
 function invSwitchCategory(category) {
   invFilterState.category = category;
+  invPagination.items = 0;
   invSyncFilterControls();
   invRenderActiveTab();
 }
@@ -191,22 +194,27 @@ function invSetupFilterControls() {
   document.getElementById("inv-clear-search")?.addEventListener("click", invClearSearch);
   document.getElementById("inv-category-filter")?.addEventListener("change", (event) => {
     invFilterState.category = event.target.value;
+    invPagination.items = 0;
     invRenderActiveTab();
   });
   document.getElementById("inv-fragment-stage-filter")?.addEventListener("change", (event) => {
     invFilterState.fragmentStage = event.target.value;
+    invPagination.items = 0;
     invRenderActiveTab();
   });
   document.getElementById("inv-rarity-filter")?.addEventListener("change", (event) => {
     invFilterState.rarity = event.target.value;
+    invPagination[invTab] = 0;
     invRenderActiveTab();
   });
   document.getElementById("inv-slot-filter")?.addEventListener("change", (event) => {
     invFilterState.slot = event.target.value;
+    invPagination.equipment = 0;
     invRenderActiveTab();
   });
   document.getElementById("inv-sort")?.addEventListener("change", (event) => {
     invFilterState.sort = event.target.value;
+    invPagination[invTab] = 0;
     invRenderActiveTab();
   });
   invSyncFilterControls();
@@ -226,11 +234,13 @@ function invToggleConfig() {
 function invSubmitSearch(event) {
   event.preventDefault();
   invFilterState.search = document.getElementById("inv-search")?.value.trim() || "";
+  invPagination[invTab] = 0;
   invRenderActiveTab();
 }
 
 function invClearSearch() {
   invFilterState.search = "";
+  invPagination[invTab] = 0;
   const input = document.getElementById("inv-search");
   if (input) input.value = "";
   invRenderActiveTab();
@@ -361,10 +371,11 @@ function invCompareText(a, b) {
 function invRenderItems() {
   const content = document.getElementById("inv-content");
   const allItems = invAggregateItems(invItems).filter(i => i.quantity > 0);
-  const items = invSortItems(invGetFilteredItems());
-  invUpdateFilterSummary(items.length, allItems.length, "item");
+  const filteredItems = invSortItems(invGetFilteredItems());
+  const items = invGetPagedEntries("items", filteredItems);
+  invUpdateFilterSummary(invGetPageSummary("items", filteredItems.length), allItems.length, "item");
 
-  if (items.length === 0) {
+  if (filteredItems.length === 0) {
     const message = allItems.length === 0
       ? "Nenhum item no inventário."
       : "Nenhum item corresponde aos filtros atuais.";
@@ -419,7 +430,32 @@ function invRenderItems() {
         ${action}
       </div>
     `;
-  }).join("");
+  }).join("") + invRenderPagination("items", filteredItems.length);
+}
+
+function invGetPagedEntries(tab, entries) {
+  const totalPages = Math.max(1, Math.ceil(entries.length / invPagination.pageSize));
+  invPagination[tab] = Math.min(Math.max(0, invPagination[tab]), totalPages - 1);
+  const start = invPagination[tab] * invPagination.pageSize;
+  return entries.slice(start, start + invPagination.pageSize);
+}
+
+function invGetPageSummary(tab, total) {
+  if (total === 0) return 0;
+  const start = invPagination[tab] * invPagination.pageSize + 1;
+  return `${start}-${Math.min(start + invPagination.pageSize - 1, total)}`;
+}
+
+function invRenderPagination(tab, total) {
+  const totalPages = Math.ceil(total / invPagination.pageSize);
+  if (totalPages <= 1) return "";
+  const currentPage = invPagination[tab];
+  return `<div class="flex items-center justify-between gap-3 mt-4 pt-3 border-t border-slate-800"><span class="text-xs text-slate-500">Página ${currentPage + 1} de ${totalPages}</span><div class="flex gap-2"><button type="button" class="btn-sm btn-secondary" ${currentPage === 0 ? "disabled" : ""} onclick="invSetPage('${tab}', ${currentPage - 1})">Anterior</button><button type="button" class="btn-sm btn-secondary" ${currentPage >= totalPages - 1 ? "disabled" : ""} onclick="invSetPage('${tab}', ${currentPage + 1})">Próxima</button></div></div>`;
+}
+
+function invSetPage(tab, page) {
+  invPagination[tab] = Math.max(0, Number(page) || 0);
+  invRenderActiveTab();
 }
 
 function invAggregateItems(items) {
@@ -922,7 +958,8 @@ function invRenderEquipment() {
   const content = document.getElementById("inv-content");
   const filtered = invGetFilteredEquipments();
   const sorted = invSortEquipments(filtered);
-  invUpdateFilterSummary(sorted.length, invEquipments.length, "equipamento");
+  const paged = invGetPagedEntries("equipment", sorted);
+  invUpdateFilterSummary(invGetPageSummary("equipment", sorted.length), invEquipments.length, "equipamento");
 
   if (sorted.length === 0) {
     const message = invEquipments.length === 0
@@ -932,7 +969,7 @@ function invRenderEquipment() {
     return;
   }
 
-  content.innerHTML = sorted.map(eq => {
+  content.innerHTML = paged.map(eq => {
     const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
     const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
     const emoji = slotEmoji[eq.slot] || "⚔️";
@@ -972,7 +1009,7 @@ function invRenderEquipment() {
         </div>
       </div>
     `;
-  }).join("");
+  }).join("") + invRenderPagination("equipment", sorted.length);
 }
 
 async function invEquip(equipmentId) {
