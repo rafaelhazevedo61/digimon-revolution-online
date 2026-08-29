@@ -267,12 +267,12 @@ function renderClanDetailHtml(clan, opts = {}) {
       </div>
     </div>
 
-    <div class="flex gap-2 mb-3 overflow-x-auto">
-      <button id="clan-tab-members" class="clan-tab-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-cyan-600 text-white" onclick="clanShowTab('members')">Membros</button>
-      <button id="clan-tab-upgrades" class="clan-tab-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('upgrades')">Melhorias</button>
-      ${showMemberTabs ? `<button id="clan-tab-storage" class="clan-tab-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('storage')">Armazém</button>` : ""}
-      ${showMemberTabs ? `<button id="clan-tab-missions" class="clan-tab-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('missions')">Missões</button>` : ""}
-      ${showMemberTabs ? `<button id="clan-tab-raid" class="clan-tab-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('raid')">Raid</button>` : ""}
+    <div class="clan-tabs ${showMemberTabs ? "clan-tabs--full" : "clan-tabs--compact"} mb-3">
+      <button id="clan-tab-members" class="clan-tab-btn font-bold bg-cyan-600 text-white" onclick="clanShowTab('members')">Membros</button>
+      <button id="clan-tab-upgrades" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('upgrades')">Melhorias</button>
+      ${showMemberTabs ? `<button id="clan-tab-storage" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('storage')">Armazém</button>` : ""}
+      ${showMemberTabs ? `<button id="clan-tab-missions" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('missions')">Missões</button>` : ""}
+      ${showMemberTabs ? `<button id="clan-tab-raid" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('raid')">Raid</button>` : ""}
     </div>
 
     <div id="clan-tab-content" class="mb-4"></div>

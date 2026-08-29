@@ -148,6 +148,52 @@ body {
 
 .btn-red:hover { opacity: 0.9; }
 
+/* ===================== Clan Navigation ===================== */
+.clan-tabs {
+  display: grid;
+  width: 100%;
+  gap: 0.35rem;
+}
+
+.clan-tabs--full {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.clan-tabs--compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.clan-tab-btn {
+  min-width: 0;
+  width: 100%;
+  min-height: 2rem;
+  padding: 0.4rem 0.2rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  color: #e2e8f0;
+  cursor: pointer;
+  font-size: clamp(0.68rem, 2.8vw, 0.8rem);
+  line-height: 1.1;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  transition: filter 0.2s, transform 0.16s;
+  white-space: nowrap;
+}
+
+.clan-tab-btn:hover { filter: brightness(1.08); }
+.clan-tab-btn:active { transform: scale(0.98); }
+.clan-tab-btn:focus-visible {
+  outline: 2px solid #22d3ee;
+  outline-offset: 2px;
+}
+
+@media (max-width: 22.5rem) {
+  .clan-tabs--full {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 /* ===================== Tabs ===================== */
 .tab-btn {
   flex: 1;
