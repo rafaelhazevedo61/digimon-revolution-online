@@ -133,9 +133,9 @@ CREATE UNIQUE INDEX ux_inventory_items_player_item_definition
     WHERE item_definition_id IS NOT NULL;
 CREATE INDEX idx_inventory_items_player_id ON inventory_items(player_id);
 
-ALTER TABLE equipments ADD COLUMN player_id UUID;
+ALTER TABLE inventory_equipments ADD COLUMN player_id UUID;
 
-UPDATE equipments equipment
+UPDATE inventory_equipments equipment
 SET player_id = digimon.player_id
 FROM digimons digimon
 WHERE equipment.digimon_id = digimon.id
@@ -148,24 +148,24 @@ DECLARE
 BEGIN
     SELECT COUNT(*), string_agg(equipment.id::text, ', ' ORDER BY equipment.id)
     INTO unresolved_count, unresolved_ids
-    FROM equipments equipment
+    FROM inventory_equipments equipment
     WHERE equipment.player_id IS NULL;
 
     IF unresolved_count > 0 THEN
         RAISE EXCEPTION
-            'equipments possui % registros sem jogador proprietário. IDs: %',
+            'inventory_equipments possui % registros sem jogador proprietário. IDs: %',
             unresolved_count,
             unresolved_ids;
     END IF;
 END $$;
 
-UPDATE equipments
+UPDATE inventory_equipments
 SET digimon_id = NULL
 WHERE equipped = FALSE;
 
-DROP INDEX IF EXISTS idx_equipments_digimon_id;
-ALTER TABLE equipments ALTER COLUMN player_id SET NOT NULL;
-ALTER TABLE equipments ADD CONSTRAINT fk_equipments_player FOREIGN KEY (player_id) REFERENCES players(id);
-ALTER TABLE equipments ALTER COLUMN digimon_id DROP NOT NULL;
-CREATE INDEX idx_equipments_player_id ON equipments(player_id);
-CREATE INDEX idx_equipments_equipped_digimon ON equipments(digimon_id) WHERE equipped = TRUE;
+DROP INDEX IF EXISTS idx_inventory_equipments_digimon_id;
+ALTER TABLE inventory_equipments ALTER COLUMN player_id SET NOT NULL;
+ALTER TABLE inventory_equipments ADD CONSTRAINT fk_inventory_equipments_player FOREIGN KEY (player_id) REFERENCES players(id);
+ALTER TABLE inventory_equipments ALTER COLUMN digimon_id DROP NOT NULL;
+CREATE INDEX idx_inventory_equipments_player_id ON inventory_equipments(player_id);
+CREATE INDEX idx_inventory_equipments_equipped_digimon ON inventory_equipments(digimon_id) WHERE equipped = TRUE;
