@@ -29,7 +29,7 @@ function renderDashboard() {
         <span class="text-xs text-slate-500">Dados atuais</span>
       </div>
       <div id="dashboard-metrics" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        ${dashboardMetricSkeleton(4)}
+        ${dashboardMetricSkeleton(7)}
       </div>
     </section>
 
@@ -122,7 +122,9 @@ function dashboardRenderSummary(summary) {
     { title: "Digimons", value: summary.digimons.total, detail: `${summary.digimons.secondary} ativos`, tone: "violet" },
     { title: "Inventário", value: summary.inventory.total, detail: `${summary.inventory.secondary} unidades em stacks`, tone: "emerald" },
     { title: "Equipamentos", value: summary.equipment.total, detail: `${summary.equipment.secondary} equipados`, tone: "purple" },
-    { title: "Conteúdo", value: summary.content.total, detail: `${summary.content.secondary} loot tables ativas`, tone: "amber" }
+    { title: "Itens cadastrados", value: summary.items.total, detail: "Itens disponíveis no catálogo", tone: "blue" },
+    { title: "Templates de equipamento", value: summary.equipmentTemplates.total, detail: "Modelos disponíveis no catálogo", tone: "fuchsia" },
+    { title: "Loot Tables", value: summary.lootTables.total, detail: `${summary.lootTables.secondary} ativas`, tone: "amber" }
   ];
   document.getElementById("dashboard-metrics").innerHTML = metrics.map(dashboardMetricCard).join("");
 
@@ -142,7 +144,7 @@ function dashboardRenderSummary(summary) {
 }
 
 function dashboardMetricCard(metric) {
-  const tone = { cyan: "text-cyan-300", violet: "text-violet-300", emerald: "text-emerald-300", purple: "text-purple-300", amber: "text-amber-300" }[metric.tone] || "text-slate-100";
+  const tone = { cyan: "text-cyan-300", violet: "text-violet-300", emerald: "text-emerald-300", purple: "text-purple-300", blue: "text-blue-300", fuchsia: "text-fuchsia-300", amber: "text-amber-300" }[metric.tone] || "text-slate-100";
   return `<div class="card border-slate-700"><p class="text-sm text-slate-400">${metric.title}</p><h4 class="text-3xl font-bold mt-2 ${tone}">${Number(metric.value).toLocaleString("pt-BR")}</h4><p class="text-xs text-slate-500 mt-2">${metric.detail}</p></div>`;
 }
 

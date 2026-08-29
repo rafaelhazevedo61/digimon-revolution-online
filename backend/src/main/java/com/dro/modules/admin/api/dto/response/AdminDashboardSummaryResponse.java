@@ -8,7 +8,9 @@ public record AdminDashboardSummaryResponse(
         Metrics digimons,
         Metrics inventory,
         Metrics equipment,
-        Metrics content,
+        Metrics items,
+        Metrics equipmentTemplates,
+        Metrics lootTables,
         List<Alert> alerts,
         SystemStatus system
 ) {

@@ -58,7 +58,9 @@ public class AdminDashboardController {
                 new AdminDashboardSummaryResponse.Metrics(digimonsTotal, activeDigimons, orphanDigimons),
                 new AdminDashboardSummaryResponse.Metrics(inventoryStacks, inventoryQuantities, orphanInventory),
                 new AdminDashboardSummaryResponse.Metrics(equipmentTotal, equipped, orphanEquipment),
-                new AdminDashboardSummaryResponse.Metrics(itemDefinitions + equipmentTemplates + lootTables, activeLootTables, 0),
+                new AdminDashboardSummaryResponse.Metrics(itemDefinitions, 0, 0),
+                new AdminDashboardSummaryResponse.Metrics(equipmentTemplates, 0, 0),
+                new AdminDashboardSummaryResponse.Metrics(lootTables, activeLootTables, 0),
                 alerts,
                 new AdminDashboardSummaryResponse.SystemStatus("UP", LocalDateTime.now())
         );
