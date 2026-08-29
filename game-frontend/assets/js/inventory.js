@@ -36,6 +36,13 @@ async function renderInventoryPage() {
       </div>
 
       <div id="inv-config-panel" class="card-sm mb-3 hidden">
+        <div class="mb-3 rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-2">
+          <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+            <input id="inv-pagination-enabled" type="checkbox" class="accent-cyan-500" checked>
+            Usar paginação no inventário
+          </label>
+          <p class="text-xs text-slate-500 mt-1">Desative para exibir todos os itens de uma vez.</p>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label class="text-xs text-slate-400 flex flex-col min-w-0">
             <span class="min-h-8 leading-4 flex items-start">Categoria dos itens</span>
@@ -139,6 +146,22 @@ async function renderInventoryPage() {
   `;
 
   invSetupFilterControls();
+  await loadPlayerPaginationPreference();
+  const paginationToggle = document.getElementById("inv-pagination-enabled");
+  if (paginationToggle) {
+    paginationToggle.checked = playerPaginationEnabled;
+    paginationToggle.addEventListener("change", async () => {
+      paginationToggle.disabled = true;
+      try {
+        await savePlayerPaginationPreference(paginationToggle.checked);
+        invPagination.items = 0;
+        invPagination.equipment = 0;
+        await invRenderActiveTab();
+      } finally {
+        paginationToggle.disabled = false;
+      }
+    });
+  }
 
   try {
     const [, dashboard] = await Promise.all([
@@ -275,7 +298,12 @@ function invPageParams(tab) {
 }
 
 async function invLoadItemsPage() {
-  invPageData.items = await apiGet("/inventory/page", invPageParams("items"));
+  if (playerPaginationEnabled) {
+    invPageData.items = await apiGet("/inventory/page", invPageParams("items"));
+  } else {
+    const items = await apiGet("/inventory") || [];
+    invPageData.items = { content: items, totalElements: items.length, totalPages: 1 };
+  }
   invItems = invPageData.items.content || [];
   return invPageData.items;
 }
@@ -286,7 +314,12 @@ async function invLoadEquipmentPage() {
     invEquipments = [];
     return invPageData.equipment;
   }
-  invPageData.equipment = await apiGet("/equipment/inventory/page", invPageParams("equipment"));
+  if (playerPaginationEnabled) {
+    invPageData.equipment = await apiGet("/equipment/inventory/page", invPageParams("equipment"));
+  } else {
+    const equipment = await apiGet("/equipment/inventory") || [];
+    invPageData.equipment = { content: equipment, totalElements: equipment.length, totalPages: 1 };
+  }
   invEquipments = invPageData.equipment.content || [];
   return invPageData.equipment;
 }

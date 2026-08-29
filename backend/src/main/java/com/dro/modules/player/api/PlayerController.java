@@ -10,6 +10,10 @@ import com.dro.modules.player.api.dto.response.UsernameChangeInfoResponse;
 import com.dro.modules.player.api.dto.response.PlayerDashboardResponse;
 import com.dro.modules.player.api.dto.response.PlayerResponse;
 import com.dro.modules.player.api.dto.response.PlayerStartupResponse;
+import com.dro.modules.player.api.dto.response.PlayerPaginationPreferenceResponse;
+import com.dro.modules.player.api.dto.request.UpdatePlayerPaginationPreferenceRequest;
+import com.dro.modules.player.application.PlayerDisplayPreferenceService;
+import com.dro.shared.util.TokenExtractor;
 import com.dro.modules.player.application.ChangePlayerEmailUseCase;
 import com.dro.modules.player.application.ChangePlayerPasswordUseCase;
 import com.dro.modules.player.application.ChangeUsernameUseCase;
@@ -34,6 +38,7 @@ public class PlayerController {
     private final ChangePlayerPasswordUseCase changePlayerPasswordUseCase;
     private final ChangeUsernameUseCase changeUsernameUseCase;
     private final RevokePlayerSessionsUseCase revokePlayerSessionsUseCase;
+    private final PlayerDisplayPreferenceService displayPreferenceService;
 
     @GetMapping("/me")
     public ResponseEntity<PlayerResponse> me(@RequestHeader("Authorization") String authorization) {
@@ -48,6 +53,16 @@ public class PlayerController {
     @GetMapping("/me/startup")
     public ResponseEntity<PlayerStartupResponse> startup(@RequestHeader("Authorization") String authorization) {
         return ResponseEntity.ok(startupUseCase.execute(authorization));
+    }
+
+    @GetMapping("/me/preferences/pagination")
+    public ResponseEntity<PlayerPaginationPreferenceResponse> paginationPreference(@RequestHeader("Authorization") String authorization) {
+        return ResponseEntity.ok(PlayerPaginationPreferenceResponse.from(displayPreferenceService.get(TokenExtractor.extractPlayerId(authorization))));
+    }
+
+    @PutMapping("/me/preferences/pagination")
+    public ResponseEntity<PlayerPaginationPreferenceResponse> updatePaginationPreference(@RequestHeader("Authorization") String authorization, @RequestBody @Valid UpdatePlayerPaginationPreferenceRequest request) {
+        return ResponseEntity.ok(PlayerPaginationPreferenceResponse.from(displayPreferenceService.set(TokenExtractor.extractPlayerId(authorization), request.paginationEnabled())));
     }
 
     @PostMapping("/me/change-email")
@@ -76,7 +91,7 @@ public class PlayerController {
         return ResponseEntity.ok().build();
     }
 
-    public PlayerController(final GetPlayerUseCase useCase, final GetPlayerDashboardUseCase dashboardUseCase, final GetPlayerStartupUseCase startupUseCase, final ChangePlayerEmailUseCase changePlayerEmailUseCase, final ChangePlayerPasswordUseCase changePlayerPasswordUseCase, final ChangeUsernameUseCase changeUsernameUseCase, final RevokePlayerSessionsUseCase revokePlayerSessionsUseCase) {
+    public PlayerController(final GetPlayerUseCase useCase, final GetPlayerDashboardUseCase dashboardUseCase, final GetPlayerStartupUseCase startupUseCase, final ChangePlayerEmailUseCase changePlayerEmailUseCase, final ChangePlayerPasswordUseCase changePlayerPasswordUseCase, final ChangeUsernameUseCase changeUsernameUseCase, final RevokePlayerSessionsUseCase revokePlayerSessionsUseCase, final PlayerDisplayPreferenceService displayPreferenceService) {
         this.useCase = useCase;
         this.dashboardUseCase = dashboardUseCase;
         this.startupUseCase = startupUseCase;
@@ -84,5 +99,6 @@ public class PlayerController {
         this.changePlayerPasswordUseCase = changePlayerPasswordUseCase;
         this.changeUsernameUseCase = changeUsernameUseCase;
         this.revokePlayerSessionsUseCase = revokePlayerSessionsUseCase;
+        this.displayPreferenceService = displayPreferenceService;
     }
 }

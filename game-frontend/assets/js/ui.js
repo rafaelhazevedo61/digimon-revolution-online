@@ -30,6 +30,24 @@ function localizeGameMessage(message) {
   return translations[String(message || "")] || message;
 }
 
+let playerPaginationEnabled = true;
+
+async function loadPlayerPaginationPreference() {
+  try {
+    const preference = await apiGet("/players/me/preferences/pagination");
+    playerPaginationEnabled = preference?.paginationEnabled !== false;
+  } catch (_) {
+    playerPaginationEnabled = true;
+  }
+  return playerPaginationEnabled;
+}
+
+async function savePlayerPaginationPreference(enabled) {
+  const preference = await apiPut("/players/me/preferences/pagination", { paginationEnabled: Boolean(enabled) });
+  playerPaginationEnabled = preference?.paginationEnabled !== false;
+  return playerPaginationEnabled;
+}
+
 function showToast(message, type = "success") {
   message = localizeGameMessage(message);
   const existing = document.querySelector(".toast");
