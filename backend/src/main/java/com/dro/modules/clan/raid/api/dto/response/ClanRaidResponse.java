@@ -1,6 +1,7 @@
 package com.dro.modules.clan.raid.api.dto.response;
 
 import com.dro.modules.clan.raid.domain.ClanRaidStatus;
+import com.dro.modules.boss.api.dto.response.BossDefeatSummaryResponse;
 
 import java.time.Instant;
 import java.util.List;
@@ -25,6 +26,7 @@ public record ClanRaidResponse(
         Instant nextAttackAvailableAt,
         long myTotalDamage,
         List<ClanRaidRankingEntryResponse> ranking,
-        List<ClanRaidAttackResponse> recentAttacks
+        List<ClanRaidAttackResponse> recentAttacks,
+        BossDefeatSummaryResponse defeatSummary
 ) {
 }

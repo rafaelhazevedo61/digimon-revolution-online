@@ -1093,7 +1093,7 @@ async function clanLoadRaid() {
         <p class="text-xs text-slate-400 mb-3">Seu dano: <span class="text-cyan-400">${raid.myTotalDamage.toLocaleString()}</span></p>
 
         ${!defeated ? `${cooldownInfoHtml}<button id="clan-raid-attack-button" class="btn-primary w-full" onclick="clanAttackRaid()"${cooldownActive ? " disabled" : ""}>${cooldownActive ? "Próximo ataque em <span id=\"clan-raid-countdown\">--:--</span>" : "Atacar Incursão"}</button>` : ""}
-        ${defeated ? `<p class="text-xs text-green-400 text-center">Incursão derrotada. Aguarde o próximo ciclo.</p>` : ""}
+        ${defeated ? `<p class="text-xs text-green-400 text-center">Incursão derrotada. O próximo renascimento ocorrerá uma hora após a derrota.</p>${raid.defeatSummary ? `<div class="mt-3 rounded-lg border border-green-800/70 bg-green-950/20 p-3 text-xs"><p class="font-bold text-green-300 mb-2">Resumo da derrota</p><p class="text-slate-300">Golpe final: <strong class="text-white">${escapeHtml(raid.defeatSummary.finalBlowUsername || "Desconhecido")}</strong></p><p class="text-slate-300">Maior dano: <strong class="text-white">${escapeHtml(raid.defeatSummary.topDamageUsername || "Desconhecido")}</strong> (${Number(raid.defeatSummary.topDamage || 0).toLocaleString()} de dano)</p><p class="text-slate-300">Ataques totais: <strong class="text-white">${Number(raid.defeatSummary.totalAttacks || 0).toLocaleString()}</strong></p><p class="text-slate-300">Tempo vivo: <strong class="text-white">${formatBossAliveDuration(raid.defeatSummary.aliveDurationSeconds)}</strong></p></div>` : ""}` : ""}
       </div>
 
       ${rankingHtml}
@@ -1160,10 +1160,14 @@ function startClanRaidCooldownCountdown(nextAttackAt) {
   clanRaidCooldownTimer = setInterval(tick, 1000);
 }
 
+function formatBossAliveDuration(seconds) { const total = Math.max(0, Number(seconds) || 0); const days = Math.floor(total / 86400); const hours = Math.floor((total % 86400) / 3600); const minutes = Math.floor((total % 3600) / 60); const secs = total % 60; return `${days}d ${hours}h ${minutes}m ${secs}s`; }
+
 function showRaidAttackModal(result) {
   const existing = document.getElementById("raid-attack-modal");
   if (existing) existing.remove();
 
+  const defeatSummary = result.defeatSummary;
+  const defeatSummaryHtml = result.defeated && defeatSummary ? `<div class="mt-3 rounded-lg border border-green-800/70 bg-green-950/20 p-3 text-xs"><p class="font-bold text-green-300 mb-2">Resumo da derrota</p><p class="text-slate-300">Golpe final: <strong class="text-white">${escapeHtml(defeatSummary.finalBlowUsername || "Desconhecido")}</strong></p><p class="text-slate-300">Maior dano: <strong class="text-white">${escapeHtml(defeatSummary.topDamageUsername || "Desconhecido")}</strong> (${Number(defeatSummary.topDamage || 0).toLocaleString()} de dano)</p><p class="text-slate-300">Ataques totais: <strong class="text-white">${Number(defeatSummary.totalAttacks || 0).toLocaleString()}</strong></p><p class="text-slate-300">Tempo vivo: <strong class="text-white">${formatBossAliveDuration(defeatSummary.aliveDurationSeconds)}</strong></p></div>` : "";
   const rewardRow = result.defeated
     ? `<p class="text-green-400 text-sm font-bold mb-1">Clã ganhou ${result.clanHonorMarksGained.toLocaleString()} Marcas de Honra e ${result.clanXpGained.toLocaleString()} Experiência do Clã!</p>`
     : "";
@@ -1192,6 +1196,7 @@ function showRaidAttackModal(result) {
         </div>
       </div>
       ${rewardRow}
+      ${defeatSummaryHtml}
       <button class="btn-primary w-full" onclick="document.getElementById('raid-attack-modal').remove()">Fechar</button>
     </div>
   `;

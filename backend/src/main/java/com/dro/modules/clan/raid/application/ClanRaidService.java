@@ -10,6 +10,7 @@ import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -20,6 +21,7 @@ import java.util.UUID;
  */
 @Service
 public class ClanRaidService {
+    private static final Duration RESPAWN_DELAY = Duration.ofHours(1);
     private final ClanRaidRepository clanRaidRepository;
     private final BossDefinitionRepository bossDefinitionRepository;
     private final GameplayConfig gameplayConfig;
@@ -27,10 +29,12 @@ public class ClanRaidService {
     @Transactional
     public ClanRaid getOrCreateToday(UUID clanId) {
         Instant startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant();
-        ClanRaid current = clanRaidRepository.findFirstByClanIdOrderByCreatedAtDesc(clanId)
-                .filter(raid -> !raid.getCreatedAt().isBefore(startOfDay))
-                .orElse(null);
-        if (current == null || (gameplayConfig.isAutoBossRespawnAfterDefeatEnabled() && current.getStatus() == ClanRaidStatus.DEFEATED)) {
+        ClanRaid current = clanRaidRepository.findFirstByClanIdOrderByCreatedAtDesc(clanId).orElse(null);
+        boolean respawnReady = current != null
+                && current.getStatus() == ClanRaidStatus.DEFEATED
+                && current.getDefeatedAt() != null
+                && !Instant.now().isBefore(current.getDefeatedAt().plus(RESPAWN_DELAY));
+        if (current == null || (gameplayConfig.isAutoBossRespawnAfterDefeatEnabled() && respawnReady)) {
             return createNewRaid(clanId);
         }
         return current;

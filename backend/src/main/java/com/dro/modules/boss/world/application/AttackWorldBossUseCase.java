@@ -5,6 +5,7 @@ import com.dro.modules.boss.domain.BossCombatRules;
 import com.dro.modules.boss.domain.BossDefinitionEntity;
 import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.modules.boss.world.api.dto.response.AttackWorldBossResponse;
+import com.dro.modules.boss.api.dto.response.BossDefeatSummaryResponse;
 import com.dro.modules.activitycalendar.application.ActivityCalendarService;
 import com.dro.modules.activitycalendar.domain.ActivitySource;
 import com.dro.modules.boss.world.api.dto.response.WorldBossRewardResponse;
@@ -144,7 +145,18 @@ public class AttackWorldBossUseCase {
     private AttackWorldBossResponse toResponse(BossDefinitionEntity boss, WorldBossInstance instance, WorldBossAttack attack, List<WorldBossRewardResponse> rewards) {
         int hitXp = Math.max(0, attack.getXpGained() - attack.getDefeatedRewardXp());
         int hitBits = Math.max(0, attack.getBitsGained() - attack.getDefeatedRewardBits());
-        return new AttackWorldBossResponse(instance.getId(), boss.getCode(), boss.getName(), attack.getDamage(), attack.getRemainingHpAfter(), instance.getMaxHp(), attack.isDefeated(), attack.getWinChance(), hitXp, hitBits, attack.getDefeatedRewardXp(), attack.getDefeatedRewardBits(), rewards);
+        return new AttackWorldBossResponse(instance.getId(), boss.getCode(), boss.getName(), attack.getDamage(), attack.getRemainingHpAfter(), instance.getMaxHp(), attack.isDefeated(), attack.getWinChance(), hitXp, hitBits, attack.getDefeatedRewardXp(), attack.getDefeatedRewardBits(), rewards, buildDefeatSummary(instance, attack));
+    }
+
+    private BossDefeatSummaryResponse buildDefeatSummary(WorldBossInstance instance, WorldBossAttack finalBlow) {
+        if (!finalBlow.isDefeated()) return null;
+        List<WorldBossAttack> attacks = worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(instance.getId());
+        Map<UUID, Long> totals = attacks.stream().collect(java.util.stream.Collectors.groupingBy(WorldBossAttack::getPlayerId, java.util.stream.Collectors.summingLong(WorldBossAttack::getDamage)));
+        UUID topPlayer = totals.entrySet().stream().max(Map.Entry.<UUID, Long>comparingByValue()).orElseThrow().getKey();
+        String finalName = playerRepository.findById(finalBlow.getPlayerId()).map(Player::getUsername).orElse("Desconhecido");
+        String topName = playerRepository.findById(topPlayer).map(Player::getUsername).orElse("Desconhecido");
+        long duration = instance.getDefeatedAt() == null ? 0 : Math.max(0, Duration.between(instance.getCreatedAt(), instance.getDefeatedAt()).getSeconds());
+        return new BossDefeatSummaryResponse(finalBlow.getPlayerId(), finalName, topPlayer, topName, totals.get(topPlayer), attacks.size(), duration);
     }
 
     private String normalizeRequestId(String idempotencyKey) {

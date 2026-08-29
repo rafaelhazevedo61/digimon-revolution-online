@@ -5,6 +5,7 @@ import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.modules.boss.world.api.dto.response.WorldBossAttackResponse;
 import com.dro.modules.boss.world.api.dto.response.WorldBossRankingEntryResponse;
 import com.dro.modules.boss.world.api.dto.response.WorldBossResponse;
+import com.dro.modules.boss.api.dto.response.BossDefeatSummaryResponse;
 import com.dro.modules.boss.world.domain.WorldBossAttack;
 import com.dro.modules.boss.world.domain.WorldBossInstance;
 import com.dro.modules.boss.world.domain.WorldBossRules;
@@ -40,7 +41,18 @@ public class WorldBossResponseMapper {
         Instant nextAttackCandidate = myAttacks.isEmpty() || myAttacks.get(0).getCreatedAt() == null ? null : myAttacks.get(0).getCreatedAt().plus(Duration.ofMinutes(attackCooldownMinutes));
         Instant nextAttackAvailableAt = cooldownEnabled && instance.getStatus() == com.dro.modules.boss.world.domain.WorldBossStatus.ACTIVE && nextAttackCandidate != null && nextAttackCandidate.isAfter(Instant.now()) ? nextAttackCandidate : null;
         List<WorldBossAttackResponse> recentAttacks = worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(instance.getId()).stream().limit(RECENT_ATTACK_LIMIT).map(this::toAttackResponse).toList();
-        return new WorldBossResponse(instance.getId(), boss.getCode(), boss.getName(), boss.getImageUrl(), instance.getMaxHp(), instance.getRemainingHp(), instance.getStatus(), instance.getCreatedAt(), instance.getDefeatedAt(), attackCooldownMinutes, cooldownEnabled, nextAttackAvailableAt, myTotalDamage, buildRanking(instance.getId()), recentAttacks, worldBossRewardService.findPlayerRewards(instance.getId(), viewerPlayerId));
+        return new WorldBossResponse(instance.getId(), boss.getCode(), boss.getName(), boss.getImageUrl(), instance.getMaxHp(), instance.getRemainingHp(), instance.getStatus(), instance.getCreatedAt(), instance.getDefeatedAt(), attackCooldownMinutes, cooldownEnabled, nextAttackAvailableAt, myTotalDamage, buildRanking(instance.getId()), recentAttacks, worldBossRewardService.findPlayerRewards(instance.getId(), viewerPlayerId), buildDefeatSummary(instance, worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(instance.getId())));
+    }
+
+    private BossDefeatSummaryResponse buildDefeatSummary(WorldBossInstance instance, List<WorldBossAttack> attacks) {
+        if (instance.getStatus() != com.dro.modules.boss.world.domain.WorldBossStatus.DEFEATED || attacks.isEmpty()) return null;
+        WorldBossAttack finalBlow = attacks.stream().max(Comparator.comparing(WorldBossAttack::getCreatedAt)).orElseThrow();
+        Map<UUID, Long> totals = attacks.stream().collect(Collectors.groupingBy(WorldBossAttack::getPlayerId, Collectors.summingLong(WorldBossAttack::getDamage)));
+        UUID topPlayer = totals.entrySet().stream().max(Map.Entry.<UUID, Long>comparingByValue()).orElseThrow().getKey();
+        String finalName = playerRepository.findById(finalBlow.getPlayerId()).map(Player::getUsername).orElse("Desconhecido");
+        String topName = playerRepository.findById(topPlayer).map(Player::getUsername).orElse("Desconhecido");
+        long duration = instance.getDefeatedAt() == null ? 0 : Math.max(0, Duration.between(instance.getCreatedAt(), instance.getDefeatedAt()).getSeconds());
+        return new BossDefeatSummaryResponse(finalBlow.getPlayerId(), finalName, topPlayer, topName, totals.get(topPlayer), attacks.size(), duration);
     }
 
     private List<WorldBossRankingEntryResponse> buildRanking(UUID worldBossId) {

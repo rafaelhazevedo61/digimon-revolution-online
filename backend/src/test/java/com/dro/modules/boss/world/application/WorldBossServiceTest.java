@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -36,7 +37,7 @@ class WorldBossServiceTest {
     @Test
     void getOrCreateToday_returnsExistingInstanceForToday() {
         WorldBossInstance existing = new WorldBossInstance();
-        when(worldBossInstanceRepository.findFirstByBossDateOrderByCreatedAtDesc(any(LocalDate.class)))
+        when(worldBossInstanceRepository.findFirstByOrderByCreatedAtDesc())
                 .thenReturn(Optional.of(existing));
 
         WorldBossInstance result = service.getOrCreateToday();
@@ -49,7 +50,7 @@ class WorldBossServiceTest {
     void getOrCreateToday_keepsDefeatedInstanceWhenAutomaticRespawnIsDisabled() {
         WorldBossInstance defeated = new WorldBossInstance();
         defeated.setStatus(WorldBossStatus.DEFEATED);
-        when(worldBossInstanceRepository.findFirstByBossDateOrderByCreatedAtDesc(any(LocalDate.class)))
+        when(worldBossInstanceRepository.findFirstByOrderByCreatedAtDesc())
                 .thenReturn(Optional.of(defeated));
         when(gameplayConfig.isAutoBossRespawnAfterDefeatEnabled()).thenReturn(false);
 
@@ -63,9 +64,10 @@ class WorldBossServiceTest {
     void getOrCreateToday_createsNextCycleWhenAutomaticRespawnIsEnabled() {
         WorldBossInstance defeated = new WorldBossInstance();
         defeated.setStatus(WorldBossStatus.DEFEATED);
+        defeated.setDefeatedAt(Instant.now().minusSeconds(3601));
         defeated.setCycleNumber(2);
         WorldBossInstance nextCycle = new WorldBossInstance();
-        when(worldBossInstanceRepository.findFirstByBossDateOrderByCreatedAtDesc(any(LocalDate.class)))
+        when(worldBossInstanceRepository.findFirstByOrderByCreatedAtDesc())
                 .thenReturn(Optional.of(defeated));
         when(gameplayConfig.isAutoBossRespawnAfterDefeatEnabled()).thenReturn(true);
         when(worldBossInstanceFactory.create(any(LocalDate.class), eq(3))).thenReturn(nextCycle);
@@ -79,7 +81,7 @@ class WorldBossServiceTest {
     @Test
     void getOrCreateToday_recoversInstanceWhenAnotherRequestCreatesItFirst() {
         WorldBossInstance existing = new WorldBossInstance();
-        when(worldBossInstanceRepository.findFirstByBossDateOrderByCreatedAtDesc(any(LocalDate.class)))
+        when(worldBossInstanceRepository.findFirstByOrderByCreatedAtDesc())
                 .thenReturn(Optional.empty(), Optional.of(existing));
         when(worldBossInstanceFactory.create(any(LocalDate.class)))
                 .thenThrow(new DataIntegrityViolationException("daily instance already exists"));
@@ -88,7 +90,6 @@ class WorldBossServiceTest {
 
         assertSame(existing, result);
         verify(worldBossInstanceFactory).create(any(LocalDate.class));
-        verify(worldBossInstanceRepository, times(2))
-                .findFirstByBossDateOrderByCreatedAtDesc(any(LocalDate.class));
+        verify(worldBossInstanceRepository, times(2)).findFirstByOrderByCreatedAtDesc();
     }
 }

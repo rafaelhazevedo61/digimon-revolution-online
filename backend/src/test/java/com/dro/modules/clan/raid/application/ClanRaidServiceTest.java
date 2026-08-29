@@ -103,6 +103,7 @@ class ClanRaidServiceTest {
                 .status(status)
                 .createdAt(now)
                 .updatedAt(now)
+                .defeatedAt(status == ClanRaidStatus.DEFEATED ? now.minusSeconds(3601) : null)
                 .build();
     }
 }
