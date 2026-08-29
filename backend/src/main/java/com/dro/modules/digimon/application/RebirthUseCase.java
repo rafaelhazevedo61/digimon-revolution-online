@@ -54,6 +54,7 @@ public class RebirthUseCase {
         execute(token, digimonId, 0, 0, 0);
     }
 
+    @Transactional
     public void execute(String token, UUID digimonId, int codeInfiniteHp, int codeInfiniteAttack, int codeInfiniteDefense) {
         UUID playerId = extractPlayerId(token);
         Player player = findPlayer(playerId);
@@ -78,9 +79,11 @@ public class RebirthUseCase {
         validateCodeInfinite(codeInfinite, codeInfiniteCost);
         consumeCosts(player, oldDigimon, dataCore, codeInfinite, bitsCost, dataCoreCost, digitalDataCost, codeInfiniteCost);
         Digimon newDigimon = createRebornDigimon(playerId, oldDigimon, newRebirthCount, codeInfiniteHp, codeInfiniteAttack, codeInfiniteDefense);
+        // A constraint do banco permite apenas um Digimon ACTIVE por jogador.
+        // Libere o slot e force o UPDATE antes de inserir o novo Digimon ACTIVE.
         oldDigimon.setStatus(DigimonStatus.REBORN);
         oldDigimon.setBits(0);
-        digimonRepository.save(oldDigimon);
+        digimonRepository.saveAndFlush(oldDigimon);
         digimonRepository.save(newDigimon);
         inventoryRepository.save(dataCore);
         if (codeInfinite != null && codeInfiniteCost > 0) inventoryRepository.save(codeInfinite);
