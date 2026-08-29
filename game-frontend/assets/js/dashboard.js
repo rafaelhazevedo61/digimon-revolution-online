@@ -242,7 +242,6 @@ function renderDigimonCard(d) {
         ${d.trait ? `<span class="badge-xs badge-trait">${formatTrait(d.trait)}</span>` : ""}
         ${d.rebirthCount > 0 ? `<span class="badge-xs badge-rebirth">Rebirth ×${d.rebirthCount}</span>` : ""}
       </div>
-      ${renderRarityDieDetails(d)}
     </div>
   `;
 }

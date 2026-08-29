@@ -31,4 +31,4 @@ Quando o jogador aceita uma nova raridade pelo Dado, o Digimon passa a registrar
 
 A migration `V172__add_rarity_die_indicator.sql` adiciona os campos `rarity_changed_by_die`, `original_rarity_before_die` e `rarity_changed_by_die_at` à tabela `digimons`. O indicador não recalcula IVs ou atributos já armazenados.
 
-Nas listas e resumos do Dashboard, Storage, Ranking e Evolução, um ícone discreto de dado é exibido ao lado da raridade. O tooltip informa que a raridade foi alterada pelo Dado. Nos modais de detalhes, o jogador vê a raridade original, a data da primeira alteração e a observação de que IVs e atributos do nascimento permaneceram inalterados.
+Nas listas e resumos do Dashboard, Storage, Ranking e Evolução, um ícone discreto de dado é exibido ao lado da raridade. O Dashboard exibe somente esse indicativo compacto, sem mostrar a raridade original, a data ou a observação sobre IVs e atributos. O tooltip e os modais de detalhes continuam disponíveis nas telas apropriadas, onde o jogador pode consultar a origem da alteração.
