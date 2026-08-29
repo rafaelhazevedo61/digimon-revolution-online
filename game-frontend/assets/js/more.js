@@ -40,6 +40,7 @@ async function renderMorePage() {
         {
           route: "mail",
           icon: "✉️",
+          iconImage: "assets/img/correio.webp",
           title: "Correio",
           badgeId: "mail-more-unread",
           desc: "Mensagens entre jogadores e comunicados",
