@@ -238,6 +238,11 @@ async function renderArenaRankingPage() {
         <h2 class="text-lg font-bold px-1">Classificação da Arena</h2>
         <button class="text-sm text-cyan-400" onclick="navigateTo('arena')">Voltar</button>
       </div>
+      <div class="flex gap-2 mb-4" role="tablist" aria-label="Tipo de classificação">
+        <button type="button" class="tab-btn active flex-1" role="tab" aria-selected="true">Atual</button>
+        <button type="button" class="tab-btn flex-1 opacity-60 cursor-not-allowed" role="tab" aria-selected="false" disabled title="Ranking por temporada em breve">Temporada <span class="text-[10px]">(em breve)</span></button>
+      </div>
+      <div id="arena-player-history" class="card-sm mb-4 hidden"></div>
       <div id="arena-ranking-list">
         <div class="card animate-pulse mb-3"><div class="h-16"></div></div>
       </div>
@@ -245,7 +250,15 @@ async function renderArenaRankingPage() {
   `;
 
   try {
-    const ranking = await apiGet("/arena/ranking", { page: 0, size: 50 });
+    const [ranking, statistics] = await Promise.all([
+      apiGet("/arena/ranking", { page: 0, size: 50 }),
+      apiGet("/arena/statistics").catch(() => null)
+    ]);
+    const history = document.getElementById("arena-player-history");
+    if (history && statistics) {
+      history.classList.remove("hidden");
+      history.innerHTML = `<p class="text-xs uppercase tracking-wide text-slate-500 mb-2">Seu histórico de arena</p><div class="grid grid-cols-3 gap-2 text-center"><div><p class="text-xs text-slate-500">Saldo</p><p class="font-bold ${statistics.netPoints >= 0 ? "text-green-400" : "text-red-400"}">${Number(statistics.netPoints || 0).toLocaleString("pt-BR")}</p></div><div><p class="text-xs text-slate-500">Ganhos</p><p class="font-bold text-cyan-400">${Number(statistics.pointsWon || 0).toLocaleString("pt-BR")}</p></div><div><p class="text-xs text-slate-500">Perdas</p><p class="font-bold text-red-400">${Number(statistics.pointsLost || 0).toLocaleString("pt-BR")}</p></div></div>`;
+    }
     const container = document.getElementById("arena-ranking-list");
     const myId = getPlayerId();
 

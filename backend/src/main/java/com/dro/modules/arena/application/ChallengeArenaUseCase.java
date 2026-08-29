@@ -55,6 +55,7 @@ public class ChallengeArenaUseCase {
     private final TransactionAuditPublisher transactionAuditPublisher;
     private final GameplayConfig gameplayConfig;
     private final ActivityCalendarService activityCalendarService;
+    private final PlayerArenaStatisticsService playerArenaStatisticsService;
 
     /**
      * Executa um desafio de Arena e persiste todos os efeitos da partida.
@@ -162,6 +163,12 @@ public class ChallengeArenaUseCase {
             clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.ARENA_DUELS);
         }
         player.setArenaCoins(player.getArenaCoins() + arenaCoinsGained);
+        if (playerArenaStatisticsService != null) {
+            playerArenaStatisticsService.recordResult(playerId, attackerRatingAfter - attackerRatingBefore, victory);
+            if (!defenderIsBot) {
+                playerArenaStatisticsService.recordResult(defender.getPlayerId(), defenderRatingAfter - defenderRatingBefore, !victory);
+            }
+        }
         try {
             digimonRepository.save(attacker);
             if (!defenderIsBot) {
@@ -217,7 +224,7 @@ public class ChallengeArenaUseCase {
         return Math.max(1, (int) Math.floor(baseCost * multiplier));
     }
 
-    public ChallengeArenaUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ArenaMatchRepository arenaMatchRepository, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final ClanMissionProgressTracker clanMissionProgressTracker, final GlobalDamageBuffService globalDamageBuffService, final AddItemUseCase addItemUseCase, final ChestDefinitionRepository chestDefinitionRepository, final TransactionAuditPublisher transactionAuditPublisher, final GameplayConfig gameplayConfig, final ActivityCalendarService activityCalendarService) {
+    public ChallengeArenaUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ArenaMatchRepository arenaMatchRepository, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final ClanMissionProgressTracker clanMissionProgressTracker, final GlobalDamageBuffService globalDamageBuffService, final AddItemUseCase addItemUseCase, final ChestDefinitionRepository chestDefinitionRepository, final TransactionAuditPublisher transactionAuditPublisher, final GameplayConfig gameplayConfig, final ActivityCalendarService activityCalendarService, final PlayerArenaStatisticsService playerArenaStatisticsService) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.arenaMatchRepository = arenaMatchRepository;
@@ -230,5 +237,6 @@ public class ChallengeArenaUseCase {
         this.transactionAuditPublisher = transactionAuditPublisher;
         this.gameplayConfig = gameplayConfig;
         this.activityCalendarService = activityCalendarService;
+        this.playerArenaStatisticsService = playerArenaStatisticsService;
     }
 }
