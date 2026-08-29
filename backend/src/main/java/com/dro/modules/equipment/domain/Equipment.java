@@ -12,11 +12,13 @@ import java.util.UUID;
  * combina o valor base com o multiplicador de raridade e o refinamento.</p>
  */
 @Entity
-@Table(name = "inventory_equipments")
+@Table(name = "equipments")
 public class Equipment {
     @Id
     private UUID id;
     @Column(nullable = false)
+    private UUID playerId;
+    @Column
     private UUID digimonId;
     @Column(nullable = false)
     private String name;
@@ -92,6 +94,7 @@ public class Equipment {
 
     public static class EquipmentBuilder {
         private UUID id;
+        private UUID playerId;
         private UUID digimonId;
         private String name;
         private EquipmentSlot slot;
@@ -121,6 +124,11 @@ public class Equipment {
         /**
          * @return {@code this}.
          */
+        public Equipment.EquipmentBuilder playerId(final UUID playerId) {
+            this.playerId = playerId;
+            return this;
+        }
+
         public Equipment.EquipmentBuilder digimonId(final UUID digimonId) {
             this.digimonId = digimonId;
             return this;
@@ -221,7 +229,7 @@ public class Equipment {
             if (!this.refinementLevel$set) refinementLevel$value = Equipment.$default$refinementLevel();
             boolean equipped$value = this.equipped$value;
             if (!this.equipped$set) equipped$value = Equipment.$default$equipped();
-            return new Equipment(this.id, this.digimonId, this.name, this.slot, this.rarity, this.bonusHp, this.bonusAttack, this.bonusDefense, this.setCode, this.tier, refinementLevel$value, this.createdAt, equipped$value);
+            return new Equipment(this.id, this.playerId, this.digimonId, this.name, this.slot, this.rarity, this.bonusHp, this.bonusAttack, this.bonusDefense, this.setCode, this.tier, refinementLevel$value, this.createdAt, equipped$value);
         }
 
         @Override
@@ -238,8 +246,12 @@ public class Equipment {
         return this.id;
     }
 
+    public UUID getPlayerId() {
+        return playerId;
+    }
+
     public UUID getDigimonId() {
-        return this.digimonId;
+        return digimonId;
     }
 
     public String getName() {
@@ -288,6 +300,10 @@ public class Equipment {
 
     public void setId(final UUID id) {
         this.id = id;
+    }
+
+    public void setPlayerId(final UUID playerId) {
+        this.playerId = playerId;
     }
 
     public void setDigimonId(final UUID digimonId) {
@@ -343,8 +359,9 @@ public class Equipment {
         this.equipped = Equipment.$default$equipped();
     }
 
-    public Equipment(final UUID id, final UUID digimonId, final String name, final EquipmentSlot slot, final EquipmentRarity rarity, final int bonusHp, final int bonusAttack, final int bonusDefense, final String setCode, final int tier, final int refinementLevel, final LocalDateTime createdAt, final boolean equipped) {
+    public Equipment(final UUID id, final UUID playerId, final UUID digimonId, final String name, final EquipmentSlot slot, final EquipmentRarity rarity, final int bonusHp, final int bonusAttack, final int bonusDefense, final String setCode, final int tier, final int refinementLevel, final LocalDateTime createdAt, final boolean equipped) {
         this.id = id;
+        this.playerId = playerId;
         this.digimonId = digimonId;
         this.name = name;
         this.slot = slot;
@@ -357,5 +374,10 @@ public class Equipment {
         this.refinementLevel = refinementLevel;
         this.createdAt = createdAt;
         this.equipped = equipped;
+    }
+
+    /** Compatibilidade para fixtures antigas que ainda não informam o jogador. */
+    public Equipment(final UUID id, final UUID digimonId, final String name, final EquipmentSlot slot, final EquipmentRarity rarity, final int bonusHp, final int bonusAttack, final int bonusDefense, final String setCode, final int tier, final int refinementLevel, final LocalDateTime createdAt, final boolean equipped) {
+        this(id, null, digimonId, name, slot, rarity, bonusHp, bonusAttack, bonusDefense, setCode, tier, refinementLevel, createdAt, equipped);
     }
 }

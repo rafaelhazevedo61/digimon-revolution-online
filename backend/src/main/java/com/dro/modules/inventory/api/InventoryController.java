@@ -11,9 +11,6 @@ import com.dro.modules.loot.api.dto.request.OpenChestRequest;
 import com.dro.modules.loot.api.dto.response.ChestOpeningResponse;
 import com.dro.modules.loot.application.OpenChestUseCase;
 import com.dro.modules.inventory.infra.InventoryRepository;
-import com.dro.modules.player.infra.PlayerRepository;
-import com.dro.shared.exception.BadRequestException;
-import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -31,17 +28,12 @@ public class InventoryController {
     private final InventoryRepository repository;
     private final UseItemUseCase useItemUseCase;
     private final OpenChestUseCase openChestUseCase;
-    private final PlayerRepository playerRepository;
     private final RarityRerollUseCase rarityRerollUseCase;
 
     @GetMapping
     public ResponseEntity<?> getInventory(@RequestHeader("Authorization") String authorization) {
         UUID playerId = TokenExtractor.extractPlayerId(authorization);
-        var player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
-        if (player.getActiveDigimonId() == null) {
-            throw new BadRequestException("No active digimon selected");
-        }
-        List<InventoryItem> items = repository.findByDigimonId(player.getActiveDigimonId());
+        List<InventoryItem> items = repository.findByPlayerId(playerId);
         items.sort(Comparator.comparingInt(this::categoryOrder).thenComparing(this::itemName, String.CASE_INSENSITIVE_ORDER).thenComparing(this::itemCode, String.CASE_INSENSITIVE_ORDER).thenComparing(InventoryItem::getId));
         return ResponseEntity.ok(items);
     }
@@ -111,11 +103,10 @@ public class InventoryController {
         return ResponseEntity.ok(useItemUseCase.execute(authorization, request.itemType(), request.quantity()));
     }
 
-    public InventoryController(final InventoryRepository repository, final UseItemUseCase useItemUseCase, final OpenChestUseCase openChestUseCase, final PlayerRepository playerRepository, final RarityRerollUseCase rarityRerollUseCase) {
+    public InventoryController(final InventoryRepository repository, final UseItemUseCase useItemUseCase, final OpenChestUseCase openChestUseCase, final RarityRerollUseCase rarityRerollUseCase) {
         this.repository = repository;
         this.useItemUseCase = useItemUseCase;
         this.openChestUseCase = openChestUseCase;
-        this.playerRepository = playerRepository;
         this.rarityRerollUseCase = rarityRerollUseCase;
     }
 }

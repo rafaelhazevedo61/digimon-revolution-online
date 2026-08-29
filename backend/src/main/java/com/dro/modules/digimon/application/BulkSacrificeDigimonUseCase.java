@@ -61,7 +61,6 @@ public class BulkSacrificeDigimonUseCase {
         }
 
         for (Digimon digimon : digimons) {
-            inventoryRepository.deleteByDigimonId(digimon.getId());
             digimon.setStatus(DigimonStatus.SACRIFICED);
             digimonRepository.save(digimon);
         }

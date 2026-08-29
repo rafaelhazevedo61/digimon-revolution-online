@@ -35,9 +35,15 @@ public class EquipmentController {
     private final com.dro.modules.player.infra.PlayerRepository playerRepository;
     private final com.dro.modules.digimon.infra.DigimonRepository digimonRepository;
 
+    @GetMapping("/inventory")
+    public ResponseEntity<List<EquipmentResponse>> getInventory(@RequestHeader("Authorization") String authorization) {
+        return ResponseEntity.ok(getDigimonInventoryUseCase.execute(authorization));
+    }
+
+    /** Alias de compatibilidade; o inventário agora é global do jogador. */
     @GetMapping("/digimon/{digimonId}/inventory")
     public ResponseEntity<List<EquipmentResponse>> getDigimonInventory(@RequestHeader("Authorization") String authorization, @PathVariable UUID digimonId) {
-        return ResponseEntity.ok(getDigimonInventoryUseCase.execute(authorization, digimonId));
+        return ResponseEntity.ok(getDigimonInventoryUseCase.execute(authorization));
     }
 
     @GetMapping("/digimon/{digimonId}")
