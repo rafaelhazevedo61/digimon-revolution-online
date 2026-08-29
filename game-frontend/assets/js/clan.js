@@ -12,6 +12,11 @@ let clanRankingLoading = false;
 let currentClan = null;
 let currentClanTab = "members";
 let clanRaidCooldownTimer = null;
+let clanStorageDepositItems = [];
+let clanStorageDepositSearch = "";
+let clanStorageDepositPage = 0;
+let clanStorageDepositSelectedItemId = null;
+const clanStorageDepositPageSize = 6;
 
 const clanActionHandlers = {
   promote: clanPromote,
@@ -424,6 +429,8 @@ async function clanLoadStorage() {
     const isOfficer = clan.myRole && clan.myRole.role === "OFFICER";
     const canWithdraw = isLeader || isOfficer;
     const depositableItems = (inventory || []).filter(item => item.quantity > 0 && item.itemDefinition && item.itemDefinition.tradable && item.itemDefinition.id);
+    clanStorageDepositItems = depositableItems;
+    clanStorageDepositSelectedItemId = null;
 
     let html = `
       <div class="flex items-center justify-between mb-2">
@@ -438,19 +445,18 @@ async function clanLoadStorage() {
     `;
 
     html += `
-      <form class="card-sm mb-4" onsubmit="clanStorageDeposit(event, '${clan.id}')">
-        <p class="font-bold text-sm mb-1">Depositar item</p>
-        <p class="text-xs text-slate-400 mb-2">Qualquer membro pode depositar itens negociáveis do próprio inventário.</p>
-        ${depositableItems.length ? `
-          <div class="flex gap-2">
-            <select id="clan-storage-deposit-item" class="input flex-1 min-w-0" required>
-              ${depositableItems.map(item => `<option value="${item.itemDefinition.id}">${escapeHtml(item.itemDefinition.name || item.itemDefinition.code)} (${item.quantity})</option>`).join("")}
-            </select>
-            <input id="clan-storage-deposit-quantity" class="input w-20" type="number" min="1" max="999" value="1" required>
+      <div class="card-sm mb-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="font-bold text-sm mb-1">Depositar item</p>
+            <p class="text-xs text-slate-400">Qualquer membro pode depositar itens negociáveis do próprio inventário.</p>
           </div>
-          <button class="btn-primary w-full mt-2 text-sm" type="submit">Depositar</button>
-        ` : `<p class="text-xs text-slate-500">Nenhum item negociável disponível para depósito.</p>`}
-      </form>
+          <button type="button" class="btn-primary text-sm shrink-0" ${depositableItems.length ? "" : "disabled"} onclick="clanOpenStorageDepositModal()">Depositar</button>
+        </div>
+        ${depositableItems.length
+          ? `<p class="text-xs text-slate-500 mt-3">Use a busca para localizar rapidamente o item que deseja enviar ao armazém.</p>`
+          : `<p class="text-xs text-slate-500 mt-3">Nenhum item negociável disponível para depósito.</p>`}
+      </div>
     `;
 
     html += `<h4 class="font-bold text-sm mb-2">Itens armazenados</h4>`;
@@ -491,13 +497,213 @@ async function clanStorageDeposit(event, clanId) {
   event.preventDefault();
   const itemDefinitionId = Number(document.getElementById("clan-storage-deposit-item")?.value);
   const quantity = Number(document.getElementById("clan-storage-deposit-quantity")?.value);
+  const item = clanStorageDepositItems.find(entry => Number(entry.itemDefinition?.id) === itemDefinitionId);
+  if (!item || !Number.isInteger(itemDefinitionId) || itemDefinitionId <= 0) {
+    showToast("Selecione um item negociável para depositar.", "error");
+    return;
+  }
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > item.quantity) {
+    showToast("Quantidade inválida.", "error");
+    return;
+  }
+
+  const button = document.getElementById("clan-storage-deposit-submit");
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Depositando...";
+  }
   try {
     await apiPost(`/clans/${clanId}/storage/deposit`, { itemDefinitionId, quantity });
     showToast("Item depositado no armazém.", "success");
+    clanCloseStorageDepositModal();
     await clanLoadStorage();
   } catch (err) {
     showToast(err.message, "error");
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Depositar item";
+    }
   }
+}
+
+function clanOpenStorageDepositModal() {
+  if (!clanStorageDepositItems.length || document.getElementById("clan-storage-deposit-modal")) return;
+  clanStorageDepositSearch = "";
+  clanStorageDepositPage = 0;
+  clanStorageDepositSelectedItemId = null;
+
+  const overlay = document.createElement("div");
+  overlay.id = "clan-storage-deposit-modal";
+  overlay.className = "shop-modal-overlay";
+  overlay.innerHTML = `
+    <div class="shop-modal auction-item-modal clan-storage-deposit-modal" role="dialog" aria-modal="true" aria-labelledby="clan-storage-deposit-modal-title">
+      <div class="flex items-start justify-between gap-4 mb-5">
+        <div>
+          <h3 id="clan-storage-deposit-modal-title" class="text-xl font-bold">Depositar item</h3>
+          <p class="text-sm text-slate-400 mt-1">Pesquise e selecione um item negociável do seu inventário.</p>
+        </div>
+        <button type="button" class="text-slate-400 hover:text-white text-2xl" aria-label="Fechar" data-clan-storage-deposit-close>&times;</button>
+      </div>
+      <label class="block text-xs text-slate-400 mb-2" for="clan-storage-deposit-search">Buscar item</label>
+      <input id="clan-storage-deposit-search" class="input mb-4" type="search" placeholder="Nome ou código do item" autocomplete="off">
+      <div id="clan-storage-deposit-modal-results" class="space-y-2 min-h-48"></div>
+      <div id="clan-storage-deposit-selected" class="mt-4"></div>
+      <form id="clan-storage-deposit-form" class="mt-4 border-t border-slate-800 pt-4">
+        <label class="block text-xs text-slate-400" for="clan-storage-deposit-quantity">Quantidade</label>
+        <input id="clan-storage-deposit-item" type="hidden">
+        <input id="clan-storage-deposit-quantity" class="input w-full mt-1" type="number" min="1" value="1" required disabled>
+        <button id="clan-storage-deposit-submit" class="btn-primary w-full mt-3" type="submit" disabled>Depositar item</button>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector("[data-clan-storage-deposit-close]").addEventListener("click", clanCloseStorageDepositModal);
+  overlay.querySelector("#clan-storage-deposit-search").addEventListener("input", event => {
+    clanStorageDepositSearch = event.target.value.trim().toLowerCase();
+    clanStorageDepositPage = 0;
+    clanStorageRenderDepositModalResults();
+  });
+  overlay.querySelector("#clan-storage-deposit-form").addEventListener("submit", event => clanStorageDeposit(event, currentClan.id));
+  overlay.addEventListener("click", event => { if (event.target === overlay) clanCloseStorageDepositModal(); });
+  document.addEventListener("keydown", clanHandleStorageDepositModalKeydown);
+  clanStorageRenderDepositModalResults();
+  clanStorageRenderDepositSelection();
+  overlay.querySelector("#clan-storage-deposit-search").focus();
+}
+
+function clanHandleStorageDepositModalKeydown(event) {
+  if (event.key === "Escape") clanCloseStorageDepositModal();
+}
+
+function clanCloseStorageDepositModal() {
+  document.getElementById("clan-storage-deposit-modal")?.remove();
+  document.removeEventListener("keydown", clanHandleStorageDepositModalKeydown);
+}
+
+function clanStorageFilteredDepositItems() {
+  if (!clanStorageDepositSearch) return clanStorageDepositItems;
+  return clanStorageDepositItems.filter(item => {
+    const definition = item.itemDefinition || {};
+    return [definition.name, definition.code, definition.category]
+      .filter(Boolean)
+      .some(value => String(value).toLowerCase().includes(clanStorageDepositSearch));
+  });
+}
+
+function clanStorageChangeDepositPage(delta) {
+  const filteredItems = clanStorageFilteredDepositItems();
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / clanStorageDepositPageSize));
+  clanStorageDepositPage = Math.max(0, Math.min(totalPages - 1, clanStorageDepositPage + delta));
+  clanStorageRenderDepositModalResults();
+}
+
+function clanStorageRenderDepositModalResults() {
+  const container = document.getElementById("clan-storage-deposit-modal-results");
+  if (!container) return;
+
+  const filteredItems = clanStorageFilteredDepositItems();
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / clanStorageDepositPageSize));
+  clanStorageDepositPage = Math.min(clanStorageDepositPage, totalPages - 1);
+  const start = clanStorageDepositPage * clanStorageDepositPageSize;
+  const pageItems = filteredItems.slice(start, start + clanStorageDepositPageSize);
+  const results = pageItems.length
+    ? pageItems.map(item => {
+      const definition = item.itemDefinition || {};
+      const itemId = Number(definition.id);
+      const selected = itemId === Number(clanStorageDepositSelectedItemId);
+      return `
+        <button type="button" class="card-sm w-full text-left clan-storage-deposit-option ${selected ? "border-cyan-500 bg-cyan-950/30" : "hover:border-cyan-600"}" data-clan-storage-deposit-item-id="${escapeAttr(String(itemId))}">
+          <div class="flex items-center gap-3">
+            <span class="w-9 h-9 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center">${clanStorageDepositItemIcon(item)}</span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-cyan-300 font-medium truncate">${escapeHtml(definition.name || definition.code || "Item")}</span>
+              <span class="block text-xs text-slate-500 truncate">${escapeHtml(definition.code || definition.category || "Item")} · ${Number(item.quantity).toLocaleString("pt-BR")} disponível(is)</span>
+            </span>
+            <span class="text-xs text-slate-400 shrink-0">${selected ? "Selecionado" : "Selecionar"}</span>
+          </div>
+        </button>
+      `;
+    }).join("")
+    : `<p class="text-sm text-slate-500 py-6 text-center">Nenhum item negociável encontrado.</p>`;
+
+  container.innerHTML = `
+    <div class="flex items-center justify-between gap-3 mb-2">
+      <p class="text-xs text-slate-500">${filteredItems.length} item(ns) encontrado(s)</p>
+      ${totalPages > 1 ? `
+        <div class="flex items-center gap-2">
+          <button type="button" class="btn-secondary text-xs" data-clan-storage-deposit-page="-1" ${clanStorageDepositPage === 0 ? "disabled" : ""}>Anterior</button>
+          <span class="text-xs text-slate-400 whitespace-nowrap">${clanStorageDepositPage + 1}/${totalPages}</span>
+          <button type="button" class="btn-secondary text-xs" data-clan-storage-deposit-page="1" ${clanStorageDepositPage >= totalPages - 1 ? "disabled" : ""}>Próxima</button>
+        </div>
+      ` : ""}
+    </div>
+    <div class="space-y-2">${results}</div>
+  `;
+
+  container.querySelectorAll("[data-clan-storage-deposit-page]").forEach(button => {
+    button.addEventListener("click", () => clanStorageChangeDepositPage(Number(button.dataset.clanStorageDepositPage)));
+  });
+  container.querySelectorAll("[data-clan-storage-deposit-item-id]").forEach(button => {
+    button.addEventListener("click", () => clanStorageSelectDepositItem(button.dataset.clanStorageDepositItemId));
+  });
+}
+
+function clanStorageDepositItemIcon(item) {
+  const icon = String(item.itemDefinition?.icon || "").trim();
+  const isImageUrl = icon.startsWith("http://")
+    || icon.startsWith("https://")
+    || icon.startsWith("/")
+    || icon.startsWith("./")
+    || icon.startsWith("../")
+    || icon.startsWith("assets/")
+    || /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(icon);
+  return isImageUrl
+    ? `<img src="${escapeAttr(icon)}" alt="" class="w-7 h-7 object-contain" onerror="this.style.display='none'">`
+    : `<span class="text-xl" aria-hidden="true">${escapeHtml(icon || "📦")}</span>`;
+}
+
+function clanStorageSelectDepositItem(itemDefinitionId) {
+  const item = clanStorageDepositItems.find(entry => Number(entry.itemDefinition?.id) === Number(itemDefinitionId));
+  if (!item) return;
+  clanStorageDepositSelectedItemId = Number(item.itemDefinition.id);
+  const hiddenInput = document.getElementById("clan-storage-deposit-item");
+  if (hiddenInput) hiddenInput.value = item.itemDefinition.id;
+  clanStorageRenderDepositModalResults();
+  clanStorageRenderDepositSelection();
+}
+
+function clanStorageRenderDepositSelection() {
+  const container = document.getElementById("clan-storage-deposit-selected");
+  const quantityInput = document.getElementById("clan-storage-deposit-quantity");
+  const submitButton = document.getElementById("clan-storage-deposit-submit");
+  if (!container || !quantityInput || !submitButton) return;
+
+  const item = clanStorageDepositItems.find(entry => Number(entry.itemDefinition?.id) === Number(clanStorageDepositSelectedItemId));
+  if (!item) {
+    container.innerHTML = `<p class="text-xs text-slate-500">Selecione um item acima para informar a quantidade.</p>`;
+    quantityInput.value = "1";
+    quantityInput.removeAttribute("max");
+    quantityInput.disabled = true;
+    submitButton.disabled = true;
+    return;
+  }
+
+  const definition = item.itemDefinition || {};
+  container.innerHTML = `
+    <div class="card-sm flex items-center gap-3 border-cyan-800 bg-cyan-950/30">
+      <span class="w-9 h-9 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center">${clanStorageDepositItemIcon(item)}</span>
+      <div class="min-w-0">
+        <p class="font-semibold text-cyan-200 truncate">${escapeHtml(definition.name || definition.code || "Item")}</p>
+        <p class="text-xs text-slate-400 mt-1">${Number(item.quantity).toLocaleString("pt-BR")} disponível(is)</p>
+      </div>
+      <span class="text-xs text-cyan-300 shrink-0">Selecionado</span>
+    </div>
+  `;
+  quantityInput.max = String(item.quantity);
+  quantityInput.disabled = false;
+  if (!quantityInput.value || Number(quantityInput.value) > item.quantity) quantityInput.value = "1";
+  submitButton.disabled = false;
 }
 
 async function clanStorageWithdraw(clanId, itemDefinitionId, itemName, availableQuantity) {
