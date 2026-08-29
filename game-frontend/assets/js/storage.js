@@ -1,6 +1,6 @@
 let storageDigimons = [];
 let storageSelectedDigimonIds = new Set();
-const STORAGE_PAGE_SIZE = 20;
+const STORAGE_PAGE_SIZE = 5;
 let storageCurrentPage = 1;
 
 let storageFilterState = {
@@ -36,22 +36,22 @@ async function renderStoragePage() {
         </button>
       </div>
 
-      <div id="storage-config-panel" class="card-sm mb-3 hidden">
-        <form id="storage-search-form" class="flex flex-col sm:flex-row gap-2 mb-3">
-          <input
-            id="storage-search"
-            class="input flex-1"
-            type="search"
-            value="${escapeHtml(storageFilterState.search)}"
-            placeholder="Pesquisar Digimon por nome..."
-            aria-label="Pesquisar Digimon no Armazém Digimon"
-          />
-          <div class="flex gap-2">
-            <button type="submit" class="btn-primary flex-1 sm:flex-none">Buscar</button>
-            <button id="storage-clear-search" type="button" class="btn-secondary flex-1 sm:flex-none">Limpar</button>
-          </div>
-        </form>
+      <form id="storage-search-form" class="flex flex-col sm:flex-row gap-2 mb-3">
+        <input
+          id="storage-search"
+          class="input flex-1"
+          type="search"
+          value="${escapeHtml(storageFilterState.search)}"
+          placeholder="Pesquisar Digimon por nome..."
+          aria-label="Pesquisar Digimon no Armazém Digimon"
+        />
+        <div class="flex gap-2">
+          <button type="submit" class="btn-primary flex-1 sm:flex-none">Buscar</button>
+          <button id="storage-clear-search" type="button" class="btn-secondary flex-1 sm:flex-none">Limpar</button>
+        </div>
+      </form>
 
+      <div id="storage-config-panel" class="card-sm mb-3 hidden">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label class="text-xs text-slate-400 flex flex-col min-w-0">
             <span class="min-h-8 leading-4 flex items-start">Estágio</span>
