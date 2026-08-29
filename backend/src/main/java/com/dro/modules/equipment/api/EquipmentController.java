@@ -5,6 +5,7 @@ import com.dro.modules.equipment.api.dto.request.RefineEquipmentRequest;
 import com.dro.modules.equipment.api.dto.request.UnequipRequest;
 import com.dro.modules.equipment.api.dto.response.DigimonEquipmentResponse;
 import com.dro.modules.equipment.api.dto.response.EquipmentResponse;
+import com.dro.modules.equipment.api.dto.response.EquipmentPageResponse;
 import com.dro.modules.equipment.api.dto.response.RefineEquipmentResponse;
 import com.dro.modules.equipment.api.dto.response.RefinePreviewResponse;
 import com.dro.modules.equipment.application.*;
@@ -14,7 +15,9 @@ import com.dro.modules.inventory.infra.InventoryRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -38,6 +41,50 @@ public class EquipmentController {
     @GetMapping("/inventory")
     public ResponseEntity<List<EquipmentResponse>> getInventory(@RequestHeader("Authorization") String authorization) {
         return ResponseEntity.ok(getDigimonInventoryUseCase.execute(authorization));
+    }
+
+    @GetMapping("/inventory/page")
+    public ResponseEntity<EquipmentPageResponse> getInventoryPage(
+            @RequestHeader("Authorization") String authorization,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "ALL") String slot,
+            @RequestParam(defaultValue = "ALL") String rarity,
+            @RequestParam(defaultValue = "name-asc") String sort) {
+        UUID playerId = com.dro.shared.util.TokenExtractor.extractPlayerId(authorization);
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(Math.max(1, size), 50);
+        String query = search == null ? "" : search.toLowerCase(Locale.ROOT).trim();
+        List<EquipmentResponse> filtered = equipmentRepository.findByPlayerId(playerId).stream()
+                .map(EquipmentResponse::from)
+                .filter(equipment -> (query.isEmpty() || String.join(" ", String.valueOf(equipment.name()), String.valueOf(equipment.setCode()), String.valueOf(equipment.slot()), String.valueOf(equipment.rarity()), String.valueOf(equipment.tier()), String.valueOf(equipment.refinementLevel())).toLowerCase(Locale.ROOT).contains(query)))
+                .filter(equipment -> "ALL".equalsIgnoreCase(slot) || String.valueOf(equipment.slot()).equalsIgnoreCase(slot))
+                .filter(equipment -> "ALL".equalsIgnoreCase(rarity) || String.valueOf(equipment.rarity()).equalsIgnoreCase(rarity))
+                .sorted(equipmentComparator(sort))
+                .toList();
+        int from = Math.min(safePage * safeSize, filtered.size());
+        int to = Math.min(from + safeSize, filtered.size());
+        return ResponseEntity.ok(EquipmentPageResponse.of(filtered.subList(from, to), safePage, safeSize, filtered.size()));
+    }
+
+    private java.util.Comparator<EquipmentResponse> equipmentComparator(String sort) {
+        java.util.Comparator<EquipmentResponse> equippedFirst = java.util.Comparator.comparing(EquipmentResponse::equipped).reversed();
+        java.util.Comparator<EquipmentResponse> byName = java.util.Comparator.comparing(EquipmentResponse::name, String.CASE_INSENSITIVE_ORDER).thenComparing(EquipmentResponse::id);
+        return switch (sort == null ? "name-asc" : sort) {
+            case "name-desc" -> equippedFirst.thenComparing(byName.reversed());
+            case "rarity-desc" -> equippedFirst.thenComparing(Comparator.comparingInt((EquipmentResponse e) -> rarityRank(e.rarity())).reversed()).thenComparing(byName);
+            case "rarity-asc" -> equippedFirst.thenComparingInt(e -> rarityRank(e.rarity())).thenComparing(byName);
+            case "level-desc" -> equippedFirst.thenComparing(Comparator.comparingInt(EquipmentResponse::tier).reversed()).thenComparing(byName);
+            case "refinement-desc" -> equippedFirst.thenComparing(Comparator.comparingInt(EquipmentResponse::refinementLevel).reversed()).thenComparing(byName);
+            default -> equippedFirst.thenComparing(byName);
+        };
+    }
+
+    private int rarityRank(Object rarity) {
+        return switch (String.valueOf(rarity).toUpperCase(Locale.ROOT)) {
+            case "COMMON" -> 1; case "RARE" -> 2; case "EPIC" -> 3; case "LEGENDARY" -> 4; default -> 0;
+        };
     }
 
     /** Alias de compatibilidade; o inventário agora é global do jogador. */

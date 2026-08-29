@@ -5,6 +5,7 @@ let invTab = "items"; // "items" or "equipment"
 let invChestOpeningInProgress = false;
 let invItemUseInProgress = false;
 let invPagination = { items: 0, equipment: 0, pageSize: 10 };
+let invPageData = { items: { content: [], totalElements: 0, totalPages: 0 }, equipment: { content: [], totalElements: 0, totalPages: 0 } };
 let invFilterState = {
   search: "",
   category: "ALL",
@@ -140,22 +141,16 @@ async function renderInventoryPage() {
   invSetupFilterControls();
 
   try {
-    const [inventory, dashboard] = await Promise.all([
-      apiGet("/inventory"),
+    const [, dashboard] = await Promise.all([
+      invLoadItemsPage(),
       apiGet("/players/me/dashboard")
     ]);
 
-    invItems = inventory || [];
     invDigimonId = dashboard.activeDigimon ? dashboard.activeDigimon.id : null;
-
-    if (invDigimonId) {
-      invEquipments = await apiGet(`/equipment/inventory`) || [];
-    } else {
-      invEquipments = [];
-    }
-
+    invItems = invPageData.items.content;
+    invEquipments = [];
     invTab = "items";
-    invRenderActiveTab();
+    invRenderItems();
   } catch (err) {
     document.getElementById("inv-content").innerHTML = `
       <div class="card border-red-900">
@@ -262,12 +257,55 @@ function invSyncFilterControls() {
   if (sort) sort.value = invFilterState.sort;
 }
 
-function invRenderActiveTab() {
-  invUpdateFilterVisibility();
-  if (invTab === "items") {
-    invRenderItems();
+function invPageParams(tab) {
+  const params = {
+    page: invPagination[tab],
+    size: invPagination.pageSize,
+    search: invFilterState.search,
+    rarity: invFilterState.rarity,
+    sort: invFilterState.sort
+  };
+  if (tab === "items") {
+    params.category = invFilterState.category;
+    params.fragmentStage = invFilterState.fragmentStage;
   } else {
-    invRenderEquipment();
+    params.slot = invFilterState.slot;
+  }
+  return params;
+}
+
+async function invLoadItemsPage() {
+  invPageData.items = await apiGet("/inventory/page", invPageParams("items"));
+  invItems = invPageData.items.content || [];
+  return invPageData.items;
+}
+
+async function invLoadEquipmentPage() {
+  if (!invDigimonId) {
+    invPageData.equipment = { content: [], totalElements: 0, totalPages: 0 };
+    invEquipments = [];
+    return invPageData.equipment;
+  }
+  invPageData.equipment = await apiGet("/equipment/inventory/page", invPageParams("equipment"));
+  invEquipments = invPageData.equipment.content || [];
+  return invPageData.equipment;
+}
+
+async function invRenderActiveTab() {
+  invUpdateFilterVisibility();
+  const content = document.getElementById("inv-content");
+  if (!content) return;
+  content.innerHTML = '<div class="card animate-pulse"><div class="h-32"></div></div>';
+  try {
+    if (invTab === "items") {
+      await invLoadItemsPage();
+      invRenderItems();
+    } else {
+      await invLoadEquipmentPage();
+      invRenderEquipment();
+    }
+  } catch (err) {
+    content.innerHTML = `<div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>`;
   }
 }
 
@@ -370,16 +408,12 @@ function invCompareText(a, b) {
 
 function invRenderItems() {
   const content = document.getElementById("inv-content");
-  const allItems = invAggregateItems(invItems).filter(i => i.quantity > 0);
-  const filteredItems = invSortItems(invGetFilteredItems());
-  const items = invGetPagedEntries("items", filteredItems);
-  invUpdateFilterSummary(invGetPageSummary("items", filteredItems.length), allItems.length, "item");
+  const page = invPageData.items;
+  const items = page.content || [];
+  invUpdateFilterSummary(invGetPageSummary("items", page.totalElements), page.totalElements, "item");
 
-  if (filteredItems.length === 0) {
-    const message = allItems.length === 0
-      ? "Nenhum item no inventário."
-      : "Nenhum item corresponde aos filtros atuais.";
-    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${message}</p>`;
+  if (items.length === 0) {
+    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${page.totalElements === 0 ? "Nenhum item no inventário." : "Nenhum item nesta página."}</p>`;
     return;
   }
 
@@ -430,7 +464,7 @@ function invRenderItems() {
         ${action}
       </div>
     `;
-  }).join("") + invRenderPagination("items", filteredItems.length);
+  }).join("") + invRenderPagination("items", page.totalElements, page.totalPages);
 }
 
 function invGetPagedEntries(tab, entries) {
@@ -446,8 +480,8 @@ function invGetPageSummary(tab, total) {
   return `${start}-${Math.min(start + invPagination.pageSize - 1, total)}`;
 }
 
-function invRenderPagination(tab, total) {
-  const totalPages = Math.ceil(total / invPagination.pageSize);
+function invRenderPagination(tab, total, backendTotalPages = null) {
+  const totalPages = backendTotalPages == null ? Math.ceil(total / invPagination.pageSize) : backendTotalPages;
   if (totalPages <= 1) return "";
   const currentPage = invPagination[tab];
   return `<div class="flex items-center justify-between gap-3 mt-4 pt-3 border-t border-slate-800"><span class="text-xs text-slate-500">Página ${currentPage + 1} de ${totalPages}</span><div class="flex gap-2"><button type="button" class="btn-sm btn-secondary" ${currentPage === 0 ? "disabled" : ""} onclick="invSetPage('${tab}', ${currentPage - 1})">Anterior</button><button type="button" class="btn-sm btn-secondary" ${currentPage >= totalPages - 1 ? "disabled" : ""} onclick="invSetPage('${tab}', ${currentPage + 1})">Próxima</button></div></div>`;
@@ -582,10 +616,8 @@ function invCategoryBadge(category) {
 }
 
 async function invReloadItems() {
-  invItems = await apiGet("/inventory") || [];
-  if (document.getElementById("inv-content")) {
-    invRenderActiveTab();
-  }
+  await invLoadItemsPage();
+  if (document.getElementById("inv-content")) invRenderItems();
 }
 
 async function invUseItem(itemType, quantity = null) {
@@ -956,20 +988,16 @@ function invSortEquipments(equipments) {
 
 function invRenderEquipment() {
   const content = document.getElementById("inv-content");
-  const filtered = invGetFilteredEquipments();
-  const sorted = invSortEquipments(filtered);
-  const paged = invGetPagedEntries("equipment", sorted);
-  invUpdateFilterSummary(invGetPageSummary("equipment", sorted.length), invEquipments.length, "equipamento");
+  const page = invPageData.equipment;
+  const equipments = page.content || [];
+  invUpdateFilterSummary(invGetPageSummary("equipment", page.totalElements), page.totalElements, "equipamento");
 
-  if (sorted.length === 0) {
-    const message = invEquipments.length === 0
-      ? "Nenhum equipamento no inventário."
-      : "Nenhum equipamento corresponde aos filtros atuais.";
-    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${message}</p>`;
+  if (equipments.length === 0) {
+    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${page.totalElements === 0 ? "Nenhum equipamento no inventário." : "Nenhum equipamento nesta página."}</p>`;
     return;
   }
 
-  content.innerHTML = paged.map(eq => {
+  content.innerHTML = equipments.map(eq => {
     const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
     const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
     const emoji = slotEmoji[eq.slot] || "⚔️";
@@ -1009,7 +1037,7 @@ function invRenderEquipment() {
         </div>
       </div>
     `;
-  }).join("") + invRenderPagination("equipment", sorted.length);
+  }).join("") + invRenderPagination("equipment", page.totalElements, page.totalPages);
 }
 
 async function invEquip(equipmentId) {
@@ -1035,7 +1063,7 @@ async function invUnequip(equipmentId) {
 async function invReloadEquipment() {
   if (!invDigimonId) return;
   try {
-    invEquipments = await apiGet(`/equipment/inventory`) || [];
+    await invLoadEquipmentPage();
     invRenderEquipment();
   } catch (err) {
     showToast(err.message, "error");
