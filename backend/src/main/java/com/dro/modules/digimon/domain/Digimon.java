@@ -103,6 +103,8 @@ public class Digimon {
     private UUID accessoryId;
     @Column(name = "digimon_info_id")
     private Long digimonInfoId;
+    @Column(name = "is_locked", nullable = false)
+    private boolean locked;
 
     /**
      * Vincula uma arma ao slot de arma do Digimon.
@@ -579,6 +581,14 @@ public class Digimon {
         this.digimonInfoId = digimonInfoId;
     }
 
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
+
     private static int $default$arenaRating() {
         return 1000;
     }
@@ -640,6 +650,7 @@ public class Digimon {
         private UUID armorId;
         private UUID accessoryId;
         private Long digimonInfoId;
+        private boolean locked;
 
         DigimonBuilder() {
         }
@@ -921,6 +932,11 @@ public class Digimon {
             return this;
         }
 
+        public Digimon.DigimonBuilder locked(final boolean locked) {
+            this.locked = locked;
+            return this;
+        }
+
         public Digimon build() {
             int arenaRating$value = this.arenaRating$value;
             if (!this.arenaRating$set) arenaRating$value = Digimon.$default$arenaRating();
@@ -932,7 +948,7 @@ public class Digimon {
             if (!this.bot$set) bot$value = Digimon.$default$bot();
             long version$value = this.version$value;
             if (!this.version$set) version$value = Digimon.$default$version();
-            return new Digimon(this.id, this.playerId, this.name, this.type, this.stage, this.level, this.experience, this.hp, this.attack, this.defense, this.ivHp, this.ivAttack, this.ivDefense, this.grade, this.createdAt, this.rarity, this.personality, this.energy, this.maxEnergy, this.lastEnergyUpdate, this.bits, this.rebirthCount, arenaRating$value, arenaWins$value, arenaLosses$value, bot$value, version$value, this.status, this.rebornedFrom, this.trait, this.weaponId, this.armorId, this.accessoryId, this.digimonInfoId);
+            return new Digimon(this.id, this.playerId, this.name, this.type, this.stage, this.level, this.experience, this.hp, this.attack, this.defense, this.ivHp, this.ivAttack, this.ivDefense, this.grade, this.createdAt, this.rarity, this.personality, this.energy, this.maxEnergy, this.lastEnergyUpdate, this.bits, this.rebirthCount, arenaRating$value, arenaWins$value, arenaLosses$value, bot$value, version$value, this.status, this.rebornedFrom, this.trait, this.weaponId, this.armorId, this.accessoryId, this.digimonInfoId, this.locked);
         }
 
         @Override
@@ -953,7 +969,7 @@ public class Digimon {
         this.version = Digimon.$default$version();
     }
 
-    public Digimon(final UUID id, final UUID playerId, final String name, final String type, final Stage stage, final int level, final int experience, final int hp, final int attack, final int defense, final int ivHp, final int ivAttack, final int ivDefense, final DigimonGrade grade, final LocalDateTime createdAt, final Rarity rarity, final Personality personality, final int energy, final int maxEnergy, final Instant lastEnergyUpdate, final int bits, final int rebirthCount, final int arenaRating, final int arenaWins, final int arenaLosses, final boolean bot, final long version, final DigimonStatus status, final UUID rebornedFrom, final Trait trait, final UUID weaponId, final UUID armorId, final UUID accessoryId, final Long digimonInfoId) {
+    public Digimon(final UUID id, final UUID playerId, final String name, final String type, final Stage stage, final int level, final int experience, final int hp, final int attack, final int defense, final int ivHp, final int ivAttack, final int ivDefense, final DigimonGrade grade, final LocalDateTime createdAt, final Rarity rarity, final Personality personality, final int energy, final int maxEnergy, final Instant lastEnergyUpdate, final int bits, final int rebirthCount, final int arenaRating, final int arenaWins, final int arenaLosses, final boolean bot, final long version, final DigimonStatus status, final UUID rebornedFrom, final Trait trait, final UUID weaponId, final UUID armorId, final UUID accessoryId, final Long digimonInfoId, final boolean locked) {
         this.id = id;
         this.playerId = playerId;
         this.name = name;
@@ -988,5 +1004,6 @@ public class Digimon {
         this.armorId = armorId;
         this.accessoryId = accessoryId;
         this.digimonInfoId = digimonInfoId;
+        this.locked = locked;
     }
 }

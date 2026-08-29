@@ -61,6 +61,7 @@ public class BulkSacrificeDigimonUseCase {
         }
 
         for (Digimon digimon : digimons) {
+            inventoryRepository.deleteByDigimonId(digimon.getId());
             digimon.setStatus(DigimonStatus.SACRIFICED);
             digimonRepository.save(digimon);
         }
@@ -91,6 +92,9 @@ public class BulkSacrificeDigimonUseCase {
         }
         if (digimon.getStatus() != DigimonStatus.STORED) {
             throw new BadRequestException("Only stored Digimons can be sacrificed");
+        }
+        if (digimon.isLocked()) {
+            throw new BadRequestException("Locked Digimons cannot be sacrificed");
         }
         if (digimon.getId().equals(player.getActiveDigimonId())) {
             throw new BadRequestException("The active Digimon cannot be sacrificed");

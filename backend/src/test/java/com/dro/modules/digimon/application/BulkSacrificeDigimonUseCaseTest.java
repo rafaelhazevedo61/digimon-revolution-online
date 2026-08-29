@@ -11,6 +11,7 @@ import com.dro.modules.mission.domain.MissionInstance;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.security.JwtTestToken;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -67,6 +69,31 @@ class BulkSacrificeDigimonUseCaseTest {
         verify(inventoryRepository).deleteByDigimonId(firstId);
         verify(inventoryRepository).deleteByDigimonId(secondId);
         verify(playerRepository).save(player);
+    }
+
+    @Test
+    void rejectsLockedDigimonWithoutChangingAnyRecord() {
+        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
+        Player player = Player.builder().id(playerId).digitalData(10).build();
+        Digimon locked = digimon(digimonId, playerId, 3);
+        locked.setLocked(true);
+
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findAllByIdForUpdate(playerId, List.of(digimonId)))
+                .thenReturn(List.of(locked));
+
+        BulkSacrificeDigimonUseCase useCase = new BulkSacrificeDigimonUseCase(
+                digimonRepository, playerRepository, missionInstanceRepository, inventoryRepository
+        );
+
+        assertThrows(BadRequestException.class, () -> useCase.execute(
+                JwtTestToken.create(playerId), List.of(digimonId)));
+
+        assertEquals(10, player.getDigitalData());
+        assertEquals(DigimonStatus.STORED, locked.getStatus());
+        verify(digimonRepository, never()).save(any());
+        verify(playerRepository, never()).save(any());
     }
 
     @Test
