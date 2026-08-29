@@ -647,13 +647,13 @@ function clanStorageRenderDepositModalResults() {
       const selected = itemId === Number(clanStorageDepositSelectedItemId);
       return `
         <button type="button" class="card-sm w-full text-left clan-storage-deposit-option overflow-hidden ${selected ? "border-cyan-500 bg-cyan-950/30" : "hover:border-cyan-600"}" data-clan-storage-deposit-item-id="${escapeAttr(String(itemId))}">
-          <div class="flex items-center gap-3">
+          <div class="clan-storage-deposit-option-layout">
             <span class="w-9 h-9 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center">${clanStorageDepositItemIcon(item)}</span>
-            <span class="min-w-0 flex-1">
-              <span class="block text-cyan-300 font-medium truncate">${escapeHtml(definition.name || definition.code || "Item")}</span>
-              <span class="block text-xs text-slate-500 truncate">${escapeHtml(clanStorageDepositCategoryLabel(definition.category))} · ${Number(item.quantity).toLocaleString("pt-BR")} disponível(is)</span>
+            <span class="clan-storage-deposit-option-details">
+              <span class="clan-storage-deposit-option-name text-cyan-300 font-medium">${escapeHtml(definition.name || definition.code || "Item")}</span>
+              <span class="clan-storage-deposit-option-meta text-xs text-slate-500">${escapeHtml(clanStorageDepositCategoryLabel(definition.category))} · ${Number(item.quantity).toLocaleString("pt-BR")} disponível(is)</span>
             </span>
-            <span class="text-xs text-slate-400 shrink-0">${selected ? "Selecionado" : "Selecionar"}</span>
+            <span class="clan-storage-deposit-option-action text-xs text-slate-400">${selected ? "Selecionado" : "Selecionar"}</span>
           </div>
         </button>
       `;

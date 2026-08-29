@@ -188,9 +188,51 @@ body {
   outline-offset: 2px;
 }
 
+.clan-storage-deposit-option-layout {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.clan-storage-deposit-option-details {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.clan-storage-deposit-option-name {
+  display: block;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.clan-storage-deposit-option-meta {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clan-storage-deposit-option-action {
+  white-space: nowrap;
+}
+
 @media (max-width: 22.5rem) {
   .clan-tabs--full {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .clan-storage-deposit-option-layout {
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    row-gap: 0.35rem;
+  }
+
+  .clan-storage-deposit-option-action {
+    grid-column: 2;
+    justify-self: start;
   }
 }
 
