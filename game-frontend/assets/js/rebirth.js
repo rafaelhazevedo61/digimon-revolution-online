@@ -13,7 +13,7 @@ async function renderRebirthPage() {
     <div class="page-container">
       <div class="flex items-center gap-2 mb-4">
         <button class="btn-sm" style="background:#1e293b;color:#94a3b8" onclick="navigateTo('dashboard')">&larr; Voltar</button>
-        <h2 class="text-lg font-bold">Rebirth</h2>
+        <h2 class="text-lg font-bold">Renascer</h2>
       </div>
       <div id="rebirth-content">
         <div class="card animate-pulse"><div class="h-32"></div></div>
@@ -68,13 +68,13 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
             ${digimon.attribute ? `<span class="badge badge-common">${escapeHtml(digimon.attribute)}</span>` : ""}
             ${digimon.element ? `<span class="badge badge-common">${escapeHtml(digimon.element)}</span>` : ""}
           </div>
-          ${p.currentRebirthCount > 0 ? `<p class="text-xs text-amber-400 mt-1">🔄 Rebirth x${p.currentRebirthCount}</p>` : ""}
+          ${p.currentRebirthCount > 0 ? `<p class="text-xs text-amber-400 mt-1">🔄 Renascer x${p.currentRebirthCount}</p>` : ""}
         </div>
       </div>
     </div>
 
     <div class="card mb-4" style="border-color:#854d0e">
-      <h3 class="font-bold text-amber-400 mb-3">🔄 Rebirth #${p.newRebirthCount}</h3>
+      <h3 class="font-bold text-amber-400 mb-3">🔄 Renascer #${p.newRebirthCount}</h3>
       <p class="text-xs text-slate-400 mb-4">O Digimon renasce como um novo ovo, mantendo bônus de IV e stats acumulados.</p>
 
       <div class="mb-4">
@@ -135,7 +135,7 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
       </div>
 
       <div class="mb-4">
-        <p class="text-xs font-bold text-slate-300 mb-2">IVs após Rebirth (mín — máx):</p>
+        <p class="text-xs font-bold text-slate-300 mb-2">IVs após Renascer (mín — máx):</p>
         <div class="grid grid-cols-3 gap-2">
           <div class="card-sm text-center">
             <p class="text-xs text-slate-500">HP</p>
@@ -158,7 +158,7 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
       ${p.eligible ? `
       <div class="mb-4">
         <div class="flex justify-between text-xs text-slate-400">
-          <span>Bits restantes após Rebirth:</span>
+          <span>Bits restantes após Renascer:</span>
           <span class="text-yellow-400 font-bold">${p.remainingBitsAfterRebirth.toLocaleString()}</span>
         </div>
       </div>
@@ -168,8 +168,8 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
     <div class="mb-4">
       ${equippedEquipmentCount > 0 ? `
         <div class="rounded-lg border border-red-900/70 bg-red-950/30 p-3 mb-3 text-sm text-red-200">
-          <p class="font-semibold">Rebirth bloqueado</p>
-          <p class="text-xs text-red-200/80 mt-1">Este Digimon possui ${equippedEquipmentCount} equipamento(s) equipado(s). Desequipe todos antes de realizar o Rebirth para não sacrificá-los junto com o Digimon.</p>
+          <p class="font-semibold">Renascer bloqueado</p>
+          <p class="text-xs text-red-200/80 mt-1">Este Digimon possui ${equippedEquipmentCount} equipamento(s) equipado(s). Desequipe todos antes de realizar o Renascer para não sacrificá-los junto com o Digimon.</p>
         </div>
         <button class="btn-primary w-full opacity-50 cursor-not-allowed py-3" disabled>
           Desequipe os equipamentos para continuar
@@ -307,7 +307,7 @@ async function rebirthExecute() {
       codeInfiniteAttack: rebirthCodeAllocation.attack,
       codeInfiniteDefense: rebirthCodeAllocation.defense
     });
-    showToast("Rebirth realizado com sucesso! Seu Digimon renasceu.");
+    showToast("Renascer realizado com sucesso! Seu Digimon renasceu.");
     navigateTo("dashboard");
   } catch (err) {
     showToast(err.message, "error");
