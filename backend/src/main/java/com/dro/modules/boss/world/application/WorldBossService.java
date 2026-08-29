@@ -30,8 +30,7 @@ public class WorldBossService {
         if (current == null) {
             return createOrRecover(today);
         }
-        if (gameplayConfig.isAutoBossRespawnAfterDefeatEnabled()
-                && current.getStatus() == WorldBossStatus.DEFEATED
+        if (current.getStatus() == WorldBossStatus.DEFEATED
                 && current.getDefeatedAt() != null
                 && !Instant.now().isBefore(current.getDefeatedAt().plus(RESPAWN_DELAY))) {
             return createOrRecover(today, current.getCycleNumber() + 1);

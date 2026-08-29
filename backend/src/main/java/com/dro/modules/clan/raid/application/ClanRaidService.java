@@ -34,7 +34,7 @@ public class ClanRaidService {
                 && current.getStatus() == ClanRaidStatus.DEFEATED
                 && current.getDefeatedAt() != null
                 && !Instant.now().isBefore(current.getDefeatedAt().plus(RESPAWN_DELAY));
-        if (current == null || (gameplayConfig.isAutoBossRespawnAfterDefeatEnabled() && respawnReady)) {
+        if (current == null || respawnReady) {
             return createNewRaid(clanId);
         }
         return current;

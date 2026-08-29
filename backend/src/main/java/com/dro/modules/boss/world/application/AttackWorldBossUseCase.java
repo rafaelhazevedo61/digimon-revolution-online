@@ -76,7 +76,7 @@ public class AttackWorldBossUseCase {
             }
         }
         if (instance.getStatus() == WorldBossStatus.DEFEATED || instance.getRemainingHp() <= 0) {
-            throw new BadRequestException("The world boss has already been defeated today");
+            throw new BadRequestException("O Chefe Mundial foi derrotado. O próximo renascimento ocorrerá uma hora após a derrota.");
         }
         validateRequirements(boss, digimon);
         WorldBossAttack lastAttack = worldBossAttackRepository.findFirstByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(instance.getId(), playerId).orElse(null);

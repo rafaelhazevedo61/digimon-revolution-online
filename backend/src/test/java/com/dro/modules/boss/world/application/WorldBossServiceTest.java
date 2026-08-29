@@ -47,17 +47,32 @@ class WorldBossServiceTest {
     }
 
     @Test
-    void getOrCreateToday_keepsDefeatedInstanceWhenAutomaticRespawnIsDisabled() {
+    void getOrCreateToday_keepsDefeatedInstanceDuringTheOneHourRespawnWindow() {
         WorldBossInstance defeated = new WorldBossInstance();
         defeated.setStatus(WorldBossStatus.DEFEATED);
+        defeated.setDefeatedAt(Instant.now().minusSeconds(3599));
         when(worldBossInstanceRepository.findFirstByOrderByCreatedAtDesc())
                 .thenReturn(Optional.of(defeated));
-        when(gameplayConfig.isAutoBossRespawnAfterDefeatEnabled()).thenReturn(false);
 
         WorldBossInstance result = service.getOrCreateToday();
 
         assertSame(defeated, result);
         verifyNoInteractions(worldBossInstanceFactory);
+    }
+
+    @Test
+    void getOrCreateToday_respawnsAfterOneHourEvenWhenAutomaticRespawnIsDisabled() {
+        WorldBossInstance defeated = new WorldBossInstance();
+        defeated.setStatus(WorldBossStatus.DEFEATED);
+        defeated.setDefeatedAt(Instant.now().minusSeconds(3601));
+        WorldBossInstance nextCycle = new WorldBossInstance();
+        when(worldBossInstanceRepository.findFirstByOrderByCreatedAtDesc()).thenReturn(Optional.of(defeated));
+        when(worldBossInstanceFactory.create(any(LocalDate.class), eq(2))).thenReturn(nextCycle);
+
+        WorldBossInstance result = service.getOrCreateToday();
+
+        assertSame(nextCycle, result);
+        verify(worldBossInstanceFactory).create(any(LocalDate.class), eq(2));
     }
 
     @Test
@@ -69,7 +84,6 @@ class WorldBossServiceTest {
         WorldBossInstance nextCycle = new WorldBossInstance();
         when(worldBossInstanceRepository.findFirstByOrderByCreatedAtDesc())
                 .thenReturn(Optional.of(defeated));
-        when(gameplayConfig.isAutoBossRespawnAfterDefeatEnabled()).thenReturn(true);
         when(worldBossInstanceFactory.create(any(LocalDate.class), eq(3))).thenReturn(nextCycle);
 
         WorldBossInstance result = service.getOrCreateToday();
