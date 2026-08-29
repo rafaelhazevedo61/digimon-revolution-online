@@ -4,7 +4,7 @@ let invDigimonId = null;
 let invTab = "items"; // "items" or "equipment"
 let invChestOpeningInProgress = false;
 let invItemUseInProgress = false;
-let invPagination = { items: 0, equipment: 0, pageSize: 10 };
+let invPagination = { items: 0, equipment: 0, pageSize: 5 };
 let invPageData = { items: { content: [], totalElements: 0, totalPages: 0 }, equipment: { content: [], totalElements: 0, totalPages: 0 } };
 let invFilterState = {
   search: "",

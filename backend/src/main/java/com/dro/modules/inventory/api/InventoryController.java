@@ -46,7 +46,7 @@ public class InventoryController {
     public ResponseEntity<InventoryPageResponse> getInventoryPage(
             @RequestHeader("Authorization") String authorization,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "") String search,
             @RequestParam(defaultValue = "ALL") String category,
             @RequestParam(defaultValue = "ALL") String fragmentStage,
