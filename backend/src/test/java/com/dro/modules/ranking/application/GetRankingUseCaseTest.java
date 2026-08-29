@@ -3,9 +3,11 @@ package com.dro.modules.ranking.application;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.*;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.digimon.infra.DigimonInfosRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.ranking.api.dto.response.RankingEntryResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,6 +35,14 @@ class GetRankingUseCaseTest {
     @Mock
     private PlayerRepository playerRepository;
 
+    @Mock
+    private DigimonInfosRepository digimonInfosRepository;
+
+    @BeforeEach
+    void setUp() {
+        when(digimonInfosRepository.findAllById(any())).thenReturn(List.of());
+    }
+
     @InjectMocks
     private GetRankingUseCase getRankingUseCase;
 
@@ -44,8 +54,8 @@ class GetRankingUseCaseTest {
 
         Player player = Player.builder().id(playerId).username("rafael").build();
 
-        when(digimonRepository.findByStatusOrderByLevelDescExperienceDesc(
-                eq(DigimonStatus.ACTIVE), any(PageRequest.class)))
+        when(digimonRepository.findByStatusInOrderByLevelDescExperienceDesc(
+                eq(List.of(DigimonStatus.ACTIVE, DigimonStatus.STORED)), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(List.of(d1, d2)));
 
         when(playerRepository.findAllById(any())).thenReturn(List.of(player));
@@ -62,14 +72,33 @@ class GetRankingUseCaseTest {
     }
 
     @Test
+    void byLevel_includesStoredDigimons() {
+        UUID playerId = UUID.randomUUID();
+        Digimon active = buildDigimon("Agumon", 50, DigimonGrade.S, 3, playerId);
+        Digimon stored = buildDigimon("Gabumon", 45, DigimonGrade.A, 1, playerId);
+        stored.setStatus(DigimonStatus.STORED);
+        Player player = Player.builder().id(playerId).username("rafael").build();
+
+        when(digimonRepository.findByStatusInOrderByLevelDescExperienceDesc(
+                eq(List.of(DigimonStatus.ACTIVE, DigimonStatus.STORED)), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(active, stored)));
+        when(playerRepository.findAllById(any())).thenReturn(List.of(player));
+
+        List<RankingEntryResponse> result = getRankingUseCase.byLevel(0, 10);
+
+        assertEquals(2, result.size());
+        assertEquals("Gabumon", result.get(1).digimonName());
+    }
+
+    @Test
     void byGrade_returnsDigimonsWithCorrectPositions() {
         UUID playerId = UUID.randomUUID();
         Digimon d1 = buildDigimon("WarGreymon", 99, DigimonGrade.SSS, 10, playerId);
 
         Player player = Player.builder().id(playerId).username("rafael").build();
 
-        when(digimonRepository.findByStatusOrderByGradeQualityAscLevelDesc(
-                eq(DigimonStatus.ACTIVE), any(PageRequest.class)))
+        when(digimonRepository.findByStatusInOrderByGradeQualityAscLevelDesc(
+                eq(List.of(DigimonStatus.ACTIVE, DigimonStatus.STORED)), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(List.of(d1)));
 
         when(playerRepository.findAllById(any())).thenReturn(List.of(player));
@@ -89,8 +118,8 @@ class GetRankingUseCaseTest {
 
         Player player = Player.builder().id(playerId).username("rafael").build();
 
-        when(digimonRepository.findByStatusAndRebirthCountGreaterThanOrderByRebirthCountDescLevelDesc(
-                eq(DigimonStatus.ACTIVE), eq(0), any(PageRequest.class)))
+        when(digimonRepository.findByStatusInAndRebirthCountGreaterThanOrderByRebirthCountDescLevelDesc(
+                eq(List.of(DigimonStatus.ACTIVE, DigimonStatus.STORED)), eq(0), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(List.of(d1, d2)));
 
         when(playerRepository.findAllById(any())).thenReturn(List.of(player));
@@ -109,8 +138,8 @@ class GetRankingUseCaseTest {
 
         Player player = Player.builder().id(playerId).username("rafael").build();
 
-        when(digimonRepository.findByStatusOrderByLevelDescExperienceDesc(
-                eq(DigimonStatus.ACTIVE), any(PageRequest.class)))
+        when(digimonRepository.findByStatusInOrderByLevelDescExperienceDesc(
+                eq(List.of(DigimonStatus.ACTIVE, DigimonStatus.STORED)), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(List.of(d1)));
 
         when(playerRepository.findAllById(any())).thenReturn(List.of(player));
@@ -122,8 +151,8 @@ class GetRankingUseCaseTest {
 
     @Test
     void byLevel_emptyResult_returnsEmptyList() {
-        when(digimonRepository.findByStatusOrderByLevelDescExperienceDesc(
-                eq(DigimonStatus.ACTIVE), any(PageRequest.class)))
+        when(digimonRepository.findByStatusInOrderByLevelDescExperienceDesc(
+                eq(List.of(DigimonStatus.ACTIVE, DigimonStatus.STORED)), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         List<RankingEntryResponse> result = getRankingUseCase.byLevel(0, 10);
@@ -136,8 +165,8 @@ class GetRankingUseCaseTest {
         UUID playerId = UUID.randomUUID();
         Digimon d1 = buildDigimon("Agumon", 50, DigimonGrade.A, 0, playerId);
 
-        when(digimonRepository.findByStatusOrderByLevelDescExperienceDesc(
-                eq(DigimonStatus.ACTIVE), any(PageRequest.class)))
+        when(digimonRepository.findByStatusInOrderByLevelDescExperienceDesc(
+                eq(List.of(DigimonStatus.ACTIVE, DigimonStatus.STORED)), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(List.of(d1)));
 
         when(playerRepository.findAllById(any())).thenReturn(List.of());

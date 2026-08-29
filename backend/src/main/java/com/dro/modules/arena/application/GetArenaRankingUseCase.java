@@ -23,13 +23,14 @@ import java.util.stream.Collectors;
 public class GetArenaRankingUseCase {
     private static final int DEFAULT_SIZE = 10;
     private static final int MAX_SIZE = 50;
+    private static final List<DigimonStatus> RANKING_STATUSES = List.of(DigimonStatus.ACTIVE, DigimonStatus.STORED);
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
 
     public List<ArenaRankingEntryResponse> execute(int page, int size) {
         int safePage = Math.max(page, 0);
         int safeSize = size <= 0 ? DEFAULT_SIZE : Math.min(size, MAX_SIZE);
-        Page<Digimon> result = digimonRepository.findByStatusOrderByArenaRatingDescLevelDesc(DigimonStatus.ACTIVE, PageRequest.of(safePage, safeSize));
+        Page<Digimon> result = digimonRepository.findByStatusInOrderByArenaRatingDescLevelDesc(RANKING_STATUSES, PageRequest.of(safePage, safeSize));
         List<Digimon> digimons = result.getContent();
         List<UUID> playerIds = digimons.stream().map(Digimon::getPlayerId).distinct().toList();
         Map<UUID, String> playerNames = playerRepository.findAllById(playerIds).stream().collect(Collectors.toMap(Player::getId, Player::getUsername));
