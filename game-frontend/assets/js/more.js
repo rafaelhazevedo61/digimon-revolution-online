@@ -40,7 +40,7 @@ async function renderMorePage() {
         },
         {
           route: "rebirth",
-          icon: "🔄",
+          iconImage: "assets/img/rebirth.webp",
           title: "Renascimento",
           desc: "Renasça seu Digimon e aprimore seus atributos",
         },
@@ -110,7 +110,7 @@ async function renderMorePage() {
       items: [
         {
           route: "settings",
-          iconImage: "assets/img/digivice.webp",
+          iconImage: "assets/img/configuracoes.webp",
           title: "Configurações",
           desc: "Conta e preferências",
         },
