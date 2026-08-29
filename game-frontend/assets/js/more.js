@@ -85,7 +85,7 @@ async function renderMorePage() {
         {
           route: "pokedex",
           icon: "📖",
-          title: "Informações Digimon",
+          title: "Biblioteca Digimon",
           desc: "Catálogo de todos os Digimons",
         },
       ],
