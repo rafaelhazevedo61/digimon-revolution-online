@@ -76,8 +76,8 @@ async function renderMorePage() {
       items: [
         {
           route: "auction-house",
-          icon: "🏪",
-          title: "Mercado",
+          iconImage: "assets/img/casaleilao.webp",
+          title: "Casa de Leilão",
           desc: "Compre e venda itens com jogadores",
         },
       ],
