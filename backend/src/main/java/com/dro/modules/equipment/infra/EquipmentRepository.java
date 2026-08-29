@@ -12,6 +12,12 @@ import java.util.UUID;
 public interface EquipmentRepository extends JpaRepository<Equipment, UUID> {
     List<Equipment> findByPlayerId(UUID playerId);
     List<Equipment> findByPlayerIdAndEquippedFalse(UUID playerId);
+
+    long countByPlayerIdIsNull();
+
+    long countByEquippedTrue();
+
+    long countByEquippedFalse();
     List<Equipment> findByDigimonIdAndEquippedTrue(UUID digimonId);
 
     /** Compatibilidade para módulos de combate: somente equipamentos equipados afetam o Digimon. */
