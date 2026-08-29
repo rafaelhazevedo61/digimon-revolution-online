@@ -36,21 +36,6 @@ async function renderInventoryPage() {
       </div>
 
       <div id="inv-config-panel" class="card-sm mb-3 hidden">
-        <form id="inv-search-form" class="flex flex-col sm:flex-row gap-2 mb-3">
-          <input
-            id="inv-search"
-            class="input flex-1"
-            type="search"
-            value="${escapeHtml(invFilterState.search)}"
-            placeholder="Pesquisar item ou equipamento..."
-            aria-label="Pesquisar no Inventário"
-          />
-          <div class="flex gap-2">
-            <button type="submit" class="btn-primary flex-1 sm:flex-none">Buscar</button>
-            <button id="inv-clear-search" type="button" class="btn-secondary flex-1 sm:flex-none">Limpar</button>
-          </div>
-        </form>
-
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label class="text-xs text-slate-400 flex flex-col min-w-0">
             <span class="min-h-8 leading-4 flex items-start">Categoria dos itens</span>
@@ -131,6 +116,21 @@ async function renderInventoryPage() {
         <button class="tab-btn w-full" data-category="CHEST" onclick="invSwitchCategory('CHEST')">Baús</button>
         <button class="tab-btn w-full" data-category="OTHER" onclick="invSwitchCategory('OTHER')">Outros</button>
       </div>
+
+      <form id="inv-search-form" class="flex flex-col sm:flex-row gap-2 mb-4">
+        <input
+          id="inv-search"
+          class="input flex-1"
+          type="search"
+          value="${escapeHtml(invFilterState.search)}"
+          placeholder="Pesquisar item ou equipamento..."
+          aria-label="Pesquisar no Inventário"
+        />
+        <div class="flex gap-2">
+          <button type="submit" class="btn-primary flex-1 sm:flex-none">Buscar</button>
+          <button id="inv-clear-search" type="button" class="btn-secondary flex-1 sm:flex-none">Limpar</button>
+        </div>
+      </form>
 
       <div id="inv-content">
         <div class="card animate-pulse"><div class="h-32"></div></div>
