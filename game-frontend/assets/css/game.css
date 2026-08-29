@@ -392,6 +392,7 @@ body {
   line-height: 1;
 }
 .nav-btn .nav-icon.nav-image { object-fit: contain; }
+.nav-btn .nav-icon.nav-backpack { transform: scale(1.2); }
 .nav-btn:hover { color: #94a3b8; }
 .nav-btn.active { color: #06b6d4; }
 
