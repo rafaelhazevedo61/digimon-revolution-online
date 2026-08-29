@@ -7,6 +7,9 @@ const toolsState = {
   digimons: [],
   itemDefinitions: [],
   equipmentTemplates: [],
+  selectedItem: null,
+  selectedEquipment: null,
+  catalogPicker: null,
   selectedPlayerId: null,
   selectedDigimonId: null
 };
@@ -51,9 +54,12 @@ async function renderToolsPage() {
           <div class="rounded-xl border border-slate-700 bg-slate-950/40 p-4">
             <h4 class="font-semibold text-green-300 mb-4">Grant Item</h4>
             <div class="space-y-3">
-              <label class="block text-sm text-slate-400">Item
-                <select id="tools-item-code" class="input mt-1"><option value="">Carregando...</option></select>
-              </label>
+              <div>
+                <label class="block text-sm text-slate-400">Item</label>
+                <input id="tools-item-code" type="hidden" value="" />
+                <div id="tools-item-selection" class="mt-1 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-500">Nenhum item selecionado.</div>
+                <button id="tools-item-picker-btn" type="button" class="btn-secondary w-full mt-2">Buscar item no catálogo</button>
+              </div>
               <label class="block text-sm text-slate-400">Quantidade
                 <input id="tools-item-qty" type="number" class="input mt-1" placeholder="1" min="1" value="1" />
               </label>
@@ -65,9 +71,12 @@ async function renderToolsPage() {
           <div class="rounded-xl border border-slate-700 bg-slate-950/40 p-4">
             <h4 class="font-semibold text-purple-300 mb-4">Grant Equipment</h4>
             <div class="space-y-3">
-              <label class="block text-sm text-slate-400">Template
-                <select id="tools-equip-template" class="input mt-1"><option value="">Carregando...</option></select>
-              </label>
+              <div>
+                <label class="block text-sm text-slate-400">Template</label>
+                <input id="tools-equip-template" type="hidden" value="" />
+                <div id="tools-equipment-selection" class="mt-1 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-500">Nenhum template selecionado.</div>
+                <button id="tools-equipment-picker-btn" type="button" class="btn-secondary w-full mt-2">Buscar equipamento no catálogo</button>
+              </div>
               <label class="block text-sm text-slate-400">Raridade (opcional)
                 <select id="tools-equip-rarity" class="input mt-1">
                   <option value="">Roll automático</option><option value="COMMON">Comum</option><option value="RARE">Rara</option><option value="EPIC">Épica</option><option value="LEGENDARY">Lendária</option>
@@ -141,6 +150,8 @@ async function renderToolsPage() {
   document.getElementById("tools-player-search").addEventListener("keydown", (e) => {
     if (e.key === "Enter") toolsSearchPlayers();
   });
+  document.getElementById("tools-item-picker-btn").addEventListener("click", () => toolsOpenCatalogPicker("item"));
+  document.getElementById("tools-equipment-picker-btn").addEventListener("click", () => toolsOpenCatalogPicker("equipment"));
 
   adminLoadDamageBuff();
   adminLoadWeekendDoubleReward();
@@ -236,7 +247,9 @@ async function toolsSelectPlayer(playerId) {
 
   const actionsSection = document.getElementById("tools-actions-section");
   actionsSection.classList.remove("hidden");
-  await toolsLoadSelects();
+  toolsState.selectedItem = null;
+  toolsState.selectedEquipment = null;
+  toolsRenderCatalogSelections();
   toolsBindActionButtons();
 
   const digimonSection = document.getElementById("tools-digimon-section");
@@ -287,33 +300,6 @@ function toolsBindActionButtons() {
   document.getElementById("tools-item-btn").onclick = toolsGrantItem;
 }
 
-async function toolsLoadSelects() {
-  try {
-    if (toolsState.equipmentTemplates.length === 0) {
-      const templates = await apiGet("/admin/equipment-templates", { activeOnly: true });
-      toolsState.equipmentTemplates = templates;
-    }
-    const templateSelect = document.getElementById("tools-equip-template");
-    templateSelect.innerHTML = toolsState.equipmentTemplates.map(t =>
-      `<option value="${escapeAttr(t.name)}">${escapeHtml(t.name)} (${escapeHtml(t.slot)} | T${t.tier})</option>`
-    ).join("");
-  } catch (err) {
-    console.error("Failed to load equipment templates", err);
-  }
-
-  try {
-    if (toolsState.itemDefinitions.length === 0) {
-      const items = await apiGet("/admin/inventory/item-definitions");
-      toolsState.itemDefinitions = items;
-    }
-    const itemSelect = document.getElementById("tools-item-code");
-    itemSelect.innerHTML = toolsState.itemDefinitions.map(i =>
-      `<option value="${escapeAttr(i.code)}">${escapeHtml(i.name)} (${escapeHtml(i.category)})</option>`
-    ).join("");
-  } catch (err) {
-    console.error("Failed to load item definitions", err);
-  }
-}
 
 function toolsRunWithConfirmation(buttonId, resultId, message, busyLabel, action) {
   const button = document.getElementById(buttonId);
@@ -371,7 +357,7 @@ async function toolsGrantEquipment() {
     return;
   }
   const templateName = document.getElementById("tools-equip-template").value;
-  if (!templateName) {
+  if (!templateName || !toolsState.selectedEquipment) {
     document.getElementById("tools-equip-result").innerHTML = `<span class="text-red-400">Selecione um template.</span>`;
     return;
   }
@@ -411,7 +397,7 @@ async function toolsGrantItem() {
     return;
   }
 
-  const item = toolsState.itemDefinitions.find(candidate => candidate.code === itemCode);
+  const item = toolsState.selectedItem || toolsState.itemDefinitions.find(candidate => candidate.code === itemCode);
   toolsRunWithConfirmation(
     "tools-item-btn",
     "tools-item-result",
@@ -539,4 +525,155 @@ async function adminCompleteClanMissions() {
     document.getElementById("admin-complete-missions-result").innerHTML =
       `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
   }
+}
+
+
+function toolsRenderCatalogSelections() {
+  const itemCode = document.getElementById("tools-item-code");
+  const itemSelection = document.getElementById("tools-item-selection");
+  const equipmentName = document.getElementById("tools-equip-template");
+  const equipmentSelection = document.getElementById("tools-equipment-selection");
+
+  if (itemCode && itemSelection) {
+    itemCode.value = toolsState.selectedItem?.code || "";
+    itemSelection.innerHTML = toolsState.selectedItem
+      ? `<span class="block text-cyan-300 font-medium break-words">${escapeHtml(toolsState.selectedItem.name)}</span><span class="block text-xs text-slate-500 mt-1">${escapeHtml(toolsState.selectedItem.category || "Item")} · <span class="font-mono">${escapeHtml(toolsState.selectedItem.code)}</span></span>`
+      : "Nenhum item selecionado.";
+    itemSelection.classList.toggle("text-slate-500", !toolsState.selectedItem);
+  }
+  if (equipmentName && equipmentSelection) {
+    equipmentName.value = toolsState.selectedEquipment?.name || "";
+    equipmentSelection.innerHTML = toolsState.selectedEquipment
+      ? `<span class="block text-purple-300 font-medium break-words">${escapeHtml(toolsState.selectedEquipment.name)}</span><span class="block text-xs text-slate-500 mt-1">${escapeHtml(toolsState.selectedEquipment.slot || "Equipment")} · ${escapeHtml(toolsState.selectedEquipment.rarity || "-")} · T${Number(toolsState.selectedEquipment.tier || 0)}</span>`
+      : "Nenhum template selecionado.";
+    equipmentSelection.classList.toggle("text-slate-500", !toolsState.selectedEquipment);
+  }
+}
+
+function toolsOpenCatalogPicker(kind) {
+  const isItem = kind === "item";
+  toolsState.catalogPicker = { kind, search: "", page: 0, pageSize: 8, items: [], totalItems: 0, totalPages: 1, hasNext: false, hasPrevious: false, remote: isItem, loading: false, error: "" };
+  const overlay = document.createElement("div");
+  overlay.id = "tools-catalog-picker-modal";
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-content modal-wide" role="dialog" aria-modal="true" aria-labelledby="tools-catalog-picker-title" onclick="event.stopPropagation()">
+      <div class="flex items-start justify-between gap-4 mb-5">
+        <div>
+          <h3 id="tools-catalog-picker-title" class="text-xl font-bold">Selecionar ${isItem ? "item" : "template de equipamento"}</h3>
+          <p class="text-sm text-slate-400 mt-1">Pesquise no catálogo oficial e selecione um registro para conceder ao jogador.</p>
+        </div>
+        <button type="button" class="text-slate-400 hover:text-white text-2xl" aria-label="Fechar" data-tools-picker-close>&times;</button>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2 mb-4">
+        <input id="tools-catalog-picker-search" class="input flex-1" placeholder="Nome, código ou ${isItem ? "categoria" : "posição"}" autocomplete="off">
+        <button type="button" class="btn-primary" data-tools-picker-search>Pesquisar</button>
+      </div>
+      <div id="tools-catalog-picker-results" class="space-y-2 min-h-48"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector("[data-tools-picker-close]").addEventListener("click", toolsCloseCatalogPicker);
+  overlay.querySelector("[data-tools-picker-search]").addEventListener("click", toolsSearchCatalogPicker);
+  overlay.querySelector("#tools-catalog-picker-search").addEventListener("keydown", event => {
+    if (event.key === "Enter") toolsSearchCatalogPicker();
+  });
+  overlay.addEventListener("click", event => { if (event.target === overlay) toolsCloseCatalogPicker(); });
+  document.addEventListener("keydown", toolsCatalogPickerKeydown);
+  toolsLoadCatalogPicker();
+  overlay.querySelector("#tools-catalog-picker-search").focus();
+}
+
+function toolsCatalogPickerKeydown(event) {
+  if (event.key === "Escape") toolsCloseCatalogPicker();
+}
+
+function toolsCloseCatalogPicker() {
+  document.getElementById("tools-catalog-picker-modal")?.remove();
+  document.removeEventListener("keydown", toolsCatalogPickerKeydown);
+  toolsState.catalogPicker = null;
+}
+
+function toolsSearchCatalogPicker() {
+  const picker = toolsState.catalogPicker;
+  const input = document.getElementById("tools-catalog-picker-search");
+  if (!picker || !input) return;
+  picker.search = input.value.trim();
+  picker.page = 0;
+  toolsLoadCatalogPicker();
+}
+
+async function toolsLoadCatalogPicker() {
+  const picker = toolsState.catalogPicker;
+  const container = document.getElementById("tools-catalog-picker-results");
+  if (!picker || !container) return;
+  picker.loading = true;
+  container.innerHTML = `<p class="text-slate-400">Carregando catálogo...</p>`;
+  try {
+    if (picker.kind === "item") {
+      const result = await apiGet("/items", { search: picker.search, page: picker.page, size: picker.pageSize });
+      picker.items = (result.items || []).map(item => ({ ...item, name: item.name || item.code }));
+      picker.totalItems = Number(result.totalItems || 0);
+      picker.totalPages = Math.max(1, Number(result.totalPages || 1));
+      picker.hasNext = Boolean(result.hasNext);
+      picker.hasPrevious = Boolean(result.hasPrevious);
+    } else {
+      if (toolsState.equipmentTemplates.length === 0) toolsState.equipmentTemplates = await apiGet("/admin/equipment-templates", { activeOnly: true });
+      const term = picker.search.toLowerCase();
+      const filtered = toolsState.equipmentTemplates.filter(template => [template.name, template.slot, template.rarity, template.set, `T${template.tier}`]
+        .filter(Boolean).some(value => String(value).toLowerCase().includes(term)));
+      picker.totalItems = filtered.length;
+      picker.totalPages = Math.max(1, Math.ceil(filtered.length / picker.pageSize));
+      picker.page = Math.min(picker.page, picker.totalPages - 1);
+      picker.items = filtered.slice(picker.page * picker.pageSize, (picker.page + 1) * picker.pageSize);
+      picker.hasPrevious = picker.page > 0;
+      picker.hasNext = picker.page < picker.totalPages - 1;
+    }
+    picker.error = "";
+  } catch (error) {
+    picker.error = error.message || "Não foi possível carregar o catálogo.";
+    picker.items = [];
+    picker.totalItems = 0;
+    picker.totalPages = 1;
+    picker.hasNext = false;
+    picker.hasPrevious = false;
+  } finally {
+    picker.loading = false;
+    toolsRenderCatalogPicker();
+  }
+}
+
+function toolsRenderCatalogPicker() {
+  const picker = toolsState.catalogPicker;
+  const container = document.getElementById("tools-catalog-picker-results");
+  if (!picker || !container) return;
+  const isItem = picker.kind === "item";
+  const results = picker.items.length
+    ? picker.items.map(entry => {
+      const subtitle = isItem
+        ? `${entry.category || "Item"} · ${entry.rarity || "-"} · ${entry.code}`
+        : `${entry.slot || "-"} · ${entry.rarity || "-"} · T${entry.tier || "-"} · HP ${entry.bonusHp || 0} · ATK ${entry.bonusAttack || 0} · DEF ${entry.bonusDefense || 0}`;
+      const value = isItem ? entry.code : entry.name;
+      return `<button type="button" class="card-sm w-full text-left hover:border-cyan-600" data-tools-picker-value="${escapeAttr(value)}">
+        <div class="flex items-center justify-between gap-3"><span class="min-w-0"><span class="block ${isItem ? "text-cyan-300" : "text-purple-300"} font-medium break-words">${escapeHtml(entry.name)}</span><span class="block text-xs text-slate-500">${escapeHtml(subtitle)}</span></span><span class="text-xs text-slate-400 shrink-0">Selecionar</span></div>
+      </button>`;
+    }).join("")
+    : `<p class="text-slate-500">Nenhum registro encontrado.</p>`;
+  const errorNotice = picker.error ? `<p class="text-xs text-red-300 mb-2">${escapeHtml(picker.error)}</p>` : "";
+  container.innerHTML = `${errorNotice}
+    <div class="flex items-center justify-between gap-3 mb-2"><p class="text-xs text-slate-500">${picker.totalItems} registro(s) encontrado(s)</p><div class="flex items-center gap-2"><button type="button" class="btn-secondary text-xs" data-tools-picker-previous ${!picker.hasPrevious ? "disabled" : ""}>Anterior</button><span class="text-xs text-slate-400 whitespace-nowrap">Página ${picker.page + 1} de ${picker.totalPages}</span><button type="button" class="btn-secondary text-xs" data-tools-picker-next ${!picker.hasNext ? "disabled" : ""}>Próxima</button></div></div>
+    <div class="space-y-2">${results}</div>`;
+  container.querySelector("[data-tools-picker-previous]")?.addEventListener("click", () => { if (picker.hasPrevious) { picker.page--; toolsLoadCatalogPicker(); } });
+  container.querySelector("[data-tools-picker-next]")?.addEventListener("click", () => { if (picker.hasNext) { picker.page++; toolsLoadCatalogPicker(); } });
+  container.querySelectorAll("[data-tools-picker-value]").forEach(button => button.addEventListener("click", () => {
+    const selected = picker.items.find(entry => (isItem ? entry.code : entry.name) === button.dataset.toolsPickerValue);
+    if (!selected) return;
+    if (isItem) toolsState.selectedItem = selected; else toolsState.selectedEquipment = selected;
+    toolsRenderCatalogSelections();
+    toolsCloseCatalogPicker();
+  }));
+}
+
+function toolsLoadSelects() {
+  return Promise.resolve();
 }
