@@ -84,7 +84,7 @@ function renderClanList() {
       <div class="card animate-pulse"><div class="h-32"></div></div>
     </div>
 
-    <button class="btn-primary w-full mt-4" onclick="renderClanRanking()">Ver Ranking de Clãs</button>
+    <button class="btn-primary w-full mt-4" onclick="renderClanRanking()">Ver Classificação de Clãs</button>
   `);
   return el;
 }
@@ -267,12 +267,12 @@ function renderClanDetailHtml(clan, opts = {}) {
         <div class="card-sm"><p class="text-xs text-slate-500">Membros</p><p class="font-bold">${clan.memberCount}/${clan.maxMembers}</p></div>
         <div class="card-sm"><p class="text-xs text-slate-500">Vagas base</p><p class="font-bold text-green-400">${clan.baseMaxMembers}</p></div>
         <div class="card-sm"><p class="text-xs text-slate-500">Vagas extras</p><p class="font-bold text-amber-400">+${clan.memberCapacityUpgradeLevel}</p></div>
-        <div class="card-sm col-span-2 sm:col-span-1"><p class="text-xs text-slate-500">Honor Marks</p><p class="font-bold text-purple-400">${clan.honorMarks}</p></div>
+        <div class="card-sm col-span-2 sm:col-span-1"><p class="text-xs text-slate-500">Marcas de Honra</p><p class="font-bold text-purple-400">${clan.honorMarks}</p></div>
       </div>
 
       <div class="mt-4">
         <div class="flex justify-between text-xs mb-1">
-          <span class="text-slate-400">XP do Clã</span>
+          <span class="text-slate-400">Experiência do Clã</span>
           <span class="text-slate-400">${clan.xpToNextLevel > 0 ? clan.xpToNextLevel + " para o próximo" : "Máximo"}</span>
         </div>
         <div class="w-full bg-slate-800 rounded-full h-2"><div class="bg-cyan-500 h-2 rounded-full" style="width:${xpPercent}%"></div></div>
@@ -284,14 +284,14 @@ function renderClanDetailHtml(clan, opts = {}) {
       <button id="clan-tab-upgrades" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('upgrades')">Melhorias</button>
       ${showMemberTabs ? `<button id="clan-tab-storage" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('storage')">Armazém</button>` : ""}
       ${showMemberTabs ? `<button id="clan-tab-missions" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('missions')">Missões</button>` : ""}
-      ${showMemberTabs ? `<button id="clan-tab-raid" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('raid')">Raid</button>` : ""}
+      ${showMemberTabs ? `<button id="clan-tab-raid" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('raid')">Incursão</button>` : ""}
     </div>
 
     <div id="clan-tab-content" class="mb-4"></div>
 
     ${managementButtons}
 
-    ${!preview ? `<button class="btn-primary w-full mt-4" onclick="renderClanRanking()">Ranking de Clãs</button>` : ""}
+    ${!preview ? `<button class="btn-primary w-full mt-4" onclick="renderClanRanking()">Classificação de Clãs</button>` : ""}
   `;
 }
 
@@ -895,7 +895,7 @@ async function clanLoadMissions() {
               <p class="font-bold text-sm">${escapeHtml(m.title)}</p>
               <p class="text-xs text-slate-400">${escapeHtml(m.description || "")}</p>
               <p class="text-xs text-slate-500">Objetivo: <span class="text-cyan-400">${formatObjective(m.objectiveType)} ${m.targetValue}</span></p>
-              <p class="text-xs text-slate-500">Recompensa: ${m.minHonorMarksReward}-${m.maxHonorMarksReward} HM · ${m.clanXpReward} XP</p>
+              <p class="text-xs text-slate-500">Recompensa: ${m.minHonorMarksReward}-${m.maxHonorMarksReward} Marcas de Honra · ${m.clanXpReward} Experiência do Clã</p>
             </div>
             <div class="text-right">
               ${active ? `<span class="text-xs text-cyan-400">Ativa</span>` : ""}
@@ -925,7 +925,7 @@ function renderPlayerMission(m) {
         <div>
           <p class="font-bold text-sm">${escapeHtml(m.title)}</p>
           <p class="text-xs text-slate-400">${formatObjective(m.objectiveType)} ${m.progress}/${m.targetValue}</p>
-          <p class="text-xs text-slate-500">Recompensa: ${m.honorMarksReward} HM · ${m.clanXpReward} XP</p>
+          <p class="text-xs text-slate-500">Recompensa: ${m.honorMarksReward} Marcas de Honra · ${m.clanXpReward} Experiência do Clã</p>
         </div>
         ${m.status === "COMPLETED" || complete ? `<button class="btn-primary text-sm py-1 px-2" onclick="clanClaimMission('${m.id}')">Resgatar</button>` : `<span class="text-xs text-slate-500">${formatMissionStatus(m.status)}</span>`}
       </div>
@@ -946,7 +946,7 @@ function formatMissionStatus(status) {
 function formatObjective(type) {
   const map = {
     MISSIONS_COMPLETED: "Missões concluídas:",
-    BOSSES_DEFEATED: "Bosses derrotados:",
+    BOSSES_DEFEATED: "Chefes derrotados:",
     ARENA_WINS: "Vitórias na arena:",
     ARENA_DUELS: "Duelos na arena:",
     REBIRTHS_DONE: "Rebirths realizados:"
@@ -970,13 +970,13 @@ function renderHonorMarksRanking(ranking) {
         <span class="font-bold w-5 ${rankColor(i)}">${i + 1}.</span>
         <span class="text-sm text-slate-200">${escapeHtml(entry.username)}</span>
       </div>
-      <span class="text-xs text-cyan-400 font-mono">${entry.contribution} HM</span>
+      <span class="text-xs text-cyan-400 font-mono">${entry.contribution} Marcas de Honra</span>
     </div>
   `).join("");
 
   return `
     <div class="card mt-4 border-cyan-900">
-      <p class="font-bold mb-2 text-sm">Ranking de Contribuição</p>
+          <p class="font-bold mb-2 text-sm">Classificação de Contribuição</p>
       ${rows}
     </div>
   `;
@@ -1026,8 +1026,8 @@ async function clanLoadRaid() {
       && Number.isFinite(nextAttackAt)
       && nextAttackAt > Date.now();
     const cooldownInfoHtml = cooldownEnabled
-      ? `<p class="text-xs text-slate-500 mb-2 text-center">Cooldown entre ataques: ${cooldownMinutes} minuto(s)</p>`
-      : `<p class="text-xs text-green-400 mb-2 text-center">Cooldown desativado pelo administrador</p>`;
+      ? `<p class="text-xs text-slate-500 mb-2 text-center">Intervalo entre ataques: ${cooldownMinutes} minuto(s)</p>`
+      : `<p class="text-xs text-green-400 mb-2 text-center">Intervalo desativado pelo administrador</p>`;
 
     let rankingHtml = "";
     if (raid.ranking && raid.ranking.length > 0) {
@@ -1039,7 +1039,7 @@ async function clanLoadRaid() {
       };
       rankingHtml = `
         <div class="card mt-4 border-cyan-900">
-          <p class="font-bold mb-2 text-sm">Ranking de Dano</p>
+          <p class="font-bold mb-2 text-sm">Classificação de Dano</p>
           ${raid.ranking.map((entry, i) => `
             <div class="flex justify-between items-center py-1.5 border-b border-slate-800 last:border-0">
               <div class="flex items-center gap-2">
@@ -1069,7 +1069,7 @@ async function clanLoadRaid() {
     }
 
     container.innerHTML = `
-      <h3 class="font-bold mb-2">Raid de Clã</h3>
+      <h3 class="font-bold mb-2">Incursão de Clã</h3>
 
       <div class="card mb-3">
         <div class="flex items-center gap-3 mb-3">
@@ -1092,8 +1092,8 @@ async function clanLoadRaid() {
 
         <p class="text-xs text-slate-400 mb-3">Seu dano: <span class="text-cyan-400">${raid.myTotalDamage.toLocaleString()}</span></p>
 
-        ${!defeated ? `${cooldownInfoHtml}<button id="clan-raid-attack-button" class="btn-primary w-full" onclick="clanAttackRaid()"${cooldownActive ? " disabled" : ""}>${cooldownActive ? "Próximo ataque em <span id=\"clan-raid-countdown\">--:--</span>" : "Atacar Raid"}</button>` : ""}
-        ${defeated ? `<p class="text-xs text-green-400 text-center">Raid derrotado. Aguarde o próximo ciclo.</p>` : ""}
+        ${!defeated ? `${cooldownInfoHtml}<button id="clan-raid-attack-button" class="btn-primary w-full" onclick="clanAttackRaid()"${cooldownActive ? " disabled" : ""}>${cooldownActive ? "Próximo ataque em <span id=\"clan-raid-countdown\">--:--</span>" : "Atacar Incursão"}</button>` : ""}
+        ${defeated ? `<p class="text-xs text-green-400 text-center">Incursão derrotada. Aguarde o próximo ciclo.</p>` : ""}
       </div>
 
       ${rankingHtml}
@@ -1121,7 +1121,7 @@ async function clanAttackRaid() {
   } catch (err) {
     if (btn) {
       btn.disabled = false;
-      btn.textContent = "Atacar Raid";
+      btn.textContent = "Atacar Incursão";
     }
     showToast(err.message, "error");
   }
@@ -1165,7 +1165,7 @@ function showRaidAttackModal(result) {
   if (existing) existing.remove();
 
   const rewardRow = result.defeated
-    ? `<p class="text-green-400 text-sm font-bold mb-1">Clã ganhou ${result.clanHonorMarksGained.toLocaleString()} Honor Marks e ${result.clanXpGained.toLocaleString()} XP!</p>`
+    ? `<p class="text-green-400 text-sm font-bold mb-1">Clã ganhou ${result.clanHonorMarksGained.toLocaleString()} Marcas de Honra e ${result.clanXpGained.toLocaleString()} Experiência do Clã!</p>`
     : "";
 
   const overlay = document.createElement("div");
@@ -1369,7 +1369,7 @@ async function renderClanRanking() {
   app.innerHTML = `
     <div class="page-container">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-bold px-1">🏆 Ranking de Clãs</h2>
+        <h2 class="text-lg font-bold px-1">🏆 Classificação de Clãs</h2>
         <button class="text-sm text-slate-400" onclick="renderClansPage()">Voltar</button>
       </div>
       <div id="clan-ranking-content">
