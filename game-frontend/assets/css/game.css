@@ -397,7 +397,7 @@ body {
 .nav-btn.active { color: #06b6d4; }
 
 /* Keep oversized menu artwork visually consistent with the other cards. */
-.more-icon-settings { transform: scale(0.9); }
+.more-icon-settings { transform: scale(1.1); }
 
 /* ===================== Animations ===================== */
 @keyframes fade-in {
