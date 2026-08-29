@@ -6,7 +6,7 @@ import java.util.UUID;
  * Contrato de dados do módulo de Inventário.
  */
 public record GrantItemResponse(
-        UUID digimonId,
+        UUID playerId,
         String itemCode,
         int quantity,
         String message

@@ -29,68 +29,73 @@ async function renderToolsPage() {
     </div>
 
     <div id="tools-digimon-section" class="card mb-6 hidden">
-      <h3 class="text-lg font-semibold text-cyan-400 mb-4">2. Selecionar Digimon</h3>
+      <h3 class="text-lg font-semibold text-cyan-400 mb-4">2. Selecionar Digimon para XP</h3>
       <div id="tools-digimon-list"></div>
     </div>
 
     <div id="tools-actions-section" class="hidden">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-        <div class="card">
-          <h3 class="text-lg font-semibold text-yellow-400 mb-4">Add XP</h3>
-          <div class="space-y-3">
-            <div>
-              <label class="text-sm text-slate-400">Quantidade de XP</label>
-              <input id="tools-xp-amount" type="number" class="input mt-1" placeholder="1000" min="1" />
-            </div>
-            <button id="tools-xp-btn" class="btn-primary w-full py-2">Conceder XP</button>
-            <div id="tools-xp-result" class="text-sm mt-2"></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3 class="text-lg font-semibold text-purple-400 mb-4">Grant Equipment</h3>
-          <div class="space-y-3">
-            <div>
-              <label class="text-sm text-slate-400">Template</label>
-              <select id="tools-equip-template" class="input mt-1">
-                <option value="">Carregando...</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-sm text-slate-400">Raridade (opcional)</label>
-              <select id="tools-equip-rarity" class="input mt-1">
-                <option value="">Roll automatico</option>
-                <option value="COMMON">Common</option>
-                <option value="RARE">Rare</option>
-                <option value="EPIC">Epic</option>
-                <option value="LEGENDARY">Legendary</option>
-              </select>
-            </div>
-            <button id="tools-equip-btn" class="btn-primary w-full py-2">Conceder Equipamento</button>
-            <div id="tools-equip-result" class="text-sm mt-2"></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3 class="text-lg font-semibold text-green-400 mb-4">Grant Item</h3>
-          <div class="space-y-3">
-            <div>
-              <label class="text-sm text-slate-400">Item</label>
-              <select id="tools-item-code" class="input mt-1">
-                <option value="">Carregando...</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-sm text-slate-400">Quantidade</label>
-              <input id="tools-item-qty" type="number" class="input mt-1" placeholder="1" min="1" value="1" />
-            </div>
-            <button id="tools-item-btn" class="btn-primary w-full py-2">Conceder Item</button>
-            <div id="tools-item-result" class="text-sm mt-2"></div>
-          </div>
-        </div>
-
+      <div class="mb-5 rounded-xl border border-cyan-900/60 bg-cyan-950/20 px-4 py-3 text-sm text-slate-300">
+        <strong class="text-cyan-300">Ações do jogador selecionado.</strong>
+        Recursos econômicos são concedidos ao jogador. O Digimon ativo é necessário somente para a operação de XP.
       </div>
+
+      <section class="card mb-6 border-cyan-900/60">
+        <div class="flex items-start justify-between gap-4 mb-5">
+          <div>
+            <h3 class="text-lg font-semibold text-emerald-400">Economia do jogador</h3>
+            <p class="text-sm text-slate-400 mt-1">Itens e equipamentos entram no inventário global do tamer.</p>
+          </div>
+          <span class="badge badge-success">Player-owned</span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div class="rounded-xl border border-slate-700 bg-slate-950/40 p-4">
+            <h4 class="font-semibold text-green-300 mb-4">Grant Item</h4>
+            <div class="space-y-3">
+              <label class="block text-sm text-slate-400">Item
+                <select id="tools-item-code" class="input mt-1"><option value="">Carregando...</option></select>
+              </label>
+              <label class="block text-sm text-slate-400">Quantidade
+                <input id="tools-item-qty" type="number" class="input mt-1" placeholder="1" min="1" value="1" />
+              </label>
+              <button id="tools-item-btn" class="btn-primary w-full py-2">Conceder item ao jogador</button>
+              <div id="tools-item-result" class="text-sm mt-2 min-h-5"></div>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-slate-700 bg-slate-950/40 p-4">
+            <h4 class="font-semibold text-purple-300 mb-4">Grant Equipment</h4>
+            <div class="space-y-3">
+              <label class="block text-sm text-slate-400">Template
+                <select id="tools-equip-template" class="input mt-1"><option value="">Carregando...</option></select>
+              </label>
+              <label class="block text-sm text-slate-400">Raridade (opcional)
+                <select id="tools-equip-rarity" class="input mt-1">
+                  <option value="">Roll automático</option><option value="COMMON">Comum</option><option value="RARE">Rara</option><option value="EPIC">Épica</option><option value="LEGENDARY">Lendária</option>
+                </select>
+              </label>
+              <button id="tools-equip-btn" class="btn-primary w-full py-2">Conceder equipamento ao jogador</button>
+              <div id="tools-equip-result" class="text-sm mt-2 min-h-5"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card border-yellow-900/60">
+        <div class="flex items-start justify-between gap-4 mb-5">
+          <div>
+            <h3 class="text-lg font-semibold text-yellow-300">Progressão do Digimon ativo</h3>
+            <p class="text-sm text-slate-400 mt-1">Esta operação altera somente a experiência do Digimon selecionado acima.</p>
+          </div>
+          <span class="badge badge-warning">Digimon-specific</span>
+        </div>
+        <div class="max-w-md rounded-xl border border-slate-700 bg-slate-950/40 p-4">
+          <label class="block text-sm text-slate-400">Quantidade de XP
+            <input id="tools-xp-amount" type="number" class="input mt-1" placeholder="1000" min="1" />
+          </label>
+          <button id="tools-xp-btn" class="btn-primary w-full py-2 mt-3">Conceder XP ao Digimon ativo</button>
+          <div id="tools-xp-result" class="text-sm mt-2 min-h-5"></div>
+        </div>
+      </section>
     </div>
 
     <div class="card border-red-900/50 mb-6">
@@ -226,7 +231,13 @@ function toolsRenderPlayerList() {
 
 async function toolsSelectPlayer(playerId) {
   toolsState.selectedPlayerId = playerId;
+  toolsState.selectedDigimonId = null;
   toolsRenderPlayerList();
+
+  const actionsSection = document.getElementById("tools-actions-section");
+  actionsSection.classList.remove("hidden");
+  await toolsLoadSelects();
+  toolsBindActionButtons();
 
   const digimonSection = document.getElementById("tools-digimon-section");
   digimonSection.classList.remove("hidden");
@@ -267,12 +278,10 @@ function toolsRenderDigimonList() {
 async function toolsSelectDigimon(digimonId) {
   toolsState.selectedDigimonId = digimonId;
   toolsRenderDigimonList();
+  toolsBindActionButtons();
+}
 
-  const actionsSection = document.getElementById("tools-actions-section");
-  actionsSection.classList.remove("hidden");
-
-  await toolsLoadSelects();
-
+function toolsBindActionButtons() {
   document.getElementById("tools-xp-btn").onclick = toolsAddXp;
   document.getElementById("tools-equip-btn").onclick = toolsGrantEquipment;
   document.getElementById("tools-item-btn").onclick = toolsGrantItem;
@@ -306,24 +315,61 @@ async function toolsLoadSelects() {
   }
 }
 
+function toolsRunWithConfirmation(buttonId, resultId, message, busyLabel, action) {
+  const button = document.getElementById(buttonId);
+  const result = document.getElementById(resultId);
+  if (!button || typeof openConfirmModal !== "function") return;
+
+  openConfirmModal({
+    title: "Confirmar operação administrativa",
+    message,
+    confirmText: "Confirmar",
+    cancelText: "Cancelar",
+    onConfirm: async () => {
+      const originalLabel = button.textContent;
+      button.disabled = true;
+      button.textContent = busyLabel;
+      try {
+        await action();
+      } catch (error) {
+        if (result) result.innerHTML = `<span class="text-red-400">${escapeHtml(error.message)}</span>`;
+      } finally {
+        button.disabled = false;
+        button.textContent = originalLabel;
+      }
+    }
+  });
+}
+
 async function toolsAddXp() {
+  if (!toolsState.selectedDigimonId) {
+    document.getElementById("tools-xp-result").innerHTML = `<span class="text-red-400">Selecione um Digimon para conceder XP.</span>`;
+    return;
+  }
   const amount = parseInt(document.getElementById("tools-xp-amount").value);
   if (!amount || amount <= 0) {
     document.getElementById("tools-xp-result").innerHTML = `<span class="text-red-400">Informe um valor valido.</span>`;
     return;
   }
 
-  try {
-    await apiPostVoid(`/admin/digimon/add-xp?digimonId=${toolsState.selectedDigimonId}&amount=${amount}`);
-    document.getElementById("tools-xp-result").innerHTML =
-      `<span class="text-green-400">+${amount} XP concedido com sucesso!</span>`;
-  } catch (err) {
-    document.getElementById("tools-xp-result").innerHTML =
-      `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
-  }
+  toolsRunWithConfirmation(
+    "tools-xp-btn",
+    "tools-xp-result",
+    `Confirmar concessão de ${amount} XP ao Digimon ativo selecionado?`,
+    "Concedendo XP...",
+    async () => {
+      await apiPostVoid(`/admin/digimon/add-xp?digimonId=${toolsState.selectedDigimonId}&amount=${amount}`);
+      document.getElementById("tools-xp-result").innerHTML =
+        `<span class="text-green-400">+${amount} XP concedido com sucesso!</span>`;
+    }
+  );
 }
 
 async function toolsGrantEquipment() {
+  if (!toolsState.selectedPlayerId) {
+    document.getElementById("tools-equip-result").innerHTML = `<span class="text-red-400">Selecione um jogador.</span>`;
+    return;
+  }
   const templateName = document.getElementById("tools-equip-template").value;
   if (!templateName) {
     document.getElementById("tools-equip-result").innerHTML = `<span class="text-red-400">Selecione um template.</span>`;
@@ -332,20 +378,27 @@ async function toolsGrantEquipment() {
 
   const rarity = document.getElementById("tools-equip-rarity").value || null;
 
-  try {
-    const body = { digimonId: toolsState.selectedDigimonId, templateName };
-    if (rarity) body.rarity = rarity;
+  toolsRunWithConfirmation(
+    "tools-equip-btn",
+    "tools-equip-result",
+    `Confirmar concessão do equipamento ${templateName} ao jogador selecionado?`,
+    "Concedendo equipamento...",
+    async () => {
+      const body = { playerId: toolsState.selectedPlayerId, templateName };
+      if (rarity) body.rarity = rarity;
 
-    const result = await apiPost("/admin/equipment-templates/grant", body);
-    document.getElementById("tools-equip-result").innerHTML =
-      `<span class="text-green-400">${escapeHtml(result.message)} (ID: ${escapeHtml(result.equipmentId.substring(0, 8))}...)</span>`;
-  } catch (err) {
-    document.getElementById("tools-equip-result").innerHTML =
-      `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
-  }
+      const result = await apiPost("/admin/equipment-templates/grant", body);
+      document.getElementById("tools-equip-result").innerHTML =
+        `<span class="text-green-400">${escapeHtml(result.message)} (ID: ${escapeHtml(result.equipmentId.substring(0, 8))}...)</span>`;
+    }
+  );
 }
 
 async function toolsGrantItem() {
+  if (!toolsState.selectedPlayerId) {
+    document.getElementById("tools-item-result").innerHTML = `<span class="text-red-400">Selecione um jogador.</span>`;
+    return;
+  }
   const itemCode = document.getElementById("tools-item-code").value;
   const quantity = parseInt(document.getElementById("tools-item-qty").value);
 
@@ -358,18 +411,22 @@ async function toolsGrantItem() {
     return;
   }
 
-  try {
-    const result = await apiPost("/admin/inventory/grant", {
-      digimonId: toolsState.selectedDigimonId,
-      itemCode,
-      quantity
-    });
-    document.getElementById("tools-item-result").innerHTML =
-      `<span class="text-green-400">${escapeHtml(result.message)}</span>`;
-  } catch (err) {
-    document.getElementById("tools-item-result").innerHTML =
-      `<span class="text-red-400">${escapeHtml(err.message)}</span>`;
-  }
+  const item = toolsState.itemDefinitions.find(candidate => candidate.code === itemCode);
+  toolsRunWithConfirmation(
+    "tools-item-btn",
+    "tools-item-result",
+    `Confirmar concessão de ${quantity} unidade(s) de ${item?.name || itemCode} ao jogador selecionado?`,
+    "Concedendo item...",
+    async () => {
+      const result = await apiPost("/admin/inventory/grant", {
+        playerId: toolsState.selectedPlayerId,
+        itemCode,
+        quantity
+      });
+      document.getElementById("tools-item-result").innerHTML =
+        `<span class="text-green-400">${escapeHtml(result.message)}</span>`;
+    }
+  );
 }
 
 async function adminLoadDamageBuff() {

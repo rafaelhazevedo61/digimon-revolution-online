@@ -26,9 +26,9 @@ public class AdminInventoryController {
     @PostMapping("/grant")
     public ResponseEntity<GrantItemResponse> grantItem(@RequestHeader("Authorization") String authorization, @RequestBody @Valid GrantItemRequest request) {
         ItemDefinition itemDef = itemDefinitionRepository.findByCode(request.itemCode()).orElseThrow(() -> new NotFoundException("Item not found: " + request.itemCode()));
-        addItemUseCase.addMaterial(request.digimonId(), itemDef, request.quantity());
-        adminAuditService.success(authorization, "ADMIN_INVENTORY_GRANT", "Inventory", request.digimonId().toString(), "grant", "Item concedido ao Digimon", Map.of("targetDigimonId", request.digimonId().toString(), "itemCode", itemDef.getCode(), "quantity", request.quantity()));
-        return ResponseEntity.ok(new GrantItemResponse(request.digimonId(), itemDef.getCode(), request.quantity(), "Item granted successfully"));
+        addItemUseCase.addMaterialToPlayer(request.playerId(), itemDef, request.quantity());
+        adminAuditService.success(authorization, "ADMIN_INVENTORY_GRANT", "Inventory", request.playerId().toString(), "grant", "Item concedido ao jogador", Map.of("targetPlayerId", request.playerId().toString(), "itemCode", itemDef.getCode(), "quantity", request.quantity()));
+        return ResponseEntity.ok(new GrantItemResponse(request.playerId(), itemDef.getCode(), request.quantity(), "Item granted successfully"));
     }
 
     @GetMapping("/item-definitions")
