@@ -13,12 +13,12 @@ O custo para manter a raridade é configurável por `DRO_RARITY_REROLL_KEEP_COST
 
 | Raridade atual | Comum | Rara | Épica | Lendária | Sem alteração |
 |---|---:|---:|---:|---:|---:|
-| `COMMON` | — | 28% | 1,8% | 0,2% | 70% |
-| `RARE` | 98% | — | 1,8% | 0,2% | — |
-| `EPIC` | 71,29% | 28,51% | — | 0,2% | — |
-| `LEGENDARY` | 65% | 25% | 10% | — | — |
+| `COMMON` | — | 30% | 2% | 0,3% | 67,7% |
+| `RARE` | 97,7% | — | 2% | 0,3% | — |
+| `EPIC` | 71,21% | 28,49% | — | 0,3% | — |
+| `LEGENDARY` | 65% | 24% | 11% | — | — |
 
-Quando o Digimon é Comum, existe 70% de chance de o Dado ser consumido sem alterar a raridade. Nos demais casos, uma nova raridade é sempre escolhida. A linha da Épica mantém a proporção aproximada 70/28 usada como referência na queda da Lendária, ajustada para preservar os 0,2% de avanço para Lendária.
+Quando o Digimon é Comum, existe 67,7% de chance de o Dado ser consumido sem alterar a raridade. Nos demais casos, uma nova raridade é sempre escolhida. A linha da Épica mantém a proporção aproximada 70/28 usada como referência na queda da Lendária, ajustada para preservar os 0,3% de avanço para Lendária.
 
 A tabela `digimon_rarity_rerolls` registra jogador, Digimon, raridade atual, nova raridade, estado e timestamps. As confirmações utilizam bloqueio pessimista e só aceitam propostas com estado `PENDING`, evitando confirmação duplicada ou cobrança concorrente.
 

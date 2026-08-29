@@ -56,24 +56,24 @@ public class RarityRoller {
         int roll = random.nextInt(10000);
         return switch (currentRarity) {
             case COMMON -> {
-                if (roll < 7000) yield Optional.empty();
-                if (roll < 9800) yield Optional.of(Rarity.RARE);
-                if (roll < 9980) yield Optional.of(Rarity.EPIC);
+                if (roll < 6770) yield Optional.empty();
+                if (roll < 9770) yield Optional.of(Rarity.RARE);
+                if (roll < 9970) yield Optional.of(Rarity.EPIC);
                 yield Optional.of(Rarity.LEGENDARY);
             }
             case RARE -> {
-                if (roll < 9800) yield Optional.of(Rarity.COMMON);
-                if (roll < 9980) yield Optional.of(Rarity.EPIC);
+                if (roll < 9770) yield Optional.of(Rarity.COMMON);
+                if (roll < 9970) yield Optional.of(Rarity.EPIC);
                 yield Optional.of(Rarity.LEGENDARY);
             }
             case EPIC -> {
-                if (roll < 7129) yield Optional.of(Rarity.COMMON);
-                if (roll < 9980) yield Optional.of(Rarity.RARE);
+                if (roll < 7121) yield Optional.of(Rarity.COMMON);
+                if (roll < 9970) yield Optional.of(Rarity.RARE);
                 yield Optional.of(Rarity.LEGENDARY);
             }
             case LEGENDARY -> {
                 if (roll < 6500) yield Optional.of(Rarity.COMMON);
-                if (roll < 9000) yield Optional.of(Rarity.RARE);
+                if (roll < 8900) yield Optional.of(Rarity.RARE);
                 yield Optional.of(Rarity.EPIC);
             }
         };
