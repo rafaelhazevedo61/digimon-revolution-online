@@ -12,7 +12,7 @@ import java.util.UUID;
  * combina o valor base com o multiplicador de raridade e o refinamento.</p>
  */
 @Entity
-@Table(name = "equipments")
+@Table(name = "inventory_equipments")
 public class Equipment {
     @Id
     private UUID id;
