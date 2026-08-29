@@ -39,7 +39,7 @@ import java.util.UUID;
 /**
  * Abre baús de forma atômica e idempotente.
  *
- * <p>O caso de uso bloqueia o Digimon ativo e o item de baú, sorteia o resultado,
+ * <p>O caso de uso bloqueia o jogador, o Digimon ativo e os itens de inventário, sorteia o resultado,
  * debita os baús, credita as recompensas, registra a abertura e enfileira a
  * auditoria positiva na mesma transação PostgreSQL.</p>
  */
@@ -68,17 +68,19 @@ public class OpenChestUseCase {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         validateRequest(request);
         int quantity = request.requestedQuantity();
+        // Serialize all inventory mutations for this player before checking idempotency.
+        // A retry therefore observes the opening after the first transaction commits.
+        Player player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         ChestOpeningEntity previousOpening = chestOpeningRepository.findByRequestId(request.requestId()).orElse(null);
         if (previousOpening != null) {
             validateRetryOwnership(previousOpening, playerId, request.chestCode());
             return toResponse(previousOpening, true);
         }
-        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         Digimon activeDigimon = findLockedActiveDigimon(player, playerId);
         ChestDefinitionEntity chest = chestDefinitionRepository.findWithCatalogByCode(request.chestCode()).filter(ChestDefinitionEntity::isActive).orElseThrow(() -> new NotFoundException("Chest not found or inactive"));
-        InventoryItem chestInventory = inventoryRepository.findByDigimonIdAndItemDefinitionIdForUpdate(activeDigimon.getId(), chest.getItemDefinition().getId()).orElseThrow(() -> new NotFoundException("Chest not found in inventory"));
+        InventoryItem chestInventory = inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, chest.getItemDefinition().getId()).orElseThrow(() -> new NotFoundException("Chest not found in inventory"));
         if (chestInventory.getItemType() != ItemType.LOOT_CHEST || chestInventory.getQuantity() < quantity) {
-            throw new UnprocessableException("Not enough chests in inventory");
+            throw new UnprocessableException("Você não possui baús suficientes para abrir essa quantidade.");
         }
 
         List<ChestOpeningItemEntity> openingItems = new ArrayList<>();
@@ -89,7 +91,7 @@ public class OpenChestUseCase {
                 primaryRarity = roll.rarity();
             }
             for (ChestLootRoller.ChestLootItem reward : roll.items()) {
-                creditReward(activeDigimon, reward);
+                creditReward(playerId, reward);
                 mergeOpeningItem(openingItems, reward);
             }
         }
@@ -136,17 +138,17 @@ public class OpenChestUseCase {
         return digimon;
     }
 
-    private void creditReward(Digimon digimon, ChestLootRoller.ChestLootItem reward) {
+    private void creditReward(UUID playerId, ChestLootRoller.ChestLootItem reward) {
         String itemCode = reward.materialCode() == null ? reward.itemType().name() : reward.materialCode();
         ItemDefinition itemDefinition = itemDefinitionRepository.findByCode(itemCode).orElseThrow(() -> new UnprocessableException("Reward item is not defined: " + itemCode));
-        InventoryItem inventoryItem = inventoryRepository.findByDigimonIdAndItemDefinitionIdForUpdate(digimon.getId(), itemDefinition.getId()).orElse(null);
+        InventoryItem inventoryItem = inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, itemDefinition.getId()).orElse(null);
         int currentQuantity = inventoryItem == null ? 0 : inventoryItem.getQuantity();
         int newQuantity = currentQuantity + reward.quantity();
         if (itemDefinition.getMaxStack() != null && newQuantity > itemDefinition.getMaxStack()) {
             throw new UnprocessableException("Cannot exceed max stack of " + itemDefinition.getMaxStack() + " for item " + itemDefinition.getCode());
         }
         if (inventoryItem == null) {
-            inventoryRepository.save(InventoryItem.builder().id(UUID.randomUUID()).digimonId(digimon.getId()).itemType(reward.itemType()).itemDefinition(itemDefinition).quantity(reward.quantity()).build());
+            inventoryRepository.save(InventoryItem.builder().id(UUID.randomUUID()).playerId(playerId).itemType(reward.itemType()).itemDefinition(itemDefinition).quantity(reward.quantity()).build());
         } else {
             inventoryItem.setQuantity(newQuantity);
             inventoryRepository.save(inventoryItem);

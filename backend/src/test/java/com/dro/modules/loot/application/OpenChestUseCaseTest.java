@@ -159,6 +159,35 @@ class OpenChestUseCaseTest {
     }
 
     @Test
+    void executeRejectsBatchWhenRequestedQuantityExceedsChestBalance() {
+        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
+        String chestCode = "CHEST_MISSION_NATIVE_FOREST";
+        ItemDefinition chestDefinition = itemDefinition(1L, chestCode, "Baú Floresta Nativa", "CHEST", 99);
+        ItemDefinition rewardDefinition = itemDefinition(2L, "FRAGMENT_AGUMON", "Fragmento do Agumon", "EVOLUTION_MATERIAL", 999);
+        ChestDefinitionEntity chest = chest(chestCode, chestDefinition, rewardDefinition);
+        Player player = Player.builder().id(playerId).activeDigimonId(digimonId).build();
+        Digimon digimon = Digimon.builder().id(digimonId).playerId(playerId).build();
+        InventoryItem chestInventory = inventory(digimonId, ItemType.LOOT_CHEST, chestDefinition, 2);
+        when(chestOpeningRepository.findByRequestId("request-insufficient")).thenReturn(Optional.empty());
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(chestDefinitionRepository.findWithCatalogByCode(chestCode)).thenReturn(Optional.of(chest));
+        when(inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, 1L))
+                .thenReturn(Optional.of(chestInventory));
+
+        assertThatThrownBy(() -> openChestUseCase.execute(
+                token(playerId),
+                new OpenChestRequest(chestCode, "request-insufficient", 3)
+        )).isInstanceOf(UnprocessableException.class)
+                .hasMessage("Você não possui baús suficientes para abrir essa quantidade.");
+
+        assertThat(chestInventory.getQuantity()).isEqualTo(2);
+        verify(chestOpeningRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(transactionAuditPublisher);
+    }
+
+    @Test
     void executeReturnsPreviousOpeningWithoutConsumingAgainOnRetry() {
         UUID playerId = UUID.randomUUID();
         String chestCode = "CHEST_MISSION_NATIVE_FOREST";
@@ -174,7 +203,7 @@ class OpenChestUseCaseTest {
                 .source("PLAYER_INVENTORY")
                 .build();
         when(chestOpeningRepository.findByRequestId("request-1")).thenReturn(Optional.of(previous));
-
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(Player.builder().id(playerId).build()));
         ChestOpeningResponse response = openChestUseCase.execute(
                 token(playerId),
                 new OpenChestRequest(chestCode, "request-1")
@@ -187,7 +216,8 @@ class OpenChestUseCaseTest {
                 "Esta abertura já havia sido processada. O resultado original foi retornado."
         );
         assertThat(response.rarity()).isEqualTo(LootRarity.COMMON);
-        verifyNoInteractions(playerRepository, digimonRepository, inventoryRepository,
+        verify(playerRepository).findByIdForUpdate(playerId);
+        verifyNoInteractions(digimonRepository, inventoryRepository,
                 itemDefinitionRepository, chestDefinitionRepository, transactionAuditPublisher);
         verify(chestOpeningRepository, never()).saveAndFlush(any());
     }
@@ -208,7 +238,7 @@ class OpenChestUseCaseTest {
                 .source("PLAYER_INVENTORY")
                 .build();
         when(chestOpeningRepository.findByRequestId("request-1")).thenReturn(Optional.of(previous));
-
+        when(playerRepository.findByIdForUpdate(differentPlayerId)).thenReturn(Optional.of(Player.builder().id(differentPlayerId).build()));
         assertThatThrownBy(() -> openChestUseCase.execute(
                 token(differentPlayerId),
                 new OpenChestRequest(chestCode, "request-1")
@@ -230,7 +260,7 @@ class OpenChestUseCaseTest {
         InventoryItem existingReward = inventory(digimonId, ItemType.EVOLUTION_MATERIAL, rewardDefinition, 1);
 
         stubCommon(playerId, digimonId, player, digimon, chest, chestInventory, rewardDefinition);
-        when(inventoryRepository.findByDigimonIdAndItemDefinitionIdForUpdate(digimonId, 2L))
+        when(inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, 2L))
                 .thenReturn(Optional.of(existingReward));
         when(chestLootRoller.roll(chest.getLootTable())).thenReturn(
                 new ChestLootRoller.ChestLootRoll(
@@ -266,12 +296,12 @@ class OpenChestUseCaseTest {
             ItemDefinition rewardDefinition
     ) {
         when(chestOpeningRepository.findByRequestId(anyString())).thenReturn(Optional.empty());
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
         when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
         when(chestDefinitionRepository.findWithCatalogByCode(chest.getCode())).thenReturn(Optional.of(chest));
-        when(inventoryRepository.findByDigimonIdAndItemDefinitionIdForUpdate(digimonId, 1L))
+        when(inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, 1L))
                 .thenReturn(Optional.of(chestInventory));
-        when(inventoryRepository.findByDigimonIdAndItemDefinitionIdForUpdate(digimonId, 2L))
+        when(inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, 2L))
                 .thenReturn(Optional.empty());
         when(itemDefinitionRepository.findByCode("FRAGMENT_AGUMON"))
                 .thenReturn(Optional.of(rewardDefinition));

@@ -26,7 +26,7 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
         assertEquals(ApiErrorCode.CONFLICT, response.getBody().code());
-        assertTrue(response.getBody().message().contains("Atualize"));
+        assertTrue(response.getBody().message().contains("dados já foram alterados"));
     }
 
     @Test
