@@ -30,8 +30,8 @@ import java.util.UUID;
 /**
  * Executa compras imediatas e parciais na Casa de Leilões.
  *
- * <p>A operação bloqueia o anúncio, os Digimons ativos em ordem estável e o
- * estoque do item antes de transferir Bits e unidades. Tudo é persistido na
+ * <p>A operação bloqueia o anúncio, os jogadores e os Digimons ativos em ordem
+ * estável, além do estoque do item, antes de transferir Bits e unidades. Tudo é persistido na
  * mesma transação, incluindo a transação histórica e as notificações do Correio.</p>
  */
 @Service
@@ -62,7 +62,6 @@ public class BuyAuctionListingUseCase {
             throw new BadRequestException("Quantity must be greater than zero");
         }
         UUID buyerPlayerId = TokenExtractor.extractPlayerId(token);
-        Player buyer = playerRepository.findById(buyerPlayerId).orElseThrow(() -> new ConflictException("Buyer player not found"));
         AuctionListing listing = auctionListingRepository.findByIdForUpdate(listingId).orElseThrow(() -> new ConflictException("Auction listing is no longer available"));
         Instant now = Instant.now();
         if (!listing.isActiveAt(now)) {
@@ -74,7 +73,9 @@ public class BuyAuctionListingUseCase {
         if (request.quantity() > listing.getRemainingQuantity()) {
             throw new ConflictException("Only " + listing.getRemainingQuantity() + " item(s) remain in this listing");
         }
-        Player seller = playerRepository.findById(listing.getSellerPlayerId()).orElseThrow(() -> new ConflictException("Seller player not found"));
+        LockedPlayers lockedPlayers = lockPlayersInStableOrder(buyerPlayerId, listing.getSellerPlayerId());
+        Player buyer = lockedPlayers.buyer();
+        Player seller = lockedPlayers.seller();
         LockedDigimons lockedDigimons = lockDigimonsInStableOrder(buyer, seller, buyerPlayerId);
         Digimon buyerDigimon = lockedDigimons.buyer();
         Digimon sellerDigimon = lockedDigimons.seller();
@@ -85,7 +86,7 @@ public class BuyAuctionListingUseCase {
         if (buyerDigimon.getBits() < grossAmount) {
             throw new UnprocessableException("Not enough Bits");
         }
-        InventoryItem buyerInventory = inventoryRepository.findByDigimonIdAndItemDefinitionIdForUpdate(buyerDigimon.getId(), itemDefinition.getId()).orElse(null);
+        InventoryItem buyerInventory = inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(buyerPlayerId, itemDefinition.getId()).orElse(null);
         int currentQuantity = buyerInventory == null ? 0 : buyerInventory.getQuantity();
         int newQuantity = currentQuantity + request.quantity();
         if (itemDefinition.getMaxStack() != null && newQuantity > itemDefinition.getMaxStack()) {
@@ -105,6 +106,18 @@ public class BuyAuctionListingUseCase {
         auctionMailNotificationService.notifyPurchase(transaction);
         transactionAuditPublisher.success("auction-purchase:" + transaction.getId(), "AUCTION_PURCHASE_COMPLETED", "AuctionListing", String.valueOf(listing.getId()), Map.of("module", "auction", "operation", "buyListing", "actorId", buyerPlayerId.toString(), "sellerPlayerId", listing.getSellerPlayerId().toString(), "quantity", request.quantity(), "grossAmount", grossAmount, "fee", sellerFee, "itemCode", itemDefinition.getCode(), "summary", "Auction listing purchased"));
         return new AuctionPurchaseResponse(listing.getId(), itemDefinition.getCode(), itemDefinition.getName(), request.quantity(), grossAmount, sellerFee, grossAmount, sellerNetAmount, listing.getRemainingQuantity(), listing.getStatus(), buyerDigimon.getBits(), "Compra realizada com sucesso!");
+    }
+
+    private LockedPlayers lockPlayersInStableOrder(UUID buyerPlayerId, UUID sellerPlayerId) {
+        UUID firstId = buyerPlayerId.compareTo(sellerPlayerId) < 0 ? buyerPlayerId : sellerPlayerId;
+        UUID secondId = firstId.equals(buyerPlayerId) ? sellerPlayerId : buyerPlayerId;
+        Player first = playerRepository.findByIdForUpdate(firstId)
+                .orElseThrow(() -> new ConflictException("Player not found"));
+        Player second = playerRepository.findByIdForUpdate(secondId)
+                .orElseThrow(() -> new ConflictException("Player not found"));
+        Player buyer = first.getId().equals(buyerPlayerId) ? first : second;
+        Player seller = first.getId().equals(sellerPlayerId) ? first : second;
+        return new LockedPlayers(buyer, seller);
     }
 
     /**
@@ -134,6 +147,9 @@ public class BuyAuctionListingUseCase {
     }
 
 
+    private record LockedPlayers(Player buyer, Player seller) {
+    }
+
     private record LockedDigimons(Digimon buyer, Digimon seller) {
     }
 
@@ -143,7 +159,7 @@ public class BuyAuctionListingUseCase {
             inventoryRepository.save(inventoryItem);
             return;
         }
-        InventoryItem created = InventoryItem.builder().id(UUID.randomUUID()).digimonId(buyerDigimon.getId()).itemType(resolveItemType(itemDefinition.getCode())).itemDefinition(itemDefinition).quantity(newQuantity).build();
+        InventoryItem created = InventoryItem.builder().id(UUID.randomUUID()).playerId(buyerDigimon.getPlayerId()).itemType(resolveItemType(itemDefinition.getCode())).itemDefinition(itemDefinition).quantity(newQuantity).build();
         inventoryRepository.save(created);
     }
 
