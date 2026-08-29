@@ -1,5 +1,7 @@
 let adminEventRewardSubmitting = false;
 let adminEventRewardSelectedPlayers = [];
+let adminEventRewardSelectedPlayer = null;
+let adminEventRewardPlayerPicker = null;
 let adminEventRewardClanOptions = [];
 let adminEventRewardClanMembers = [];
 let adminEventRewardPlayerSearchTimer = null;
@@ -39,6 +41,8 @@ const ADMIN_EVENT_ITEM_OPTIONS = [
 
 function renderEventRewardsPage() {
   adminEventRewardSelectedItems = [];
+  adminEventRewardSelectedPlayer = null;
+  adminEventRewardPlayerPicker = null;
   adminEventRewardItemModalTargetIndex = null;
   adminEventRewardItemModalState = { search: "", page: 0, pageSize: 8, items: [], totalItems: 0, totalPages: 1, hasNext: false, hasPrevious: false, loading: false, error: "", remote: false };
   setPageHeader("Premiações de Eventos", "Envie uma recompensa resgatável pelo Correio");
@@ -474,12 +478,17 @@ function adminChangeEventRewardRecipientType() {
     adminRenderSelectedEventRewardPlayers();
   } else {
     panel.innerHTML = `
-      <label class="block">
+      <div>
         <span class="text-sm text-slate-300">Jogador destinatário</span>
-        <input id="admin-event-reward-player" class="input w-full mt-1" maxlength="30" required placeholder="Nome exato do jogador" oninput="adminUpdateEventRewardPreview()">
-        <span class="text-xs text-slate-500 mt-1 block">A busca não diferencia letras maiúsculas e minúsculas.</span>
-      </label>
+        <input id="admin-event-reward-player" type="hidden" required>
+        <div class="flex flex-col sm:flex-row gap-2 mt-1">
+          <div id="admin-event-reward-player-selection" class="input flex-1 min-h-10 flex items-center text-slate-500">Nenhum jogador selecionado.</div>
+          <button type="button" class="btn-secondary whitespace-nowrap" onclick="adminOpenEventRewardPlayerPicker()">Buscar jogador</button>
+        </div>
+        <span class="text-xs text-slate-500 mt-1 block">Selecione um jogador pelo username na lista paginada.</span>
+      </div>
     `;
+    adminRenderSelectedEventRewardPlayer();
   }
   adminUpdateEventRewardPreview();
 }
@@ -784,6 +793,8 @@ async function adminSubmitEventReward(event) {
     adminShowEventRewardResult(`${result.createdCount || 0} premiação(ões) criada(s) para ${payload.recipientLabel}.${suffix}`, true);
     document.getElementById("admin-event-reward-form")?.reset();
     adminEventRewardSelectedPlayers = [];
+    adminEventRewardSelectedPlayer = null;
+    adminEventRewardPlayerPicker = null;
     adminEventRewardSelectedItems = [];
     adminEventRewardItemModalTargetIndex = null;
     adminChangeEventRewardRecipientType();
@@ -796,4 +807,116 @@ async function adminSubmitEventReward(event) {
     adminEventRewardSubmitting = false;
     if (button) { button.disabled = false; button.textContent = "Criar premiação"; }
   }
+}
+
+
+function adminRenderSelectedEventRewardPlayer() {
+  const hidden = document.getElementById("admin-event-reward-player");
+  const selection = document.getElementById("admin-event-reward-player-selection");
+  if (!hidden || !selection) return;
+  hidden.value = adminEventRewardSelectedPlayer?.username || "";
+  selection.innerHTML = adminEventRewardSelectedPlayer
+    ? `<span class="text-cyan-300 font-medium break-words">${escapeHtml(adminEventRewardSelectedPlayer.username)}</span><span class="text-xs text-slate-500 ml-2">${escapeHtml(adminEventRewardSelectedPlayer.email || "")}</span>`
+    : "Nenhum jogador selecionado.";
+  selection.classList.toggle("text-slate-500", !adminEventRewardSelectedPlayer);
+  adminUpdateEventRewardPreview();
+}
+
+function adminOpenEventRewardPlayerPicker() {
+  adminEventRewardPlayerPicker = { search: "", page: 0, pageSize: 8, items: [], totalItems: 0, totalPages: 1, hasNext: false, hasPrevious: false, loading: false, error: "" };
+  const overlay = document.createElement("div");
+  overlay.id = "admin-event-reward-player-picker-modal";
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-content modal-wide" role="dialog" aria-modal="true" aria-labelledby="admin-event-reward-player-picker-title" onclick="event.stopPropagation()">
+      <div class="flex items-start justify-between gap-4 mb-5">
+        <div>
+          <h3 id="admin-event-reward-player-picker-title" class="text-xl font-bold">Selecionar jogador destinatário</h3>
+          <p class="text-sm text-slate-400 mt-1">Pesquise por username e confirme o jogador correto antes de criar a premiação.</p>
+        </div>
+        <button type="button" class="text-slate-400 hover:text-white text-2xl" aria-label="Fechar" data-event-reward-player-picker-close>&times;</button>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2 mb-4">
+        <input id="admin-event-reward-player-picker-search" class="input flex-1" maxlength="30" placeholder="Pesquisar por username" autocomplete="off">
+        <button type="button" class="btn-primary" data-event-reward-player-picker-search>Pesquisar</button>
+      </div>
+      <div id="admin-event-reward-player-picker-results" class="space-y-2 min-h-48"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector("[data-event-reward-player-picker-close]").addEventListener("click", adminCloseEventRewardPlayerPicker);
+  overlay.querySelector("[data-event-reward-player-picker-search]").addEventListener("click", adminSearchEventRewardPlayerPicker);
+  overlay.querySelector("#admin-event-reward-player-picker-search").addEventListener("keydown", event => {
+    if (event.key === "Enter") adminSearchEventRewardPlayerPicker();
+  });
+  overlay.addEventListener("click", event => { if (event.target === overlay) adminCloseEventRewardPlayerPicker(); });
+  document.addEventListener("keydown", adminEventRewardPlayerPickerKeydown);
+  adminLoadEventRewardPlayerPicker();
+  overlay.querySelector("#admin-event-reward-player-picker-search").focus();
+}
+
+function adminEventRewardPlayerPickerKeydown(event) {
+  if (event.key === "Escape") adminCloseEventRewardPlayerPicker();
+}
+
+function adminCloseEventRewardPlayerPicker() {
+  document.getElementById("admin-event-reward-player-picker-modal")?.remove();
+  document.removeEventListener("keydown", adminEventRewardPlayerPickerKeydown);
+  adminEventRewardPlayerPicker = null;
+}
+
+function adminSearchEventRewardPlayerPicker() {
+  const picker = adminEventRewardPlayerPicker;
+  const input = document.getElementById("admin-event-reward-player-picker-search");
+  if (!picker || !input) return;
+  picker.search = input.value.trim();
+  picker.page = 0;
+  adminLoadEventRewardPlayerPicker();
+}
+
+async function adminLoadEventRewardPlayerPicker() {
+  const picker = adminEventRewardPlayerPicker;
+  const container = document.getElementById("admin-event-reward-player-picker-results");
+  if (!picker || !container) return;
+  picker.loading = true;
+  container.innerHTML = `<p class="text-slate-400">Carregando jogadores...</p>`;
+  try {
+    const result = await apiGet("/admin/players", { username: picker.search, page: picker.page, size: picker.pageSize });
+    picker.items = result.items || [];
+    picker.totalItems = Number(result.totalItems || 0);
+    picker.totalPages = Math.max(1, Number(result.totalPages || 1));
+    picker.hasNext = Boolean(result.hasNext);
+    picker.hasPrevious = Boolean(result.hasPrevious);
+    picker.error = "";
+  } catch (error) {
+    picker.items = [];
+    picker.totalItems = 0;
+    picker.totalPages = 1;
+    picker.hasNext = false;
+    picker.hasPrevious = false;
+    picker.error = error.message || "Não foi possível carregar os jogadores.";
+  } finally {
+    picker.loading = false;
+    adminRenderEventRewardPlayerPicker();
+  }
+}
+
+function adminRenderEventRewardPlayerPicker() {
+  const picker = adminEventRewardPlayerPicker;
+  const container = document.getElementById("admin-event-reward-player-picker-results");
+  if (!picker || !container) return;
+  const results = picker.items.length
+    ? picker.items.map(player => `<button type="button" class="card-sm w-full text-left hover:border-cyan-600" data-event-reward-picker-player-id="${escapeAttr(player.id)}"><div class="flex items-center justify-between gap-3"><span class="min-w-0"><span class="block text-cyan-300 font-medium break-words">${escapeHtml(player.username)}</span><span class="block text-xs text-slate-500">${escapeHtml(player.email || "Sem e-mail exibido")} · <span class="font-mono">${escapeHtml(String(player.id).slice(0, 8))}...</span></span></span><span class="text-xs text-slate-400 shrink-0">Selecionar</span></div></button>`).join("")
+    : `<p class="text-slate-500">Nenhum jogador encontrado.</p>`;
+  const errorNotice = picker.error ? `<p class="text-xs text-red-300 mb-2">${escapeHtml(picker.error)}</p>` : "";
+  container.innerHTML = `${errorNotice}<div class="flex items-center justify-between gap-3 mb-2"><p class="text-xs text-slate-500">${picker.totalItems} jogador(es) encontrado(s)</p><div class="flex items-center gap-2"><button type="button" class="btn-secondary text-xs" data-event-reward-picker-previous ${!picker.hasPrevious ? "disabled" : ""}>Anterior</button><span class="text-xs text-slate-400 whitespace-nowrap">Página ${picker.page + 1} de ${picker.totalPages}</span><button type="button" class="btn-secondary text-xs" data-event-reward-picker-next ${!picker.hasNext ? "disabled" : ""}>Próxima</button></div></div><div class="space-y-2">${results}</div>`;
+  container.querySelector("[data-event-reward-picker-previous]")?.addEventListener("click", () => { if (picker.hasPrevious) { picker.page--; adminLoadEventRewardPlayerPicker(); } });
+  container.querySelector("[data-event-reward-picker-next]")?.addEventListener("click", () => { if (picker.hasNext) { picker.page++; adminLoadEventRewardPlayerPicker(); } });
+  container.querySelectorAll("[data-event-reward-picker-player-id]").forEach(button => button.addEventListener("click", () => {
+    const player = picker.items.find(candidate => String(candidate.id) === button.dataset.eventRewardPickerPlayerId);
+    if (!player) return;
+    adminEventRewardSelectedPlayer = { id: player.id, username: player.username, email: player.email };
+    adminRenderSelectedEventRewardPlayer();
+    adminCloseEventRewardPlayerPicker();
+  }));
 }
