@@ -35,8 +35,11 @@ public class EquipUseCase {
         }
         Digimon digimon = digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Active digimon not found"));
         Equipment equipment = equipmentRepository.findById(equipmentId).orElseThrow(() -> new NotFoundException("Equipment not found"));
-        if (!equipment.getDigimonId().equals(digimon.getId())) {
-            throw new ForbiddenException("Equipment does not belong to this Digimon");
+        if (!playerId.equals(equipment.getPlayerId())) {
+            throw new ForbiddenException("Equipment does not belong to this player");
+        }
+        if (equipment.isEquipped() && !digimon.getId().equals(equipment.getDigimonId())) {
+            throw new BadRequestException("Equipment is already equipped by another Digimon");
         }
         EquipmentRules.validateEquip(equipment);
         UUID currentEquipmentId = digimon.getEquipmentIdBySlot(equipment.getSlot());
@@ -44,10 +47,12 @@ public class EquipUseCase {
             Equipment currentEquipment = equipmentRepository.findById(currentEquipmentId).orElse(null);
             if (currentEquipment != null) {
                 currentEquipment.unequip();
+                currentEquipment.setDigimonId(null);
                 equipmentRepository.save(currentEquipment);
             }
         }
         equipment.equip();
+        equipment.setDigimonId(digimon.getId());
         digimon.setEquipmentBySlot(equipment.getSlot(), equipment.getId());
         equipmentRepository.save(equipment);
         digimonRepository.save(digimon);

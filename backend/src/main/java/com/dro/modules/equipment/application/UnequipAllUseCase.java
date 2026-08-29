@@ -37,6 +37,7 @@ public class UnequipAllUseCase {
                 Equipment equipment = equipmentRepository.findById(equipId).orElse(null);
                 if (equipment != null) {
                     equipment.unequip();
+                    equipment.setDigimonId(null);
                     equipmentRepository.save(equipment);
                 }
                 digimon.clearSlot(slot);

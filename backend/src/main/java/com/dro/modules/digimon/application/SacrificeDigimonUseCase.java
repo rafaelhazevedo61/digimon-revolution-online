@@ -51,7 +51,6 @@ public class SacrificeDigimonUseCase {
                 digimon.getIvHp(), digimon.getIvAttack(), digimon.getIvDefense());
         player.addDigitalData(reward);
         playerRepository.save(player);
-        inventoryRepository.deleteByDigimonId(digimon.getId());
         digimon.setStatus(DigimonStatus.SACRIFICED);
         digimonRepository.save(digimon);
         return reward;
