@@ -7,6 +7,7 @@ import com.dro.modules.clan.raid.domain.ClanRaid;
 import com.dro.modules.clan.raid.domain.ClanRaidStatus;
 import com.dro.modules.clan.raid.infra.ClanRaidRepository;
 import com.dro.shared.config.GameplayConfig;
+import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,16 @@ public class ClanRaidService {
             return createNewRaid(clanId);
         }
         return current;
+    }
+
+    @Transactional
+    public ClanRaid forceNewCycle(UUID clanId) {
+        ClanRaid current = clanRaidRepository.findFirstByClanIdOrderByCreatedAtDesc(clanId)
+                .orElseThrow(() -> new NotFoundException("Não existe uma incursão para este clã."));
+        if (current.getStatus() != ClanRaidStatus.DEFEATED) {
+            throw new ConflictException("O novo ciclo só pode ser aberto depois que a incursão atual for derrotada.");
+        }
+        return createNewRaid(clanId);
     }
 
     private ClanRaid createNewRaid(UUID clanId) {

@@ -5,6 +5,7 @@ import com.dro.modules.boss.world.application.AdminForceNewWorldBossCycleUseCase
 import com.dro.modules.boss.world.application.AdminResetWorldBossDailyUseCase;
 import com.dro.modules.clan.application.AdminCompleteClanMissionsUseCase;
 import com.dro.modules.clan.raid.application.AdminResetClanRaidDailyUseCase;
+import com.dro.modules.clan.raid.application.AdminForceNewClanRaidCycleUseCase;
 import com.dro.shared.audit.AdminAuditService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Componente da camada de controller da API do módulo de Administração.
@@ -23,6 +25,7 @@ public class AdminToolsController {
     private final AdminResetClanRaidDailyUseCase resetClanRaidDailyUseCase;
     private final AdminResetWorldBossDailyUseCase resetWorldBossDailyUseCase;
     private final AdminForceNewWorldBossCycleUseCase forceNewWorldBossCycleUseCase;
+    private final AdminForceNewClanRaidCycleUseCase forceNewClanRaidCycleUseCase;
     private final AdminCompleteClanMissionsUseCase completeClanMissionsUseCase;
     private final AdminAuditService adminAuditService;
 
@@ -54,6 +57,13 @@ public class AdminToolsController {
         return ResponseEntity.ok(Map.of("message", "New world boss cycle opened successfully", "instanceId", instance.getId(), "cycleNumber", instance.getCycleNumber(), "bossDate", instance.getBossDate()));
     }
 
+    @PostMapping("/force-new-clan-raid-cycle/{clanId}")
+    public ResponseEntity<Map<String, Object>> forceNewClanRaidCycle(@RequestHeader("Authorization") String authorization, @org.springframework.web.bind.annotation.PathVariable UUID clanId) {
+        var raid = forceNewClanRaidCycleUseCase.execute(clanId);
+        audit(authorization, "ADMIN_FORCE_NEW_CLAN_RAID_CYCLE", "force-new-clan-raid-cycle", Map.of("raidId", raid.getId(), "clanId", clanId));
+        return ResponseEntity.ok(Map.of("message", "Novo ciclo da incursão aberto com sucesso", "raidId", raid.getId(), "clanId", clanId));
+    }
+
     @PostMapping("/complete-clan-missions")
     public ResponseEntity<Map<String, Object>> completeClanMissions(@RequestHeader("Authorization") String authorization) {
         long completed = completeClanMissionsUseCase.execute();
@@ -65,11 +75,12 @@ public class AdminToolsController {
         adminAuditService.success(authorization, eventType, "AdminTool", operation, operation, "Ferramenta administrativa executada", metadata);
     }
 
-    public AdminToolsController(final AdminResetArenaDailyUseCase resetArenaDailyUseCase, final AdminResetClanRaidDailyUseCase resetClanRaidDailyUseCase, final AdminResetWorldBossDailyUseCase resetWorldBossDailyUseCase, final AdminForceNewWorldBossCycleUseCase forceNewWorldBossCycleUseCase, final AdminCompleteClanMissionsUseCase completeClanMissionsUseCase, final AdminAuditService adminAuditService) {
+    public AdminToolsController(final AdminResetArenaDailyUseCase resetArenaDailyUseCase, final AdminResetClanRaidDailyUseCase resetClanRaidDailyUseCase, final AdminResetWorldBossDailyUseCase resetWorldBossDailyUseCase, final AdminForceNewWorldBossCycleUseCase forceNewWorldBossCycleUseCase, final AdminForceNewClanRaidCycleUseCase forceNewClanRaidCycleUseCase, final AdminCompleteClanMissionsUseCase completeClanMissionsUseCase, final AdminAuditService adminAuditService) {
         this.resetArenaDailyUseCase = resetArenaDailyUseCase;
         this.resetClanRaidDailyUseCase = resetClanRaidDailyUseCase;
         this.resetWorldBossDailyUseCase = resetWorldBossDailyUseCase;
         this.forceNewWorldBossCycleUseCase = forceNewWorldBossCycleUseCase;
+        this.forceNewClanRaidCycleUseCase = forceNewClanRaidCycleUseCase;
         this.completeClanMissionsUseCase = completeClanMissionsUseCase;
         this.adminAuditService = adminAuditService;
     }
