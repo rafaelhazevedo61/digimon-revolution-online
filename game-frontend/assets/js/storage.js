@@ -221,7 +221,8 @@ function storageRenderList() {
         ${renderDigimonVisual(d.imageUrl, d.stage, "w-16 h-16", "text-4xl")}
         <div class="flex-1 min-w-0">
           <p class="font-bold text-sm truncate">${escapeHtml(d.name)}</p>
-          <p class="text-xs text-slate-400">Lv.${d.level} | ${escapeHtml(d.stage)} | ${formatRarity(d.rarity)}</p>
+          <p class="text-xs text-slate-400">Lv.${d.level} | ${escapeHtml(d.stage)} | ${formatRarity(d.rarity)} ${renderRarityDieIndicator(d)}</p>
+          ${renderRarityDieDetails(d)}
           <p class="text-xs text-slate-500">HP ${d.hp} ATK ${d.attack} DEF ${d.defense}</p>
           <p class="text-xs text-cyan-300 mt-1">Sacrifício: +${calculateDigitalDataPreview(d)} Dados Digitais</p>
         </div>

@@ -186,3 +186,21 @@ function renderDigimonVisual(imageUrl, stage, sizeClass = "w-14 h-14", emojiClas
     </div>
   `;
 }
+
+function renderRarityDieIndicator(digimon) {
+  if (!digimon?.rarityChangedByDie) return "";
+  const original = digimon.originalRarityBeforeDie ? formatRarity(digimon.originalRarityBeforeDie) : "não registrada";
+  const date = digimon.rarityChangedByDieAt ? new Date(digimon.rarityChangedByDieAt).toLocaleDateString("pt-BR") : "data não registrada";
+  return `<span class="rarity-die-indicator" title="Raridade alterada pelo Dado de Raridade. Original: ${escapeHtml(original)}. Data: ${date}. IVs e atributos originais não foram recalculados." aria-label="Raridade alterada pelo Dado de Raridade">🎲</span>`;
+}
+
+function renderRarityDieDetails(digimon) {
+  if (!digimon?.rarityChangedByDie) return "";
+  const original = digimon.originalRarityBeforeDie ? formatRarity(digimon.originalRarityBeforeDie) : "Não registrada";
+  const date = digimon.rarityChangedByDieAt ? new Date(digimon.rarityChangedByDieAt).toLocaleString("pt-BR") : "Não registrada";
+  return `<div class="rarity-die-details mt-3" role="note"><p class="font-semibold text-amber-200">🎲 Raridade alterada pelo Dado de Raridade</p><p class="mt-1">Raridade original: <strong>${escapeHtml(original)}</strong></p><p>Alterada em: <strong>${escapeHtml(date)}</strong></p><p class="mt-1 text-slate-400">Os IVs e atributos definidos no nascimento não foram recalculados.</p></div>`;
+}
+
+function rarityDieIndicator(digimon) {
+  return renderRarityDieIndicator(digimon);
+}

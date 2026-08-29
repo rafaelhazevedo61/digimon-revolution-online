@@ -208,7 +208,7 @@ function rankRenderModal(d, playerName) {
         <div class="flex gap-2 mt-1 flex-wrap">
           <span class="badge badge-${d.stage.toLowerCase()}">${stage}</span>
           <span class="badge ${gradeBadge}">${escapeHtml(d.grade)}</span>
-          <span class="badge badge-${(d.rarity || 'COMMON').toLowerCase()}">${escapeHtml(d.rarity)}</span>
+          <span class="badge badge-${(d.rarity || 'COMMON').toLowerCase()}">${escapeHtml(formatRarity(d.rarity))}</span>${renderRarityDieIndicator(d)}
         </div>
         <div class="flex gap-2 mt-1 flex-wrap">
           ${d.attribute ? `<span class="badge badge-common">${escapeHtml(d.attribute)}</span>` : ""}
@@ -217,6 +217,7 @@ function rankRenderModal(d, playerName) {
         </div>
         ${d.rebirthCount > 0 ? `<p class="text-xs text-amber-400 mt-1">🔄 Rebirth x${d.rebirthCount}</p>` : ""}
         ${playerName ? `<p class="text-xs text-slate-500 mt-1">👤 ${escapeHtml(playerName)}</p>` : ""}
+        ${renderRarityDieDetails(d)}
       </div>
     </div>
 

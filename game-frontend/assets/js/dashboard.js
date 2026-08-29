@@ -200,7 +200,7 @@ function renderDigimonCard(d) {
           <p class="text-xs text-slate-400">${escapeHtml(formatDigimonType(d.type))}</p>
           <div class="flex gap-2 mt-1 flex-wrap">
             <span class="badge badge-${d.stage.toLowerCase()}">${escapeHtml(formatStage(d.stage))}</span>
-            <span class="badge badge-${d.rarity.toLowerCase()}">${escapeHtml(formatRarity(d.rarity))}</span>
+            <span class="badge badge-${d.rarity.toLowerCase()}">${escapeHtml(formatRarity(d.rarity))}</span>${renderRarityDieIndicator(d)}
             ${d.attribute ? `<span class="badge badge-common">${escapeHtml(formatAttribute(d.attribute))}</span>` : ""}
             ${d.element ? `<span class="badge badge-common">${escapeHtml(formatElement(d.element))}</span>` : ""}
           </div>
