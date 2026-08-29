@@ -618,7 +618,7 @@ function clanStorageRenderDepositModalResults() {
             <span class="w-9 h-9 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center">${clanStorageDepositItemIcon(item)}</span>
             <span class="min-w-0 flex-1">
               <span class="block text-cyan-300 font-medium truncate">${escapeHtml(definition.name || definition.code || "Item")}</span>
-              <span class="block text-xs text-slate-500 truncate">${escapeHtml(definition.code || definition.category || "Item")} · ${Number(item.quantity).toLocaleString("pt-BR")} disponível(is)</span>
+              <span class="block text-xs text-slate-500 truncate">${escapeHtml(clanStorageDepositCategoryLabel(definition.category))} · ${Number(item.quantity).toLocaleString("pt-BR")} disponível(is)</span>
             </span>
             <span class="text-xs text-slate-400 shrink-0">${selected ? "Selecionado" : "Selecionar"}</span>
           </div>
@@ -647,6 +647,18 @@ function clanStorageRenderDepositModalResults() {
   container.querySelectorAll("[data-clan-storage-deposit-item-id]").forEach(button => {
     button.addEventListener("click", () => clanStorageSelectDepositItem(button.dataset.clanStorageDepositItemId));
   });
+}
+
+function clanStorageDepositCategoryLabel(category) {
+  return {
+    CONSUMABLE: "Consumível",
+    MATERIAL: "Material",
+    EVOLUTION_MATERIAL: "Material de evolução",
+    FRAGMENT: "Fragmento",
+    DIGITAMA: "Digitama",
+    INCUBATOR: "Incubadora",
+    CHEST: "Baú"
+  }[String(category || "").toUpperCase()] || "Item negociável";
 }
 
 function clanStorageDepositItemIcon(item) {
