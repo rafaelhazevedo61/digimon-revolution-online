@@ -79,7 +79,7 @@ async function renderMorePage() {
         {
           route: "storage",
           icon: "📦",
-          title: "Storage",
+          title: "Armazém Digimon",
           desc: "Gerenciar Digimons armazenados e tornar um parceiro ativo",
         },
         {
