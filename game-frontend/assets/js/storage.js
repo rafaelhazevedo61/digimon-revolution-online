@@ -226,9 +226,9 @@ function storageRenderList() {
         </label>
         ${renderDigimonVisual(d.imageUrl, d.stage, "w-16 h-16", "text-4xl")}
         <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 min-w-0">
-            <p class="font-bold text-sm truncate">${escapeHtml(d.name)}</p>
-            ${locked ? '<span class="text-xs text-amber-300 whitespace-nowrap" title="Protegido contra sacrifício">🔒 Bloqueado</span>' : ""}
+          <div class="min-w-0">
+            <p class="font-bold text-sm break-words" style="overflow-wrap:anywhere">${escapeHtml(d.name)}</p>
+            ${locked ? '<span class="block text-xs text-amber-300 mt-1" title="Protegido contra sacrifício">🔒 Bloqueado</span>' : ""}
           </div>
           <p class="text-xs text-slate-400">Lv.${d.level} | ${escapeHtml(d.stage)} | ${formatRarity(d.rarity)} ${renderRarityDieIndicator(d)}</p>
           ${renderRarityDieDetails(d)}
