@@ -50,7 +50,7 @@ INSERT INTO boss_definitions (
     15,
     30,
     2500,
-    1000,
+    100,
     5,
     'https://digimon.shadowsmith.com/img/omegamon.jpg',
     TRUE
