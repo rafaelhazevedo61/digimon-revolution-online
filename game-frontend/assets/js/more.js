@@ -82,13 +82,13 @@ async function renderMorePage() {
         },
         {
           route: "storage",
-          icon: "📦",
+          iconImage: "assets/img/armazemdigimon.webp",
           title: "Armazém Digimon",
           desc: "Gerenciar Digimons armazenados e tornar um parceiro ativo",
         },
         {
           route: "pokedex",
-          icon: "📖",
+          iconImage: "assets/img/bibliotecadigimon.webp",
           title: "Biblioteca Digimon",
           desc: "Catálogo de todos os Digimons",
         },
@@ -99,7 +99,7 @@ async function renderMorePage() {
       items: [
         {
           route: "settings",
-          icon: "⚙️",
+          iconImage: "assets/img/digivice.webp",
           title: "Configurações",
           desc: "Conta e preferências",
         },
