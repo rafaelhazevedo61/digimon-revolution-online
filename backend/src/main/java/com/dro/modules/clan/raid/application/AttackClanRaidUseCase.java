@@ -117,7 +117,7 @@ public class AttackClanRaidUseCase {
             raid.setDefeatedAt(Instant.now());
             Clan clan = clanRepository.findById(player.getClanId()).orElseThrow(() -> new NotFoundException("Clan not found"));
             double honorMarksMultiplier = 1.0 + clanBonusService.getHonorMarksBonusPercent(clan.getId());
-            clanHonorMarksGained = (int) Math.floor(boss.getBaseBitsReward() * honorMarksMultiplier);
+            clanHonorMarksGained = (int) Math.floor(boss.getClanHonorMarksReward() * honorMarksMultiplier);
             clanXpGained = boss.getBaseXpReward();
             clan.setHonorMarks(clan.getHonorMarks() + clanHonorMarksGained);
             ClanRules.addExperience(clan, clanXpGained);

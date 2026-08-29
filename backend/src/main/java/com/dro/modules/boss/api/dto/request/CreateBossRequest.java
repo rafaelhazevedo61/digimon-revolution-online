@@ -20,6 +20,7 @@ public record CreateBossRequest(
         @NotNull Integer cooldownMinutes,
         @NotNull Integer baseXpReward,
         @NotNull Integer baseBitsReward,
+        @NotNull Integer clanHonorMarksReward,
         Integer defeatXpPercent,
         String imageUrl,
         String chestCode,

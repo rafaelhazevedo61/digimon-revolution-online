@@ -45,6 +45,8 @@ public class BossDefinitionEntity {
     private int baseXpReward;
     @Column(name = "base_bits_reward", nullable = false)
     private int baseBitsReward;
+    @Column(name = "clan_honor_marks_reward", nullable = false)
+    private int clanHonorMarksReward;
     @Column(name = "defeat_xp_percent", nullable = false)
     private int defeatXpPercent;
     @Column(name = "image_url")
@@ -154,6 +156,7 @@ public class BossDefinitionEntity {
         private int cooldownMinutes;
         private int baseXpReward;
         private int baseBitsReward;
+        private int clanHonorMarksReward;
         private int defeatXpPercent;
         private String imageUrl;
         private boolean active;
@@ -278,6 +281,11 @@ public class BossDefinitionEntity {
             return this;
         }
 
+        public BossDefinitionEntity.BossDefinitionEntityBuilder clanHonorMarksReward(final int clanHonorMarksReward) {
+            this.clanHonorMarksReward = clanHonorMarksReward;
+            return this;
+        }
+
         /**
          * @return {@code this}.
          */
@@ -351,7 +359,7 @@ public class BossDefinitionEntity {
         }
 
         public BossDefinitionEntity build() {
-            return new BossDefinitionEntity(this.id, this.code, this.name, this.bossType, this.requiredStage, this.requiredLevel, this.requiredRebirths, this.hp, this.atk, this.def, this.energyCost, this.cooldownMinutes, this.baseXpReward, this.baseBitsReward, this.defeatXpPercent, this.imageUrl, this.active, this.chestDefinition, this.worldAttemptChestDefinition, this.worldTopDamageChestDefinition, this.worldFinalBlowChestDefinition, this.drops);
+            return new BossDefinitionEntity(this.id, this.code, this.name, this.bossType, this.requiredStage, this.requiredLevel, this.requiredRebirths, this.hp, this.atk, this.def, this.energyCost, this.cooldownMinutes, this.baseXpReward, this.baseBitsReward, this.clanHonorMarksReward, this.defeatXpPercent, this.imageUrl, this.active, this.chestDefinition, this.worldAttemptChestDefinition, this.worldTopDamageChestDefinition, this.worldFinalBlowChestDefinition, this.drops);
         }
 
         @Override
@@ -418,6 +426,10 @@ public class BossDefinitionEntity {
 
     public int getBaseBitsReward() {
         return this.baseBitsReward;
+    }
+
+    public int getClanHonorMarksReward() {
+        return this.clanHonorMarksReward;
     }
 
     public int getDefeatXpPercent() {
@@ -520,6 +532,10 @@ public class BossDefinitionEntity {
         this.baseBitsReward = baseBitsReward;
     }
 
+    public void setClanHonorMarksReward(final int clanHonorMarksReward) {
+        this.clanHonorMarksReward = clanHonorMarksReward;
+    }
+
     public void setDefeatXpPercent(final int defeatXpPercent) {
         this.defeatXpPercent = defeatXpPercent;
     }
@@ -584,6 +600,7 @@ public class BossDefinitionEntity {
      * @param cooldownMinutes
      * @param baseXpReward
      * @param baseBitsReward
+     * @param clanHonorMarksReward
      * @param defeatXpPercent
      * @param imageUrl
      * @param active
@@ -593,7 +610,7 @@ public class BossDefinitionEntity {
      * @param worldFinalBlowChestDefinition Baú concedido ao jogador que desferiu o golpe final.
      * @param drops
      */
-    public BossDefinitionEntity(final Long id, final String code, final String name, final BossType bossType, final Stage requiredStage, final int requiredLevel, final int requiredRebirths, final int hp, final int atk, final int def, final int energyCost, final int cooldownMinutes, final int baseXpReward, final int baseBitsReward, final int defeatXpPercent, final String imageUrl, final boolean active, final ChestDefinitionEntity chestDefinition, final ChestDefinitionEntity worldAttemptChestDefinition, final ChestDefinitionEntity worldTopDamageChestDefinition, final ChestDefinitionEntity worldFinalBlowChestDefinition, final List<BossDropEntity> drops) {
+    public BossDefinitionEntity(final Long id, final String code, final String name, final BossType bossType, final Stage requiredStage, final int requiredLevel, final int requiredRebirths, final int hp, final int atk, final int def, final int energyCost, final int cooldownMinutes, final int baseXpReward, final int baseBitsReward, final int clanHonorMarksReward, final int defeatXpPercent, final String imageUrl, final boolean active, final ChestDefinitionEntity chestDefinition, final ChestDefinitionEntity worldAttemptChestDefinition, final ChestDefinitionEntity worldTopDamageChestDefinition, final ChestDefinitionEntity worldFinalBlowChestDefinition, final List<BossDropEntity> drops) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -608,6 +625,7 @@ public class BossDefinitionEntity {
         this.cooldownMinutes = cooldownMinutes;
         this.baseXpReward = baseXpReward;
         this.baseBitsReward = baseBitsReward;
+        this.clanHonorMarksReward = clanHonorMarksReward;
         this.defeatXpPercent = defeatXpPercent;
         this.imageUrl = imageUrl;
         this.active = active;
