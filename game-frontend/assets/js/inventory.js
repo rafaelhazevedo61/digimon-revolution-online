@@ -391,9 +391,9 @@ function invRenderItems() {
     const incubationOnly = digitamaItem || incubatorItem;
     const usable = !incubationOnly && (def ? def.usable : invIsUsable(item.itemType));
     const action = isChest && chestCode ? `
-      <div class="flex items-center gap-2">
-        <input id="${chestQuantityInputId}" class="input w-16 text-center" type="number" min="1" max="${maxUseQuantity}" value="1" aria-label="Quantidade de baús" />
-        <button class="btn-sm btn-primary whitespace-nowrap" onclick="invOpenChest('${escapeHtml(chestCode)}', document.getElementById('${chestQuantityInputId}').value)">Abrir</button>
+      <div class="inventory-chest-controls flex items-center gap-1">
+        <input id="${chestQuantityInputId}" class="input inventory-quantity-input text-center" type="number" min="1" max="${maxUseQuantity}" value="1" aria-label="Quantidade de baús" />
+        <button class="btn-sm btn-primary inventory-chest-open-btn whitespace-nowrap" onclick="invOpenChest('${escapeHtml(chestCode)}', document.getElementById('${chestQuantityInputId}').value)">Abrir</button>
       </div>
     ` : incubatorItem ? `
       <button class="btn-sm btn-primary whitespace-nowrap" onclick="navigateTo('incubation')">Usar</button>
