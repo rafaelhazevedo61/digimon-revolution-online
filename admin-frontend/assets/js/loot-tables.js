@@ -258,39 +258,43 @@ function lootTableRenderEntryRow(entry) {
   const selectedCode = entry.itemCode || entry.materialCode || entry.itemType || "";
   const selectedItem = lootTableState.catalog.find(item => item.code === selectedCode);
   const selectedLabel = selectedItem ? `${selectedItem.name} — ${selectedItem.code}` : "Nenhum item selecionado";
+  const entryId = entry._uiId || entry.id || "new";
   return `
-    <div class="card-sm loot-entry-row" data-entry-id="${escapeAttr(entry._uiId || entry.id || "new")}">
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-        <div class="md:col-span-4 min-w-0">
+    <div class="card-sm loot-entry-row" data-entry-id="${escapeAttr(entryId)}">
+      <div class="loot-entry-layout">
+        <div class="loot-entry-item-field min-w-0">
           <label class="text-xs text-slate-500">Item catalogado</label>
           <input type="hidden" class="loot-entry-item" value="${escapeAttr(selectedCode)}" />
           <div class="loot-selected-item card-sm mt-1 min-w-0 flex items-center justify-between gap-2">
             <span class="min-w-0 loot-selected-item-label" title="${escapeAttr(selectedLabel)}">${escapeHtml(selectedLabel)}</span>
-            <button type="button" class="btn-sm btn-secondary shrink-0" onclick="lootTableOpenItemPicker('${escapeAttr(entry._uiId || entry.id || "new")}')">Buscar item</button>
+            <button type="button" class="btn-sm btn-secondary shrink-0" onclick="lootTableOpenItemPicker('${escapeAttr(entryId)}')">Buscar item</button>
           </div>
         </div>
-        <div class="md:col-span-2">
+        <div class="loot-entry-rarity-field">
           <label class="text-xs text-slate-500">Raridade</label>
           <select class="input mt-1 loot-entry-rarity" required>
             ${lootTableRarityOptions(entry.rarity)}
           </select>
         </div>
-        <div>
-          <label class="text-xs text-slate-500">Peso</label>
-          <input class="input mt-1 loot-entry-weight" type="number" min="1" value="${Number(entry.weight || 1)}" required />
-        </div>
-        <div>
-          <label class="text-xs text-slate-500">Mín.</label>
-          <input class="input mt-1 loot-entry-min" type="number" min="1" value="${Number(entry.minQuantity || 1)}" required />
-        </div>
-        <div>
-          <label class="text-xs text-slate-500">Máx.</label>
-          <input class="input mt-1 loot-entry-max" type="number" min="1" value="${Number(entry.maxQuantity || 1)}" required />
-        </div>
-        <label class="md:col-span-2 flex items-center gap-2 text-xs text-slate-400 pb-2">
-          <input class="loot-entry-active accent-cyan-500" type="checkbox" ${entry.active !== false ? "checked" : ""} /> Ativo
+        <label class="loot-entry-active-field flex items-center gap-2 text-xs text-slate-400">
+          <input class="loot-entry-active accent-cyan-500" type="checkbox" ${entry.active !== false ? "checked" : ""} />
+          <span>Ativo</span>
         </label>
-        <button type="button" class="btn-sm btn-danger md:col-span-2" onclick="lootTableRemoveEntryRow(this)">Remover</button>
+        <button type="button" class="btn-sm btn-danger loot-entry-remove" onclick="lootTableRemoveEntryRow(this)">Remover</button>
+        <div class="loot-entry-quantity-fields">
+          <label>
+            <span class="text-xs text-slate-500">Peso</span>
+            <input class="input mt-1 loot-entry-weight" type="number" min="1" value="${Number(entry.weight || 1)}" required />
+          </label>
+          <label>
+            <span class="text-xs text-slate-500">Quantidade mínima</span>
+            <input class="input mt-1 loot-entry-min" type="number" min="1" value="${Number(entry.minQuantity || 1)}" required />
+          </label>
+          <label>
+            <span class="text-xs text-slate-500">Quantidade máxima</span>
+            <input class="input mt-1 loot-entry-max" type="number" min="1" value="${Number(entry.maxQuantity || 1)}" required />
+          </label>
+        </div>
       </div>
     </div>
   `;

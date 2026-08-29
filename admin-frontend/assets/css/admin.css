@@ -253,6 +253,71 @@
     line-height: 1.25;
   }
 
+  .loot-entry-layout {
+    display: grid;
+    grid-template-columns: minmax(20rem, 3fr) minmax(11rem, 1.35fr) auto auto;
+    gap: 0.9rem 1rem;
+    align-items: end;
+  }
+
+  .loot-entry-item-field,
+  .loot-entry-rarity-field {
+    min-width: 0;
+  }
+
+  .loot-entry-active-field {
+    min-height: 2.75rem;
+    padding: 0 0.25rem 0.2rem;
+    white-space: nowrap;
+  }
+
+  .loot-entry-remove {
+    min-width: 5.75rem;
+    min-height: 2.25rem;
+  }
+
+  .loot-entry-quantity-fields {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(9rem, 1fr));
+    gap: 0.75rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid #24344d;
+  }
+
+  @media (max-width: 900px) {
+    .loot-entry-layout {
+      grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.8fr);
+    }
+
+    .loot-entry-item-field {
+      grid-column: 1 / -1;
+    }
+
+    .loot-entry-active-field,
+    .loot-entry-remove {
+      justify-self: start;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .loot-entry-layout,
+    .loot-entry-quantity-fields {
+      grid-template-columns: 1fr;
+    }
+
+    .loot-entry-item-field,
+    .loot-entry-quantity-fields {
+      grid-column: auto;
+    }
+
+    .loot-entry-active-field,
+    .loot-entry-remove {
+      width: 100%;
+      justify-self: stretch;
+    }
+  }
+
   @media (max-width: 768px) {
     .loot-table-modal {
       max-width: calc(100vw - 2rem);
