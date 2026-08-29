@@ -6,7 +6,12 @@ let auctionState = {
   category: "",
   rarity: "",
   dashboard: null,
-  inventory: []
+  inventory: [],
+  createEligible: [],
+  createSearch: "",
+  createPage: 0,
+  createPageSize: 10,
+  createSelectedItemId: null
 };
 
 async function renderAuctionHousePage() {
@@ -271,6 +276,10 @@ async function auctionShowCreateForm() {
     const eligible = auctionState.inventory.filter(item =>
       item.quantity > 0 && item.itemDefinition && item.itemDefinition.tradable && item.itemDefinition.stackable
     );
+    auctionState.createEligible = eligible;
+    auctionState.createSearch = "";
+    auctionState.createPage = 0;
+    auctionState.createSelectedItemId = eligible[0]?.itemDefinition?.id || null;
     content.innerHTML = `
       <div class="card space-y-4">
         <div class="flex items-center justify-between">
@@ -283,9 +292,9 @@ async function auctionShowCreateForm() {
         ${eligible.length ? `
           <form onsubmit="auctionCreate(event)" class="space-y-3">
             <label class="block text-xs text-slate-400">Item
-              <select id="auction-create-item" class="input w-full mt-1" required>
-                ${eligible.map(item => `<option value="${item.itemDefinition.id}" data-quantity="${item.quantity}">${escapeHtml(item.itemDefinition.name)} — ${item.quantity} disponível(is)</option>`).join("")}
-              </select>
+              <input id="auction-create-item-search" class="input w-full mt-1" type="search" placeholder="Buscar item por nome ou código..." oninput="auctionFilterCreateItems(this.value)" autocomplete="off" />
+              <select id="auction-create-item" class="input w-full mt-1" onchange="auctionSelectCreateItem(this.value)" required></select>
+              <div id="auction-create-item-page" class="mt-2"></div>
             </label>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <label class="block text-xs text-slate-400">Quantidade<input id="auction-create-quantity" class="input w-full mt-1" type="number" min="1" value="1" required /></label>
@@ -298,14 +307,78 @@ async function auctionShowCreateForm() {
         ` : `<p class="text-sm text-slate-400">Você não possui itens negociáveis disponíveis no Digimon ativo.</p>`}
       </div>
     `;
+    auctionRenderCreateItemSelector();
   } catch (error) {
     content.innerHTML = `<div class="card border-red-900 text-red-300">${escapeHtml(error.message)}</div>`;
   }
 }
 
+function auctionFilterCreateItems(search) {
+  auctionState.createSearch = String(search || "").trim().toLowerCase();
+  auctionState.createPage = 0;
+  auctionRenderCreateItemSelector();
+}
+
+function auctionSelectCreateItem(itemDefinitionId) {
+  auctionState.createSelectedItemId = Number(itemDefinitionId);
+  const item = auctionState.createEligible.find(entry => Number(entry.itemDefinition.id) === auctionState.createSelectedItemId);
+  const quantityInput = document.getElementById("auction-create-quantity");
+  if (quantityInput && item) {
+    quantityInput.max = item.quantity;
+    if (Number(quantityInput.value) > item.quantity) quantityInput.value = item.quantity;
+  }
+}
+
+function auctionChangeCreateItemPage(delta) {
+  const filtered = auctionFilteredCreateItems();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / auctionState.createPageSize));
+  auctionState.createPage = Math.max(0, Math.min(totalPages - 1, auctionState.createPage + delta));
+  auctionRenderCreateItemSelector();
+}
+
+function auctionFilteredCreateItems() {
+  const search = auctionState.createSearch;
+  if (!search) return auctionState.createEligible;
+  return auctionState.createEligible.filter(item => {
+    const definition = item.itemDefinition || {};
+    return [definition.name, definition.code, definition.itemType]
+      .filter(Boolean)
+      .some(value => String(value).toLowerCase().includes(search));
+  });
+}
+
+function auctionRenderCreateItemSelector() {
+  const select = document.getElementById("auction-create-item");
+  const pagination = document.getElementById("auction-create-item-page");
+  if (!select || !pagination) return;
+
+  const filtered = auctionFilteredCreateItems();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / auctionState.createPageSize));
+  auctionState.createPage = Math.min(auctionState.createPage, totalPages - 1);
+  const start = auctionState.createPage * auctionState.createPageSize;
+  const pageItems = filtered.slice(start, start + auctionState.createPageSize);
+  const selectedStillVisible = pageItems.some(item => Number(item.itemDefinition.id) === Number(auctionState.createSelectedItemId));
+  if (!selectedStillVisible && pageItems.length) auctionState.createSelectedItemId = Number(pageItems[0].itemDefinition.id);
+
+  select.innerHTML = pageItems.length
+    ? pageItems.map(item => `<option value="${item.itemDefinition.id}" data-quantity="${item.quantity}"${Number(item.itemDefinition.id) === Number(auctionState.createSelectedItemId) ? " selected" : ""}>${escapeHtml(item.itemDefinition.name)} — ${Number(item.quantity).toLocaleString("pt-BR")} disponível(is)</option>`).join("")
+    : `<option value="" disabled selected>Nenhum item encontrado</option>`;
+  select.disabled = pageItems.length === 0;
+  select.required = pageItems.length > 0;
+  auctionSelectCreateItem(select.value);
+
+  pagination.innerHTML = filtered.length > 0
+    ? `<div class="flex items-center justify-between gap-2"><button type="button" class="btn-sm btn-secondary" ${auctionState.createPage === 0 ? "disabled" : ""} onclick="auctionChangeCreateItemPage(-1)">Anterior</button><span class="text-xs text-slate-400">${start + 1}-${Math.min(start + pageItems.length, filtered.length)} de ${filtered.length} · Página ${auctionState.createPage + 1}/${totalPages}</span><button type="button" class="btn-sm btn-secondary" ${auctionState.createPage >= totalPages - 1 ? "disabled" : ""} onclick="auctionChangeCreateItemPage(1)">Próxima</button></div>`
+    : `<p class="text-xs text-slate-500 mt-1">Nenhum item negociável corresponde à busca.</p>`;
+}
+
 async function auctionCreate(event) {
   event.preventDefault();
   const itemDefinitionId = Number(document.getElementById("auction-create-item").value);
+  if (!Number.isInteger(itemDefinitionId) || itemDefinitionId <= 0) {
+    showToast("Selecione um item negociável para publicar.", "error");
+    return;
+  }
   const quantity = Number(document.getElementById("auction-create-quantity").value);
   const unitPrice = Number(document.getElementById("auction-create-price").value);
   const durationHours = Number(document.getElementById("auction-create-duration").value);
