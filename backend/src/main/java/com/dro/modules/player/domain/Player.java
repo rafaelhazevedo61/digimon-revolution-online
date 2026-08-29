@@ -11,7 +11,7 @@ import java.util.UUID;
  *
  * <p>O jogador mantém o Digimon ativo, o vínculo opcional com clã, limites de
  * armazenamento e o tipo de usuário usado na autorização administrativa. Bits,
- * inventário e equipamentos ficam vinculados aos Digimons associados.</p>
+ * inventário e equipamentos ficam vinculados ao jogador.</p>
  */
 @Entity
 @Table(name = "players")
@@ -45,8 +45,12 @@ public class Player {
     private int maxStorageSlots;
     @Column(name = "arena_coins", nullable = false)
     private int arenaCoins;
+    @Column(name = "bits", nullable = false)
+    private int bits;
     @Column(name = "digital_data", nullable = false)
     private int digitalData;
+    @Column(name = "username_change_count", nullable = false)
+    private int usernameChangeCount;
     @Column(name = "unlocked_incubation_slots", nullable = false)
     private int unlockedIncubationSlots;
     @Column(name = "clan_id")
@@ -89,6 +93,14 @@ public class Player {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public int getUsernameChangeCount() {
+        return usernameChangeCount;
+    }
+
+    public void incrementUsernameChangeCount() {
+        this.usernameChangeCount++;
     }
 
     public void incrementTokenVersion() {
@@ -203,6 +215,27 @@ public class Player {
         this.arenaCoins = arenaCoins;
     }
 
+    public int getBits() {
+        return bits;
+    }
+
+    public void setBits(int bits) {
+        if (bits < 0) throw new IllegalArgumentException("Bits cannot be negative");
+        this.bits = bits;
+    }
+
+    public void addBits(int amount) {
+        if (amount < 0) throw new IllegalArgumentException("Bits amount cannot be negative");
+        if ((long) bits + amount > Integer.MAX_VALUE) throw new IllegalArgumentException("Bits overflow");
+        this.bits += amount;
+    }
+
+    public boolean spendBits(int amount) {
+        if (amount < 0 || bits < amount) return false;
+        bits -= amount;
+        return true;
+    }
+
     public int getUnlockedIncubationSlots() {
         return unlockedIncubationSlots;
     }
@@ -279,15 +312,21 @@ public class Player {
         return 50;
     }
 
-    private static int $default$arenaCoins() {
+        private static int $default$arenaCoins() {
         return 0;
     }
-
+    private static int $default$bits() {
+        return 0;
+    }
     private static int $default$unlockedIncubationSlots() {
         return 1;
     }
 
     private static int $default$digitalData() {
+        return 0;
+    }
+
+    private static int $default$usernameChangeCount() {
         return 0;
     }
 
@@ -311,10 +350,14 @@ public class Player {
         private int maxStorageSlots$value;
         private boolean arenaCoins$set;
         private int arenaCoins$value;
+        private boolean bits$set;
+        private int bits$value;
         private boolean unlockedIncubationSlots$set;
         private int unlockedIncubationSlots$value;
         private boolean digitalData$set;
         private int digitalData$value;
+        private boolean usernameChangeCount$set;
+        private int usernameChangeCount$value;
         private UUID clanId;
         private ClanRole clanRole;
         private LocalDateTime clanJoinedAt;
@@ -443,6 +486,12 @@ public class Player {
         /**
          * @return {@code this}.
          */
+        public Player.PlayerBuilder bits(final int bits) {
+            this.bits$value = bits;
+            bits$set = true;
+            return this;
+        }
+
         public Player.PlayerBuilder unlockedIncubationSlots(final int unlockedIncubationSlots) {
             this.unlockedIncubationSlots$value = unlockedIncubationSlots;
             unlockedIncubationSlots$set = true;
@@ -455,6 +504,12 @@ public class Player {
         public Player.PlayerBuilder digitalData(final int digitalData) {
             this.digitalData$value = digitalData;
             digitalData$set = true;
+            return this;
+        }
+
+        public Player.PlayerBuilder usernameChangeCount(final int usernameChangeCount) {
+            this.usernameChangeCount$value = usernameChangeCount;
+            usernameChangeCount$set = true;
             return this;
         }
 
@@ -501,11 +556,15 @@ public class Player {
             if (!this.maxStorageSlots$set) maxStorageSlots$value = Player.$default$maxStorageSlots();
             int arenaCoins$value = this.arenaCoins$value;
             if (!this.arenaCoins$set) arenaCoins$value = Player.$default$arenaCoins();
+            int bits$value = this.bits$value;
+            if (!this.bits$set) bits$value = Player.$default$bits();
             int unlockedIncubationSlots$value = this.unlockedIncubationSlots$value;
             if (!this.unlockedIncubationSlots$set) unlockedIncubationSlots$value = Player.$default$unlockedIncubationSlots();
             int digitalData$value = this.digitalData$value;
             if (!this.digitalData$set) digitalData$value = Player.$default$digitalData();
-            return new Player(this.id, this.username, this.email, this.password, this.createdAt, this.selectedDigitama, this.activeDigimonId, this.lastMissionAt, this.starterSelected, userType$value, tokenVersion$value, maxDigimonSlots$value, maxStorageSlots$value, arenaCoins$value, unlockedIncubationSlots$value, digitalData$value, this.clanId, this.clanRole, this.clanJoinedAt, this.arenaDailyResetAt);
+            int usernameChangeCount$value = this.usernameChangeCount$value;
+            if (!this.usernameChangeCount$set) usernameChangeCount$value = Player.$default$usernameChangeCount();
+            return new Player(this.id, this.username, this.email, this.password, this.createdAt, this.selectedDigitama, this.activeDigimonId, this.lastMissionAt, this.starterSelected, userType$value, tokenVersion$value, maxDigimonSlots$value, maxStorageSlots$value, arenaCoins$value, bits$value, unlockedIncubationSlots$value, digitalData$value, usernameChangeCount$value, this.clanId, this.clanRole, this.clanJoinedAt, this.arenaDailyResetAt);
         }
 
         @Override
@@ -524,11 +583,13 @@ public class Player {
         this.maxDigimonSlots = Player.$default$maxDigimonSlots();
         this.maxStorageSlots = Player.$default$maxStorageSlots();
         this.arenaCoins = Player.$default$arenaCoins();
+        this.bits = Player.$default$bits();
         this.unlockedIncubationSlots = Player.$default$unlockedIncubationSlots();
         this.digitalData = Player.$default$digitalData();
+        this.usernameChangeCount = Player.$default$usernameChangeCount();
     }
 
-    public Player(final UUID id, final String username, final String email, final String password, final LocalDateTime createdAt, final DigitamaType selectedDigitama, final UUID activeDigimonId, final LocalDateTime lastMissionAt, final boolean starterSelected, final UserType userType, final int tokenVersion, final int maxDigimonSlots, final int maxStorageSlots, final int arenaCoins, final int unlockedIncubationSlots, final int digitalData, final UUID clanId, final ClanRole clanRole, final LocalDateTime clanJoinedAt, final LocalDateTime arenaDailyResetAt) {
+    public Player(final UUID id, final String username, final String email, final String password, final LocalDateTime createdAt, final DigitamaType selectedDigitama, final UUID activeDigimonId, final LocalDateTime lastMissionAt, final boolean starterSelected, final UserType userType, final int tokenVersion, final int maxDigimonSlots, final int maxStorageSlots, final int arenaCoins, final int bits, final int unlockedIncubationSlots, final int digitalData, final int usernameChangeCount, final UUID clanId, final ClanRole clanRole, final LocalDateTime clanJoinedAt, final LocalDateTime arenaDailyResetAt) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -543,8 +604,10 @@ public class Player {
         this.maxDigimonSlots = maxDigimonSlots;
         this.maxStorageSlots = maxStorageSlots;
         this.arenaCoins = arenaCoins;
+        this.bits = bits;
         this.unlockedIncubationSlots = unlockedIncubationSlots;
         this.digitalData = digitalData;
+        this.usernameChangeCount = usernameChangeCount;
         this.clanId = clanId;
         this.clanRole = clanRole;
         this.clanJoinedAt = clanJoinedAt;

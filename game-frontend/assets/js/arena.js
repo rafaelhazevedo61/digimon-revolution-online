@@ -37,7 +37,7 @@ async function renderArenaPage() {
         <h2 class="text-lg font-bold px-1">Arena</h2>
         <div class="flex gap-3">
           <button class="text-xs text-cyan-400 hover:text-cyan-300" onclick="navigateTo('arena-shop')">Loja</button>
-          <button class="text-xs text-cyan-400 hover:text-cyan-300" onclick="navigateTo('arena-ranking')">Ranking</button>
+          <button class="text-xs text-cyan-400 hover:text-cyan-300" onclick="navigateTo('arena-ranking')">Classificação</button>
           <button class="text-xs text-cyan-400 hover:text-cyan-300" onclick="navigateTo('arena-history')">Historico</button>
         </div>
       </div>
@@ -221,7 +221,7 @@ function renderArenaResult(result) {
       <div class="flex gap-2 w-full">
         <button class="btn-primary flex-1" onclick="navigateTo('arena')">Voltar a Arena</button>
         <button class="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-700 hover:bg-slate-600 transition-colors" onclick="navigateTo('arena-ranking')">
-          Ver Ranking
+          Ver Classificação
         </button>
       </div>
     </div>
@@ -235,7 +235,7 @@ async function renderArenaRankingPage() {
   app.innerHTML = `
     <div class="page-container">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-bold px-1">Ranking da Arena</h2>
+        <h2 class="text-lg font-bold px-1">Classificação da Arena</h2>
         <button class="text-sm text-cyan-400" onclick="navigateTo('arena')">Voltar</button>
       </div>
       <div id="arena-ranking-list">
@@ -250,7 +250,7 @@ async function renderArenaRankingPage() {
     const myId = getPlayerId();
 
     if (!ranking || ranking.length === 0) {
-      container.innerHTML = `<div class="card text-center text-slate-400 text-sm">Ranking vazio</div>`;
+      container.innerHTML = `<div class="card text-center text-slate-400 text-sm">Classificação vazia</div>`;
       return;
     }
 

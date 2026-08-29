@@ -60,14 +60,14 @@ public class StartIncubationUseCase {
         UUID digimonId = player.getActiveDigimonId();
 
         InventoryItem digitamaItem = inventoryRepository
-                .findByDigimonIdAndItemType(digimonId, digitamaType)
+                .findByPlayerIdAndItemTypeForUpdate(playerId, digitamaType)
                 .orElseThrow(() -> new NotFoundException("Digitama not found"));
         if (digitamaItem.getQuantity() <= 0) {
             throw new UnprocessableException("No digitama available");
         }
 
         InventoryItem incubatorItem = inventoryRepository
-                .findByDigimonIdAndItemType(digimonId, incubatorType)
+                .findByPlayerIdAndItemTypeForUpdate(playerId, incubatorType)
                 .orElseThrow(() -> new NotFoundException("Incubator not found"));
         if (incubatorItem.getQuantity() <= 0) {
             throw new UnprocessableException("No incubator available");

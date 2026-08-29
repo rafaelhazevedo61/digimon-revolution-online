@@ -2,6 +2,7 @@ package com.dro.modules.digimon.api.dto.response;
 
 import com.dro.modules.digimon.domain.enums.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -30,6 +31,7 @@ public record DigimonResponse(
         int rebirthCount,
         UUID rebornedFrom,
         DigimonStatus status,
+        boolean locked,
         Long digimonInfoId,
         String attribute,
         String element,
@@ -40,7 +42,10 @@ public record DigimonResponse(
         int clanBonusHp,
         int clanBonusAttack,
         int clanBonusDefense,
-        int clanBonusMaxEnergy
+        int clanBonusMaxEnergy,
+        boolean rarityChangedByDie,
+        Rarity originalRarityBeforeDie,
+        LocalDateTime rarityChangedByDieAt
 ) {
 
     public static DigimonResponse from(com.dro.modules.digimon.domain.Digimon d) {
@@ -51,8 +56,9 @@ public record DigimonResponse(
                 d.getIvHp(), d.getIvAttack(), d.getIvDefense(),
                 d.getGrade(), d.getRarity(), d.getPersonality(), d.getTrait(),
                 d.getEnergy(), d.getMaxEnergy(), d.getBits(),
-                d.getRebirthCount(), d.getRebornedFrom(), d.getStatus(),
-                d.getDigimonInfoId(), null, null, null, 0, 0, 0, 0, 0, 0, 0
+                d.getRebirthCount(), d.getRebornedFrom(), d.getStatus(), d.isLocked(),
+                d.getDigimonInfoId(), null, null, null, 0, 0, 0, 0, 0, 0, 0,
+                d.isRarityChangedByDie(), d.getOriginalRarityBeforeDie(), d.getRarityChangedByDieAt()
         );
     }
 }

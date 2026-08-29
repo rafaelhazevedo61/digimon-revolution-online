@@ -25,7 +25,7 @@ public class ClanUpgradeType {
     private int baseHonorMarksCost;
     @Column(name = "cost_multiplier", nullable = false, precision = 4, scale = 2)
     private BigDecimal costMultiplier;
-    @Column(name = "effect_per_level", nullable = false, precision = 5, scale = 4)
+    @Column(name = "effect_per_level", nullable = false, precision = 6, scale = 4)
     private BigDecimal effectPerLevel;
     @Enumerated(EnumType.STRING)
     @Column(name = "effect_type", nullable = false, length = 30)

@@ -7,6 +7,7 @@ import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.evolution.domain.EvolutionLine;
 import com.dro.modules.evolution.domain.EvolutionLineStep;
 import com.dro.modules.evolution.infra.EvolutionLineRepository;
+import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
@@ -46,6 +47,7 @@ public class RebirthUseCase {
     private final MissionInstanceRepository missionInstanceRepository;
     private final DigimonInfosRepository digimonInfosRepository;
     private final EvolutionLineRepository evolutionLineRepository;
+    private final EquipmentRepository equipmentRepository;
     private final ClanMissionProgressTracker clanMissionProgressTracker;
     private final Random random = new Random();
 
@@ -54,12 +56,14 @@ public class RebirthUseCase {
         execute(token, digimonId, 0, 0, 0);
     }
 
+    @Transactional
     public void execute(String token, UUID digimonId, int codeInfiniteHp, int codeInfiniteAttack, int codeInfiniteDefense) {
         UUID playerId = extractPlayerId(token);
         Player player = findPlayer(playerId);
         Digimon oldDigimon = findDigimon(digimonId);
         validateOwner(oldDigimon, playerId);
         validateStatus(oldDigimon);
+        validateNoEquippedEquipment(oldDigimon);
         validateLevel(oldDigimon);
         validateStage(oldDigimon);
         validateActiveMission(oldDigimon);
@@ -70,17 +74,18 @@ public class RebirthUseCase {
         int digitalDataCost = RebirthRules.calculateDigitalDataCost(currentRebirthCount);
         validateCodeInfiniteInvestment(codeInfiniteHp, codeInfiniteAttack, codeInfiniteDefense);
         int codeInfiniteCost = codeInfiniteHp + codeInfiniteAttack + codeInfiniteDefense;
-        validateBits(oldDigimon, bitsCost);
+        validateBits(player, bitsCost);
         validateDigitalData(player, digitalDataCost);
         InventoryItem dataCore = findDataCore(digimonId);
         validateDataCore(dataCore, dataCoreCost);
         InventoryItem codeInfinite = findCodeInfinite(digimonId, codeInfiniteCost);
         validateCodeInfinite(codeInfinite, codeInfiniteCost);
-        consumeCosts(player, oldDigimon, dataCore, codeInfinite, bitsCost, dataCoreCost, digitalDataCost, codeInfiniteCost);
+        consumeCosts(player, dataCore, codeInfinite, bitsCost, dataCoreCost, digitalDataCost, codeInfiniteCost);
         Digimon newDigimon = createRebornDigimon(playerId, oldDigimon, newRebirthCount, codeInfiniteHp, codeInfiniteAttack, codeInfiniteDefense);
+        // A constraint do banco permite apenas um Digimon ACTIVE por jogador.
+        // Libere o slot e force o UPDATE antes de inserir o novo Digimon ACTIVE.
         oldDigimon.setStatus(DigimonStatus.REBORN);
-        oldDigimon.setBits(0);
-        digimonRepository.save(oldDigimon);
+        digimonRepository.saveAndFlush(oldDigimon);
         digimonRepository.save(newDigimon);
         inventoryRepository.save(dataCore);
         if (codeInfinite != null && codeInfiniteCost > 0) inventoryRepository.save(codeInfinite);
@@ -114,6 +119,13 @@ public class RebirthUseCase {
         }
     }
 
+    private void validateNoEquippedEquipment(Digimon digimon) {
+        long equippedCount = equipmentRepository.findByDigimonIdAndEquippedTrue(digimon.getId()).size();
+        if (equippedCount > 0) {
+            throw new ConflictException("Remova todos os equipamentos equipados antes de realizar o Rebirth");
+        }
+    }
+
     private void validateLevel(Digimon digimon) {
         if (digimon.getLevel() < REQUIRED_LEVEL) {
             throw new BadRequestException("Digimon must be level 100 to perform Rebirth");
@@ -133,8 +145,8 @@ public class RebirthUseCase {
         }
     }
 
-    private void validateBits(Digimon digimon, int bitsCost) {
-        if (digimon.getBits() < bitsCost) {
+    private void validateBits(Player player, int bitsCost) {
+        if (player.getBits() < bitsCost) {
             throw new UnprocessableException("Not enough Bits to perform Rebirth");
         }
     }
@@ -175,8 +187,10 @@ public class RebirthUseCase {
         }
     }
 
-    private void consumeCosts(Player player, Digimon digimon, InventoryItem dataCore, InventoryItem codeInfinite, int bitsCost, int dataCoreCost, int digitalDataCost, int codeInfiniteCost) {
-        digimon.setBits(digimon.getBits() - bitsCost);
+    private void consumeCosts(Player player, InventoryItem dataCore, InventoryItem codeInfinite, int bitsCost, int dataCoreCost, int digitalDataCost, int codeInfiniteCost) {
+        if (!player.spendBits(bitsCost)) {
+            throw new UnprocessableException("Not enough Bits to perform Rebirth");
+        }
         dataCore.setQuantity(dataCore.getQuantity() - dataCoreCost);
         if (codeInfinite != null) codeInfinite.setQuantity(codeInfinite.getQuantity() - codeInfiniteCost);
         if (!player.spendDigitalData(digitalDataCost)) {
@@ -212,7 +226,7 @@ public class RebirthUseCase {
         int defense = (int) Math.floor((baseDef + (ivDefense * DEFENSE_IV_WEIGHT)) * rarityMultiplier * stageMultiplier * PersonalityRules.getDefenseMultiplier(personality) * TraitRules.getDefenseMultiplier(trait) * rebirthMultiplier);
         int maxEnergy = 20 + TraitRules.getMaxEnergyBonus(trait);
         String rebornName = babyInfo != null ? babyInfo.getName() : "Reborn " + oldDigimon.getType();
-        return Digimon.builder().id(UUID.randomUUID()).playerId(playerId).name(rebornName).type(oldDigimon.getType()).stage(Stage.BABY).digimonInfoId(babyInfoId).level(1).experience(0).hp(hp).attack(attack).defense(defense).ivHp(ivHp).ivAttack(ivAttack).ivDefense(ivDefense).grade(grade).rarity(rarity).personality(personality).energy(maxEnergy).maxEnergy(maxEnergy).trait(trait).lastEnergyUpdate(Instant.now()).createdAt(LocalDateTime.now()).bits(oldDigimon.getBits()).rebirthCount(newRebirthCount).rebornedFrom(oldDigimon.getId()).status(DigimonStatus.ACTIVE).build();
+        return Digimon.builder().id(UUID.randomUUID()).playerId(playerId).name(rebornName).type(oldDigimon.getType()).stage(Stage.BABY).digimonInfoId(babyInfoId).level(1).experience(0).hp(hp).attack(attack).defense(defense).ivHp(ivHp).ivAttack(ivAttack).ivDefense(ivDefense).grade(grade).rarity(rarity).personality(personality).energy(maxEnergy).maxEnergy(maxEnergy).trait(trait).lastEnergyUpdate(Instant.now()).createdAt(LocalDateTime.now()).bits(0).rebirthCount(newRebirthCount).rebornedFrom(oldDigimon.getId()).status(DigimonStatus.ACTIVE).build();
     }
 
     private Long resolveBabyDigimonInfoId(Digimon oldDigimon) {
@@ -245,13 +259,14 @@ public class RebirthUseCase {
         }
     }
 
-    public RebirthUseCase(final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final InventoryRepository inventoryRepository, final MissionInstanceRepository missionInstanceRepository, final DigimonInfosRepository digimonInfosRepository, final EvolutionLineRepository evolutionLineRepository, final ClanMissionProgressTracker clanMissionProgressTracker) {
+    public RebirthUseCase(final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final InventoryRepository inventoryRepository, final MissionInstanceRepository missionInstanceRepository, final DigimonInfosRepository digimonInfosRepository, final EvolutionLineRepository evolutionLineRepository, final EquipmentRepository equipmentRepository, final ClanMissionProgressTracker clanMissionProgressTracker) {
         this.digimonRepository = digimonRepository;
         this.playerRepository = playerRepository;
         this.inventoryRepository = inventoryRepository;
         this.missionInstanceRepository = missionInstanceRepository;
         this.digimonInfosRepository = digimonInfosRepository;
         this.evolutionLineRepository = evolutionLineRepository;
+        this.equipmentRepository = equipmentRepository;
         this.clanMissionProgressTracker = clanMissionProgressTracker;
     }
 }

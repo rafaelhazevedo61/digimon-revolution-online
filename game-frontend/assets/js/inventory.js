@@ -4,6 +4,8 @@ let invDigimonId = null;
 let invTab = "items"; // "items" or "equipment"
 let invChestOpeningInProgress = false;
 let invItemUseInProgress = false;
+let invPagination = { items: 0, equipment: 0, pageSize: 5 };
+let invPageData = { items: { content: [], totalElements: 0, totalPages: 0 }, equipment: { content: [], totalElements: 0, totalPages: 0 } };
 let invFilterState = {
   search: "",
   category: "ALL",
@@ -34,21 +36,6 @@ async function renderInventoryPage() {
       </div>
 
       <div id="inv-config-panel" class="card-sm mb-3 hidden">
-        <form id="inv-search-form" class="flex flex-col sm:flex-row gap-2 mb-3">
-          <input
-            id="inv-search"
-            class="input flex-1"
-            type="search"
-            value="${escapeHtml(invFilterState.search)}"
-            placeholder="Pesquisar item ou equipamento..."
-            aria-label="Pesquisar no Inventário"
-          />
-          <div class="flex gap-2">
-            <button type="submit" class="btn-primary flex-1 sm:flex-none">Buscar</button>
-            <button id="inv-clear-search" type="button" class="btn-secondary flex-1 sm:flex-none">Limpar</button>
-          </div>
-        </form>
-
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label class="text-xs text-slate-400 flex flex-col min-w-0">
             <span class="min-h-8 leading-4 flex items-start">Categoria dos itens</span>
@@ -130,6 +117,21 @@ async function renderInventoryPage() {
         <button class="tab-btn w-full" data-category="OTHER" onclick="invSwitchCategory('OTHER')">Outros</button>
       </div>
 
+      <form id="inv-search-form" class="flex flex-col sm:flex-row gap-2 mb-4">
+        <input
+          id="inv-search"
+          class="input flex-1"
+          type="search"
+          value="${escapeHtml(invFilterState.search)}"
+          placeholder="Pesquisar item ou equipamento..."
+          aria-label="Pesquisar no Inventário"
+        />
+        <div class="flex gap-2">
+          <button type="submit" class="btn-primary flex-1 sm:flex-none">Buscar</button>
+          <button id="inv-clear-search" type="button" class="btn-secondary flex-1 sm:flex-none">Limpar</button>
+        </div>
+      </form>
+
       <div id="inv-content">
         <div class="card animate-pulse"><div class="h-32"></div></div>
       </div>
@@ -139,22 +141,16 @@ async function renderInventoryPage() {
   invSetupFilterControls();
 
   try {
-    const [inventory, dashboard] = await Promise.all([
-      apiGet("/inventory"),
+    const [, dashboard] = await Promise.all([
+      invLoadItemsPage(),
       apiGet("/players/me/dashboard")
     ]);
 
-    invItems = inventory || [];
     invDigimonId = dashboard.activeDigimon ? dashboard.activeDigimon.id : null;
-
-    if (invDigimonId) {
-      invEquipments = await apiGet(`/equipment/digimon/${invDigimonId}/inventory`) || [];
-    } else {
-      invEquipments = [];
-    }
-
+    invItems = invPageData.items.content;
+    invEquipments = [];
     invTab = "items";
-    invRenderActiveTab();
+    invRenderItems();
   } catch (err) {
     document.getElementById("inv-content").innerHTML = `
       <div class="card border-red-900">
@@ -166,6 +162,7 @@ async function renderInventoryPage() {
 
 function invSwitchTab(tab) {
   invTab = tab;
+  invPagination[tab] = 0;
   document.querySelectorAll("#inv-tabs .tab-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.tab === tab);
   });
@@ -174,6 +171,7 @@ function invSwitchTab(tab) {
 
 function invSwitchCategory(category) {
   invFilterState.category = category;
+  invPagination.items = 0;
   invSyncFilterControls();
   invRenderActiveTab();
 }
@@ -191,22 +189,27 @@ function invSetupFilterControls() {
   document.getElementById("inv-clear-search")?.addEventListener("click", invClearSearch);
   document.getElementById("inv-category-filter")?.addEventListener("change", (event) => {
     invFilterState.category = event.target.value;
+    invPagination.items = 0;
     invRenderActiveTab();
   });
   document.getElementById("inv-fragment-stage-filter")?.addEventListener("change", (event) => {
     invFilterState.fragmentStage = event.target.value;
+    invPagination.items = 0;
     invRenderActiveTab();
   });
   document.getElementById("inv-rarity-filter")?.addEventListener("change", (event) => {
     invFilterState.rarity = event.target.value;
+    invPagination[invTab] = 0;
     invRenderActiveTab();
   });
   document.getElementById("inv-slot-filter")?.addEventListener("change", (event) => {
     invFilterState.slot = event.target.value;
+    invPagination.equipment = 0;
     invRenderActiveTab();
   });
   document.getElementById("inv-sort")?.addEventListener("change", (event) => {
     invFilterState.sort = event.target.value;
+    invPagination[invTab] = 0;
     invRenderActiveTab();
   });
   invSyncFilterControls();
@@ -226,11 +229,13 @@ function invToggleConfig() {
 function invSubmitSearch(event) {
   event.preventDefault();
   invFilterState.search = document.getElementById("inv-search")?.value.trim() || "";
+  invPagination[invTab] = 0;
   invRenderActiveTab();
 }
 
 function invClearSearch() {
   invFilterState.search = "";
+  invPagination[invTab] = 0;
   const input = document.getElementById("inv-search");
   if (input) input.value = "";
   invRenderActiveTab();
@@ -252,12 +257,55 @@ function invSyncFilterControls() {
   if (sort) sort.value = invFilterState.sort;
 }
 
-function invRenderActiveTab() {
-  invUpdateFilterVisibility();
-  if (invTab === "items") {
-    invRenderItems();
+function invPageParams(tab) {
+  const params = {
+    page: invPagination[tab],
+    size: invPagination.pageSize,
+    search: invFilterState.search,
+    rarity: invFilterState.rarity,
+    sort: invFilterState.sort
+  };
+  if (tab === "items") {
+    params.category = invFilterState.category;
+    params.fragmentStage = invFilterState.fragmentStage;
   } else {
-    invRenderEquipment();
+    params.slot = invFilterState.slot;
+  }
+  return params;
+}
+
+async function invLoadItemsPage() {
+  invPageData.items = await apiGet("/inventory/page", invPageParams("items"));
+  invItems = invPageData.items.content || [];
+  return invPageData.items;
+}
+
+async function invLoadEquipmentPage() {
+  if (!invDigimonId) {
+    invPageData.equipment = { content: [], totalElements: 0, totalPages: 0 };
+    invEquipments = [];
+    return invPageData.equipment;
+  }
+  invPageData.equipment = await apiGet("/equipment/inventory/page", invPageParams("equipment"));
+  invEquipments = invPageData.equipment.content || [];
+  return invPageData.equipment;
+}
+
+async function invRenderActiveTab() {
+  invUpdateFilterVisibility();
+  const content = document.getElementById("inv-content");
+  if (!content) return;
+  content.innerHTML = '<div class="card animate-pulse"><div class="h-32"></div></div>';
+  try {
+    if (invTab === "items") {
+      await invLoadItemsPage();
+      invRenderItems();
+    } else {
+      await invLoadEquipmentPage();
+      invRenderEquipment();
+    }
+  } catch (err) {
+    content.innerHTML = `<div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>`;
   }
 }
 
@@ -360,15 +408,12 @@ function invCompareText(a, b) {
 
 function invRenderItems() {
   const content = document.getElementById("inv-content");
-  const allItems = invAggregateItems(invItems).filter(i => i.quantity > 0);
-  const items = invSortItems(invGetFilteredItems());
-  invUpdateFilterSummary(items.length, allItems.length, "item");
+  const page = invPageData.items;
+  const items = page.content || [];
+  invUpdateFilterSummary(invGetPageSummary("items", page.totalElements), page.totalElements, "item");
 
   if (items.length === 0) {
-    const message = allItems.length === 0
-      ? "Nenhum item no inventário."
-      : "Nenhum item corresponde aos filtros atuais.";
-    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${message}</p>`;
+    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${page.totalElements === 0 ? "Nenhum item no inventário." : "Nenhum item nesta página."}</p>`;
     return;
   }
 
@@ -391,9 +436,9 @@ function invRenderItems() {
     const incubationOnly = digitamaItem || incubatorItem;
     const usable = !incubationOnly && (def ? def.usable : invIsUsable(item.itemType));
     const action = isChest && chestCode ? `
-      <div class="flex items-center gap-2">
-        <input id="${chestQuantityInputId}" class="input w-16 text-center" type="number" min="1" max="${maxUseQuantity}" value="1" aria-label="Quantidade de baús" />
-        <button class="btn-sm btn-primary whitespace-nowrap" onclick="invOpenChest('${escapeHtml(chestCode)}', document.getElementById('${chestQuantityInputId}').value)">Abrir</button>
+      <div class="inventory-chest-controls flex items-center gap-1">
+        <input id="${chestQuantityInputId}" class="input inventory-quantity-input text-center" type="number" min="1" max="${maxUseQuantity}" value="1" aria-label="Quantidade de baús" />
+        <button class="btn-sm btn-primary inventory-chest-open-btn whitespace-nowrap" onclick="invOpenChest('${escapeHtml(chestCode)}', document.getElementById('${chestQuantityInputId}').value)">Abrir</button>
       </div>
     ` : incubatorItem ? `
       <button class="btn-sm btn-primary whitespace-nowrap" onclick="navigateTo('incubation')">Usar</button>
@@ -410,7 +455,7 @@ function invRenderItems() {
       <div class="card-sm mb-2 flex items-center gap-3">
         <div class="text-2xl">${emoji}</div>
         <div class="flex-1 min-w-0">
-          <p class="font-bold text-sm truncate">${escapeHtml(name)}</p>
+          <p class="font-bold text-sm inventory-item-name" title="${escapeAttr(name)}" aria-label="${escapeAttr(name)}">${escapeHtml(name)}</p>
           <div class="flex gap-2 mt-1">
             <span class="text-xs text-slate-400">Qtd: ${item.quantity}</span>
             <span class="badge badge-${catBadge}">${escapeHtml(catName)}</span>
@@ -419,7 +464,32 @@ function invRenderItems() {
         ${action}
       </div>
     `;
-  }).join("");
+  }).join("") + invRenderPagination("items", page.totalElements, page.totalPages);
+}
+
+function invGetPagedEntries(tab, entries) {
+  const totalPages = Math.max(1, Math.ceil(entries.length / invPagination.pageSize));
+  invPagination[tab] = Math.min(Math.max(0, invPagination[tab]), totalPages - 1);
+  const start = invPagination[tab] * invPagination.pageSize;
+  return entries.slice(start, start + invPagination.pageSize);
+}
+
+function invGetPageSummary(tab, total) {
+  if (total === 0) return 0;
+  const start = invPagination[tab] * invPagination.pageSize + 1;
+  return `${start}-${Math.min(start + invPagination.pageSize - 1, total)}`;
+}
+
+function invRenderPagination(tab, total, backendTotalPages = null) {
+  const totalPages = backendTotalPages == null ? Math.ceil(total / invPagination.pageSize) : backendTotalPages;
+  if (totalPages <= 1) return "";
+  const currentPage = invPagination[tab];
+  return `<div class="flex items-center justify-between gap-3 mt-4 pt-3 border-t border-slate-800"><span class="text-xs text-slate-500">Página ${currentPage + 1} de ${totalPages}</span><div class="flex gap-2"><button type="button" class="btn-sm btn-secondary" ${currentPage === 0 ? "disabled" : ""} onclick="invSetPage('${tab}', ${currentPage - 1})">Anterior</button><button type="button" class="btn-sm btn-secondary" ${currentPage >= totalPages - 1 ? "disabled" : ""} onclick="invSetPage('${tab}', ${currentPage + 1})">Próxima</button></div></div>`;
+}
+
+function invSetPage(tab, page) {
+  invPagination[tab] = Math.max(0, Number(page) || 0);
+  invRenderActiveTab();
 }
 
 function invAggregateItems(items) {
@@ -546,13 +616,15 @@ function invCategoryBadge(category) {
 }
 
 async function invReloadItems() {
-  invItems = await apiGet("/inventory") || [];
-  if (document.getElementById("inv-content")) {
-    invRenderActiveTab();
-  }
+  await invLoadItemsPage();
+  if (document.getElementById("inv-content")) invRenderItems();
 }
 
 async function invUseItem(itemType, quantity = null) {
+  if (itemType === "RARITY_REROLL") {
+    await invStartRarityReroll();
+    return;
+  }
   const isXpDiskItem = invIsXpDisk(itemType);
   const isBatchUsableItem = isXpDiskItem || itemType === "POTION_SMALL" || itemType === "TRAINING_STONE";
   let requestedQuantity = 1;
@@ -719,7 +791,8 @@ function invItemName(itemType) {
     FRAGMENT_ULTIMATE: "Fragmento Ultimate",
     FRAGMENT_MEGA: "Fragmento Mega",
     EVOLUTION_MATERIAL: "Material de Evolução",
-    LOOT_CHEST: "Baú"
+    LOOT_CHEST: "Baú",
+    RARITY_REROLL: "Dado de Raridade"
   };
   return map[itemType] || itemType;
 }
@@ -737,7 +810,8 @@ function invItemEmoji(itemType) {
     XP_DISC_10: "💿", XP_DISC_15: "💿", XP_DISC_20: "💿",
     FRAGMENT_ROOKIE: "🧩", FRAGMENT_CHAMPION: "🧩", FRAGMENT_ULTIMATE: "🧩", FRAGMENT_MEGA: "🧩",
     EVOLUTION_MATERIAL: "⭐",
-    LOOT_CHEST: "🎁"
+    LOOT_CHEST: "🎁",
+    RARITY_REROLL: "🎲"
   };
   return map[itemType] || "📦";
 }
@@ -745,7 +819,7 @@ function invItemEmoji(itemType) {
 function invIsUsable(itemType) {
   const usable = ["POTION_SMALL", "TRAINING_STONE", "DATA_CORE", "INCUBATION_SLOT_UNLOCK",
     "STORAGE_SLOT_1", "STORAGE_SLOT_5", "STORAGE_SLOT_10",
-    "XP_DISC_1", "XP_DISC_3", "XP_DISC_5", "XP_DISC_10", "XP_DISC_15", "XP_DISC_20"];
+    "XP_DISC_1", "XP_DISC_3", "XP_DISC_5", "XP_DISC_10", "XP_DISC_15", "XP_DISC_20", "RARITY_REROLL"];
   return usable.includes(itemType);
 }
 
@@ -757,6 +831,7 @@ function invItemCategory(itemType) {
   if (itemType.startsWith("INCUBATOR_")) return "epic";
   if (itemType.startsWith("FRAGMENT_")) return "champion";
   if (itemType === "EVOLUTION_MATERIAL") return "legendary";
+  if (itemType === "RARITY_REROLL") return "epic";
   if (itemType === "LOOT_CHEST") return "rare";
   return "common";
 }
@@ -772,7 +847,73 @@ function invItemCategoryName(itemType) {
   if (itemType.startsWith("FRAGMENT_")) return "Fragmento";
   if (itemType === "EVOLUTION_MATERIAL") return "Evolução";
   if (itemType === "LOOT_CHEST") return "Baú";
+  if (itemType === "RARITY_REROLL") return "Raridade";
   return "Item";
+}
+
+async function invStartRarityReroll() {
+  if (invItemUseInProgress) return;
+  invItemUseInProgress = true;
+  try {
+    const result = await apiPost("/inventory/rarity-reroll/start", {});
+    invShowRarityRerollModal(result);
+    await invReloadItems();
+  } catch (err) {
+    showToast(err.message || "Não foi possível usar o Dado de Raridade.", "error");
+  } finally {
+    invItemUseInProgress = false;
+  }
+}
+
+function invRarityBadgeClass(rarity) {
+  const map = {
+    COMMON: "badge-common",
+    RARE: "badge-rare",
+    EPIC: "badge-epic",
+    LEGENDARY: "badge-legendary"
+  };
+  return map[String(rarity || "").toUpperCase()] || "badge-common";
+}
+
+function invRarityBoxClass(rarity) {
+  const map = {
+    COMMON: "rarity-box-common",
+    RARE: "rarity-box-rare",
+    EPIC: "rarity-box-epic",
+    LEGENDARY: "rarity-box-legendary"
+  };
+  return map[String(rarity || "").toUpperCase()] || "rarity-box-common";
+}
+
+function invShowRarityRerollModal(result) {
+  document.getElementById("rarity-reroll-overlay")?.remove();
+  const currentRarityClass = invRarityBadgeClass(result.currentRarity);
+  const newRarityClass = invRarityBadgeClass(result.newRarity);
+  const newRarityLabel = result.newRarity ? formatRarity(result.newRarity) : "Sem alteração";
+  const currentRarityBoxClass = invRarityBoxClass(result.currentRarity);
+  const newRarityBoxClass = invRarityBoxClass(result.newRarity);
+  const actionButtons = result.rerollId
+    ? `<div class="grid grid-cols-1 gap-2"><button class="btn-primary" onclick="invResolveRarityReroll('${result.rerollId}','accept')">Aceitar nova</button><button class="btn-secondary" onclick="invResolveRarityReroll('${result.rerollId}','keep',false)">Manter e fechar</button><button class="btn-secondary" onclick="invResolveRarityReroll('${result.rerollId}','keep',true)">Manter e usar outro Dado</button></div>`
+    : `<div class="rounded-lg border border-slate-700 bg-slate-900/70 p-3 text-center text-sm text-slate-300 mb-4">${result.message || "O Dado de Raridade não alterou a raridade do Digimon."}</div><button class="btn-secondary w-full" onclick="document.getElementById('rarity-reroll-overlay')?.remove()">Fechar</button>`;
+  const overlay = document.createElement("div");
+  overlay.id = "rarity-reroll-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(2,6,23,.82);z-index:70;display:flex;align-items:center;justify-content:center;padding:1rem;";
+  overlay.innerHTML = `<div class="card w-full max-w-md" role="dialog" aria-modal="true"><div class="flex justify-between items-start gap-4 mb-5"><div><p class="text-xs uppercase tracking-wider text-fuchsia-400 font-bold">Dado de Raridade</p>
+<h3 class="text-xl font-bold mt-1">Escolha o destino</h3></div><button class="text-slate-400 hover:text-white text-2xl" aria-label="Fechar" onclick="document.getElementById('rarity-reroll-overlay')?.remove()">&times;</button></div><div class="grid grid-cols-2 gap-3 mb-4"><div class="rarity-box ${currentRarityBoxClass} p-4 text-center"><p class="rarity-box-label text-xs">Raridade atual</p><p class="mt-2"><span class="badge ${currentRarityClass}">${formatRarity(result.currentRarity)}</span></p></div><div class="rarity-box ${newRarityBoxClass} p-4 text-center"><p class="rarity-box-label text-xs">Nova raridade</p><p class="mt-2"><span class="badge ${newRarityClass}">${newRarityLabel}</span></p></div></div><p class="text-sm text-slate-300 mb-5">Aceitar substitui a raridade atual. Para manter a anterior, será cobrado <strong class="text-amber-300">${Number(result.keepCostBits).toLocaleString('pt-BR')} Bits</strong>.</p>${actionButtons}</div>`;
+  overlay.onclick = (event) => { if (event.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}
+
+async function invResolveRarityReroll(id, action, retry = false) {
+  const overlay = document.getElementById("rarity-reroll-overlay");
+  try {
+    const result = await apiPost(`/inventory/rarity-reroll/${id}/${action}`, {});
+    overlay?.remove();
+    showToast(result.message || "Dado de Raridade processado com sucesso.");
+    await invReloadItems();
+    if (action === "keep" && retry) await invStartRarityReroll();
+  } catch (err) { showToast(err.message || "Não foi possível processar o Dado de Raridade.", "error");
+ }
 }
 
 // ==================== EQUIPMENT TAB ====================
@@ -847,19 +988,16 @@ function invSortEquipments(equipments) {
 
 function invRenderEquipment() {
   const content = document.getElementById("inv-content");
-  const filtered = invGetFilteredEquipments();
-  const sorted = invSortEquipments(filtered);
-  invUpdateFilterSummary(sorted.length, invEquipments.length, "equipamento");
+  const page = invPageData.equipment;
+  const equipments = page.content || [];
+  invUpdateFilterSummary(invGetPageSummary("equipment", page.totalElements), page.totalElements, "equipamento");
 
-  if (sorted.length === 0) {
-    const message = invEquipments.length === 0
-      ? "Nenhum equipamento no inventário."
-      : "Nenhum equipamento corresponde aos filtros atuais.";
-    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${message}</p>`;
+  if (equipments.length === 0) {
+    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${page.totalElements === 0 ? "Nenhum equipamento no inventário." : "Nenhum equipamento nesta página."}</p>`;
     return;
   }
 
-  content.innerHTML = sorted.map(eq => {
+  content.innerHTML = equipments.map(eq => {
     const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
     const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
     const emoji = slotEmoji[eq.slot] || "⚔️";
@@ -876,7 +1014,7 @@ function invRenderEquipment() {
           <div class="text-2xl">${emoji}</div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
-              <p class="font-bold text-sm truncate">${escapeHtml(eq.name)}${refLabel}</p>
+              <p class="font-bold text-sm inventory-item-name" title="${escapeAttr(`${eq.name}${refLabel}`)}" aria-label="${escapeAttr(`${eq.name}${refLabel}`)}">${escapeHtml(eq.name)}${refLabel}</p>
               ${eq.equipped ? '<span class="badge badge-success">Equipado</span>' : ''}
             </div>
             <div class="flex gap-2 mt-1 flex-wrap">
@@ -899,7 +1037,7 @@ function invRenderEquipment() {
         </div>
       </div>
     `;
-  }).join("");
+  }).join("") + invRenderPagination("equipment", page.totalElements, page.totalPages);
 }
 
 async function invEquip(equipmentId) {
@@ -925,7 +1063,7 @@ async function invUnequip(equipmentId) {
 async function invReloadEquipment() {
   if (!invDigimonId) return;
   try {
-    invEquipments = await apiGet(`/equipment/digimon/${invDigimonId}/inventory`) || [];
+    await invLoadEquipmentPage();
     invRenderEquipment();
   } catch (err) {
     showToast(err.message, "error");

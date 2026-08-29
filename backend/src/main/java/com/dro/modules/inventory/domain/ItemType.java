@@ -61,6 +61,9 @@ public enum ItemType {
     LOOT_CHEST,
 
     // Material de refinamento
-    REFINEMENT_STONE
+    REFINEMENT_STONE,
+
+    // Reroll de raridade do Digimon
+    RARITY_REROLL
 
 }

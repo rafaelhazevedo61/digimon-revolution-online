@@ -1,5 +1,7 @@
 let storageDigimons = [];
 let storageSelectedDigimonIds = new Set();
+const STORAGE_PAGE_SIZE = 5;
+let storageCurrentPage = 1;
 
 let storageFilterState = {
   search: "",
@@ -11,6 +13,7 @@ let storageFilterState = {
 
 async function renderStoragePage() {
   storageSelectedDigimonIds.clear();
+  storageCurrentPage = 1;
   const app = document.getElementById("app");
   showBottomNav("digimons");
   storageFilterState.open = false;
@@ -20,7 +23,7 @@ async function renderStoragePage() {
       <div class="flex items-center justify-between gap-2 mb-4 px-1">
         <div class="flex items-center gap-2 min-w-0">
           <button class="btn-sm" style="background:#334155;color:#94a3b8" onclick="navigateTo('dashboard')">← Voltar</button>
-          <h2 class="text-lg font-bold truncate">Storage</h2>
+          <h2 class="text-lg font-bold truncate">Armazém Digimon</h2>
         </div>
         <button
           id="storage-config-btn"
@@ -33,22 +36,22 @@ async function renderStoragePage() {
         </button>
       </div>
 
-      <div id="storage-config-panel" class="card-sm mb-3 hidden">
-        <form id="storage-search-form" class="flex flex-col sm:flex-row gap-2 mb-3">
-          <input
-            id="storage-search"
-            class="input flex-1"
-            type="search"
-            value="${escapeHtml(storageFilterState.search)}"
-            placeholder="Pesquisar Digimon por nome..."
-            aria-label="Pesquisar Digimon no Storage"
-          />
-          <div class="flex gap-2">
-            <button type="submit" class="btn-primary flex-1 sm:flex-none">Buscar</button>
-            <button id="storage-clear-search" type="button" class="btn-secondary flex-1 sm:flex-none">Limpar</button>
-          </div>
-        </form>
+      <form id="storage-search-form" class="flex flex-col sm:flex-row gap-2 mb-3">
+        <input
+          id="storage-search"
+          class="input flex-1"
+          type="search"
+          value="${escapeHtml(storageFilterState.search)}"
+          placeholder="Pesquisar Digimon por nome..."
+          aria-label="Pesquisar Digimon no Armazém Digimon"
+        />
+        <div class="flex gap-2">
+          <button type="submit" class="btn-primary flex-1 sm:flex-none">Buscar</button>
+          <button id="storage-clear-search" type="button" class="btn-secondary flex-1 sm:flex-none">Limpar</button>
+        </div>
+      </form>
 
+      <div id="storage-config-panel" class="card-sm mb-3 hidden">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label class="text-xs text-slate-400 flex flex-col min-w-0">
             <span class="min-h-8 leading-4 flex items-start">Estágio</span>
@@ -74,7 +77,7 @@ async function renderStoragePage() {
           </label>
           <label class="text-xs text-slate-400 flex flex-col min-w-0">
             <span class="min-h-8 leading-4 flex items-start">Ordenar por</span>
-            <select id="storage-sort" class="input mt-1" aria-label="Ordenar Storage">
+            <select id="storage-sort" class="input mt-1" aria-label="Ordenar Armazém Digimon">
               <option value="level-desc">Nível: maior para menor</option>
               <option value="level-asc">Nível: menor para maior</option>
               <option value="stage-desc">Estágio: maior para menor</option>
@@ -94,6 +97,7 @@ async function renderStoragePage() {
       <div id="storage-list">
         <div class="card animate-pulse"><div class="h-20"></div></div>
       </div>
+      <div id="storage-pagination" class="mt-4"></div>
     </div>
   `;
 
@@ -110,18 +114,21 @@ async function renderStoragePage() {
     .getElementById("storage-stage-filter")
     ?.addEventListener("change", (event) => {
       storageFilterState.stage = event.target.value;
+      storageCurrentPage = 1;
       storageRenderList();
     });
   document
     .getElementById("storage-rarity-filter")
     ?.addEventListener("change", (event) => {
       storageFilterState.rarity = event.target.value;
+      storageCurrentPage = 1;
       storageRenderList();
     });
   document
     .getElementById("storage-sort")
     ?.addEventListener("change", (event) => {
       storageFilterState.sort = event.target.value;
+      storageCurrentPage = 1;
       storageRenderList();
     });
   storageSyncFilterControls();
@@ -171,11 +178,13 @@ function storageToggleConfig() {
 function storageSubmitSearch(event) {
   event.preventDefault();
   storageFilterState.search = document.getElementById("storage-search")?.value.trim() || "";
+  storageCurrentPage = 1;
   storageRenderList();
 }
 
 function storageClearSearch() {
   storageFilterState.search = "";
+  storageCurrentPage = 1;
   const input = document.getElementById("storage-search");
   if (input) input.value = "";
   storageRenderList();
@@ -195,83 +204,180 @@ function storageRenderList() {
   if (!container) return;
 
   const filtered = storageGetFilteredDigimons();
-  const total = storageDigimons.length;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / STORAGE_PAGE_SIZE));
+  storageCurrentPage = Math.min(Math.max(1, storageCurrentPage), totalPages);
+  const pageStart = (storageCurrentPage - 1) * STORAGE_PAGE_SIZE;
+  const pageItems = filtered.slice(pageStart, pageStart + STORAGE_PAGE_SIZE);
   const summary = document.getElementById("storage-filter-summary");
   if (summary) {
-    summary.textContent = `Exibindo ${filtered.length} de ${total} Digimon${total === 1 ? "" : "s"}.`;
+    summary.textContent = filtered.length === 0
+      ? "Nenhum Digimon encontrado."
+      : `Exibindo ${pageStart + 1}-${Math.min(pageStart + STORAGE_PAGE_SIZE, filtered.length)} de ${filtered.length} Digimon${filtered.length === 1 ? "" : "s"}.`;
   }
 
   if (filtered.length === 0) {
-    container.innerHTML = `<div class="card text-center text-slate-400 text-sm">${total === 0 ? "Storage vazio" : "Nenhum Digimon corresponde aos filtros atuais."}</div>`;
+    container.innerHTML = `<div class="card text-center text-slate-400 text-sm">${storageDigimons.length === 0 ? "Armazém Digimon vazio" : "Nenhum Digimon corresponde aos filtros atuais."}
+</div>`;
+    storageRenderPagination(0, 1);
+    storageUpdateBulkActions();
     return;
   }
 
-  container.innerHTML = filtered.map(d => `
-      <div class="card mb-2 flex items-center gap-3">
-        <label class="shrink-0 flex items-center justify-center cursor-pointer" title="Selecionar Digimon para sacrifício">
+  container.innerHTML = pageItems.map(d => {
+    const locked = d.locked === true;
+    const selected = storageSelectedDigimonIds.has(String(d.id));
+    return `
+      <div class="card mb-2 flex items-center gap-3 ${locked ? "border-amber-700/70 bg-amber-950/10" : ""}">
+        <label class="shrink-0 flex items-center justify-center ${locked ? "cursor-not-allowed" : "cursor-pointer"}" title="${locked ? "Digimon bloqueado contra sacrifício" : "Selecionar Digimon para sacrifício"}">
           <input
             type="checkbox"
             class="storage-sacrifice-checkbox h-5 w-5 accent-cyan-500"
             data-digimon-id="${escapeAttr(d.id)}"
-            ${storageSelectedDigimonIds.has(String(d.id)) ? "checked" : ""}
+            ${selected ? "checked" : ""}
+            ${locked ? "disabled" : ""}
             onchange="storageToggleSelection('${escapeAttr(d.id)}', this.checked)"
             aria-label="Selecionar ${escapeAttr(d.name || "Digimon")} para sacrifício"
           />
         </label>
         ${renderDigimonVisual(d.imageUrl, d.stage, "w-16 h-16", "text-4xl")}
         <div class="flex-1 min-w-0">
-          <p class="font-bold text-sm truncate">${escapeHtml(d.name)}</p>
-          <p class="text-xs text-slate-400">Lv.${d.level} | ${escapeHtml(d.stage)} | ${formatRarity(d.rarity)}</p>
+          <div class="min-w-0">
+            <p class="font-bold text-sm break-words" style="overflow-wrap:anywhere">${escapeHtml(d.name)}</p>
+            ${locked ? '<span class="block text-xs text-amber-300 mt-1" title="Protegido contra sacrifício">🔒 Bloqueado</span>' : ""}
+          </div>
+          <p class="text-xs text-slate-400">Lv.${d.level} | ${escapeHtml(d.stage)} | ${formatRarity(d.rarity)} ${renderRarityDieIndicator(d)}</p>
+          ${renderRarityDieDetails(d)}
           <p class="text-xs text-slate-500">HP ${d.hp} ATK ${d.attack} DEF ${d.defense}</p>
-          <p class="text-xs text-cyan-300 mt-1">Sacrifício: +${calculateDigitalDataPreview(d)} Dados Digitais</p>
+          <p class="text-xs ${locked ? "text-amber-300" : "text-cyan-300"} mt-1">${locked ? "Protegido contra sacrifício" : `Sacrifício: +${calculateDigitalDataPreview(d)} Dados Digitais`}</p>
         </div>
         <div class="flex flex-col gap-1">
+          <button class="btn-sm"
+            style="background:${locked ? "#78350f;color:#fde68a" : "#475569;color:#e2e8f0"}"
+            onclick="storageToggleLock('${escapeAttr(d.id)}')"
+            aria-label="${locked ? "Desbloquear" : "Bloquear"} ${escapeAttr(d.name || "Digimon")}">
+            ${locked ? "🔓 Desbloquear" : "🔒 Bloquear"}
+          </button>
           <button class="btn-sm"
             style="background:#065f46;color:#6ee7b7"
             onclick="storageRetrieve('${escapeHtml(d.id)}')">
             Tornar ativo
           </button>
           <button class="btn-sm"
-            style="background:#7f1d1d;color:#fecaca"
-            onclick="storageSacrifice('${escapeHtml(d.id)}', '${encodeURIComponent(d.name || "Digimon")}')">
-            Sacrificar
+            style="background:#7f1d1d;color:#fecaca${locked ? ";opacity:.55;cursor:not-allowed" : ""}"
+            onclick="storageSacrifice('${escapeHtml(d.id)}', '${encodeURIComponent(d.name || "Digimon")}')"
+            ${locked ? "disabled" : ""}>
+            ${locked ? "Bloqueado" : "Sacrificar"}
           </button>
         </div>
       </div>
-    `).join("");
+    `;
+  }).join("");
 
+  storageRenderPagination(filtered.length, totalPages);
   storageUpdateBulkActions();
+}
+
+function storageRenderPagination(totalItems, totalPages) {
+  const container = document.getElementById("storage-pagination");
+  if (!container) return;
+  if (totalItems <= STORAGE_PAGE_SIZE) {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="flex items-center justify-center gap-3">
+      <button type="button" class="btn-secondary" onclick="storageGoToPage(${storageCurrentPage - 1})" ${storageCurrentPage === 1 ? "disabled" : ""}>Anterior</button>
+      <span class="text-sm text-slate-400 whitespace-nowrap">Página ${storageCurrentPage} de ${totalPages}</span>
+      <button type="button" class="btn-secondary" onclick="storageGoToPage(${storageCurrentPage + 1})" ${storageCurrentPage === totalPages ? "disabled" : ""}>Próxima</button>
+    </div>
+  `;
+}
+
+function storageGoToPage(page) {
+  const totalPages = Math.max(1, Math.ceil(storageGetFilteredDigimons().length / STORAGE_PAGE_SIZE));
+  const nextPage = Math.min(Math.max(1, Number(page) || 1), totalPages);
+  if (nextPage === storageCurrentPage) return;
+  storageCurrentPage = nextPage;
+  storageRenderList();
 }
 
 function storageUpdateBulkActions() {
   const container = document.getElementById("storage-bulk-actions");
   if (!container) return;
 
-  const selected = storageDigimons.filter(d => storageSelectedDigimonIds.has(String(d.id)));
+  storageDigimons.forEach(digimon => {
+    if (digimon.locked === true) storageSelectedDigimonIds.delete(String(digimon.id));
+  });
+
+  const eligible = storageDigimons.filter(d => d.locked !== true);
+  const selected = eligible.filter(d => storageSelectedDigimonIds.has(String(d.id)));
   const count = selected.length;
   const totalReward = selected.reduce((sum, digimon) => sum + calculateDigitalDataPreview(digimon), 0);
+  const selectionActions = count === 0 ? "" : `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3 pt-3 border-t border-cyan-800/60">
+          <div>
+            <p class="font-bold text-sm text-cyan-200">${count} Digimon${count === 1 ? " selecionado" : "s selecionados"}</p>
+            <p class="text-xs text-cyan-300 mt-1">Total estimado: +${totalReward.toLocaleString()} Dados Digitais</p>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" class="btn-secondary" onclick="storageClearSelection()">Limpar</button>
+            <button type="button" class="btn-sm" style="background:#7f1d1d;color:#fecaca" onclick="storageSacrificeSelected()">Sacrificar selecionados</button>
+          </div>
+        </div>
+  `;
 
-  container.innerHTML = count === 0 ? "" : `
-    <div class="card-sm border-cyan-700 bg-cyan-950/30">
+  container.innerHTML = `
+    <div class="card-sm border-slate-700 bg-slate-900/50">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <p class="font-bold text-sm text-cyan-200">${count} Digimon${count === 1 ? " selecionado" : "s selecionados"}</p>
-          <p class="text-xs text-cyan-300 mt-1">Total estimado: +${totalReward.toLocaleString()} Dados Digitais</p>
+          <p class="font-bold text-sm text-slate-200">Seleção em massa</p>
+          <p class="text-xs text-slate-400 mt-1">${eligible.length} Digimon${eligible.length === 1 ? " desbloqueado" : "s desbloqueados"} disponível${eligible.length === 1 ? "" : "eis"}. Digimons com cadeado ficam de fora.</p>
         </div>
-        <div class="flex gap-2">
-          <button type="button" class="btn-secondary" onclick="storageClearSelection()">Limpar</button>
-          <button type="button" class="btn-sm" style="background:#7f1d1d;color:#fecaca" onclick="storageSacrificeSelected()">Sacrificar selecionados</button>
-        </div>
+        <button type="button" class="btn-primary whitespace-nowrap" onclick="storageSelectAllUnlocked()" ${eligible.length === 0 ? "disabled" : ""}>
+          Selecionar todos
+        </button>
       </div>
+      ${selectionActions}
     </div>
   `;
 }
 
+function storageSelectAllUnlocked() {
+  storageDigimons
+    .filter(digimon => digimon.locked !== true)
+    .forEach(digimon => storageSelectedDigimonIds.add(String(digimon.id)));
+  storageRenderList();
+}
+
 function storageToggleSelection(digimonId, selected) {
   const id = String(digimonId);
+  const digimon = storageDigimons.find(item => String(item.id) === id);
+  if (digimon?.locked === true) {
+    storageSelectedDigimonIds.delete(id);
+    storageUpdateBulkActions();
+    return;
+  }
   if (selected) storageSelectedDigimonIds.add(id);
   else storageSelectedDigimonIds.delete(id);
   storageUpdateBulkActions();
+}
+
+async function storageToggleLock(digimonId) {
+  const id = String(digimonId);
+  const digimon = storageDigimons.find(item => String(item.id) === id);
+  if (!digimon) return;
+
+  try {
+    const updated = await apiPatch(`/digimon/${encodeURIComponent(id)}/lock`, null);
+    const locked = updated?.locked === true;
+    digimon.locked = locked;
+    if (locked) storageSelectedDigimonIds.delete(id);
+    showToast(locked ? "Digimon bloqueado contra sacrifício." : "Digimon desbloqueado.");
+    storageRenderList();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
 }
 
 function storageClearSelection() {
@@ -369,6 +475,11 @@ function calculateDigitalDataPreview(digimon) {
 }
 
 async function storageSacrifice(digimonId, encodedDigimonName) {
+  const digimon = storageDigimons.find(item => String(item.id) === String(digimonId));
+  if (digimon?.locked === true) {
+    showToast("Este Digimon está bloqueado e não pode ser sacrificado.", "error");
+    return;
+  }
   const digimonName = decodeURIComponent(encodedDigimonName || "Digimon");
   const confirmed = await showConfirm(
     `Sacrificar ${digimonName}? Esta ação é permanente e não pode ser desfeita.`,
@@ -390,7 +501,7 @@ async function storageSacrifice(digimonId, encodedDigimonName) {
 }
 
 async function storageSacrificeSelected() {
-  const selected = storageDigimons.filter(d => storageSelectedDigimonIds.has(String(d.id)));
+  const selected = storageDigimons.filter(d => d.locked !== true && storageSelectedDigimonIds.has(String(d.id)));
   if (selected.length === 0) return;
 
   const totalReward = selected.reduce((sum, digimon) => sum + calculateDigitalDataPreview(digimon), 0);

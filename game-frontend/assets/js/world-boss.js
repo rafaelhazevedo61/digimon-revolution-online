@@ -7,8 +7,8 @@ async function renderWorldBossPage() {
       <div class="flex items-center gap-2 mb-4">
         <button class="text-sm text-slate-400" onclick="navigateTo('more')">← Voltar</button>
       </div>
-      <h2 class="text-lg font-bold mb-1">Boss Mundial</h2>
-      <p class="text-xs text-slate-400 mb-4">Boss compartilhado por todo o servidor. Todos os jogadores contribuem para derrotá-lo.</p>
+      <h2 class="text-lg font-bold mb-1">Chefe Mundial</h2>
+      <p class="text-xs text-slate-400 mb-4">Chefe compartilhado por todo o servidor. Todos os jogadores contribuem para derrotá-lo.</p>
 
       <div id="world-boss-content">
         <div class="card animate-pulse"><div class="h-32"></div></div>
@@ -52,10 +52,10 @@ function renderWorldBossContent(boss) {
     && Number.isFinite(nextAttackAt)
     && nextAttackAt > Date.now();
   const cooldownInfoHtml = cooldownEnabled
-    ? `<p class="text-xs text-slate-500 mb-2 text-center">Cooldown entre ataques: ${cooldownMinutes} minuto(s)</p>`
-    : `<p class="text-xs text-green-400 mb-2 text-center">Cooldown desativado pelo administrador</p>`;
+    ? `<p class="text-xs text-slate-500 mb-2 text-center">Intervalo entre ataques: ${cooldownMinutes} minuto(s)</p>`
+    : `<p class="text-xs text-green-400 mb-2 text-center">Intervalo desativado pelo administrador</p>`;
   const attackButtonHtml = !defeated
-    ? `${cooldownInfoHtml}<button id="world-boss-attack-button" class="btn-primary w-full" onclick="attackWorldBoss()"${cooldownActive ? " disabled" : ""}>${cooldownActive ? "Próximo ataque em <span id=\"world-boss-countdown\">--:--</span>" : "Atacar Boss Mundial"}</button>`
+    ? `${cooldownInfoHtml}<button id="world-boss-attack-button" class="btn-primary w-full" onclick="attackWorldBoss()"${cooldownActive ? " disabled" : ""}>${cooldownActive ? "Próximo ataque em <span id=\"world-boss-countdown\">--:--</span>" : "Atacar Chefe Mundial"}</button>`
     : "";
 
   let rankingHtml = "";
@@ -84,7 +84,7 @@ function renderWorldBossContent(boss) {
     rankingHtml = `
       <div class="card mt-4 border-slate-800">
         <p class="font-bold mb-2 text-sm">Ranking de Dano Global</p>
-        <p class="text-sm text-slate-500">Ainda nenhum jogador atacou o Boss Mundial neste ciclo. Seja o primeiro!</p>
+        <p class="text-sm text-slate-500">Ainda nenhum jogador atacou o Chefe Mundial neste ciclo. Seja o primeiro!</p>
       </div>
     `;
   }
@@ -127,7 +127,7 @@ function renderWorldBossContent(boss) {
       <p class="text-xs text-slate-400 mb-3">Seu dano: <span class="text-cyan-400">${boss.myTotalDamage.toLocaleString()}</span></p>
 
       ${attackButtonHtml}
-      ${defeated ? `<p class="text-xs text-green-400 text-center">Boss Mundial derrotado. Aguarde o próximo ciclo.</p>` : ""}
+      ${defeated ? `<p class="text-xs text-green-400 text-center">Chefe Mundial derrotado. Aguarde o próximo ciclo.</p>` : ""}
 
     </div>
 
@@ -195,7 +195,7 @@ async function attackWorldBoss() {
     showToast(err.message, "error");
     if (btn) {
       btn.disabled = false;
-      btn.textContent = "Atacar Boss Mundial";
+      btn.textContent = "Atacar Chefe Mundial";
     }
   }
 }
@@ -240,7 +240,7 @@ function showWorldBossAttackModal(result) {
   ` : "";
   const defeatBonusHtml = result.defeated ? `
     <div class="mt-4 rounded-lg border border-green-800/70 bg-green-950/30 p-3">
-      <p class="text-sm font-bold text-green-300">Boss derrotado</p>
+      <p class="text-sm font-bold text-green-300">Chefe derrotado</p>
       <p class="mt-1 text-xs leading-relaxed text-green-200">Bônus final: <strong>${result.defeatedRewardXp.toLocaleString()} XP</strong> e <strong>${result.defeatedRewardBits.toLocaleString()} Bits</strong>.</p>
     </div>
   ` : "";

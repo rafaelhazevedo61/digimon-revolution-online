@@ -2,9 +2,12 @@ package com.dro.modules.clan.application;
 
 import com.dro.modules.clan.domain.Clan;
 import com.dro.modules.clan.infra.ClanRepository;
+import com.dro.modules.clan.storage.infra.ClanStorageItemRepository;
+import com.dro.shared.exception.ConflictException;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.util.TokenExtractor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -19,6 +22,7 @@ public class DissolveClanUseCase {
     private final ClanAuthorizationService authorization;
     private final ClanRepository clanRepository;
     private final PlayerRepository playerRepository;
+    private final ClanStorageItemRepository storageItemRepository;
 
     /**
      * Dissolve o clã por exclusão lógica: a linha em {@code clans} é preservada
@@ -33,6 +37,9 @@ public class DissolveClanUseCase {
         Player player = authorization.getPlayer(playerId);
         Clan clan = authorization.getClan(clanId);
         authorization.assertCanDissolve(player, clan);
+        if (storageItemRepository != null && storageItemRepository.countByClanId(clanId) > 0) {
+            throw new ConflictException("Clan cannot be dissolved while its storage is not empty");
+        }
         List<Player> members = playerRepository.findByClanId(clanId);
         for (Player member : members) {
             member.setClanId(null);
@@ -46,8 +53,14 @@ public class DissolveClanUseCase {
     }
 
     public DissolveClanUseCase(final ClanAuthorizationService authorization, final ClanRepository clanRepository, final PlayerRepository playerRepository) {
+        this(authorization, clanRepository, playerRepository, null);
+    }
+
+    @Autowired
+    public DissolveClanUseCase(final ClanAuthorizationService authorization, final ClanRepository clanRepository, final PlayerRepository playerRepository, final ClanStorageItemRepository storageItemRepository) {
         this.authorization = authorization;
         this.clanRepository = clanRepository;
         this.playerRepository = playerRepository;
+        this.storageItemRepository = storageItemRepository;
     }
 }

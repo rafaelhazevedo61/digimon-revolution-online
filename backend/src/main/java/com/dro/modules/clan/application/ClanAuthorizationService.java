@@ -105,6 +105,17 @@ public class ClanAuthorizationService {
         }
     }
 
+    public void assertCanDepositStorage(Player player, Clan clan) {
+        assertInClan(player, clan);
+    }
+
+    public void assertCanWithdrawStorage(Player player, Clan clan) {
+        assertInClan(player, clan);
+        if (!isAdmin(player) && player.getClanRole() != ClanRole.LEADER && player.getClanRole() != ClanRole.OFFICER) {
+            throw new ForbiddenException("Only clan officers and leaders can withdraw items");
+        }
+    }
+
     public List<Player> getMembers(UUID clanId) {
         return playerRepository.findByClanId(clanId);
     }

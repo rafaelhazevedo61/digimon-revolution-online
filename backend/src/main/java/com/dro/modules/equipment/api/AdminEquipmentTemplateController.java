@@ -56,8 +56,8 @@ public class AdminEquipmentTemplateController {
 
     @PostMapping("/grant")
     public ResponseEntity<GrantEquipmentResponse> grant(@RequestHeader("Authorization") String authorization, @RequestBody @Valid GrantEquipmentRequest request) {
-        UUID equipmentId = grantEquipmentUseCase.execute(request.digimonId(), request.templateName(), request.rarity());
-        adminAuditService.success(authorization, "ADMIN_EQUIPMENT_GRANT", "Equipment", equipmentId.toString(), "grant", "Equipamento concedido ao Digimon", Map.of("targetDigimonId", request.digimonId().toString(), "templateName", request.templateName(), "rarity", request.rarity() == null ? "ROLLED" : request.rarity().name()));
+        UUID equipmentId = grantEquipmentUseCase.executeForPlayer(request.playerId(), request.templateName(), request.rarity());
+        adminAuditService.success(authorization, "ADMIN_EQUIPMENT_GRANT", "Equipment", equipmentId.toString(), "grant", "Equipamento concedido ao jogador", Map.of("targetPlayerId", request.playerId().toString(), "templateName", request.templateName(), "rarity", request.rarity() == null ? "ROLLED" : request.rarity().name()));
         return ResponseEntity.ok(new GrantEquipmentResponse(equipmentId, "Equipment granted successfully"));
     }
 

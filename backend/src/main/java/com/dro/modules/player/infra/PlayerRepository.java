@@ -33,6 +33,7 @@ public interface PlayerRepository extends JpaRepository<Player, UUID>, JpaSpecif
     boolean existsByEmailIgnoreCase(String email);
 
     boolean existsByUsername(String username);
+    boolean existsByUsernameIgnoreCase(String username);
 
     List<Player> findByClanId(UUID clanId);
 
@@ -41,6 +42,8 @@ public interface PlayerRepository extends JpaRepository<Player, UUID>, JpaSpecif
     List<Player> findTop100ByUsernameContainingIgnoreCaseOrderByUsernameAsc(String username);
 
     long countByClanId(UUID clanId);
+
+    long countByActiveDigimonIdIsNull();
 
     long countByUserType(UserType userType);
 

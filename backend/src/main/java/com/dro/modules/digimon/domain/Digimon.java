@@ -2,6 +2,7 @@ package com.dro.modules.digimon.domain;
 
 import com.dro.modules.digimon.domain.enums.*;
 import com.dro.shared.exception.UnprocessableException;
+import com.dro.modules.player.domain.Player;
 import jakarta.persistence.*;
 import java.time.Duration;
 import java.time.Instant;
@@ -12,9 +13,10 @@ import java.util.UUID;
  * Parceiro Digimon persistente e principal unidade de progressão do jogador.
  *
  * <p>O Digimon concentra estágio, nível, experiência, IVs, raridade,
- * personalidade, trait, energia, Bits, Rebirth e referências aos equipamentos
- * por slot. Inventário e operações de combate devem respeitar o vínculo entre
- * este registro e seu {@code playerId}.</p>
+ * personalidade, trait, energia, Rebirth e referências aos equipamentos
+ * por slot. O saldo de Bits pertence ao Player; o campo legado é mantido apenas
+ * durante a migração. Inventário e operações de combate devem respeitar o vínculo
+ * entre este registro e seu {@code playerId}.</p>
  */
 @Entity
 @Table(name = "digimons")
@@ -22,8 +24,11 @@ public class Digimon {
     private static final int MAX_LEVEL = DigimonLevelRules.MAX_LEVEL;
     @Id
     private UUID id;
-    @Column(nullable = false)
+    @Column(name = "player_id", nullable = false)
     private UUID playerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_id", insertable = false, updatable = false)
+    private Player player;
     @Column(nullable = false)
     private String name;
     @Column(nullable = false)
@@ -49,6 +54,13 @@ public class Digimon {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Rarity rarity;
+    @Column(name = "rarity_changed_by_die", nullable = false)
+    private boolean rarityChangedByDie;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "original_rarity_before_die")
+    private Rarity originalRarityBeforeDie;
+    @Column(name = "rarity_changed_by_die_at")
+    private LocalDateTime rarityChangedByDieAt;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Personality personality;
@@ -58,6 +70,8 @@ public class Digimon {
     private int maxEnergy;
     @Column(name = "last_energy_update", nullable = false)
     private Instant lastEnergyUpdate;
+    /** Campo legado; o saldo oficial fica em Player.bits. */
+    @Deprecated
     @Column(nullable = false)
     private int bits;
     @Column(name = "rebirth_count", nullable = false)
@@ -89,6 +103,8 @@ public class Digimon {
     private UUID accessoryId;
     @Column(name = "digimon_info_id")
     private Long digimonInfoId;
+    @Column(name = "is_locked", nullable = false)
+    private boolean locked;
 
     /**
      * Vincula uma arma ao slot de arma do Digimon.
@@ -390,6 +406,26 @@ public class Digimon {
         this.rarity = rarity;
     }
 
+    public boolean isRarityChangedByDie() {
+        return rarityChangedByDie;
+    }
+
+    public Rarity getOriginalRarityBeforeDie() {
+        return originalRarityBeforeDie;
+    }
+
+    public LocalDateTime getRarityChangedByDieAt() {
+        return rarityChangedByDieAt;
+    }
+
+    public void markRarityChangedByDie(Rarity originalRarity, LocalDateTime changedAt) {
+        if (!this.rarityChangedByDie) {
+            this.originalRarityBeforeDie = originalRarity;
+            this.rarityChangedByDieAt = changedAt;
+            this.rarityChangedByDie = true;
+        }
+    }
+
     public Personality getPersonality() {
         return personality;
     }
@@ -422,12 +458,23 @@ public class Digimon {
         this.lastEnergyUpdate = lastEnergyUpdate;
     }
 
+    /**
+     * Retorna o saldo global do jogador quando a relação está disponível.
+     * O campo local permanece apenas como compatibilidade com fixtures legadas.
+     */
     public int getBits() {
-        return bits;
+        return player != null ? player.getBits() : bits;
     }
 
+    /**
+     * Atualiza o saldo global do jogador quando a relação está disponível.
+     */
     public void setBits(int bits) {
-        this.bits = bits;
+        if (player != null) {
+            player.setBits(bits);
+        } else {
+            this.bits = bits;
+        }
     }
 
     public int getRebirthCount() {
@@ -534,6 +581,14 @@ public class Digimon {
         this.digimonInfoId = digimonInfoId;
     }
 
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
+
     private static int $default$arenaRating() {
         return 1000;
     }
@@ -595,6 +650,7 @@ public class Digimon {
         private UUID armorId;
         private UUID accessoryId;
         private Long digimonInfoId;
+        private boolean locked;
 
         DigimonBuilder() {
         }
@@ -876,6 +932,11 @@ public class Digimon {
             return this;
         }
 
+        public Digimon.DigimonBuilder locked(final boolean locked) {
+            this.locked = locked;
+            return this;
+        }
+
         public Digimon build() {
             int arenaRating$value = this.arenaRating$value;
             if (!this.arenaRating$set) arenaRating$value = Digimon.$default$arenaRating();
@@ -887,7 +948,7 @@ public class Digimon {
             if (!this.bot$set) bot$value = Digimon.$default$bot();
             long version$value = this.version$value;
             if (!this.version$set) version$value = Digimon.$default$version();
-            return new Digimon(this.id, this.playerId, this.name, this.type, this.stage, this.level, this.experience, this.hp, this.attack, this.defense, this.ivHp, this.ivAttack, this.ivDefense, this.grade, this.createdAt, this.rarity, this.personality, this.energy, this.maxEnergy, this.lastEnergyUpdate, this.bits, this.rebirthCount, arenaRating$value, arenaWins$value, arenaLosses$value, bot$value, version$value, this.status, this.rebornedFrom, this.trait, this.weaponId, this.armorId, this.accessoryId, this.digimonInfoId);
+            return new Digimon(this.id, this.playerId, this.name, this.type, this.stage, this.level, this.experience, this.hp, this.attack, this.defense, this.ivHp, this.ivAttack, this.ivDefense, this.grade, this.createdAt, this.rarity, this.personality, this.energy, this.maxEnergy, this.lastEnergyUpdate, this.bits, this.rebirthCount, arenaRating$value, arenaWins$value, arenaLosses$value, bot$value, version$value, this.status, this.rebornedFrom, this.trait, this.weaponId, this.armorId, this.accessoryId, this.digimonInfoId, this.locked);
         }
 
         @Override
@@ -908,7 +969,7 @@ public class Digimon {
         this.version = Digimon.$default$version();
     }
 
-    public Digimon(final UUID id, final UUID playerId, final String name, final String type, final Stage stage, final int level, final int experience, final int hp, final int attack, final int defense, final int ivHp, final int ivAttack, final int ivDefense, final DigimonGrade grade, final LocalDateTime createdAt, final Rarity rarity, final Personality personality, final int energy, final int maxEnergy, final Instant lastEnergyUpdate, final int bits, final int rebirthCount, final int arenaRating, final int arenaWins, final int arenaLosses, final boolean bot, final long version, final DigimonStatus status, final UUID rebornedFrom, final Trait trait, final UUID weaponId, final UUID armorId, final UUID accessoryId, final Long digimonInfoId) {
+    public Digimon(final UUID id, final UUID playerId, final String name, final String type, final Stage stage, final int level, final int experience, final int hp, final int attack, final int defense, final int ivHp, final int ivAttack, final int ivDefense, final DigimonGrade grade, final LocalDateTime createdAt, final Rarity rarity, final Personality personality, final int energy, final int maxEnergy, final Instant lastEnergyUpdate, final int bits, final int rebirthCount, final int arenaRating, final int arenaWins, final int arenaLosses, final boolean bot, final long version, final DigimonStatus status, final UUID rebornedFrom, final Trait trait, final UUID weaponId, final UUID armorId, final UUID accessoryId, final Long digimonInfoId, final boolean locked) {
         this.id = id;
         this.playerId = playerId;
         this.name = name;
@@ -943,5 +1004,6 @@ public class Digimon {
         this.armorId = armorId;
         this.accessoryId = accessoryId;
         this.digimonInfoId = digimonInfoId;
+        this.locked = locked;
     }
 }

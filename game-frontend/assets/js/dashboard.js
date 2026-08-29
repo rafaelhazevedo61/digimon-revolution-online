@@ -82,8 +82,8 @@ function renderDashContent(data) {
     <!-- Actions -->
     <div class="grid grid-cols-3 gap-2 mb-4">
       <button class="btn-primary w-full" onclick="navigateTo('evolution')">⚡ Evoluir</button>
-      <button class="w-full py-2 rounded-lg font-bold text-sm" style="background:#854d0e;color:#fbbf24" onclick="navigateTo('rebirth')">🔄 Rebirth</button>
-      <button class="w-full py-2 rounded-lg font-bold text-sm" style="background:#164e63;color:#67e8f9" onclick="navigateTo('storage')">📦 Storage</button>
+      <button class="w-full py-2 rounded-lg font-bold text-sm" style="background:#854d0e;color:#fbbf24" onclick="navigateTo('rebirth')">🔄 Renascer</button>
+      <button class="w-full py-2 rounded-lg font-bold text-sm" style="background:#164e63;color:#67e8f9" onclick="navigateTo('storage')">📦 Armazém</button>
     </div>
     ` : ""}
 
@@ -200,7 +200,7 @@ function renderDigimonCard(d) {
           <p class="text-xs text-slate-400">${escapeHtml(formatDigimonType(d.type))}</p>
           <div class="flex gap-2 mt-1 flex-wrap">
             <span class="badge badge-${d.stage.toLowerCase()}">${escapeHtml(formatStage(d.stage))}</span>
-            <span class="badge badge-${d.rarity.toLowerCase()}">${escapeHtml(formatRarity(d.rarity))}</span>
+            <span class="badge badge-${d.rarity.toLowerCase()}">${escapeHtml(formatRarity(d.rarity))}</span>${renderRarityDieIndicator(d)}
             ${d.attribute ? `<span class="badge badge-common">${escapeHtml(formatAttribute(d.attribute))}</span>` : ""}
             ${d.element ? `<span class="badge badge-common">${escapeHtml(formatElement(d.element))}</span>` : ""}
           </div>

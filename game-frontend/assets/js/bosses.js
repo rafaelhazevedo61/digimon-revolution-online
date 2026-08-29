@@ -27,7 +27,7 @@ async function renderBossesPage() {
   app.innerHTML = `
     <div class="page-container">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-bold px-1">Bosses</h2>
+        <h2 class="text-lg font-bold px-1">Chefes</h2>
         <button class="text-xs text-cyan-400 hover:text-cyan-300" onclick="navigateTo('boss-history')">Historico</button>
       </div>
       <div class="flex gap-1.5 mb-3" id="boss-stage-tabs"></div>

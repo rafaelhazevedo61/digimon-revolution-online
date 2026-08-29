@@ -2,6 +2,7 @@ package com.dro.modules.digimon.domain;
 
 import com.dro.modules.digimon.domain.enums.Rarity;
 
+import java.util.Optional;
 import java.util.Random;
 
 /**
@@ -47,6 +48,38 @@ public class RarityRoller {
     }
 
     /**
+     * Sorteio explícito do Dado de Raridade. O resultado nunca repete a raridade
+     * atual. Para Digimons Comuns, existe também a possibilidade de o dado não
+     * alterar a raridade.
+     */
+    public static Optional<Rarity> rollForRarityDie(Rarity currentRarity) {
+        int roll = random.nextInt(10000);
+        return switch (currentRarity) {
+            case COMMON -> {
+                if (roll < 6770) yield Optional.empty();
+                if (roll < 9770) yield Optional.of(Rarity.RARE);
+                if (roll < 9970) yield Optional.of(Rarity.EPIC);
+                yield Optional.of(Rarity.LEGENDARY);
+            }
+            case RARE -> {
+                if (roll < 9770) yield Optional.of(Rarity.COMMON);
+                if (roll < 9970) yield Optional.of(Rarity.EPIC);
+                yield Optional.of(Rarity.LEGENDARY);
+            }
+            case EPIC -> {
+                if (roll < 7121) yield Optional.of(Rarity.COMMON);
+                if (roll < 9970) yield Optional.of(Rarity.RARE);
+                yield Optional.of(Rarity.LEGENDARY);
+            }
+            case LEGENDARY -> {
+                if (roll < 6500) yield Optional.of(Rarity.COMMON);
+                if (roll < 8900) yield Optional.of(Rarity.RARE);
+                yield Optional.of(Rarity.EPIC);
+            }
+        };
+    }
+
+    /**
      * Sorteia uma raridade específica para o fluxo de Rebirth.
      *
      * Primeiro tenta herdar a raridade anterior.
@@ -81,30 +114,17 @@ public class RarityRoller {
         int epicWeight = 8 + (cappedRebirth / 2);
         int legendaryWeight = 2 + legendaryBonus;
 
-        int totalWeight =
-                commonWeight
-                        + rareWeight
-                        + epicWeight
-                        + legendaryWeight;
+        return rollByWeights(commonWeight, rareWeight, epicWeight, legendaryWeight);
+    }
 
+    private static Rarity rollByWeights(int commonWeight, int rareWeight, int epicWeight, int legendaryWeight) {
+        int totalWeight = commonWeight + rareWeight + epicWeight + legendaryWeight;
         int roll = random.nextInt(totalWeight) + 1;
-
-        if (roll <= commonWeight) {
-            return Rarity.COMMON;
-        }
-
+        if (roll <= commonWeight) return Rarity.COMMON;
         roll -= commonWeight;
-
-        if (roll <= rareWeight) {
-            return Rarity.RARE;
-        }
-
+        if (roll <= rareWeight) return Rarity.RARE;
         roll -= rareWeight;
-
-        if (roll <= epicWeight) {
-            return Rarity.EPIC;
-        }
-
+        if (roll <= epicWeight) return Rarity.EPIC;
         return Rarity.LEGENDARY;
     }
 }

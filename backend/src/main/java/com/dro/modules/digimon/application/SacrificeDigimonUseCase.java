@@ -36,8 +36,11 @@ public class SacrificeDigimonUseCase {
         if (!playerId.equals(digimon.getPlayerId())) {
             throw new BadRequestException("Digimon does not belong to player");
         }
-        if (digimon.getStatus() != DigimonStatus.STORED) {
-            throw new BadRequestException("Only stored Digimons can be sacrificed");
+        if (digimon.getStatus() != DigimonStatus.STORED && digimon.getStatus() != DigimonStatus.HATCHED) {
+            throw new BadRequestException("Only stored or newly hatched Digimons can be sacrificed");
+        }
+        if (digimon.isLocked()) {
+            throw new BadRequestException("Locked Digimons cannot be sacrificed");
         }
         if (digimon.getId().equals(player.getActiveDigimonId())) {
             throw new BadRequestException("The active Digimon cannot be sacrificed");
@@ -49,9 +52,9 @@ public class SacrificeDigimonUseCase {
         int reward = DigitalDataRules.calculate(
                 digimon.getStage(), digimon.getLevel(),
                 digimon.getIvHp(), digimon.getIvAttack(), digimon.getIvDefense());
+        inventoryRepository.deleteByDigimonId(digimonId);
         player.addDigitalData(reward);
         playerRepository.save(player);
-        inventoryRepository.deleteByDigimonId(digimon.getId());
         digimon.setStatus(DigimonStatus.SACRIFICED);
         digimonRepository.save(digimon);
         return reward;

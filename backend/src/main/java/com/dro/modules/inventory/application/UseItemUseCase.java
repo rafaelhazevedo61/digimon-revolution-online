@@ -60,7 +60,7 @@ public class UseItemUseCase {
             throw new BadRequestException("No active digimon selected");
         }
         Digimon digimon = digimonRepository.findByIdForUpdate(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Active digimon not found"));
-        InventoryItem item = inventoryRepository.findByDigimonIdAndItemTypeForUpdate(digimon.getId(), type).orElseThrow(() -> new NotFoundException("Item not found"));
+        InventoryItem item = inventoryRepository.findByPlayerIdAndItemTypeForUpdate(playerId, type).orElseThrow(() -> new NotFoundException("Item not found"));
         if (item.getQuantity() <= 0) {
             throw new UnprocessableException("No item available");
         }
@@ -173,7 +173,7 @@ public class UseItemUseCase {
         Digimon digimon = digimonRepository.findById(player.getActiveDigimonId())
                 .orElseThrow(() -> new NotFoundException("Active digimon not found"));
         InventoryItem item = inventoryRepository
-                .findByDigimonIdAndItemTypeForUpdate(digimon.getId(), ItemType.INCUBATION_SLOT_UNLOCK)
+                .findByPlayerIdAndItemTypeForUpdate(playerId, ItemType.INCUBATION_SLOT_UNLOCK)
                 .orElseThrow(() -> new NotFoundException("Item not found"));
         if (item.getQuantity() <= 0) {
             throw new UnprocessableException("No item available");

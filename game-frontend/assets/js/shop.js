@@ -259,13 +259,7 @@ async function shopRenderSellMode() {
     ]);
 
     shopInventoryItems = inventory || [];
-    const digimonId = dashboard.activeDigimon ? dashboard.activeDigimon.id : null;
-
-    if (digimonId) {
-      shopInventoryEquipments = await apiGet(`/equipment/digimon/${digimonId}/inventory`);
-    } else {
-      shopInventoryEquipments = [];
-    }
+    shopInventoryEquipments = await apiGet(`/equipment/inventory`) || [];
 
     shopRenderSellList();
   } catch (err) {

@@ -31,14 +31,15 @@ public class UnequipUseCase {
         }
         Digimon digimon = digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Active digimon not found"));
         Equipment equipment = equipmentRepository.findById(equipmentId).orElseThrow(() -> new NotFoundException("Equipment not found"));
-        if (!equipment.getDigimonId().equals(digimon.getId())) {
-            throw new ForbiddenException("Equipment does not belong to this Digimon");
+        if (!playerId.equals(equipment.getPlayerId()) || !digimon.getId().equals(equipment.getDigimonId())) {
+            throw new ForbiddenException("Equipment does not belong to this player and active Digimon");
         }
         if (!equipment.isEquipped()) {
             throw new BadRequestException("Equipment is not equipped");
         }
         digimon.clearSlot(equipment.getSlot());
         equipment.unequip();
+        equipment.setDigimonId(null);
         digimonRepository.save(digimon);
         equipmentRepository.save(equipment);
     }
