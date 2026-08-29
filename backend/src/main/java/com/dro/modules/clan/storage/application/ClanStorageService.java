@@ -79,7 +79,7 @@ public class ClanStorageService {
         int requiredNewSlots = calculateRequiredNewSlots(stacks, quantity, maxStack);
         int usedSlots = Math.toIntExact(storageItemRepository.countByClanId(clanId));
         if (usedSlots + requiredNewSlots > getCapacity(clanId)) {
-            throw new BadRequestException("Clan storage has no available slots");
+            throw new BadRequestException("O armazém do clã não possui slots disponíveis.");
         }
 
         personalItem.setQuantity(personalItem.getQuantity() - quantity);
