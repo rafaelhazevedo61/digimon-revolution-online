@@ -1,6 +1,9 @@
 let forgeEquipments = [];
 let forgeSearchQuery = "";
 let forgeInventory = [];
+let forgeAutoEquipmentId = null;
+let forgeAutoAttempts = 0;
+let forgeAutoTimer = null;
 const FORGE_SUPPORT_PREFERENCES_KEY = "dro-forge-support-preferences";
 
 function forgeSupportPreferences() {
@@ -168,7 +171,12 @@ async function forgeShowRefine(equipmentId) {
   const overlay = document.createElement("div");
   overlay.id = "forge-refine-overlay";
   overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;display:flex;align-items:flex-end;justify-content:center;";
-  overlay.onclick = event => { if (event.target === overlay) overlay.remove(); };
+  overlay.onclick = event => {
+    if (event.target === overlay) {
+      forgeStopAutoRefine();
+      overlay.remove();
+    }
+  };
   overlay.innerHTML = `
     <div class="card" style="max-width:420px;width:100%;max-height:85vh;overflow-y:auto;border-radius:1rem 1rem 0 0;margin:0 auto;">
       <div class="text-center mb-3">
@@ -204,6 +212,10 @@ async function forgeShowRefine(equipmentId) {
         </div>
         ${preview.breakChance > 0 ? `<p class="text-[10px] text-red-300 mt-2">Atenção: esta tentativa tem ${preview.breakChance}% de chance de quebrar o equipamento.</p>` : ""}
       </div>
+      <div class="flex items-center justify-between gap-2 rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2 mb-3">
+        <span class="text-xs text-slate-300">Tentativa automática <span class="block text-[10px] text-slate-500">Repete enquanto houver recursos</span></span>
+        <button id="forge-auto-toggle" type="button" role="switch" aria-checked="false" data-active="false" class="forge-support-toggle" onclick="forgeToggleAuto('${equipmentId}', ${Boolean(preview.canRefine)})">OFF</button>
+      </div>
       <button id="forge-refine-btn" data-next-level="${nextLevel}" class="btn-primary w-full py-3 text-base font-bold ${!preview.canRefine ? "opacity-60" : ""}" onclick="forgeDoRefine('${equipmentId}', ${Boolean(preview.canRefine)})">🔨 Refinar para +${nextLevel} (<span id="forge-refine-button-rate">${preview.successRate}%</span>)</button>
       ${!preview.canRefine ? `<p class="text-red-400 text-xs text-center mt-2">Recursos insuficientes</p>` : ""}
     </div>
@@ -213,6 +225,7 @@ async function forgeShowRefine(equipmentId) {
 }
 
 async function forgeDoRefine(equipmentId, canRefine = true) {
+  if (forgeAutoEquipmentId) return;
   if (!canRefine) {
     const preview = await apiGet(`/equipment/${equipmentId}/refine-preview`).catch(() => null);
     if (preview) {
@@ -279,4 +292,91 @@ function forgeUpdateRefineChance(baseRate) {
 function forgeFindItemCount(code) {
   return forgeInventory.filter(item => item.quantity > 0 && (item.itemDefinition?.code === code || item.itemType === code))
     .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+}
+
+function forgeToggleAuto(equipmentId, canRefine) {
+  const toggle = document.getElementById("forge-auto-toggle");
+  if (!toggle) return;
+  const active = toggle.dataset.active !== "true";
+  if (active && !canRefine) {
+    showToast("Não há recursos suficientes para iniciar as tentativas automáticas.", "error");
+    return;
+  }
+  toggle.dataset.active = String(active);
+  toggle.textContent = active ? "ON" : "OFF";
+  toggle.setAttribute("aria-checked", String(active));
+  toggle.classList.toggle("is-active", active);
+  if (active) {
+    forgeAutoEquipmentId = equipmentId;
+    forgeAutoAttempts = 0;
+    const button = document.getElementById("forge-refine-btn");
+    if (button) { button.disabled = true; button.textContent = "Refinando automaticamente..."; }
+    forgeAutoStep();
+  } else {
+    forgeStopAutoRefine();
+  }
+}
+
+function forgeStopAutoRefine() {
+  forgeAutoEquipmentId = null;
+  forgeAutoAttempts = 0;
+  if (forgeAutoTimer) {
+    clearTimeout(forgeAutoTimer);
+    forgeAutoTimer = null;
+  }
+  const toggle = document.getElementById("forge-auto-toggle");
+  if (toggle) {
+    toggle.dataset.active = "false";
+    toggle.textContent = "OFF";
+    toggle.setAttribute("aria-checked", "false");
+    toggle.classList.remove("is-active");
+  }
+  const button = document.getElementById("forge-refine-btn");
+  if (button) button.disabled = false;
+}
+
+async function forgeAutoStep() {
+  const equipmentId = forgeAutoEquipmentId;
+  if (!equipmentId || !document.getElementById("forge-refine-btn")) return;
+  if (forgeAutoAttempts >= 50) {
+    forgeStopAutoRefine();
+    showToast("Tentativa automática interrompida após 50 tentativas.", "error");
+    return;
+  }
+  try {
+    const preview = await apiGet(`/equipment/${equipmentId}/refine-preview`);
+    if (preview.currentRefinementLevel >= preview.nextRefinementLevel || !preview.canRefine) {
+      forgeStopAutoRefine();
+      showToast(preview.currentRefinementLevel >= preview.nextRefinementLevel ? "Equipamento maximizado em +11." : "Tentativa automática interrompida: recursos insuficientes.", "error");
+      await renderForgePage();
+      return;
+    }
+    const result = await apiPost("/equipment/refine", {
+      equipmentId,
+      successBoostItemCode: document.getElementById("forge-success-boost")?.dataset.active === "true" ? "REFINEMENT_SUCCESS_BOOST" : null,
+      protectionItemCode: document.getElementById("forge-protection")?.dataset.active === "true" ? "REFINEMENT_PROTECTION" : null
+    });
+    if (forgeAutoEquipmentId !== equipmentId) return;
+    forgeAutoAttempts += 1;
+    if (result.equipmentDestroyed) {
+      forgeStopAutoRefine();
+      document.getElementById("forge-refine-overlay")?.remove();
+      showToast(result.message || "O equipamento foi destruído.", "error");
+      await renderForgePage();
+      return;
+    }
+    const button = document.getElementById("forge-refine-btn");
+    if (button) button.textContent = `Tentativa automática · +${result.newRefinementLevel}`;
+    if (result.newRefinementLevel >= 11) {
+      forgeStopAutoRefine();
+      document.getElementById("forge-refine-overlay")?.remove();
+      showToast(result.message || "Equipamento maximizado em +11.");
+      await renderForgePage();
+      return;
+    }
+    forgeAutoTimer = setTimeout(forgeAutoStep, 350);
+  } catch (err) {
+    forgeStopAutoRefine();
+    showToast(err.message, "error");
+  }
 }
