@@ -47,6 +47,9 @@ public class UseItemUseCase {
         if (isIncubationOnly(type)) {
             throw new BadRequestException("Digitamas e incubadoras devem ser usados pela tela de incubação");
         }
+        if (type == ItemType.RARITY_PRESERVATION) {
+            throw new BadRequestException("O Cristal de Preservação deve ser usado na tela de Renascimento");
+        }
         UUID playerId = TokenExtractor.extractPlayerId(token);
         if (type == ItemType.INCUBATION_SLOT_UNLOCK) {
             return unlockIncubationSlot(playerId);

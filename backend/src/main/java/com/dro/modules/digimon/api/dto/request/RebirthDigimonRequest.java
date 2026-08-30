@@ -20,7 +20,9 @@ public record RebirthDigimonRequest(
         Integer codeInfiniteAttack,
 
         @Min(0)
-        Integer codeInfiniteDefense
+        Integer codeInfiniteDefense,
+
+        Boolean preserveRarity
 
 ) {
     public int codeInfiniteHpOrZero() {
@@ -33,5 +35,9 @@ public record RebirthDigimonRequest(
 
     public int codeInfiniteDefenseOrZero() {
         return codeInfiniteDefense == null ? 0 : codeInfiniteDefense;
+    }
+
+    public boolean preserveRarityOrFalse() {
+        return Boolean.TRUE.equals(preserveRarity);
     }
 }

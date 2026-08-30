@@ -53,11 +53,16 @@ public class RebirthUseCase {
 
     @Transactional
     public void execute(String token, UUID digimonId) {
-        execute(token, digimonId, 0, 0, 0);
+        execute(token, digimonId, 0, 0, 0, false);
     }
 
     @Transactional
     public void execute(String token, UUID digimonId, int codeInfiniteHp, int codeInfiniteAttack, int codeInfiniteDefense) {
+        execute(token, digimonId, codeInfiniteHp, codeInfiniteAttack, codeInfiniteDefense, false);
+    }
+
+    @Transactional
+    public void execute(String token, UUID digimonId, int codeInfiniteHp, int codeInfiniteAttack, int codeInfiniteDefense, boolean preserveRarity) {
         UUID playerId = extractPlayerId(token);
         Player player = findPlayer(playerId);
         Digimon oldDigimon = findDigimon(digimonId);
@@ -80,8 +85,9 @@ public class RebirthUseCase {
         validateDataCore(dataCore, dataCoreCost);
         InventoryItem codeInfinite = findCodeInfinite(digimonId, codeInfiniteCost);
         validateCodeInfinite(codeInfinite, codeInfiniteCost);
+        InventoryItem rarityPreservation = preserveRarity ? findRarityPreservationItem(digimonId) : null;
         consumeCosts(player, dataCore, codeInfinite, bitsCost, dataCoreCost, digitalDataCost, codeInfiniteCost);
-        Digimon newDigimon = createRebornDigimon(playerId, oldDigimon, newRebirthCount, codeInfiniteHp, codeInfiniteAttack, codeInfiniteDefense);
+        Digimon newDigimon = createRebornDigimon(playerId, oldDigimon, newRebirthCount, codeInfiniteHp, codeInfiniteAttack, codeInfiniteDefense, preserveRarity);
         // A constraint do banco permite apenas um Digimon ACTIVE por jogador.
         // Libere o slot e force o UPDATE antes de inserir o novo Digimon ACTIVE.
         oldDigimon.setStatus(DigimonStatus.REBORN);
@@ -89,6 +95,7 @@ public class RebirthUseCase {
         digimonRepository.save(newDigimon);
         inventoryRepository.save(dataCore);
         if (codeInfinite != null && codeInfiniteCost > 0) inventoryRepository.save(codeInfinite);
+        if (rarityPreservation != null) consumeRarityPreservationItem(rarityPreservation);
         if (player.getClanId() != null) {
             clanMissionProgressTracker.track(playerId, ClanMissionObjectiveType.REBIRTHS_DONE);
         }
@@ -172,6 +179,19 @@ public class RebirthUseCase {
                 .orElseGet(() -> required == 0 ? null : null);
     }
 
+    private InventoryItem findRarityPreservationItem(UUID digimonId) {
+        InventoryItem item = inventoryRepository.findByDigimonIdAndItemTypeForUpdate(digimonId, ItemType.RARITY_PRESERVATION)
+                .orElseThrow(() -> new UnprocessableException("Item de preservação de raridade indisponível"));
+        if (item.getQuantity() < 1) throw new UnprocessableException("Item de preservação de raridade indisponível");
+        return item;
+    }
+
+    private void consumeRarityPreservationItem(InventoryItem item) {
+        item.setQuantity(item.getQuantity() - 1);
+        if (item.getQuantity() == 0) inventoryRepository.delete(item);
+        else inventoryRepository.save(item);
+    }
+
     private void validateCodeInfiniteInvestment(int hp, int attack, int defense) {
         if (hp < 0 || attack < 0 || defense < 0) {
             throw new BadRequestException("O investimento de Códigos Infinitos não pode ser negativo");
@@ -199,8 +219,8 @@ public class RebirthUseCase {
         playerRepository.save(player);
     }
 
-    private Digimon createRebornDigimon(UUID playerId, Digimon oldDigimon, int newRebirthCount, int codeInfiniteHp, int codeInfiniteAttack, int codeInfiniteDefense) {
-        Rarity rarity = RarityRoller.rollForRebirth(oldDigimon.getRarity(), newRebirthCount);
+    private Digimon createRebornDigimon(UUID playerId, Digimon oldDigimon, int newRebirthCount, int codeInfiniteHp, int codeInfiniteAttack, int codeInfiniteDefense, boolean preserveRarity) {
+        Rarity rarity = preserveRarity ? oldDigimon.getRarity() : RarityRoller.rollForRebirth(oldDigimon.getRarity(), newRebirthCount);
         Personality personality = PersonalityRoller.roll();
         Trait trait = TraitRoller.rollForRebirth(newRebirthCount);
         int rarityMinimumIv = RarityRules.getMinimumIv(rarity);
