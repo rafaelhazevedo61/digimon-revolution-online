@@ -604,8 +604,8 @@ function showEquipDetailModal(equipmentId) {
   const emoji = slotEmoji[eq.slot] || "⚔️";
   const refLabel = eq.refinementLevel > 0 ? ` +${eq.refinementLevel}` : "";
   const setLabel = typeof invSetLabel === "function" ? invSetLabel(eq.setCode) : (eq.setCode || "");
-  const setBadge = typeof invSetBadge === "function" ? invSetBadge(eq.setCode) : "common";
-  const rarityLabel = { COMMON: "Common", RARE: "Rare", EPIC: "Epic", LEGENDARY: "Legendary" };
+  const rarityLabel = { COMMON: "Comum", RARE: "Rara", EPIC: "Épica", LEGENDARY: "Lendária" };
+  const rarityMultiplier = { COMMON: "1,00x", RARE: "1,15x", EPIC: "1,30x", LEGENDARY: "1,50x" };
   const ascensionLevel = Number(eq.ascensionLevel) || 0;
   const ascensionBonus = { 0: "Nenhum", 1: "+30%", 2: "+50%", 3: "+100%" }[ascensionLevel];
   const requiredRebirths = [0, 1, 10, 20][ascensionLevel] || 0;
@@ -635,7 +635,7 @@ function showEquipDetailModal(equipmentId) {
         <summary class="cursor-pointer list-none flex items-center justify-between text-xs text-slate-400"><span>Detalhes do equipamento</span><span class="text-slate-500 group-open:rotate-180 transition-transform">⌄</span></summary>
         <div class="mt-3 pt-3 border-t border-slate-700/70 grid grid-cols-2 gap-2 text-xs">
           <div><span class="text-slate-500">Tier</span><p class="font-semibold">T${eq.tier || '?'}</p></div>
-          <div><span class="text-slate-500">Raridade</span><p class="font-semibold">${rarityLabel[eq.rarity] || eq.rarity}</p></div>
+          <div><span class="text-slate-500">Raridade</span><p class="font-semibold">${rarityLabel[eq.rarity] || eq.rarity} <span class="text-amber-300">(${rarityMultiplier[eq.rarity] || "1,00x"})</span></p></div>
           <div><span class="text-slate-500">Conjunto</span><p class="font-semibold">${eq.setCode ? escapeHtml(setLabel) : 'Sem conjunto'}</p></div>
           <div><span class="text-slate-500">Refinamento</span><p class="font-semibold text-yellow-400">+${eq.refinementLevel}</p></div>
           <div><span class="text-slate-500">Ascensão</span><p class="font-semibold text-amber-300">${ascensionLevel} (${ascensionBonus})</p></div>
