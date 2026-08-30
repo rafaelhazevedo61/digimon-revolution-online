@@ -17,6 +17,7 @@ import com.dro.modules.shop.domain.enums.ShopProductCategory;
 import com.dro.modules.shop.infra.ShopProductRepository;
 import com.dro.modules.tutorial.application.TutorialService;
 import com.dro.shared.audit.TransactionAuditPublisher;
+import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.security.JwtSettings;
 import com.dro.shared.security.JwtTokenCodec;
 import org.junit.jupiter.api.Test;
@@ -32,10 +33,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -111,6 +114,44 @@ class BuyShopProductUseCaseTest {
         verify(addItemUseCase).addMaterial(digimonId, chestDefinition, 2);
         verify(addItemUseCase, never()).execute(any(), any(), anyInt());
         verify(digimonRepository).save(digimon);
+    }
+
+    @Test
+    void buyRejectsMoreThan999Units() {
+        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
+        String productCode = "TRAINING_STONE";
+
+        Player player = Player.builder()
+                .id(playerId)
+                .activeDigimonId(digimonId)
+                .build();
+        Digimon digimon = Digimon.builder()
+                .id(digimonId)
+                .playerId(playerId)
+                .bits(100_000)
+                .build();
+        ShopProductEntity product = ShopProductEntity.builder()
+                .code(productCode)
+                .name("Training Stone")
+                .productType(ShopProductType.ITEM)
+                .itemType(ItemType.TRAINING_STONE)
+                .price(1)
+                .active(true)
+                .build();
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
+        when(shopProductRepository.findById(productCode)).thenReturn(Optional.of(product));
+
+        assertThrows(
+                BadRequestException.class,
+                () -> useCase.execute(
+                        createToken(playerId),
+                        new BuyShopProductRequest(productCode, 1_000)
+                )
+        );
+        verifyNoInteractions(addItemUseCase, grantEquipmentUseCase, tutorialService, transactionAuditPublisher);
     }
 
     private static String createToken(UUID subject) {

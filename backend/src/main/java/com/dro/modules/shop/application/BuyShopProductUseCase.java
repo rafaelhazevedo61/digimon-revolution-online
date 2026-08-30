@@ -38,6 +38,8 @@ import java.util.UUID;
  */
 @Service
 public class BuyShopProductUseCase {
+    private static final int MAX_PURCHASE_QUANTITY = 999;
+
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final AddItemUseCase addItemUseCase;
@@ -71,6 +73,9 @@ public class BuyShopProductUseCase {
         }
         ShopProduct product = shopProductRepository.findById(request.productCode()).map(ShopProductMapper::toProduct).orElseThrow(() -> new NotFoundException("Produto da loja não encontrado: " + request.productCode()));
         int quantity = request.quantity();
+        if (quantity > MAX_PURCHASE_QUANTITY) {
+            throw new BadRequestException("A quantidade máxima por compra é 999 unidades");
+        }
         if (product.getProductType() == ShopProductType.EQUIPMENT && quantity > 1) {
             throw new BadRequestException("Equipamentos devem ser comprados um por vez");
         }

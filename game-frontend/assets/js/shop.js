@@ -1,4 +1,6 @@
 let shopData = null;
+const SHOP_MAX_BUY_QUANTITY = 999;
+
 let shopPlayerBits = 0;
 let shopModalUnitPrice = 0;
 let shopMode = "buy"; // "buy" or "sell"
@@ -256,7 +258,9 @@ function shopOpenBuy(code) {
   if (!product) return;
 
   const isEquip = product.productType === "EQUIPMENT";
-  const maxQty = isEquip ? 1 : Math.floor(shopPlayerBits / product.price) || 1;
+  const affordableQuantity = product.price > 0 ? Math.floor(shopPlayerBits / product.price) : SHOP_MAX_BUY_QUANTITY;
+  const maxQty = isEquip ? 1 : Math.min(SHOP_MAX_BUY_QUANTITY, affordableQuantity);
+  const purchaseUnavailable = !isEquip && maxQty < 1;
   shopModalUnitPrice = product.price;
 
   const overlay = document.createElement("div");
@@ -282,9 +286,14 @@ function shopOpenBuy(code) {
           <label class="label" for="shop-qty">Quantidade</label>
           <div class="flex items-center gap-2">
             <button class="btn-sm btn-primary" onclick="shopQtyChange(-1)" aria-label="Diminuir quantidade">−</button>
-            <input type="number" id="shop-qty" class="input text-center" value="1" min="1" max="${maxQty}" style="width:4rem" oninput="shopQtyUpdate()">
-            <button class="btn-sm btn-primary" onclick="shopQtyChange(1)" aria-label="Aumentar quantidade">+</button>
+            <input type="number" id="shop-qty" class="input text-center" value="${purchaseUnavailable ? 0 : 1}" min="1" max="${maxQty}" style="width:4rem" oninput="shopQtyUpdate()" ${purchaseUnavailable ? "disabled" : ""}>
+            <button class="btn-sm btn-primary" onclick="shopQtyChange(1)" aria-label="Aumentar quantidade" ${purchaseUnavailable ? "disabled" : ""}>+</button>
           </div>
+          <div class="flex items-center gap-2 mt-2">
+            <button class="btn-secondary flex-1 text-xs" onclick="shopBuyMax()" ${purchaseUnavailable ? "disabled" : ""}>Comprar máximo</button>
+            <span class="text-xs text-slate-500">Limite: ${SHOP_MAX_BUY_QUANTITY}</span>
+          </div>
+          ${purchaseUnavailable ? '<p class="text-xs text-red-400 mt-2">Bits insuficientes para comprar este recurso.</p>' : ""}
         </div>
         ` : ""}
         <div class="shop-modal-total shop-modal-total-buy">
@@ -293,7 +302,7 @@ function shopOpenBuy(code) {
         </div>
       </div>
       <div class="shop-modal-actions">
-        <button class="btn-primary flex-1" onclick="shopConfirmBuy('${escapeHtml(code)}', ${product.price})" id="shop-buy-btn">Confirmar</button>
+        <button class="btn-primary flex-1" onclick="shopConfirmBuy('${escapeHtml(code)}', ${product.price})" id="shop-buy-btn" ${purchaseUnavailable ? "disabled" : ""}>Confirmar</button>
         <button class="btn-sm flex-1" style="background:#334155;color:#94a3b8" onclick="shopCloseModal()">Cancelar</button>
       </div>
     </div>
@@ -316,17 +325,33 @@ function shopQtyChange(delta) {
   }
 }
 
+function shopBuyMax() {
+  const input = document.getElementById("shop-qty");
+  if (!input || input.disabled) return;
+
+  const max = Math.min(SHOP_MAX_BUY_QUANTITY, parseInt(input.max, 10) || 1);
+  if (max < 1) return;
+
+  input.value = max;
+  shopQtyUpdate();
+}
+
 function shopQtyUpdate() {
   const input = document.getElementById("shop-qty");
   const totalEl = document.getElementById("shop-total");
   if (!input || !totalEl) return;
-  const qty = parseInt(input.value) || 1;
+
+  const min = parseInt(input.min, 10) || 1;
+  const max = Math.min(SHOP_MAX_BUY_QUANTITY, parseInt(input.max, 10) || SHOP_MAX_BUY_QUANTITY);
+  const qty = Math.max(min, Math.min(max, parseInt(input.value, 10) || min));
+  input.value = qty;
   totalEl.textContent = shopFormatBits(qty * shopModalUnitPrice);
 }
 
 async function shopConfirmBuy(code, unitPrice) {
   const qtyInput = document.getElementById("shop-qty");
-  const qty = qtyInput ? parseInt(qtyInput.value) || 1 : 1;
+  const max = qtyInput ? Math.min(SHOP_MAX_BUY_QUANTITY, parseInt(qtyInput.max, 10) || SHOP_MAX_BUY_QUANTITY) : 1;
+  const qty = qtyInput ? Math.max(1, Math.min(max, parseInt(qtyInput.value, 10) || 1)) : 1;
   const btn = document.getElementById("shop-buy-btn");
   if (btn) { btn.disabled = true; btn.textContent = "Comprando..."; }
 
