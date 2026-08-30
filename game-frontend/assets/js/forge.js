@@ -1,4 +1,5 @@
 let forgeEquipments = [];
+let forgeSearchQuery = "";
 
 async function renderForgePage() {
   const app = document.getElementById("app");
@@ -70,19 +71,32 @@ function renderForgeCraftTab() {
 function renderForgeEquipmentList() {
   const container = document.getElementById("forge-content");
   if (!container) return;
-  if (!forgeEquipments.length) {
-    container.innerHTML = `<div class="card text-center py-8"><div class="text-4xl mb-3">🧰</div><p class="font-semibold text-slate-300">Nenhum equipamento no inventário</p><p class="text-xs text-slate-500 mt-1">Equipamentos não equipados aparecerão aqui.</p></div>`;
+  container.innerHTML = `
+    <div class="flex items-center gap-2 mb-3">
+      <input id="forge-search" class="input flex-1" type="search" value="${escapeAttr(forgeSearchQuery)}" placeholder="Buscar equipamento por nome..." aria-label="Buscar equipamento por nome" oninput="forgeSearchQuery=this.value; renderForgeEquipmentCards()">
+      <span id="forge-count" class="text-xs text-slate-500 whitespace-nowrap"></span>
+    </div>
+    <div id="forge-equipment-items" class="flex flex-col gap-2"></div>
+  `;
+  renderForgeEquipmentCards();
+}
+
+function renderForgeEquipmentCards() {
+  const container = document.getElementById("forge-equipment-items");
+  const count = document.getElementById("forge-count");
+  if (!container || !count) return;
+  const query = forgeSearchQuery.trim().toLocaleLowerCase("pt-BR");
+  const filteredEquipments = forgeEquipments.filter(eq => !query || String(eq.name || "").toLocaleLowerCase("pt-BR").includes(query));
+  count.textContent = `${filteredEquipments.length}/${forgeEquipments.length}`;
+  if (!filteredEquipments.length) {
+    const emptyMessage = forgeEquipments.length ? "Nenhum equipamento encontrado" : "Nenhum equipamento no inventário";
+    const emptyHint = forgeEquipments.length ? "Tente buscar por outro nome." : "Equipamentos não equipados aparecerão aqui.";
+    container.innerHTML = `<div class="card text-center py-8"><div class="text-4xl mb-3">🧰</div><p class="font-semibold text-slate-300">${emptyMessage}</p><p class="text-xs text-slate-500 mt-1">${emptyHint}</p></div>`;
     return;
   }
-
   const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
   container.innerHTML = `
-    <div class="flex items-center justify-between mb-2 px-1">
-      <h3 class="text-sm font-bold text-slate-300">Equipamentos disponíveis</h3>
-      <span class="text-xs text-slate-500">${forgeEquipments.length} item(ns)</span>
-    </div>
-    <div class="flex flex-col gap-2">
-      ${forgeEquipments.map(eq => {
+      ${filteredEquipments.map(eq => {
         const rarity = String(eq.rarity || "COMMON").toLowerCase();
         const ref = Number(eq.refinementLevel || 0);
         return `
@@ -96,7 +110,6 @@ function renderForgeEquipmentList() {
           </div>
         `;
       }).join("")}
-    </div>
   `;
 }
 
