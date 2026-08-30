@@ -617,7 +617,7 @@ function showEquipDetailModal(equipmentId) {
         </div>
       </div>
 
-      <button class="btn-primary w-full py-3 text-base" onclick="this.closest('div[style]').remove()">Fechar</button>
+      <button class="btn-primary w-full py-3 text-base" onclick="document.getElementById('dashboard-equipment-detail-overlay')?.remove()">Fechar</button>
     </div>
   `;
 
