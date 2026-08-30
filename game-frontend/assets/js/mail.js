@@ -17,21 +17,22 @@ function renderMailPage() {
         <button class="btn-primary text-sm" onclick="mailOpenCompose()">+ Nova mensagem</button>
       </div>
 
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-4 px-1">
+      <div class="mb-3 px-1">
         <p class="text-sm text-slate-400">Não lidas: <strong class="text-cyan-300" id="mail-unread-count">--</strong></p>
-        <div class="flex flex-wrap items-center gap-2">
-          <button id="mail-mark-all-read" class="btn-sm text-xs" onclick="mailMarkAllRead()">
-            Marcar todas como lidas
-          </button>
-          <button id="mail-delete-all" class="btn-sm text-xs text-red-300" onclick="mailAskDeleteAll()">
-            Apagar todas
-          </button>
-        </div>
       </div>
 
       <div class="flex gap-2 mb-4" id="mail-folder-tabs">
         <button class="tab-btn active flex-1" data-folder="inbox" onclick="mailSetFolder('inbox')">Entrada</button>
         <button class="tab-btn flex-1" data-folder="sent" onclick="mailSetFolder('sent')">Enviadas</button>
+      </div>
+
+      <div class="flex flex-wrap gap-2 mb-4" id="mail-bulk-actions">
+        <button id="mail-mark-all-read" class="btn-sm flex-1 text-xs" onclick="mailMarkAllRead()">
+          Marcar todas como lidas
+        </button>
+        <button id="mail-delete-all" class="btn-sm flex-1 text-xs text-red-300" onclick="mailAskDeleteAll()">
+          Apagar todas
+        </button>
       </div>
 
       <div id="mail-list">
