@@ -633,9 +633,9 @@ function showEquipDetailModal(equipmentId) {
       <div class="card-sm mb-3">
         <p class="text-xs text-slate-400 mb-2">Atributos finais</p>
         <div class="grid grid-cols-3 gap-2 text-center text-xs">
-          ${eq.effectiveBonusHp > 0 ? `<div><span class="text-slate-400">HP</span><br><strong class="text-red-300 text-base">${eq.effectiveBonusHp}</strong></div>` : ''}
-          ${eq.effectiveBonusAttack > 0 ? `<div><span class="text-slate-400">ATK</span><br><strong class="text-orange-300 text-base">${eq.effectiveBonusAttack}</strong></div>` : ''}
-          ${eq.effectiveBonusDefense > 0 ? `<div><span class="text-slate-400">DEF</span><br><strong class="text-blue-300 text-base">${eq.effectiveBonusDefense}</strong></div>` : ''}
+          <div class="rounded-lg border border-red-900/50 bg-red-950/20 p-2"><span class="text-slate-400">HP</span><br><strong class="text-red-300 text-base">${eq.effectiveBonusHp || 0}</strong></div>
+          <div class="rounded-lg border border-orange-900/50 bg-orange-950/20 p-2"><span class="text-slate-400">ATK</span><br><strong class="text-orange-300 text-base">${eq.effectiveBonusAttack || 0}</strong></div>
+          <div class="rounded-lg border border-blue-900/50 bg-blue-950/20 p-2"><span class="text-slate-400">DEF</span><br><strong class="text-blue-300 text-base">${eq.effectiveBonusDefense || 0}</strong></div>
         </div>
       </div>
 
