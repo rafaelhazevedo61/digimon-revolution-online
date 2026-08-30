@@ -21,6 +21,17 @@ function forgeSetSupportPreference(type, active) {
   localStorage.setItem(FORGE_SUPPORT_PREFERENCES_KEY, JSON.stringify(preferences));
 }
 
+function forgeShowMaximized() {
+  return forgeSupportPreferences().showMaximized !== false;
+}
+
+function forgeToggleMaximized() {
+  const preferences = forgeSupportPreferences();
+  preferences.showMaximized = !forgeShowMaximized();
+  localStorage.setItem(FORGE_SUPPORT_PREFERENCES_KEY, JSON.stringify(preferences));
+  renderForgeEquipmentList();
+}
+
 async function renderForgePage() {
   const app = document.getElementById("app");
   showBottomNav("more");
@@ -92,6 +103,10 @@ function renderForgeEquipmentList() {
   const container = document.getElementById("forge-content");
   if (!container) return;
   container.innerHTML = `
+    <div class="flex items-center justify-between gap-2 mb-3 rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2">
+      <span class="text-xs text-slate-300">Mostrar maximizados</span>
+      <button id="forge-maximized-toggle" type="button" role="switch" aria-checked="${forgeShowMaximized()}" data-active="${forgeShowMaximized()}" class="forge-support-toggle ${forgeShowMaximized() ? "is-active" : ""}" onclick="forgeToggleMaximized()">${forgeShowMaximized() ? "ON" : "OFF"}</button>
+    </div>
     <div class="flex items-center gap-2 mb-3">
       <input id="forge-search" class="input flex-1" type="search" value="${escapeAttr(forgeSearchQuery)}" placeholder="Buscar equipamento por nome..." aria-label="Buscar equipamento por nome" oninput="forgeSearchQuery=this.value; renderForgeEquipmentCards()">
       <span id="forge-count" class="text-xs text-slate-500 whitespace-nowrap"></span>
@@ -106,11 +121,12 @@ function renderForgeEquipmentCards() {
   const count = document.getElementById("forge-count");
   if (!container || !count) return;
   const query = forgeSearchQuery.trim().toLocaleLowerCase("pt-BR");
-  const filteredEquipments = forgeEquipments.filter(eq => !query || String(eq.name || "").toLocaleLowerCase("pt-BR").includes(query));
+  const visibleEquipments = forgeEquipments.filter(eq => forgeShowMaximized() || Number(eq.refinementLevel || 0) < 11);
+  const filteredEquipments = visibleEquipments.filter(eq => !query || String(eq.name || "").toLocaleLowerCase("pt-BR").includes(query));
   count.textContent = `${filteredEquipments.length}/${forgeEquipments.length}`;
   if (!filteredEquipments.length) {
-    const emptyMessage = forgeEquipments.length ? "Nenhum equipamento encontrado" : "Nenhum equipamento no inventário";
-    const emptyHint = forgeEquipments.length ? "Tente buscar por outro nome." : "Equipamentos não equipados aparecerão aqui.";
+    const emptyMessage = forgeEquipments.length && !visibleEquipments.length ? "Todos os equipamentos estão maximizados" : forgeEquipments.length ? "Nenhum equipamento encontrado" : "Nenhum equipamento no inventário";
+    const emptyHint = forgeEquipments.length && !visibleEquipments.length ? "Ative Mostrar maximizados para visualizá-los." : forgeEquipments.length ? "Tente buscar por outro nome." : "Equipamentos não equipados aparecerão aqui.";
     container.innerHTML = `<div class="card text-center py-8"><div class="text-4xl mb-3">🧰</div><p class="font-semibold text-slate-300">${emptyMessage}</p><p class="text-xs text-slate-500 mt-1">${emptyHint}</p></div>`;
     return;
   }
@@ -260,6 +276,11 @@ async function forgeDoRefine(equipmentId, canRefine = true) {
     if (result.equipmentDestroyed) {
       document.getElementById("forge-refine-overlay")?.remove();
       await renderForgePage();
+      return;
+    }
+    if (result.newRefinementLevel >= 11) {
+      document.getElementById("forge-refine-overlay")?.remove();
+      await forgeReload();
       return;
     }
     forgeInventory = await apiGet("/inventory").catch(() => forgeInventory);
