@@ -97,10 +97,16 @@ function renderDashContent(data) {
 
     <!-- Active missions -->
     ${data.activeMissions && data.activeMissions.length > 0 ? `
-    <div class="mb-4">
-      <h3 class="text-sm font-bold text-slate-300 mb-2 px-1">Missões Ativas</h3>
-      ${data.activeMissions.map(renderActiveMission).join("")}
-    </div>
+    <section class="dashboard-missions-section mb-4">
+      <div class="dashboard-section-heading">
+        <div><p class="dashboard-eyebrow dashboard-eyebrow-blue">Atividade em campo</p><h3 class="dashboard-section-title">Missões ativas</h3></div>
+        <span class="dashboard-section-count dashboard-section-count-blue">${data.activeMissions.length}</span>
+      </div>
+      <p class="dashboard-section-note">Acompanhe seus objetivos e resgate suas recompensas.</p>
+      <div class="dashboard-missions-list">
+        ${data.activeMissions.map(renderActiveMission).join("")}
+      </div>
+    </section>
     ` : ""}
 
     <!-- Incubation -->
@@ -349,17 +355,15 @@ function renderActiveMission(m) {
   const done = remaining <= 0;
 
   return `
-    <div class="card-sm mb-2 flex items-center justify-between" data-mission-instance="${m.instanceId}" data-ends-at="${m.endsAt}">
-      <div>
-        <p class="font-bold text-sm">${escapeHtml(m.missionName)}</p>
-        <p class="text-xs text-slate-500 mission-timer">${done ? "Concluída!" : formatTime(remaining)}</p>
+    <article class="dashboard-mission-card ${done ? "dashboard-mission-card-ready" : ""}" data-mission-instance="${m.instanceId}" data-ends-at="${m.endsAt}">
+      <div class="dashboard-mission-icon" aria-hidden="true">✦</div>
+      <div class="dashboard-mission-main">
+        <p class="dashboard-mission-label">Objetivo em campo</p>
+        <p class="dashboard-mission-name">${escapeHtml(m.missionName)}</p>
+        <div class="dashboard-mission-state"><span class="dashboard-mission-dot ${done ? "dashboard-mission-dot-ready" : ""}"></span><span class="mission-timer">${done ? "Concluída!" : `Retorno em ${formatTime(remaining)}`}</span></div>
       </div>
-      ${done ? `
-        <button class="btn-sm btn-primary" onclick="claimMission('${m.instanceId}')">Resgatar</button>
-      ` : `
-        <span class="badge">Em andamento</span>
-      `}
-    </div>
+      <div class="dashboard-mission-action">${done ? `<button class="btn-sm btn-primary" onclick="claimMission('${m.instanceId}')">Resgatar</button>` : `<span class="dashboard-mission-badge">Em andamento</span>`}</div>
+    </article>
   `;
 }
 
@@ -508,15 +512,18 @@ function startMissionTimers() {
 
       if (remaining <= 0) {
         timerEl.textContent = "Concluída!";
+        el.classList.add("dashboard-mission-card-ready");
+        const dot = el.querySelector(".dashboard-mission-dot");
+        if (dot) dot.classList.add("dashboard-mission-dot-ready");
         const btn = el.querySelector("button");
         if (!btn) {
-          const badgeEl = el.querySelector(".badge");
+          const badgeEl = el.querySelector(".dashboard-mission-badge");
           if (badgeEl) {
             badgeEl.outerHTML = `<button class="btn-sm btn-primary" onclick="claimMission('${el.dataset.missionInstance}')">Resgatar</button>`;
           }
         }
       } else {
-        timerEl.textContent = formatTime(remaining);
+        timerEl.textContent = `Retorno em ${formatTime(remaining)}`;
       }
     });
   }, 1000);

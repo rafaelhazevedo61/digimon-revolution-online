@@ -952,3 +952,36 @@ body {
   .dashboard-incubation-card, .dashboard-incubation-progress span { transition: none; }
   .dashboard-incubation-card:hover { transform: none; }
 }
+
+
+/* ===================== Dashboard: missões ativas ===================== */
+.dashboard-eyebrow-blue { color: #60a5fa; }
+.dashboard-section-count-blue { border-color: rgba(96, 165, 250, 0.3); background: rgba(37, 99, 235, 0.12); color: #93c5fd; }
+.dashboard-missions-section { padding: 0.85rem; border: 1px solid rgba(30, 64, 175, 0.62); border-radius: 1rem; background: linear-gradient(145deg, rgba(23, 37, 84, 0.28), rgba(15, 23, 42, 0.52)); box-shadow: 0 12px 30px rgba(2, 6, 23, 0.16); }
+.dashboard-missions-list { display: flex; flex-direction: column; gap: 0.55rem; }
+.dashboard-mission-card { display: grid; grid-template-columns: 2.55rem minmax(0, 1fr) auto; align-items: center; gap: 0.65rem; min-width: 0; padding: 0.65rem 0.7rem; border: 1px solid rgba(59, 130, 246, 0.42); border-radius: 0.8rem; background: linear-gradient(100deg, rgba(30, 58, 138, 0.2), rgba(15, 23, 42, 0.74)); box-shadow: inset 0 1px 0 rgba(147, 197, 253, 0.04); transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease; }
+.dashboard-mission-card:hover { border-color: rgba(96, 165, 250, 0.78); box-shadow: 0 8px 22px rgba(2, 6, 23, 0.28), 0 0 16px rgba(59, 130, 246, 0.12); transform: translateY(-1px); }
+.dashboard-mission-card-ready { border-color: rgba(34, 197, 94, 0.62); background: linear-gradient(100deg, rgba(20, 83, 45, 0.26), rgba(15, 23, 42, 0.72)); }
+.dashboard-mission-card-ready:hover { border-color: rgba(74, 222, 128, 0.82); box-shadow: 0 8px 22px rgba(2, 6, 23, 0.28), 0 0 16px rgba(74, 222, 128, 0.14); }
+.dashboard-mission-icon { display: flex; width: 2.35rem; height: 2.35rem; align-items: center; justify-content: center; border: 1px solid rgba(96, 165, 250, 0.2); border-radius: 0.7rem; background: rgba(37, 99, 235, 0.18); color: #93c5fd; font-size: 1.2rem; filter: drop-shadow(0 0 9px rgba(96, 165, 250, 0.16)); }
+.dashboard-mission-card-ready .dashboard-mission-icon { border-color: rgba(74, 222, 128, 0.22); background: rgba(22, 163, 74, 0.16); color: #86efac; filter: drop-shadow(0 0 9px rgba(74, 222, 128, 0.16)); }
+.dashboard-mission-main { min-width: 0; }
+.dashboard-mission-label { margin: 0; color: #64748b; font-size: 0.57rem; font-weight: 800; letter-spacing: 0.1em; line-height: 1.2; text-transform: uppercase; }
+.dashboard-mission-name { margin: 0.2rem 0 0; overflow: hidden; color: #f8fafc; font-size: 0.76rem; font-weight: 800; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.dashboard-mission-state { display: flex; align-items: center; gap: 0.32rem; margin-top: 0.35rem; color: #93c5fd; font-size: 0.62rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.dashboard-mission-card-ready .dashboard-mission-state { color: #86efac; }
+.dashboard-mission-dot { width: 0.4rem; height: 0.4rem; flex: 0 0 auto; border-radius: 9999px; background: #60a5fa; box-shadow: 0 0 8px rgba(96, 165, 250, 0.65); }
+.dashboard-mission-dot-ready { background: #4ade80; box-shadow: 0 0 8px rgba(74, 222, 128, 0.65); }
+.dashboard-mission-action { display: flex; min-width: 5.5rem; justify-content: flex-end; }
+.dashboard-mission-action .btn-sm { padding: 0.38rem 0.58rem; font-size: 0.62rem; }
+.dashboard-mission-badge { padding: 0.3rem 0.45rem; border: 1px solid rgba(96, 165, 250, 0.2); border-radius: 9999px; background: rgba(37, 99, 235, 0.12); color: #93c5fd; font-size: 0.58rem; font-weight: 800; white-space: nowrap; }
+
+@media (max-width: 23rem) {
+  .dashboard-mission-card { grid-template-columns: 2.35rem minmax(0, 1fr); }
+  .dashboard-mission-action { grid-column: 2; justify-content: flex-start; min-width: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-mission-card { transition: none; }
+  .dashboard-mission-card:hover { transform: none; }
+}
