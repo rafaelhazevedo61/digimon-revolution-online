@@ -27,8 +27,11 @@ public final class AuctionMailNotificationFactory {
                 transaction.getId(),
                 "PURCHASE_COMPLETED_BUYER",
                 "Compra realizada na Casa de Leilões",
-                "Você comprou " + quantity + " unidade(s) de " + itemName
-                        + " por " + amount + " Bits. O item já foi entregue ao seu Digimon.",
+                "A compra foi concluída com sucesso!\n\n"
+                        + "Item: " + itemName + "\n"
+                        + "Quantidade: " + quantity + " unidade(s)\n"
+                        + "Valor total: " + amount + " Bits\n\n"
+                        + "O item já foi entregue ao seu Digimon.",
                 "auction:transaction:" + transaction.getId() + ":buyer"
         );
     }
@@ -44,10 +47,13 @@ public final class AuctionMailNotificationFactory {
                 transaction.getId(),
                 "PURCHASE_COMPLETED_SELLER",
                 "Venda concluída na Casa de Leilões",
-                "Seu anúncio vendeu " + quantity + " unidade(s) de " + itemName
-                        + " para " + buyerUsername
-                        + ". Valor bruto: " + grossAmount + " Bits; comissão: " + fee
-                        + " Bits; valor líquido recebido: " + netAmount + " Bits.",
+                "A venda foi concluída com sucesso!\n\n"
+                        + "Item: " + itemName + "\n"
+                        + "Quantidade: " + quantity + " unidade(s)\n"
+                        + "Comprador: " + buyerUsername + "\n\n"
+                        + "Valor bruto: " + grossAmount + " Bits\n"
+                        + "Comissão: " + fee + " Bits\n"
+                        + "Valor líquido recebido: " + netAmount + " Bits",
                 "auction:transaction:" + transaction.getId() + ":seller"
         );
     }
