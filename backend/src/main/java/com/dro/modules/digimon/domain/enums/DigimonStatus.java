@@ -8,5 +8,6 @@ public enum DigimonStatus {
     STORED,
     HATCHED,
     REBORN,
-    SACRIFICED
+    SACRIFICED,
+    COLLECTION_CONSUMED
 }

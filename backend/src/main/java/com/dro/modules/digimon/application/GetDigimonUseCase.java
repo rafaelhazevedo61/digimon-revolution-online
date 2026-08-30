@@ -30,13 +30,14 @@ public class GetDigimonUseCase {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         var digimons = digimonRepository.findByPlayerId(playerId);
         return digimons.stream()
-                .filter(d -> d.getStatus() != DigimonStatus.REBORN && d.getStatus() != DigimonStatus.SACRIFICED)
+                .filter(d -> d.getStatus() != DigimonStatus.REBORN && d.getStatus() != DigimonStatus.SACRIFICED && d.getStatus() != DigimonStatus.COLLECTION_CONSUMED)
                 .sorted(Comparator.comparingInt(d -> switch (d.getStatus()) {
                     case ACTIVE -> 0;
                     case HATCHED -> 1;
                     case STORED -> 2;
                     case REBORN -> 3;
                     case SACRIFICED -> 4;
+                    case COLLECTION_CONSUMED -> 5;
                 }))
                 .map(d -> {
             List<Equipment> equipped = getEquippedItems(d);
