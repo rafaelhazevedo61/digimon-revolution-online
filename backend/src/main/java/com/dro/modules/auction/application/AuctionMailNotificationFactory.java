@@ -27,13 +27,16 @@ public final class AuctionMailNotificationFactory {
                 transaction.getId(),
                 "PURCHASE_COMPLETED_BUYER",
                 "Compra realizada na Casa de Leilões",
-                "Você comprou " + quantity + " unidade(s) de " + itemName
-                        + " por " + amount + " Bits. O item já foi entregue ao seu Digimon.",
+                "A compra foi concluída com sucesso!\n\n"
+                        + "Item: " + itemName + "\n"
+                        + "Quantidade: " + quantity + " unidade(s)\n"
+                        + "Valor total: " + amount + " Bits\n\n"
+                        + "O item já foi entregue ao seu Digimon.",
                 "auction:transaction:" + transaction.getId() + ":buyer"
         );
     }
 
-    public static AuctionMailNotification purchaseForSeller(AuctionTransaction transaction) {
+    public static AuctionMailNotification purchaseForSeller(AuctionTransaction transaction, String buyerUsername) {
         String itemName = transaction.getItemDefinition().getName();
         String quantity = format(transaction.getQuantity());
         String grossAmount = format(transaction.getGrossAmount());
@@ -44,11 +47,19 @@ public final class AuctionMailNotificationFactory {
                 transaction.getId(),
                 "PURCHASE_COMPLETED_SELLER",
                 "Venda concluída na Casa de Leilões",
-                "Seu anúncio vendeu " + quantity + " unidade(s) de " + itemName
-                        + ". Valor bruto: " + grossAmount + " Bits; comissão: " + fee
-                        + " Bits; valor líquido recebido: " + netAmount + " Bits.",
+                "A venda foi concluída com sucesso!\n\n"
+                        + "Item: " + itemName + "\n"
+                        + "Quantidade: " + quantity + " unidade(s)\n"
+                        + "Comprador: " + buyerUsername + "\n\n"
+                        + "Valor bruto: " + grossAmount + " Bits\n"
+                        + "Comissão: " + fee + " Bits\n"
+                        + "Valor líquido recebido: " + netAmount + " Bits",
                 "auction:transaction:" + transaction.getId() + ":seller"
         );
+    }
+
+    public static AuctionMailNotification purchaseForSeller(AuctionTransaction transaction) {
+        return purchaseForSeller(transaction, "outro jogador");
     }
 
     public static AuctionMailNotification listingReturnPending(
