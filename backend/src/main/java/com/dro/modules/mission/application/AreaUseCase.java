@@ -22,22 +22,17 @@ public class AreaUseCase {
 
     public List<AreaResponse> execute(String token) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        Stage highestStage = getHighestStage(playerId);
+        Stage activeStage = digimonRepository.findByPlayerIdAndStatus(playerId, DigimonStatus.ACTIVE).stream()
+                .findFirst()
+                .map(Digimon::getStage)
+                .orElse(Stage.BABY);
         return Arrays.stream(Area.values())
                 .map(area -> new AreaResponse(
                         area,
                         AreaRules.requiredStage(area),
-                        AreaRules.isUnlocked(highestStage, area)
+                        AreaRules.isUnlocked(activeStage, area)
                 ))
                 .toList();
-    }
-
-    private Stage getHighestStage(UUID playerId) {
-        return digimonRepository.findByPlayerId(playerId).stream()
-                .filter(d -> d.getStatus() != DigimonStatus.SACRIFICED && d.getStatus() != DigimonStatus.REBORN)
-                .map(Digimon::getStage)
-                .max(Enum::compareTo)
-                .orElse(Stage.BABY);
     }
 
     public AreaUseCase(final DigimonRepository digimonRepository) {

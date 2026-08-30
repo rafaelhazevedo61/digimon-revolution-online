@@ -1,7 +1,6 @@
 package com.dro.modules.mission.application;
 
 import com.dro.modules.digimon.domain.Digimon;
-import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.mission.api.dto.response.MissionStartResponse;
@@ -44,8 +43,7 @@ public class StartMissionUseCase {
         Digimon digimon = getActiveDigimon(player);
         MissionDefinitionEntity entity = missionDefinitionRepository.findById(missionId).orElseThrow(() -> new NotFoundException("Mission not found"));
         MissionDefinition mission = MissionDefinitionMapper.toDefinition(entity);
-        Stage highestStage = getHighestStage(playerId);
-        if (!AreaRules.isUnlocked(highestStage, mission.getArea())) {
+        if (!AreaRules.isUnlocked(digimon.getStage(), mission.getArea())) {
             throw new BadRequestException("Area locked: " + mission.getArea());
         }
         validateRequirement(digimon, mission);
@@ -72,14 +70,6 @@ public class StartMissionUseCase {
         MissionInstance instance = new MissionInstance(playerId, digimon.getId(), missionId, missionDuration);
         missionInstanceRepository.save(instance);
         return new MissionStartResponse(instance.getId(), instance.getEndsAt());
-    }
-
-    private Stage getHighestStage(UUID playerId) {
-        return digimonRepository.findByPlayerId(playerId).stream()
-                .filter(d -> d.getStatus() != DigimonStatus.SACRIFICED && d.getStatus() != DigimonStatus.REBORN)
-                .map(Digimon::getStage)
-                .max(Enum::compareTo)
-                .orElse(Stage.BABY);
     }
 
     private int applyCostReduction(int baseCost, double multiplier) {
