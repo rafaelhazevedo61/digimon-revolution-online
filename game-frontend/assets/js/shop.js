@@ -292,9 +292,9 @@ function shopOpenBuy(code) {
         ${!isEquip ? `
         <div class="shop-modal-quantity">
           <label class="label" for="shop-qty">Quantidade</label>
-          <div class="flex items-center gap-2">
+          <div class="shop-buy-quantity-controls">
             <button class="btn-sm btn-primary" onclick="shopQtyChange(-1)" aria-label="Diminuir quantidade">−</button>
-            <input type="number" id="shop-qty" class="input text-center" value="${initialQuantity}" min="1" max="${maxQty}" style="width:4rem" oninput="shopQtyUpdate()" ${purchaseUnavailable ? "disabled" : ""}>
+            <input type="number" id="shop-qty" class="input text-center" value="${initialQuantity}" min="1" max="${maxQty}" oninput="shopQtyUpdate()" ${purchaseUnavailable ? "disabled" : ""}>
             <button class="btn-sm btn-primary" onclick="shopQtyChange(1)" aria-label="Aumentar quantidade" ${purchaseUnavailable ? "disabled" : ""}>+</button>
             <button class="btn-sm btn-primary" onclick="shopBuyMax()" aria-label="Comprar quantidade máxima" title="Comprar máximo" ${purchaseUnavailable ? "disabled" : ""}>MAX</button>
           </div>
