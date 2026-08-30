@@ -4,6 +4,7 @@ import com.dro.modules.digimon.api.dto.response.IvRangeResponse;
 import com.dro.modules.digimon.api.dto.response.RebirthPreviewResponse;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.RebirthRules;
+import com.dro.modules.digimon.domain.RarityRules;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.equipment.infra.EquipmentRepository;
 import com.dro.modules.inventory.domain.InventoryItem;
@@ -33,6 +34,10 @@ public class RebirthPreviewUseCase {
     private final PlayerRepository playerRepository;
 
     public RebirthPreviewResponse execute(String token, UUID digimonId) {
+        return execute(token, digimonId, false);
+    }
+
+    public RebirthPreviewResponse execute(String token, UUID digimonId, boolean preserveRarity) {
         UUID playerId = extractPlayerId(token);
         Digimon digimon = digimonRepository.findById(digimonId).orElseThrow(() -> new NotFoundException("Digimon not found"));
         validateOwner(digimon, playerId);
@@ -52,7 +57,9 @@ public class RebirthPreviewUseCase {
         int equippedEquipmentCount = equipmentRepository.findByDigimonIdAndEquippedTrue(digimonId).size();
         long pendingCompletedMissionCount = missionInstanceRepository.countByDigimonIdAndStatus(digimonId, MissionStatus.COMPLETED);
         int remainingBitsAfterRebirth = Math.max(0, currentBits - costBits);
-        int rarityMinimumIv = RebirthRules.calculateIvBonus(newRebirthCount);
+        int rarityMinimumIv = preserveRarity
+                ? RarityRules.getMinimumIv(digimon.getRarity())
+                : RebirthRules.calculateIvBonus(newRebirthCount);
         IvRangeResponse hpRange = calculateIvRange(digimon.getIvHp(), rarityMinimumIv, newRebirthCount);
         IvRangeResponse attackRange = calculateIvRange(digimon.getIvAttack(), rarityMinimumIv, newRebirthCount);
         IvRangeResponse defenseRange = calculateIvRange(digimon.getIvDefense(), rarityMinimumIv, newRebirthCount);

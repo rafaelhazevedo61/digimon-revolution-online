@@ -1,4 +1,5 @@
 let rebirthDigimonId = null;
+let rebirthDigimon = null;
 let rebirthPreview = null;
 let rebirthCodeAllocation = { hp: 0, attack: 0, defense: 0 };
 let rebirthEquippedEquipmentCount = 0;
@@ -38,7 +39,8 @@ async function renderRebirthPage() {
     }
 
     rebirthDigimonId = d.id;
-    rebirthPreview = await apiGet(`/digimon/${d.id}/rebirth-preview`);
+    rebirthDigimon = d;
+    rebirthPreview = await apiGet(`/digimon/${d.id}/rebirth-preview`, { preserveRarity: false });
     rebirthEquippedEquipmentCount = Number(rebirthPreview.equippedEquipmentCount || 0);
     rebirthRender(d, rebirthEquippedEquipmentCount);
   } catch (err) {
@@ -47,6 +49,31 @@ async function renderRebirthPage() {
         <p class="text-red-300">${escapeHtml(err.message)}</p>
       </div>
     `;
+  }
+}
+
+async function rebirthTogglePreserveRarity(checked) {
+  if (!rebirthDigimonId || !rebirthDigimon || !rebirthPreview) return;
+
+  const previousValue = rebirthPreserveRarity;
+  rebirthPreserveRarity = checked;
+  const checkbox = document.getElementById("rebirth-preserve-rarity");
+  if (checkbox) checkbox.disabled = true;
+
+  try {
+    rebirthPreview = await apiGet(
+      `/digimon/${rebirthDigimonId}/rebirth-preview`,
+      { preserveRarity: checked }
+    );
+    rebirthEquippedEquipmentCount = Number(rebirthPreview.equippedEquipmentCount || 0);
+    rebirthRender(rebirthDigimon, rebirthEquippedEquipmentCount);
+  } catch (err) {
+    rebirthPreserveRarity = previousValue;
+    if (checkbox) {
+      checkbox.checked = previousValue;
+      checkbox.disabled = false;
+    }
+    showToast(err.message, "error");
   }
 }
 
@@ -183,7 +210,7 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
 
     <div class="mb-4">
       <label class="card-sm rebirth-preserve-card flex items-start gap-3 mb-3 cursor-pointer ${rarityPreservationQuantity === 0 ? "opacity-60" : ""}">
-        <input id="rebirth-preserve-rarity" type="checkbox" class="mt-1 h-4 w-4 accent-cyan-500" ${rarityPreservationQuantity === 0 ? "disabled" : ""} onchange="rebirthPreserveRarity = this.checked">
+        <input id="rebirth-preserve-rarity" type="checkbox" class="mt-1 h-4 w-4 accent-cyan-500" ${rebirthPreserveRarity ? "checked" : ""} ${rarityPreservationQuantity === 0 ? "disabled" : ""} onchange="rebirthTogglePreserveRarity(this.checked)">
         <span class="flex-1">
           <span class="block text-sm font-bold text-cyan-300">Preservar raridade</span>
           <span class="inline-flex items-center rounded-md border border-cyan-700 bg-cyan-950/60 px-2 py-1 mt-2 text-xs font-bold text-cyan-200">Raridade atual: ${currentRarityLabel}</span>

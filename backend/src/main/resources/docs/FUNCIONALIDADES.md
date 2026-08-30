@@ -158,7 +158,7 @@ Todos esses estágios fazem parte da implementação atual.
 | GET | `/digimon/{digimonId}/evolution-options` | Consultar opções de evolução |
 | POST | `/digimon/evolve` | Evoluir Digimon |
 | POST | `/digimon/rebirth` | Executar Rebirth |
-| GET | `/digimon/{digimonId}/rebirth-preview` | Visualizar condições do Rebirth |
+| GET | `/digimon/{digimonId}/rebirth-preview?preserveRarity={true\|false}` | Visualizar condições do Rebirth; com `preserveRarity=true`, calcula o IV mínimo usando a raridade preservada |
 | GET | `/digimon/{digimonId}/lineage` | Consultar linhagem de Rebirth |
 | PUT | `/digimon/rename` | Renomear Digimon |
 | POST | `/digimon/{digimonId}/store` | Enviar ao Storage |

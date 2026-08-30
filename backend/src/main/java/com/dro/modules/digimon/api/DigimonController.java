@@ -86,8 +86,12 @@ public class DigimonController {
     }
 
     @GetMapping("/{digimonId}/rebirth-preview")
-    public ResponseEntity<RebirthPreviewResponse> rebirthPreview(@RequestHeader("Authorization") String authorization, @PathVariable UUID digimonId) {
-        return ResponseEntity.ok(rebirthPreviewUseCase.execute(authorization, digimonId));
+    public ResponseEntity<RebirthPreviewResponse> rebirthPreview(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable UUID digimonId,
+            @RequestParam(defaultValue = "false") boolean preserveRarity
+    ) {
+        return ResponseEntity.ok(rebirthPreviewUseCase.execute(authorization, digimonId, preserveRarity));
     }
 
     @PutMapping("/rename")
