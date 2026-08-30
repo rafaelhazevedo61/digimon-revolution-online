@@ -579,7 +579,7 @@ function showEquipDetailModal(equipmentId) {
   overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 
   overlay.innerHTML = `
-    <div class="card" style="max-width:420px;width:100%;max-height:90vh;overflow:hidden;border-radius:1rem;margin:0 auto;">
+    <div class="card" style="max-width:560px;width:100%;max-height:92vh;overflow:hidden;border-radius:1rem;margin:0 auto;">
       <div class="text-center mb-3">
         <div class="text-3xl mb-1">${emoji}</div>
         <h3 class="text-lg font-bold">${escapeHtml(eq.name)}${refLabel}</h3>
