@@ -26,6 +26,10 @@ import com.dro.modules.clan.domain.enums.ClanMissionObjectiveType;
 import com.dro.modules.activitycalendar.application.ActivityCalendarService;
 import com.dro.modules.activitycalendar.domain.ActivitySource;
 import com.dro.modules.digimon.domain.enums.Stage;
+import com.dro.modules.digimon.domain.RarityRules;
+import com.dro.modules.digimon.domain.PersonalityRules;
+import com.dro.modules.digimon.domain.TraitRules;
+import com.dro.modules.mission.api.dto.response.MissionRewardBreakdownResponse;
 import com.dro.modules.mission.api.dto.response.NewlyUnlockedContentResponse;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
@@ -165,19 +169,25 @@ public class ClaimMissionUseCase {
         double bitsMultiplier = clanId != null ? clanBonusService.getMissionBitsMultiplier(clanId) : 1.0;
 
         Instant rewardTime = Instant.now();
-        int xpGained = WeekendDoubleRewardRules.multiplyXp((int) Math.floor(calculateScaledXp(
-                mission.getBaseXp(),
-                completionCount
-        ) * xpMultiplier), rewardTime);
+        double missionProgressMultiplier = calculateProgressMultiplier(completionCount);
+        int eventMultiplier = WeekendDoubleRewardRules.isActive(rewardTime)
+                ? WeekendDoubleRewardRules.XP_MULTIPLIER
+                : 1;
 
-        digimon.gainExperience(xpGained);
+        int xpBeforeDigimonMultiplier = WeekendDoubleRewardRules.multiplyXp((int) Math.floor(
+                calculateScaledXp(mission.getBaseXp(), completionCount) * xpMultiplier
+        ), rewardTime);
+        double digimonXpMultiplier = RarityRules.getXpMultiplier(digimon.getRarity())
+                * PersonalityRules.getXpMultiplier(digimon.getPersonality())
+                * TraitRules.getXpMultiplier(digimon.getTrait());
+        int xpGained = digimon.gainExperience(xpBeforeDigimonMultiplier);
 
         boolean levelUp = digimon.getLevel() > previousLevel;
 
-        int bitsGained = WeekendDoubleRewardRules.multiplyBits((int) Math.floor(calculateScaledBits(
-                mission.getBaseBits(),
-                completionCount
-        ) * bitsMultiplier), rewardTime);
+        int bitsBeforeEventMultiplier = (int) Math.floor(
+                calculateScaledBits(mission.getBaseBits(), completionCount) * bitsMultiplier
+        );
+        int bitsGained = WeekendDoubleRewardRules.multiplyBits(bitsBeforeEventMultiplier, rewardTime);
 
         if (bitsGained > 0) {
             digimon.setBits(digimon.getBits() + bitsGained);
@@ -226,7 +236,27 @@ public class ClaimMissionUseCase {
                 bitsGained,
                 levelUp,
                 rewards,
-                newlyUnlockedContent
+                newlyUnlockedContent,
+                new MissionRewardBreakdownResponse(
+                        mission.getBaseXp(),
+                        missionProgressMultiplier,
+                        xpMultiplier,
+                        eventMultiplier,
+                        digimonXpMultiplier,
+                        xpBeforeDigimonMultiplier,
+                        xpGained
+                ),
+                new MissionRewardBreakdownResponse(
+                        mission.getBaseBits(),
+                        missionProgressMultiplier,
+                        bitsMultiplier,
+                        WeekendDoubleRewardRules.isActive(rewardTime)
+                                ? WeekendDoubleRewardRules.BITS_MULTIPLIER
+                                : 1,
+                        1.0,
+                        bitsBeforeEventMultiplier,
+                        bitsGained
+                )
         );
     }
 

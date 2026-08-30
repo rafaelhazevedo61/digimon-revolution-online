@@ -457,6 +457,37 @@ async function repeatMissionFromReward(missionId) {
   }
 }
 
+function missionMultiplierLabel(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "1x";
+  return `${number.toFixed(2).replace(/\.?0+$/, "")}x`;
+}
+
+function missionRewardBreakdownMarkup(title, breakdown, unit, digimonLabel) {
+  if (!breakdown) return "";
+  const base = Number(breakdown.baseAmount) || 0;
+  const progress = Number(breakdown.missionProgressMultiplier) || 1;
+  const clan = Number(breakdown.clanMultiplier) || 1;
+  const event = Number(breakdown.eventMultiplier) || 1;
+  const digimon = Number(breakdown.digimonMultiplier) || 1;
+  const beforeDigimon = Number(breakdown.amountBeforeDigimonMultiplier) || 0;
+  const total = Number(breakdown.finalAmount) || 0;
+  return `
+    <details class="mt-4 rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-3">
+      <summary class="cursor-pointer text-sm font-bold text-slate-300">Detalhes de ${title}</summary>
+      <div class="mt-3 space-y-2 text-xs text-slate-400">
+        <div class="flex justify-between gap-3"><span>Valor-base</span><strong class="text-slate-200">${base} ${unit}</strong></div>
+        <div class="flex justify-between gap-3"><span>Progressão da missão</span><strong class="text-slate-200">${missionMultiplierLabel(progress)}</strong></div>
+        <div class="flex justify-between gap-3"><span>Bônus de clã</span><strong class="text-slate-200">${missionMultiplierLabel(clan)}</strong></div>
+        <div class="flex justify-between gap-3"><span>Evento de recompensa</span><strong class="text-slate-200">${missionMultiplierLabel(event)}</strong></div>
+        <div class="flex justify-between gap-3"><span>${escapeHtml(digimonLabel)}</span><strong class="text-slate-200">${missionMultiplierLabel(digimon)}</strong></div>
+        <div class="border-t border-slate-700 pt-2 flex justify-between gap-3"><span>Após missão, clã e evento</span><strong class="text-slate-200">${beforeDigimon} ${unit}</strong></div>
+        <div class="flex justify-between gap-3 font-bold"><span>Total aplicado</span><strong class="text-purple-200">${total} ${unit}</strong></div>
+      </div>
+    </details>
+  `;
+}
+
 function showMissionClaimModal(result) {
   const existing = document.getElementById("mission-claim-modal");
   if (existing) existing.remove();
@@ -512,6 +543,9 @@ function showMissionClaimModal(result) {
           <p class="text-xl font-bold text-yellow-200 mt-1">+${Number(result && result.bitsGained) || 0}</p>
         </div>
       </div>
+
+      ${missionRewardBreakdownMarkup("EXP", result && result.experienceBreakdown, "XP", "Multiplicadores do Digimon")}
+      ${missionRewardBreakdownMarkup("bits", result && result.bitsBreakdown, "bits", "Multiplicador do Digimon")}
 
       ${result && result.levelUp ? `
         <div class="rounded-lg border border-emerald-700 bg-emerald-950/40 px-3 py-3 mb-5 text-center">
@@ -730,7 +764,7 @@ function renderMissionCards(missions, area) {
       <div class="mission-detail-topline"><p class="progression-eyebrow progression-eyebrow-cyan">Missão ${String(index + 1).padStart(2, "0")}</p><span class="mission-detail-code">${escapeHtml(missionFriendlyCode(m.id || "OPS"))}</span></div>
       <div class="mission-detail-heading"><div><h3 class="mission-detail-title">${escapeHtml(formatMissionName(m))}</h3><span class="mission-detail-status"><span></span> Operação disponível</span></div><span class="mission-detail-arrow" aria-hidden="true">✦</span></div>
       <p class="mission-detail-description">${escapeHtml(m.description) || "Sem descrição disponível."}</p>
-      <div class="mission-detail-reward-row"><span class="mission-detail-reward-label">Retorno previsto</span><span class="mission-detail-reward-xp">+${m.xpReward} XP</span>${m.bitsReward > 0 ? `<span class="mission-detail-reward-bits">+${m.bitsReward} bits</span>` : ""}</div>
+      <div class="mission-detail-reward-row"><span class="mission-detail-reward-label">Retorno previsto</span><span class="mission-detail-reward-xp">+${m.xpReward} XP base</span>${m.bitsReward > 0 ? `<span class="mission-detail-reward-bits">+${m.bitsReward} bits base</span>` : ""}</div>
       <div class="mission-detail-meta">
         <span><small>REQUISITO</small>⚡ Nível ${m.requiredLevel}</span>
         <span><small>CUSTO</small>🔋 ${m.energyCost} energia</span>

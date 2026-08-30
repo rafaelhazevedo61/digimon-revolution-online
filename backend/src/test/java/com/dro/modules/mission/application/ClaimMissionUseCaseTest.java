@@ -23,6 +23,7 @@ import com.dro.modules.mission.domain.PlayerMissionProgress;
 import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.mission.infra.PlayerMissionProgressRepository;
+import com.dro.shared.gameplay.WeekendDoubleRewardRules;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.tutorial.application.TutorialService;
@@ -126,13 +127,23 @@ class ClaimMissionUseCaseTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
         when(chestDefinitionRepository.findWithCatalogByCode(chestCode))
                 .thenReturn(Optional.of(chest));
-        MissionResultResponse response = claimMissionUseCase.execute(
-                token(playerId),
-                UUID.randomUUID()
-        );
+        WeekendDoubleRewardRules.setManualOverride(true, Instant.now());
+        MissionResultResponse response;
+        try {
+            response = claimMissionUseCase.execute(
+                    token(playerId),
+                    UUID.randomUUID()
+            );
+        } finally {
+            WeekendDoubleRewardRules.setManualOverride(null, Instant.now());
+        }
 
-        assertThat(response.xpGained()).isEqualTo(30);
+        assertThat(response.xpGained()).isEqualTo(60);
         assertThat(response.bitsGained()).isEqualTo(0);
+        assertThat(response.experienceBreakdown().baseAmount()).isEqualTo(30);
+        assertThat(response.experienceBreakdown().eventMultiplier()).isEqualTo(2);
+        assertThat(response.experienceBreakdown().amountBeforeDigimonMultiplier()).isEqualTo(60);
+        assertThat(response.experienceBreakdown().finalAmount()).isEqualTo(60);
         assertThat(response.rewards()).hasSize(1);
         assertThat(response.rewards().get(0).item()).isEqualTo(ItemType.LOOT_CHEST);
         assertThat(response.rewards().get(0).quantity()).isEqualTo(1);
