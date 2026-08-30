@@ -605,10 +605,17 @@ function showEquipDetailModal(equipmentId) {
   const refLabel = eq.refinementLevel > 0 ? ` +${eq.refinementLevel}` : "";
   const setLabel = typeof invSetLabel === "function" ? invSetLabel(eq.setCode) : (eq.setCode || "");
   const rarityLabel = { COMMON: "Comum", RARE: "Rara", EPIC: "Épica", LEGENDARY: "Lendária" };
-  const rarityMultiplier = { COMMON: "1,00x", RARE: "1,15x", EPIC: "1,30x", LEGENDARY: "1,50x" };
+  const rarityPercent = { COMMON: 0, RARE: 15, EPIC: 30, LEGENDARY: 50 };
+  const rarityMultiplier = { COMMON: 1, RARE: 1.15, EPIC: 1.30, LEGENDARY: 1.50 };
   const ascensionLevel = Number(eq.ascensionLevel) || 0;
   const ascensionBonus = { 0: "Nenhum", 1: "+30%", 2: "+50%", 3: "+100%" }[ascensionLevel];
   const requiredRebirths = [0, 1, 10, 20][ascensionLevel] || 0;
+  const statImpact = (values) => Object.entries(values).filter(([, value]) => value > 0).map(([label, value]) => `+${label} ${value}`).join(" · ") || "nenhum";
+  const rarityImpact = statImpact({ HP: Math.round((eq.bonusHp || 0) * ((rarityMultiplier[eq.rarity] || 1) - 1)), ATK: Math.round((eq.bonusAttack || 0) * ((rarityMultiplier[eq.rarity] || 1) - 1)), DEF: Math.round((eq.bonusDefense || 0) * ((rarityMultiplier[eq.rarity] || 1) - 1)) });
+  const refinedStat = (base) => Math.round(base * (rarityMultiplier[eq.rarity] || 1)) + ((Number(eq.refinementLevel) || 0) * 2);
+  const ascensionMultiplier = { 0: 1, 1: 1.30, 2: 1.50, 3: 2.00 }[ascensionLevel] || 1;
+  const ascensionImpact = statImpact({ HP: Math.round(refinedStat(eq.bonusHp || 0) * (ascensionMultiplier - 1)), ATK: Math.round(refinedStat(eq.bonusAttack || 0) * (ascensionMultiplier - 1)), DEF: Math.round(refinedStat(eq.bonusDefense || 0) * (ascensionMultiplier - 1)) });
+  const refinementImpact = statImpact({ HP: eq.bonusHp > 0 ? (Number(eq.refinementLevel) || 0) * 2 : 0, ATK: eq.bonusAttack > 0 ? (Number(eq.refinementLevel) || 0) * 2 : 0, DEF: eq.bonusDefense > 0 ? (Number(eq.refinementLevel) || 0) * 2 : 0 });
 
   const overlay = document.createElement("div");
   overlay.id = "dashboard-equipment-detail-overlay";
@@ -635,10 +642,10 @@ function showEquipDetailModal(equipmentId) {
         <summary class="cursor-pointer list-none flex items-center justify-between text-xs text-slate-400"><span>Detalhes do equipamento</span><span class="text-slate-500 group-open:rotate-180 transition-transform">⌄</span></summary>
         <div class="mt-3 pt-3 border-t border-slate-700/70 grid grid-cols-2 gap-2 text-xs">
           <div><span class="text-slate-500">Tier</span><p class="font-semibold">T${eq.tier || '?'}</p></div>
-          <div><span class="text-slate-500">Raridade</span><p class="font-semibold">${rarityLabel[eq.rarity] || eq.rarity} <span class="text-amber-300">(${rarityMultiplier[eq.rarity] || "1,00x"})</span></p></div>
+          <div><span class="text-slate-500">Raridade</span><p class="font-semibold">${rarityLabel[eq.rarity] || eq.rarity} <span class="text-amber-300">(+${rarityPercent[eq.rarity] || 0}%)</span></p><p class="text-[10px] text-slate-500">${rarityImpact}</p></div>
           <div><span class="text-slate-500">Conjunto</span><p class="font-semibold">${eq.setCode ? escapeHtml(setLabel) : 'Sem conjunto'}</p></div>
-          <div><span class="text-slate-500">Refinamento</span><p class="font-semibold text-yellow-400">+${eq.refinementLevel}</p></div>
-          <div><span class="text-slate-500">Ascensão</span><p class="font-semibold text-amber-300">${ascensionLevel} (${ascensionBonus})</p></div>
+          <div><span class="text-slate-500">Refinamento</span><p class="font-semibold text-yellow-400">+${eq.refinementLevel} <span class="text-slate-400">(${refinementImpact})</span></p></div>
+          <div><span class="text-slate-500">Ascensão</span><p class="font-semibold text-amber-300">${ascensionLevel} (${ascensionBonus})</p><p class="text-[10px] text-slate-500">${ascensionImpact}</p></div>
           <div><span class="text-slate-500">Uso mínimo</span><p class="font-semibold">${requiredRebirths} Rebirth${requiredRebirths === 1 ? '' : 's'}</p></div>
           <div class="col-span-2"><span class="text-slate-500">Bônus base</span><p class="font-semibold text-slate-300">HP ${eq.bonusHp || 0} · ATK ${eq.bonusAttack || 0} · DEF ${eq.bonusDefense || 0}</p></div>
         </div>
