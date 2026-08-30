@@ -1077,7 +1077,7 @@ function invRenderEquipment() {
               <button class="btn-sm" style="background:#7f1d1d;color:#fca5a5" onclick="invUnequip('${eq.id}')">Desequipar</button>
             ` : `
               <button class="btn-sm btn-primary" onclick="invEquip('${eq.id}')">Equipar</button>
-              ${canAscend ? `<button class="btn-sm" style="background:#854d0e;color:#fde68a" onclick="invAscend('${eq.id}', ${ascensionLevel + 1})">Ascender</button>` : ''}
+              ${canAscend ? `<button class="btn-sm" style="background:#854d0e;color:#fde68a" onclick="invOpenAscensionPreview('${eq.id}')">Ascender</button>` : ''}
             `}
           </div>
         </div>
@@ -1107,15 +1107,58 @@ async function invUnequip(equipmentId) {
   }
 }
 
-async function invAscend(equipmentId, targetLevel) {
-  const confirmed = window.confirm(`Realizar Ascensão ${targetLevel}? O equipamento deve estar no refinamento +11 e serão consumidos Núcleos de Ascensão e Bits.`);
-  if (!confirmed) return;
+async function invOpenAscensionPreview(equipmentId) {
+  try {
+    const preview = await apiGet(`/equipment/${equipmentId}/ascend-preview`);
+    invRenderAscensionPreview(preview);
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+function invFormatNumber(value) {
+  return Number(value || 0).toLocaleString("pt-BR");
+}
+
+function invRenderAscensionPreview(preview) {
+  document.getElementById("inventory-ascension-preview")?.remove();
+  const overlay = document.createElement("div");
+  overlay.id = "inventory-ascension-preview";
+  overlay.className = "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70";
+  const statRow = (label, before, after, color) => `<div class="flex items-center justify-between rounded-lg bg-slate-900/70 px-3 py-2"><span class="text-xs text-slate-400">${label}</span><span class="text-sm font-bold"><span class="${color}">${invFormatNumber(before)}</span><span class="text-slate-500 mx-2">→</span><span class="text-emerald-300">${invFormatNumber(after)}</span></span></div>`;
+  const costRow = (label, current, required) => `<div class="flex items-center justify-between text-sm"><span class="text-slate-400">${label}</span><span class="font-bold ${current >= required ? "text-emerald-300" : "text-red-300"}">${invFormatNumber(current)} / ${invFormatNumber(required)}</span></div>`;
+  const restriction = preview.restrictionMessage ? `<div class="rounded-lg border border-red-900/70 bg-red-950/30 px-3 py-2 text-xs text-red-300">${escapeHtml(preview.restrictionMessage)}</div>` : `<div class="rounded-lg border border-emerald-900/70 bg-emerald-950/30 px-3 py-2 text-xs text-emerald-300">Todos os requisitos foram atendidos.</div>`;
+  overlay.innerHTML = `
+    <div class="card w-full max-w-md max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div><p class="text-xs uppercase tracking-wider text-amber-400 font-bold">Evolução de equipamento</p><h3 class="font-bold text-lg">Preview da Ascensão ${preview.nextAscensionLevel}</h3><p class="text-xs text-slate-400 mt-1">${escapeHtml(preview.equipment.name)} +${preview.equipment.refinementLevel}</p></div>
+        <button class="text-slate-400 text-2xl leading-none" aria-label="Fechar" onclick="invCloseAscensionPreview()">&times;</button>
+      </div>
+      <div class="rounded-xl border border-amber-900/60 bg-amber-950/20 p-3 mb-4"><p class="text-xs uppercase tracking-wider text-slate-500 mb-2">Status do equipamento</p><div class="grid grid-cols-2 gap-2 text-center"><div class="rounded-lg bg-slate-900/70 p-2"><p class="text-[10px] text-slate-500">Atual</p><p class="font-black text-lg">Ascensão ${preview.equipment.ascensionLevel || 0}</p><p class="text-xs text-slate-400">${preview.equipment.refinementLevel >= preview.requiredRefinementLevel ? "Refinamento máximo" : `Refinamento +${preview.equipment.refinementLevel}`}</p></div><div class="rounded-lg bg-amber-900/30 p-2"><p class="text-[10px] text-amber-300">Depois</p><p class="font-black text-lg text-amber-200">Ascensão ${preview.nextAscensionLevel}</p><p class="text-xs text-slate-400">Mesmo cap de refinamento</p></div></div></div>
+      <div class="mb-4"><p class="text-xs uppercase tracking-wider text-slate-500 mb-2">Atributos efetivos</p><div class="flex flex-col gap-2">${statRow("HP", preview.beforeHp, preview.afterHp, "text-red-300")}${statRow("ATK", preview.beforeAttack, preview.afterAttack, "text-orange-300")}${statRow("DEF", preview.beforeDefense, preview.afterDefense, "text-blue-300")}</div></div>
+      <div class="mb-4"><p class="text-xs uppercase tracking-wider text-slate-500 mb-2">Custos e requisitos</p><div class="rounded-lg border border-slate-700 bg-slate-950/50 p-3 flex flex-col gap-2">${costRow("Núcleos de Ascensão", preview.currentCores, preview.coreCost)}${costRow("Bits", preview.currentBits, preview.bitsCost)}<div class="flex items-center justify-between text-sm"><span class="text-slate-400">Rebirths do Digimon ativo</span><span class="font-bold ${preview.currentRebirths >= preview.requiredRebirths ? "text-emerald-300" : "text-red-300"}">${preview.currentRebirths} / ${preview.requiredRebirths}</span></div><div class="text-[11px] text-slate-500 pt-1">Refinamento necessário: +${preview.requiredRefinementLevel}</div></div></div>
+      ${restriction}
+      <div class="flex gap-2 mt-4"><button class="btn-sm flex-1" style="background:#334155;color:#cbd5e1;padding:0.65rem" onclick="invCloseAscensionPreview()">Fechar</button><button id="inventory-ascend-submit" class="btn-sm flex-1" style="background:${preview.canAscend ? "#854d0e" : "#334155"};color:${preview.canAscend ? "#fde68a" : "#64748b"};padding:0.65rem" ${preview.canAscend ? `onclick="invSubmitAscension('${preview.equipment.id}', ${preview.nextAscensionLevel})"` : "disabled"}>Realizar Ascensão</button></div>
+    </div>`;
+  overlay.onclick = event => { if (event.target === overlay) invCloseAscensionPreview(); };
+  document.body.appendChild(overlay);
+}
+
+function invCloseAscensionPreview() {
+  document.getElementById("inventory-ascension-preview")?.remove();
+}
+
+async function invSubmitAscension(equipmentId, targetLevel) {
+  const button = document.getElementById("inventory-ascend-submit");
+  if (button) { button.disabled = true; button.textContent = "Ascendendo..."; }
   try {
     const result = await apiPost("/equipment/ascend", { equipmentId });
+    invCloseAscensionPreview();
     showToast(result.message || `Ascensão ${targetLevel} realizada!`);
     await invReloadEquipment();
   } catch (err) {
     showToast(err.message, "error");
+    if (button) { button.disabled = false; button.textContent = "Realizar Ascensão"; }
   }
 }
 

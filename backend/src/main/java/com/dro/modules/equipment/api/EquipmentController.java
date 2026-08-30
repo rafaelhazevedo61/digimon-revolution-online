@@ -10,6 +10,7 @@ import com.dro.modules.equipment.api.dto.response.EquipmentPageResponse;
 import com.dro.modules.equipment.api.dto.response.RefineEquipmentResponse;
 import com.dro.modules.equipment.api.dto.response.RefinePreviewResponse;
 import com.dro.modules.equipment.api.dto.response.AscendEquipmentResponse;
+import com.dro.modules.equipment.api.dto.response.AscendEquipmentPreviewResponse;
 import com.dro.modules.equipment.application.*;
 import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.inventory.domain.ItemType;
@@ -129,6 +130,11 @@ public class EquipmentController {
     @PostMapping("/ascend")
     public ResponseEntity<AscendEquipmentResponse> ascend(@RequestHeader("Authorization") String authorization, @RequestBody @Valid AscendEquipmentRequest request) {
         return ResponseEntity.ok(ascendEquipmentUseCase.execute(authorization, request));
+    }
+
+    @GetMapping("/{equipmentId}/ascend-preview")
+    public ResponseEntity<AscendEquipmentPreviewResponse> ascendPreview(@RequestHeader("Authorization") String authorization, @PathVariable UUID equipmentId) {
+        return ResponseEntity.ok(ascendEquipmentUseCase.preview(authorization, equipmentId));
     }
 
     @GetMapping("/{equipmentId}/refine-preview")
