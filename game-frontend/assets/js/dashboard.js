@@ -269,6 +269,10 @@ function renderEquipSlots(items) {
           <div class="flex gap-1 justify-center flex-wrap">
             <span class="badge badge-${item.rarity ? item.rarity.toLowerCase() : 'common'}" style="font-size:0.6rem">T${item.tier || '?'}</span>
           </div>
+          <div class="flex flex-col gap-1 mt-2" onclick="event.stopPropagation()">
+            <button class="btn-sm w-full text-[10px] py-1" style="background:#7f1d1d;color:#fca5a5" onclick="invUnequip('${item.id}')">Desequipar</button>
+            ${item.refinementLevel < 10 ? `<button class="btn-sm w-full text-[10px] py-1" style="background:#4a2800;color:#f59e0b" onclick="invShowRefine('${item.id}')">Refinar</button>` : ''}
+          </div>
         </div>
       `;
     }
