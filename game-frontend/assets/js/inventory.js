@@ -1208,7 +1208,12 @@ async function invDoRefine(equipmentId) {
     if (overlay) overlay.remove();
 
     await invReloadEquipment();
-    if (typeof renderDashboardPage === "function") renderDashboardPage();
+    const currentRoute = window.location.hash.replace("#", "").split("?")[0];
+    if (currentRoute === "forge" && typeof renderForgePage === "function") {
+      await renderForgePage();
+    } else if (typeof renderDashboardPage === "function") {
+      renderDashboardPage();
+    }
   } catch (err) {
     showToast(err.message, "error");
     if (btn) { btn.disabled = false; btn.textContent = "🔨 Refinar"; }
