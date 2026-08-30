@@ -57,7 +57,8 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
   const stageMap = { BABY: "Baby", BABY_II: "Baby II", ROOKIE: "Rookie", CHAMPION: "Champion", ULTIMATE: "Ultimate", MEGA: "Mega" };
   const formatStg = s => stageMap[s] || s;
   const rarityMap = { COMMON: "Comum", RARE: "Rara", EPIC: "Épica", LEGENDARY: "Lendária" };
-  const currentRarityLabel = rarityMap[p.currentRarity] || p.currentRarity || "Não informada";
+  const currentRarity = p.currentRarity || digimon.rarity;
+  const currentRarityLabel = rarityMap[currentRarity] || currentRarity || "Não informada";
 
   let html = `
     <div class="card mb-4">
