@@ -56,6 +56,8 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
 
   const stageMap = { BABY: "Baby", BABY_II: "Baby II", ROOKIE: "Rookie", CHAMPION: "Champion", ULTIMATE: "Ultimate", MEGA: "Mega" };
   const formatStg = s => stageMap[s] || s;
+  const rarityMap = { COMMON: "Comum", RARE: "Rara", EPIC: "Épica", LEGENDARY: "Lendária" };
+  const currentRarityLabel = rarityMap[p.currentRarity] || p.currentRarity || "Não informada";
 
   let html = `
     <div class="card mb-4">
@@ -173,7 +175,8 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
         <input id="rebirth-preserve-rarity" type="checkbox" class="mt-1 h-4 w-4 accent-cyan-500" ${rarityPreservationQuantity === 0 ? "disabled" : ""} onchange="rebirthPreserveRarity = this.checked">
         <span class="flex-1">
           <span class="block text-sm font-bold text-cyan-300">Preservar raridade</span>
-          <span class="block text-xs text-slate-400 mt-1">Usa 1 Cristal de Preservação e garante que o Digimon renascido mantenha a raridade <strong>${p.currentRarity || "atual"}</strong>.</span>
+          <span class="inline-flex items-center rounded-md border border-cyan-700 bg-cyan-950/60 px-2 py-1 mt-2 text-xs font-bold text-cyan-200">Raridade atual: ${currentRarityLabel}</span>
+          <span class="block text-xs text-slate-400 mt-2">Usa 1 Cristal de Preservação e garante que o Digimon renascido mantenha esta raridade.</span>
           <span class="block text-xs ${rarityPreservationQuantity > 0 ? "text-slate-500" : "text-amber-400"} mt-1">Disponíveis: ${rarityPreservationQuantity}</span>
         </span>
       </label>
