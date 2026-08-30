@@ -2,12 +2,14 @@ let rebirthDigimonId = null;
 let rebirthPreview = null;
 let rebirthCodeAllocation = { hp: 0, attack: 0, defense: 0 };
 let rebirthEquippedEquipmentCount = 0;
+let rebirthPreserveRarity = false;
 
 async function renderRebirthPage() {
   const app = document.getElementById("app");
   showBottomNav("dashboard");
   rebirthCodeAllocation = { hp: 0, attack: 0, defense: 0 };
   rebirthEquippedEquipmentCount = 0;
+  rebirthPreserveRarity = false;
 
   app.innerHTML = `
     <div class="page-container">
@@ -48,6 +50,7 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
   const content = document.getElementById("rebirth-content");
   const p = rebirthPreview;
   const availableCodeInfinite = Math.max(0, Number(p.currentCodeInfinite ?? 0));
+  const rarityPreservationQuantity = Math.max(0, Number(p.rarityPreservationItemQuantity ?? 0));
   const codeInfiniteDisabled = availableCodeInfinite <= 0 ? "disabled" : "";
   const codeInfiniteMax = Math.min(100, availableCodeInfinite);
 
@@ -166,6 +169,14 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
     </div>
 
     <div class="mb-4">
+      <label class="card-sm flex items-start gap-3 mb-3 cursor-pointer ${rarityPreservationQuantity === 0 ? "opacity-60" : ""}">
+        <input id="rebirth-preserve-rarity" type="checkbox" class="mt-1 h-4 w-4 accent-cyan-500" ${rarityPreservationQuantity === 0 ? "disabled" : ""} onchange="rebirthPreserveRarity = this.checked">
+        <span class="flex-1">
+          <span class="block text-sm font-bold text-cyan-300">Preservar raridade</span>
+          <span class="block text-xs text-slate-400 mt-1">Usa 1 Cristal de Preservação e garante que o Digimon renascido mantenha a raridade <strong>${p.currentRarity || "atual"}</strong>.</span>
+          <span class="block text-xs ${rarityPreservationQuantity > 0 ? "text-slate-500" : "text-amber-400"} mt-1">Disponíveis: ${rarityPreservationQuantity}</span>
+        </span>
+      </label>
       ${equippedEquipmentCount > 0 ? `
         <div class="rounded-lg border border-red-900/70 bg-red-950/30 p-3 mb-3 text-sm text-red-200">
           <p class="font-semibold">Renascimento bloqueado</p>
@@ -305,7 +316,8 @@ async function rebirthExecute() {
       digimonId: rebirthDigimonId,
       codeInfiniteHp: rebirthCodeAllocation.hp,
       codeInfiniteAttack: rebirthCodeAllocation.attack,
-      codeInfiniteDefense: rebirthCodeAllocation.defense
+      codeInfiniteDefense: rebirthCodeAllocation.defense,
+      preserveRarity: rebirthPreserveRarity
     });
     showToast("Renascimento realizado com sucesso! Seu Digimon renasceu.");
     navigateTo("dashboard");

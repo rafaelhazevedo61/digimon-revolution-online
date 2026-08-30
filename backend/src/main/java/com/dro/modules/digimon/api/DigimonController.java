@@ -66,7 +66,7 @@ public class DigimonController {
 
     @PostMapping("/rebirth")
     public ResponseEntity<Map<String, String>> rebirth(@RequestHeader("Authorization") String authorization, @RequestBody @Valid RebirthDigimonRequest request) {
-        rebirthUseCase.execute(authorization, request.digimonId(), request.codeInfiniteHpOrZero(), request.codeInfiniteAttackOrZero(), request.codeInfiniteDefenseOrZero());
+        rebirthUseCase.execute(authorization, request.digimonId(), request.codeInfiniteHpOrZero(), request.codeInfiniteAttackOrZero(), request.codeInfiniteDefenseOrZero(), request.preserveRarityOrFalse());
         return ResponseEntity.ok(Map.of("message", "Digimon reborn successfully"));
     }
 
