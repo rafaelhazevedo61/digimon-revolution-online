@@ -581,8 +581,8 @@ function showMissionClaimModal(result) {
         </div>
       ` : ""}
 
-      ${missionRewardBreakdownMarkup("EXP", result && result.experienceBreakdown, "XP", "Multiplicadores do Digimon")}
-      ${missionRewardBreakdownMarkup("bits", result && result.bitsBreakdown, "bits", "Multiplicador do Digimon")}
+      ${missionRewardBreakdownMarkup("Experiência", result && result.experienceBreakdown, "XP", "Multiplicadores do Digimon")}
+      ${missionRewardBreakdownMarkup("Bits", result && result.bitsBreakdown, "bits", "Multiplicador do Digimon")}
 
       ${result && result.missionId ? `
         <div class="flex flex-col sm:flex-row gap-2 mt-5">
