@@ -40,7 +40,7 @@ function collectionRenderDigimons() {
   const countLabel = search ? `${filtered.length} encontrado(s)` : `${filtered.length} no Storage`;
   const countElement = document.getElementById("collection-storage-count");
   if (countElement) countElement.textContent = countLabel;
-  target.innerHTML = filtered.length ? filtered.map(d => { const registered = entries.has(`${d.digimonInfoId}:${d.rarity}`); return `<div class="flex items-center justify-between gap-2 rounded-lg border ${registered ? "border-emerald-900/70 bg-emerald-950/20" : "border-slate-800 bg-slate-900/20"} px-3 py-2 mb-2"><div><p class="font-bold text-sm">${escapeHtml(d.name || "Digimon")}</p><p class="text-xs text-slate-400">${escapeHtml(d.rarity)} · ${escapeHtml(d.stage)}</p></div>${registered ? '<span class="text-xs font-semibold text-emerald-300">✓ Já registrado</span>' : `<button class="btn-sm btn-primary" onclick="collectionOpenRegisterModal('${d.id}')">Registrar</button>`}</div>`; }).join("") : `<div class="rounded-lg border border-slate-800 bg-slate-900/50 p-4 text-center"><p class="text-sm text-slate-400">${search ? "Nenhum Digimon do Storage corresponde à busca." : "Nenhum Digimon encontrado no Storage."}</p>${search ? '<button class="btn-secondary mt-3" type="button" onclick="document.getElementById(\'collection-search\').value=\'\'; collectionApplySearch()">Limpar busca</button>' : ""}</div>`;
+  target.innerHTML = filtered.length ? filtered.map(d => { const registered = entries.has(`${d.digimonInfoId}:${d.rarity}`); const locked = Boolean(d.locked); const stateClass = locked ? "border-amber-900/70 bg-amber-950/20" : registered ? "border-emerald-900/70 bg-emerald-950/20" : "border-slate-800 bg-slate-900/20"; const stateLabel = locked ? '<span class="text-xs font-semibold text-amber-300">🔒 Trancado</span>' : registered ? '<span class="text-xs font-semibold text-emerald-300">✓ Já registrado</span>' : `<button class="btn-sm btn-primary" onclick="collectionOpenRegisterModal('${d.id}')">Registrar</button>`; return `<div class="flex items-center justify-between gap-2 rounded-lg border ${stateClass} px-3 py-2 mb-2"><div><p class="font-bold text-sm">${escapeHtml(d.name || "Digimon")}</p><p class="text-xs text-slate-400">${escapeHtml(d.rarity)} · ${escapeHtml(d.stage)}</p></div>${stateLabel}</div>`; }).join("") : `<div class="rounded-lg border border-slate-800 bg-slate-900/50 p-4 text-center"><p class="text-sm text-slate-400">${search ? "Nenhum Digimon do Storage corresponde à busca." : "Nenhum Digimon encontrado no Storage."}</p>${search ? '<button class="btn-secondary mt-3" type="button" onclick="document.getElementById(\'collection-search\').value=\'\'; collectionApplySearch()">Limpar busca</button>' : ""}</div>`;
 }
 
 function collectionApplySearch() {
@@ -91,7 +91,10 @@ function collectionCloseAlbum() {
 
 function collectionOpenRegisterModal(digimonId) {
   const digimon = collectionDigimons.find(item => item.id === digimonId);
-  if (!digimon) return;
+  if (!digimon || digimon.locked) {
+    showToast("Digimons trancados não podem ser registrados na coleção.", "error");
+    return;
+  }
   document.getElementById("collection-register-overlay")?.remove();
   const overlay = document.createElement("div");
   overlay.id = "collection-register-overlay";
