@@ -36,7 +36,7 @@ async function renderBossesPage() {
           <h2 class="text-2xl font-black tracking-tight">Chefes</h2>
           <p class="text-sm text-slate-300 mt-1 max-w-sm">Enfrente inimigos poderosos, teste seu Digimon e conquiste recompensas especiais.</p>
           <div class="flex gap-2 mt-4 text-[11px] text-slate-400">
-            <span class="rounded-lg bg-black/20 px-2 py-1">${bossesData.length || "—"} desafios disponíveis</span>
+            <span id="boss-total-count" class="rounded-lg bg-black/20 px-2 py-1">— desafios disponíveis</span>
             <span class="rounded-lg bg-black/20 px-2 py-1">Escolha por estágio e frequência</span>
           </div>
         </div>
@@ -49,6 +49,7 @@ async function renderBossesPage() {
         <div><h3 class="font-bold">Desafios disponíveis</h3><p class="text-xs text-slate-500">Selecione uma frequência para filtrar.</p></div>
         <span id="boss-visible-count" class="text-xs text-slate-500"></span>
       </div>
+      <div class="flex items-center gap-2 mb-3 text-[10px] text-slate-500"><span class="inline-block w-2 h-2 rounded-full bg-green-400"></span> Disponível para desafiar agora <span class="text-slate-700">•</span> Clique em um card para ver detalhes</div>
       <div class="grid grid-cols-2 gap-1.5 mb-4" id="boss-type-tabs"></div>
       <div id="bosses-list">
         <div class="card animate-pulse mb-3"><div class="h-24"></div></div>
@@ -59,6 +60,8 @@ async function renderBossesPage() {
 
   try {
     bossesData = await apiGet("/bosses/available");
+    const totalCount = document.getElementById("boss-total-count");
+    if (totalCount) totalCount.textContent = `${bossesData.length} desafios disponíveis`;
     renderBossStageTabs();
     renderBossTypeTabs();
     renderBossList();
@@ -80,7 +83,7 @@ function renderBossStageTabs() {
         ${available ? "boss-stage-available" : "border-transparent"}
         ${active ? s.color : "bg-slate-800 text-slate-400 hover:bg-slate-700"}"
         onclick="bossActiveStage='${s.key}'; renderBossStageTabs(); renderBossTypeTabs(); renderBossList();">
-        ${escapeHtml(s.label)}${available ? `<span class="boss-stage-availability-dot" title="${availableCount} chefe(s) disponível(is)">${availableCount}</span>` : ""}
+        ${escapeHtml(s.label)}${available ? `<span class="boss-stage-availability-dot" title="${availableCount} chefe(s) disponível(is)" aria-label="${availableCount} chefe(s) disponível(is)">${availableCount}</span>` : ""}
       </button>
     `;
   }).join("");
