@@ -53,7 +53,7 @@ public class SellShopProductUseCase {
             throw new ForbiddenException("O Digimon ativo não pertence a este jogador");
         }
         if (request.equipmentId() != null) {
-            return sellEquipment(digimon, request);
+            return sellEquipment(playerId, digimon, request);
         }
         if (request.productCode() != null && !request.productCode().isBlank()) {
             return sellItem(digimon, request);
@@ -82,10 +82,10 @@ public class SellShopProductUseCase {
         return new SellShopProductResponse(product.getCode(), product.getName(), product.getProductType(), request.quantity(), totalSellPrice, digimon.getBits(), "Produto vendido com sucesso");
     }
 
-    private SellShopProductResponse sellEquipment(Digimon digimon, SellShopProductRequest request) {
+    private SellShopProductResponse sellEquipment(UUID playerId, Digimon digimon, SellShopProductRequest request) {
         Equipment equipment = equipmentRepository.findById(request.equipmentId()).orElseThrow(() -> new NotFoundException("Equipamento não encontrado"));
-        if (!equipment.getDigimonId().equals(digimon.getId())) {
-            throw new ForbiddenException("O equipamento não pertence ao Digimon ativo");
+        if (!playerId.equals(equipment.getPlayerId())) {
+            throw new ForbiddenException("O equipamento não pertence a este jogador");
         }
         if (equipment.isEquipped()) {
             throw new ConflictException("Equipamentos equipados não podem ser vendidos");
