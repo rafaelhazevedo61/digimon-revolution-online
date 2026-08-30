@@ -157,6 +157,7 @@ async function forgeShowRefine(equipmentId) {
     showToast("Este equipamento já está no nível máximo de refinamento (+11).", "error");
     return;
   }
+  eq.refinementLevel = preview.currentRefinementLevel;
 
   const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
   const emoji = slotEmoji[eq.slot] || "⚙️";
@@ -368,6 +369,8 @@ async function forgeAutoStep() {
     if (preview.breakChance > 0 && document.getElementById("forge-break-risk-toggle")?.dataset.active !== "true") {
       forgeStopAutoRefine();
       showToast("Tentativa automática pausada antes de uma tentativa com risco de quebra. Ative o toggle de segurança para continuar.", "error");
+      document.getElementById("forge-refine-overlay")?.remove();
+      await forgeShowRefine(equipmentId);
       return;
     }
     const result = await apiPost("/equipment/refine", {
