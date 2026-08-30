@@ -574,6 +574,7 @@ function showEquipDetailModal(equipmentId) {
   const rarityLabel = { COMMON: "Common", RARE: "Rare", EPIC: "Epic", LEGENDARY: "Legendary" };
 
   const overlay = document.createElement("div");
+  overlay.id = "dashboard-equipment-detail-overlay";
   overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;display:flex;align-items:flex-end;justify-content:center;";
   overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 
@@ -615,9 +616,52 @@ function showEquipDetailModal(equipmentId) {
       </div>
       ` : ''}
 
+      <div class="card-sm mb-3">
+        <p class="text-xs text-slate-400 mb-2">Outros equipamentos para este slot</p>
+        <div id="dashboard-equipment-alternatives" class="space-y-2">
+          <p class="text-xs text-slate-500">Carregando equipamentos disponíveis...</p>
+        </div>
+      </div>
+
       <button class="btn-primary w-full py-3 text-base" onclick="this.closest('div[style]').remove()">Fechar</button>
     </div>
   `;
 
   document.body.appendChild(overlay);
+  dashboardLoadEquipmentAlternatives(eq.slot, eq.id);
+}
+
+async function dashboardLoadEquipmentAlternatives(slot, equippedId) {
+  const container = document.getElementById("dashboard-equipment-alternatives");
+  if (!container) return;
+  try {
+    const equipment = (await apiGet("/equipment/inventory") || [])
+      .filter(item => item.slot === slot && item.id !== equippedId);
+    if (!equipment.length) {
+      container.innerHTML = '<p class="text-xs text-slate-500">Nenhum outro equipamento disponível para este slot.</p>';
+      return;
+    }
+    container.innerHTML = equipment.map(item => `
+      <div class="flex items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-900/60 p-2">
+        <div class="min-w-0">
+          <p class="text-xs font-bold truncate">${escapeHtml(item.name)}${item.refinementLevel > 0 ? ` +${item.refinementLevel}` : ""}</p>
+          <p class="text-[10px] text-slate-400">${escapeHtml(item.rarity || "COMMON")} · T${item.tier || "?"}</p>
+        </div>
+        <button class="btn-sm btn-primary shrink-0 text-xs" onclick="dashboardEquipAlternative('${item.id}')">Equipar</button>
+      </div>
+    `).join("");
+  } catch (err) {
+    container.innerHTML = `<p class="text-xs text-red-300">${escapeHtml(err.message)}</p>`;
+  }
+}
+
+async function dashboardEquipAlternative(equipmentId) {
+  try {
+    await apiPost("/equipment/equip", { equipmentId });
+    document.getElementById("dashboard-equipment-detail-overlay")?.remove();
+    showToast("Equipamento equipado!");
+    await renderDashboardPage();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
 }
