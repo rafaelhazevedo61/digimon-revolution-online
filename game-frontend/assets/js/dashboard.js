@@ -266,12 +266,11 @@ function renderEquipSlots(items) {
         <div class="card-sm text-center ${border}" style="cursor:pointer" onclick="showEquipDetailModal('${item.id}')">
           <p class="text-lg">${slotEmoji[slot]}</p>
           <p class="text-xs font-bold truncate">${escapeHtml(item.name)}${refLabel}</p>
-          <div class="flex gap-1 justify-center flex-wrap">
+          <div class="flex gap-1 justify-center flex-wrap mb-3">
             <span class="badge badge-${item.rarity ? item.rarity.toLowerCase() : 'common'}" style="font-size:0.6rem">T${item.tier || '?'}</span>
           </div>
-          <div class="flex flex-col gap-1 mt-2" onclick="event.stopPropagation()">
+          <div class="flex flex-col gap-1" onclick="event.stopPropagation()">
             <button class="btn-sm w-full text-[10px] py-1" style="background:#7f1d1d;color:#fca5a5" onclick="invUnequip('${item.id}')">Desequipar</button>
-            ${item.refinementLevel < 10 ? `<button class="btn-sm w-full text-[10px] py-1" style="background:#4a2800;color:#f59e0b" onclick="invShowRefine('${item.id}')">Refinar</button>` : ''}
           </div>
         </div>
       `;
@@ -616,10 +615,7 @@ function showEquipDetailModal(equipmentId) {
       </div>
       ` : ''}
 
-      <div class="grid grid-cols-2 gap-2 mb-2">
-        <button class="btn-sm" style="background:#7f1d1d;color:#fca5a5" onclick="this.closest('div[style]').remove(); invUnequip('${eq.id}')">Desequipar</button>
-        ${eq.refinementLevel < 10 ? `<button class="btn-sm" style="background:#4a2800;color:#f59e0b" onclick="this.closest('div[style]').remove(); invShowRefine('${eq.id}')">Refinar</button>` : '<span></span>'}
-      </div>
+      <button class="btn-sm w-full mb-2" style="background:#7f1d1d;color:#fca5a5" onclick="this.closest('div[style]').remove(); invUnequip('${eq.id}')">Desequipar</button>
       <button class="btn-primary w-full py-3 text-base" onclick="this.closest('div[style]').remove()">Fechar</button>
     </div>
   `;
