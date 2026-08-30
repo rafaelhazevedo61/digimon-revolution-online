@@ -159,8 +159,8 @@ public class MailController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/inbox")
-    public ResponseEntity<BulkMailDeleteResponse> deleteAllInbox(@RequestHeader("Authorization") String authorization) {
+    @DeleteMapping("/all")
+    public ResponseEntity<BulkMailDeleteResponse> deleteAllMail(@RequestHeader("Authorization") String authorization) {
         return ResponseEntity.ok(deleteAllMailMessagesUseCase.execute(authorization));
     }
 

@@ -53,7 +53,7 @@ function mailUpdateMarkAllReadButton() {
   const button = document.getElementById("mail-mark-all-read");
   const deleteButton = document.getElementById("mail-delete-all");
   if (button) button.classList.toggle("hidden", mailFolder !== "inbox");
-  if (deleteButton) deleteButton.classList.toggle("hidden", mailFolder !== "inbox");
+  if (deleteButton) deleteButton.classList.remove("hidden");
 }
 
 async function mailMarkAllRead() {
@@ -378,13 +378,12 @@ async function mailDelete(messageId) {
 }
 
 async function mailAskDeleteAll() {
-  if (mailFolder !== "inbox") return;
-  const confirmed = await showConfirm("Todas as mensagens comuns da Entrada serão apagadas. Mensagens com recompensas pendentes serão preservadas.", { title: "Apagar todas as mensagens?", confirmText: "Apagar todas", danger: true });
+  const confirmed = await showConfirm("Todas as mensagens visíveis da Entrada e de Enviadas serão apagadas. Mensagens da Entrada com recompensas pendentes serão preservadas.", { title: "Apagar todas as mensagens?", confirmText: "Apagar todas", danger: true });
   if (!confirmed) return;
   const button = document.getElementById("mail-delete-all");
   if (button) { button.disabled = true; button.textContent = "Apagando..."; }
   try {
-    const result = await apiDelete("/mail/inbox");
+    const result = await apiDelete("/mail/all");
     const preserved = Number(result.preservedCount || 0);
     showToast(preserved > 0 ? `${result.deletedCount || 0} mensagem(ns) apagada(s). ${preserved} mensagem(ns) com recompensa pendente foram preservadas.` : `${result.deletedCount || 0} mensagem(ns) apagada(s).`);
     await mailLoadFolder();

@@ -30,6 +30,8 @@ public interface MailMessageRepository extends JpaRepository<MailMessage, UUID> 
 
     List<MailMessage> findByRecipientIdAndRecipientDeletedFalse(UUID recipientId);
 
+    List<MailMessage> findBySenderIdAndSenderDeletedFalse(UUID senderId);
+
     /** Lista as mensagens enviadas pelo jogador em ordem decrescente de criação. */
     Page<MailMessage> findBySenderIdAndSenderDeletedFalseOrderByCreatedAtDesc(
             UUID senderId,

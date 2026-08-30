@@ -20,10 +20,11 @@ public class DeleteAllMailMessagesUseCase {
     @Transactional
     public BulkMailDeleteResponse execute(String token) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        List<MailMessage> messages = mailMessageRepository.findByRecipientIdAndRecipientDeletedFalse(playerId);
+        List<MailMessage> inboxMessages = mailMessageRepository.findByRecipientIdAndRecipientDeletedFalse(playerId);
+        List<MailMessage> sentMessages = mailMessageRepository.findBySenderIdAndSenderDeletedFalse(playerId);
         int deleted = 0;
         int preserved = 0;
-        for (MailMessage message : messages) {
+        for (MailMessage message : inboxMessages) {
             if (hasClaimableReward(message, playerId)) {
                 preserved++;
             } else {
@@ -31,7 +32,12 @@ public class DeleteAllMailMessagesUseCase {
                 deleted++;
             }
         }
-        mailMessageRepository.saveAll(messages);
+        for (MailMessage message : sentMessages) {
+            message.setSenderDeleted(true);
+            deleted++;
+        }
+        mailMessageRepository.saveAll(inboxMessages);
+        mailMessageRepository.saveAll(sentMessages);
         return new BulkMailDeleteResponse(deleted, preserved);
     }
 
