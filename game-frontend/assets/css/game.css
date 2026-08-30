@@ -1109,7 +1109,7 @@ body {
 .missions-active-badge { padding: 0.3rem 0.45rem; border: 1px solid rgba(96, 165, 250, 0.2); border-radius: 9999px; background: rgba(37, 99, 235, 0.12); color: #93c5fd; font-size: 0.58rem; font-weight: 800; white-space: nowrap; }
 .missions-map-key { display: inline-flex; align-items: center; gap: 0.32rem; color: #86efac; font-size: 0.58rem; font-weight: 800; text-transform: uppercase; }
 .missions-map-key-dot, .mission-area-access-dot { width: 0.4rem; height: 0.4rem; flex: 0 0 auto; border-radius: 9999px; background: #4ade80; box-shadow: 0 0 8px rgba(74, 222, 128, 0.55); }
-#areas-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem; }
+#areas-list { display: grid; grid-template-columns: 1fr; gap: 0.65rem; }
 .mission-area-skeleton { min-height: 5.2rem; border: 1px solid rgba(51, 65, 85, 0.72); border-radius: 0.85rem; background: linear-gradient(110deg, rgba(30, 41, 59, 0.78), rgba(15, 23, 42, 0.48), rgba(30, 41, 59, 0.78)); background-size: 220% 100%; animation: mission-skeleton-shimmer 1.5s ease-in-out infinite; }
 @keyframes mission-skeleton-shimmer { 0%, 100% { background-position: 100% 0; } 50% { background-position: 0 0; } }
 .mission-area-card { display: grid; grid-template-columns: 2.7rem minmax(0, 1fr) auto; align-items: center; gap: 0.62rem; min-width: 0; min-height: 5.2rem; padding: 0.68rem; border: 1px solid rgba(71, 85, 105, 0.72); border-radius: 0.85rem; background: linear-gradient(145deg, rgba(30, 41, 59, 0.78), rgba(15, 23, 42, 0.7)); }
@@ -1138,10 +1138,6 @@ body {
 .mission-brief-meta { display: flex; align-items: center; gap: 0.45rem 0.7rem; flex-wrap: wrap; margin-top: 0.72rem; color: #94a3b8; font-size: 0.61rem; }
 .mission-brief-bits { color: #facc15; }
 .mission-brief-actions { display: flex; gap: 0.55rem; margin-top: 0.8rem; }
-
-@media (max-width: 34rem) {
-  #areas-list { grid-template-columns: 1fr; }
-}
 
 @media (max-width: 23rem) {
   .missions-page-header { align-items: flex-start; }
