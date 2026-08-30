@@ -35,7 +35,8 @@ public class CollectionUseCase {
         List<CollectionDtos.EntryResponse> entries = collectionRepository.findByPlayerIdOrderByDiscoveredAtDesc(playerId).stream().map(entry -> CollectionDtos.EntryResponse.from(entry, digimonInfosRepository.findById(entry.getDigimonInfoId()).map(info -> info.getName()).orElse("Digimon"))).toList();
         long points = entries.size();
         List<Integer> available = java.util.Arrays.stream(MILESTONES).filter(m -> points >= m).boxed().toList();
-        return new CollectionDtos.SummaryResponse(points, collectionRepository.countDistinctRarities(playerId), entries, available);
+        long totalDigimons = digimonInfosRepository.count();
+        return new CollectionDtos.SummaryResponse(points, collectionRepository.countDistinctRarities(playerId), collectionRepository.countAddedDigimons(playerId), totalDigimons, collectionRepository.countCompletedDigimons(playerId), entries, available);
     }
 
     @Transactional
