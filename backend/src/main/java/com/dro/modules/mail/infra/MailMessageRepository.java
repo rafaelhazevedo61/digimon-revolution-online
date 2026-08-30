@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,6 +27,10 @@ public interface MailMessageRepository extends JpaRepository<MailMessage, UUID> 
             UUID recipientId,
             Pageable pageable
     );
+
+    List<MailMessage> findByRecipientIdAndRecipientDeletedFalse(UUID recipientId);
+
+    List<MailMessage> findBySenderIdAndSenderDeletedFalse(UUID senderId);
 
     /** Lista as mensagens enviadas pelo jogador em ordem decrescente de criação. */
     Page<MailMessage> findBySenderIdAndSenderDeletedFalseOrderByCreatedAtDesc(

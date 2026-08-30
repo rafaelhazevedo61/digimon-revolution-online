@@ -6,6 +6,8 @@ import com.dro.modules.mail.api.dto.response.MailActionResponse;
 import com.dro.modules.mail.api.dto.response.MailMessagePageResponse;
 import com.dro.modules.mail.api.dto.response.MailMessageResponse;
 import com.dro.modules.mail.api.dto.response.MarkAllMailReadResponse;
+import com.dro.modules.mail.api.dto.response.BulkMailDeleteResponse;
+import com.dro.modules.mail.application.DeleteAllMailMessagesUseCase;
 import com.dro.modules.mail.application.DeleteMailMessageUseCase;
 import com.dro.modules.mail.application.GetMailMessageUseCase;
 import com.dro.modules.mail.application.GetUnreadMailCountUseCase;
@@ -36,6 +38,7 @@ public class MailController {
     private final MarkMailReadUseCase markMailReadUseCase;
     private final MarkAllMailReadUseCase markAllMailReadUseCase;
     private final DeleteMailMessageUseCase deleteMailMessageUseCase;
+    private final DeleteAllMailMessagesUseCase deleteAllMailMessagesUseCase;
     private final GetUnreadMailCountUseCase getUnreadMailCountUseCase;
     private final ProcessMailActionUseCase processMailActionUseCase;
 
@@ -156,13 +159,19 @@ public class MailController {
         return ResponseEntity.noContent().build();
     }
 
-    public MailController(final ListMailMessagesUseCase listMailMessagesUseCase, final SendMailMessageUseCase sendMailMessageUseCase, final GetMailMessageUseCase getMailMessageUseCase, final MarkMailReadUseCase markMailReadUseCase, final MarkAllMailReadUseCase markAllMailReadUseCase, final DeleteMailMessageUseCase deleteMailMessageUseCase, final GetUnreadMailCountUseCase getUnreadMailCountUseCase, final ProcessMailActionUseCase processMailActionUseCase) {
+    @DeleteMapping("/all")
+    public ResponseEntity<BulkMailDeleteResponse> deleteAllMail(@RequestHeader("Authorization") String authorization) {
+        return ResponseEntity.ok(deleteAllMailMessagesUseCase.execute(authorization));
+    }
+
+    public MailController(final ListMailMessagesUseCase listMailMessagesUseCase, final SendMailMessageUseCase sendMailMessageUseCase, final GetMailMessageUseCase getMailMessageUseCase, final MarkMailReadUseCase markMailReadUseCase, final MarkAllMailReadUseCase markAllMailReadUseCase, final DeleteMailMessageUseCase deleteMailMessageUseCase, final DeleteAllMailMessagesUseCase deleteAllMailMessagesUseCase, final GetUnreadMailCountUseCase getUnreadMailCountUseCase, final ProcessMailActionUseCase processMailActionUseCase) {
         this.listMailMessagesUseCase = listMailMessagesUseCase;
         this.sendMailMessageUseCase = sendMailMessageUseCase;
         this.getMailMessageUseCase = getMailMessageUseCase;
         this.markMailReadUseCase = markMailReadUseCase;
         this.markAllMailReadUseCase = markAllMailReadUseCase;
         this.deleteMailMessageUseCase = deleteMailMessageUseCase;
+        this.deleteAllMailMessagesUseCase = deleteAllMailMessagesUseCase;
         this.getUnreadMailCountUseCase = getUnreadMailCountUseCase;
         this.processMailActionUseCase = processMailActionUseCase;
     }

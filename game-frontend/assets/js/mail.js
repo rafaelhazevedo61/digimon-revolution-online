@@ -17,22 +17,22 @@ function renderMailPage() {
         <button class="btn-primary text-sm" onclick="mailOpenCompose()">+ Nova mensagem</button>
       </div>
 
-      <div class="card-sm mb-3 flex items-center justify-between gap-3">
-        <div>
-          <p class="text-xs text-slate-400">Mensagens não lidas</p>
-          <p class="text-xl font-bold text-cyan-300" id="mail-unread-count">--</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <button id="mail-mark-all-read" class="btn-sm text-xs" onclick="mailMarkAllRead()">
-            Marcar todas como lidas
-          </button>
-          <span class="text-3xl" aria-hidden="true">✉️</span>
-        </div>
+      <div class="mb-3 px-1">
+        <p class="text-sm text-slate-400">Não lidas: <strong class="text-cyan-300" id="mail-unread-count">--</strong></p>
       </div>
 
       <div class="flex gap-2 mb-4" id="mail-folder-tabs">
         <button class="tab-btn active flex-1" data-folder="inbox" onclick="mailSetFolder('inbox')">Entrada</button>
         <button class="tab-btn flex-1" data-folder="sent" onclick="mailSetFolder('sent')">Enviadas</button>
+      </div>
+
+      <div class="flex gap-2 mb-4" id="mail-bulk-actions">
+        <button id="mail-mark-all-read" class="tab-btn flex-1" onclick="mailMarkAllRead()">
+          Marcar todas como lidas
+        </button>
+        <button id="mail-delete-all" class="tab-btn flex-1 text-red-300" onclick="mailAskDeleteAll()">
+          Apagar todas
+        </button>
       </div>
 
       <div id="mail-list">
@@ -51,7 +51,9 @@ function renderMailPage() {
 
 function mailUpdateMarkAllReadButton() {
   const button = document.getElementById("mail-mark-all-read");
+  const deleteButton = document.getElementById("mail-delete-all");
   if (button) button.classList.toggle("hidden", mailFolder !== "inbox");
+  if (deleteButton) deleteButton.classList.remove("hidden");
 }
 
 async function mailMarkAllRead() {
@@ -372,6 +374,24 @@ async function mailDelete(messageId) {
     mailRefreshUnreadCount();
   } catch (err) {
     showToast(err.message, "error");
+  }
+}
+
+async function mailAskDeleteAll() {
+  const confirmed = await showConfirm("Todas as mensagens visíveis da Entrada e de Enviadas serão apagadas. Mensagens da Entrada com recompensas pendentes serão preservadas.", { title: "Apagar todas as mensagens?", confirmText: "Apagar todas", danger: true });
+  if (!confirmed) return;
+  const button = document.getElementById("mail-delete-all");
+  if (button) { button.disabled = true; button.textContent = "Apagando..."; }
+  try {
+    const result = await apiDelete("/mail/all");
+    const preserved = Number(result.preservedCount || 0);
+    showToast(preserved > 0 ? `${result.deletedCount || 0} mensagem(ns) apagada(s). ${preserved} mensagem(ns) com recompensa pendente foram preservadas.` : `${result.deletedCount || 0} mensagem(ns) apagada(s).`);
+    await mailLoadFolder();
+    await mailRefreshUnreadCount();
+  } catch (err) {
+    showToast(err.message, "error");
+  } finally {
+    if (button) { button.disabled = false; button.textContent = "Apagar todas"; }
   }
 }
 
