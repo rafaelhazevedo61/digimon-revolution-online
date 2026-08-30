@@ -688,6 +688,7 @@ async function auctionRenderHistory() {
       <div>
         <p class="font-bold">${escapeHtml(transaction.itemName)}</p>
         <p class="text-xs text-slate-400">${transaction.direction === "BUY" ? "Compra" : "Venda"} · ${transaction.quantity} unidade(s) · ${new Date(transaction.createdAt).toLocaleString("pt-BR")}</p>
+        <p class="text-xs text-slate-500 mt-1">${transaction.direction === "BUY" ? "Vendedor" : "Comprador"}: ${escapeHtml(transaction.direction === "BUY" ? transaction.sellerUsername : transaction.buyerUsername)}</p>
       </div>
       <div class="text-right text-xs">
         <p class="${transaction.direction === "BUY" ? "text-red-300" : "text-emerald-300"}">${transaction.direction === "BUY" ? "-" : "+"}${Number(transaction.direction === "BUY" ? transaction.grossAmount : transaction.sellerNetAmount).toLocaleString("pt-BR")} Bits</p>

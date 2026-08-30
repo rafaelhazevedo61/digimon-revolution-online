@@ -33,7 +33,7 @@ public final class AuctionMailNotificationFactory {
         );
     }
 
-    public static AuctionMailNotification purchaseForSeller(AuctionTransaction transaction) {
+    public static AuctionMailNotification purchaseForSeller(AuctionTransaction transaction, String buyerUsername) {
         String itemName = transaction.getItemDefinition().getName();
         String quantity = format(transaction.getQuantity());
         String grossAmount = format(transaction.getGrossAmount());
@@ -45,10 +45,15 @@ public final class AuctionMailNotificationFactory {
                 "PURCHASE_COMPLETED_SELLER",
                 "Venda concluída na Casa de Leilões",
                 "Seu anúncio vendeu " + quantity + " unidade(s) de " + itemName
+                        + " para " + buyerUsername
                         + ". Valor bruto: " + grossAmount + " Bits; comissão: " + fee
                         + " Bits; valor líquido recebido: " + netAmount + " Bits.",
                 "auction:transaction:" + transaction.getId() + ":seller"
         );
+    }
+
+    public static AuctionMailNotification purchaseForSeller(AuctionTransaction transaction) {
+        return purchaseForSeller(transaction, "outro jogador");
     }
 
     public static AuctionMailNotification listingReturnPending(

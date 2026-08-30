@@ -103,7 +103,7 @@ public class BuyAuctionListingUseCase {
         digimonRepository.save(sellerDigimon);
         auctionListingRepository.save(listing);
         auctionTransactionRepository.save(transaction);
-        auctionMailNotificationService.notifyPurchase(transaction);
+        auctionMailNotificationService.notifyPurchase(transaction, buyer.getUsername());
         transactionAuditPublisher.success("auction-purchase:" + transaction.getId(), "AUCTION_PURCHASE_COMPLETED", "AuctionListing", String.valueOf(listing.getId()), Map.of("module", "auction", "operation", "buyListing", "actorId", buyerPlayerId.toString(), "sellerPlayerId", listing.getSellerPlayerId().toString(), "quantity", request.quantity(), "grossAmount", grossAmount, "fee", sellerFee, "itemCode", itemDefinition.getCode(), "summary", "Auction listing purchased"));
         return new AuctionPurchaseResponse(listing.getId(), itemDefinition.getCode(), itemDefinition.getName(), request.quantity(), grossAmount, sellerFee, grossAmount, sellerNetAmount, listing.getRemainingQuantity(), listing.getStatus(), buyerDigimon.getBits(), "Compra realizada com sucesso!");
     }

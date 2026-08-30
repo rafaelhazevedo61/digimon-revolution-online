@@ -12,6 +12,8 @@ public record AuctionTransactionResponse(
         String direction,
         String itemCode,
         String itemName,
+        String buyerUsername,
+        String sellerUsername,
         int quantity,
         int unitPrice,
         int grossAmount,
