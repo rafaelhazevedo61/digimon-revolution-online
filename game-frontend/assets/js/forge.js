@@ -21,6 +21,10 @@ async function renderForgePage() {
           </div>
         </div>
       </div>
+      <div class="grid grid-cols-2 gap-2 mb-4" role="tablist" aria-label="Funções do Ferreiro">
+        <button id="forge-tab-refine" class="btn-primary py-2" role="tab" aria-selected="true" onclick="forgeSelectTab('refine')">🔨 Refinamento</button>
+        <button id="forge-tab-craft" class="py-2 rounded-lg font-bold text-sm bg-slate-800 text-slate-400 hover:bg-slate-700" role="tab" aria-selected="false" onclick="forgeSelectTab('craft')">⚒️ Craft</button>
+      </div>
       <div id="forge-content"><div class="card animate-pulse"><div class="h-24"></div></div></div>
     </div>
   `;
@@ -31,6 +35,36 @@ async function renderForgePage() {
   } catch (err) {
     document.getElementById("forge-content").innerHTML = `<div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>`;
   }
+}
+
+function forgeSelectTab(tab) {
+  const refineTab = document.getElementById("forge-tab-refine");
+  const craftTab = document.getElementById("forge-tab-craft");
+  if (!refineTab || !craftTab) return;
+  const refining = tab === "refine";
+  refineTab.className = refining ? "btn-primary py-2" : "py-2 rounded-lg font-bold text-sm bg-slate-800 text-slate-400 hover:bg-slate-700";
+  craftTab.className = refining ? "py-2 rounded-lg font-bold text-sm bg-slate-800 text-slate-400 hover:bg-slate-700" : "btn-primary py-2";
+  refineTab.setAttribute("aria-selected", String(refining));
+  craftTab.setAttribute("aria-selected", String(!refining));
+  if (refining) renderForgeEquipmentList();
+  else renderForgeCraftTab();
+}
+
+function renderForgeCraftTab() {
+  const container = document.getElementById("forge-content");
+  if (!container) return;
+  const recipes = [
+    { name: "Placa de Aprimoramento", icon: "🛡️", result: "1x Placa de Aprimoramento", materials: ["3x Fragmento de Metal", "1x Núcleo Digital", "500 Bits"] },
+    { name: "Lâmina do Tamer", icon: "⚔️", result: "1x Lâmina do Tamer", materials: ["5x Fragmento de Metal", "2x Núcleo Digital", "1.500 Bits"] },
+    { name: "Anel de Energia", icon: "💍", result: "1x Anel de Energia", materials: ["4x Fragmento de Metal", "3x Núcleo Digital", "2.000 Bits"] }
+  ];
+  container.innerHTML = `
+    <div class="card border-cyan-900/60 bg-cyan-950/10 mb-3"><p class="text-xs text-cyan-300 font-semibold">Prévia do sistema</p><p class="text-xs text-slate-400 mt-1">As receitas abaixo são apenas visuais. O craft ainda não consome materiais nem Bits.</p></div>
+    <div class="flex items-center justify-between mb-2 px-1"><h3 class="text-sm font-bold text-slate-300">Receitas disponíveis</h3><span class="badge text-amber-300">Em breve</span></div>
+    <div class="flex flex-col gap-2">
+      ${recipes.map(recipe => `<div class="card-sm flex items-start gap-3 opacity-80"><span class="text-3xl">${recipe.icon}</span><div class="flex-1 min-w-0"><p class="font-bold text-sm">${recipe.name}</p><p class="text-xs text-emerald-300 mt-1">Resultado: ${recipe.result}</p><div class="flex flex-wrap gap-1 mt-2">${recipe.materials.map(material => `<span class="badge text-[10px]">${material}</span>`).join("")}</div></div><button class="btn-sm shrink-0 opacity-60" disabled title="O craft será habilitado futuramente">Criar</button></div>`).join("")}
+    </div>
+  `;
 }
 
 function renderForgeEquipmentList() {
