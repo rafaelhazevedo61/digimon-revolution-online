@@ -257,8 +257,14 @@ async function forgeDoRefine(equipmentId, canRefine = true) {
       protectionItemCode: document.getElementById("forge-protection")?.dataset.active === "true" ? "REFINEMENT_PROTECTION" : null
     });
     showToast(result.success ? (result.message || "Refinamento bem-sucedido!") : (result.message || "Refinamento falhou!"), result.success ? "success" : "error");
+    if (result.equipmentDestroyed) {
+      document.getElementById("forge-refine-overlay")?.remove();
+      await renderForgePage();
+      return;
+    }
+    forgeInventory = await apiGet("/inventory").catch(() => forgeInventory);
     document.getElementById("forge-refine-overlay")?.remove();
-    await renderForgePage();
+    await forgeShowRefine(equipmentId);
   } catch (err) {
     showToast(err.message, "error");
     if (button) { button.disabled = false; button.textContent = "🔨 Refinar"; }
