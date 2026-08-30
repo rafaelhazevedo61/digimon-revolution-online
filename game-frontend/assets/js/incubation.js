@@ -475,7 +475,7 @@ async function incubRenderStart(response) {
   const incubators = inventory.filter(i => {
     const def = i.itemDefinition;
     if (def && def.category === "INCUBATOR" && i.quantity > 0) return true;
-    return ["INCUBATOR_COMMON", "INCUBATOR_RARE", "INCUBATOR_EPIC"].includes(i.itemType) && i.quantity > 0;
+    return ["INCUBATOR_COMMON", "INCUBATOR_RARE", "INCUBATOR_EPIC", "INCUBATOR_LEGENDARY"].includes(i.itemType) && i.quantity > 0;
   });
 
   if (digitamas.length === 0 || incubators.length === 0) {
@@ -629,7 +629,8 @@ function incubItemName(type) {
     DIGITAMA_STEEL: "Digitama de Metal",
     INCUBATOR_COMMON: "Incubadora Comum",
     INCUBATOR_RARE: "Incubadora Rara",
-    INCUBATOR_EPIC: "Incubadora Épica"
+    INCUBATOR_EPIC: "Incubadora Épica",
+    INCUBATOR_LEGENDARY: "Incubadora Lendária"
   };
   return map[type] || type;
 }
@@ -644,12 +645,12 @@ function incubDigitamaEmoji(type) {
 }
 
 function incubIncubatorEmoji(type) {
-  const map = { INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "💎", INCUBATOR_EPIC: "👑" };
+  const map = { INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "💎", INCUBATOR_EPIC: "👑", INCUBATOR_LEGENDARY: "🌟" };
   return map[type] || "📦";
 }
 
 function incubDuration(type) {
-  const map = { INCUBATOR_COMMON: "5 min", INCUBATOR_RARE: "2 min", INCUBATOR_EPIC: "30 seg" };
+  const map = { INCUBATOR_COMMON: "5 min", INCUBATOR_RARE: "2 min", INCUBATOR_EPIC: "30 seg", INCUBATOR_LEGENDARY: "0 seg" };
   return map[type] || "?";
 }
 

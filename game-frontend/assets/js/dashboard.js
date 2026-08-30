@@ -562,7 +562,8 @@ function formatItemType(t) {
     DIGITAMA_STEEL: "Digitama de Metal",
     INCUBATOR_COMMON: "Incubadora Comum",
     INCUBATOR_RARE: "Incubadora Rara",
-    INCUBATOR_EPIC: "Incubadora Épica"
+    INCUBATOR_EPIC: "Incubadora Épica",
+    INCUBATOR_LEGENDARY: "Incubadora Lendária"
   };
   return map[t] || t.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }

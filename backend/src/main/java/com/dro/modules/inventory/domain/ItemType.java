@@ -31,6 +31,7 @@ public enum ItemType {
     INCUBATOR_COMMON,
     INCUBATOR_RARE,
     INCUBATOR_EPIC,
+    INCUBATOR_LEGENDARY,
 
     // Expansão da incubadora
     INCUBATION_SLOT_UNLOCK,
