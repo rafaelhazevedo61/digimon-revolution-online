@@ -478,7 +478,7 @@ function missionRewardBreakdownMarkup(title, breakdown, unit, digimonLabel) {
   const cardLabel = "block text-[11px] uppercase tracking-wide text-slate-500";
   const cardValue = "block mt-1 text-base font-bold text-slate-100";
   return `
-    <details open class="mt-4 rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-3">
+    <details class="mt-4 rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-3">
       <summary class="cursor-pointer list-none text-sm font-bold text-slate-200">Detalhes de ${title}</summary>
       <div class="mt-4 space-y-4">
         <section>
