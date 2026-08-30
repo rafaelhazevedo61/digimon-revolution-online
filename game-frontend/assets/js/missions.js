@@ -51,10 +51,10 @@ async function renderMissionsPage() {
       <div id="active-missions"></div>
       <section class="missions-map-section">
         <div class="dashboard-section-heading">
-          <div><p class="progression-eyebrow progression-eyebrow-cyan">Rotas disponíveis</p><h3 class="progression-panel-title">Mapa de áreas</h3></div>
+          <div><p class="progression-eyebrow progression-eyebrow-cyan">Exploração</p><h3 class="progression-panel-title">Áreas disponíveis</h3></div>
           <span class="missions-map-key"><span class="missions-map-key-dot"></span> acessível</span>
         </div>
-        <p class="dashboard-section-note">Avance pelas zonas para desbloquear missões mais desafiadoras.</p>
+        <p class="dashboard-section-note">Avance pelas áreas para desbloquear missões mais desafiadoras.</p>
         <div id="areas-list">
           <div class="mission-area-skeleton"></div>
           <div class="mission-area-skeleton"></div>
@@ -599,7 +599,7 @@ function renderAreaCards(areas) {
       <article class="mission-area-card ${locked ? "mission-area-card-locked" : "mission-area-card-open"}" ${locked ? "" : `onclick="navigateTo('mission-area', { area: '${a.area}' })" role="button" tabindex="0" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigateTo('mission-area', { area: '${a.area}' }); }"`}>
         <div class="mission-area-icon" aria-hidden="true">${info.emoji}</div>
         <div class="mission-area-main">
-          <p class="mission-area-label">Zona ${zoneNumber}</p>
+          <p class="mission-area-label">Área ${zoneNumber}</p>
           <h3 class="mission-area-name">${info.name}</h3>
           <p class="mission-area-requirement">Estágio mínimo · ${formatStage(a.requiredStage)}</p>
         </div>
@@ -624,7 +624,7 @@ async function renderMissionAreaPage(params) {
       <header class="mission-area-page-header mb-4">
         <div>
           <button class="progression-back-button mb-3" onclick="navigateTo('missions')"><span aria-hidden="true">←</span> Voltar ao mapa</button>
-          <p class="progression-eyebrow progression-eyebrow-cyan">Zona de exploração</p>
+          <p class="progression-eyebrow progression-eyebrow-cyan">Área de exploração</p>
           <h2 class="progression-page-title"><span class="mission-area-header-emoji" aria-hidden="true">${info.emoji}</span> ${info.name}</h2>
           <p class="progression-page-subtitle">Missões disponíveis para esta área.</p>
         </div>
