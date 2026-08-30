@@ -167,14 +167,14 @@ async function forgeShowRefine(equipmentId) {
         <div class="flex justify-around text-sm">
           <div class="text-center"><span class="text-yellow-400 font-bold">${Number(preview.costBits).toLocaleString("pt-BR")}</span><span class="text-slate-400"> Bits</span><br><span class="text-xs ${preview.currentBits >= preview.costBits ? "text-green-400" : "text-red-400"}">(tem: ${Number(preview.currentBits).toLocaleString("pt-BR")})</span></div>
           <div class="text-center"><span class="text-purple-400 font-bold">${preview.costStones}</span><span class="text-slate-400"> Pedra</span><br><span class="text-xs ${preview.currentStones >= preview.costStones ? "text-green-400" : "text-red-400"}">(tem: ${preview.currentStones})</span></div>
-          <div class="text-center"><span class="font-bold ${preview.successRate >= 70 ? "text-green-400" : preview.successRate >= 40 ? "text-yellow-400" : "text-red-400"}">${preview.successRate}%</span><span class="text-slate-400"> Chance</span></div>
+          <div class="text-center"><span id="forge-success-rate" class="font-bold ${forgeSuccessRateClass(preview.successRate)}">${preview.successRate}%</span><span class="text-slate-400"> Chance</span></div>
         </div>
       </div>
       <div class="card-sm mb-3">
         <p class="text-xs text-slate-400 mb-2">Itens de suporte</p>
         <label class="flex items-center justify-between gap-2 text-xs ${forgeFindItemCount("REFINEMENT_SUCCESS_BOOST") > 0 ? "text-slate-300" : "text-slate-600"}">
           <span>Usar Pergaminho de Refinamento (+10 pontos percentuais)</span>
-          <input id="forge-success-boost" type="checkbox" ${forgeFindItemCount("REFINEMENT_SUCCESS_BOOST") < 1 ? "disabled" : ""}>
+          <input id="forge-success-boost" type="checkbox" onchange="forgeUpdateRefineChance(${preview.baseSuccessRate ?? preview.successRate})" ${forgeFindItemCount("REFINEMENT_SUCCESS_BOOST") < 1 ? "disabled" : ""}>
         </label>
         <label class="flex items-center justify-between gap-2 text-xs mt-2 ${forgeFindItemCount("REFINEMENT_PROTECTION") > 0 && preview.breakChance > 0 ? "text-slate-300" : "text-slate-600"}">
           <span>Usar Cristal de Proteção (${forgeFindItemCount("REFINEMENT_PROTECTION")} disponível(is))</span>
@@ -182,7 +182,7 @@ async function forgeShowRefine(equipmentId) {
         </label>
         ${preview.breakChance > 0 ? `<p class="text-[10px] text-red-300 mt-2">Atenção: esta tentativa tem ${preview.breakChance}% de chance de quebrar o equipamento.</p>` : ""}
       </div>
-      <button id="forge-refine-btn" class="btn-primary w-full py-3 text-base font-bold ${!preview.canRefine ? "opacity-60" : ""}" onclick="forgeDoRefine('${equipmentId}', ${Boolean(preview.canRefine)})">🔨 Refinar para +${nextLevel} (${preview.successRate}%)</button>
+      <button id="forge-refine-btn" data-next-level="${nextLevel}" class="btn-primary w-full py-3 text-base font-bold ${!preview.canRefine ? "opacity-60" : ""}" onclick="forgeDoRefine('${equipmentId}', ${Boolean(preview.canRefine)})">🔨 Refinar para +${nextLevel} (<span id="forge-refine-button-rate">${preview.successRate}%</span>)</button>
       ${!preview.canRefine ? `<p class="text-red-400 text-xs text-center mt-2">Recursos insuficientes</p>` : ""}
     </div>
   `;
@@ -221,6 +221,22 @@ async function forgeDoRefine(equipmentId, canRefine = true) {
 
 function forgeRarityBadge(rarity) {
   return String(rarity || "COMMON").toLowerCase();
+}
+
+function forgeSuccessRateClass(rate) {
+  return rate >= 70 ? "text-green-400" : rate >= 40 ? "text-yellow-400" : "text-red-400";
+}
+
+function forgeUpdateRefineChance(baseRate) {
+  const boost = document.getElementById("forge-success-boost");
+  const rate = Math.min(100, Number(baseRate || 0) + (boost?.checked ? 10 : 0));
+  const rateElement = document.getElementById("forge-success-rate");
+  const buttonRate = document.getElementById("forge-refine-button-rate");
+  if (rateElement) {
+    rateElement.textContent = `${rate}%`;
+    rateElement.className = `font-bold ${forgeSuccessRateClass(rate)}`;
+  }
+  if (buttonRate) buttonRate.textContent = `${rate}%`;
 }
 
 function forgeFindItemCount(code) {
