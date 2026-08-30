@@ -55,6 +55,7 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
   const p = rebirthPreview;
   const availableCodeInfinite = Math.max(0, Number(p.currentCodeInfinite ?? 0));
   const rarityPreservationQuantity = Math.max(0, Number(p.rarityPreservationItemQuantity ?? 0));
+  const pendingCompletedMissionCount = Math.max(0, Number(p.pendingCompletedMissionCount ?? 0));
   const codeInfiniteDisabled = availableCodeInfinite <= 0 ? "disabled" : "";
   const codeInfiniteMax = Math.min(100, availableCodeInfinite);
 
@@ -191,12 +192,24 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
         </span>
       </label>
       ${equippedEquipmentCount > 0 ? `
-        <div class="rounded-lg border border-red-900/70 bg-red-950/30 p-3 mb-3 text-sm text-red-200">
+        <div class="rebirth-block-alert">
           <p class="font-semibold">Renascimento bloqueado</p>
           <p class="text-xs text-red-200/80 mt-1">Este Digimon possui ${equippedEquipmentCount} equipamento(s) equipado(s). Desequipe todos antes de realizar o Renascimento para não sacrificá-los junto com o Digimon.</p>
         </div>
+      ` : ""}
+      ${pendingCompletedMissionCount > 0 ? `
+        <div class="rebirth-block-alert">
+          <p class="font-semibold">Renascimento bloqueado</p>
+          <p class="text-xs text-red-200/80 mt-1">Este Digimon possui ${pendingCompletedMissionCount} missão${pendingCompletedMissionCount === 1 ? "" : "ões"} concluída${pendingCompletedMissionCount === 1 ? "" : "s"} com recompensa pendente. Resgate ${pendingCompletedMissionCount === 1 ? "a recompensa" : "as recompensas"} antes de realizar o Renascimento.</p>
+        </div>
+      ` : ""}
+      ${equippedEquipmentCount > 0 ? `
         <button class="btn-primary w-full opacity-50 cursor-not-allowed py-3" disabled>
           Desequipe os equipamentos para continuar
+        </button>
+      ` : pendingCompletedMissionCount > 0 ? `
+        <button class="btn-primary w-full opacity-50 cursor-not-allowed py-3" disabled>
+          Resgate as missões antes de continuar
         </button>
       ` : p.eligible ? `
         <button class="btn-primary w-full text-lg py-3" id="rebirth-btn" onclick="rebirthExecute()">

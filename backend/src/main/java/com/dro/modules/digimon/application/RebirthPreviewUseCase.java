@@ -50,15 +50,16 @@ public class RebirthPreviewUseCase {
                 .map(InventoryItem::getQuantity).orElse(0);
         int currentBits = digimon.getBits();
         int equippedEquipmentCount = equipmentRepository.findByDigimonIdAndEquippedTrue(digimonId).size();
+        long pendingCompletedMissionCount = missionInstanceRepository.countByDigimonIdAndStatus(digimonId, MissionStatus.COMPLETED);
         int remainingBitsAfterRebirth = Math.max(0, currentBits - costBits);
         int rarityMinimumIv = RebirthRules.calculateIvBonus(newRebirthCount);
         IvRangeResponse hpRange = calculateIvRange(digimon.getIvHp(), rarityMinimumIv, newRebirthCount);
         IvRangeResponse attackRange = calculateIvRange(digimon.getIvAttack(), rarityMinimumIv, newRebirthCount);
         IvRangeResponse defenseRange = calculateIvRange(digimon.getIvDefense(), rarityMinimumIv, newRebirthCount);
         double statMultiplier = RebirthRules.calculateStatMultiplier(newRebirthCount);
-        String ineligibilityReason = getIneligibilityReason(digimon, costBits, costDataCore, costDigitalData, currentDigitalData, equippedEquipmentCount);
+        String ineligibilityReason = getIneligibilityReason(digimon, costBits, costDataCore, costDigitalData, currentDigitalData, equippedEquipmentCount, pendingCompletedMissionCount);
         boolean eligible = ineligibilityReason == null;
-        return new RebirthPreviewResponse(eligible, ineligibilityReason, currentRebirthCount, newRebirthCount, costBits, costDataCore, currentDataCore, costDigitalData, currentDigitalData, currentCodeInfinite, currentBits, remainingBitsAfterRebirth, hpRange, attackRange, defenseRange, statMultiplier, equippedEquipmentCount, digimon.getRarity(), rarityPreservationItemQuantity);
+        return new RebirthPreviewResponse(eligible, ineligibilityReason, currentRebirthCount, newRebirthCount, costBits, costDataCore, currentDataCore, costDigitalData, currentDigitalData, currentCodeInfinite, currentBits, remainingBitsAfterRebirth, hpRange, attackRange, defenseRange, statMultiplier, equippedEquipmentCount, Math.toIntExact(pendingCompletedMissionCount), digimon.getRarity(), rarityPreservationItemQuantity);
     }
 
     private UUID extractPlayerId(String token) {
@@ -76,7 +77,7 @@ public class RebirthPreviewUseCase {
         return new IvRangeResponse(min, MAX_IV);
     }
 
-    private String getIneligibilityReason(Digimon digimon, int costBits, int costDataCore, int costDigitalData, int currentDigitalData, int equippedEquipmentCount) {
+    private String getIneligibilityReason(Digimon digimon, int costBits, int costDataCore, int costDigitalData, int currentDigitalData, int equippedEquipmentCount, long pendingCompletedMissionCount) {
         if (digimon.getStatus().name().equals("REBORN")) {
             return "Only active Digimons can perform Rebirth";
         }
@@ -92,6 +93,9 @@ public class RebirthPreviewUseCase {
         boolean hasRunningMission = missionInstanceRepository.existsByDigimonIdAndStatus(digimon.getId(), MissionStatus.RUNNING);
         if (hasRunningMission) {
             return "Digimon cannot perform Rebirth while in a running mission";
+        }
+        if (pendingCompletedMissionCount > 0) {
+            return "Resgate as recompensas das missões concluídas antes de realizar o Rebirth";
         }
         if (digimon.getBits() < costBits) {
             return "Not enough Bits to perform Rebirth";

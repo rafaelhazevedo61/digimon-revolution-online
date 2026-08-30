@@ -16,6 +16,8 @@ public interface MissionInstanceRepository
 
     boolean existsByDigimonIdAndStatus(UUID digimonId, MissionStatus status);
 
+    long countByDigimonIdAndStatus(UUID digimonId, MissionStatus status);
+
     Optional<MissionInstance> findByIdAndPlayerId(UUID id, UUID playerId);
 
     List<MissionInstance> findByPlayerIdAndStatusIn(

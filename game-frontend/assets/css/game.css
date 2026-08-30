@@ -1078,3 +1078,9 @@ body {
   .progression-back-button, .rebirth-preserve-card, .evolution-option-card, .progression-button { transition: none; }
   .evolution-option-card:hover { transform: none; }
 }
+
+
+/* Bloqueios de Rebirth */
+.rebirth-block-alert { margin-bottom: 0.75rem; padding: 0.72rem 0.78rem; border: 1px solid rgba(239, 68, 68, 0.62); border-radius: 0.7rem; background: linear-gradient(110deg, rgba(127, 29, 29, 0.35), rgba(69, 10, 10, 0.2)); color: #fecaca; font-size: 0.76rem; box-shadow: inset 0 1px 0 rgba(254, 202, 202, 0.04); }
+.rebirth-block-alert p { margin: 0; }
+.rebirth-block-alert + .rebirth-block-alert { margin-top: -0.25rem; }
