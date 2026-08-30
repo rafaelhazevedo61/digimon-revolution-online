@@ -216,6 +216,10 @@ async function forgeShowRefine(equipmentId) {
         <span class="text-xs text-slate-300">Tentativa automática <span class="block text-[10px] text-slate-500">Repete enquanto houver recursos</span></span>
         <button id="forge-auto-toggle" type="button" role="switch" aria-checked="false" data-active="false" class="forge-support-toggle" onclick="forgeToggleAuto('${equipmentId}', ${Boolean(preview.canRefine)})">OFF</button>
       </div>
+      <div class="flex items-center justify-between gap-2 rounded-lg border border-red-950/60 bg-red-950/10 px-3 py-2 mb-3 ${preview.breakChance > 0 ? "" : "opacity-50"}">
+        <span class="text-xs text-slate-300">Continuar com risco de quebra <span class="block text-[10px] text-red-300/70">Autoriza o automático a tentar +10 → +11</span></span>
+        <button id="forge-break-risk-toggle" type="button" role="switch" aria-checked="false" data-active="false" class="forge-support-toggle" onclick="forgeToggleBreakRisk()" ${preview.breakChance < 1 ? "disabled" : ""}>OFF</button>
+      </div>
       <button id="forge-refine-btn" data-next-level="${nextLevel}" class="btn-primary w-full py-3 text-base font-bold ${!preview.canRefine ? "opacity-60" : ""}" onclick="forgeDoRefine('${equipmentId}', ${Boolean(preview.canRefine)})">🔨 Refinar para +${nextLevel} (<span id="forge-refine-button-rate">${preview.successRate}%</span>)</button>
       ${!preview.canRefine ? `<p class="text-red-400 text-xs text-center mt-2">Recursos insuficientes</p>` : ""}
     </div>
@@ -294,6 +298,16 @@ function forgeFindItemCount(code) {
     .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 }
 
+function forgeToggleBreakRisk() {
+  const toggle = document.getElementById("forge-break-risk-toggle");
+  if (!toggle || toggle.disabled) return;
+  const active = toggle.dataset.active !== "true";
+  toggle.dataset.active = String(active);
+  toggle.textContent = active ? "ON" : "OFF";
+  toggle.setAttribute("aria-checked", String(active));
+  toggle.classList.toggle("is-active", active);
+}
+
 function forgeToggleAuto(equipmentId, canRefine) {
   const toggle = document.getElementById("forge-auto-toggle");
   if (!toggle) return;
@@ -349,6 +363,11 @@ async function forgeAutoStep() {
       forgeStopAutoRefine();
       showToast(preview.currentRefinementLevel >= preview.nextRefinementLevel ? "Equipamento maximizado em +11." : "Tentativa automática interrompida: recursos insuficientes.", "error");
       await renderForgePage();
+      return;
+    }
+    if (preview.breakChance > 0 && document.getElementById("forge-break-risk-toggle")?.dataset.active !== "true") {
+      forgeStopAutoRefine();
+      showToast("Tentativa automática pausada antes de uma tentativa com risco de quebra. Ative o toggle de segurança para continuar.", "error");
       return;
     }
     const result = await apiPost("/equipment/refine", {
