@@ -369,15 +369,16 @@ function renderIncubation(inc) {
   if (activeSlots.length === 0) return "";
 
   return `
-    <div class="mb-4" id="dash-incubation">
-      <div class="flex items-center justify-between mb-2 px-1">
-        <h3 class="text-sm font-bold text-slate-300">Incubação</h3>
-        <button class="text-xs text-cyan-400" onclick="navigateTo('incubation')">Ver slots</button>
+    <section class="dashboard-incubation-section mb-4" id="dash-incubation">
+      <div class="dashboard-section-heading">
+        <div><p class="dashboard-eyebrow dashboard-eyebrow-amber">Ciclo ativo</p><h3 class="dashboard-section-title">Incubação</h3></div>
+        <button class="dashboard-section-link" onclick="navigateTo('incubation')">Ver slots <span aria-hidden="true">›</span></button>
       </div>
-      <div class="grid grid-cols-1 gap-2">
+      <p class="dashboard-section-note">Acompanhe seus Digitamas enquanto eles evoluem.</p>
+      <div class="dashboard-incubation-list">
         ${activeSlots.map(slot => renderDashboardIncubationSlot(slot)).join("")}
       </div>
-    </div>
+    </section>
   `;
 }
 
@@ -385,8 +386,9 @@ function renderDashboardIncubationSlot(slot) {
   const slotNumber = Number(slot.slotNumber);
   if (!slot.unlocked) {
     return `
-      <div class="card-sm flex items-center justify-between opacity-70" data-dash-incub-slot="${slotNumber}">
-        <div class="flex items-center gap-2"><span>🔒</span><span class="text-sm">Slot ${slotNumber}</span></div>
+      <div class="dashboard-incubation-card dashboard-incubation-card-locked" data-dash-incub-slot="${slotNumber}">
+        <div class="dashboard-incubation-icon" aria-hidden="true">🔒</div>
+        <div class="min-w-0"><p class="dashboard-incubation-label">Slot ${slotNumber}</p><p class="dashboard-incubation-name">Slot bloqueado</p></div>
         <span class="badge">Bloqueado</span>
       </div>
     `;
@@ -394,9 +396,10 @@ function renderDashboardIncubationSlot(slot) {
 
   if (!slot.incubation) {
     return `
-      <div class="card-sm flex items-center justify-between" data-dash-incub-slot="${slotNumber}" onclick="navigateTo('incubation')">
-        <div class="flex items-center gap-2"><span>🥚</span><span class="text-sm">Slot ${slotNumber}</span></div>
-        <span class="badge text-emerald-300">Livre</span>
+      <div class="dashboard-incubation-card dashboard-incubation-card-free" data-dash-incub-slot="${slotNumber}" onclick="navigateTo('incubation')">
+        <div class="dashboard-incubation-icon" aria-hidden="true">🥚</div>
+        <div class="min-w-0"><p class="dashboard-incubation-label">Slot ${slotNumber}</p><p class="dashboard-incubation-name">Disponível para uso</p></div>
+        <span class="dashboard-incubation-link">Abrir <span aria-hidden="true">›</span></span>
       </div>
     `;
   }
@@ -404,18 +407,32 @@ function renderDashboardIncubationSlot(slot) {
   const incubation = slot.incubation;
   const remaining = Math.max(0, Number(incubation.remainingSeconds) || 0);
   const done = incubation.status === "READY" || remaining <= 0;
+  const progress = dashboardIncubationProgress(incubation);
+  const digitamaEmoji = dashboardIncubationEmoji(incubation.digitamaType);
   return `
-    <div class="card-sm flex items-center justify-between cursor-pointer" data-dash-incub-slot="${slotNumber}" data-finish-at="${escapeAttr(incubation.finishAt)}" data-started-at="${escapeAttr(incubation.startedAt)}" data-remaining-seconds="${remaining}" onclick="navigateTo('incubation')">
-      <div class="min-w-0">
-        <p class="font-bold text-sm truncate">Slot ${slotNumber} · ${formatItemType(incubation.digitamaType)}</p>
-        <p class="text-xs text-slate-500">${formatItemType(incubation.incubatorType)}</p>
+    <article class="dashboard-incubation-card ${done ? "dashboard-incubation-card-ready" : "dashboard-incubation-card-active"}" data-dash-incub-slot="${slotNumber}" data-finish-at="${escapeAttr(incubation.finishAt)}" data-started-at="${escapeAttr(incubation.startedAt)}" data-remaining-seconds="${remaining}" onclick="navigateTo('incubation')">
+      <div class="dashboard-incubation-icon" aria-hidden="true">${digitamaEmoji}</div>
+      <div class="dashboard-incubation-main">
+        <div class="dashboard-incubation-topline"><span class="dashboard-incubation-label">Slot ${slotNumber}</span><span class="dashboard-incubation-status">${done ? "Pronto" : "Em andamento"}</span></div>
+        <p class="dashboard-incubation-name">${escapeHtml(formatItemType(incubation.digitamaType))}</p>
+        <p class="dashboard-incubation-meta">${escapeHtml(formatItemType(incubation.incubatorType))}</p>
+        <div class="dashboard-incubation-progress" role="progressbar" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100" aria-label="${progress}% da incubação concluída"><span id="incub-dash-bar-${slotNumber}" style="width:${progress}%"></span></div>
       </div>
-      <div class="text-right shrink-0 ml-2">
-        <p class="text-xs ${done ? "text-green-400 font-bold" : "text-amber-400"}" id="incub-dash-timer-${slotNumber}">${done ? "Pronta! 🐣" : formatTime(remaining)}</p>
-        ${done ? `<button class="btn-sm btn-primary mt-1" onclick="event.stopPropagation(); navigateTo('incubation')">Chocar</button>` : ""}
-      </div>
-    </div>
+      <div class="dashboard-incubation-timer-wrap"><p class="dashboard-incubation-timer ${done ? "dashboard-incubation-timer-ready" : ""}" id="incub-dash-timer-${slotNumber}">${done ? "Pronta!" : formatTime(remaining)}</p>${done ? `<button class="btn-sm btn-primary" onclick="event.stopPropagation(); navigateTo('incubation')">Chocar</button>` : `<span class="dashboard-incubation-open">Ver detalhes</span>`}</div>
+    </article>
   `;
+}
+
+function dashboardIncubationProgress(incubation) {
+  const total = (new Date(incubation.finishAt) - new Date(incubation.startedAt)) / 1000;
+  if (!Number.isFinite(total) || total <= 0) return 0;
+  const remaining = Math.max(0, Number(incubation.remainingSeconds) || 0);
+  return Math.min(100, Math.round(((total - remaining) / total) * 100));
+}
+
+function dashboardIncubationEmoji(type) {
+  const map = { DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿", DIGITAMA_EARTH: "🪨", DIGITAMA_WIND: "🌪️", DIGITAMA_LIGHT: "✨", DIGITAMA_DARK: "🌑", DIGITAMA_THUNDER: "⚡", DIGITAMA_ICE: "❄️", DIGITAMA_STEEL: "⚙️" };
+  return map[type] || "🥚";
 }
 
 async function claimMission(instanceId) {
@@ -449,6 +466,7 @@ function startIncubationTimer(inc = null) {
       startedAt: incubation.startedAt,
       remainingSeconds: remaining,
       timerId: `incub-dash-timer-${Number(slot.slotNumber)}`,
+      barId: `incub-dash-bar-${Number(slot.slotNumber)}`,
       formatter: formatTime,
       onComplete: () => dashboardMarkIncubationReady(Number(slot.slotNumber))
     });
@@ -459,11 +477,20 @@ function dashboardMarkIncubationReady(slotNumber) {
   const timerEl = document.getElementById(`incub-dash-timer-${slotNumber}`);
   if (!timerEl) return;
 
-  timerEl.textContent = "Pronta! 🐣";
-  timerEl.className = "text-xs text-green-400 font-bold";
+  timerEl.textContent = "Pronta!";
+  timerEl.className = "dashboard-incubation-timer dashboard-incubation-timer-ready";
+  const barEl = document.getElementById(`incub-dash-bar-${slotNumber}`);
+  if (barEl) barEl.style.width = "100%";
+  const card = timerEl.closest(".dashboard-incubation-card");
+  if (card) {
+    card.classList.remove("dashboard-incubation-card-active");
+    card.classList.add("dashboard-incubation-card-ready");
+  }
   const parent = timerEl.parentElement;
   if (parent && !parent.querySelector("button")) {
-    parent.insertAdjacentHTML("beforeend", `<button class="btn-sm btn-primary mt-1" onclick="event.stopPropagation(); navigateTo('incubation')">Chocar</button>`);
+    const details = parent.querySelector(".dashboard-incubation-open");
+    if (details) details.remove();
+    parent.insertAdjacentHTML("beforeend", `<button class="btn-sm btn-primary" onclick="event.stopPropagation(); navigateTo('incubation')">Chocar</button>`);
   }
 }
 
