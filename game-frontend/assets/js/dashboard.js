@@ -641,18 +641,40 @@ async function dashboardLoadEquipmentAlternatives(slot, equippedId) {
       container.innerHTML = '<p class="text-xs text-slate-500">Nenhum outro equipamento disponível para este slot.</p>';
       return;
     }
-    container.innerHTML = equipment.map(item => `
-      <div class="flex items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-900/60 p-2">
-        <div class="min-w-0">
-          <p class="text-xs font-bold truncate">${escapeHtml(item.name)}${item.refinementLevel > 0 ? ` +${item.refinementLevel}` : ""}</p>
-          <p class="text-[10px] text-slate-400">${escapeHtml(item.rarity || "COMMON")} · T${item.tier || "?"}</p>
-        </div>
-        <button class="btn-sm btn-primary shrink-0 text-xs" onclick="dashboardEquipAlternative('${item.id}')">Equipar</button>
-      </div>
-    `).join("");
+    container.innerHTML = equipment.map(dashboardEquipmentAlternativeCard).join("");
   } catch (err) {
     container.innerHTML = `<p class="text-xs text-red-300">${escapeHtml(err.message)}</p>`;
   }
+}
+
+function dashboardEquipmentAlternativeCard(item) {
+  const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
+  const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
+  const rarity = String(item.rarity || "COMMON").toLowerCase();
+  const refLabel = Number(item.refinementLevel) > 0 ? ` +${item.refinementLevel}` : "";
+  const stats = [];
+  if (Number(item.effectiveBonusHp) > 0) stats.push(`<span class="text-red-400">HP+${item.effectiveBonusHp}</span>`);
+  if (Number(item.effectiveBonusAttack) > 0) stats.push(`<span class="text-orange-400">ATK+${item.effectiveBonusAttack}</span>`);
+  if (Number(item.effectiveBonusDefense) > 0) stats.push(`<span class="text-blue-400">DEF+${item.effectiveBonusDefense}</span>`);
+  const setLabel = typeof invSetLabel === "function" ? invSetLabel(item.setCode) : item.setCode;
+  const setBadge = typeof invSetBadge === "function" ? invSetBadge(item.setCode) : "common";
+  return `
+    <div class="rounded-lg border border-slate-700 bg-slate-900/60 p-2">
+      <div class="flex items-center gap-2">
+        <div class="text-xl shrink-0">${slotEmoji[item.slot] || "⚔️"}</div>
+        <div class="min-w-0 flex-1">
+          <p class="font-bold text-xs truncate">${escapeHtml(item.name)}${refLabel}</p>
+          <div class="flex gap-1 mt-1 flex-wrap items-center">
+            ${item.setCode ? `<span class="badge badge-${setBadge}">${escapeHtml(setLabel)}</span>` : ""}
+            <span class="badge badge-${rarity}">T${item.tier || "?"}</span>
+            <span class="text-[10px] text-slate-500">${slotName[item.slot] || item.slot}</span>
+          </div>
+          ${stats.length ? `<div class="flex gap-2 mt-1 text-[10px] font-bold">${stats.join(" ")}</div>` : ""}
+        </div>
+        <button class="btn-sm btn-primary shrink-0 text-xs" onclick="dashboardEquipAlternative('${item.id}')">Equipar</button>
+      </div>
+    </div>
+  `;
 }
 
 async function dashboardEquipAlternative(equipmentId) {
