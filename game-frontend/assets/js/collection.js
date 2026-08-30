@@ -5,7 +5,7 @@ let collectionInventory = [];
 async function renderCollectionPage() {
   const app = document.getElementById("app");
   showBottomNav("more");
-  app.innerHTML = `<div class="page-container"><div class="flex items-center justify-between mb-4"><div><h2 class="text-lg font-bold">Coleção</h2><p class="text-xs text-slate-400">Registre Digimons usando um Digivice.</p></div><button class="btn-sm" onclick="navigateTo('more')">Voltar</button></div><div class="card grid grid-cols-2 divide-x divide-slate-700 p-0 overflow-hidden"><div class="flex min-h-24 flex-col items-center justify-center px-4 py-4 text-center"><p class="text-3xl font-black leading-none text-cyan-400" id="collection-points">—</p><p class="mt-2 text-xs text-slate-400">Pontos de coleção</p></div><div class="flex min-h-24 flex-col items-center justify-center px-4 py-4 text-center"><p class="text-3xl font-black leading-none text-fuchsia-300" id="collection-digivices">—</p><p class="mt-2 text-xs text-slate-400">Digivices de Registro</p></div></div><div id="collection-milestones" class="card mt-3"></div><div class="card mt-3"><div class="flex items-center justify-between gap-3 mb-2"><h3 class="font-bold">Digimons disponíveis para registro</h3><span id="collection-storage-count" class="text-xs text-slate-400"></span></div><p class="text-xs text-slate-400 mb-3">Somente Digimons que estão no seu Armazém Digimon aparecem nesta lista.</p><div class="flex w-full items-center gap-2 mb-3"><input id="collection-search" class="input flex-1 min-w-0" type="search" placeholder="Buscar por nome" autocomplete="off" onkeydown="if (event.key === 'Enter') collectionApplySearch()" /><button type="button" class="btn-primary shrink-0" onclick="collectionApplySearch()">Buscar</button></div><p class="text-xs text-amber-200 mb-3">O Digivice e o Digimon serão consumidos permanentemente. Duplicatas não geram pontos.</p><div id="collection-digimons"><p class="text-sm text-slate-400">Carregando o Storage...</p></div></div><div id="collection-entries" class="card mt-3"></div></div>`;
+  app.innerHTML = `<div class="page-container"><div class="flex items-center justify-between mb-4"><div><h2 class="text-lg font-bold">Coleção</h2><p class="text-xs text-slate-400">Registre Digimons usando um Digivice.</p></div><div class="flex items-center gap-2"><button class="btn-sm btn-primary" onclick="collectionOpenAlbum()">Álbum completo</button><button class="btn-sm" onclick="navigateTo('more')">Voltar</button></div></div><div class="card grid grid-cols-2 divide-x divide-slate-700 p-0 overflow-hidden"><div class="flex min-h-24 flex-col items-center justify-center px-4 py-4 text-center"><p class="text-3xl font-black leading-none text-cyan-400" id="collection-points">—</p><p class="mt-2 text-xs text-slate-400">Pontos de coleção</p></div><div class="flex min-h-24 flex-col items-center justify-center px-4 py-4 text-center"><p class="text-3xl font-black leading-none text-fuchsia-300" id="collection-digivices">—</p><p class="mt-2 text-xs text-slate-400">Digivices de Registro</p></div></div><div id="collection-milestones" class="card mt-3"></div><div class="card mt-3"><div class="flex items-center justify-between gap-3 mb-2"><h3 class="font-bold">Digimons disponíveis para registro</h3><span id="collection-storage-count" class="text-xs text-slate-400"></span></div><p class="text-xs text-slate-400 mb-3">Somente Digimons que estão no seu Armazém Digimon aparecem nesta lista.</p><div class="flex w-full items-center gap-2 mb-3"><input id="collection-search" class="input flex-1 min-w-0" type="search" placeholder="Buscar por nome" autocomplete="off" onkeydown="if (event.key === 'Enter') collectionApplySearch()" /><button type="button" class="btn-primary shrink-0" onclick="collectionApplySearch()">Buscar</button></div><p class="text-xs text-amber-200 mb-3">O Digivice e o Digimon serão consumidos permanentemente. Duplicatas não geram pontos.</p><div id="collection-digimons"><p class="text-sm text-slate-400">Carregando o Storage...</p></div></div><div id="collection-entries" class="card mt-3"></div></div>`;
   try {
     const [summary, digimons, inventory] = await Promise.all([apiGet("/collection"), apiGet("/digimon/storage"), apiGet("/inventory")]);
     collectionSummary = summary;
@@ -45,6 +45,48 @@ function collectionRenderDigimons() {
 
 function collectionApplySearch() {
   collectionRenderDigimons();
+}
+
+async function collectionOpenAlbum() {
+  document.getElementById("collection-album-overlay")?.remove();
+  const overlay = document.createElement("div");
+  overlay.id = "collection-album-overlay";
+  overlay.className = "fixed inset-0 z-[60] flex items-end justify-center";
+  overlay.style.background = "rgba(0,0,0,0.72)";
+  overlay.innerHTML = `<div class="w-full max-w-4xl rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:92vh;overflow-y:auto" onclick="event.stopPropagation()"><div class="flex items-center justify-between gap-3 mb-3"><div><p class="text-xs uppercase tracking-wider text-fuchsia-400 font-bold">Coleção</p><h3 class="font-bold text-lg">Álbum completo</h3><p class="text-xs text-slate-400">Cada Digimon possui uma entrada para cada raridade.</p></div><button class="text-slate-400 text-2xl" aria-label="Fechar" onclick="collectionCloseAlbum()">&times;</button></div><div class="flex w-full items-center gap-2 mb-4"><input id="collection-album-search" class="input flex-1 min-w-0" type="search" placeholder="Buscar Digimon por nome" oninput="collectionRenderAlbum()" /><span id="collection-album-count" class="text-xs text-slate-400 whitespace-nowrap"></span></div><div id="collection-album-content"><p class="text-sm text-slate-400 text-center py-8">Carregando catálogo...</p></div></div>`;
+  overlay.onclick = event => { if (event.target === overlay) collectionCloseAlbum(); };
+  document.body.appendChild(overlay);
+  try {
+    let page = 0;
+    window.collectionAlbumEntries = [];
+    let hasNext = true;
+    while (hasNext) {
+      const result = await apiGet(`/digimon-infos?page=${page}&size=100`);
+      window.collectionAlbumEntries.push(...(result.items || []));
+      hasNext = Boolean(result.hasNext);
+      page++;
+    }
+    collectionRenderAlbum();
+  } catch (err) {
+    document.getElementById("collection-album-content").innerHTML = `<p class="text-sm text-red-300 text-center py-8">${escapeHtml(err.message || "Não foi possível carregar o álbum.")}</p>`;
+  }
+}
+
+function collectionRenderAlbum() {
+  const target = document.getElementById("collection-album-content");
+  if (!target) return;
+  const search = String(document.getElementById("collection-album-search")?.value || "").trim().toLowerCase();
+  const entries = new Set((collectionSummary?.entries || []).map(e => `${e.digimonInfoId}:${e.rarity}`));
+  const items = (window.collectionAlbumEntries || []).filter(item => !search || String(item.name || "").toLowerCase().includes(search));
+  const count = document.getElementById("collection-album-count");
+  if (count) count.textContent = `${items.length} Digimon(s)`;
+  const rarities = [["COMMON", "Comum", "rarity-box-common"], ["RARE", "Rara", "rarity-box-rare"], ["EPIC", "Épica", "rarity-box-epic"], ["LEGENDARY", "Lendária", "rarity-box-legendary"]];
+  target.innerHTML = items.length ? `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${items.map(item => `<div class="rounded-xl border border-slate-700 bg-slate-900/60 p-3"><div class="flex items-center gap-2 mb-3"><div class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">${renderDigimonVisual(item.imageUrl, item.stage, "w-full h-full", "text-2xl")}</div><div class="min-w-0"><p class="font-bold truncate">${escapeHtml(item.name)}</p><p class="text-xs text-slate-500">${escapeHtml(item.stage)}</p></div></div><div class="grid grid-cols-4 gap-1.5">${rarities.map(([code, label, rarityClass]) => { const registered = entries.has(`${item.id}:${code}`); return `<div class="${rarityClass} rounded-lg border p-1.5 text-center ${registered ? "opacity-100" : "opacity-50 grayscale"}" title="${registered ? "Registrado" : "Ainda não registrado"}"><div class="aspect-square rounded bg-slate-950/60 flex items-center justify-center overflow-hidden">${renderDigimonVisual(item.imageUrl, item.stage, "w-full h-full", "text-2xl")}</div><p class="text-[9px] font-semibold mt-1 truncate">${label}</p><p class="text-[10px]">${registered ? "✓" : "—"}</p></div>`; }).join("")}</div></div>`).join("")}</div>` : '<p class="text-sm text-slate-400 text-center py-8">Nenhum Digimon corresponde à busca.</p>';
+}
+
+function collectionCloseAlbum() {
+  document.getElementById("collection-album-overlay")?.remove();
+  window.collectionAlbumEntries = [];
 }
 
 function collectionOpenRegisterModal(digimonId) {
