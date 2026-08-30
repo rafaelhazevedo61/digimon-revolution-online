@@ -172,6 +172,7 @@ public final class EventRewardMessageText {
                 case REFINEMENT_STONE -> "Pedra de refinamento";
                 case RARITY_REROLL -> "Dado de Raridade";
                 case RARITY_PRESERVATION -> "Cristal de Preservação de Raridade";
+                case COLLECTION_DIGIVICE -> "Digivice de Registro";
             };
         } catch (IllegalArgumentException exception) {
             return itemType;

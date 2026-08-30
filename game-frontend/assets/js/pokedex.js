@@ -5,6 +5,7 @@ let dexHasMore = true;
 let dexFilters = { name: "", stage: "", attribute: "", element: "" };
 let dexEvolutionLinesCache = null;
 let dexEvolutionLinesLoading = false;
+let dexMasteryInfoIds = new Set();
 
 async function renderPokedexPage() {
   const app = document.getElementById("app");
@@ -197,6 +198,13 @@ async function dexShowEvolutionLines(digimonInfoId) {
   document.body.appendChild(overlay);
 
   try {
+    const collection = await apiGet("/collection");
+    const raritiesByDigimon = new Map();
+    (collection.entries || []).forEach(entry => {
+      if (!raritiesByDigimon.has(entry.digimonInfoId)) raritiesByDigimon.set(entry.digimonInfoId, new Set());
+      raritiesByDigimon.get(entry.digimonInfoId).add(entry.rarity);
+    });
+    dexMasteryInfoIds = new Set([...raritiesByDigimon.entries()].filter(([, rarities]) => rarities.size >= 4).map(([infoId]) => Number(infoId)));
     if (!dexEvolutionLinesCache) {
       dexEvolutionLinesLoading = true;
       dexEvolutionLinesCache = await apiGet("/evolution-lines/available");
@@ -231,7 +239,7 @@ async function dexShowEvolutionLines(digimonInfoId) {
                       <p class="font-bold text-sm truncate">${escapeHtml(step.digimon || "Digimon não definido")}</p>
                       <p class="text-xs text-slate-400">${escapeHtml(dexStageName(step.stage))}</p>
                     </div>
-                    ${step.digimonInfoId === digimonInfoId ? `<span class="ml-auto badge badge-common">Atual</span>` : ""}
+                    <div class="ml-auto flex items-center gap-1">${dexMasteryInfoIds.has(Number(step.digimonInfoId)) ? `<span class="badge badge-legendary whitespace-nowrap" title="Maestria adquirida">Maestria adquirida</span>` : ""}${step.digimonInfoId === digimonInfoId ? `<span class="badge badge-common">Atual</span>` : ""}</div>
                   </div>
                 </button>
                 ${index < steps.length - 1 ? `<span class="text-cyan-400 text-lg" aria-hidden="true">↓</span>` : ""}

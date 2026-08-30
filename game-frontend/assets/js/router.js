@@ -22,6 +22,7 @@ const routes = {
   "arena-history": renderArenaHistoryPage,
   "arena-shop": renderArenaShopPage,
   storage: renderStoragePage,
+  collection: renderCollectionPage,
   clans: renderClansPage,
   "clan-ranking": renderClanRanking,
   "world-boss": renderWorldBossPage,

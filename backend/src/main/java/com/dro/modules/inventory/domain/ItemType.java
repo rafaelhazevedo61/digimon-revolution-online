@@ -67,6 +67,9 @@ public enum ItemType {
     RARITY_REROLL,
 
     // Preserva a raridade no Renascimento
-    RARITY_PRESERVATION
+    RARITY_PRESERVATION,
+
+    // Registro permanente de Digimons na coleção
+    COLLECTION_DIGIVICE
 
 }

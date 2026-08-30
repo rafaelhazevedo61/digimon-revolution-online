@@ -103,6 +103,12 @@ async function renderMorePage() {
           title: "Biblioteca Digimon",
           desc: "Catálogo de todos os Digimons",
         },
+        {
+          route: "collection",
+          icon: "📚",
+          title: "Coleção",
+          desc: "Registre Digimons e alcance marcos",
+        },
       ],
     },
     {
