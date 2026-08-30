@@ -276,9 +276,10 @@ function renderEquipSlots(items) {
       `;
     }
     return `
-      <div class="card-sm text-center opacity-40">
+      <div class="card-sm text-center opacity-70 cursor-pointer hover:border-cyan-700 transition-colors" role="button" tabindex="0" aria-label="Equipar ${slotName[slot]}" onclick="dashboardOpenEmptyEquipmentSlot('${slot}')" onkeydown="if (event.key === 'Enter' || event.key === ' ') dashboardOpenEmptyEquipmentSlot('${slot}')">
         <p class="text-lg">${slotEmoji[slot]}</p>
         <p class="text-xs text-slate-500">${slotName[slot]}</p>
+        <p class="text-[10px] text-cyan-400 mt-1">Clique para equipar</p>
       </div>
     `;
   }).join("");
@@ -669,6 +670,33 @@ function dashboardEquipmentAlternativeCard(item) {
       </div>
     </div>
   `;
+}
+
+function dashboardOpenEmptyEquipmentSlot(slot) {
+  const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
+  const overlay = document.createElement("div");
+  overlay.id = "dashboard-equipment-detail-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;display:flex;align-items:center;justify-content:center;padding:1rem;";
+  overlay.onclick = (event) => { if (event.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="card dashboard-equipment-detail-card" style="max-width:560px;width:100%;max-height:92vh;overflow:hidden;border-radius:1rem;margin:0 auto;">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <h3 class="text-lg font-bold">Equipar ${slotName[slot] || slot}</h3>
+          <p class="text-xs text-slate-400 mt-1">Escolha um equipamento disponível para este slot.</p>
+        </div>
+        <button class="text-slate-400 text-xl" onclick="document.getElementById('dashboard-equipment-detail-overlay')?.remove()" aria-label="Fechar">×</button>
+      </div>
+      <div class="card-sm mb-3">
+        <div id="dashboard-equipment-alternatives" class="dashboard-equipment-alternatives space-y-2 max-h-56 overflow-y-auto pr-1">
+          <p class="text-xs text-slate-500">Carregando equipamentos disponíveis...</p>
+        </div>
+      </div>
+      <button class="btn-primary w-full py-3 text-base" onclick="document.getElementById('dashboard-equipment-detail-overlay')?.remove()">Fechar</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  dashboardLoadEquipmentAlternatives(slot, null);
 }
 
 async function dashboardEquipAlternative(equipmentId) {
