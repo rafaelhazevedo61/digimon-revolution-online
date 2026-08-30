@@ -1069,9 +1069,6 @@ function invRenderEquipment() {
             ${stats.length > 0 ? `<div class="flex gap-2 mt-1 text-xs font-bold">${stats.join(" ")}</div>` : ""}
           </div>
           <div class="flex flex-col gap-1">
-            ${eq.refinementLevel < 10 ? `
-              <button class="btn-sm" style="background:#4a2800;color:#f59e0b" onclick="invShowRefine('${eq.id}')">Refinar</button>
-            ` : ''}
             ${eq.equipped ? `
               <button class="btn-sm" style="background:#7f1d1d;color:#fca5a5" onclick="invUnequip('${eq.id}')">Desequipar</button>
             ` : `

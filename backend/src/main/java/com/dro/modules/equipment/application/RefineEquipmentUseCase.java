@@ -44,7 +44,9 @@ public class RefineEquipmentUseCase {
         }
         Digimon digimon = digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Active digimon not found"));
         Equipment equipment = equipmentRepository.findById(equipmentId).orElseThrow(() -> new NotFoundException("Equipment not found"));
-        if (!equipment.getDigimonId().equals(digimon.getId())) {
+        boolean ownedByPlayer = playerId.equals(equipment.getPlayerId());
+        boolean equippedOnActiveDigimon = digimon.getId().equals(equipment.getDigimonId());
+        if (!ownedByPlayer && !equippedOnActiveDigimon) {
             throw new ForbiddenException("Equipment does not belong to this Digimon");
         }
         if (equipment.getRefinementLevel() >= EquipmentRules.MAX_REFINEMENT_LEVEL) {

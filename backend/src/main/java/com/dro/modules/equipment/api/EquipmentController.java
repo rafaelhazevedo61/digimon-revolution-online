@@ -125,11 +125,16 @@ public class EquipmentController {
     public ResponseEntity<RefinePreviewResponse> refinePreview(@RequestHeader("Authorization") String authorization, @PathVariable UUID equipmentId) {
         UUID playerId = com.dro.shared.util.TokenExtractor.extractPlayerId(authorization);
         var player = playerRepository.findById(playerId).orElseThrow(() -> new com.dro.shared.exception.NotFoundException("Player not found"));
-        var digimon = digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new com.dro.shared.exception.NotFoundException("Active digimon not found"));
+        if (player.getActiveDigimonId() == null) {
+            throw new com.dro.shared.exception.BadRequestException("No active digimon selected");
+        }
         var equip = equipmentRepository.findById(equipmentId).orElseThrow(() -> new com.dro.shared.exception.NotFoundException("Equipment not found"));
-        if (!equip.getDigimonId().equals(digimon.getId())) {
+        if (!playerId.equals(equip.getPlayerId()) && !playerId.equals(equip.getDigimonId() != null
+                ? digimonRepository.findById(equip.getDigimonId()).map(d -> d.getPlayerId()).orElse(null)
+                : null)) {
             throw new com.dro.shared.exception.ForbiddenException("Equipment does not belong to this Digimon");
         }
+        var digimon = digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new com.dro.shared.exception.NotFoundException("Active digimon not found"));
         int currentLevel = equip.getRefinementLevel();
         int costBits = EquipmentRules.refinementCostBits(currentLevel);
         int currentStones = inventoryRepository.findByDigimonIdAndItemType(digimon.getId(), ItemType.REFINEMENT_STONE).map(i -> i.getQuantity()).orElse(0);

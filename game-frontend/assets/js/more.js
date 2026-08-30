@@ -44,6 +44,12 @@ async function renderMorePage() {
           title: "Renascimento",
           desc: "Renasça seu Digimon e aprimore seus atributos",
         },
+        {
+          route: "forge",
+          icon: "🔨",
+          title: "Ferreiro",
+          desc: "Refine equipamentos e prepare-se para novos desafios",
+        },
       ],
     },
     {

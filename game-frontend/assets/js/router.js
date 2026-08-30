@@ -7,6 +7,7 @@ const routes = {
   "mission-area": renderMissionAreaPage,
   "digimon-select": renderDigimonSelectPage,
   shop: renderShopPage,
+  forge: renderForgePage,
   "auction-house": renderAuctionHousePage,
   mail: renderMailPage,
   inventory: renderInventoryPage,
