@@ -27,10 +27,10 @@ function renderMailPage() {
       </div>
 
       <div class="flex flex-wrap gap-2 mb-4" id="mail-bulk-actions">
-        <button id="mail-mark-all-read" class="btn-sm flex-1 text-xs" onclick="mailMarkAllRead()">
+          <button id="mail-mark-all-read" class="tab-btn flex-1 text-xs" onclick="mailMarkAllRead()">
           Marcar todas como lidas
         </button>
-        <button id="mail-delete-all" class="btn-sm flex-1 text-xs text-red-300" onclick="mailAskDeleteAll()">
+          <button id="mail-delete-all" class="tab-btn flex-1 text-xs text-red-300" onclick="mailAskDeleteAll()">
           Apagar todas
         </button>
       </div>
