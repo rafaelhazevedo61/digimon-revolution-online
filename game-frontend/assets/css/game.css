@@ -712,3 +712,23 @@ body {
     max-height: calc(96vh - 22rem) !important;
   }
 }
+
+/* ===================== Ferreiro: toggles de suporte ===================== */
+.forge-support-toggle {
+  min-width: 3.25rem;
+  min-height: 2rem;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid #475569;
+  border-radius: 9999px;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
+}
+
+.forge-support-toggle:hover:not(:disabled) { transform: scale(1.04); }
+.forge-support-toggle.is-active { border-color: #22c55e; background: #166534; color: #dcfce7; }
+.forge-support-toggle:disabled { cursor: not-allowed; opacity: 0.45; }
