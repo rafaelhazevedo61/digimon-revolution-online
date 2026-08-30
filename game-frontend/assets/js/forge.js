@@ -362,13 +362,21 @@ async function forgeAutoStep() {
     const preview = await apiGet(`/equipment/${equipmentId}/refine-preview`);
     if (preview.currentRefinementLevel >= preview.nextRefinementLevel || !preview.canRefine) {
       forgeStopAutoRefine();
-      showToast(preview.currentRefinementLevel >= preview.nextRefinementLevel ? "Equipamento maximizado em +11." : "Tentativa automática interrompida: recursos insuficientes.", "error");
-      await renderForgePage();
+      const maxed = preview.currentRefinementLevel >= preview.nextRefinementLevel;
+      showToast(maxed ? "Equipamento maximizado em +11." : "Tentativa automática interrompida: recursos insuficientes.", "error");
+      if (maxed) {
+        await renderForgePage();
+      } else {
+        forgeInventory = await apiGet("/inventory").catch(() => forgeInventory);
+        document.getElementById("forge-refine-overlay")?.remove();
+        await forgeShowRefine(equipmentId);
+      }
       return;
     }
     if (preview.breakChance > 0 && document.getElementById("forge-break-risk-toggle")?.dataset.active !== "true") {
       forgeStopAutoRefine();
       showToast("Tentativa automática pausada antes de uma tentativa com risco de quebra. Ative o toggle de segurança para continuar.", "error");
+      forgeInventory = await apiGet("/inventory").catch(() => forgeInventory);
       document.getElementById("forge-refine-overlay")?.remove();
       await forgeShowRefine(equipmentId);
       return;
