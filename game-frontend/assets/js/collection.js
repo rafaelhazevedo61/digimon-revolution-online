@@ -27,20 +27,20 @@ function collectionRenderSummary(summary) {
   document.getElementById("collection-digivices").textContent = collectionDigiviceCount();
   const milestones = (summary.availableMilestones || []).map(value => `<span class="badge badge-epic mr-1 mb-1 inline-block">${value} pontos alcançados · Disco XP +20%</span>`).join("");
   document.getElementById("collection-milestones").innerHTML = `<h3 class="font-bold mb-2">Marcos alcançados</h3>${milestones || '<p class="text-xs text-slate-400">Continue registrando Digimons para alcançar seu primeiro marco.</p>'}`;
-  const entries = (summary.entries || []).slice(0, 20).map(entry => `<li class="flex justify-between text-sm py-1"><span>${escapeHtml(entry.rarity)}</span><span class="text-slate-500">#${entry.digimonInfoId}</span></li>`).join("");
-  document.getElementById("collection-entries").innerHTML = `<h3 class="font-bold mb-2">Últimos registros</h3><ul>${entries || '<li class="text-xs text-slate-400">Nenhum Digimon registrado.</li>'}</ul>`;
+  const entries = (summary.entries || []).map(entry => `<li class="flex items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-sm"><span><strong>${escapeHtml(entry.speciesName || "Digimon")}</strong><span class="ml-2 badge badge-${String(entry.rarity).toLowerCase()}">${escapeHtml(entry.rarity)}</span></span><span class="text-xs text-slate-500">Registrado</span></li>`).join("");
+  document.getElementById("collection-entries").innerHTML = `<div class="flex items-center justify-between mb-2"><h3 class="font-bold">Digimons registrados</h3><span class="text-xs text-slate-400">${(summary.entries || []).length} entrada(s)</span></div><ul class="space-y-2">${entries || '<li class="text-xs text-slate-400">Nenhum Digimon registrado.</li>'}</ul>`;
 }
 
 function collectionRenderDigimons() {
   const entries = new Set((collectionSummary?.entries || []).map(e => `${e.digimonInfoId}:${e.rarity}`));
   const search = String(document.getElementById("collection-search")?.value || "").trim().toLowerCase();
-  const eligible = collectionDigimons.filter(d => !entries.has(`${d.digimonInfoId}:${d.rarity}`)).filter(d => !search || String(d.name || "").toLowerCase().includes(search));
+  const filtered = collectionDigimons.filter(d => !search || String(d.name || "").toLowerCase().includes(search));
   const target = document.getElementById("collection-digimons");
   if (!target) return;
-  const countLabel = search ? `${eligible.length} encontrado(s)` : `${eligible.length} no Storage`;
+  const countLabel = search ? `${filtered.length} encontrado(s)` : `${filtered.length} no Storage`;
   const countElement = document.getElementById("collection-storage-count");
   if (countElement) countElement.textContent = countLabel;
-  target.innerHTML = eligible.length ? eligible.map(d => `<div class="flex items-center justify-between gap-2 border-b border-slate-800 py-2"><div><p class="font-bold text-sm">${escapeHtml(d.name || "Digimon")}</p><p class="text-xs text-slate-400">${escapeHtml(d.rarity)} · ${escapeHtml(d.stage)}</p></div><button class="btn-sm btn-primary" onclick="collectionOpenRegisterModal('${d.id}')">Registrar</button></div>`).join("") : `<div class="rounded-lg border border-slate-800 bg-slate-900/50 p-4 text-center"><p class="text-sm text-slate-400">${search ? "Nenhum Digimon do Storage corresponde à busca." : "Nenhum Digimon elegível encontrado no Storage."}</p>${search ? '<button class="btn-secondary mt-3" type="button" onclick="document.getElementById(\'collection-search\').value=\'\'; collectionApplySearch()">Limpar busca</button>' : ""}</div>`;
+  target.innerHTML = filtered.length ? filtered.map(d => { const registered = entries.has(`${d.digimonInfoId}:${d.rarity}`); return `<div class="flex items-center justify-between gap-2 rounded-lg border ${registered ? "border-emerald-900/70 bg-emerald-950/20" : "border-slate-800 bg-slate-900/20"} px-3 py-2 mb-2"><div><p class="font-bold text-sm">${escapeHtml(d.name || "Digimon")}</p><p class="text-xs text-slate-400">${escapeHtml(d.rarity)} · ${escapeHtml(d.stage)}</p></div>${registered ? '<span class="text-xs font-semibold text-emerald-300">✓ Já registrado</span>' : `<button class="btn-sm btn-primary" onclick="collectionOpenRegisterModal('${d.id}')">Registrar</button>`}</div>`; }).join("") : `<div class="rounded-lg border border-slate-800 bg-slate-900/50 p-4 text-center"><p class="text-sm text-slate-400">${search ? "Nenhum Digimon do Storage corresponde à busca." : "Nenhum Digimon encontrado no Storage."}</p>${search ? '<button class="btn-secondary mt-3" type="button" onclick="document.getElementById(\'collection-search\').value=\'\'; collectionApplySearch()">Limpar busca</button>' : ""}</div>`;
 }
 
 function collectionApplySearch() {

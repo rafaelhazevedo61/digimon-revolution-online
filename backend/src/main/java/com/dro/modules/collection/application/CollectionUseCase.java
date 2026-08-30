@@ -6,6 +6,7 @@ import com.dro.modules.collection.infra.CollectionEntryRepository;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.digimon.infra.DigimonInfosRepository;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
@@ -24,13 +25,14 @@ public class CollectionUseCase {
     private static final int[] MILESTONES = {10, 50, 100, 150, 200};
     private final CollectionEntryRepository collectionRepository;
     private final DigimonRepository digimonRepository;
+    private final DigimonInfosRepository digimonInfosRepository;
     private final InventoryRepository inventoryRepository;
     private final AddItemUseCase addItemUseCase;
 
     @Transactional(readOnly = true)
     public CollectionDtos.SummaryResponse summary(String token) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        List<CollectionDtos.EntryResponse> entries = collectionRepository.findByPlayerIdOrderByDiscoveredAtDesc(playerId).stream().map(CollectionDtos.EntryResponse::from).toList();
+        List<CollectionDtos.EntryResponse> entries = collectionRepository.findByPlayerIdOrderByDiscoveredAtDesc(playerId).stream().map(entry -> CollectionDtos.EntryResponse.from(entry, digimonInfosRepository.findById(entry.getDigimonInfoId()).map(info -> info.getName()).orElse("Digimon"))).toList();
         long points = entries.size();
         List<Integer> available = java.util.Arrays.stream(MILESTONES).filter(m -> points >= m).boxed().toList();
         return new CollectionDtos.SummaryResponse(points, collectionRepository.countDistinctRarities(playerId), entries, available);
@@ -58,10 +60,11 @@ public class CollectionUseCase {
         if (milestoneRewards > 0) addItemUseCase.execute(playerId, ItemType.XP_DISC_20, milestoneRewards);
         boolean mastery = collectionRepository.countRaritiesForSpecies(playerId, digimon.getDigimonInfoId()) == 4;
         String message = milestoneRewards > 0 ? "Digimon registrado; recompensa de marco recebida" : "Digimon registrado na coleção";
-        return new CollectionDtos.RegisterResponse(CollectionDtos.EntryResponse.from(entry), after, mastery, message);
+        String speciesName = digimonInfosRepository.findById(entry.getDigimonInfoId()).map(info -> info.getName()).orElse("Digimon");
+        return new CollectionDtos.RegisterResponse(CollectionDtos.EntryResponse.from(entry, speciesName), after, mastery, message);
     }
 
-    public CollectionUseCase(CollectionEntryRepository collectionRepository, DigimonRepository digimonRepository, InventoryRepository inventoryRepository, AddItemUseCase addItemUseCase) {
-        this.collectionRepository = collectionRepository; this.digimonRepository = digimonRepository; this.inventoryRepository = inventoryRepository; this.addItemUseCase = addItemUseCase;
+    public CollectionUseCase(CollectionEntryRepository collectionRepository, DigimonRepository digimonRepository, DigimonInfosRepository digimonInfosRepository, InventoryRepository inventoryRepository, AddItemUseCase addItemUseCase) {
+        this.collectionRepository = collectionRepository; this.digimonRepository = digimonRepository; this.digimonInfosRepository = digimonInfosRepository; this.inventoryRepository = inventoryRepository; this.addItemUseCase = addItemUseCase;
     }
 }
