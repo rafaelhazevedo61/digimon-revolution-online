@@ -42,7 +42,7 @@ public class EquipmentRules {
     private static final int[] ASCENSION_REBIRTH_REQUIREMENTS = {0, 1, 10, 20};
     private static final int[] ASCENSION_CORE_COSTS = {0, 10, 30, 100};
     private static final int[] ASCENSION_BITS_COSTS = {0, 100_000, 500_000, 2_000_000};
-    private static final double[] ASCENSION_MULTIPLIERS = {1.0, 1.05, 1.12, 1.20};
+    private static final double[] ASCENSION_MULTIPLIERS = {1.0, 1.30, 1.50, 2.00};
 
     public static int ascensionRebirthRequirement(int targetLevel) {
         validateAscensionTarget(targetLevel);

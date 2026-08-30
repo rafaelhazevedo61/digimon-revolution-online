@@ -90,7 +90,11 @@ class EquipmentRulesTest {
         Equipment equipment = createEquipment(100, 0, 0, false);
         equipment.setRefinementLevel(EquipmentRules.MAX_REFINEMENT_LEVEL);
         assertEquals(122, equipment.getEffectiveBonusHp());
+        equipment.setAscensionLevel(1);
+        assertEquals(159, equipment.getEffectiveBonusHp());
+        equipment.setAscensionLevel(2);
+        assertEquals(183, equipment.getEffectiveBonusHp());
         equipment.setAscensionLevel(3);
-        assertEquals(146, equipment.getEffectiveBonusHp());
+        assertEquals(244, equipment.getEffectiveBonusHp());
     }
 }
