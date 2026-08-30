@@ -40,12 +40,26 @@ async function renderMissionsPage() {
 
   app.innerHTML = `
     <div class="page-container">
+      <header class="missions-page-header mb-4">
+        <div>
+          <p class="progression-eyebrow progression-eyebrow-cyan">Central de operações</p>
+          <h2 class="progression-page-title">Mapa de missões</h2>
+          <p class="progression-page-subtitle">Envie seu Digimon para explorar novas áreas e conquistar recompensas.</p>
+        </div>
+        <div class="missions-hero-emblem" aria-hidden="true">✦</div>
+      </header>
       <div id="active-missions"></div>
-      <h2 class="text-lg font-bold mb-4 px-1">Mapa de Áreas</h2>
-      <div id="areas-list">
-        <div class="card animate-pulse mb-3"><div class="h-20"></div></div>
-        <div class="card animate-pulse mb-3"><div class="h-20"></div></div>
-      </div>
+      <section class="missions-map-section">
+        <div class="dashboard-section-heading">
+          <div><p class="progression-eyebrow progression-eyebrow-cyan">Rotas disponíveis</p><h3 class="progression-panel-title">Mapa de áreas</h3></div>
+          <span class="missions-map-key"><span class="missions-map-key-dot"></span> acessível</span>
+        </div>
+        <p class="dashboard-section-note">Avance pelas zonas para desbloquear missões mais desafiadoras.</p>
+        <div id="areas-list">
+          <div class="mission-area-skeleton"></div>
+          <div class="mission-area-skeleton"></div>
+        </div>
+      </section>
     </div>
   `;
 
@@ -78,10 +92,14 @@ async function loadActiveMissions() {
   }
 
   container.innerHTML = `
-    <div class="mb-4">
-      <h3 class="text-sm font-bold text-slate-300 mb-2 px-1">Missões em Andamento</h3>
-      ${active.map(renderActiveMissionCard).join("")}
-    </div>
+    <section class="missions-active-section mb-4">
+      <div class="dashboard-section-heading">
+        <div><p class="progression-eyebrow progression-eyebrow-blue">Atividade em campo</p><h3 class="progression-panel-title">Missões em andamento</h3></div>
+        <span class="dashboard-section-count dashboard-section-count-blue">${active.length}</span>
+      </div>
+      <p class="dashboard-section-note">Acompanhe os retornos e resgate cada recompensa assim que estiver disponível.</p>
+      <div class="missions-active-list">${active.map(renderActiveMissionCard).join("")}</div>
+    </section>
   `;
 
   startMissionsPageTimers();
@@ -118,17 +136,15 @@ function renderActiveMissionCard(m) {
   const done = m.status === "COMPLETED" || remaining <= 0;
 
   return `
-    <div class="card-sm mb-2 flex items-center justify-between" data-mp-instance="${m.missionInstanceId}" data-mp-ends-at="${m.endsAt}">
-      <div class="min-w-0">
-        <p class="font-bold text-sm truncate">${escapeHtml(formatMissionName(m))}</p>
-        <p class="text-xs mp-timer ${done ? "text-green-400 font-bold" : "text-slate-500"}">${done ? "Concluída!" : formatTime(remaining)}</p>
+    <article class="missions-active-card ${done ? "missions-active-card-ready" : ""}" data-mp-instance="${m.missionInstanceId}" data-mp-ends-at="${m.endsAt}">
+      <div class="missions-active-icon" aria-hidden="true">✦</div>
+      <div class="missions-active-main">
+        <p class="missions-active-label">Objetivo em campo</p>
+        <p class="missions-active-name">${escapeHtml(formatMissionName(m))}</p>
+        <div class="missions-active-state"><span class="missions-active-dot ${done ? "missions-active-dot-ready" : ""}"></span><span class="mp-timer">${done ? "Concluída!" : `Retorno em ${formatTime(remaining)}`}</span></div>
       </div>
-      ${done ? `
-        <button class="btn-sm btn-primary" onclick="claimMissionFromList('${m.missionInstanceId}')">Resgatar</button>
-      ` : `
-        <span class="badge">Em andamento</span>
-      `}
-    </div>
+      <div class="missions-active-action">${done ? `<button class="btn-sm btn-primary" onclick="claimMissionFromList('${m.missionInstanceId}')">Resgatar</button>` : `<span class="missions-active-badge">Em andamento</span>`}</div>
+    </article>
   `;
 }
 
@@ -550,13 +566,15 @@ function startMissionsPageTimers() {
 
       if (remaining <= 0) {
         timerEl.textContent = "Concluída!";
-        timerEl.className = "text-xs mp-timer text-green-400 font-bold";
-        const badge = el.querySelector(".badge");
+        el.classList.add("missions-active-card-ready");
+        const dot = el.querySelector(".missions-active-dot");
+        if (dot) dot.classList.add("missions-active-dot-ready");
+        const badge = el.querySelector(".missions-active-badge");
         if (badge) {
           badge.outerHTML = `<button class="btn-sm btn-primary" onclick="claimMissionFromList('${el.dataset.mpInstance}')">Resgatar</button>`;
         }
       } else {
-        timerEl.textContent = formatTime(remaining);
+        timerEl.textContent = `Retorno em ${formatTime(remaining)}`;
       }
     });
   }, 1000);
@@ -571,22 +589,22 @@ function renderAreaCards(areas) {
     return stageProgressionRank(b.requiredStage) - stageProgressionRank(a.requiredStage);
   });
 
-  container.innerHTML = sorted.map(a => {
-    const info = AREA_INFO[a.area] || { name: a.area, emoji: "📍", color: "from-slate-800 to-slate-900", border: "border-slate-700" };
+  container.innerHTML = sorted.map((a, index) => {
+    const info = AREA_INFO[a.area] || { name: a.area, emoji: "📍" };
     const locked = !a.unlocked;
+    const progressionNumber = areaProgressionRank(a.area) >= 0 ? areaProgressionRank(a.area) + 1 : index + 1;
+    const zoneNumber = String(progressionNumber).padStart(2, "0");
 
     return `
-      <div class="card mb-3 bg-gradient-to-r ${info.color} ${info.border} ${locked ? "opacity-40" : "cursor-pointer hover:scale-[1.02] transition-transform"}"
-        ${locked ? "" : `onclick="navigateTo('mission-area', { area: '${a.area}' })"`}>
-        <div class="flex items-center gap-4">
-          <span class="text-3xl">${info.emoji}</span>
-          <div class="flex-1">
-            <h3 class="font-bold">${info.name}</h3>
-            <p class="text-xs text-slate-400">Estágio mínimo: ${formatStage(a.requiredStage)}</p>
-          </div>
-          ${locked ? `<span class="text-xl">🔒</span>` : `<span class="text-slate-400">›</span>`}
+      <article class="mission-area-card ${locked ? "mission-area-card-locked" : "mission-area-card-open"}" ${locked ? "" : `onclick="navigateTo('mission-area', { area: '${a.area}' })" role="button" tabindex="0" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigateTo('mission-area', { area: '${a.area}' }); }"`}>
+        <div class="mission-area-icon" aria-hidden="true">${info.emoji}</div>
+        <div class="mission-area-main">
+          <p class="mission-area-label">Zona ${zoneNumber}</p>
+          <h3 class="mission-area-name">${info.name}</h3>
+          <p class="mission-area-requirement">Estágio mínimo · ${formatStage(a.requiredStage)}</p>
         </div>
-      </div>
+        <div class="mission-area-status">${locked ? `<span class="mission-area-lock" aria-hidden="true">🔒</span><span>Bloqueada</span>` : `<span class="mission-area-access-dot"></span><span>Acessível</span>`}<span class="mission-area-arrow" aria-hidden="true">›</span></div>
+      </article>
     `;
   }).join("");
 }
@@ -603,17 +621,14 @@ async function renderMissionAreaPage(params) {
 
   app.innerHTML = `
     <div class="page-container">
-      <button class="text-sm text-cyan-400 mb-3 flex items-center gap-1" onclick="navigateTo('missions')">
-        ← Voltar ao Mapa
-      </button>
-
-      <div class="flex items-center gap-3 mb-4">
-        <span class="text-3xl">${info.emoji}</span>
+      <header class="mission-area-page-header mb-4">
         <div>
-          <h2 class="text-lg font-bold">${info.name}</h2>
-          <p class="text-xs text-slate-400">Missões disponíveis</p>
+          <button class="progression-back-button mb-3" onclick="navigateTo('missions')"><span aria-hidden="true">←</span> Voltar ao mapa</button>
+          <p class="progression-eyebrow progression-eyebrow-cyan">Zona de exploração</p>
+          <h2 class="progression-page-title"><span class="mission-area-header-emoji" aria-hidden="true">${info.emoji}</span> ${info.name}</h2>
+          <p class="progression-page-subtitle">Missões disponíveis para esta área.</p>
         </div>
-      </div>
+      </header>
 
       <div id="mission-list">
         <div class="card animate-pulse mb-3"><div class="h-24"></div></div>
@@ -654,32 +669,22 @@ function renderMissionCards(missions, area) {
 
   const sortedMissions = [...missions].sort(compareMissionsByProgression);
 
-  container.innerHTML = sortedMissions.map(m => `
-    <div class="card mb-3">
-      <div class="flex justify-between items-start mb-2">
-        <div class="flex-1">
-          <h3 class="font-bold text-sm">${escapeHtml(formatMissionName(m))}</h3>
-          <p class="text-xs text-slate-400 mt-1">${escapeHtml(m.description) || ""}</p>
-        </div>
-      </div>
-
-      <div class="flex gap-3 text-xs text-slate-400 mb-3 flex-wrap">
+  container.innerHTML = sortedMissions.map((m, index) => `
+    <article class="mission-brief-card">
+      <div class="mission-brief-heading"><div><p class="progression-eyebrow progression-eyebrow-cyan">Briefing ${String(index + 1).padStart(2, "0")}</p><h3 class="mission-brief-title">${escapeHtml(formatMissionName(m))}</h3></div><span class="mission-brief-arrow" aria-hidden="true">✦</span></div>
+      <p class="mission-brief-description">${escapeHtml(m.description) || "Sem descrição disponível."}</p>
+      <div class="mission-brief-meta">
         <span>⚡ Nível ${m.requiredLevel}</span>
         <span>✨ ${m.xpReward} XP</span>
-        ${m.bitsReward > 0 ? `<span class="text-yellow-500">💰 ${m.bitsReward} bits</span>` : ""}
+        ${m.bitsReward > 0 ? `<span class="mission-brief-bits">💰 ${m.bitsReward} bits</span>` : ""}
         <span>🔋 ${m.energyCost} energia</span>
         <span>⏱️ ${formatTime(m.durationSeconds)}</span>
       </div>
-
-      <div class="flex flex-col sm:flex-row gap-2">
-        <button type="button" class="btn-secondary flex-1 text-sm" onclick="missionShowLootPreview('${escapeAttr(m.id)}', this)">
-          Ver recompensas
-        </button>
-        <button type="button" class="btn-primary flex-1 text-sm" onclick="startMission('${escapeAttr(m.id)}', '${escapeAttr(area)}')">
-          Iniciar Missão
-        </button>
+      <div class="mission-brief-actions">
+        <button type="button" class="btn-secondary flex-1 text-sm" onclick="missionShowLootPreview('${escapeAttr(m.id)}', this)">Ver recompensas</button>
+        <button type="button" class="btn-primary flex-1 text-sm" onclick="startMission('${escapeAttr(m.id)}', '${escapeAttr(area)}')">Iniciar missão</button>
       </div>
-    </div>
+    </article>
   `).join("");
 }
 
