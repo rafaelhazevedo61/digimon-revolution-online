@@ -182,6 +182,7 @@ function missionRewardLabel(reward) {
     INCUBATOR_COMMON: "Incubadora Comum",
     INCUBATOR_RARE: "Incubadora Rara",
     INCUBATOR_EPIC: "Incubadora Épica",
+    INCUBATOR_LEGENDARY: "Incubadora Lendária",
     LOOT_CHEST: "Baú"
   };
   return labels[reward && reward.item] || (reward && reward.item) || "Recompensa";

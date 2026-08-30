@@ -25,6 +25,11 @@ class IncubatorRulesTest {
     }
 
     @Test
+    void getIncubationTime_legendary_returnsZeroSeconds() {
+        assertEquals(Duration.ZERO, IncubatorRules.getIncubationTime(ItemType.INCUBATOR_LEGENDARY));
+    }
+
+    @Test
     void getIncubationTime_invalidType_throwsException() {
         assertThrows(IllegalArgumentException.class,
                 () -> IncubatorRules.getIncubationTime(ItemType.DATA_CORE));
