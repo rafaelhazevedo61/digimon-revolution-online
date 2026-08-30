@@ -17,19 +17,37 @@ async function renderShopPage() {
   showBottomNav("shop");
 
   app.innerHTML = `
-    <div class="page-container">
-      <div class="flex items-center justify-between mb-4 px-1">
-        <h2 class="text-lg font-bold">Loja</h2>
-        <div class="flex items-center gap-2">
-          <span class="text-yellow-400 font-bold" id="shop-bits">--</span>
-          <span class="text-xs text-slate-400">Bits</span>
+    <div class="page-container shop-page">
+      <header class="progression-page-header shop-page-header">
+        <div>
+          <p class="progression-eyebrow progression-eyebrow-cyan">Economia do servidor</p>
+          <h2 class="progression-page-title">Loja</h2>
+          <p class="progression-page-subtitle">Compre recursos, venda equipamentos e mantenha seu Digimon pronto para a próxima missão.</p>
         </div>
-      </div>
+        <div class="shop-balance-card" aria-label="Saldo atual de Bits">
+          <span class="shop-balance-label">Saldo atual</span>
+          <strong class="shop-balance-value" id="shop-bits">--</strong>
+          <span class="shop-balance-currency">Bits</span>
+        </div>
+      </header>
 
-      <!-- Buy/Sell toggle -->
-      <div class="flex gap-2 mb-4" id="shop-mode-tabs">
-        <button class="tab-btn active" data-mode="buy" onclick="shopSetMode('buy')">Comprar</button>
-        <button class="tab-btn" data-mode="sell" onclick="shopSetMode('sell')">Vender</button>
+      <section class="progression-hero progression-hero-cyan shop-hero mb-4">
+        <div class="progression-hero-topline">
+          <span class="progression-hero-kicker">Central de comércio</span>
+          <span class="progression-hero-status">Mercado ativo</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="progression-hero-visual shop-hero-visual" aria-hidden="true">🛒</div>
+          <div class="min-w-0">
+            <h3 class="progression-panel-title">Recursos para sua jornada</h3>
+            <p class="shop-hero-copy">Use seus Bits com estratégia ou transforme equipamentos parados em novas oportunidades.</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="shop-mode-switch" id="shop-mode-tabs" role="tablist" aria-label="Modo da loja">
+        <button class="shop-mode-button active" data-mode="buy" role="tab" aria-selected="true" onclick="shopSetMode('buy')"><span aria-hidden="true">＋</span> Comprar</button>
+        <button class="shop-mode-button" data-mode="sell" role="tab" aria-selected="false" onclick="shopSetMode('sell')"><span aria-hidden="true">↗</span> Vender</button>
       </div>
 
       <div id="shop-content">
@@ -56,8 +74,10 @@ async function renderShopPage() {
 
 function shopSetMode(mode) {
   shopMode = mode;
-  document.querySelectorAll("#shop-mode-tabs .tab-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.mode === mode);
+  document.querySelectorAll("#shop-mode-tabs [data-mode]").forEach(btn => {
+    const active = btn.dataset.mode === mode;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-selected", String(active));
   });
   if (mode === "buy") {
     shopRenderBuyMode();
@@ -71,19 +91,32 @@ function shopSetMode(mode) {
 function shopRenderBuyMode() {
   const content = document.getElementById("shop-content");
   content.innerHTML = `
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4" id="shop-tabs">
-      <button class="tab-btn w-full" data-cat="ALL" onclick="shopSwitchTab('ALL')">Todos</button>
-      <button class="tab-btn w-full" data-cat="CONSUMABLE" onclick="shopSwitchTab('CONSUMABLE')">Consumíveis</button>
-      <button class="tab-btn w-full" data-cat="MATERIAL" onclick="shopSwitchTab('MATERIAL')">Materiais</button>
-      <button class="tab-btn w-full" data-cat="EVOLUTION_MATERIAL" onclick="shopSwitchTab('EVOLUTION_MATERIAL')">Evolução</button>
-      <button class="tab-btn w-full" data-cat="FRAGMENT" onclick="shopSwitchTab('FRAGMENT')">Fragmentos</button>
-      <button class="tab-btn w-full" data-cat="DIGITAMA" onclick="shopSwitchTab('DIGITAMA')">Digitamas</button>
-      <button class="tab-btn w-full" data-cat="INCUBATOR" onclick="shopSwitchTab('INCUBATOR')">Incubadoras</button>
-      <button class="tab-btn w-full" data-cat="CHEST" onclick="shopSwitchTab('CHEST')">Baús</button>
-      <button class="tab-btn w-full" data-cat="OTHER" onclick="shopSwitchTab('OTHER')">Outros</button>
-      <button class="tab-btn w-full" data-cat="EQUIPMENT" onclick="shopSwitchTab('EQUIPMENT')">Equipamentos</button>
-    </div>
-    <div id="shop-list"></div>
+    <section class="shop-section">
+      <div class="shop-section-heading">
+        <div>
+          <p class="progression-eyebrow progression-eyebrow-cyan">Catálogo</p>
+          <h3 class="shop-section-title">Comprar recursos</h3>
+        </div>
+        <span class="shop-section-note">Escolha uma categoria</span>
+      </div>
+      <nav class="shop-category-nav" id="shop-tabs" aria-label="Categorias da loja">
+        <button class="shop-category-button" data-cat="ALL" onclick="shopSwitchTab('ALL')">Todos</button>
+        <button class="shop-category-button" data-cat="CONSUMABLE" onclick="shopSwitchTab('CONSUMABLE')">Consumíveis</button>
+        <button class="shop-category-button" data-cat="MATERIAL" onclick="shopSwitchTab('MATERIAL')">Materiais</button>
+        <button class="shop-category-button" data-cat="EVOLUTION_MATERIAL" onclick="shopSwitchTab('EVOLUTION_MATERIAL')">Evolução</button>
+        <button class="shop-category-button" data-cat="FRAGMENT" onclick="shopSwitchTab('FRAGMENT')">Fragmentos</button>
+        <button class="shop-category-button" data-cat="DIGITAMA" onclick="shopSwitchTab('DIGITAMA')">Digitamas</button>
+        <button class="shop-category-button" data-cat="INCUBATOR" onclick="shopSwitchTab('INCUBATOR')">Incubadoras</button>
+        <button class="shop-category-button" data-cat="CHEST" onclick="shopSwitchTab('CHEST')">Baús</button>
+        <button class="shop-category-button" data-cat="OTHER" onclick="shopSwitchTab('OTHER')">Outros</button>
+        <button class="shop-category-button" data-cat="EQUIPMENT" onclick="shopSwitchTab('EQUIPMENT')">Equipamentos</button>
+      </nav>
+      <div class="shop-list-heading">
+        <p class="shop-list-title" id="shop-list-title">Todos os produtos</p>
+        <span class="shop-list-count" id="shop-list-count"></span>
+      </div>
+      <div id="shop-list"></div>
+    </section>
   `;
   shopSwitchTab("ALL");
 }
@@ -117,31 +150,46 @@ function shopProductsForCategory(category) {
   });
 }
 function shopSwitchTab(cat) {
-  document.querySelectorAll("#shop-tabs .tab-btn").forEach(btn => {
+  document.querySelectorAll("#shop-tabs [data-cat]").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.cat === cat);
+    btn.setAttribute("aria-current", btn.dataset.cat === cat ? "page" : "false");
   });
   const items = shopProductsForCategory(cat);
   const container = document.getElementById("shop-list");
+  const listTitle = document.getElementById("shop-list-title");
+  const listCount = document.getElementById("shop-list-count");
+  const categoryName = document.querySelector(`#shop-tabs [data-cat="${cat}"]`)?.textContent || "Produtos";
+  if (listTitle) listTitle.textContent = categoryName;
+  if (listCount) listCount.textContent = `${items.length} ${items.length === 1 ? "produto" : "produtos"}`;
 
   if (items.length === 0) {
-    container.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">Nenhum produto nesta categoria.</p>`;
+    container.innerHTML = `
+      <div class="shop-empty-state">
+        <span class="shop-empty-icon" aria-hidden="true">⌁</span>
+        <p>Nenhum produto nesta categoria.</p>
+        <span>Volte ao catálogo para explorar outras opções.</span>
+      </div>
+    `;
     return;
   }
 
-  container.innerHTML = items.map(p => `
-    <div class="card-sm mb-2 flex items-center gap-3">
-      <div class="text-2xl">${shopItemEmoji(p)}</div>
-      <div class="flex-1 min-w-0">
-        <p class="font-bold text-sm break-words">${escapeHtml(p.name)}</p>
-        <p class="text-xs text-slate-400 break-words">${escapeHtml(p.description || "")}</p>
-        <div class="flex gap-2 mt-1">
-          <span class="text-xs text-yellow-400 font-bold">${shopFormatBits(p.price)}</span>
-          ${p.sellPrice > 0 ? `<span class="text-xs text-slate-500">Venda: ${shopFormatBits(p.sellPrice)}</span>` : ""}
+  container.innerHTML = `<div class="shop-product-list">${items.map(p => `
+    <article class="shop-product-card">
+      <div class="shop-product-icon" aria-hidden="true">${shopItemEmoji(p)}</div>
+      <div class="shop-product-body">
+        <div class="shop-product-heading">
+          <p class="shop-product-name">${escapeHtml(p.name)}</p>
+          ${p.productType === "EQUIPMENT" ? `<span class="shop-product-type">Equipamento</span>` : ""}
+        </div>
+        <p class="shop-product-description">${escapeHtml(p.description || "")}</p>
+        <div class="shop-product-meta">
+          <span class="shop-product-price">${shopFormatBits(p.price)}</span>
+          ${p.sellPrice > 0 ? `<span class="shop-product-resale">Venda: ${shopFormatBits(p.sellPrice)}</span>` : ""}
         </div>
       </div>
-      <button class="btn-sm btn-primary" onclick="shopOpenBuy('${escapeHtml(p.code)}')">Comprar</button>
-    </div>
-  `).join("");
+      <button class="shop-action-button shop-action-buy" onclick="shopOpenBuy('${escapeHtml(p.code)}')">Comprar</button>
+    </article>
+  `).join("")}</div>`;
 }
 
 function shopItemEmoji(p) {
@@ -171,27 +219,35 @@ function shopOpenBuy(code) {
   overlay.id = "shop-modal";
   overlay.innerHTML = `
     <div class="shop-modal">
-      <h3 class="font-bold text-lg mb-1">${escapeHtml(product.name)}</h3>
-      <p class="text-xs text-slate-400 mb-3">${escapeHtml(product.description || "")}</p>
-      <div class="flex justify-between text-sm mb-4">
-        <span class="text-slate-400">Preço unitário</span>
-        <span class="text-yellow-400 font-bold">${shopFormatBits(product.price)}</span>
+      <div class="shop-modal-heading">
+        <div>
+          <p class="shop-modal-kicker shop-modal-kicker-buy">Comprar recurso</p>
+          <h3 class="shop-modal-title">${escapeHtml(product.name)}</h3>
+        </div>
+        <span class="shop-modal-mark shop-modal-mark-buy" aria-hidden="true">＋</span>
       </div>
-      ${!isEquip ? `
-      <div class="mb-4">
-        <label class="label">Quantidade</label>
-        <div class="flex items-center gap-2">
-          <button class="btn-sm btn-primary" onclick="shopQtyChange(-1)">−</button>
-          <input type="number" id="shop-qty" class="input text-center" value="1" min="1" max="${maxQty}" style="width:4rem" oninput="shopQtyUpdate()">
-          <button class="btn-sm btn-primary" onclick="shopQtyChange(1)">+</button>
+      <p class="shop-modal-description">${escapeHtml(product.description || "")}</p>
+      <div class="shop-modal-summary">
+        <div class="shop-modal-row">
+          <span>Preço unitário</span>
+          <strong class="shop-modal-value-buy">${shopFormatBits(product.price)}</strong>
+        </div>
+        ${!isEquip ? `
+        <div class="shop-modal-quantity">
+          <label class="label" for="shop-qty">Quantidade</label>
+          <div class="flex items-center gap-2">
+            <button class="btn-sm btn-primary" onclick="shopQtyChange(-1)" aria-label="Diminuir quantidade">−</button>
+            <input type="number" id="shop-qty" class="input text-center" value="1" min="1" max="${maxQty}" style="width:4rem" oninput="shopQtyUpdate()">
+            <button class="btn-sm btn-primary" onclick="shopQtyChange(1)" aria-label="Aumentar quantidade">+</button>
+          </div>
+        </div>
+        ` : ""}
+        <div class="shop-modal-total shop-modal-total-buy">
+          <span>Total</span>
+          <strong id="shop-total">${shopFormatBits(product.price)}</strong>
         </div>
       </div>
-      ` : ""}
-      <div class="flex justify-between text-sm mb-4">
-        <span class="text-slate-400">Total</span>
-        <span class="text-yellow-400 font-bold" id="shop-total">${shopFormatBits(product.price)}</span>
-      </div>
-      <div class="flex gap-2">
+      <div class="shop-modal-actions">
         <button class="btn-primary flex-1" onclick="shopConfirmBuy('${escapeHtml(code)}', ${product.price})" id="shop-buy-btn">Confirmar</button>
         <button class="btn-sm flex-1" style="background:#334155;color:#94a3b8" onclick="shopCloseModal()">Cancelar</button>
       </div>
@@ -303,48 +359,70 @@ function shopRenderSellList() {
     .filter(eq => eq.shopProduct && eq.shopProduct.sellPrice > 0);
 
   if (sellableItems.length === 0 && sellableEquipments.length === 0) {
-    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">Nenhum item vendível no inventário.</p>`;
+    content.innerHTML = `
+      <section class="shop-section shop-sell-section">
+        <div class="shop-empty-state">
+          <span class="shop-empty-icon" aria-hidden="true">↗</span>
+          <p>Nenhum item vendível no inventário.</p>
+          <span>Equipamentos equipados não podem ser vendidos.</span>
+        </div>
+      </section>
+    `;
     return;
   }
 
-  let html = "";
+  let html = `
+    <section class="shop-section shop-sell-section">
+      <div class="shop-section-heading">
+        <div>
+          <p class="progression-eyebrow progression-eyebrow-amber">Inventário</p>
+          <h3 class="shop-section-title">Vender itens</h3>
+        </div>
+        <span class="shop-section-note">Converta excessos em Bits</span>
+      </div>
+  `;
 
   if (sellableItems.length > 0) {
-    html += `<h3 class="text-sm font-bold text-slate-300 mb-2 px-1">Itens</h3>`;
-    html += sellableItems.map(item => {
+    html += `<div class="shop-subsection-heading"><span>Itens do inventário</span><strong>${sellableItems.length}</strong></div>`;
+    html += `<div class="shop-product-list">${sellableItems.map(item => {
       const def = item.itemDefinition;
       return `
-      <div class="card-sm mb-2 flex items-center gap-3">
-        <div class="text-2xl">${shopSellItemEmoji(def.category)}</div>
-        <div class="flex-1 min-w-0">
-          <p class="font-bold text-sm truncate">${escapeHtml(def.name)}</p>
-          <div class="flex gap-2 mt-1">
-            <span class="text-xs text-slate-400">Qtd: ${item.quantity}</span>
-            <span class="text-xs text-green-400 font-bold">+${shopFormatBits(def.sellPrice)}/un.</span>
+      <article class="shop-product-card shop-product-card-sell">
+        <div class="shop-product-icon" aria-hidden="true">${shopSellItemEmoji(def.category)}</div>
+        <div class="shop-product-body">
+          <div class="shop-product-heading">
+            <p class="shop-product-name">${escapeHtml(def.name)}</p>
+            <span class="shop-product-type">${item.quantity} disponíveis</span>
+          </div>
+          <div class="shop-product-meta">
+            <span class="shop-product-resale">+${shopFormatBits(def.sellPrice)} / un.</span>
           </div>
         </div>
-        <button class="btn-sm" style="background:#166534;color:#86efac" onclick="shopOpenSell('${escapeHtml(def.code)}', ${item.quantity}, ${def.sellPrice})">Vender</button>
-      </div>
-    `;}).join("");
+        <button class="shop-action-button shop-action-sell" onclick="shopOpenSell('${escapeHtml(def.code)}', ${item.quantity}, ${def.sellPrice})">Vender</button>
+      </article>
+    `;}).join("")}</div>`;
   }
 
   if (sellableEquipments.length > 0) {
-    html += `<h3 class="text-sm font-bold text-slate-300 mb-2 mt-4 px-1">Equipamentos</h3>`;
-    html += sellableEquipments.map(eq => `
-      <div class="card-sm mb-2 flex items-center gap-3">
-        <div class="text-2xl">⚔️</div>
-        <div class="flex-1 min-w-0">
-          <p class="font-bold text-sm truncate">${escapeHtml(eq.name)}</p>
-          <div class="flex gap-2 mt-1">
-            <span class="badge badge-${eq.rarity ? eq.rarity.toLowerCase() : 'common'}">${escapeHtml(shopRarityLabel(eq.rarity))}</span>
-            <span class="text-xs text-green-400 font-bold">+${shopFormatBits(eq.shopProduct.sellPrice)}</span>
+    html += `<div class="shop-subsection-heading ${sellableItems.length > 0 ? "shop-subsection-heading-spaced" : ""}"><span>Equipamentos disponíveis</span><strong>${sellableEquipments.length}</strong></div>`;
+    html += `<div class="shop-product-list">${sellableEquipments.map(eq => `
+      <article class="shop-product-card shop-product-card-sell">
+        <div class="shop-product-icon shop-equipment-icon" aria-hidden="true">⚔️</div>
+        <div class="shop-product-body">
+          <div class="shop-product-heading">
+            <p class="shop-product-name">${escapeHtml(eq.name)}</p>
+            <span class="shop-product-type">${escapeHtml(shopRarityLabel(eq.rarity))}</span>
+          </div>
+          <div class="shop-product-meta">
+            <span class="shop-product-resale">+${shopFormatBits(eq.shopProduct.sellPrice)}</span>
           </div>
         </div>
-        <button class="btn-sm" style="background:#166534;color:#86efac" onclick="shopConfirmSellEquipment('${eq.id}')">Vender</button>
-      </div>
-    `).join("");
+        <button class="shop-action-button shop-action-sell" onclick="shopConfirmSellEquipment('${eq.id}')">Vender</button>
+      </article>
+    `).join("")}</div>`;
   }
 
+  html += `</section>`;
   content.innerHTML = html;
 }
 
@@ -356,24 +434,32 @@ function shopOpenSell(itemDefCode, maxQty, sellPrice) {
   overlay.id = "shop-modal";
   overlay.innerHTML = `
     <div class="shop-modal">
-      <h3 class="font-bold text-lg mb-3">Vender Item</h3>
-      <div class="flex justify-between text-sm mb-4">
-        <span class="text-slate-400">Preço unitário</span>
-        <span class="text-green-400 font-bold">+${shopFormatBits(sellPrice)}</span>
+      <div class="shop-modal-heading">
+        <div>
+          <p class="shop-modal-kicker shop-modal-kicker-sell">Vender recurso</p>
+          <h3 class="shop-modal-title">Vender Item</h3>
+        </div>
+        <span class="shop-modal-mark shop-modal-mark-sell" aria-hidden="true">↗</span>
       </div>
-      <div class="mb-4">
-        <label class="label">Quantidade (máx: ${maxQty})</label>
-        <div class="flex items-center gap-2">
-          <button class="btn-sm btn-primary" onclick="shopQtyChange(-1)">−</button>
-          <input type="number" id="shop-qty" class="input text-center" value="1" min="1" max="${maxQty}" style="width:4rem" oninput="shopSellQtyUpdate(${sellPrice})">
-          <button class="btn-sm btn-primary" onclick="shopQtyChange(1)">+</button>
+      <div class="shop-modal-summary shop-modal-summary-sell">
+        <div class="shop-modal-row">
+          <span>Preço unitário</span>
+          <strong class="shop-modal-value-sell">+${shopFormatBits(sellPrice)}</strong>
+        </div>
+        <div class="shop-modal-quantity">
+          <label class="label" for="shop-qty">Quantidade (máx: ${maxQty})</label>
+          <div class="flex items-center gap-2">
+            <button class="btn-sm btn-primary" onclick="shopQtyChange(-1)" aria-label="Diminuir quantidade">−</button>
+            <input type="number" id="shop-qty" class="input text-center" value="1" min="1" max="${maxQty}" style="width:4rem" oninput="shopSellQtyUpdate(${sellPrice})">
+            <button class="btn-sm btn-primary" onclick="shopQtyChange(1)" aria-label="Aumentar quantidade">+</button>
+          </div>
+        </div>
+        <div class="shop-modal-total shop-modal-total-sell">
+          <span>Total</span>
+          <strong id="shop-total">+${shopFormatBits(sellPrice)}</strong>
         </div>
       </div>
-      <div class="flex justify-between text-sm mb-4">
-        <span class="text-slate-400">Total</span>
-        <span class="text-green-400 font-bold" id="shop-total">+${shopFormatBits(sellPrice)}</span>
-      </div>
-      <div class="flex gap-2">
+      <div class="shop-modal-actions">
         <button class="flex-1 btn-sm" style="background:#166534;color:#86efac;padding:0.6rem" onclick="shopConfirmSellItem('${escapeHtml(itemDefCode)}')" id="shop-sell-btn">Confirmar Venda</button>
         <button class="btn-sm flex-1" style="background:#334155;color:#94a3b8;padding:0.6rem" onclick="shopCloseModal()">Cancelar</button>
       </div>
