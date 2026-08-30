@@ -288,10 +288,7 @@ function shopOpenBuy(code) {
             <button class="btn-sm btn-primary" onclick="shopQtyChange(-1)" aria-label="Diminuir quantidade">−</button>
             <input type="number" id="shop-qty" class="input text-center" value="${purchaseUnavailable ? 0 : 1}" min="1" max="${maxQty}" style="width:4rem" oninput="shopQtyUpdate()" ${purchaseUnavailable ? "disabled" : ""}>
             <button class="btn-sm btn-primary" onclick="shopQtyChange(1)" aria-label="Aumentar quantidade" ${purchaseUnavailable ? "disabled" : ""}>+</button>
-          </div>
-          <div class="flex items-center gap-2 mt-2">
-            <button class="btn-secondary flex-1 text-xs" onclick="shopBuyMax()" ${purchaseUnavailable ? "disabled" : ""}>Comprar máximo</button>
-            <span class="text-xs text-slate-500">Limite: ${SHOP_MAX_BUY_QUANTITY}</span>
+            <button class="btn-sm btn-primary" onclick="shopBuyMax()" aria-label="Comprar quantidade máxima" title="Comprar máximo" ${purchaseUnavailable ? "disabled" : ""}>MAX</button>
           </div>
           ${purchaseUnavailable ? '<p class="text-xs text-red-400 mt-2">Bits insuficientes para comprar este recurso.</p>' : ""}
         </div>
