@@ -474,39 +474,38 @@ function missionRewardBreakdownMarkup(title, breakdown, unit, digimonLabel) {
   const effective = Number(breakdown.effectiveMultiplier) || 0;
   const beforeDigimon = Number(breakdown.amountBeforeDigimonMultiplier) || 0;
   const total = Number(breakdown.finalAmount) || 0;
-  const card = "rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-3 min-h-[76px]";
-  const cardLabel = "block text-[11px] uppercase tracking-wide text-slate-500";
-  const cardValue = "block mt-1 text-base font-bold text-slate-100";
+  const row = "flex items-center justify-between gap-3 rounded-md border border-slate-700/80 bg-slate-900/40 px-2.5 py-2";
+  const label = "text-xs text-slate-400";
+  const value = "text-xs font-semibold text-slate-200 whitespace-nowrap";
   return `
-    <details class="mt-4 rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-3">
-      <summary class="cursor-pointer list-none text-sm font-bold text-slate-200">Detalhes de ${title}</summary>
-      <div class="mt-4 space-y-4">
+    <details class="mt-3 rounded-lg border border-slate-700 bg-slate-900/40 px-2.5 py-2">
+      <summary class="cursor-pointer list-none text-xs font-semibold text-slate-300">Detalhes de ${title}</summary>
+      <div class="mt-3 space-y-3">
         <section>
-          <h5 class="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">Composição da recompensa</h5>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div class="${card}"><span class="${cardLabel}">Valor-base</span><strong class="${cardValue}">${base} ${unit}</strong></div>
-            <div class="${card}"><span class="${cardLabel}">Progressão da missão</span><strong class="${cardValue}">${missionMultiplierLabel(progress)}</strong></div>
-            <div class="${card}"><span class="${cardLabel}">Bônus de clã</span><strong class="${cardValue}">${missionMultiplierLabel(clan)}</strong></div>
-            <div class="${card}"><span class="${cardLabel}">Evento de recompensa</span><strong class="${cardValue}">${missionMultiplierLabel(event)}</strong></div>
-            <div class="${card}"><span class="${cardLabel}">${escapeHtml(digimonLabel)}</span><strong class="${cardValue}">${missionMultiplierLabel(digimon)}</strong></div>
+          <h5 class="mb-1.5 border-b border-slate-700/80 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Composição</h5>
+          <div class="grid grid-cols-1 gap-1.5">
+            <div class="${row}"><span class="${label}">Valor-base</span><strong class="${value}">${base} ${unit}</strong></div>
+            <div class="${row}"><span class="${label}">Progressão da missão</span><strong class="${value}">${missionMultiplierLabel(progress)}</strong></div>
+            <div class="${row}"><span class="${label}">Bônus de clã</span><strong class="${value}">${missionMultiplierLabel(clan)}</strong></div>
+            <div class="${row}"><span class="${label}">Evento de recompensa</span><strong class="${value}">${missionMultiplierLabel(event)}</strong></div>
+            <div class="${row}"><span class="${label}">${escapeHtml(digimonLabel)}</span><strong class="${value}">${missionMultiplierLabel(digimon)}</strong></div>
           </div>
         </section>
 
-        <section class="border-t border-slate-700 pt-4">
-          <h5 class="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">Resultado dos multiplicadores</h5>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div class="${card}"><span class="${cardLabel}">Após missão, clã e evento</span><strong class="${cardValue}">${beforeDigimon} ${unit}</strong></div>
-            <div class="${card}"><span class="${cardLabel}">Multiplicador consolidado</span><strong class="${cardValue} text-cyan-200">${missionMultiplierLabel(combined)}</strong></div>
-            <div class="${card}"><span class="${cardLabel}">Multiplicador efetivo</span><strong class="${cardValue} text-cyan-200">${missionMultiplierLabel(effective)}</strong><span class="mt-1 block text-[11px] text-slate-500">Considera os arredondamentos.</span></div>
+        <section class="border-t border-slate-700/80 pt-3">
+          <h5 class="mb-1.5 border-b border-slate-700/80 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Resultado</h5>
+          <div class="grid grid-cols-1 gap-1.5">
+            <div class="${row}"><span class="${label}">Após missão, clã e evento</span><strong class="${value}">${beforeDigimon} ${unit}</strong></div>
+            <div class="${row}"><span class="${label}">Multiplicador consolidado</span><strong class="${value} text-cyan-200">${missionMultiplierLabel(combined)}</strong></div>
+            <div class="${row}"><span class="${label}">Multiplicador efetivo</span><strong class="${value} text-cyan-200">${missionMultiplierLabel(effective)}</strong></div>
           </div>
         </section>
 
-        <section class="border-t border-slate-700 pt-4">
-          <h5 class="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">Conferência final</h5>
-          <div class="rounded-lg border border-purple-700 bg-purple-950/40 px-4 py-4 text-center">
-            <p class="text-xs text-purple-300">Valor-base × multiplicador efetivo</p>
-            <p class="mt-1 text-lg font-bold text-purple-100">${base} × ${missionMultiplierLabel(effective)} ≈ ${total} ${unit}</p>
-            <p class="mt-1 text-xs text-purple-200/70">Total aplicado ao jogador</p>
+        <section class="border-t border-slate-700/80 pt-3">
+          <h5 class="mb-1.5 border-b border-slate-700/80 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Conferência</h5>
+          <div class="rounded-md border border-purple-700/80 bg-purple-950/40 px-2.5 py-2 text-center">
+            <p class="text-xs font-semibold text-purple-100">${base} × ${missionMultiplierLabel(effective)} ≈ ${total} ${unit}</p>
+            <p class="mt-0.5 text-[10px] text-purple-200/70">Valor-base × multiplicador efetivo = total aplicado</p>
           </div>
         </section>
       </div>
