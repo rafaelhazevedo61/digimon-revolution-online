@@ -145,7 +145,8 @@ public class EquipmentController {
         int baseSuccessRate = EquipmentRules.refinementSuccessRate(currentLevel);
         int breakChance = EquipmentRules.refinementBreakChance(currentLevel);
         boolean canRefine = currentLevel < EquipmentRules.MAX_REFINEMENT_LEVEL && digimon.getBits() >= costBits && currentStones >= 1;
-        return ResponseEntity.ok(new RefinePreviewResponse(currentLevel, currentLevel + 1, baseSuccessRate, baseSuccessRate,
+        int nextLevel = Math.min(EquipmentRules.MAX_REFINEMENT_LEVEL, currentLevel + 1);
+        return ResponseEntity.ok(new RefinePreviewResponse(currentLevel, nextLevel, baseSuccessRate, baseSuccessRate,
                 breakChance, costBits, 1, digimon.getBits(), currentStones, successBoostItems, protectionItems, canRefine));
     }
 
