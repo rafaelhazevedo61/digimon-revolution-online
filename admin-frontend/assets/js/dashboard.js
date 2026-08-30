@@ -33,6 +33,17 @@ function renderDashboard() {
       </div>
     </section>
 
+    <section class="card mt-8 border-cyan-900/60">
+      <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between mb-5">
+        <div>
+          <h3 class="text-lg font-semibold text-cyan-300">Atividade dos jogadores</h3>
+          <p class="text-sm text-slate-400 mt-1">Pontos de atividade registrados por mês nos últimos 12 meses.</p>
+        </div>
+        <span id="dashboard-activity-period" class="text-xs text-slate-500">Carregando...</span>
+      </div>
+      <div id="dashboard-activity-chart" class="min-h-64 flex items-center justify-center text-sm text-slate-500">Carregando atividade...</div>
+    </section>
+
     <section class="mt-8">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-lg font-semibold text-amber-300">Alertas de integridade</h3>
@@ -103,8 +114,12 @@ async function loadDashboardSummary(showLoading = false) {
   }
 
   try {
-    const summary = await apiGet("/admin/dashboard/summary");
+    const [summary, activity] = await Promise.all([
+      apiGet("/admin/dashboard/summary"),
+      apiGet("/admin/dashboard/activity/monthly")
+    ]);
     dashboardRenderSummary(summary);
+    dashboardRenderActivity(activity);
   } catch (err) {
     document.getElementById("dashboard-system-status").innerHTML =
       `<span class="text-red-400">Não foi possível carregar o dashboard: ${escapeHtml(err.message)}</span>`;
@@ -141,6 +156,44 @@ function dashboardRenderSummary(summary) {
   document.getElementById("dashboard-alerts").innerHTML = summary.alerts.length === 0
     ? `<div class="card border-emerald-900/50 bg-emerald-950/10"><span class="text-emerald-300">Nenhuma inconsistência detectada.</span></div>`
     : summary.alerts.map(dashboardAlertCard).join("");
+}
+
+function dashboardRenderActivity(data) {
+  const chart = document.getElementById("dashboard-activity-chart");
+  const period = document.getElementById("dashboard-activity-period");
+  if (!chart || !data) return;
+  period.textContent = `${dashboardFormatMonth(data.from)} – ${dashboardFormatMonth(data.to)}`;
+  const byMonth = new Map((data.months || []).map(month => [month.yearMonth, month]));
+  const first = dashboardParseMonth(data.from);
+  const rows = Array.from({ length: 12 }, (_, index) => {
+    const date = new Date(first.getFullYear(), first.getMonth() + index, 1);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    return { key, label: date.toLocaleDateString("pt-BR", { month: "short" }).replace(".", ""), ...(byMonth.get(key) || { points: 0, activePlayers: 0, events: 0 }) };
+  });
+  const maxPoints = Math.max(1, ...rows.map(row => Number(row.points) || 0));
+  chart.innerHTML = `<div class="w-full overflow-x-auto pb-2"><div class="min-w-[720px]">
+    <div class="h-52 flex items-end gap-2 border-b border-l border-slate-700 px-3">
+      ${rows.map(row => {
+        const points = Number(row.points) || 0;
+        const height = points === 0 ? 2 : Math.max(5, Math.round((points / maxPoints) * 100));
+        return `<div class="h-full flex-1 flex flex-col justify-end items-center gap-2 group" title="${row.key}: ${points.toLocaleString("pt-BR")} pontos | ${Number(row.activePlayers).toLocaleString("pt-BR")} jogadores ativos">
+          <span class="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">${points.toLocaleString("pt-BR")}</span>
+          <div class="w-full max-w-10 rounded-t bg-cyan-500/80 hover:bg-cyan-400 transition-colors" style="height:${height}%"></div>
+        </div>`;
+      }).join("")}
+    </div>
+    <div class="flex gap-2 px-3 mt-2">${rows.map(row => `<span class="flex-1 text-center text-[10px] uppercase text-slate-500">${row.label}</span>`).join("")}</div>
+    <div class="flex flex-wrap gap-x-5 gap-y-1 mt-4 text-xs text-slate-400"><span><strong class="text-cyan-300">${rows.reduce((sum, row) => sum + Number(row.points || 0), 0).toLocaleString("pt-BR")}</strong> pontos no período</span><span><strong class="text-emerald-300">${Math.max(...rows.map(row => Number(row.activePlayers || 0))).toLocaleString("pt-BR")}</strong> jogadores ativos no pico mensal</span><span><strong class="text-violet-300">${rows.reduce((sum, row) => sum + Number(row.events || 0), 0).toLocaleString("pt-BR")}</strong> eventos</span></div>
+  </div></div>`;
+}
+
+function dashboardParseMonth(yearMonth) {
+  const [year, month] = String(yearMonth || "").split("-").map(Number);
+  return new Date(year || new Date().getFullYear(), (month || 1) - 1, 1);
+}
+
+function dashboardFormatMonth(yearMonth) {
+  return dashboardParseMonth(yearMonth).toLocaleDateString("pt-BR", { month: "short", year: "numeric" }).replace(".", "");
 }
 
 function dashboardMetricCard(metric) {

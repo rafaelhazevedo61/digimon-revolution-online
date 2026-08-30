@@ -1,5 +1,8 @@
 package com.dro.modules.admin.api;
 
+import com.dro.modules.activitycalendar.infra.ActivityMonthlyAggregateProjection;
+import com.dro.modules.activitycalendar.infra.ActivityPointEventRepository;
+import com.dro.modules.admin.api.dto.response.AdminActivityMonthlyResponse;
 import com.dro.modules.admin.api.dto.response.AdminDashboardSummaryResponse;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +32,7 @@ public class AdminDashboardController {
     private final ItemDefinitionRepository itemDefinitionRepository;
     private final EquipmentTemplateRepository equipmentTemplateRepository;
     private final LootTableRepository lootTableRepository;
+    private final ActivityPointEventRepository activityPointEventRepository;
 
     @GetMapping("/summary")
     public ResponseEntity<AdminDashboardSummaryResponse> summary() {
@@ -67,6 +72,31 @@ public class AdminDashboardController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/activity/monthly")
+    public ResponseEntity<AdminActivityMonthlyResponse> activityMonthly() {
+        YearMonth currentMonth = YearMonth.now();
+        YearMonth firstMonth = currentMonth.minusMonths(11);
+        List<AdminActivityMonthlyResponse.Month> months = activityPointEventRepository
+                .aggregateMonthlySince(firstMonth.atDay(1))
+                .stream()
+                .map(this::toActivityMonth)
+                .toList();
+        return ResponseEntity.ok(new AdminActivityMonthlyResponse(
+                firstMonth.toString(), currentMonth.toString(), months));
+    }
+
+    private AdminActivityMonthlyResponse.Month toActivityMonth(ActivityMonthlyAggregateProjection row) {
+        return new AdminActivityMonthlyResponse.Month(
+                row.getYearMonth(),
+                valueOrZero(row.getPoints()),
+                valueOrZero(row.getActivePlayers()),
+                valueOrZero(row.getEvents()));
+    }
+
+    private long valueOrZero(Long value) {
+        return value == null ? 0L : value;
+    }
+
     private void addAlert(List<AdminDashboardSummaryResponse.Alert> alerts, String severity, String code, String title, String message, long count) {
         if (count > 0) alerts.add(new AdminDashboardSummaryResponse.Alert(severity, code, title, message, count));
     }
@@ -78,7 +108,8 @@ public class AdminDashboardController {
             EquipmentRepository equipmentRepository,
             ItemDefinitionRepository itemDefinitionRepository,
             EquipmentTemplateRepository equipmentTemplateRepository,
-            LootTableRepository lootTableRepository
+            LootTableRepository lootTableRepository,
+            ActivityPointEventRepository activityPointEventRepository
     ) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
@@ -87,6 +118,6 @@ public class AdminDashboardController {
         this.itemDefinitionRepository = itemDefinitionRepository;
         this.equipmentTemplateRepository = equipmentTemplateRepository;
         this.lootTableRepository = lootTableRepository;
+        this.activityPointEventRepository = activityPointEventRepository;
     }
 }
-
