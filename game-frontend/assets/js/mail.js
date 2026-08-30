@@ -207,6 +207,28 @@ async function mailOpen(messageId) {
   }
 }
 
+function mailAuctionBodyMarkup(message) {
+  const isPurchase = message.actionType === "PURCHASE_COMPLETED_BUYER";
+  const isSale = message.actionType === "PURCHASE_COMPLETED_SELLER";
+  if (!isPurchase && !isSale) return escapeHtml(message.body).replace(/\n/g, "<br>");
+
+  return String(message.body || "").split("\n").map(line => {
+    const escaped = escapeHtml(line);
+    if (!line.trim()) return "<br>";
+    if (line.startsWith("A compra")) return `<p class="font-bold text-cyan-300">${escaped}</p>`;
+    if (line.startsWith("A venda")) return `<p class="font-bold text-emerald-300">${escaped}</p>`;
+    if (line.startsWith("Item: ")) return `<p><span class="text-slate-400">Item:</span> <strong class="text-violet-200">${escapeHtml(line.slice(6))}</strong></p>`;
+    if (line.startsWith("Quantidade: ")) return `<p><span class="text-slate-400">Quantidade:</span> <strong class="text-slate-200">${escapeHtml(line.slice(12))}</strong></p>`;
+    if (line.startsWith("Comprador: ")) return `<p><span class="text-slate-400">Comprador:</span> <strong class="text-amber-200">${escapeHtml(line.slice(11))}</strong></p>`;
+    if (line.startsWith("Valor total: ")) return `<p><span class="text-slate-400">Valor total:</span> <strong class="text-red-300">${escapeHtml(line.slice(12))}</strong></p>`;
+    if (line.startsWith("Valor bruto: ")) return `<p><span class="text-slate-400">Valor bruto:</span> <strong class="text-emerald-300">${escapeHtml(line.slice(12))}</strong></p>`;
+    if (line.startsWith("Comissão: ")) return `<p><span class="text-slate-400">Comissão:</span> <strong class="text-red-300">${escapeHtml(line.slice(9))}</strong></p>`;
+    if (line.startsWith("Valor líquido recebido: ")) return `<p><span class="text-slate-400">Valor líquido recebido:</span> <strong class="text-emerald-300">${escapeHtml(line.slice(24))}</strong></p>`;
+    if (line.startsWith("O item já foi")) return `<p class="text-cyan-200">${escaped}</p>`;
+    return `<p>${escaped}</p>`;
+  }).join("");
+}
+
 function mailShowMessageModal(message) {
   const root = document.getElementById("mail-modal-root");
   if (!root) return;
@@ -239,7 +261,7 @@ function mailShowMessageModal(message) {
           <p>Para: <strong class="text-slate-200">${escapeHtml(message.recipientUsername || "Você")}</strong></p>
           <p class="col-span-2">${mailFormatDate(message.createdAt)}</p>
         </div>
-        <div class="rounded-lg bg-slate-900/70 border border-slate-700 p-4 text-sm text-slate-200 whitespace-pre-wrap break-words">${escapeHtml(message.body)}</div>
+        <div class="rounded-lg bg-slate-900/70 border border-slate-700 p-4 text-sm text-slate-200 break-words space-y-1">${mailAuctionBodyMarkup(message)}</div>
         <p class="text-xs text-slate-500 mt-3">O MVP ainda não possui respostas diretas. Para escrever novamente, use “Nova mensagem”.</p>
         ${actionMarkup}
         <div class="grid grid-cols-2 gap-2 mt-4">
