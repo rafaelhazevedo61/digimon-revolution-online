@@ -579,7 +579,7 @@ function showEquipDetailModal(equipmentId) {
   overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 
   overlay.innerHTML = `
-    <div class="card" style="max-width:560px;width:100%;max-height:92vh;overflow:hidden;border-radius:1rem;margin:0 auto;">
+    <div class="card dashboard-equipment-detail-card" style="max-width:560px;width:100%;max-height:92vh;overflow:hidden;border-radius:1rem;margin:0 auto;">
       <div class="text-center mb-3">
         <div class="text-3xl mb-1">${emoji}</div>
         <h3 class="text-lg font-bold">${escapeHtml(eq.name)}${refLabel}</h3>
@@ -612,7 +612,7 @@ function showEquipDetailModal(equipmentId) {
 
       <div class="card-sm mb-3">
         <p class="text-xs text-slate-400 mb-2">Outros equipamentos para este slot</p>
-        <div id="dashboard-equipment-alternatives" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+        <div id="dashboard-equipment-alternatives" class="dashboard-equipment-alternatives space-y-2 max-h-56 overflow-y-auto pr-1">
           <p class="text-xs text-slate-500">Carregando equipamentos disponíveis...</p>
         </div>
       </div>
