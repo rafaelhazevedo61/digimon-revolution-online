@@ -301,8 +301,19 @@ function incubCloseHatchResult() {
   document.getElementById("incub-hatch-result-modal")?.remove();
 }
 
+function incubHatchRarityTheme(rarity) {
+  const themes = {
+    COMMON: { box: "rarity-box-common", badge: "badge-common", label: "Comum" },
+    RARE: { box: "rarity-box-rare", badge: "badge-rare", label: "Rara" },
+    EPIC: { box: "rarity-box-epic", badge: "badge-epic", label: "Épica" },
+    LEGENDARY: { box: "rarity-box-legendary", badge: "badge-legendary", label: "Lendária" }
+  };
+  return themes[String(rarity || "COMMON").toUpperCase()] || themes.COMMON;
+}
+
 function incubShowHatchResult(digimon) {
   incubCloseHatchResult();
+  const rarityTheme = incubHatchRarityTheme(digimon.rarity);
 
   const overlay = document.createElement("div");
   overlay.id = "incub-hatch-result-modal";
@@ -311,16 +322,16 @@ function incubShowHatchResult(digimon) {
   overlay.setAttribute("aria-modal", "true");
   overlay.setAttribute("aria-labelledby", "incub-hatch-result-title");
   overlay.innerHTML = `
-    <div class="card w-full max-w-sm text-center border-cyan-700 shadow-2xl">
+    <div class="card w-full max-w-sm text-center ${rarityTheme.box} shadow-2xl">
       <div class="flex justify-center mb-3">
         ${renderDigimonVisual(digimon.imageUrl, digimon.stage, "w-28 h-28", "text-6xl")}
       </div>
-      <h3 id="incub-hatch-result-title" class="text-xl font-bold text-cyan-300">${escapeHtml(digimon.name || "Novo Digimon")} nasceu!</h3>
+      <h3 id="incub-hatch-result-title" class="text-xl font-bold">${escapeHtml(digimon.name || "Novo Digimon")} nasceu!</h3>
 
       <p class="text-sm text-slate-400 mt-2">O Digimon foi adicionado à sua coleção.</p>
       <div class="mt-4 rounded-lg bg-slate-900/70 p-3 text-left text-xs text-slate-300">
         <div class="flex justify-between"><span>Estágio</span><strong>${escapeHtml(digimon.stage || "BABY")}</strong></div>
-        <div class="flex justify-between mt-1"><span>Raridade</span><strong>${escapeHtml(digimon.rarity || "COMMON")}</strong></div>
+        <div class="flex justify-between items-center mt-1"><span>Raridade</span><strong class="badge ${rarityTheme.badge}">${rarityTheme.label}</strong></div>
       </div>
       <div class="grid gap-2 mt-5">
         <button class="hatch-choice-btn hatch-choice-primary" id="incub-select-hatched-btn" onclick="incubSelectHatched('${escapeAttr(String(digimon.id))}')">Tornar ativo</button>
