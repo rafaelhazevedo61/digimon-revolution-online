@@ -107,7 +107,7 @@ function renderForgeEquipmentCards() {
               <p class="font-bold text-sm truncate">${escapeHtml(eq.name)}${ref > 0 ? ` +${ref}` : ""}</p>
               <p class="text-xs text-slate-500 mt-0.5">${escapeHtml(eq.slot || "Equipamento")} · ${escapeHtml(eq.rarity || "COMMON")} · T${eq.tier || "?"}</p>
             </div>
-            ${ref >= 11 ? `<span class="btn-sm shrink-0 opacity-60 text-center" style="background:#334155;color:#cbd5e1">+11 Máximo</span>` : `<button class="btn-sm shrink-0" style="background:#4a2800;color:#f59e0b" onclick="forgeShowRefine('${eq.id}')">🔨 Refinar</button>`}
+            ${ref >= 11 ? `<span class="btn-sm shrink-0 opacity-60 text-center" style="background:#334155;color:#cbd5e1" title="Este equipamento já atingiu o nível máximo">Maximizado</span>` : `<button class="btn-sm shrink-0" style="background:#4a2800;color:#f59e0b" onclick="forgeShowRefine('${eq.id}')">🔨 Refinar</button>`}
           </div>
         `;
       }).join("")}
