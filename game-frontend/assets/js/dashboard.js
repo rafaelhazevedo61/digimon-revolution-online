@@ -31,13 +31,17 @@ function renderDashContent(data) {
 
   container.innerHTML = `
     <!-- Player header -->
-    <div class="flex items-center justify-between mb-4 px-1">
+    <header class="dashboard-header mb-4">
       <div>
-        <h2 class="text-lg font-bold">${escapeHtml(data.username)}</h2>
-        <p class="text-xs text-slate-400">Tamer</p>
+        <p class="dashboard-eyebrow">Painel do treinador</p>
+        <h2 class="dashboard-title">${escapeHtml(data.username)}</h2>
+        <p class="dashboard-subtitle">Tamer · visão geral da sua jornada</p>
       </div>
-      <button class="text-xs text-slate-500 hover:text-red-400" onclick="authLogout()">Sair</button>
-    </div>
+      <button class="dashboard-logout" onclick="authLogout()" aria-label="Sair da conta" title="Sair">
+        <span aria-hidden="true">↗</span>
+        <span>Sair</span>
+      </button>
+    </header>
 
     <div id="dash-mail-notice"></div>
 
@@ -52,39 +56,43 @@ function renderDashContent(data) {
     `}
 
     <!-- Resources -->
-    <div class="grid grid-cols-2 gap-3 mb-4">
+    <div class="dashboard-resource-grid ${d ? "" : "dashboard-resource-grid-single"} mb-4">
       ${d ? `
-      <div class="card-sm text-center">
-        <p class="text-xs text-slate-500">Bits</p>
-        <p class="text-lg font-bold text-yellow-400">${Number(d.bits || 0).toLocaleString("pt-BR")}</p>
+      <div class="dashboard-resource-card dashboard-resource-bits">
+        <span class="dashboard-resource-icon" aria-hidden="true">◈</span>
+        <div><p class="dashboard-resource-label">Bits</p><p class="dashboard-resource-value">${Number(d.bits || 0).toLocaleString("pt-BR")}</p></div>
       </div>
-      <div class="card-sm text-center">
-        <p class="text-xs text-slate-500">Energia</p>
-        <p class="text-lg font-bold text-green-400">${d.energy}/${d.maxEnergy}${d.clanBonusMaxEnergy ? `<span class="text-xs text-cyan-400">+${d.clanBonusMaxEnergy}</span>` : ""}</p>
+      <div class="dashboard-resource-card dashboard-resource-energy">
+        <span class="dashboard-resource-icon" aria-hidden="true">ϟ</span>
+        <div><p class="dashboard-resource-label">Energia</p><p class="dashboard-resource-value">${d.energy}/${d.maxEnergy}${d.clanBonusMaxEnergy ? `<span class="dashboard-resource-bonus">+${d.clanBonusMaxEnergy}</span>` : ""}</p></div>
       </div>
       ` : ""}
-      <div class="card-sm text-center">
-        <p class="text-xs text-slate-500">Dados Digitais</p>
-        <p class="text-lg font-bold text-cyan-400">${Number(data.digitalData || 0).toLocaleString("pt-BR")}</p>
+      <div class="dashboard-resource-card dashboard-resource-data">
+        <span class="dashboard-resource-icon" aria-hidden="true">⌁</span>
+        <div><p class="dashboard-resource-label">Dados digitais</p><p class="dashboard-resource-value">${Number(data.digitalData || 0).toLocaleString("pt-BR")}</p></div>
       </div>
     </div>
 
     <!-- Equipped items -->
     ${d ? `
-    <div class="mb-4">
-      <h3 class="text-sm font-bold text-slate-300 mb-2 px-1">Equipamentos</h3>
-      <div class="grid grid-cols-3 gap-2">
+    <section class="dashboard-section mb-4">
+      <div class="dashboard-section-heading">
+        <div><p class="dashboard-eyebrow">Loadout ativo</p><h3 class="dashboard-section-title">Equipamentos</h3></div>
+        <span class="dashboard-section-count">${(data.equippedItems || []).length}/3</span>
+      </div>
+      <p class="dashboard-section-note">Toque em um item para ver atributos, ascensão e alternativas.</p>
+      <div class="dashboard-equipment-grid">
         ${renderEquipSlots(data.equippedItems || [])}
       </div>
       ${renderSetBonus(data.setBonus)}
-    </div>
+    </section>
 
     <!-- Actions -->
-    <div class="grid grid-cols-3 gap-2 mb-4">
-      <button class="btn-primary w-full" onclick="navigateTo('evolution')">⚡ Evoluir</button>
-      <button class="w-full py-2 rounded-lg font-bold text-sm" style="background:#854d0e;color:#fbbf24" onclick="navigateTo('rebirth')">🔄 Renascer</button>
-      <button class="w-full py-2 rounded-lg font-bold text-sm" style="background:#164e63;color:#67e8f9" onclick="navigateTo('storage')">📦 Armazém</button>
-    </div>
+    <section class="dashboard-actions mb-4" aria-label="Ações rápidas">
+      <button class="dashboard-action dashboard-action-primary" onclick="navigateTo('evolution')"><span class="dashboard-action-icon">ϟ</span><span><strong>Evoluir</strong><small>Fortaleça seu Digimon</small></span><span class="dashboard-action-arrow">›</span></button>
+      <button class="dashboard-action dashboard-action-amber" onclick="navigateTo('rebirth')"><span class="dashboard-action-icon">↻</span><span><strong>Renascer</strong><small>Recomece mais forte</small></span><span class="dashboard-action-arrow">›</span></button>
+      <button class="dashboard-action dashboard-action-cyan" onclick="navigateTo('storage')"><span class="dashboard-action-icon">▣</span><span><strong>Armazém</strong><small>Gerencie seus itens</small></span><span class="dashboard-action-arrow">›</span></button>
+    </section>
     ` : ""}
 
     <!-- Active missions -->
@@ -283,37 +291,37 @@ function renderEquipSlots(items) {
   const slots = ["WEAPON", "ARMOR", "ACCESSORY"];
   const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
   const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
-  const rarityBorder = {
-    COMMON: "border-slate-600",
-    RARE: "border-blue-500",
-    EPIC: "border-purple-500",
-    LEGENDARY: "border-yellow-500"
-  };
+  const rarityClass = { COMMON: "dashboard-rarity-common", RARE: "dashboard-rarity-rare", EPIC: "dashboard-rarity-epic", LEGENDARY: "dashboard-rarity-legendary" };
 
   return slots.map(slot => {
     const item = items.find(i => i.slot === slot);
     if (item) {
-      const border = rarityBorder[item.rarity] || "border-slate-600";
+      const rarity = String(item.rarity || "COMMON").toUpperCase();
       const refLabel = item.refinementLevel > 0 ? ` +${item.refinementLevel}` : "";
+      const ascension = Number(item.ascensionLevel) || 0;
+      const stats = [];
+      if (Number(item.effectiveBonusHp) > 0) stats.push(`<span class="text-red-300">HP ${item.effectiveBonusHp}</span>`);
+      if (Number(item.effectiveBonusAttack) > 0) stats.push(`<span class="text-orange-300">ATK ${item.effectiveBonusAttack}</span>`);
+      if (Number(item.effectiveBonusDefense) > 0) stats.push(`<span class="text-blue-300">DEF ${item.effectiveBonusDefense}</span>`);
       return `
-        <div class="card-sm text-center ${border}" style="cursor:pointer" onclick="showEquipDetailModal('${item.id}')">
-          <p class="text-lg">${slotEmoji[slot]}</p>
-          <p class="text-xs font-bold truncate">${escapeHtml(item.name)}${refLabel}</p>
-          <div class="flex gap-1 justify-center flex-wrap mb-3">
-            <span class="badge badge-${item.rarity ? item.rarity.toLowerCase() : 'common'}" style="font-size:0.6rem">T${item.tier || '?'}</span>
-          </div>
-          <div class="flex flex-col gap-1" onclick="event.stopPropagation()">
-            <button class="btn-sm w-full text-[10px] py-1" style="background:#7f1d1d;color:#fca5a5" onclick="invUnequip('${item.id}')">Desequipar</button>
-          </div>
-        </div>
+        <article class="dashboard-equipment-slot ${rarityClass[rarity] || rarityClass.COMMON}" role="button" tabindex="0" aria-label="Ver detalhes de ${escapeAttr(item.name)}" onclick="showEquipDetailModal('${item.id}')" onkeydown="if (event.key === 'Enter' || event.key === ' ') showEquipDetailModal('${item.id}')">
+          <div class="dashboard-slot-topline"><span class="dashboard-slot-label">${slotName[slot]}</span><span class="dashboard-slot-status">Equipado</span></div>
+          <div class="dashboard-slot-icon" aria-hidden="true">${slotEmoji[slot]}</div>
+          <p class="dashboard-slot-name" title="${escapeAttr(`${item.name}${refLabel}`)}">${escapeHtml(item.name)}${refLabel}</p>
+          <div class="dashboard-slot-meta"><span class="badge badge-${rarity.toLowerCase()}">T${item.tier || '?'}</span>${ascension > 0 ? `<span class="badge badge-legendary">Asc. ${ascension}</span>` : ''}</div>
+          ${stats.length ? `<div class="dashboard-slot-stats">${stats.join('')}</div>` : '<div class="dashboard-slot-stats dashboard-slot-stats-muted">Toque para ver detalhes</div>'}
+          <div class="dashboard-slot-action" onclick="event.stopPropagation()"><button class="btn-sm w-full" onclick="invUnequip('${item.id}')">Desequipar</button></div>
+        </article>
       `;
     }
     return `
-      <div class="card-sm text-center opacity-70 cursor-pointer hover:border-cyan-700 transition-colors" role="button" tabindex="0" aria-label="Equipar ${slotName[slot]}" onclick="dashboardOpenEmptyEquipmentSlot('${slot}')" onkeydown="if (event.key === 'Enter' || event.key === ' ') dashboardOpenEmptyEquipmentSlot('${slot}')">
-        <p class="text-lg">${slotEmoji[slot]}</p>
-        <p class="text-xs text-slate-500">${slotName[slot]}</p>
-        <p class="text-[10px] text-cyan-400 mt-1">Clique para equipar</p>
-      </div>
+      <article class="dashboard-equipment-slot dashboard-equipment-slot-empty" role="button" tabindex="0" aria-label="Equipar ${slotName[slot]}" onclick="dashboardOpenEmptyEquipmentSlot('${slot}')" onkeydown="if (event.key === 'Enter' || event.key === ' ') dashboardOpenEmptyEquipmentSlot('${slot}')">
+        <div class="dashboard-slot-topline"><span class="dashboard-slot-label">${slotName[slot]}</span><span class="dashboard-slot-status dashboard-slot-status-empty">Livre</span></div>
+        <div class="dashboard-slot-icon dashboard-slot-icon-empty" aria-hidden="true">${slotEmoji[slot]}</div>
+        <p class="dashboard-slot-name dashboard-slot-name-empty">Nenhum item equipado</p>
+        <div class="dashboard-slot-stats dashboard-slot-stats-muted">Escolher equipamento</div>
+        <div class="dashboard-slot-action"><span class="dashboard-slot-add">+ Adicionar</span></div>
+      </article>
     `;
   }).join("");
 }
