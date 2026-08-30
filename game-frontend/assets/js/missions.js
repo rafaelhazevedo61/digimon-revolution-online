@@ -676,14 +676,14 @@ async function renderMissionAreaPage(params) {
           <div class="mission-area-terminal-mark" aria-hidden="true"><span></span><span></span><span></span></div>
         </div>
       </header>
-      <section class="mission-area-briefing-strip">
+      <section class="mission-area-missions-strip">
         <div><p class="mission-area-strip-label">Protocolo de campo</p><p class="mission-area-strip-title">Operações disponíveis</p></div>
-        <div class="mission-area-strip-status"><span class="mission-area-strip-dot"></span><span id="mission-area-count">—</span> briefings</div>
+        <div class="mission-area-strip-status"><span class="mission-area-strip-dot"></span><span id="mission-area-count">—</span> missões</div>
       </section>
 
       <div id="mission-list">
-        <div class="mission-brief-skeleton"></div>
-        <div class="mission-brief-skeleton"></div>
+        <div class="mission-detail-skeleton"></div>
+        <div class="mission-detail-skeleton"></div>
       </div>
     </div>
   `;
@@ -726,17 +726,17 @@ function renderMissionCards(missions, area) {
   const sortedMissions = [...missions].sort(compareMissionsByProgression);
 
   container.innerHTML = sortedMissions.map((m, index) => `
-    <article class="mission-brief-card">
-      <div class="mission-brief-topline"><p class="progression-eyebrow progression-eyebrow-cyan">Briefing ${String(index + 1).padStart(2, "0")}</p><span class="mission-brief-code">${escapeHtml(missionFriendlyCode(m.id || "OPS"))}</span></div>
-      <div class="mission-brief-heading"><div><h3 class="mission-brief-title">${escapeHtml(formatMissionName(m))}</h3><span class="mission-brief-status"><span></span> Operação disponível</span></div><span class="mission-brief-arrow" aria-hidden="true">✦</span></div>
-      <p class="mission-brief-description">${escapeHtml(m.description) || "Sem descrição disponível."}</p>
-      <div class="mission-brief-reward-row"><span class="mission-brief-reward-label">Retorno previsto</span><span class="mission-brief-reward-xp">+${m.xpReward} XP</span>${m.bitsReward > 0 ? `<span class="mission-brief-reward-bits">+${m.bitsReward} bits</span>` : ""}</div>
-      <div class="mission-brief-meta">
+    <article class="mission-detail-card">
+      <div class="mission-detail-topline"><p class="progression-eyebrow progression-eyebrow-cyan">Missão ${String(index + 1).padStart(2, "0")}</p><span class="mission-detail-code">${escapeHtml(missionFriendlyCode(m.id || "OPS"))}</span></div>
+      <div class="mission-detail-heading"><div><h3 class="mission-detail-title">${escapeHtml(formatMissionName(m))}</h3><span class="mission-detail-status"><span></span> Operação disponível</span></div><span class="mission-detail-arrow" aria-hidden="true">✦</span></div>
+      <p class="mission-detail-description">${escapeHtml(m.description) || "Sem descrição disponível."}</p>
+      <div class="mission-detail-reward-row"><span class="mission-detail-reward-label">Retorno previsto</span><span class="mission-detail-reward-xp">+${m.xpReward} XP</span>${m.bitsReward > 0 ? `<span class="mission-detail-reward-bits">+${m.bitsReward} bits</span>` : ""}</div>
+      <div class="mission-detail-meta">
         <span><small>REQUISITO</small>⚡ Nível ${m.requiredLevel}</span>
         <span><small>CUSTO</small>🔋 ${m.energyCost} energia</span>
         <span><small>DURAÇÃO</small>⏱️ ${formatTime(m.durationSeconds)}</span>
       </div>
-      <div class="mission-brief-actions">
+      <div class="mission-detail-actions">
         <button type="button" class="btn-secondary flex-1 text-sm" onclick="missionShowLootPreview('${escapeAttr(m.id)}', this)">Ver recompensas</button>
         <button type="button" class="btn-primary flex-1 text-sm" onclick="startMission('${escapeAttr(m.id)}', '${escapeAttr(area)}')">Iniciar missão</button>
       </div>
