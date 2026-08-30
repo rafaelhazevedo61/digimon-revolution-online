@@ -76,8 +76,13 @@ async function renderShopPage() {
   `;
 
   try {
-    shopData = await apiGet("/shop");
-    const dashboard = await apiGet("/players/me/dashboard");
+    const [catalog, dashboard, inventory] = await Promise.all([
+      apiGet("/shop"),
+      apiGet("/players/me/dashboard"),
+      apiGet("/inventory")
+    ]);
+    shopData = catalog;
+    shopInventoryItems = inventory || [];
     shopPlayerBits = dashboard.activeDigimon ? dashboard.activeDigimon.bits : 0;
     document.getElementById("shop-bits").textContent = shopFormatNumber(shopPlayerBits);
     shopMode = "buy";
@@ -134,6 +139,17 @@ function shopRenderBuyMode() {
   `;
   shopSwitchTab("ALL");
 }
+function shopProductInventoryQuantity(product) {
+  const targetCode = product.itemDefinitionCode || product.itemType || product.code;
+  return shopInventoryItems
+    .filter(item => {
+      const definitionCode = item.itemDefinition && item.itemDefinition.code;
+      if (product.itemDefinitionCode) return definitionCode === product.itemDefinitionCode;
+      return definitionCode === targetCode || (!definitionCode && item.itemType === targetCode);
+    })
+    .reduce((total, item) => total + Math.max(0, Number(item.quantity) || 0), 0);
+}
+
 function shopAllProducts() {
   const products = [
     ...(shopData.potions || []),
@@ -259,9 +275,14 @@ function shopOpenBuy(code) {
   if (!product) return;
 
   const isEquip = product.productType === "EQUIPMENT";
+  const inventoryQuantity = isEquip ? 0 : shopProductInventoryQuantity(product);
+  const remainingStackQuantity = Math.max(0, SHOP_MAX_BUY_QUANTITY - inventoryQuantity);
   const affordableQuantity = product.price > 0 ? Math.floor(shopPlayerBits / product.price) : SHOP_MAX_BUY_QUANTITY;
-  const maxQty = isEquip ? 1 : Math.min(SHOP_MAX_BUY_QUANTITY, affordableQuantity);
+  const maxQty = isEquip ? 1 : Math.min(SHOP_MAX_BUY_QUANTITY, remainingStackQuantity, affordableQuantity);
   const purchaseUnavailable = maxQty < 1 || shopPlayerBits < product.price;
+  const purchaseUnavailableMessage = remainingStackQuantity < 1
+    ? "Limite de stack atingido para este item."
+    : "Bits insuficientes para comprar este recurso.";
   const initialQuantity = purchaseUnavailable ? 0 : 1;
   const initialTotal = initialQuantity * product.price;
   shopModalStartingBits = shopPlayerBits;
@@ -298,7 +319,8 @@ function shopOpenBuy(code) {
             <button class="btn-sm btn-primary" onclick="shopQtyChange(1)" aria-label="Aumentar quantidade" ${purchaseUnavailable ? "disabled" : ""}>+</button>
             <button class="btn-sm btn-primary" onclick="shopBuyMax()" aria-label="Comprar quantidade máxima" title="Comprar máximo" ${purchaseUnavailable ? "disabled" : ""}>MAX</button>
           </div>
-          ${purchaseUnavailable ? '<p class="text-xs text-red-400 mt-2">Bits insuficientes para comprar este recurso.</p>' : ""}
+          <p class="text-xs text-slate-500 mt-2">No inventário: ${shopFormatNumber(inventoryQuantity)} / ${SHOP_MAX_BUY_QUANTITY} · Restante: ${shopFormatNumber(remainingStackQuantity)}</p>
+          ${purchaseUnavailable ? `<p class="text-xs text-red-400 mt-2">${purchaseUnavailableMessage}</p>` : ""}
         </div>
         ` : ""}
         <div class="shop-modal-row">

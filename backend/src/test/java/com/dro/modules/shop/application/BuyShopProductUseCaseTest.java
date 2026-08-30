@@ -4,8 +4,10 @@ import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.equipment.application.GrantEquipmentUseCase;
 import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
@@ -47,6 +49,7 @@ class BuyShopProductUseCaseTest {
     @Mock private PlayerRepository playerRepository;
     @Mock private DigimonRepository digimonRepository;
     @Mock private AddItemUseCase addItemUseCase;
+    @Mock private InventoryRepository inventoryRepository;
     @Mock private ItemDefinitionRepository itemDefinitionRepository;
     @Mock private GrantEquipmentUseCase grantEquipmentUseCase;
     @Mock private ShopProductRepository shopProductRepository;
@@ -152,6 +155,119 @@ class BuyShopProductUseCaseTest {
                 )
         );
         verifyNoInteractions(addItemUseCase, grantEquipmentUseCase, tutorialService, transactionAuditPublisher);
+    }
+
+    @Test
+    void buyRejectsWhenExistingInventoryLeavesInsufficientStackSpace() {
+        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
+        String productCode = "FRAGMENT_CHAMPION";
+
+        Player player = Player.builder()
+                .id(playerId)
+                .activeDigimonId(digimonId)
+                .build();
+        Digimon digimon = Digimon.builder()
+                .id(digimonId)
+                .playerId(playerId)
+                .bits(100_000)
+                .build();
+        ShopProductEntity product = ShopProductEntity.builder()
+                .code(productCode)
+                .name("Champion Fragment")
+                .productType(ShopProductType.ITEM)
+                .category(ShopProductCategory.FRAGMENT)
+                .itemType(ItemType.FRAGMENT_CHAMPION)
+                .price(1)
+                .active(true)
+                .build();
+        ItemDefinition definition = ItemDefinition.builder()
+                .id(902L)
+                .code(productCode)
+                .name("Champion Fragment")
+                .category("FRAGMENT")
+                .stackable(true)
+                .maxStack(999)
+                .build();
+        InventoryItem inventoryItem = InventoryItem.builder()
+                .id(UUID.randomUUID())
+                .playerId(playerId)
+                .itemType(ItemType.FRAGMENT_CHAMPION)
+                .itemDefinition(definition)
+                .quantity(998)
+                .build();
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
+        when(shopProductRepository.findById(productCode)).thenReturn(Optional.of(product));
+        when(itemDefinitionRepository.findByCode(productCode)).thenReturn(Optional.of(definition));
+        when(inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, definition.getId()))
+                .thenReturn(Optional.of(inventoryItem));
+
+        BadRequestException exception = assertThrows(
+                BadRequestException.class,
+                () -> useCase.execute(createToken(playerId), new BuyShopProductRequest(productCode, 2))
+        );
+
+        assertEquals("A quantidade ultrapassa o limite de stack. Espaço restante: 1", exception.getMessage());
+        verifyNoInteractions(addItemUseCase, grantEquipmentUseCase, tutorialService, transactionAuditPublisher);
+    }
+
+    @Test
+    void buyAllowsExactlyTheRemainingStackSpace() {
+        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
+        String productCode = "FRAGMENT_CHAMPION";
+
+        Player player = Player.builder()
+                .id(playerId)
+                .activeDigimonId(digimonId)
+                .build();
+        Digimon digimon = Digimon.builder()
+                .id(digimonId)
+                .playerId(playerId)
+                .bits(100_000)
+                .build();
+        ShopProductEntity product = ShopProductEntity.builder()
+                .code(productCode)
+                .name("Champion Fragment")
+                .productType(ShopProductType.ITEM)
+                .category(ShopProductCategory.FRAGMENT)
+                .itemType(ItemType.FRAGMENT_CHAMPION)
+                .price(1)
+                .active(true)
+                .build();
+        ItemDefinition definition = ItemDefinition.builder()
+                .id(903L)
+                .code(productCode)
+                .name("Champion Fragment")
+                .category("FRAGMENT")
+                .stackable(true)
+                .maxStack(999)
+                .build();
+        InventoryItem inventoryItem = InventoryItem.builder()
+                .id(UUID.randomUUID())
+                .playerId(playerId)
+                .itemType(ItemType.FRAGMENT_CHAMPION)
+                .itemDefinition(definition)
+                .quantity(998)
+                .build();
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
+        when(shopProductRepository.findById(productCode)).thenReturn(Optional.of(product));
+        when(itemDefinitionRepository.findByCode(productCode)).thenReturn(Optional.of(definition));
+        when(inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, definition.getId()))
+                .thenReturn(Optional.of(inventoryItem));
+
+        BuyShopProductResponse response = useCase.execute(
+                createToken(playerId),
+                new BuyShopProductRequest(productCode, 1)
+        );
+
+        assertEquals(1, response.quantity());
+        assertEquals(99_999, response.remainingBits());
+        verify(addItemUseCase).execute(digimonId, ItemType.FRAGMENT_CHAMPION, 1);
     }
 
     private static String createToken(UUID subject) {
