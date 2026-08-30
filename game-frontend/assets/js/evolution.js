@@ -7,10 +7,14 @@ async function renderEvolutionPage() {
 
   app.innerHTML = `
     <div class="page-container">
-      <div class="flex items-center gap-2 mb-4 px-1">
-        <button class="btn-sm" style="background:#334155;color:#94a3b8" onclick="navigateTo('dashboard')">← Voltar</button>
-        <h2 class="text-lg font-bold">Evolução</h2>
-      </div>
+      <header class="progression-page-header mb-4">
+        <div>
+          <p class="progression-eyebrow progression-eyebrow-cyan">Sistema de progressão</p>
+          <h2 class="progression-page-title">Evolução</h2>
+          <p class="progression-page-subtitle">Escolha o próximo estágio e prepare seu Digimon para o salto.</p>
+        </div>
+        <button class="progression-back-button" onclick="navigateTo('dashboard')"><span aria-hidden="true">←</span> Voltar</button>
+      </header>
       <div id="evo-content">
         <div class="card animate-pulse"><div class="h-32"></div></div>
       </div>
@@ -45,9 +49,10 @@ function evoRender(digimon) {
 
   // Current digimon summary
   let html = `
-    <div class="card mb-4">
+    <section class="progression-hero progression-hero-cyan mb-4">
+      <div class="progression-hero-topline"><span class="progression-hero-kicker">Digimon selecionado</span><span class="progression-hero-status">Estágio atual</span></div>
       <div class="flex items-center gap-3">
-        ${renderDigimonVisual(digimon.imageUrl, digimon.stage, "w-14 h-14", "text-4xl")}
+        <div class="progression-hero-visual">${renderDigimonVisual(digimon.imageUrl, digimon.stage, "w-14 h-14", "text-4xl")}</div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <h3 class="font-bold text-lg truncate">${escapeHtml(digimon.name)}</h3>
@@ -62,21 +67,20 @@ function evoRender(digimon) {
           ${renderRarityDieDetails(digimon)}
         </div>
       </div>
-    </div>
+    </section>
   `;
 
   if (options.length === 0) {
     html += `
-      <div class="card text-center">
-        <p class="text-2xl mb-2">🏆</p>
-        <p class="text-slate-400">Este Digimon já atingiu o estágio máximo!</p>
-        <p class="text-xs text-slate-500 mt-1">Considere fazer Rebirth para continuar evoluindo.</p>
-        <button class="btn-primary mt-3" style="background:#854d0e;color:#fbbf24" onclick="navigateTo('rebirth')">🔄 Ir para Rebirth</button>
-      </div>
+      <section class="evolution-empty-state">
+        <div class="evolution-empty-icon" aria-hidden="true">🏆</div>
+        <p class="evolution-empty-title">Estágio máximo alcançado</p>
+        <p class="evolution-empty-copy">Seu Digimon já chegou ao fim desta linha evolutiva. Use Rebirth para abrir um novo ciclo.</p>
+        <button class="progression-button progression-button-amber mt-3" onclick="navigateTo('rebirth')">↻ Ir para Rebirth</button>
+      </section>
     `;
   } else {
-    html += `<h3 class="text-sm font-bold text-slate-300 mb-3 px-1">Opções de Evolução</h3>`;
-    html += options.map(opt => evoRenderOption(opt, digimon)).join("");
+    html += `<section class="evolution-options-section"><div class="dashboard-section-heading"><div><p class="progression-eyebrow progression-eyebrow-cyan">Próximo passo</p><h3 class="progression-panel-title">Opções de evolução</h3></div><span class="evolution-option-count">${options.length} ${options.length === 1 ? "rota" : "rotas"}</span></div><p class="dashboard-section-note">Compare atributos e requisitos antes de confirmar.</p><div class="evolution-options-list">${options.map(opt => evoRenderOption(opt, digimon)).join("")}</div></section>`;
   }
 
   content.innerHTML = html;
@@ -96,40 +100,25 @@ function evoRenderOption(opt, digimon) {
 
   // Stats comparison
   const statsHtml = `
-    <div class="grid grid-cols-3 gap-2 text-center text-xs mt-2">
-      <div>
-        <p class="text-slate-500">HP</p>
-        <p class="font-bold text-red-400">${next.baseHp}</p>
-      </div>
-      <div>
-        <p class="text-slate-500">ATK</p>
-        <p class="font-bold text-orange-400">${next.baseAtk}</p>
-      </div>
-      <div>
-        <p class="text-slate-500">DEF</p>
-        <p class="font-bold text-blue-400">${next.baseDef}</p>
-      </div>
+    <div class="evolution-stat-grid">
+      <div class="evolution-stat evolution-stat-hp"><span>HP</span><strong>${next.baseHp}</strong></div>
+      <div class="evolution-stat evolution-stat-atk"><span>ATK</span><strong>${next.baseAtk}</strong></div>
+      <div class="evolution-stat evolution-stat-def"><span>DEF</span><strong>${next.baseDef}</strong></div>
     </div>
   `;
 
   // Requirements list
   let reqHtml = `
-    <div class="mt-3 pt-3" style="border-top:1px solid #1e293b">
-      <p class="text-xs font-bold text-slate-400 mb-2">Requisitos:</p>
-      <div class="flex flex-col gap-1">
-        <div class="flex justify-between text-xs">
-          <span>Nível ${req.level}</span>
-          <span class="${levelMet ? 'text-green-400' : 'text-red-400'}">${levelMet ? '✓' : `Lv.${digimon.level}/${req.level}`}</span>
-        </div>
+    <div class="evolution-requirements">
+      <div class="evolution-requirements-heading"><p>Requisitos para evoluir</p><span class="${canEvolve ? "evolution-requirements-ready" : ""}">${canEvolve ? "Pronto" : "Verifique"}</span></div>
+      <div class="evolution-requirements-list">
+        <div class="evolution-requirement-row"><span>Nível ${req.level}</span><span class="${levelMet ? 'evolution-check' : 'evolution-missing'}">${levelMet ? '✓' : `Lv.${digimon.level}/${req.level}`}</span></div>
   `;
 
   materials.forEach(m => {
     const met = m.playerHas >= m.quantity;
     reqHtml += `
-      <div class="flex justify-between text-xs">
-        <span>${escapeHtml(m.description || m.materialCode)}</span>
-        <span class="${met ? 'text-green-400' : 'text-red-400'}">${m.playerHas}/${m.quantity}</span>
-      </div>
+      <div class="evolution-requirement-row"><span>${escapeHtml(m.description || m.materialCode)}</span><span class="${met ? 'evolution-check' : 'evolution-missing'}">${m.playerHas}/${m.quantity}</span></div>
     `;
   });
 
@@ -141,7 +130,8 @@ function evoRenderOption(opt, digimon) {
   ` : "";
 
   return `
-    <div class="card mb-3 ${canEvolve ? 'border-cyan-800' : ''}">
+    <article class="evolution-option-card ${canEvolve ? 'evolution-option-card-ready' : ''}">
+      <div class="evolution-option-heading"><div><p class="progression-eyebrow progression-eyebrow-cyan">${canEvolve ? 'Rota disponível' : 'Rota bloqueada'}</p><p class="evolution-option-title">Próximo estágio</p></div><span class="evolution-option-arrow" aria-hidden="true">→</span></div>
       <div class="flex items-center gap-3">
         ${renderDigimonVisual(next.imageUrl, next.stage, "w-12 h-12", "text-3xl")}
         <div class="flex-1 min-w-0">
@@ -157,13 +147,13 @@ function evoRenderOption(opt, digimon) {
       ${reqHtml}
       ${reasonHtml}
       <div class="mt-3">
-        <button class="btn-primary w-full ${!canEvolve ? 'opacity-50 cursor-not-allowed' : ''}"
+        <button class="progression-button progression-button-cyan w-full ${!canEvolve ? 'opacity-50 cursor-not-allowed' : ''}"
           ${canEvolve ? `onclick="evoEvolve(${opt.evolutionLineId})"` : 'disabled'}
           id="evo-btn-${opt.evolutionLineId}">
           ${canEvolve ? 'Evoluir!' : 'Requisitos não atendidos'}
         </button>
       </div>
-    </div>
+    </article>
   `;
 }
 
