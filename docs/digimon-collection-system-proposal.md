@@ -83,6 +83,8 @@ Isso permite testar o ciclo completo — registrar, pontuar, desbloquear e resga
 | 100 pontos | 1 Disco de XP de 20% | Marco de longo prazo. |
 | 150 pontos | 1 Disco de XP de 20% | Pode ser repetido enquanto o catálogo crescer. |
 | 200 pontos ou mais | 1 Disco de XP de 20% | Marcos configuráveis pelo conteúdo. |
+| 250 pontos | 1 Disco de XP de 20% | Marco avançado. |
+| 300 pontos | 1 Disco de XP de 20% | Marco avançado de longo prazo. |
 
 O item deve ser entregue apenas uma vez por marco. O jogador pode receber a recompensa automaticamente ao atingir o marco ou clicar em **Resgatar** na tela de coleção. A recomendação para a primeira versão é usar resgate manual, pois isso torna o efeito visível e facilita a substituição futura das recompensas.
 

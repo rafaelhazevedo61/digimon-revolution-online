@@ -22,7 +22,7 @@ import java.util.UUID;
 
 @Service
 public class CollectionUseCase {
-    private static final int[] MILESTONES = {10, 50, 100, 150, 200};
+    private static final int[] MILESTONES = {10, 50, 100, 150, 200, 250, 300};
     private final CollectionEntryRepository collectionRepository;
     private final DigimonRepository digimonRepository;
     private final DigimonInfosRepository digimonInfosRepository;
