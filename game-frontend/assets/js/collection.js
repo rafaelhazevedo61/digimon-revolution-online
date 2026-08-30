@@ -125,11 +125,18 @@ function collectionCloseRegisterModal() {
 }
 
 async function collectionRegister(digimonId) {
+  const selectedFilter = document.getElementById("collection-filter")?.value || "ALL";
+  const searchValue = document.getElementById("collection-search")?.value || "";
   collectionCloseRegisterModal();
   try {
     const result = await apiPost("/collection/register", { digimonId });
     showToast(result.message || "Digimon registrado na coleção!");
     await renderCollectionPage();
+    const filter = document.getElementById("collection-filter");
+    const search = document.getElementById("collection-search");
+    if (filter) filter.value = selectedFilter;
+    if (search) search.value = searchValue;
+    collectionRenderDigimons();
   } catch (err) {
     showToast(err.message || "Não foi possível registrar o Digimon.", "error");
   }
