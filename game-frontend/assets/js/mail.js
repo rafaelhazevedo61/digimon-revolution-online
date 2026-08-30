@@ -26,11 +26,11 @@ function renderMailPage() {
         <button class="tab-btn flex-1" data-folder="sent" onclick="mailSetFolder('sent')">Enviadas</button>
       </div>
 
-      <div class="flex flex-wrap gap-2 mb-4" id="mail-bulk-actions">
-          <button id="mail-mark-all-read" class="tab-btn flex-1 text-xs" onclick="mailMarkAllRead()">
+      <div class="flex gap-2 mb-4" id="mail-bulk-actions">
+        <button id="mail-mark-all-read" class="tab-btn flex-1" onclick="mailMarkAllRead()">
           Marcar todas como lidas
         </button>
-          <button id="mail-delete-all" class="tab-btn flex-1 text-xs text-red-300" onclick="mailAskDeleteAll()">
+        <button id="mail-delete-all" class="tab-btn flex-1 text-red-300" onclick="mailAskDeleteAll()">
           Apagar todas
         </button>
       </div>
