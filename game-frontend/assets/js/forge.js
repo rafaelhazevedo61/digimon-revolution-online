@@ -171,19 +171,19 @@ async function forgeShowRefine(equipmentId) {
         <div class="flex justify-around text-sm">
           <div class="text-center"><span class="text-yellow-400 font-bold">${Number(preview.costBits).toLocaleString("pt-BR")}</span><span class="text-slate-400"> Bits</span><br><span class="text-xs ${preview.currentBits >= preview.costBits ? "text-green-400" : "text-red-400"}">(tem: ${Number(preview.currentBits).toLocaleString("pt-BR")})</span></div>
           <div class="text-center"><span class="text-purple-400 font-bold">${preview.costStones}</span><span class="text-slate-400"> Pedra</span><br><span class="text-xs ${preview.currentStones >= preview.costStones ? "text-green-400" : "text-red-400"}">(tem: ${preview.currentStones})</span></div>
-          <div class="text-center"><span id="forge-success-rate" class="font-bold ${forgeSuccessRateClass(preview.successRate)}">${preview.successRate}%</span><span class="text-slate-400"> Chance</span></div>
+          <div class="text-center"><span id="forge-success-rate" data-base-rate="${preview.baseSuccessRate ?? preview.successRate}" class="font-bold ${forgeSuccessRateClass(preview.successRate)}">${preview.successRate}%</span><span class="text-slate-400"> Chance</span></div>
         </div>
       </div>
       <div class="card-sm mb-3">
         <p class="text-xs text-slate-400 mb-2">Itens de suporte</p>
-        <label class="flex items-center justify-between gap-2 text-xs ${forgeFindItemCount("REFINEMENT_SUCCESS_BOOST") > 0 ? "text-slate-300" : "text-slate-600"}">
-          <span>Usar Pergaminho de Refinamento (+10 pontos percentuais)</span>
-          <input id="forge-success-boost" type="checkbox" onchange="forgeUpdateRefineChance(${preview.baseSuccessRate ?? preview.successRate})" ${forgeFindItemCount("REFINEMENT_SUCCESS_BOOST") < 1 ? "disabled" : ""}>
-        </label>
-        <label class="flex items-center justify-between gap-2 text-xs mt-2 ${forgeFindItemCount("REFINEMENT_PROTECTION") > 0 && preview.breakChance > 0 ? "text-slate-300" : "text-slate-600"}">
-          <span>Usar Cristal de Proteção (${forgeFindItemCount("REFINEMENT_PROTECTION")} disponível(is))</span>
-          <input id="forge-protection" type="checkbox" ${forgeFindItemCount("REFINEMENT_PROTECTION") < 1 || preview.breakChance < 1 ? "disabled" : ""}>
-        </label>
+        <div class="flex items-center justify-between gap-2 text-xs ${forgeFindItemCount("REFINEMENT_SUCCESS_BOOST") > 0 ? "text-slate-300" : "text-slate-600"}">
+          <span>Pergaminho de Refinamento <span class="text-[10px] text-slate-500">(+10%)</span></span>
+          <button id="forge-success-boost" type="button" role="switch" aria-checked="false" class="forge-support-toggle" onclick="forgeToggleSupport('success-boost')" ${forgeFindItemCount("REFINEMENT_SUCCESS_BOOST") < 1 ? "disabled" : ""}>OFF</button>
+        </div>
+        <div class="flex items-center justify-between gap-2 text-xs mt-2 ${forgeFindItemCount("REFINEMENT_PROTECTION") > 0 && preview.breakChance > 0 ? "text-slate-300" : "text-slate-600"}">
+          <span>Cristal de Proteção <span class="text-[10px] text-slate-500">(${forgeFindItemCount("REFINEMENT_PROTECTION")} disponível(is))</span></span>
+          <button id="forge-protection" type="button" role="switch" aria-checked="false" class="forge-support-toggle" onclick="forgeToggleSupport('protection')" ${forgeFindItemCount("REFINEMENT_PROTECTION") < 1 || preview.breakChance < 1 ? "disabled" : ""}>OFF</button>
+        </div>
         ${preview.breakChance > 0 ? `<p class="text-[10px] text-red-300 mt-2">Atenção: esta tentativa tem ${preview.breakChance}% de chance de quebrar o equipamento.</p>` : ""}
       </div>
       <button id="forge-refine-btn" data-next-level="${nextLevel}" class="btn-primary w-full py-3 text-base font-bold ${!preview.canRefine ? "opacity-60" : ""}" onclick="forgeDoRefine('${equipmentId}', ${Boolean(preview.canRefine)})">🔨 Refinar para +${nextLevel} (<span id="forge-refine-button-rate">${preview.successRate}%</span>)</button>
@@ -211,8 +211,8 @@ async function forgeDoRefine(equipmentId, canRefine = true) {
   try {
     const result = await apiPost("/equipment/refine", {
       equipmentId,
-      successBoostItemCode: document.getElementById("forge-success-boost")?.checked ? "REFINEMENT_SUCCESS_BOOST" : null,
-      protectionItemCode: document.getElementById("forge-protection")?.checked ? "REFINEMENT_PROTECTION" : null
+      successBoostItemCode: document.getElementById("forge-success-boost")?.dataset.active === "true" ? "REFINEMENT_SUCCESS_BOOST" : null,
+      protectionItemCode: document.getElementById("forge-protection")?.dataset.active === "true" ? "REFINEMENT_PROTECTION" : null
     });
     showToast(result.success ? (result.message || "Refinamento bem-sucedido!") : (result.message || "Refinamento falhou!"), result.success ? "success" : "error");
     document.getElementById("forge-refine-overlay")?.remove();
@@ -231,10 +231,23 @@ function forgeSuccessRateClass(rate) {
   return rate >= 70 ? "text-green-400" : rate >= 40 ? "text-yellow-400" : "text-red-400";
 }
 
+function forgeToggleSupport(type) {
+  const id = type === "success-boost" ? "forge-success-boost" : "forge-protection";
+  const toggle = document.getElementById(id);
+  if (!toggle || toggle.disabled) return;
+  const active = toggle.dataset.active !== "true";
+  toggle.dataset.active = String(active);
+  toggle.textContent = active ? "ON" : "OFF";
+  toggle.setAttribute("aria-checked", String(active));
+  toggle.classList.toggle("is-active", active);
+  if (type === "success-boost") forgeUpdateRefineChance();
+}
+
 function forgeUpdateRefineChance(baseRate) {
   const boost = document.getElementById("forge-success-boost");
-  const rate = Math.min(100, Number(baseRate || 0) + (boost?.checked ? 10 : 0));
   const rateElement = document.getElementById("forge-success-rate");
+  const base = Number(baseRate ?? rateElement?.dataset.baseRate ?? 0);
+  const rate = Math.min(100, base + (boost?.dataset.active === "true" ? 10 : 0));
   const buttonRate = document.getElementById("forge-refine-button-rate");
   if (rateElement) {
     rateElement.textContent = `${rate}%`;
