@@ -4,8 +4,6 @@ public record AscendEquipmentPreviewResponse(
         EquipmentResponse equipment,
         int nextAscensionLevel,
         int requiredRefinementLevel,
-        int requiredRebirths,
-        int currentRebirths,
         int coreCost,
         int currentCores,
         int bitsCost,

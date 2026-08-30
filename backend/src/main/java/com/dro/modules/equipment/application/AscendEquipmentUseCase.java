@@ -65,10 +65,6 @@ public class AscendEquipmentUseCase {
         }
         int targetLevel = equipment.getAscensionLevel() + 1;
         EquipmentRules.validateAscensionTarget(targetLevel);
-        int requiredRebirths = EquipmentRules.ascensionRebirthRequirement(targetLevel);
-        if (digimon.getRebirthCount() < requiredRebirths) {
-            throw new UnprocessableException("O Digimon precisa ter pelo menos " + requiredRebirths + " Renascimento(s) para esta Ascensão");
-        }
         int bitsCost = EquipmentRules.ascensionBitsCost(targetLevel);
         if (digimon.getBits() < bitsCost) {
             throw new UnprocessableException("Bits insuficientes para realizar a Ascensão");
@@ -89,7 +85,6 @@ public class AscendEquipmentUseCase {
         return new AscendEquipmentResponse(
                 "Ascensão " + targetLevel + " realizada com sucesso!",
                 targetLevel,
-                requiredRebirths,
                 EquipmentResponse.from(equipment));
     }
 
@@ -107,7 +102,6 @@ public class AscendEquipmentUseCase {
 
         int currentLevel = equipment.getAscensionLevel();
         int nextLevel = currentLevel + 1;
-        int requiredRebirths = nextLevel <= EquipmentRules.MAX_ASCENSION_LEVEL ? EquipmentRules.ascensionRebirthRequirement(nextLevel) : 0;
         int coreCost = nextLevel <= EquipmentRules.MAX_ASCENSION_LEVEL ? EquipmentRules.ascensionCoreCost(nextLevel) : 0;
         int bitsCost = nextLevel <= EquipmentRules.MAX_ASCENSION_LEVEL ? EquipmentRules.ascensionBitsCost(nextLevel) : 0;
         int currentCores = inventoryRepository.findByPlayerIdAndItemType(playerId, ItemType.ASCENSION_CORE)
@@ -122,11 +116,10 @@ public class AscendEquipmentUseCase {
         if (currentLevel >= EquipmentRules.MAX_ASCENSION_LEVEL) restriction = "Este equipamento já atingiu o limite de Ascensão";
         else if (equipment.isEquipped()) restriction = "Desequipe o equipamento antes de ascender";
         else if (equipment.getRefinementLevel() < EquipmentRules.ASCENSION_REFINEMENT_REQUIREMENT) restriction = "Refinamento insuficiente: exige +" + EquipmentRules.ASCENSION_REFINEMENT_REQUIREMENT;
-        else if (digimon.getRebirthCount() < requiredRebirths) restriction = "O Digimon ativo precisa de pelo menos " + requiredRebirths + " Rebirth(s)";
         else if (digimon.getBits() < bitsCost) restriction = "Bits insuficientes";
         else if (currentCores < coreCost) restriction = "Núcleos de Ascensão insuficientes";
         return new AscendEquipmentPreviewResponse(EquipmentResponse.from(equipment), nextLevel,
-                EquipmentRules.ASCENSION_REFINEMENT_REQUIREMENT, requiredRebirths, digimon.getRebirthCount(),
+                EquipmentRules.ASCENSION_REFINEMENT_REQUIREMENT,
                 coreCost, currentCores, bitsCost, digimon.getBits(), beforeHp, afterHp,
                 beforeAttack, afterAttack, beforeDefense, afterDefense, restriction == null, restriction);
     }
