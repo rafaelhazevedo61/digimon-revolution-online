@@ -2,6 +2,7 @@ let shopData = null;
 const SHOP_MAX_BUY_QUANTITY = 999;
 
 let shopPlayerBits = 0;
+let shopModalStartingBits = 0;
 let shopModalUnitPrice = 0;
 let shopMode = "buy"; // "buy" or "sell"
 let shopInventoryItems = [];
@@ -260,7 +261,10 @@ function shopOpenBuy(code) {
   const isEquip = product.productType === "EQUIPMENT";
   const affordableQuantity = product.price > 0 ? Math.floor(shopPlayerBits / product.price) : SHOP_MAX_BUY_QUANTITY;
   const maxQty = isEquip ? 1 : Math.min(SHOP_MAX_BUY_QUANTITY, affordableQuantity);
-  const purchaseUnavailable = !isEquip && maxQty < 1;
+  const purchaseUnavailable = maxQty < 1 || shopPlayerBits < product.price;
+  const initialQuantity = purchaseUnavailable ? 0 : 1;
+  const initialTotal = initialQuantity * product.price;
+  shopModalStartingBits = shopPlayerBits;
   shopModalUnitPrice = product.price;
 
   const overlay = document.createElement("div");
@@ -281,21 +285,33 @@ function shopOpenBuy(code) {
           <span>Preço unitário</span>
           <strong class="shop-modal-value-buy">${shopFormatBits(product.price)}</strong>
         </div>
+        <div class="shop-modal-row">
+          <span>Bits atuais</span>
+          <strong id="shop-bits-current" class="shop-modal-value-buy">${shopFormatBits(shopModalStartingBits)}</strong>
+        </div>
         ${!isEquip ? `
         <div class="shop-modal-quantity">
           <label class="label" for="shop-qty">Quantidade</label>
           <div class="flex items-center gap-2">
             <button class="btn-sm btn-primary" onclick="shopQtyChange(-1)" aria-label="Diminuir quantidade">−</button>
-            <input type="number" id="shop-qty" class="input text-center" value="${purchaseUnavailable ? 0 : 1}" min="1" max="${maxQty}" style="width:4rem" oninput="shopQtyUpdate()" ${purchaseUnavailable ? "disabled" : ""}>
+            <input type="number" id="shop-qty" class="input text-center" value="${initialQuantity}" min="1" max="${maxQty}" style="width:4rem" oninput="shopQtyUpdate()" ${purchaseUnavailable ? "disabled" : ""}>
             <button class="btn-sm btn-primary" onclick="shopQtyChange(1)" aria-label="Aumentar quantidade" ${purchaseUnavailable ? "disabled" : ""}>+</button>
             <button class="btn-sm btn-primary" onclick="shopBuyMax()" aria-label="Comprar quantidade máxima" title="Comprar máximo" ${purchaseUnavailable ? "disabled" : ""}>MAX</button>
           </div>
           ${purchaseUnavailable ? '<p class="text-xs text-red-400 mt-2">Bits insuficientes para comprar este recurso.</p>' : ""}
         </div>
         ` : ""}
+        <div class="shop-modal-row">
+          <span>Bits a debitar</span>
+          <strong id="shop-bits-debit" class="shop-modal-value-buy">${shopFormatBits(initialTotal)}</strong>
+        </div>
+        <div class="shop-modal-row">
+          <span>Saldo após a transação</span>
+          <strong id="shop-bits-remaining" class="shop-modal-value-buy">${shopFormatBits(Math.max(0, shopModalStartingBits - initialTotal))}</strong>
+        </div>
         <div class="shop-modal-total shop-modal-total-buy">
           <span>Total</span>
-          <strong id="shop-total">${shopFormatBits(product.price)}</strong>
+          <strong id="shop-total">${shopFormatBits(initialTotal)}</strong>
         </div>
       </div>
       <div class="shop-modal-actions">
@@ -341,8 +357,14 @@ function shopQtyUpdate() {
   const min = parseInt(input.min, 10) || 1;
   const max = Math.min(SHOP_MAX_BUY_QUANTITY, parseInt(input.max, 10) || SHOP_MAX_BUY_QUANTITY);
   const qty = Math.max(min, Math.min(max, parseInt(input.value, 10) || min));
+  const total = qty * shopModalUnitPrice;
   input.value = qty;
-  totalEl.textContent = shopFormatBits(qty * shopModalUnitPrice);
+  totalEl.textContent = shopFormatBits(total);
+
+  const debitEl = document.getElementById("shop-bits-debit");
+  const remainingEl = document.getElementById("shop-bits-remaining");
+  if (debitEl) debitEl.textContent = shopFormatBits(total);
+  if (remainingEl) remainingEl.textContent = shopFormatBits(Math.max(0, shopModalStartingBits - total));
 }
 
 async function shopConfirmBuy(code, unitPrice) {
