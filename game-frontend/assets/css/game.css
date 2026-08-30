@@ -665,3 +665,15 @@ body {
   max-height: min(85vh, 42rem);
   overflow-y: auto;
 }
+
+/* ===================== Detalhe de equipamento no Dashboard ===================== */
+@media (max-width: 640px) {
+  .dashboard-equipment-detail-card {
+    max-height: 96vh !important;
+    min-height: 90vh;
+  }
+
+  .dashboard-equipment-alternatives {
+    max-height: calc(96vh - 22rem) !important;
+  }
+}

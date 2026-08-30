@@ -56,7 +56,7 @@ public class EquipmentController {
         int safePage = Math.max(0, page);
         int safeSize = Math.min(Math.max(1, size), 50);
         String query = search == null ? "" : search.toLowerCase(Locale.ROOT).trim();
-        List<EquipmentResponse> filtered = equipmentRepository.findByPlayerId(playerId).stream()
+        List<EquipmentResponse> filtered = equipmentRepository.findByPlayerIdAndEquippedFalse(playerId).stream()
                 .map(EquipmentResponse::from)
                 .filter(equipment -> (query.isEmpty() || String.join(" ", String.valueOf(equipment.name()), String.valueOf(equipment.setCode()), String.valueOf(equipment.slot()), String.valueOf(equipment.rarity()), String.valueOf(equipment.tier()), String.valueOf(equipment.refinementLevel())).toLowerCase(Locale.ROOT).contains(query)))
                 .filter(equipment -> "ALL".equalsIgnoreCase(slot) || String.valueOf(equipment.slot()).equalsIgnoreCase(slot))

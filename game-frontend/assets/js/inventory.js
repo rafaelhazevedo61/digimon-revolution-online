@@ -1099,6 +1099,7 @@ async function invUnequip(equipmentId) {
     await apiPost("/equipment/unequip", { equipmentId: equipmentId });
     showToast("Equipamento removido!");
     await invReloadEquipment();
+    if (typeof renderDashboardPage === "function") renderDashboardPage();
   } catch (err) {
     showToast(err.message, "error");
   }
@@ -1117,7 +1118,8 @@ async function invReloadEquipment() {
 // ==================== REFINE MODAL ====================
 
 async function invShowRefine(equipmentId) {
-  const eq = invEquipments.find(e => e.id === equipmentId);
+  const eq = invEquipments.find(e => e.id === equipmentId)
+    || (typeof dashEquippedItems !== "undefined" ? dashEquippedItems.find(e => e.id === equipmentId) : null);
   if (!eq) return;
 
   let preview = null;
@@ -1209,6 +1211,7 @@ async function invDoRefine(equipmentId) {
     if (overlay) overlay.remove();
 
     await invReloadEquipment();
+    if (typeof renderDashboardPage === "function") renderDashboardPage();
   } catch (err) {
     showToast(err.message, "error");
     if (btn) { btn.disabled = false; btn.textContent = "🔨 Refinar"; }
