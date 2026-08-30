@@ -25,6 +25,7 @@ public class EquipmentRules {
     }
 
     public static void validateAscensionEquipRequirement(Equipment equipment, Digimon digimon) {
+        if (equipment.getAscensionLevel() <= 0) return;
         int required = ascensionRebirthRequirement(equipment.getAscensionLevel());
         if (digimon.getRebirthCount() < required) {
             throw new UnprocessableException("Este equipamento exige um Digimon com pelo menos " + required + " Renascimento(s)");
