@@ -580,33 +580,74 @@ function startMissionsPageTimers() {
   }, 1000);
 }
 
+function toggleMissionAreaGroup(groupId, button) {
+  const content = document.getElementById(groupId);
+  if (!content || !button) return;
+  const expanded = button.getAttribute("aria-expanded") === "true";
+  content.hidden = expanded;
+  button.setAttribute("aria-expanded", String(!expanded));
+  const icon = button.querySelector(".mission-area-group-toggle-icon");
+  if (icon) icon.textContent = expanded ? "+" : "−";
+}
+
+function renderMissionAreaGroup({ id, title, description, areas, expanded }) {
+  if (areas.length === 0) return "";
+  return `
+    <section class="mission-area-group">
+      <button type="button" class="mission-area-group-header" aria-expanded="${expanded}" aria-controls="${id}" onclick="toggleMissionAreaGroup('${id}', this)">
+        <span class="mission-area-group-heading"><span class="mission-area-group-dot"></span><span><span class="mission-area-group-title">${title}</span><span class="mission-area-group-description">${description}</span></span></span>
+        <span class="mission-area-group-toggle-icon" aria-hidden="true">${expanded ? "−" : "+"}</span>
+      </button>
+      <div id="${id}" class="mission-area-group-content" ${expanded ? "" : "hidden"}>${areas.map(renderMissionAreaCard).join("")}</div>
+    </section>
+  `;
+}
+
+function renderMissionAreaCard(a, index) {
+  const info = AREA_INFO[a.area] || { name: a.area, emoji: "📍" };
+  const locked = !a.unlocked;
+  const progressionNumber = areaProgressionRank(a.area) >= 0 ? areaProgressionRank(a.area) + 1 : index + 1;
+  const areaNumber = String(progressionNumber).padStart(2, "0");
+
+  return `
+    <article class="mission-area-card ${locked ? "mission-area-card-locked" : "mission-area-card-open"}" ${locked ? "" : `onclick="navigateTo('mission-area', { area: '${a.area}' })" role="button" tabindex="0" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigateTo('mission-area', { area: '${a.area}' }); }"`}>
+      <div class="mission-area-icon" aria-hidden="true">${info.emoji}</div>
+      <div class="mission-area-main">
+        <p class="mission-area-label">Área ${areaNumber}</p>
+        <h3 class="mission-area-name">${info.name}</h3>
+        <p class="mission-area-requirement">Estágio mínimo · ${formatStage(a.requiredStage)}</p>
+      </div>
+      <div class="mission-area-status">${locked ? `<span class="mission-area-lock" aria-hidden="true">🔒</span><span>Bloqueada</span>` : `<span class="mission-area-access-dot"></span><span>Acessível</span>`}<span class="mission-area-arrow" aria-hidden="true">›</span></div>
+    </article>
+  `;
+}
+
 function renderAreaCards(areas) {
   const container = document.getElementById("areas-list");
-
   const sorted = [...areas].sort((a, b) => {
-    const areaDifference = areaProgressionRank(b.area) - areaProgressionRank(a.area);
+    const areaDifference = areaProgressionRank(a.area) - areaProgressionRank(b.area);
     if (areaDifference !== 0) return areaDifference;
-    return stageProgressionRank(b.requiredStage) - stageProgressionRank(a.requiredStage);
+    return stageProgressionRank(a.requiredStage) - stageProgressionRank(b.requiredStage);
   });
+  const available = sorted.filter(area => area.unlocked);
+  const locked = sorted.filter(area => !area.unlocked);
 
-  container.innerHTML = sorted.map((a, index) => {
-    const info = AREA_INFO[a.area] || { name: a.area, emoji: "📍" };
-    const locked = !a.unlocked;
-    const progressionNumber = areaProgressionRank(a.area) >= 0 ? areaProgressionRank(a.area) + 1 : index + 1;
-    const zoneNumber = String(progressionNumber).padStart(2, "0");
-
-    return `
-      <article class="mission-area-card ${locked ? "mission-area-card-locked" : "mission-area-card-open"}" ${locked ? "" : `onclick="navigateTo('mission-area', { area: '${a.area}' })" role="button" tabindex="0" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigateTo('mission-area', { area: '${a.area}' }); }"`}>
-        <div class="mission-area-icon" aria-hidden="true">${info.emoji}</div>
-        <div class="mission-area-main">
-          <p class="mission-area-label">Área ${zoneNumber}</p>
-          <h3 class="mission-area-name">${info.name}</h3>
-          <p class="mission-area-requirement">Estágio mínimo · ${formatStage(a.requiredStage)}</p>
-        </div>
-        <div class="mission-area-status">${locked ? `<span class="mission-area-lock" aria-hidden="true">🔒</span><span>Bloqueada</span>` : `<span class="mission-area-access-dot"></span><span>Acessível</span>`}<span class="mission-area-arrow" aria-hidden="true">›</span></div>
-      </article>
-    `;
-  }).join("");
+  container.innerHTML = [
+    renderMissionAreaGroup({
+      id: "mission-areas-available",
+      title: "Áreas disponíveis",
+      description: "Acessíveis para o Digimon ativo",
+      areas: available,
+      expanded: true
+    }),
+    renderMissionAreaGroup({
+      id: "mission-areas-locked",
+      title: "Áreas bloqueadas",
+      description: "Desbloqueie com um estágio mais avançado",
+      areas: locked,
+      expanded: available.length === 0
+    })
+  ].join("");
 }
 
 

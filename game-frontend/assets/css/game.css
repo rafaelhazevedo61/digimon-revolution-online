@@ -1155,3 +1155,25 @@ body {
   .missions-active-card, .mission-area-card-open, .mission-brief-card { transition: none; }
   .missions-active-card:hover, .mission-area-card-open:hover, .mission-brief-card:hover { transform: none; }
 }
+
+
+/* ===================== Grupos de exploração ===================== */
+.mission-area-group { margin-top: 0.7rem; padding: 0.55rem; border: 1px solid rgba(51, 65, 85, 0.68); border-radius: 0.85rem; background: rgba(15, 23, 42, 0.38); }
+.mission-area-group:first-child { margin-top: 0; border-color: rgba(34, 211, 238, 0.24); }
+.mission-area-group-header { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.48rem 0.4rem 0.58rem; border: 0; border-bottom: 1px solid rgba(51, 65, 85, 0.55); background: transparent; color: inherit; text-align: left; cursor: pointer; }
+.mission-area-group-header:hover { color: #f8fafc; }
+.mission-area-group-header:focus-visible { border-radius: 0.45rem; outline: 2px solid rgba(103, 232, 249, 0.72); outline-offset: 2px; }
+.mission-area-group-heading { display: flex; min-width: 0; align-items: flex-start; gap: 0.48rem; }
+.mission-area-group-dot { width: 0.45rem; height: 0.45rem; flex: 0 0 auto; margin-top: 0.3rem; border-radius: 9999px; background: #4ade80; box-shadow: 0 0 9px rgba(74, 222, 128, 0.62); }
+.mission-area-group:last-child .mission-area-group-dot { background: #64748b; box-shadow: none; }
+.mission-area-group-title { display: block; color: #e2e8f0; font-size: 0.7rem; font-weight: 850; letter-spacing: 0.04em; line-height: 1.2; }
+.mission-area-group-description { display: block; margin-top: 0.18rem; color: #64748b; font-size: 0.58rem; line-height: 1.25; }
+.mission-area-group-toggle-icon { display: flex; width: 1.35rem; height: 1.35rem; flex: 0 0 auto; align-items: center; justify-content: center; border: 1px solid rgba(100, 116, 139, 0.42); border-radius: 0.4rem; color: #94a3b8; font-size: 1rem; line-height: 1; }
+.mission-area-group:first-child .mission-area-group-toggle-icon { border-color: rgba(34, 211, 238, 0.34); color: #67e8f9; }
+.mission-area-group-content { display: grid; gap: 0.55rem; padding-top: 0.55rem; }
+.mission-area-group-content[hidden] { display: none; }
+.mission-area-group-content .mission-area-card { min-height: 4.8rem; }
+@media (max-width: 23rem) {
+  .mission-area-group { padding: 0.42rem; }
+  .mission-area-group-description { max-width: 13rem; }
+}
