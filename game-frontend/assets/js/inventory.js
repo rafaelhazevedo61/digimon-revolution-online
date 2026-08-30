@@ -1179,9 +1179,8 @@ async function invShowRefine(equipmentId) {
         </div>
       </div>
 
-      <button id="refine-btn" class="btn-primary w-full py-3 text-base font-bold"
-        ${!preview.canRefine ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}
-        onclick="invDoRefine('${equipmentId}')">
+      <button id="refine-btn" class="btn-primary w-full py-3 text-base font-bold ${!preview.canRefine ? 'opacity-60' : ''}"
+        onclick="invDoRefine('${equipmentId}', ${Boolean(preview.canRefine)})">
         🔨 Refinar para +${nextLevel} (${preview.successRate}%)
       </button>
       ${!preview.canRefine ? `<p class="text-red-400 text-xs text-center mt-2">Recursos insuficientes</p>` : ''}
@@ -1191,7 +1190,19 @@ async function invShowRefine(equipmentId) {
   document.body.appendChild(overlay);
 }
 
-async function invDoRefine(equipmentId) {
+async function invDoRefine(equipmentId, canRefine = true) {
+  if (!canRefine) {
+    const preview = await apiGet(`/equipment/${equipmentId}/refine-preview`).catch(() => null);
+    if (preview) {
+      const missing = [];
+      if (preview.currentBits < preview.costBits) missing.push(`Bits: ${preview.currentBits}/${preview.costBits}`);
+      if (preview.currentStones < preview.costStones) missing.push(`Pedras: ${preview.currentStones}/${preview.costStones}`);
+      showToast(missing.length ? `Recursos insuficientes — ${missing.join(" · ")}` : "Este equipamento não pode ser refinado agora.", "error");
+    } else {
+      showToast("Não foi possível verificar os recursos para o refinamento.", "error");
+    }
+    return;
+  }
   const btn = document.getElementById("refine-btn");
   if (btn) { btn.disabled = true; btn.textContent = "Refinando..."; }
 
