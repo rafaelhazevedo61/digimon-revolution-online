@@ -150,6 +150,10 @@ public class RebirthUseCase {
         if (hasRunningMission) {
             throw new ConflictException("Digimon cannot perform Rebirth while in a running mission");
         }
+        boolean hasPendingMissionReward = missionInstanceRepository.existsByDigimonIdAndStatus(digimon.getId(), MissionStatus.COMPLETED);
+        if (hasPendingMissionReward) {
+            throw new ConflictException("Resgate as recompensas das missões concluídas antes de realizar o Rebirth");
+        }
     }
 
     private void validateBits(Player player, int bitsCost) {

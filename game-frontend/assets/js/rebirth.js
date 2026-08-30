@@ -13,10 +13,14 @@ async function renderRebirthPage() {
 
   app.innerHTML = `
     <div class="page-container">
-      <div class="flex items-center gap-2 mb-4">
-        <button class="btn-sm" style="background:#1e293b;color:#94a3b8" onclick="navigateTo('dashboard')">&larr; Voltar</button>
-        <h2 class="text-lg font-bold">Renascimento</h2>
-      </div>
+      <header class="progression-page-header mb-4">
+        <div>
+          <p class="progression-eyebrow progression-eyebrow-amber">Sistema de progressão</p>
+          <h2 class="progression-page-title">Renascimento</h2>
+          <p class="progression-page-subtitle">Recomece com mais potencial e preserve o legado do seu Digimon.</p>
+        </div>
+        <button class="progression-back-button" onclick="navigateTo('dashboard')"><span aria-hidden="true">←</span> Voltar</button>
+      </header>
       <div id="rebirth-content">
         <div class="card animate-pulse"><div class="h-32"></div></div>
       </div>
@@ -51,6 +55,7 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
   const p = rebirthPreview;
   const availableCodeInfinite = Math.max(0, Number(p.currentCodeInfinite ?? 0));
   const rarityPreservationQuantity = Math.max(0, Number(p.rarityPreservationItemQuantity ?? 0));
+  const pendingCompletedMissionCount = Math.max(0, Number(p.pendingCompletedMissionCount ?? 0));
   const codeInfiniteDisabled = availableCodeInfinite <= 0 ? "disabled" : "";
   const codeInfiniteMax = Math.min(100, availableCodeInfinite);
 
@@ -61,9 +66,10 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
   const currentRarityLabel = rarityMap[currentRarity] || currentRarity || "Não informada";
 
   let html = `
-    <div class="card mb-4">
+    <section class="progression-hero progression-hero-amber mb-4">
+      <div class="progression-hero-topline"><span class="progression-hero-kicker">Digimon selecionado</span><span class="progression-hero-status">Ciclo atual</span></div>
       <div class="flex items-center gap-3">
-        ${renderDigimonVisual(digimon.imageUrl, digimon.stage, "w-14 h-14", "text-4xl")}
+        <div class="progression-hero-visual">${renderDigimonVisual(digimon.imageUrl, digimon.stage, "w-14 h-14", "text-4xl")}</div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <h3 class="font-bold text-lg truncate">${escapeHtml(digimon.name)}</h3>
@@ -77,26 +83,26 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
           ${p.currentRebirthCount > 0 ? `<p class="text-xs text-amber-400 mt-1">🔄 Renascimento x${p.currentRebirthCount}</p>` : ""}
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="card mb-4" style="border-color:#854d0e">
-      <h3 class="font-bold text-amber-400 mb-3">🔄 Renascimento #${p.newRebirthCount}</h3>
+    <section class="rebirth-panel mb-4">
+      <div class="rebirth-panel-heading"><div><p class="progression-eyebrow progression-eyebrow-amber">Ritual de renascimento</p><h3 class="progression-panel-title">Renascimento #${p.newRebirthCount}</h3></div><span class="rebirth-level-badge">+${Math.round((p.statMultiplier - 1) * 100)}% stats</span></div>
       <p class="text-xs text-slate-400 mb-4">O Digimon renasce como um novo ovo, mantendo bônus de IV e stats acumulados.</p>
 
       <div class="mb-4">
-        <p class="text-xs font-bold text-slate-300 mb-2">Custo:</p>
+        <div class="rebirth-block-heading"><p class="rebirth-block-title">Custo do ritual</p><span class="rebirth-block-note">Recursos necessários</span></div>
         <div class="grid grid-cols-3 gap-2">
-          <div class="card-sm text-center">
+          <div class="rebirth-cost-card">
             <p class="text-xs text-slate-500">Bits</p>
             <p class="font-bold ${p.currentBits >= p.costBits ? 'text-yellow-400' : 'text-red-400'}">${p.costBits.toLocaleString()}</p>
             <p class="text-xs ${p.currentBits >= p.costBits ? 'text-slate-500' : 'text-red-400'}">Você tem: ${p.currentBits.toLocaleString()}</p>
           </div>
-          <div class="card-sm text-center">
+          <div class="rebirth-cost-card">
             <p class="text-xs text-slate-500">Data Core</p>
             <p class="font-bold ${p.currentDataCore >= p.costDataCore ? 'text-purple-400' : 'text-red-400'}">${p.costDataCore}</p>
             <p class="text-xs ${p.currentDataCore >= p.costDataCore ? 'text-slate-500' : 'text-red-400'}">Você tem: ${p.currentDataCore}</p>
           </div>
-          <div class="card-sm text-center">
+          <div class="rebirth-cost-card">
             <p class="text-xs text-slate-500">Dados Digitais</p>
             <p class="font-bold ${p.currentDigitalData >= p.costDigitalData ? 'text-cyan-400' : 'text-red-400'}">${p.costDigitalData}</p>
             <p class="text-xs text-slate-500">Você tem: ${p.currentDigitalData}</p>
@@ -105,16 +111,20 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
       </div>
 
       <div class="mb-4">
-        <p class="text-xs font-bold text-slate-300 mb-2">Bônus de Stats:</p>
-        <div class="card-sm text-center">
+        <div class="rebirth-block-heading"><p class="rebirth-block-title">Bônus de atributos</p><span class="rebirth-block-note">Impacto permanente</span></div>
+        <div class="rebirth-bonus-card text-center">
           <p class="text-xs text-slate-500">Multiplicador</p>
           <p class="font-bold text-green-400">x${p.statMultiplier.toFixed(2)}</p>
           <p class="text-xs text-slate-500">+${Math.round((p.statMultiplier - 1) * 100)}% em HP, ATK e DEF</p>
         </div>
       </div>
 
-      <div class="mb-4">
-        <div class="flex justify-between items-center mb-2">
+      <div class="rebirth-code-section mb-4">
+        <div class="rebirth-block-heading">
+          <div><p class="rebirth-block-title">Refinar IV</p><p class="rebirth-block-note mt-1">Invista Código Infinito nos atributos</p></div>
+          <span class="rebirth-code-available">${availableCodeInfinite} disponíveis</span>
+        </div>
+        <div class="flex justify-between items-center mb-2 hidden">
           <p class="text-xs font-bold text-slate-300">Refinar IV com Código Infinito</p>
           <span class="text-xs font-bold text-violet-300">Disponíveis: ${availableCodeInfinite}</span>
         </div>
@@ -133,7 +143,7 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
           ${rebirthCodeAttributeCard("defense", "DEF", "blue", p.defenseIvRange.min, codeInfiniteDisabled, codeInfiniteMax)}
         </div>
 
-        <div class="card-sm mt-3 text-center">
+        <div class="rebirth-code-summary mt-3 text-center">
           <p id="code-allocation-summary" class="text-xs text-slate-400">Nenhum Código Infinito será usado</p>
           <p class="text-xs text-slate-500 mt-1">Restantes: <span id="code-infinite-remaining" class="font-bold text-violet-300">${availableCodeInfinite}</span></p>
         </div>
@@ -141,19 +151,19 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
       </div>
 
       <div class="mb-4">
-        <p class="text-xs font-bold text-slate-300 mb-2">IVs após Renascer (mín — máx):</p>
+        <div class="rebirth-block-heading"><p class="rebirth-block-title">IVs após renascer</p><span class="rebirth-block-note">mínimo — máximo</span></div>
         <div class="grid grid-cols-3 gap-2">
-          <div class="card-sm text-center">
+          <div class="rebirth-result-card text-center">
             <p class="text-xs text-slate-500">HP</p>
             <p class="text-sm font-bold text-red-400"><span id="rebirth-hp-min">${p.hpIvRange.min}</span> — ${p.hpIvRange.max}</p>
             <p class="text-xs text-slate-600">Atual: ${digimon.ivHp}</p>
           </div>
-          <div class="card-sm text-center">
+          <div class="rebirth-result-card text-center">
             <p class="text-xs text-slate-500">ATK</p>
             <p class="text-sm font-bold text-orange-400"><span id="rebirth-attack-min">${p.attackIvRange.min}</span> — ${p.attackIvRange.max}</p>
             <p class="text-xs text-slate-600">Atual: ${digimon.ivAttack}</p>
           </div>
-          <div class="card-sm text-center">
+          <div class="rebirth-result-card text-center">
             <p class="text-xs text-slate-500">DEF</p>
             <p class="text-sm font-bold text-blue-400"><span id="rebirth-defense-min">${p.defenseIvRange.min}</span> — ${p.defenseIvRange.max}</p>
             <p class="text-xs text-slate-600">Atual: ${digimon.ivDefense}</p>
@@ -172,7 +182,7 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
     </div>
 
     <div class="mb-4">
-      <label class="card-sm flex items-start gap-3 mb-3 cursor-pointer ${rarityPreservationQuantity === 0 ? "opacity-60" : ""}">
+      <label class="card-sm rebirth-preserve-card flex items-start gap-3 mb-3 cursor-pointer ${rarityPreservationQuantity === 0 ? "opacity-60" : ""}">
         <input id="rebirth-preserve-rarity" type="checkbox" class="mt-1 h-4 w-4 accent-cyan-500" ${rarityPreservationQuantity === 0 ? "disabled" : ""} onchange="rebirthPreserveRarity = this.checked">
         <span class="flex-1">
           <span class="block text-sm font-bold text-cyan-300">Preservar raridade</span>
@@ -182,12 +192,24 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
         </span>
       </label>
       ${equippedEquipmentCount > 0 ? `
-        <div class="rounded-lg border border-red-900/70 bg-red-950/30 p-3 mb-3 text-sm text-red-200">
+        <div class="rebirth-block-alert">
           <p class="font-semibold">Renascimento bloqueado</p>
           <p class="text-xs text-red-200/80 mt-1">Este Digimon possui ${equippedEquipmentCount} equipamento(s) equipado(s). Desequipe todos antes de realizar o Renascimento para não sacrificá-los junto com o Digimon.</p>
         </div>
+      ` : ""}
+      ${pendingCompletedMissionCount > 0 ? `
+        <div class="rebirth-block-alert">
+          <p class="font-semibold">Renascimento bloqueado</p>
+          <p class="text-xs text-red-200/80 mt-1">Este Digimon possui ${pendingCompletedMissionCount} missão${pendingCompletedMissionCount === 1 ? "" : "ões"} concluída${pendingCompletedMissionCount === 1 ? "" : "s"} com recompensa pendente. Resgate ${pendingCompletedMissionCount === 1 ? "a recompensa" : "as recompensas"} antes de realizar o Renascimento.</p>
+        </div>
+      ` : ""}
+      ${equippedEquipmentCount > 0 ? `
         <button class="btn-primary w-full opacity-50 cursor-not-allowed py-3" disabled>
           Desequipe os equipamentos para continuar
+        </button>
+      ` : pendingCompletedMissionCount > 0 ? `
+        <button class="btn-primary w-full opacity-50 cursor-not-allowed py-3" disabled>
+          Resgate as missões antes de continuar
         </button>
       ` : p.eligible ? `
         <button class="btn-primary w-full text-lg py-3" id="rebirth-btn" onclick="rebirthExecute()">

@@ -63,6 +63,9 @@ public enum ItemType {
     // Material de refinamento
     REFINEMENT_STONE,
 
+    // Material de Ascensão de equipamentos
+    ASCENSION_CORE,
+
     // Reroll de raridade do Digimon
     RARITY_REROLL,
 

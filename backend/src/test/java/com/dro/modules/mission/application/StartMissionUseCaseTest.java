@@ -18,6 +18,7 @@ import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.config.GameplayConfig;
+import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.security.JwtSettings;
 import com.dro.shared.security.JwtTokenCodec;
@@ -118,6 +119,19 @@ class StartMissionUseCaseTest {
     }
 
     @Test
+    void blocksHighStageMissionForBabyActiveDigimonEvenWhenAnotherDigimonIsMega() {
+        Digimon activeBaby = digimonWithEnergy(10, Stage.BABY);
+        stubMissionStart(activeBaby);
+        when(missionDefinitionRepository.findById("mission-1"))
+                .thenReturn(Optional.of(missionDefinition(Area.INFINITY_MOUNTAIN, Stage.MEGA)));
+        assertThrows(BadRequestException.class, () -> useCase.execute(token, "mission-1"));
+
+        verify(digimonRepository, never()).findByPlayerId(playerId);
+        verify(digimonRepository, never()).save(activeBaby);
+        verify(missionInstanceRepository, never()).save(any(MissionInstance.class));
+    }
+
+    @Test
     void keepsMissionRulesActiveWhenEnergyConsumptionIsDisabled() {
         Digimon digimon = digimonWithEnergy(0);
         stubMissionStart(digimon);
@@ -137,19 +151,20 @@ class StartMissionUseCaseTest {
     private void stubMissionStart(Digimon digimon) {
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
         when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
-        when(digimonRepository.findByPlayerId(playerId)).thenReturn(java.util.List.of(digimon));
         when(missionDefinitionRepository.findById("mission-1")).thenReturn(Optional.of(missionDefinition()));
-        when(missionInstanceRepository.existsByDigimonIdAndStatus(digimonId, MissionStatus.RUNNING))
-                .thenReturn(false);
     }
 
     private Digimon digimonWithEnergy(int energy) {
+        return digimonWithEnergy(energy, Stage.ROOKIE);
+    }
+
+    private Digimon digimonWithEnergy(int energy, Stage stage) {
         return Digimon.builder()
                 .id(digimonId)
                 .playerId(playerId)
                 .name("Agumon")
                 .type("FIRE")
-                .stage(Stage.ROOKIE)
+                .stage(stage)
                 .level(10)
                 .experience(0)
                 .hp(100)
@@ -173,12 +188,16 @@ class StartMissionUseCaseTest {
     }
 
     private MissionDefinitionEntity missionDefinition() {
+        return missionDefinition(Area.NATIVE_FOREST, Stage.BABY);
+    }
+
+    private MissionDefinitionEntity missionDefinition(Area area, Stage requiredStage) {
         return MissionDefinitionEntity.builder()
                 .id("mission-1")
                 .name("Test Mission")
                 .description("Mission used by unit tests")
-                .area(Area.NATIVE_FOREST)
-                .requiredStage(Stage.BABY)
+                .area(area)
+                .requiredStage(requiredStage)
                 .requiredLevel(1)
                 .baseXp(10)
                 .energyCost(3)

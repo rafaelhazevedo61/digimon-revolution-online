@@ -170,6 +170,7 @@ public final class EventRewardMessageText {
                 case EVOLUTION_MATERIAL -> "Material de evolução";
                 case LOOT_CHEST -> "Baú temático";
                 case REFINEMENT_STONE -> "Pedra de refinamento";
+                case ASCENSION_CORE -> "Núcleo de Ascensão";
                 case RARITY_REROLL -> "Dado de Raridade";
                 case RARITY_PRESERVATION -> "Cristal de Preservação de Raridade";
                 case COLLECTION_DIGIVICE -> "Digivice de Registro";
