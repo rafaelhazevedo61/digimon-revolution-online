@@ -606,6 +606,9 @@ function showEquipDetailModal(equipmentId) {
   const setLabel = typeof invSetLabel === "function" ? invSetLabel(eq.setCode) : (eq.setCode || "");
   const setBadge = typeof invSetBadge === "function" ? invSetBadge(eq.setCode) : "common";
   const rarityLabel = { COMMON: "Common", RARE: "Rare", EPIC: "Epic", LEGENDARY: "Legendary" };
+  const ascensionLevel = Number(eq.ascensionLevel) || 0;
+  const ascensionBonus = { 0: "Nenhum", 1: "+30%", 2: "+50%", 3: "+100%" }[ascensionLevel];
+  const requiredRebirths = [0, 1, 10, 20][ascensionLevel] || 0;
 
   const overlay = document.createElement("div");
   overlay.id = "dashboard-equipment-detail-overlay";
@@ -614,35 +617,32 @@ function showEquipDetailModal(equipmentId) {
 
   overlay.innerHTML = `
     <div class="card dashboard-equipment-detail-card" style="max-width:560px;width:100%;max-height:92vh;overflow:hidden;border-radius:1rem;margin:0 auto;">
-      <div class="text-center mb-3">
-        <div class="text-3xl mb-1">${emoji}</div>
-        <h3 class="text-lg font-bold">${escapeHtml(eq.name)}${refLabel}</h3>
-        <p class="text-xs text-slate-400 mb-2">${slotName[eq.slot] || eq.slot}</p>
-        <div class="flex gap-1 justify-center flex-wrap">
-          ${eq.setCode ? `<span class="badge badge-${setBadge}">${escapeHtml(setLabel)}</span>` : ''}
-          <span class="badge badge-${eq.rarity ? eq.rarity.toLowerCase() : 'common'}">${rarityLabel[eq.rarity] || eq.rarity}</span>
-          <span class="badge badge-common">T${eq.tier || '?'}</span>
-        </div>
+      <div class="flex items-center gap-3 mb-4">
+        <div class="text-3xl shrink-0">${emoji}</div>
+        <div class="min-w-0"><h3 class="text-lg font-bold truncate">${escapeHtml(eq.name)}${refLabel}</h3><p class="text-xs text-slate-400 mt-1">${slotName[eq.slot] || eq.slot}</p></div>
       </div>
 
       <div class="card-sm mb-3">
-        <div class="flex items-center justify-between mb-2">
-          <p class="text-xs text-slate-400">Atributos</p>
-          <p class="text-[10px] text-slate-500">Base <span class="mx-1">→</span> Efetivo</p>
-        </div>
+        <p class="text-xs text-slate-400 mb-2">Atributos finais</p>
         <div class="grid grid-cols-3 gap-2 text-center text-xs">
-          ${eq.bonusHp > 0 ? `<div><span class="text-slate-400">HP</span><br><span class="text-red-400">${eq.bonusHp}</span> <span class="text-slate-500">→</span> <strong class="text-red-300">${eq.effectiveBonusHp}</strong></div>` : ''}
-          ${eq.bonusAttack > 0 ? `<div><span class="text-slate-400">ATK</span><br><span class="text-orange-400">${eq.bonusAttack}</span> <span class="text-slate-500">→</span> <strong class="text-orange-300">${eq.effectiveBonusAttack}</strong></div>` : ''}
-          ${eq.bonusDefense > 0 ? `<div><span class="text-slate-400">DEF</span><br><span class="text-blue-400">${eq.bonusDefense}</span> <span class="text-slate-500">→</span> <strong class="text-blue-300">${eq.effectiveBonusDefense}</strong></div>` : ''}
+          ${eq.effectiveBonusHp > 0 ? `<div><span class="text-slate-400">HP</span><br><strong class="text-red-300 text-base">${eq.effectiveBonusHp}</strong></div>` : ''}
+          ${eq.effectiveBonusAttack > 0 ? `<div><span class="text-slate-400">ATK</span><br><strong class="text-orange-300 text-base">${eq.effectiveBonusAttack}</strong></div>` : ''}
+          ${eq.effectiveBonusDefense > 0 ? `<div><span class="text-slate-400">DEF</span><br><strong class="text-blue-300 text-base">${eq.effectiveBonusDefense}</strong></div>` : ''}
         </div>
       </div>
 
-      ${eq.refinementLevel > 0 ? `
-      <div class="card-sm mb-3">
-        <p class="text-xs text-slate-400 mb-1">Refinamento</p>
-        <p class="text-center text-sm font-bold text-yellow-400">+${eq.refinementLevel} (+${eq.refinementLevel * 2} em cada stat)</p>
-      </div>
-      ` : ''}
+      <details class="card-sm mb-3 group">
+        <summary class="cursor-pointer list-none flex items-center justify-between text-xs text-slate-400"><span>Detalhes do equipamento</span><span class="text-slate-500 group-open:rotate-180 transition-transform">⌄</span></summary>
+        <div class="mt-3 pt-3 border-t border-slate-700/70 grid grid-cols-2 gap-2 text-xs">
+          <div><span class="text-slate-500">Tier</span><p class="font-semibold">T${eq.tier || '?'}</p></div>
+          <div><span class="text-slate-500">Raridade</span><p class="font-semibold">${rarityLabel[eq.rarity] || eq.rarity}</p></div>
+          <div><span class="text-slate-500">Conjunto</span><p class="font-semibold">${eq.setCode ? escapeHtml(setLabel) : 'Sem conjunto'}</p></div>
+          <div><span class="text-slate-500">Refinamento</span><p class="font-semibold text-yellow-400">+${eq.refinementLevel}</p></div>
+          <div><span class="text-slate-500">Ascensão</span><p class="font-semibold text-amber-300">${ascensionLevel} (${ascensionBonus})</p></div>
+          <div><span class="text-slate-500">Uso mínimo</span><p class="font-semibold">${requiredRebirths} Rebirth${requiredRebirths === 1 ? '' : 's'}</p></div>
+          <div class="col-span-2"><span class="text-slate-500">Bônus base</span><p class="font-semibold text-slate-300">HP ${eq.bonusHp || 0} · ATK ${eq.bonusAttack || 0} · DEF ${eq.bonusDefense || 0}</p></div>
+        </div>
+      </details>
 
       <div class="card-sm mb-3">
         <p class="text-xs text-slate-400 mb-2">Outros equipamentos para este slot</p>
