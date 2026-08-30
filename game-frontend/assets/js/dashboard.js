@@ -612,6 +612,10 @@ function showEquipDetailModal(equipmentId) {
       </div>
       ` : ''}
 
+      <div class="grid grid-cols-2 gap-2 mb-2">
+        <button class="btn-sm" style="background:#7f1d1d;color:#fca5a5" onclick="this.closest('div[style]').remove(); invUnequip('${eq.id}')">Desequipar</button>
+        ${eq.refinementLevel < 10 ? `<button class="btn-sm" style="background:#4a2800;color:#f59e0b" onclick="this.closest('div[style]').remove(); invShowRefine('${eq.id}')">Refinar</button>` : '<span></span>'}
+      </div>
       <button class="btn-primary w-full py-3 text-base" onclick="this.closest('div[style]').remove()">Fechar</button>
     </div>
   `;
