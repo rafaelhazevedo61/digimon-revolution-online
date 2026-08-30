@@ -616,6 +616,7 @@ function showEquipDetailModal(equipmentId) {
   const ascensionMultiplier = { 0: 1, 1: 1.30, 2: 1.50, 3: 2.00 }[ascensionLevel] || 1;
   const ascensionImpact = statImpact({ HP: Math.round(refinedStat(eq.bonusHp || 0) * (ascensionMultiplier - 1)), ATK: Math.round(refinedStat(eq.bonusAttack || 0) * (ascensionMultiplier - 1)), DEF: Math.round(refinedStat(eq.bonusDefense || 0) * (ascensionMultiplier - 1)) });
   const refinementImpact = statImpact({ HP: eq.bonusHp > 0 ? (Number(eq.refinementLevel) || 0) * 2 : 0, ATK: eq.bonusAttack > 0 ? (Number(eq.refinementLevel) || 0) * 2 : 0, DEF: eq.bonusDefense > 0 ? (Number(eq.refinementLevel) || 0) * 2 : 0 });
+  const refinementImpactDisplay = refinementImpact.replaceAll(" · ", " - ");
 
   const overlay = document.createElement("div");
   overlay.id = "dashboard-equipment-detail-overlay";
@@ -644,7 +645,7 @@ function showEquipDetailModal(equipmentId) {
           <div><span class="text-slate-500">Tier</span><p class="font-semibold">T${eq.tier || '?'}</p></div>
           <div><span class="text-slate-500">Raridade</span><p class="font-semibold">${rarityLabel[eq.rarity] || eq.rarity} <span class="text-amber-300">(+${rarityPercent[eq.rarity] || 0}%)</span></p><p class="text-[10px] text-slate-500">${rarityImpact}</p></div>
           <div><span class="text-slate-500">Conjunto</span><p class="font-semibold">${eq.setCode ? escapeHtml(setLabel) : 'Sem conjunto'}</p></div>
-          <div><span class="text-slate-500">Refinamento</span><p class="font-semibold text-yellow-400">+${eq.refinementLevel} <span class="text-slate-400">(${refinementImpact})</span></p></div>
+          <div><span class="text-slate-500">Refinamento</span><p class="font-semibold text-yellow-400">${eq.refinementLevel}</p><p class="text-[10px] text-slate-500">${refinementImpactDisplay}</p></div>
           <div><span class="text-slate-500">Ascensão</span><p class="font-semibold text-amber-300">${ascensionLevel} (${ascensionBonus})</p><p class="text-[10px] text-slate-500">${ascensionImpact}</p></div>
           <div><span class="text-slate-500">Uso mínimo</span><p class="font-semibold">${requiredRebirths} Rebirth${requiredRebirths === 1 ? '' : 's'}</p></div>
           <div class="col-span-2"><span class="text-slate-500">Bônus base</span><p class="font-semibold text-slate-300">HP ${eq.bonusHp || 0} · ATK ${eq.bonusAttack || 0} · DEF ${eq.bonusDefense || 0}</p></div>
