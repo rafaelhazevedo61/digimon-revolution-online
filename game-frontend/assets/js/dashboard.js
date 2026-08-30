@@ -615,7 +615,6 @@ function showEquipDetailModal(equipmentId) {
       </div>
       ` : ''}
 
-      <button class="btn-sm w-full mb-2" style="background:#7f1d1d;color:#fca5a5" onclick="this.closest('div[style]').remove(); invUnequip('${eq.id}')">Desequipar</button>
       <button class="btn-primary w-full py-3 text-base" onclick="this.closest('div[style]').remove()">Fechar</button>
     </div>
   `;
