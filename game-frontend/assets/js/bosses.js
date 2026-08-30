@@ -73,11 +73,14 @@ function renderBossStageTabs() {
   const tabs = document.getElementById("boss-stage-tabs");
   tabs.innerHTML = BOSS_STAGE_TABS.map(s => {
     const active = s.key === bossActiveStage;
+    const available = bossesData.some(boss => boss.requiredStage === s.key && boss.available);
+    const availableCount = bossesData.filter(boss => boss.requiredStage === s.key && boss.available).length;
     return `
-      <button class="flex-1 py-1.5 rounded-lg text-xs font-bold text-center transition-colors
+      <button class="relative flex-1 py-2 rounded-xl text-xs font-bold text-center transition-all border
+        ${available ? "boss-stage-available" : "border-transparent"}
         ${active ? s.color : "bg-slate-800 text-slate-400 hover:bg-slate-700"}"
         onclick="bossActiveStage='${s.key}'; renderBossStageTabs(); renderBossTypeTabs(); renderBossList();">
-        ${escapeHtml(s.label)}
+        ${escapeHtml(s.label)}${available ? `<span class="boss-stage-availability-dot" title="${availableCount} chefe(s) disponível(is)">${availableCount}</span>` : ""}
       </button>
     `;
   }).join("");

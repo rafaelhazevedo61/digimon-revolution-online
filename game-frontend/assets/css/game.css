@@ -666,6 +666,41 @@ body {
   overflow-y: auto;
 }
 
+/* ===================== Disponibilidade de Chefes ===================== */
+.boss-stage-available {
+  border-color: rgba(250, 204, 21, 0.7) !important;
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.18), 0 0 14px rgba(250, 204, 21, 0.12);
+  animation: boss-stage-pulse 2.2s ease-in-out infinite;
+}
+
+.boss-stage-availability-dot {
+  position: absolute;
+  top: -0.35rem;
+  right: -0.35rem;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #0f172a;
+  border-radius: 9999px;
+  background: #22c55e;
+  color: #052e16;
+  font-size: 0.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+@keyframes boss-stage-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.16), 0 0 10px rgba(250, 204, 21, 0.08); }
+  50% { box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.34), 0 0 18px rgba(250, 204, 21, 0.2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boss-stage-available { animation: none; }
+}
+
 /* ===================== Detalhe de equipamento no Dashboard ===================== */
 @media (max-width: 640px) {
   .dashboard-equipment-detail-card {
