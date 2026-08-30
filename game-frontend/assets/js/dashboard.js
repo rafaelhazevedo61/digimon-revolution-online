@@ -575,11 +575,11 @@ function showEquipDetailModal(equipmentId) {
 
   const overlay = document.createElement("div");
   overlay.id = "dashboard-equipment-detail-overlay";
-  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;display:flex;align-items:flex-end;justify-content:center;";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;display:flex;align-items:center;justify-content:center;padding:1rem;";
   overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 
   overlay.innerHTML = `
-    <div class="card" style="max-width:420px;width:100%;max-height:85vh;overflow-y:auto;border-radius:1rem 1rem 0 0;margin:0 auto;">
+    <div class="card" style="max-width:420px;width:100%;max-height:90vh;overflow:hidden;border-radius:1rem;margin:0 auto;">
       <div class="text-center mb-3">
         <div class="text-3xl mb-1">${emoji}</div>
         <h3 class="text-lg font-bold">${escapeHtml(eq.name)}${refLabel}</h3>
@@ -612,7 +612,7 @@ function showEquipDetailModal(equipmentId) {
 
       <div class="card-sm mb-3">
         <p class="text-xs text-slate-400 mb-2">Outros equipamentos para este slot</p>
-        <div id="dashboard-equipment-alternatives" class="space-y-2">
+        <div id="dashboard-equipment-alternatives" class="space-y-2 max-h-56 overflow-y-auto pr-1">
           <p class="text-xs text-slate-500">Carregando equipamentos disponíveis...</p>
         </div>
       </div>
