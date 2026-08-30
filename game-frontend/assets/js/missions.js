@@ -663,16 +663,27 @@ async function renderMissionAreaPage(params) {
   app.innerHTML = `
     <div class="page-container">
       <header class="mission-area-page-header mb-4">
-        <div>
-          <button class="progression-back-button mb-3" onclick="navigateTo('missions')"><span aria-hidden="true">←</span> Voltar ao mapa</button>
-          <p class="progression-eyebrow progression-eyebrow-cyan">Área de exploração</p>
-          <h2 class="progression-page-title"><span class="mission-area-header-emoji" aria-hidden="true">${info.emoji}</span> ${info.name}</h2>
-          <p class="progression-page-subtitle">Missões disponíveis para esta área.</p>
+        <button class="progression-back-button mb-3" onclick="navigateTo('missions')"><span aria-hidden="true">←</span> Voltar às áreas</button>
+        <div class="mission-area-title-row">
+          <div class="mission-area-title-lockup">
+            <div class="mission-area-header-emoji" aria-hidden="true">${info.emoji}</div>
+            <div>
+              <p class="progression-eyebrow progression-eyebrow-cyan">Área de exploração</p>
+              <h2 class="progression-page-title">${info.name}</h2>
+              <p class="progression-page-subtitle">Selecione uma missão para enviar seu Digimon.</p>
+            </div>
+          </div>
+          <div class="mission-area-terminal-mark" aria-hidden="true"><span></span><span></span><span></span></div>
         </div>
       </header>
+      <section class="mission-area-briefing-strip">
+        <div><p class="mission-area-strip-label">Protocolo de campo</p><p class="mission-area-strip-title">Operações disponíveis</p></div>
+        <div class="mission-area-strip-status"><span class="mission-area-strip-dot"></span><span id="mission-area-count">—</span> briefings</div>
+      </section>
 
       <div id="mission-list">
-        <div class="card animate-pulse mb-3"><div class="h-24"></div></div>
+        <div class="mission-brief-skeleton"></div>
+        <div class="mission-brief-skeleton"></div>
       </div>
     </div>
   `;
@@ -698,11 +709,15 @@ function getMissionArea(mission) {
 function renderMissionCards(missions, area) {
   const container = document.getElementById("mission-list");
 
+  const countElement = document.getElementById("mission-area-count");
+  if (countElement) countElement.textContent = String(missions.length);
+
   if (missions.length === 0) {
     container.innerHTML = `
-      <div class="card text-center">
-        <p class="text-slate-400">Nenhuma missão disponível nesta área.</p>
-        <p class="text-xs text-slate-500 mt-1">Seu Digimon pode não atender os requisitos.</p>
+      <div class="mission-area-empty-state">
+        <div class="mission-area-empty-icon" aria-hidden="true">⌁</div>
+        <p class="mission-area-empty-title">Nenhuma missão disponível</p>
+        <p class="mission-area-empty-note">Seu Digimon pode não atender aos requisitos desta área.</p>
       </div>
     `;
     return;
@@ -712,14 +727,14 @@ function renderMissionCards(missions, area) {
 
   container.innerHTML = sortedMissions.map((m, index) => `
     <article class="mission-brief-card">
-      <div class="mission-brief-heading"><div><p class="progression-eyebrow progression-eyebrow-cyan">Briefing ${String(index + 1).padStart(2, "0")}</p><h3 class="mission-brief-title">${escapeHtml(formatMissionName(m))}</h3></div><span class="mission-brief-arrow" aria-hidden="true">✦</span></div>
+      <div class="mission-brief-topline"><p class="progression-eyebrow progression-eyebrow-cyan">Briefing ${String(index + 1).padStart(2, "0")}</p><span class="mission-brief-code">${escapeHtml(missionFriendlyCode(m.id || "OPS"))}</span></div>
+      <div class="mission-brief-heading"><div><h3 class="mission-brief-title">${escapeHtml(formatMissionName(m))}</h3><span class="mission-brief-status"><span></span> Operação disponível</span></div><span class="mission-brief-arrow" aria-hidden="true">✦</span></div>
       <p class="mission-brief-description">${escapeHtml(m.description) || "Sem descrição disponível."}</p>
+      <div class="mission-brief-reward-row"><span class="mission-brief-reward-label">Retorno previsto</span><span class="mission-brief-reward-xp">+${m.xpReward} XP</span>${m.bitsReward > 0 ? `<span class="mission-brief-reward-bits">+${m.bitsReward} bits</span>` : ""}</div>
       <div class="mission-brief-meta">
-        <span>⚡ Nível ${m.requiredLevel}</span>
-        <span>✨ ${m.xpReward} XP</span>
-        ${m.bitsReward > 0 ? `<span class="mission-brief-bits">💰 ${m.bitsReward} bits</span>` : ""}
-        <span>🔋 ${m.energyCost} energia</span>
-        <span>⏱️ ${formatTime(m.durationSeconds)}</span>
+        <span><small>REQUISITO</small>⚡ Nível ${m.requiredLevel}</span>
+        <span><small>CUSTO</small>🔋 ${m.energyCost} energia</span>
+        <span><small>DURAÇÃO</small>⏱️ ${formatTime(m.durationSeconds)}</span>
       </div>
       <div class="mission-brief-actions">
         <button type="button" class="btn-secondary flex-1 text-sm" onclick="missionShowLootPreview('${escapeAttr(m.id)}', this)">Ver recompensas</button>
