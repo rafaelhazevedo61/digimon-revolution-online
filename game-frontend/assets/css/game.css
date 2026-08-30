@@ -1247,9 +1247,8 @@ body {
 .shop-section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.72rem; }
 .shop-section-title { margin: 0.22rem 0 0; color: #f8fafc; font-size: 0.98rem; font-weight: 850; }
 .shop-section-note { color: #64748b; font-size: 0.58rem; font-weight: 700; text-align: right; }
-.shop-category-nav { display: flex; gap: 0.35rem; overflow-x: auto; padding: 0.1rem 0 0.38rem; scrollbar-width: none; }
-.shop-category-nav::-webkit-scrollbar { display: none; }
-.shop-category-button { display: inline-flex; width: 5.4rem; min-width: 5.4rem; height: 2.05rem; flex: 0 0 5.4rem; align-items: center; justify-content: center; overflow: hidden; padding: 0.42rem 0.35rem; border: 1px solid rgba(71, 85, 105, 0.72); border-radius: 0.56rem; background: rgba(15, 23, 42, 0.5); color: #94a3b8; cursor: pointer; font-size: 0.6rem; font-weight: 800; line-height: 1; text-align: center; text-overflow: ellipsis; white-space: nowrap; transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease; }
+.shop-category-nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.35rem; padding: 0.1rem 0 0.38rem; }
+.shop-category-button { display: inline-flex; width: 100%; min-width: 0; height: 2.05rem; align-items: center; justify-content: center; overflow: hidden; padding: 0.42rem 0.2rem; border: 1px solid rgba(71, 85, 105, 0.72); border-radius: 0.56rem; background: rgba(15, 23, 42, 0.5); color: #94a3b8; cursor: pointer; font-size: 0.56rem; font-weight: 800; line-height: 1; text-align: center; text-overflow: ellipsis; white-space: nowrap; transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease; }
 .shop-category-button:hover { border-color: rgba(103, 232, 249, 0.5); color: #e0f2fe; }
 .shop-category-button.active { border-color: rgba(34, 211, 238, 0.5); background: rgba(8, 145, 178, 0.2); color: #a5f3fc; box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.08); }
 .shop-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin: 0.55rem 0 0.48rem; padding-top: 0.62rem; border-top: 1px solid rgba(51, 65, 85, 0.64); }
@@ -1291,7 +1290,8 @@ body {
   .shop-balance-card { min-width: 6.25rem; }
   .shop-balance-value { font-size: 0.78rem; }
   .shop-product-card { gap: 0.45rem; padding: 0.5rem; }
-  .shop-category-button { width: 5.4rem; min-width: 5.4rem; flex-basis: 5.4rem; }
+  .shop-category-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .shop-category-button { font-size: 0.6rem; }
   .shop-product-icon { width: 2.25rem; height: 2.25rem; font-size: 1.22rem; }
   .shop-action-button { min-width: 3.55rem; padding-inline: 0.38rem; }
 }

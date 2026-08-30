@@ -154,7 +154,6 @@ function shopSwitchTab(cat) {
     const active = btn.dataset.cat === cat;
     btn.classList.toggle("active", active);
     btn.setAttribute("aria-current", active ? "page" : "false");
-    if (active) btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
   });
   const items = shopProductsForCategory(cat);
   const container = document.getElementById("shop-list");
