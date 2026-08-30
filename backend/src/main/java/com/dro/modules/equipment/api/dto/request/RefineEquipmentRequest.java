@@ -7,6 +7,8 @@ import java.util.UUID;
  * Contrato de dados do módulo de Equipamentos.
  */
 public record RefineEquipmentRequest(
-        @NotNull UUID equipmentId
+        @NotNull UUID equipmentId,
+        String successBoostItemCode,
+        String protectionItemCode
 ) {
 }

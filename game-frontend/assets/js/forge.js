@@ -1,5 +1,6 @@
 let forgeEquipments = [];
 let forgeSearchQuery = "";
+let forgeInventory = [];
 
 async function renderForgePage() {
   const app = document.getElementById("app");
@@ -31,7 +32,7 @@ async function renderForgePage() {
   `;
 
   try {
-    forgeEquipments = await apiGet("/equipment/inventory");
+    [forgeEquipments, forgeInventory] = await Promise.all([apiGet("/equipment/inventory"), apiGet("/inventory")]);
     renderForgeEquipmentList();
   } catch (err) {
     document.getElementById("forge-content").innerHTML = `<div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>`;
@@ -169,6 +170,18 @@ async function forgeShowRefine(equipmentId) {
           <div class="text-center"><span class="font-bold ${preview.successRate >= 70 ? "text-green-400" : preview.successRate >= 40 ? "text-yellow-400" : "text-red-400"}">${preview.successRate}%</span><span class="text-slate-400"> Chance</span></div>
         </div>
       </div>
+      <div class="card-sm mb-3">
+        <p class="text-xs text-slate-400 mb-2">Itens de suporte</p>
+        <label class="flex items-center justify-between gap-2 text-xs ${forgeFindItemCount("REFINEMENT_SUCCESS_BOOST") > 0 ? "text-slate-300" : "text-slate-600"}">
+          <span>Usar Pergaminho de Refinamento (+10 pontos percentuais)</span>
+          <input id="forge-success-boost" type="checkbox" ${forgeFindItemCount("REFINEMENT_SUCCESS_BOOST") < 1 ? "disabled" : ""}>
+        </label>
+        <label class="flex items-center justify-between gap-2 text-xs mt-2 ${forgeFindItemCount("REFINEMENT_PROTECTION") > 0 && preview.breakChance > 0 ? "text-slate-300" : "text-slate-600"}">
+          <span>Usar Cristal de Proteção (${forgeFindItemCount("REFINEMENT_PROTECTION")} disponível(is))</span>
+          <input id="forge-protection" type="checkbox" ${forgeFindItemCount("REFINEMENT_PROTECTION") < 1 || preview.breakChance < 1 ? "disabled" : ""}>
+        </label>
+        ${preview.breakChance > 0 ? `<p class="text-[10px] text-red-300 mt-2">Atenção: esta tentativa tem ${preview.breakChance}% de chance de quebrar o equipamento.</p>` : ""}
+      </div>
       <button id="forge-refine-btn" class="btn-primary w-full py-3 text-base font-bold ${!preview.canRefine ? "opacity-60" : ""}" onclick="forgeDoRefine('${equipmentId}', ${Boolean(preview.canRefine)})">🔨 Refinar para +${nextLevel} (${preview.successRate}%)</button>
       ${!preview.canRefine ? `<p class="text-red-400 text-xs text-center mt-2">Recursos insuficientes</p>` : ""}
     </div>
@@ -192,7 +205,11 @@ async function forgeDoRefine(equipmentId, canRefine = true) {
   const button = document.getElementById("forge-refine-btn");
   if (button) { button.disabled = true; button.textContent = "Refinando..."; }
   try {
-    const result = await apiPost("/equipment/refine", { equipmentId });
+    const result = await apiPost("/equipment/refine", {
+      equipmentId,
+      successBoostItemCode: document.getElementById("forge-success-boost")?.checked ? "REFINEMENT_SUCCESS_BOOST" : null,
+      protectionItemCode: document.getElementById("forge-protection")?.checked ? "REFINEMENT_PROTECTION" : null
+    });
     showToast(result.success ? (result.message || "Refinamento bem-sucedido!") : (result.message || "Refinamento falhou!"), result.success ? "success" : "error");
     document.getElementById("forge-refine-overlay")?.remove();
     await renderForgePage();
@@ -204,4 +221,9 @@ async function forgeDoRefine(equipmentId, canRefine = true) {
 
 function forgeRarityBadge(rarity) {
   return String(rarity || "COMMON").toLowerCase();
+}
+
+function forgeFindItemCount(code) {
+  return forgeInventory.filter(item => item.quantity > 0 && (item.itemDefinition?.code === code || item.itemType === code))
+    .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 }

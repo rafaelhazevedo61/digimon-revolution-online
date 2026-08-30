@@ -23,7 +23,10 @@ public class EquipmentRules {
     }
 
     /** Maior nível de refinamento permitido. */
-    public static final int MAX_REFINEMENT_LEVEL = 10;
+    public static final int MAX_REFINEMENT_LEVEL = 11;
+    public static final int REFINEMENT_SUCCESS_BOOST_POINTS = 10;
+    public static final int MAX_REFINEMENT_BREAK_LEVEL = 10;
+    public static final int REFINEMENT_BREAK_CHANCE_AT_MAX = 25;
 
     // Set bonus percentages: [2-piece HP%, 2-piece ATK%, 2-piece DEF%, 3-piece HP%, 3-piece ATK%, 3-piece DEF%]
     private static final Map<String, int[]> SET_BONUSES = Map.of(
@@ -125,7 +128,8 @@ public class EquipmentRules {
          50, // +6 → +7
          40, // +7 → +8
          30, // +8 → +9
-         20  // +9 → +10
+        20, // +9 → +10
+        5   // +10 → +11
     };
 
     /**
@@ -139,5 +143,15 @@ public class EquipmentRules {
             return 0;
         }
         return REFINEMENT_SUCCESS_RATE[currentLevel];
+    }
+
+    /** Retorna a chance de quebra ao tentar o refinamento +10 para +11. */
+    public static int refinementBreakChance(int currentLevel) {
+        return currentLevel == MAX_REFINEMENT_BREAK_LEVEL ? REFINEMENT_BREAK_CHANCE_AT_MAX : 0;
+    }
+
+    /** Aplica pontos percentuais de bônus sem ultrapassar 100%. */
+    public static int refinementSuccessRate(int currentLevel, int bonusPoints) {
+        return Math.min(100, refinementSuccessRate(currentLevel) + Math.max(0, bonusPoints));
     }
 }

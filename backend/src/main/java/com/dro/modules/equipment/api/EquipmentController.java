@@ -12,6 +12,7 @@ import com.dro.modules.equipment.application.*;
 import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +36,7 @@ public class EquipmentController {
     private final RefineEquipmentUseCase refineEquipmentUseCase;
     private final com.dro.modules.equipment.infra.EquipmentRepository equipmentRepository;
     private final InventoryRepository inventoryRepository;
+    private final ItemDefinitionRepository itemDefinitionRepository;
     private final com.dro.modules.player.infra.PlayerRepository playerRepository;
     private final com.dro.modules.digimon.infra.DigimonRepository digimonRepository;
 
@@ -118,7 +120,7 @@ public class EquipmentController {
 
     @PostMapping("/refine")
     public ResponseEntity<RefineEquipmentResponse> refine(@RequestHeader("Authorization") String authorization, @RequestBody @Valid RefineEquipmentRequest request) {
-        return ResponseEntity.ok(refineEquipmentUseCase.execute(authorization, request.equipmentId()));
+        return ResponseEntity.ok(refineEquipmentUseCase.execute(authorization, request));
     }
 
     @GetMapping("/{equipmentId}/refine-preview")
@@ -138,12 +140,22 @@ public class EquipmentController {
         int currentLevel = equip.getRefinementLevel();
         int costBits = EquipmentRules.refinementCostBits(currentLevel);
         int currentStones = inventoryRepository.findByDigimonIdAndItemType(digimon.getId(), ItemType.REFINEMENT_STONE).map(i -> i.getQuantity()).orElse(0);
+        int successBoostItems = supportItemCount(playerId, "REFINEMENT_SUCCESS_BOOST");
+        int protectionItems = supportItemCount(playerId, "REFINEMENT_PROTECTION");
+        int baseSuccessRate = EquipmentRules.refinementSuccessRate(currentLevel);
+        int breakChance = EquipmentRules.refinementBreakChance(currentLevel);
         boolean canRefine = currentLevel < EquipmentRules.MAX_REFINEMENT_LEVEL && digimon.getBits() >= costBits && currentStones >= 1;
-        int successRate = EquipmentRules.refinementSuccessRate(currentLevel);
-        return ResponseEntity.ok(new RefinePreviewResponse(currentLevel, currentLevel + 1, successRate, costBits, 1, digimon.getBits(), currentStones, canRefine));
+        return ResponseEntity.ok(new RefinePreviewResponse(currentLevel, currentLevel + 1, baseSuccessRate, baseSuccessRate,
+                breakChance, costBits, 1, digimon.getBits(), currentStones, successBoostItems, protectionItems, canRefine));
     }
 
-    public EquipmentController(final GetDigimonInventoryUseCase getDigimonInventoryUseCase, final GetDigimonEquipmentUseCase getDigimonEquipmentUseCase, final EquipUseCase equipUseCase, final UnequipUseCase unequipUseCase, final UnequipAllUseCase unequipAllUseCase, final RefineEquipmentUseCase refineEquipmentUseCase, final com.dro.modules.equipment.infra.EquipmentRepository equipmentRepository, final InventoryRepository inventoryRepository, final com.dro.modules.player.infra.PlayerRepository playerRepository, final com.dro.modules.digimon.infra.DigimonRepository digimonRepository) {
+    private int supportItemCount(UUID playerId, String code) {
+        return itemDefinitionRepository.findByCode(code)
+                .flatMap(definition -> inventoryRepository.findByPlayerIdAndItemDefinitionId(playerId, definition.getId()))
+                .map(item -> item.getQuantity()).orElse(0);
+    }
+
+    public EquipmentController(final GetDigimonInventoryUseCase getDigimonInventoryUseCase, final GetDigimonEquipmentUseCase getDigimonEquipmentUseCase, final EquipUseCase equipUseCase, final UnequipUseCase unequipUseCase, final UnequipAllUseCase unequipAllUseCase, final RefineEquipmentUseCase refineEquipmentUseCase, final com.dro.modules.equipment.infra.EquipmentRepository equipmentRepository, final InventoryRepository inventoryRepository, final ItemDefinitionRepository itemDefinitionRepository, final com.dro.modules.player.infra.PlayerRepository playerRepository, final com.dro.modules.digimon.infra.DigimonRepository digimonRepository) {
         this.getDigimonInventoryUseCase = getDigimonInventoryUseCase;
         this.getDigimonEquipmentUseCase = getDigimonEquipmentUseCase;
         this.equipUseCase = equipUseCase;
@@ -152,6 +164,7 @@ public class EquipmentController {
         this.refineEquipmentUseCase = refineEquipmentUseCase;
         this.equipmentRepository = equipmentRepository;
         this.inventoryRepository = inventoryRepository;
+        this.itemDefinitionRepository = itemDefinitionRepository;
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
     }
