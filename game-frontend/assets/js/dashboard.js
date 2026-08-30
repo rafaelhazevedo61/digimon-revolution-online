@@ -56,7 +56,7 @@ function renderDashContent(data) {
       ${d ? `
       <div class="card-sm text-center">
         <p class="text-xs text-slate-500">Bits</p>
-        <p class="text-lg font-bold text-yellow-400">${d.bits}</p>
+        <p class="text-lg font-bold text-yellow-400">${Number(d.bits || 0).toLocaleString("pt-BR")}</p>
       </div>
       <div class="card-sm text-center">
         <p class="text-xs text-slate-500">Energia</p>
@@ -65,7 +65,7 @@ function renderDashContent(data) {
       ` : ""}
       <div class="card-sm text-center">
         <p class="text-xs text-slate-500">Dados Digitais</p>
-        <p class="text-lg font-bold text-cyan-400">${Number(data.digitalData || 0).toLocaleString()}</p>
+        <p class="text-lg font-bold text-cyan-400">${Number(data.digitalData || 0).toLocaleString("pt-BR")}</p>
       </div>
     </div>
 
