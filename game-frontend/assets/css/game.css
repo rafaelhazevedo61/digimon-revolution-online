@@ -1319,3 +1319,10 @@ body {
 .shop-modal-total-sell strong { color: #86efac; }
 .shop-modal-actions { display: flex; gap: 0.45rem; margin-top: 0.85rem; }
 .shop-modal-actions .btn-primary, .shop-modal-actions .btn-sm { min-height: 2.35rem; }
+
+
+.shop-search-row { position: relative; margin-bottom: 0.62rem; }
+.shop-search-icon { position: absolute; top: 50%; left: 0.72rem; z-index: 1; color: #64748b; font-size: 1rem; line-height: 1; pointer-events: none; transform: translateY(-52%); }
+.shop-search-input { min-height: 2.35rem; padding-left: 2.05rem; border-color: rgba(71, 85, 105, 0.72); font-size: 0.68rem; }
+.shop-search-input:focus { border-color: rgba(34, 211, 238, 0.62); box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.14); }
+.shop-sell-section .shop-search-input:focus { border-color: rgba(251, 191, 36, 0.58); box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12); }

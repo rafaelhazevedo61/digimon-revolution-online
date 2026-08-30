@@ -4,6 +4,22 @@ let shopModalUnitPrice = 0;
 let shopMode = "buy"; // "buy" or "sell"
 let shopInventoryItems = [];
 let shopInventoryEquipments = [];
+let shopSearchQuery = "";
+let shopBuyCategory = "ALL";
+let shopSellCategory = "ALL";
+
+const SHOP_CATEGORY_LABELS = {
+  ALL: "Todos",
+  CONSUMABLE: "Consumíveis",
+  MATERIAL: "Materiais",
+  EVOLUTION_MATERIAL: "Evolução",
+  FRAGMENT: "Fragmentos",
+  DIGITAMA: "Digitamas",
+  INCUBATOR: "Incubadoras",
+  CHEST: "Baús",
+  OTHER: "Outros",
+  EQUIPMENT: "Equipamentos"
+};
 
 const SHOP_RARITY_LABELS = {
   COMMON: "Comum",
@@ -99,17 +115,12 @@ function shopRenderBuyMode() {
         </div>
         <span class="shop-section-note">Escolha uma categoria</span>
       </div>
+      <div class="shop-search-row">
+        <span class="shop-search-icon" aria-hidden="true">⌕</span>
+        <input id="shop-search" class="input shop-search-input" type="search" placeholder="Buscar no catálogo..." value="${escapeHtml(shopSearchQuery)}" oninput="shopSearchUpdate(this.value)" aria-label="Buscar produtos">
+      </div>
       <nav class="shop-category-nav" id="shop-tabs" aria-label="Categorias da loja">
-        <button class="shop-category-button" data-cat="ALL" onclick="shopSwitchTab('ALL')">Todos</button>
-        <button class="shop-category-button" data-cat="CONSUMABLE" onclick="shopSwitchTab('CONSUMABLE')">Consumíveis</button>
-        <button class="shop-category-button" data-cat="MATERIAL" onclick="shopSwitchTab('MATERIAL')">Materiais</button>
-        <button class="shop-category-button" data-cat="EVOLUTION_MATERIAL" onclick="shopSwitchTab('EVOLUTION_MATERIAL')">Evolução</button>
-        <button class="shop-category-button" data-cat="FRAGMENT" onclick="shopSwitchTab('FRAGMENT')">Fragmentos</button>
-        <button class="shop-category-button" data-cat="DIGITAMA" onclick="shopSwitchTab('DIGITAMA')">Digitamas</button>
-        <button class="shop-category-button" data-cat="INCUBATOR" onclick="shopSwitchTab('INCUBATOR')">Incubadoras</button>
-        <button class="shop-category-button" data-cat="CHEST" onclick="shopSwitchTab('CHEST')">Baús</button>
-        <button class="shop-category-button" data-cat="OTHER" onclick="shopSwitchTab('OTHER')">Outros</button>
-        <button class="shop-category-button" data-cat="EQUIPMENT" onclick="shopSwitchTab('EQUIPMENT')">Equipamentos</button>
+        ${shopCategoryButtons()}
       </nav>
       <div class="shop-list-heading">
         <p class="shop-list-title" id="shop-list-title">Todos os produtos</p>
@@ -149,17 +160,50 @@ function shopProductsForCategory(category) {
     return false;
   });
 }
+function shopCategoryButtons() {
+  return Object.entries(SHOP_CATEGORY_LABELS).map(([category, label]) => `
+    <button class="shop-category-button" data-cat="${category}" onclick="shopCategorySelect('${category}')">${label}</button>
+  `).join("");
+}
+
+function shopCategorySelect(category) {
+  if (shopMode === "sell") {
+    shopSwitchSellTab(category);
+  } else {
+    shopSwitchTab(category);
+  }
+}
+
+function shopMatchesSearch(values, query = shopSearchQuery) {
+  const normalizedQuery = String(query || "").trim().toLowerCase();
+  if (!normalizedQuery) return true;
+  return values.some(value => String(value || "").toLowerCase().includes(normalizedQuery));
+}
+
+function shopSearchUpdate(value) {
+  shopSearchQuery = String(value || "").trimStart();
+  if (shopMode === "buy") {
+    shopSwitchTab(shopBuyCategory);
+  } else {
+    shopSwitchSellTab(shopSellCategory);
+  }
+}
+
 function shopSwitchTab(cat) {
+  shopBuyCategory = cat;
   document.querySelectorAll("#shop-tabs [data-cat]").forEach(btn => {
     const active = btn.dataset.cat === cat;
     btn.classList.toggle("active", active);
     btn.setAttribute("aria-current", active ? "page" : "false");
   });
-  const items = shopProductsForCategory(cat);
+  const query = shopSearchQuery.toLowerCase();
+  const items = shopProductsForCategory(cat).filter(product => shopMatchesSearch([
+    product.code, product.name, product.description, product.itemType, product.category, product.equipmentTemplateName
+  ], query));
   const container = document.getElementById("shop-list");
   const listTitle = document.getElementById("shop-list-title");
   const listCount = document.getElementById("shop-list-count");
-  const categoryName = document.querySelector(`#shop-tabs [data-cat="${cat}"]`)?.textContent || "Produtos";
+  const categoryName = SHOP_CATEGORY_LABELS[cat] || "Produtos";
   if (listTitle) listTitle.textContent = categoryName;
   if (listCount) listCount.textContent = `${items.length} ${items.length === 1 ? "produto" : "produtos"}`;
 
@@ -318,7 +362,7 @@ async function shopRenderSellMode() {
     shopInventoryItems = inventory || [];
     shopInventoryEquipments = await apiGet(`/equipment/inventory`) || [];
 
-    shopRenderSellList();
+    shopRenderSellLayout();
   } catch (err) {
     content.innerHTML = `
       <div class="card border-red-900">
@@ -334,6 +378,145 @@ function shopSellItemEmoji(category) {
     EVOLUTION_MATERIAL: "⭐", DIGITAMA: "🥚", INCUBATOR: "📦", CHEST: renderChestIcon("w-10 h-10")
   };
   return map[category] || "📦";
+}
+
+function shopRenderSellLayout() {
+  const content = document.getElementById("shop-content");
+  content.innerHTML = `
+    <section class="shop-section shop-sell-section">
+      <div class="shop-section-heading">
+        <div>
+          <p class="progression-eyebrow progression-eyebrow-amber">Inventário</p>
+          <h3 class="shop-section-title">Vender itens</h3>
+        </div>
+        <span class="shop-section-note">Filtre e encontre rapidamente</span>
+      </div>
+      <div class="shop-search-row">
+        <span class="shop-search-icon" aria-hidden="true">⌕</span>
+        <input id="shop-search" class="input shop-search-input" type="search" placeholder="Buscar no inventário..." value="${escapeHtml(shopSearchQuery)}" oninput="shopSearchUpdate(this.value)" aria-label="Buscar itens para vender">
+      </div>
+      <nav class="shop-category-nav" id="shop-tabs" aria-label="Categorias do inventário">
+        ${shopCategoryButtons()}
+      </nav>
+      <div class="shop-list-heading">
+        <p class="shop-list-title" id="shop-list-title">Todos</p>
+        <span class="shop-list-count" id="shop-list-count"></span>
+      </div>
+      <div id="shop-sell-list"></div>
+    </section>
+  `;
+  shopSwitchSellTab(shopSellCategory);
+}
+
+function shopSellCategoryMatches(item, category) {
+  const def = item.itemDefinition || {};
+  const itemType = String(def.code || item.itemType || "").toUpperCase();
+  const itemCategory = String(def.category || "").toUpperCase();
+  if (category === "ALL") return true;
+  if (category === "CONSUMABLE") return itemCategory === "POTION" || itemCategory === "CONSUMABLE";
+  if (category === "MATERIAL") return itemCategory === "MATERIAL" && itemType !== "EVOLUTION_MATERIAL";
+  if (category === "EVOLUTION_MATERIAL") return itemType === "EVOLUTION_MATERIAL";
+  if (category === "FRAGMENT") return itemCategory === "FRAGMENT" || itemType.startsWith("FRAGMENT_");
+  if (category === "DIGITAMA") return itemType.startsWith("DIGITAMA_");
+  if (category === "INCUBATOR") return itemType.startsWith("INCUBATOR_");
+  if (category === "CHEST") return itemCategory === "CHEST" || itemType === "LOOT_CHEST";
+  if (category === "EQUIPMENT") return false;
+  if (category === "OTHER") return !["CONSUMABLE", "MATERIAL", "EVOLUTION_MATERIAL", "FRAGMENT", "DIGITAMA", "INCUBATOR", "CHEST"].some(group => shopSellCategoryMatches(item, group));
+  return false;
+}
+
+function shopSwitchSellTab(category) {
+  shopSellCategory = category;
+  document.querySelectorAll("#shop-tabs [data-cat]").forEach(btn => {
+    const active = btn.dataset.cat === category;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-current", active ? "page" : "false");
+  });
+  const list = document.getElementById("shop-sell-list");
+  if (!list) return;
+
+  const query = shopSearchQuery.toLowerCase();
+  const sellableItems = shopInventoryItems
+    .filter(item => item.quantity > 0 && item.itemDefinition && item.itemDefinition.sellable && item.itemDefinition.sellPrice > 0)
+    .filter(item => shopSellCategoryMatches(item, category))
+    .filter(item => shopMatchesSearch([
+      item.itemDefinition.code, item.itemDefinition.name, item.itemDefinition.description, item.itemDefinition.category
+    ], query));
+
+  const allShopProducts = [
+    ...(shopData.potions || []),
+    ...(shopData.materials || []),
+    ...(shopData.equipments || []),
+    ...(shopData.consumables || []),
+    ...(shopData.chests || [])
+  ];
+  const sellableEquipments = shopInventoryEquipments
+    .filter(eq => !eq.equipped)
+    .map(eq => {
+      const shopProduct = allShopProducts.find(p => p.equipmentTemplateName && p.equipmentTemplateName.toLowerCase() === eq.name.toLowerCase());
+      return { ...eq, shopProduct };
+    })
+    .filter(eq => eq.shopProduct && eq.shopProduct.sellPrice > 0)
+    .filter(eq => category === "ALL" || category === "EQUIPMENT")
+    .filter(eq => shopMatchesSearch([eq.name, eq.rarity, eq.shopProduct.name, eq.shopProduct.description], query));
+
+  const totalItems = sellableItems.length + sellableEquipments.length;
+  const listTitle = document.getElementById("shop-list-title");
+  const listCount = document.getElementById("shop-list-count");
+  if (listTitle) listTitle.textContent = SHOP_CATEGORY_LABELS[category] || "Todos";
+  if (listCount) listCount.textContent = `${totalItems} ${totalItems === 1 ? "item" : "itens"}`;
+
+  if (totalItems === 0) {
+    list.innerHTML = `
+      <div class="shop-empty-state">
+        <span class="shop-empty-icon" aria-hidden="true">⌕</span>
+        <p>Nenhum item encontrado.</p>
+        <span>Tente outra categoria ou ajuste o termo da busca.</span>
+      </div>
+    `;
+    return;
+  }
+
+  let html = "";
+  if (sellableItems.length > 0) {
+    html += `<div class="shop-subsection-heading"><span>Itens do inventário</span><strong>${sellableItems.length}</strong></div>`;
+    html += `<div class="shop-product-list">${sellableItems.map(item => {
+      const def = item.itemDefinition;
+      return `
+      <article class="shop-product-card shop-product-card-sell">
+        <div class="shop-product-icon" aria-hidden="true">${shopSellItemEmoji(def.category)}</div>
+        <div class="shop-product-body">
+          <div class="shop-product-heading">
+            <p class="shop-product-name">${escapeHtml(def.name)}</p>
+            <span class="shop-product-type">${item.quantity} disponíveis</span>
+          </div>
+          <div class="shop-product-meta">
+            <span class="shop-product-resale">+${shopFormatBits(def.sellPrice)} / un.</span>
+          </div>
+        </div>
+        <button class="shop-action-button shop-action-sell" onclick="shopOpenSell('${escapeHtml(def.code)}', ${item.quantity}, ${def.sellPrice})">Vender</button>
+      </article>
+    `;}).join("")}</div>`;
+  }
+  if (sellableEquipments.length > 0) {
+    html += `<div class="shop-subsection-heading ${sellableItems.length > 0 ? "shop-subsection-heading-spaced" : ""}"><span>Equipamentos disponíveis</span><strong>${sellableEquipments.length}</strong></div>`;
+    html += `<div class="shop-product-list">${sellableEquipments.map(eq => `
+      <article class="shop-product-card shop-product-card-sell">
+        <div class="shop-product-icon shop-equipment-icon" aria-hidden="true">⚔️</div>
+        <div class="shop-product-body">
+          <div class="shop-product-heading">
+            <p class="shop-product-name">${escapeHtml(eq.name)}</p>
+            <span class="shop-product-type">${escapeHtml(shopRarityLabel(eq.rarity))}</span>
+          </div>
+          <div class="shop-product-meta">
+            <span class="shop-product-resale">+${shopFormatBits(eq.shopProduct.sellPrice)}</span>
+          </div>
+        </div>
+        <button class="shop-action-button shop-action-sell" onclick="shopConfirmSellEquipment('${eq.id}')">Vender</button>
+      </article>
+    `).join("")}</div>`;
+  }
+  list.innerHTML = html;
 }
 
 function shopRenderSellList() {
