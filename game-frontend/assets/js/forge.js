@@ -4,6 +4,7 @@ let forgeInventory = [];
 let forgeAutoEquipmentId = null;
 let forgeAutoAttempts = 0;
 let forgeAutoTimer = null;
+let forgeAutoSessionStats = null;
 const FORGE_SUPPORT_PREFERENCES_KEY = "dro-forge-support-preferences";
 
 function forgeSupportPreferences() {
@@ -158,6 +159,9 @@ async function forgeShowRefine(equipmentId) {
     return;
   }
   eq.refinementLevel = preview.currentRefinementLevel;
+  if (!forgeAutoSessionStats || forgeAutoSessionStats.equipmentId !== equipmentId) {
+    forgeAutoSessionStats = { equipmentId, attempts: 0, bits: 0, stones: 0, boosts: 0, protections: 0 };
+  }
 
   const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
   const emoji = slotEmoji[eq.slot] || "⚙️";
@@ -221,6 +225,7 @@ async function forgeShowRefine(equipmentId) {
         <span class="text-xs text-slate-300">Continuar com risco de quebra <span class="block text-[10px] text-red-300/70">Autoriza o automático a tentar +10 → +11</span></span>
         <button id="forge-break-risk-toggle" type="button" role="switch" aria-checked="false" data-active="false" class="forge-support-toggle" onclick="forgeToggleBreakRisk()" ${preview.breakChance < 1 ? "disabled" : ""}>OFF</button>
       </div>
+      ${forgeRenderAutoSummary()}
       <button id="forge-refine-btn" data-next-level="${nextLevel}" class="btn-primary w-full py-3 text-base font-bold ${!preview.canRefine ? "opacity-60" : ""}" onclick="forgeDoRefine('${equipmentId}', ${Boolean(preview.canRefine)})">🔨 Refinar para +${nextLevel} (<span id="forge-refine-button-rate">${preview.successRate}%</span>)</button>
       ${!preview.canRefine ? `<p class="text-red-400 text-xs text-center mt-2">Recursos insuficientes</p>` : ""}
     </div>
@@ -299,6 +304,18 @@ function forgeFindItemCount(code) {
     .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 }
 
+function forgeRenderAutoSummary() {
+  const stats = forgeAutoSessionStats || { attempts: 0, bits: 0, stones: 0, boosts: 0, protections: 0 };
+  return `<div class="card-sm mb-3 border-cyan-900/50 bg-cyan-950/10"><p class="text-xs text-cyan-300 font-semibold mb-2">Resumo da tentativa automática</p><div class="grid grid-cols-2 gap-y-1 text-xs text-slate-400"><span>Tentativas</span><strong id="forge-summary-attempts" class="text-slate-200 text-right">${stats.attempts}</strong><span>Bits gastos</span><strong id="forge-summary-bits" class="text-yellow-300 text-right">${Number(stats.bits).toLocaleString("pt-BR")}</strong><span>Pedras gastas</span><strong id="forge-summary-stones" class="text-purple-300 text-right">${stats.stones}</strong><span>Pergaminhos usados</span><strong id="forge-summary-boosts" class="text-cyan-300 text-right">${stats.boosts}</strong><span>Cristais consumidos</span><strong id="forge-summary-protections" class="text-emerald-300 text-right">${stats.protections}</strong></div></div>`;
+}
+
+function forgeUpdateAutoSummary() {
+  const stats = forgeAutoSessionStats;
+  if (!stats) return;
+  const values = { "forge-summary-attempts": stats.attempts, "forge-summary-bits": Number(stats.bits).toLocaleString("pt-BR"), "forge-summary-stones": stats.stones, "forge-summary-boosts": stats.boosts, "forge-summary-protections": stats.protections };
+  Object.entries(values).forEach(([id, value]) => { const element = document.getElementById(id); if (element) element.textContent = value; });
+}
+
 function forgeToggleBreakRisk() {
   const toggle = document.getElementById("forge-break-risk-toggle");
   if (!toggle || toggle.disabled) return;
@@ -324,6 +341,7 @@ function forgeToggleAuto(equipmentId, canRefine) {
   if (active) {
     forgeAutoEquipmentId = equipmentId;
     forgeAutoAttempts = 0;
+    forgeAutoSessionStats = { equipmentId, attempts: 0, bits: 0, stones: 0, boosts: 0, protections: 0 };
     const button = document.getElementById("forge-refine-btn");
     if (button) { button.disabled = true; button.textContent = "Refinando automaticamente..."; }
     forgeAutoStep();
@@ -381,13 +399,21 @@ async function forgeAutoStep() {
       await forgeShowRefine(equipmentId);
       return;
     }
+    const boostUsed = document.getElementById("forge-success-boost")?.dataset.active === "true";
+    const protectionSelected = document.getElementById("forge-protection")?.dataset.active === "true";
     const result = await apiPost("/equipment/refine", {
       equipmentId,
-      successBoostItemCode: document.getElementById("forge-success-boost")?.dataset.active === "true" ? "REFINEMENT_SUCCESS_BOOST" : null,
-      protectionItemCode: document.getElementById("forge-protection")?.dataset.active === "true" ? "REFINEMENT_PROTECTION" : null
+      successBoostItemCode: boostUsed ? "REFINEMENT_SUCCESS_BOOST" : null,
+      protectionItemCode: protectionSelected ? "REFINEMENT_PROTECTION" : null
     });
     if (forgeAutoEquipmentId !== equipmentId) return;
     forgeAutoAttempts += 1;
+    forgeAutoSessionStats.attempts += 1;
+    forgeAutoSessionStats.bits += Number(preview.costBits || 0);
+    forgeAutoSessionStats.stones += Number(preview.costStones || 0);
+    if (boostUsed) forgeAutoSessionStats.boosts += 1;
+    if (result.protectionConsumed) forgeAutoSessionStats.protections += 1;
+    forgeUpdateAutoSummary();
     if (result.equipmentDestroyed) {
       forgeStopAutoRefine();
       document.getElementById("forge-refine-overlay")?.remove();
