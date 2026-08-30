@@ -171,6 +171,7 @@ public final class EventRewardMessageText {
                 case LOOT_CHEST -> "Baú temático";
                 case REFINEMENT_STONE -> "Pedra de refinamento";
                 case RARITY_REROLL -> "Dado de Raridade";
+                case RARITY_PRESERVATION -> "Cristal de Preservação de Raridade";
             };
         } catch (IllegalArgumentException exception) {
             return itemType;
