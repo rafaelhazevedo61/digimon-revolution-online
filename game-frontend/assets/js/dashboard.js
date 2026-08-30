@@ -592,20 +592,14 @@ function showEquipDetailModal(equipmentId) {
       </div>
 
       <div class="card-sm mb-3">
-        <p class="text-xs text-slate-400 mb-2">Stats Base</p>
-        <div class="grid grid-cols-3 gap-2 text-center text-sm">
-          ${eq.bonusHp > 0 ? `<div><span class="text-slate-400">HP</span><br><span class="text-red-400">${eq.bonusHp}</span></div>` : ''}
-          ${eq.bonusAttack > 0 ? `<div><span class="text-slate-400">ATK</span><br><span class="text-orange-400">${eq.bonusAttack}</span></div>` : ''}
-          ${eq.bonusDefense > 0 ? `<div><span class="text-slate-400">DEF</span><br><span class="text-blue-400">${eq.bonusDefense}</span></div>` : ''}
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-xs text-slate-400">Atributos</p>
+          <p class="text-[10px] text-slate-500">Base <span class="mx-1">→</span> Efetivo</p>
         </div>
-      </div>
-
-      <div class="card-sm mb-3">
-        <p class="text-xs text-slate-400 mb-2">Stats Efetivos</p>
-        <div class="grid grid-cols-3 gap-2 text-center text-sm">
-          ${eq.effectiveBonusHp > 0 ? `<div><span class="text-slate-400">HP</span><br><span class="text-red-400 font-bold">${eq.effectiveBonusHp}</span></div>` : ''}
-          ${eq.effectiveBonusAttack > 0 ? `<div><span class="text-slate-400">ATK</span><br><span class="text-orange-400 font-bold">${eq.effectiveBonusAttack}</span></div>` : ''}
-          ${eq.effectiveBonusDefense > 0 ? `<div><span class="text-slate-400">DEF</span><br><span class="text-blue-400 font-bold">${eq.effectiveBonusDefense}</span></div>` : ''}
+        <div class="grid grid-cols-3 gap-2 text-center text-xs">
+          ${eq.bonusHp > 0 ? `<div><span class="text-slate-400">HP</span><br><span class="text-red-400">${eq.bonusHp}</span> <span class="text-slate-500">→</span> <strong class="text-red-300">${eq.effectiveBonusHp}</strong></div>` : ''}
+          ${eq.bonusAttack > 0 ? `<div><span class="text-slate-400">ATK</span><br><span class="text-orange-400">${eq.bonusAttack}</span> <span class="text-slate-500">→</span> <strong class="text-orange-300">${eq.effectiveBonusAttack}</strong></div>` : ''}
+          ${eq.bonusDefense > 0 ? `<div><span class="text-slate-400">DEF</span><br><span class="text-blue-400">${eq.bonusDefense}</span> <span class="text-slate-500">→</span> <strong class="text-blue-300">${eq.effectiveBonusDefense}</strong></div>` : ''}
         </div>
       </div>
 
