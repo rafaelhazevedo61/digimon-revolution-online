@@ -219,21 +219,20 @@ function renderDigimonCard(d) {
         </div>
       </div>
 
-      <!-- Stats -->
+      <!-- Effective stats -->
       <div class="grid grid-cols-3 gap-2 text-center text-sm">
-        <div>
-          <p class="text-xs text-slate-500">HP</p>
-          <p class="font-bold text-red-400">${d.hp}${d.equipBonusHp ? `<span class="text-xs text-green-400">+${d.equipBonusHp}</span>` : ""}${d.clanBonusHp ? `<span class="text-xs text-cyan-400">+${d.clanBonusHp}</span>` : ""}</p>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500">ATK</p>
-          <p class="font-bold text-orange-400">${d.attack}${d.equipBonusAttack ? `<span class="text-xs text-green-400">+${d.equipBonusAttack}</span>` : ""}${d.clanBonusAttack ? `<span class="text-xs text-cyan-400">+${d.clanBonusAttack}</span>` : ""}</p>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500">DEF</p>
-          <p class="font-bold text-blue-400">${d.defense}${d.equipBonusDefense ? `<span class="text-xs text-green-400">+${d.equipBonusDefense}</span>` : ""}${d.clanBonusDefense ? `<span class="text-xs text-cyan-400">+${d.clanBonusDefense}</span>` : ""}</p>
-        </div>
+        ${renderDashboardStat("HP", d.hp, d.equipBonusHp, d.clanBonusHp, "text-red-400")}
+        ${renderDashboardStat("ATK", d.attack, d.equipBonusAttack, d.clanBonusAttack, "text-orange-400")}
+        ${renderDashboardStat("DEF", d.defense, d.equipBonusDefense, d.clanBonusDefense, "text-blue-400")}
       </div>
+      <details class="mt-3 rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2">
+        <summary class="cursor-pointer select-none text-xs font-semibold text-slate-400 hover:text-slate-200">Ver detalhes dos atributos</summary>
+        <div class="mt-3 grid grid-cols-1 gap-2">
+          ${renderDashboardStatBreakdown("HP", d.hp, d.equipBonusHp, d.clanBonusHp, "text-red-400")}
+          ${renderDashboardStatBreakdown("ATK", d.attack, d.equipBonusAttack, d.clanBonusAttack, "text-orange-400")}
+          ${renderDashboardStatBreakdown("DEF", d.defense, d.equipBonusDefense, d.clanBonusDefense, "text-blue-400")}
+        </div>
+      </details>
 
       <!-- Traits -->
       <div class="flex gap-2 mt-3 flex-wrap">
@@ -241,6 +240,40 @@ function renderDigimonCard(d) {
         <span class="badge-xs">${formatPersonality(d.personality)}</span>
         ${d.trait ? `<span class="badge-xs badge-trait">${formatTrait(d.trait)}</span>` : ""}
         ${d.rebirthCount > 0 ? `<span class="badge-xs badge-rebirth">Rebirth ×${d.rebirthCount}</span>` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function dashboardStatNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function dashboardFormatStat(value) {
+  return dashboardStatNumber(value).toLocaleString("pt-BR");
+}
+
+function renderDashboardStat(label, base, equipmentBonus, clanBonus, colorClass) {
+  const total = dashboardStatNumber(base) + dashboardStatNumber(equipmentBonus) + dashboardStatNumber(clanBonus);
+  return `<div><p class="text-xs text-slate-500">${label}</p><p class="font-bold ${colorClass}">${dashboardFormatStat(total)}</p></div>`;
+}
+
+function renderDashboardStatBreakdown(label, base, equipmentBonus, clanBonus, colorClass) {
+  const baseValue = dashboardStatNumber(base);
+  const equipmentValue = dashboardStatNumber(equipmentBonus);
+  const clanValue = dashboardStatNumber(clanBonus);
+  const total = baseValue + equipmentValue + clanValue;
+  return `
+    <div class="rounded-md border border-slate-800/80 px-2 py-2">
+      <div class="flex items-center justify-between gap-2 mb-1">
+        <span class="text-xs font-bold ${colorClass}">${label}</span>
+        <span class="text-xs font-bold text-slate-200">${dashboardFormatStat(total)}</span>
+      </div>
+      <div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-500">
+        <span>Digimon: ${dashboardFormatStat(baseValue)}</span>
+        ${equipmentValue ? `<span class="text-green-400">Equipamentos: +${dashboardFormatStat(equipmentValue)}</span>` : ""}
+        ${clanValue ? `<span class="text-cyan-400">Clã: +${dashboardFormatStat(clanValue)}</span>` : ""}
       </div>
     </div>
   `;
