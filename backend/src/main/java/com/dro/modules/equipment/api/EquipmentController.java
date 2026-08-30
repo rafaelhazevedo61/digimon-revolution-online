@@ -1,6 +1,7 @@
 package com.dro.modules.equipment.api;
 
 import com.dro.modules.equipment.api.dto.request.EquipRequest;
+import com.dro.modules.equipment.api.dto.request.AscendEquipmentRequest;
 import com.dro.modules.equipment.api.dto.request.RefineEquipmentRequest;
 import com.dro.modules.equipment.api.dto.request.UnequipRequest;
 import com.dro.modules.equipment.api.dto.response.DigimonEquipmentResponse;
@@ -8,6 +9,7 @@ import com.dro.modules.equipment.api.dto.response.EquipmentResponse;
 import com.dro.modules.equipment.api.dto.response.EquipmentPageResponse;
 import com.dro.modules.equipment.api.dto.response.RefineEquipmentResponse;
 import com.dro.modules.equipment.api.dto.response.RefinePreviewResponse;
+import com.dro.modules.equipment.api.dto.response.AscendEquipmentResponse;
 import com.dro.modules.equipment.application.*;
 import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.inventory.domain.ItemType;
@@ -34,6 +36,7 @@ public class EquipmentController {
     private final UnequipUseCase unequipUseCase;
     private final UnequipAllUseCase unequipAllUseCase;
     private final RefineEquipmentUseCase refineEquipmentUseCase;
+    private final AscendEquipmentUseCase ascendEquipmentUseCase;
     private final com.dro.modules.equipment.infra.EquipmentRepository equipmentRepository;
     private final InventoryRepository inventoryRepository;
     private final ItemDefinitionRepository itemDefinitionRepository;
@@ -123,6 +126,11 @@ public class EquipmentController {
         return ResponseEntity.ok(refineEquipmentUseCase.execute(authorization, request));
     }
 
+    @PostMapping("/ascend")
+    public ResponseEntity<AscendEquipmentResponse> ascend(@RequestHeader("Authorization") String authorization, @RequestBody @Valid AscendEquipmentRequest request) {
+        return ResponseEntity.ok(ascendEquipmentUseCase.execute(authorization, request));
+    }
+
     @GetMapping("/{equipmentId}/refine-preview")
     public ResponseEntity<RefinePreviewResponse> refinePreview(@RequestHeader("Authorization") String authorization, @PathVariable UUID equipmentId) {
         UUID playerId = com.dro.shared.util.TokenExtractor.extractPlayerId(authorization);
@@ -156,13 +164,14 @@ public class EquipmentController {
                 .map(item -> item.getQuantity()).orElse(0);
     }
 
-    public EquipmentController(final GetDigimonInventoryUseCase getDigimonInventoryUseCase, final GetDigimonEquipmentUseCase getDigimonEquipmentUseCase, final EquipUseCase equipUseCase, final UnequipUseCase unequipUseCase, final UnequipAllUseCase unequipAllUseCase, final RefineEquipmentUseCase refineEquipmentUseCase, final com.dro.modules.equipment.infra.EquipmentRepository equipmentRepository, final InventoryRepository inventoryRepository, final ItemDefinitionRepository itemDefinitionRepository, final com.dro.modules.player.infra.PlayerRepository playerRepository, final com.dro.modules.digimon.infra.DigimonRepository digimonRepository) {
+    public EquipmentController(final GetDigimonInventoryUseCase getDigimonInventoryUseCase, final GetDigimonEquipmentUseCase getDigimonEquipmentUseCase, final EquipUseCase equipUseCase, final UnequipUseCase unequipUseCase, final UnequipAllUseCase unequipAllUseCase, final RefineEquipmentUseCase refineEquipmentUseCase, final AscendEquipmentUseCase ascendEquipmentUseCase, final com.dro.modules.equipment.infra.EquipmentRepository equipmentRepository, final InventoryRepository inventoryRepository, final ItemDefinitionRepository itemDefinitionRepository, final com.dro.modules.player.infra.PlayerRepository playerRepository, final com.dro.modules.digimon.infra.DigimonRepository digimonRepository) {
         this.getDigimonInventoryUseCase = getDigimonInventoryUseCase;
         this.getDigimonEquipmentUseCase = getDigimonEquipmentUseCase;
         this.equipUseCase = equipUseCase;
         this.unequipUseCase = unequipUseCase;
         this.unequipAllUseCase = unequipAllUseCase;
         this.refineEquipmentUseCase = refineEquipmentUseCase;
+        this.ascendEquipmentUseCase = ascendEquipmentUseCase;
         this.equipmentRepository = equipmentRepository;
         this.inventoryRepository = inventoryRepository;
         this.itemDefinitionRepository = itemDefinitionRepository;

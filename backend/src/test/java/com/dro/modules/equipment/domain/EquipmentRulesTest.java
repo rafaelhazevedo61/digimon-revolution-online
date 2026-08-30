@@ -72,4 +72,25 @@ class EquipmentRulesTest {
         assertEquals(0, EquipmentRules.totalBonusAttack(empty));
         assertEquals(0, EquipmentRules.totalBonusDefense(empty));
     }
+
+    @Test
+    void ascension_hasExpectedProgressionAndCap() {
+        assertEquals(3, EquipmentRules.MAX_ASCENSION_LEVEL);
+        assertEquals(EquipmentRules.MAX_REFINEMENT_LEVEL, EquipmentRules.ASCENSION_REFINEMENT_REQUIREMENT);
+        assertEquals(1, EquipmentRules.ascensionRebirthRequirement(1));
+        assertEquals(10, EquipmentRules.ascensionRebirthRequirement(2));
+        assertEquals(20, EquipmentRules.ascensionRebirthRequirement(3));
+        assertEquals(10, EquipmentRules.ascensionCoreCost(1));
+        assertEquals(30, EquipmentRules.ascensionCoreCost(2));
+        assertEquals(100, EquipmentRules.ascensionCoreCost(3));
+    }
+
+    @Test
+    void ascension_multiplier_isAppliedOnlyAfterFirstAscension() {
+        Equipment equipment = createEquipment(100, 0, 0, false);
+        equipment.setRefinementLevel(EquipmentRules.MAX_REFINEMENT_LEVEL);
+        assertEquals(122, equipment.getEffectiveBonusHp());
+        equipment.setAscensionLevel(3);
+        assertEquals(146, equipment.getEffectiveBonusHp());
+    }
 }

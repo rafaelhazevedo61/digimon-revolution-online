@@ -1046,6 +1046,9 @@ function invRenderEquipment() {
     const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
     const emoji = slotEmoji[eq.slot] || "⚔️";
     const refLabel = eq.refinementLevel > 0 ? ` +${eq.refinementLevel}` : "";
+    const ascensionLevel = Number(eq.ascensionLevel) || 0;
+    const ascensionLabel = ascensionLevel > 0 ? `<span class="badge badge-legendary">Ascensão ${ascensionLevel}</span>` : "";
+    const canAscend = !eq.equipped && ascensionLevel < 3 && Number(eq.refinementLevel) >= 11;
 
     const stats = [];
     if (eq.effectiveBonusHp > 0) stats.push(`<span class="text-red-400">HP+${eq.effectiveBonusHp}</span>`);
@@ -1064,6 +1067,7 @@ function invRenderEquipment() {
             <div class="flex gap-2 mt-1 flex-wrap">
               ${eq.setCode ? `<span class="badge badge-${invSetBadge(eq.setCode)}">${escapeHtml(invSetLabel(eq.setCode))}</span>` : ''}
               <span class="badge badge-${eq.rarity ? eq.rarity.toLowerCase() : 'common'}">T${eq.tier || '?'}</span>
+              ${ascensionLabel}
               <span class="text-xs text-slate-500">${slotName[eq.slot] || eq.slot}</span>
             </div>
             ${stats.length > 0 ? `<div class="flex gap-2 mt-1 text-xs font-bold">${stats.join(" ")}</div>` : ""}
@@ -1073,6 +1077,7 @@ function invRenderEquipment() {
               <button class="btn-sm" style="background:#7f1d1d;color:#fca5a5" onclick="invUnequip('${eq.id}')">Desequipar</button>
             ` : `
               <button class="btn-sm btn-primary" onclick="invEquip('${eq.id}')">Equipar</button>
+              ${canAscend ? `<button class="btn-sm" style="background:#854d0e;color:#fde68a" onclick="invAscend('${eq.id}', ${ascensionLevel + 1})">Ascender</button>` : ''}
             `}
           </div>
         </div>
@@ -1097,6 +1102,18 @@ async function invUnequip(equipmentId) {
     showToast("Equipamento removido!");
     await invReloadEquipment();
     if (typeof renderDashboardPage === "function") renderDashboardPage();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function invAscend(equipmentId, targetLevel) {
+  const confirmed = window.confirm(`Realizar Ascensão ${targetLevel}? O equipamento deve estar no refinamento +11 e serão consumidos Núcleos de Ascensão e Bits.`);
+  if (!confirmed) return;
+  try {
+    const result = await apiPost("/equipment/ascend", { equipmentId });
+    showToast(result.message || `Ascensão ${targetLevel} realizada!`);
+    await invReloadEquipment();
   } catch (err) {
     showToast(err.message, "error");
   }
