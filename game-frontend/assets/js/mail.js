@@ -23,9 +23,14 @@ function renderMailPage() {
           <p class="text-xl font-bold text-cyan-300" id="mail-unread-count">--</p>
         </div>
         <div class="flex items-center gap-2">
-          <button id="mail-mark-all-read" class="btn-sm text-xs" onclick="mailMarkAllRead()">
-            Marcar todas como lidas
-          </button>
+          <div class="flex items-center gap-2">
+            <button id="mail-mark-all-read" class="btn-sm text-xs" onclick="mailMarkAllRead()">
+              Marcar todas como lidas
+            </button>
+            <button id="mail-delete-all" class="btn-sm text-xs text-red-300" onclick="mailAskDeleteAll()">
+              Apagar todas
+            </button>
+          </div>
           <span class="text-3xl" aria-hidden="true">✉️</span>
         </div>
       </div>
@@ -51,7 +56,9 @@ function renderMailPage() {
 
 function mailUpdateMarkAllReadButton() {
   const button = document.getElementById("mail-mark-all-read");
+  const deleteButton = document.getElementById("mail-delete-all");
   if (button) button.classList.toggle("hidden", mailFolder !== "inbox");
+  if (deleteButton) deleteButton.classList.toggle("hidden", mailFolder !== "inbox");
 }
 
 async function mailMarkAllRead() {
@@ -372,6 +379,25 @@ async function mailDelete(messageId) {
     mailRefreshUnreadCount();
   } catch (err) {
     showToast(err.message, "error");
+  }
+}
+
+async function mailAskDeleteAll() {
+  if (mailFolder !== "inbox") return;
+  const confirmed = await showConfirm("Todas as mensagens comuns da Entrada serão apagadas. Mensagens com recompensas pendentes serão preservadas.", { title: "Apagar todas as mensagens?", confirmText: "Apagar todas", danger: true });
+  if (!confirmed) return;
+  const button = document.getElementById("mail-delete-all");
+  if (button) { button.disabled = true; button.textContent = "Apagando..."; }
+  try {
+    const result = await apiDelete("/mail/inbox");
+    const preserved = Number(result.preservedCount || 0);
+    showToast(preserved > 0 ? `${result.deletedCount || 0} mensagem(ns) apagada(s). ${preserved} mensagem(ns) com recompensa pendente foram preservadas.` : `${result.deletedCount || 0} mensagem(ns) apagada(s).`);
+    await mailLoadFolder();
+    await mailRefreshUnreadCount();
+  } catch (err) {
+    showToast(err.message, "error");
+  } finally {
+    if (button) { button.disabled = false; button.textContent = "Apagar todas"; }
   }
 }
 
