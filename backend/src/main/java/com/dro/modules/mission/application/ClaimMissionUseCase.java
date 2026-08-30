@@ -243,6 +243,8 @@ public class ClaimMissionUseCase {
                         xpMultiplier,
                         eventMultiplier,
                         digimonXpMultiplier,
+                        missionProgressMultiplier * xpMultiplier * eventMultiplier * digimonXpMultiplier,
+                        effectiveMultiplier(mission.getBaseXp(), xpGained),
                         xpBeforeDigimonMultiplier,
                         xpGained
                 ),
@@ -254,6 +256,11 @@ public class ClaimMissionUseCase {
                                 ? WeekendDoubleRewardRules.BITS_MULTIPLIER
                                 : 1,
                         1.0,
+                        missionProgressMultiplier * bitsMultiplier
+                                * (WeekendDoubleRewardRules.isActive(rewardTime)
+                                ? WeekendDoubleRewardRules.BITS_MULTIPLIER
+                                : 1),
+                        effectiveMultiplier(mission.getBaseBits(), bitsGained),
                         bitsBeforeEventMultiplier,
                         bitsGained
                 )
@@ -392,6 +399,10 @@ public class ClaimMissionUseCase {
         }
         payload.put("summary", "Mission claimed successfully");
         return payload;
+    }
+
+    private double effectiveMultiplier(int baseAmount, int finalAmount) {
+        return baseAmount > 0 ? finalAmount / (double) baseAmount : 0.0;
     }
 
     private double calculateProgressMultiplier(int completionCount) {

@@ -143,6 +143,8 @@ class ClaimMissionUseCaseTest {
         assertThat(response.experienceBreakdown().baseAmount()).isEqualTo(30);
         assertThat(response.experienceBreakdown().eventMultiplier()).isEqualTo(2);
         assertThat(response.experienceBreakdown().amountBeforeDigimonMultiplier()).isEqualTo(60);
+        assertThat(response.experienceBreakdown().combinedMultiplier()).isEqualTo(2.0);
+        assertThat(response.experienceBreakdown().effectiveMultiplier()).isEqualTo(2.0);
         assertThat(response.experienceBreakdown().finalAmount()).isEqualTo(60);
         assertThat(response.rewards()).hasSize(1);
         assertThat(response.rewards().get(0).item()).isEqualTo(ItemType.LOOT_CHEST);

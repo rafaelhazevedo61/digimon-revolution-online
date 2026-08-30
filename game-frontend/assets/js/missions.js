@@ -470,6 +470,8 @@ function missionRewardBreakdownMarkup(title, breakdown, unit, digimonLabel) {
   const clan = Number(breakdown.clanMultiplier) || 1;
   const event = Number(breakdown.eventMultiplier) || 1;
   const digimon = Number(breakdown.digimonMultiplier) || 1;
+  const combined = Number(breakdown.combinedMultiplier) || 1;
+  const effective = Number(breakdown.effectiveMultiplier) || 0;
   const beforeDigimon = Number(breakdown.amountBeforeDigimonMultiplier) || 0;
   const total = Number(breakdown.finalAmount) || 0;
   return `
@@ -482,6 +484,9 @@ function missionRewardBreakdownMarkup(title, breakdown, unit, digimonLabel) {
         <div class="flex justify-between gap-3"><span>Evento de recompensa</span><strong class="text-slate-200">${missionMultiplierLabel(event)}</strong></div>
         <div class="flex justify-between gap-3"><span>${escapeHtml(digimonLabel)}</span><strong class="text-slate-200">${missionMultiplierLabel(digimon)}</strong></div>
         <div class="border-t border-slate-700 pt-2 flex justify-between gap-3"><span>Após missão, clã e evento</span><strong class="text-slate-200">${beforeDigimon} ${unit}</strong></div>
+        <div class="flex justify-between gap-3"><span>Multiplicador consolidado</span><strong class="text-cyan-200">${missionMultiplierLabel(combined)}</strong></div>
+        <div class="flex justify-between gap-3"><span>Multiplicador efetivo (arredondamento)</span><strong class="text-cyan-200">${missionMultiplierLabel(effective)}</strong></div>
+        <div class="border-t border-slate-700 pt-2 flex justify-between gap-3"><span>Conferência: ${base} × ${missionMultiplierLabel(effective)}</span><strong class="text-slate-200">≈ ${total} ${unit}</strong></div>
         <div class="flex justify-between gap-3 font-bold"><span>Total aplicado</span><strong class="text-purple-200">${total} ${unit}</strong></div>
       </div>
     </details>

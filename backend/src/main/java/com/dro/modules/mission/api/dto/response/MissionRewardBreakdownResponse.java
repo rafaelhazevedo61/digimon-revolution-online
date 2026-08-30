@@ -9,6 +9,8 @@ public record MissionRewardBreakdownResponse(
         double clanMultiplier,
         int eventMultiplier,
         double digimonMultiplier,
+        double combinedMultiplier,
+        double effectiveMultiplier,
         int amountBeforeDigimonMultiplier,
         int finalAmount
 ) {
