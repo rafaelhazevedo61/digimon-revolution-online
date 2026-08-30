@@ -36,6 +36,13 @@ async function renderInventoryPage() {
       </div>
 
       <div id="inv-config-panel" class="card-sm mb-3 hidden">
+        <div class="mb-3 rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-2">
+          <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+            <input id="inv-pagination-enabled" type="checkbox" class="accent-cyan-500" checked>
+            Usar paginação no inventário
+          </label>
+          <p class="text-xs text-slate-500 mt-1">Desative para exibir todos os itens de uma vez.</p>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label class="text-xs text-slate-400 flex flex-col min-w-0">
             <span class="min-h-8 leading-4 flex items-start">Categoria dos itens</span>
@@ -139,6 +146,22 @@ async function renderInventoryPage() {
   `;
 
   invSetupFilterControls();
+  await loadPlayerPaginationPreference();
+  const paginationToggle = document.getElementById("inv-pagination-enabled");
+  if (paginationToggle) {
+    paginationToggle.checked = playerPaginationEnabled;
+    paginationToggle.addEventListener("change", async () => {
+      paginationToggle.disabled = true;
+      try {
+        await savePlayerPaginationPreference(paginationToggle.checked);
+        invPagination.items = 0;
+        invPagination.equipment = 0;
+        await invRenderActiveTab();
+      } finally {
+        paginationToggle.disabled = false;
+      }
+    });
+  }
 
   try {
     const [, dashboard] = await Promise.all([
@@ -275,7 +298,12 @@ function invPageParams(tab) {
 }
 
 async function invLoadItemsPage() {
-  invPageData.items = await apiGet("/inventory/page", invPageParams("items"));
+  if (playerPaginationEnabled) {
+    invPageData.items = await apiGet("/inventory/page", invPageParams("items"));
+  } else {
+    const items = await apiGet("/inventory") || [];
+    invPageData.items = { content: items, totalElements: items.length, totalPages: 1 };
+  }
   invItems = invPageData.items.content || [];
   return invPageData.items;
 }
@@ -286,7 +314,12 @@ async function invLoadEquipmentPage() {
     invEquipments = [];
     return invPageData.equipment;
   }
-  invPageData.equipment = await apiGet("/equipment/inventory/page", invPageParams("equipment"));
+  if (playerPaginationEnabled) {
+    invPageData.equipment = await apiGet("/equipment/inventory/page", invPageParams("equipment"));
+  } else {
+    const equipment = await apiGet("/equipment/inventory") || [];
+    invPageData.equipment = { content: equipment, totalElements: equipment.length, totalPages: 1 };
+  }
   invEquipments = invPageData.equipment.content || [];
   return invPageData.equipment;
 }
@@ -409,8 +442,13 @@ function invCompareText(a, b) {
 function invRenderItems() {
   const content = document.getElementById("inv-content");
   const page = invPageData.items;
-  const items = page.content || [];
-  invUpdateFilterSummary(invGetPageSummary("items", page.totalElements), page.totalElements, "item");
+  const filteredItems = playerPaginationEnabled ? null : invSortItems(invGetFilteredItems());
+  const items = playerPaginationEnabled ? (page.content || []) : filteredItems;
+  invUpdateFilterSummary(
+    playerPaginationEnabled ? invGetPageSummary("items", page.totalElements) : items.length,
+    playerPaginationEnabled ? page.totalElements : items.length,
+    "item"
+  );
 
   if (items.length === 0) {
     content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${page.totalElements === 0 ? "Nenhum item no inventário." : "Nenhum item nesta página."}</p>`;
@@ -453,7 +491,7 @@ function invRenderItems() {
 
     return `
       <div class="card-sm mb-2 flex items-center gap-3">
-        <div class="text-2xl">${emoji}</div>
+        <div class="shrink-0">${isChest ? renderChestIcon("w-14 h-14") : emoji}</div>
         <div class="flex-1 min-w-0">
           <p class="font-bold text-sm inventory-item-name" title="${escapeAttr(name)}" aria-label="${escapeAttr(name)}">${escapeHtml(name)}</p>
           <div class="flex gap-2 mt-1">
@@ -481,6 +519,7 @@ function invGetPageSummary(tab, total) {
 }
 
 function invRenderPagination(tab, total, backendTotalPages = null) {
+  if (!playerPaginationEnabled) return "";
   const totalPages = backendTotalPages == null ? Math.ceil(total / invPagination.pageSize) : backendTotalPages;
   if (totalPages <= 1) return "";
   const currentPage = invPagination[tab];
@@ -594,7 +633,7 @@ function invSortItems(items) {
 function invCategoryEmoji(category) {
   const map = {
     CONSUMABLE: "🧪", MATERIAL: "🔮", FRAGMENT: "🧩",
-    EVOLUTION_MATERIAL: "⭐", DIGITAMA: "🥚", INCUBATOR: "📦", CHEST: "🎁"
+    EVOLUTION_MATERIAL: "⭐", DIGITAMA: "🥚", INCUBATOR: "📦", CHEST: renderChestIcon("w-10 h-10")
   };
   return map[category] || "📦";
 }
@@ -721,7 +760,7 @@ function invShowChestOpeningResult(result) {
   overlay.innerHTML = `
     <div class="card w-full max-w-md max-h-[88vh] border-cyan-800 shadow-2xl flex flex-col overflow-hidden">
       <div class="text-center mb-4 shrink-0">
-        <div class="text-5xl mb-2">🎁</div>
+        <div class="flex justify-center mb-2">${renderChestIcon("w-24 h-24")}</div>
         <h3 class="text-xl font-bold">${escapeHtml(title)}</h3>
         <p class="text-sm text-slate-400 mt-1">${escapeHtml(result && result.chestName || "Baú")} · ${chestQuantity} ${chestQuantity === 1 ? "baú" : "baús"}</p>
         <p class="text-xs text-slate-500 mt-2">Cada item possui sua própria raridade</p>
@@ -810,7 +849,7 @@ function invItemEmoji(itemType) {
     XP_DISC_10: "💿", XP_DISC_15: "💿", XP_DISC_20: "💿",
     FRAGMENT_ROOKIE: "🧩", FRAGMENT_CHAMPION: "🧩", FRAGMENT_ULTIMATE: "🧩", FRAGMENT_MEGA: "🧩",
     EVOLUTION_MATERIAL: "⭐",
-    LOOT_CHEST: "🎁",
+    LOOT_CHEST: renderChestIcon("w-10 h-10"),
     RARITY_REROLL: "🎲"
   };
   return map[itemType] || "📦";
@@ -989,8 +1028,13 @@ function invSortEquipments(equipments) {
 function invRenderEquipment() {
   const content = document.getElementById("inv-content");
   const page = invPageData.equipment;
-  const equipments = page.content || [];
-  invUpdateFilterSummary(invGetPageSummary("equipment", page.totalElements), page.totalElements, "equipamento");
+  const filteredEquipments = playerPaginationEnabled ? null : invSortEquipments(invGetFilteredEquipments());
+  const equipments = playerPaginationEnabled ? (page.content || []) : filteredEquipments;
+  invUpdateFilterSummary(
+    playerPaginationEnabled ? invGetPageSummary("equipment", page.totalElements) : equipments.length,
+    playerPaginationEnabled ? page.totalElements : equipments.length,
+    "equipamento"
+  );
 
   if (equipments.length === 0) {
     content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${page.totalElements === 0 ? "Nenhum equipamento no inventário." : "Nenhum equipamento nesta página."}</p>`;
@@ -1025,9 +1069,6 @@ function invRenderEquipment() {
             ${stats.length > 0 ? `<div class="flex gap-2 mt-1 text-xs font-bold">${stats.join(" ")}</div>` : ""}
           </div>
           <div class="flex flex-col gap-1">
-            ${eq.refinementLevel < 10 ? `
-              <button class="btn-sm" style="background:#4a2800;color:#f59e0b" onclick="invShowRefine('${eq.id}')">Refinar</button>
-            ` : ''}
             ${eq.equipped ? `
               <button class="btn-sm" style="background:#7f1d1d;color:#fca5a5" onclick="invUnequip('${eq.id}')">Desequipar</button>
             ` : `
@@ -1055,6 +1096,7 @@ async function invUnequip(equipmentId) {
     await apiPost("/equipment/unequip", { equipmentId: equipmentId });
     showToast("Equipamento removido!");
     await invReloadEquipment();
+    if (typeof renderDashboardPage === "function") renderDashboardPage();
   } catch (err) {
     showToast(err.message, "error");
   }
@@ -1067,106 +1109,5 @@ async function invReloadEquipment() {
     invRenderEquipment();
   } catch (err) {
     showToast(err.message, "error");
-  }
-}
-
-// ==================== REFINE MODAL ====================
-
-async function invShowRefine(equipmentId) {
-  const eq = invEquipments.find(e => e.id === equipmentId);
-  if (!eq) return;
-
-  let preview = null;
-  try {
-    preview = await apiGet(`/equipment/${equipmentId}/refine-preview`);
-  } catch (err) {
-    showToast(err.message, "error");
-    return;
-  }
-
-  const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
-  const emoji = slotEmoji[eq.slot] || "⚔️";
-  const refLabel = eq.refinementLevel > 0 ? ` +${eq.refinementLevel}` : "";
-
-  const overlay = document.createElement("div");
-  overlay.id = "refine-overlay";
-  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;display:flex;align-items:flex-end;justify-content:center;";
-  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-
-  const nextLevel = preview.nextRefinementLevel;
-  const nextHp = eq.bonusHp > 0 ? eq.effectiveBonusHp + 2 : 0;
-  const nextAtk = eq.bonusAttack > 0 ? eq.effectiveBonusAttack + 2 : 0;
-  const nextDef = eq.bonusDefense > 0 ? eq.effectiveBonusDefense + 2 : 0;
-
-  overlay.innerHTML = `
-    <div class="card" style="max-width:420px;width:100%;max-height:85vh;overflow-y:auto;border-radius:1rem 1rem 0 0;margin:0 auto;">
-      <div class="text-center mb-3">
-        <div class="text-3xl mb-1">${emoji}</div>
-        <h3 class="text-lg font-bold">${escapeHtml(eq.name)}${refLabel}</h3>
-        ${eq.setCode ? `<span class="badge badge-${invSetBadge(eq.setCode)}">${escapeHtml(invSetLabel(eq.setCode))}</span>` : ''}
-        <span class="badge badge-${eq.rarity ? eq.rarity.toLowerCase() : 'common'}">T${eq.tier || '?'}</span>
-      </div>
-
-      <div class="card-sm mb-3">
-        <p class="text-xs text-slate-400 mb-2">Refinamento: +${preview.currentRefinementLevel} → +${nextLevel}</p>
-        <div class="grid grid-cols-3 gap-2 text-center text-sm">
-          ${eq.bonusHp > 0 ? `<div><span class="text-slate-400">HP</span><br><span class="text-red-400 font-bold">${eq.effectiveBonusHp} → ${nextHp}</span></div>` : ''}
-          ${eq.bonusAttack > 0 ? `<div><span class="text-slate-400">ATK</span><br><span class="text-orange-400 font-bold">${eq.effectiveBonusAttack} → ${nextAtk}</span></div>` : ''}
-          ${eq.bonusDefense > 0 ? `<div><span class="text-slate-400">DEF</span><br><span class="text-blue-400 font-bold">${eq.effectiveBonusDefense} → ${nextDef}</span></div>` : ''}
-        </div>
-      </div>
-
-      <div class="card-sm mb-3">
-        <p class="text-xs text-slate-400 mb-2">Custo e Chance</p>
-        <div class="flex justify-around text-sm">
-          <div class="text-center">
-            <span class="text-yellow-400 font-bold">${preview.costBits}</span>
-            <span class="text-slate-400"> Bits</span>
-            <br><span class="text-xs ${preview.currentBits >= preview.costBits ? 'text-green-400' : 'text-red-400'}">(tem: ${preview.currentBits})</span>
-          </div>
-          <div class="text-center">
-            <span class="text-purple-400 font-bold">${preview.costStones}</span>
-            <span class="text-slate-400"> Pedra</span>
-            <br><span class="text-xs ${preview.currentStones >= preview.costStones ? 'text-green-400' : 'text-red-400'}">(tem: ${preview.currentStones})</span>
-          </div>
-          <div class="text-center">
-            <span class="font-bold ${preview.successRate >= 70 ? 'text-green-400' : preview.successRate >= 40 ? 'text-yellow-400' : 'text-red-400'}">${preview.successRate}%</span>
-            <span class="text-slate-400"> Chance</span>
-          </div>
-        </div>
-      </div>
-
-      <button id="refine-btn" class="btn-primary w-full py-3 text-base font-bold"
-        ${!preview.canRefine ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}
-        onclick="invDoRefine('${equipmentId}')">
-        🔨 Refinar para +${nextLevel} (${preview.successRate}%)
-      </button>
-      ${!preview.canRefine ? `<p class="text-red-400 text-xs text-center mt-2">Recursos insuficientes</p>` : ''}
-    </div>
-  `;
-
-  document.body.appendChild(overlay);
-}
-
-async function invDoRefine(equipmentId) {
-  const btn = document.getElementById("refine-btn");
-  if (btn) { btn.disabled = true; btn.textContent = "Refinando..."; }
-
-  try {
-    const result = await apiPost("/equipment/refine", { equipmentId: equipmentId });
-
-    if (result.success) {
-      showToast(result.message || "Refinamento bem-sucedido!");
-    } else {
-      showToast(result.message || "Refinamento falhou!", "error");
-    }
-
-    const overlay = document.getElementById("refine-overlay");
-    if (overlay) overlay.remove();
-
-    await invReloadEquipment();
-  } catch (err) {
-    showToast(err.message, "error");
-    if (btn) { btn.disabled = false; btn.textContent = "🔨 Refinar"; }
   }
 }

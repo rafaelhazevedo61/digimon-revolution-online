@@ -1,5 +1,7 @@
 package com.dro.modules.digimon.api.dto.response;
 
+import com.dro.modules.digimon.domain.enums.Rarity;
+
 /**
  * Contrato de dados do módulo de Digimon.
  */
@@ -20,6 +22,8 @@ public record RebirthPreviewResponse(
         IvRangeResponse attackIvRange,
         IvRangeResponse defenseIvRange,
         double statMultiplier,
-        int equippedEquipmentCount
+        int equippedEquipmentCount,
+        Rarity currentRarity,
+        int rarityPreservationItemQuantity
 ) {
 }

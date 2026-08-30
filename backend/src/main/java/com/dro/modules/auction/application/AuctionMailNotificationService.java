@@ -14,9 +14,9 @@ public class AuctionMailNotificationService {
     private final CreateSystemMailMessageUseCase createSystemMailMessageUseCase;
 
     @Transactional
-    public void notifyPurchase(AuctionTransaction transaction) {
+    public void notifyPurchase(AuctionTransaction transaction, String buyerUsername) {
         notifyMessage(AuctionMailNotificationFactory.purchaseForBuyer(transaction));
-        notifyMessage(AuctionMailNotificationFactory.purchaseForSeller(transaction));
+        notifyMessage(AuctionMailNotificationFactory.purchaseForSeller(transaction, buyerUsername));
     }
 
     @Transactional

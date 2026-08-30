@@ -56,7 +56,7 @@ function renderDashContent(data) {
       ${d ? `
       <div class="card-sm text-center">
         <p class="text-xs text-slate-500">Bits</p>
-        <p class="text-lg font-bold text-yellow-400">${d.bits}</p>
+        <p class="text-lg font-bold text-yellow-400">${Number(d.bits || 0).toLocaleString("pt-BR")}</p>
       </div>
       <div class="card-sm text-center">
         <p class="text-xs text-slate-500">Energia</p>
@@ -65,7 +65,7 @@ function renderDashContent(data) {
       ` : ""}
       <div class="card-sm text-center">
         <p class="text-xs text-slate-500">Dados Digitais</p>
-        <p class="text-lg font-bold text-cyan-400">${Number(data.digitalData || 0).toLocaleString()}</p>
+        <p class="text-lg font-bold text-cyan-400">${Number(data.digitalData || 0).toLocaleString("pt-BR")}</p>
       </div>
     </div>
 
@@ -219,21 +219,20 @@ function renderDigimonCard(d) {
         </div>
       </div>
 
-      <!-- Stats -->
+      <!-- Effective stats -->
       <div class="grid grid-cols-3 gap-2 text-center text-sm">
-        <div>
-          <p class="text-xs text-slate-500">HP</p>
-          <p class="font-bold text-red-400">${d.hp}${d.equipBonusHp ? `<span class="text-xs text-green-400">+${d.equipBonusHp}</span>` : ""}${d.clanBonusHp ? `<span class="text-xs text-cyan-400">+${d.clanBonusHp}</span>` : ""}</p>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500">ATK</p>
-          <p class="font-bold text-orange-400">${d.attack}${d.equipBonusAttack ? `<span class="text-xs text-green-400">+${d.equipBonusAttack}</span>` : ""}${d.clanBonusAttack ? `<span class="text-xs text-cyan-400">+${d.clanBonusAttack}</span>` : ""}</p>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500">DEF</p>
-          <p class="font-bold text-blue-400">${d.defense}${d.equipBonusDefense ? `<span class="text-xs text-green-400">+${d.equipBonusDefense}</span>` : ""}${d.clanBonusDefense ? `<span class="text-xs text-cyan-400">+${d.clanBonusDefense}</span>` : ""}</p>
-        </div>
+        ${renderDashboardStat("HP", d.hp, d.equipBonusHp, d.clanBonusHp, "text-red-400")}
+        ${renderDashboardStat("ATK", d.attack, d.equipBonusAttack, d.clanBonusAttack, "text-orange-400")}
+        ${renderDashboardStat("DEF", d.defense, d.equipBonusDefense, d.clanBonusDefense, "text-blue-400")}
       </div>
+      <details class="mt-3 rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2">
+        <summary class="cursor-pointer select-none text-xs font-semibold text-slate-400 hover:text-slate-200">Ver detalhes dos atributos</summary>
+        <div class="mt-3 grid grid-cols-1 gap-2">
+          ${renderDashboardStatBreakdown("HP", d.hp, d.equipBonusHp, d.clanBonusHp, "text-red-400")}
+          ${renderDashboardStatBreakdown("ATK", d.attack, d.equipBonusAttack, d.clanBonusAttack, "text-orange-400")}
+          ${renderDashboardStatBreakdown("DEF", d.defense, d.equipBonusDefense, d.clanBonusDefense, "text-blue-400")}
+        </div>
+      </details>
 
       <!-- Traits -->
       <div class="flex gap-2 mt-3 flex-wrap">
@@ -241,6 +240,40 @@ function renderDigimonCard(d) {
         <span class="badge-xs">${formatPersonality(d.personality)}</span>
         ${d.trait ? `<span class="badge-xs badge-trait">${formatTrait(d.trait)}</span>` : ""}
         ${d.rebirthCount > 0 ? `<span class="badge-xs badge-rebirth">Rebirth ×${d.rebirthCount}</span>` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function dashboardStatNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function dashboardFormatStat(value) {
+  return dashboardStatNumber(value).toLocaleString("pt-BR");
+}
+
+function renderDashboardStat(label, base, equipmentBonus, clanBonus, colorClass) {
+  const total = dashboardStatNumber(base) + dashboardStatNumber(equipmentBonus) + dashboardStatNumber(clanBonus);
+  return `<div><p class="text-xs text-slate-500">${label}</p><p class="font-bold ${colorClass}">${dashboardFormatStat(total)}</p></div>`;
+}
+
+function renderDashboardStatBreakdown(label, base, equipmentBonus, clanBonus, colorClass) {
+  const baseValue = dashboardStatNumber(base);
+  const equipmentValue = dashboardStatNumber(equipmentBonus);
+  const clanValue = dashboardStatNumber(clanBonus);
+  const total = baseValue + equipmentValue + clanValue;
+  return `
+    <div class="rounded-md border border-slate-800/80 px-2 py-2">
+      <div class="flex items-center justify-between gap-2 mb-1">
+        <span class="text-xs font-bold ${colorClass}">${label}</span>
+        <span class="text-xs font-bold text-slate-200">${dashboardFormatStat(total)}</span>
+      </div>
+      <div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-500">
+        <span>Digimon: ${dashboardFormatStat(baseValue)}</span>
+        ${equipmentValue ? `<span class="text-green-400">Equipamentos: +${dashboardFormatStat(equipmentValue)}</span>` : ""}
+        ${clanValue ? `<span class="text-cyan-400">Clã: +${dashboardFormatStat(clanValue)}</span>` : ""}
       </div>
     </div>
   `;
@@ -266,16 +299,20 @@ function renderEquipSlots(items) {
         <div class="card-sm text-center ${border}" style="cursor:pointer" onclick="showEquipDetailModal('${item.id}')">
           <p class="text-lg">${slotEmoji[slot]}</p>
           <p class="text-xs font-bold truncate">${escapeHtml(item.name)}${refLabel}</p>
-          <div class="flex gap-1 justify-center flex-wrap">
+          <div class="flex gap-1 justify-center flex-wrap mb-3">
             <span class="badge badge-${item.rarity ? item.rarity.toLowerCase() : 'common'}" style="font-size:0.6rem">T${item.tier || '?'}</span>
+          </div>
+          <div class="flex flex-col gap-1" onclick="event.stopPropagation()">
+            <button class="btn-sm w-full text-[10px] py-1" style="background:#7f1d1d;color:#fca5a5" onclick="invUnequip('${item.id}')">Desequipar</button>
           </div>
         </div>
       `;
     }
     return `
-      <div class="card-sm text-center opacity-40">
+      <div class="card-sm text-center opacity-70 cursor-pointer hover:border-cyan-700 transition-colors" role="button" tabindex="0" aria-label="Equipar ${slotName[slot]}" onclick="dashboardOpenEmptyEquipmentSlot('${slot}')" onkeydown="if (event.key === 'Enter' || event.key === ' ') dashboardOpenEmptyEquipmentSlot('${slot}')">
         <p class="text-lg">${slotEmoji[slot]}</p>
         <p class="text-xs text-slate-500">${slotName[slot]}</p>
+        <p class="text-[10px] text-cyan-400 mt-1">Clique para equipar</p>
       </div>
     `;
   }).join("");
@@ -571,11 +608,12 @@ function showEquipDetailModal(equipmentId) {
   const rarityLabel = { COMMON: "Common", RARE: "Rare", EPIC: "Epic", LEGENDARY: "Legendary" };
 
   const overlay = document.createElement("div");
-  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;display:flex;align-items:flex-end;justify-content:center;";
+  overlay.id = "dashboard-equipment-detail-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;display:flex;align-items:center;justify-content:center;padding:1rem;";
   overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 
   overlay.innerHTML = `
-    <div class="card" style="max-width:420px;width:100%;max-height:85vh;overflow-y:auto;border-radius:1rem 1rem 0 0;margin:0 auto;">
+    <div class="card dashboard-equipment-detail-card" style="max-width:560px;width:100%;max-height:92vh;overflow:hidden;border-radius:1rem;margin:0 auto;">
       <div class="text-center mb-3">
         <div class="text-3xl mb-1">${emoji}</div>
         <h3 class="text-lg font-bold">${escapeHtml(eq.name)}${refLabel}</h3>
@@ -588,20 +626,14 @@ function showEquipDetailModal(equipmentId) {
       </div>
 
       <div class="card-sm mb-3">
-        <p class="text-xs text-slate-400 mb-2">Stats Base</p>
-        <div class="grid grid-cols-3 gap-2 text-center text-sm">
-          ${eq.bonusHp > 0 ? `<div><span class="text-slate-400">HP</span><br><span class="text-red-400">${eq.bonusHp}</span></div>` : ''}
-          ${eq.bonusAttack > 0 ? `<div><span class="text-slate-400">ATK</span><br><span class="text-orange-400">${eq.bonusAttack}</span></div>` : ''}
-          ${eq.bonusDefense > 0 ? `<div><span class="text-slate-400">DEF</span><br><span class="text-blue-400">${eq.bonusDefense}</span></div>` : ''}
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-xs text-slate-400">Atributos</p>
+          <p class="text-[10px] text-slate-500">Base <span class="mx-1">→</span> Efetivo</p>
         </div>
-      </div>
-
-      <div class="card-sm mb-3">
-        <p class="text-xs text-slate-400 mb-2">Stats Efetivos</p>
-        <div class="grid grid-cols-3 gap-2 text-center text-sm">
-          ${eq.effectiveBonusHp > 0 ? `<div><span class="text-slate-400">HP</span><br><span class="text-red-400 font-bold">${eq.effectiveBonusHp}</span></div>` : ''}
-          ${eq.effectiveBonusAttack > 0 ? `<div><span class="text-slate-400">ATK</span><br><span class="text-orange-400 font-bold">${eq.effectiveBonusAttack}</span></div>` : ''}
-          ${eq.effectiveBonusDefense > 0 ? `<div><span class="text-slate-400">DEF</span><br><span class="text-blue-400 font-bold">${eq.effectiveBonusDefense}</span></div>` : ''}
+        <div class="grid grid-cols-3 gap-2 text-center text-xs">
+          ${eq.bonusHp > 0 ? `<div><span class="text-slate-400">HP</span><br><span class="text-red-400">${eq.bonusHp}</span> <span class="text-slate-500">→</span> <strong class="text-red-300">${eq.effectiveBonusHp}</strong></div>` : ''}
+          ${eq.bonusAttack > 0 ? `<div><span class="text-slate-400">ATK</span><br><span class="text-orange-400">${eq.bonusAttack}</span> <span class="text-slate-500">→</span> <strong class="text-orange-300">${eq.effectiveBonusAttack}</strong></div>` : ''}
+          ${eq.bonusDefense > 0 ? `<div><span class="text-slate-400">DEF</span><br><span class="text-blue-400">${eq.bonusDefense}</span> <span class="text-slate-500">→</span> <strong class="text-blue-300">${eq.effectiveBonusDefense}</strong></div>` : ''}
         </div>
       </div>
 
@@ -612,9 +644,101 @@ function showEquipDetailModal(equipmentId) {
       </div>
       ` : ''}
 
-      <button class="btn-primary w-full py-3 text-base" onclick="this.closest('div[style]').remove()">Fechar</button>
+      <div class="card-sm mb-3">
+        <p class="text-xs text-slate-400 mb-2">Outros equipamentos para este slot</p>
+        <div id="dashboard-equipment-alternatives" class="dashboard-equipment-alternatives space-y-2 max-h-56 overflow-y-auto pr-1">
+          <p class="text-xs text-slate-500">Carregando equipamentos disponíveis...</p>
+        </div>
+      </div>
+
+      <button class="btn-primary w-full py-3 text-base" onclick="document.getElementById('dashboard-equipment-detail-overlay')?.remove()">Fechar</button>
     </div>
   `;
 
   document.body.appendChild(overlay);
+  dashboardLoadEquipmentAlternatives(eq.slot, eq.id);
+}
+
+async function dashboardLoadEquipmentAlternatives(slot, equippedId) {
+  const container = document.getElementById("dashboard-equipment-alternatives");
+  if (!container) return;
+  try {
+    const equipment = (await apiGet("/equipment/inventory") || [])
+      .filter(item => item.slot === slot && item.id !== equippedId);
+    if (!equipment.length) {
+      container.innerHTML = '<p class="text-xs text-slate-500">Nenhum outro equipamento disponível para este slot.</p>';
+      return;
+    }
+    container.innerHTML = equipment.map(dashboardEquipmentAlternativeCard).join("");
+  } catch (err) {
+    container.innerHTML = `<p class="text-xs text-red-300">${escapeHtml(err.message)}</p>`;
+  }
+}
+
+function dashboardEquipmentAlternativeCard(item) {
+  const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
+  const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
+  const rarity = String(item.rarity || "COMMON").toLowerCase();
+  const refLabel = Number(item.refinementLevel) > 0 ? ` +${item.refinementLevel}` : "";
+  const stats = [];
+  if (Number(item.effectiveBonusHp) > 0) stats.push(`<span class="text-red-400">HP+${item.effectiveBonusHp}</span>`);
+  if (Number(item.effectiveBonusAttack) > 0) stats.push(`<span class="text-orange-400">ATK+${item.effectiveBonusAttack}</span>`);
+  if (Number(item.effectiveBonusDefense) > 0) stats.push(`<span class="text-blue-400">DEF+${item.effectiveBonusDefense}</span>`);
+  const setLabel = typeof invSetLabel === "function" ? invSetLabel(item.setCode) : item.setCode;
+  const setBadge = typeof invSetBadge === "function" ? invSetBadge(item.setCode) : "common";
+  return `
+    <div class="rounded-lg border border-slate-700 bg-slate-900/60 p-2">
+      <div class="flex items-center gap-2">
+        <div class="text-xl shrink-0">${slotEmoji[item.slot] || "⚔️"}</div>
+        <div class="min-w-0 flex-1">
+          <p class="font-bold text-xs truncate">${escapeHtml(item.name)}${refLabel}</p>
+          <div class="flex gap-1 mt-1 flex-wrap items-center">
+            ${item.setCode ? `<span class="badge badge-${setBadge}">${escapeHtml(setLabel)}</span>` : ""}
+            <span class="badge badge-${rarity}">T${item.tier || "?"}</span>
+            <span class="text-[10px] text-slate-500">${slotName[item.slot] || item.slot}</span>
+          </div>
+          ${stats.length ? `<div class="flex gap-2 mt-1 text-[10px] font-bold">${stats.join(" ")}</div>` : ""}
+        </div>
+        <button class="btn-sm btn-primary shrink-0 text-xs" onclick="dashboardEquipAlternative('${item.id}')">Equipar</button>
+      </div>
+    </div>
+  `;
+}
+
+function dashboardOpenEmptyEquipmentSlot(slot) {
+  const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
+  const overlay = document.createElement("div");
+  overlay.id = "dashboard-equipment-detail-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;display:flex;align-items:center;justify-content:center;padding:1rem;";
+  overlay.onclick = (event) => { if (event.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="card dashboard-equipment-detail-card" style="max-width:560px;width:100%;max-height:92vh;overflow:hidden;border-radius:1rem;margin:0 auto;">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <h3 class="text-lg font-bold">Equipar ${slotName[slot] || slot}</h3>
+          <p class="text-xs text-slate-400 mt-1">Escolha um equipamento disponível para este slot.</p>
+        </div>
+        <button class="text-slate-400 text-xl" onclick="document.getElementById('dashboard-equipment-detail-overlay')?.remove()" aria-label="Fechar">×</button>
+      </div>
+      <div class="card-sm mb-3">
+        <div id="dashboard-equipment-alternatives" class="dashboard-equipment-alternatives space-y-2 max-h-56 overflow-y-auto pr-1">
+          <p class="text-xs text-slate-500">Carregando equipamentos disponíveis...</p>
+        </div>
+      </div>
+      <button class="btn-primary w-full py-3 text-base" onclick="document.getElementById('dashboard-equipment-detail-overlay')?.remove()">Fechar</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  dashboardLoadEquipmentAlternatives(slot, null);
+}
+
+async function dashboardEquipAlternative(equipmentId) {
+  try {
+    await apiPost("/equipment/equip", { equipmentId });
+    document.getElementById("dashboard-equipment-detail-overlay")?.remove();
+    showToast("Equipamento equipado!");
+    await renderDashboardPage();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
 }

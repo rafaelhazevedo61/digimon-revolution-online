@@ -6,14 +6,14 @@ import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import java.util.UUID;
 
-/** Lista todos os equipamentos pertencentes ao jogador, equipados ou não. */
+/** Lista somente os equipamentos disponíveis, ainda não equipados, do jogador. */
 @Service
 public class GetDigimonInventoryUseCase {
     private final EquipmentRepository equipmentRepository;
 
     public java.util.List<EquipmentResponse> execute(String token) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        return equipmentRepository.findByPlayerId(playerId).stream().map(EquipmentResponse::from).toList();
+        return equipmentRepository.findByPlayerIdAndEquippedFalse(playerId).stream().map(EquipmentResponse::from).toList();
     }
 
     /** Compatibilidade durante a migração; o parâmetro Digimon não restringe mais a posse. */

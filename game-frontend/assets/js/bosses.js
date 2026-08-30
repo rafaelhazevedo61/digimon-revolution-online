@@ -26,12 +26,31 @@ async function renderBossesPage() {
 
   app.innerHTML = `
     <div class="page-container">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-bold px-1">Chefes</h2>
-        <button class="text-xs text-cyan-400 hover:text-cyan-300" onclick="navigateTo('boss-history')">Historico</button>
+      <section class="relative overflow-hidden rounded-2xl border border-red-900/60 bg-gradient-to-br from-red-950/80 via-slate-900 to-slate-950 p-5 mb-4">
+        <div class="absolute -right-8 -top-10 text-[9rem] opacity-10">👹</div>
+        <div class="relative">
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <span class="badge badge-legendary">⚔️ Desafios de combate</span>
+            <button class="text-xs text-cyan-300 hover:text-cyan-200" onclick="navigateTo('boss-history')">Ver histórico →</button>
+          </div>
+          <h2 class="text-2xl font-black tracking-tight">Chefes</h2>
+          <p class="text-sm text-slate-300 mt-1 max-w-sm">Enfrente inimigos poderosos, teste seu Digimon e conquiste recompensas especiais.</p>
+          <div class="flex gap-2 mt-4 text-[11px] text-slate-400">
+            <span id="boss-total-count" class="rounded-lg bg-black/20 px-2 py-1">— desafios disponíveis</span>
+            <span class="rounded-lg bg-black/20 px-2 py-1">Escolha por estágio e frequência</span>
+          </div>
+        </div>
+      </section>
+      <div class="card mb-3">
+        <p class="text-[10px] uppercase tracking-wider text-slate-500 mb-2">Estágio do chefe</p>
+        <div class="grid grid-cols-4 gap-1.5" id="boss-stage-tabs"></div>
       </div>
-      <div class="flex gap-1.5 mb-3" id="boss-stage-tabs"></div>
-      <div class="flex gap-1.5 mb-4" id="boss-type-tabs"></div>
+      <div class="flex items-center justify-between gap-3 mb-2">
+        <div><h3 class="font-bold">Desafios disponíveis</h3><p class="text-xs text-slate-500">Selecione uma frequência para filtrar.</p></div>
+        <span id="boss-visible-count" class="text-xs text-slate-500"></span>
+      </div>
+      <div class="flex items-center gap-2 mb-3 text-[10px] text-slate-500"><span class="inline-block w-2 h-2 rounded-full bg-green-400"></span> Disponível para desafiar agora <span class="text-slate-700">•</span> Clique em um card para ver detalhes</div>
+      <div class="grid grid-cols-2 gap-1.5 mb-4" id="boss-type-tabs"></div>
       <div id="bosses-list">
         <div class="card animate-pulse mb-3"><div class="h-24"></div></div>
         <div class="card animate-pulse mb-3"><div class="h-24"></div></div>
@@ -41,6 +60,8 @@ async function renderBossesPage() {
 
   try {
     bossesData = await apiGet("/bosses/available");
+    const totalCount = document.getElementById("boss-total-count");
+    if (totalCount) totalCount.textContent = `${bossesData.length} desafios disponíveis`;
     renderBossStageTabs();
     renderBossTypeTabs();
     renderBossList();
@@ -55,11 +76,14 @@ function renderBossStageTabs() {
   const tabs = document.getElementById("boss-stage-tabs");
   tabs.innerHTML = BOSS_STAGE_TABS.map(s => {
     const active = s.key === bossActiveStage;
+    const available = bossesData.some(boss => boss.requiredStage === s.key && boss.available);
+    const availableCount = bossesData.filter(boss => boss.requiredStage === s.key && boss.available).length;
     return `
-      <button class="flex-1 py-1.5 rounded-lg text-xs font-bold text-center transition-colors
+      <button class="relative flex-1 py-2 rounded-xl text-xs font-bold text-center transition-all border
+        ${available ? "boss-stage-available" : "border-transparent"}
         ${active ? s.color : "bg-slate-800 text-slate-400 hover:bg-slate-700"}"
         onclick="bossActiveStage='${s.key}'; renderBossStageTabs(); renderBossTypeTabs(); renderBossList();">
-        ${escapeHtml(s.label)}
+        ${escapeHtml(s.label)}${available ? `<span class="boss-stage-availability-dot" title="${availableCount} chefe(s) disponível(is)" aria-label="${availableCount} chefe(s) disponível(is)">${availableCount}</span>` : ""}
       </button>
     `;
   }).join("");
@@ -73,13 +97,15 @@ function renderBossTypeTabs() {
     const active = t === bossActiveType;
     const count = bossesData.filter(b => b.requiredStage === bossActiveStage && b.bossType === t).length;
     return `
-      <button class="flex-1 py-1.5 rounded-lg text-xs font-bold text-center transition-colors
+      <button class="py-2 rounded-xl text-xs font-bold text-center transition-colors border border-transparent
         ${active ? info.color : "bg-slate-800 text-slate-400 hover:bg-slate-700"}"
         onclick="bossActiveType='${t}'; renderBossTypeTabs(); renderBossList();">
         ${escapeHtml(info.label)} (${count})
       </button>
     `;
   }).join("");
+  const visibleCount = document.getElementById("boss-visible-count");
+  if (visibleCount) visibleCount.textContent = `${bossesData.filter(b => b.requiredStage === bossActiveStage && b.bossType === bossActiveType).length} chefe(s)`;
 }
 
 function renderBossList() {
@@ -87,7 +113,7 @@ function renderBossList() {
   const filtered = bossesData.filter(b => b.requiredStage === bossActiveStage && b.bossType === bossActiveType);
 
   if (filtered.length === 0) {
-    container.innerHTML = `<div class="card text-center text-slate-400 text-sm">Nenhum boss neste stage</div>`;
+    container.innerHTML = `<div class="card text-center py-8"><div class="text-4xl mb-3">🗺️</div><p class="text-sm text-slate-300 font-semibold">Nenhum chefe encontrado</p><p class="text-xs text-slate-500 mt-1">Tente outra frequência ou estágio.</p></div>`;
     return;
   }
 
@@ -107,34 +133,30 @@ function renderBossList() {
     }
 
     return `
-      <div class="card mb-3 cursor-pointer hover:border-slate-500 ${!available ? "opacity-60" : ""}"
+      <div class="card mb-3 cursor-pointer transition-all hover:-translate-y-0.5 hover:border-red-700/70 ${!available ? "opacity-65" : ""}"
         onclick="openBossDetail('${boss.code}')">
-        <div class="flex items-center gap-3">
-          <div class="w-14 h-14 rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0">
+        <div class="flex items-start gap-3">
+          <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-slate-800 to-slate-950 border border-slate-700 flex items-center justify-center overflow-hidden flex-shrink-0">
             ${boss.imageUrl
               ? `<img src="${escapeHtml(boss.imageUrl)}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<span class=\\'text-2xl\\'>👹</span>'">`
               : `<span class="text-2xl">👹</span>`}
           </div>
           <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-0.5">
-              <span class="font-bold text-sm">${escapeHtml(boss.name)}</span>
-              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${typeInfo.color}">${escapeHtml(typeInfo.label)}</span>
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <div class="min-w-0"><p class="font-bold text-sm truncate">${escapeHtml(boss.name)}</p><p class="text-[10px] text-slate-500 mt-0.5">${escapeHtml(STAGE_LABELS[boss.requiredStage] || boss.requiredStage)} · Nível ${boss.requiredLevel}</p></div>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${typeInfo.color}">${escapeHtml(typeInfo.label)}</span>
             </div>
-            <div class="text-xs text-slate-400 mb-1">
-              Lv.${boss.requiredLevel}
-              ${boss.requiredRebirths > 0 ? ` | Rebirth ${boss.requiredRebirths}+` : ""}
-            </div>
-            <div class="flex items-center gap-3 text-xs">
+            <div class="flex items-center gap-2 text-[11px] mb-2">
               <span class="text-red-400">HP ${boss.hp}</span>
               <span class="text-orange-400">ATK ${boss.atk}</span>
               <span class="text-blue-400">DEF ${boss.def}</span>
             </div>
-            <div class="mt-1">${statusBadge}</div>
+            <div class="flex items-center gap-2 flex-wrap">${statusBadge}${boss.requiredRebirths > 0 ? `<span class="text-[10px] text-slate-500">Rebirth ${boss.requiredRebirths}+</span>` : ""}</div>
           </div>
-          <div class="text-right text-xs text-slate-400 flex-shrink-0">
+          <div class="text-right text-[10px] text-slate-400 flex-shrink-0 space-y-1">
             <div>⚡ ${boss.energyCost}</div>
-            <div class="text-yellow-400">${boss.baseXpReward} XP</div>
-            <div class="text-amber-400">${boss.baseBitsReward} Bits</div>
+            <div class="text-yellow-400">+${boss.baseXpReward} XP</div>
+            <div class="text-amber-400">+${boss.baseBitsReward} Bits</div>
           </div>
         </div>
       </div>
@@ -155,7 +177,7 @@ function openBossDetail(bossCode) {
   if (boss.chestCode && boss.chestName) {
     dropsHtml += `
       <div class="flex justify-between text-xs py-1 border-b border-slate-700">
-        <span class="text-cyan-400 font-semibold">🎁 ${escapeHtml(boss.chestName)}</span>
+        <span class="text-cyan-400 font-semibold flex items-center gap-2">${renderChestIcon("w-8 h-8")} ${escapeHtml(boss.chestName)}</span>
         <span class="text-slate-400">100%</span>
       </div>
     `;
@@ -182,11 +204,11 @@ function openBossDetail(bossCode) {
 
   const overlay = document.createElement("div");
   overlay.id = "boss-detail-overlay";
-  overlay.className = "fixed inset-0 bg-black/70 z-50 flex items-end justify-center animate-fade-in";
+  overlay.className = "fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 animate-fade-in";
   overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 
   overlay.innerHTML = `
-    <div class="w-full max-w-md bg-slate-900 rounded-t-2xl p-5 max-h-[85vh] overflow-y-auto animate-slide-up">
+    <div class="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-2xl p-5 max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="flex items-center gap-3 mb-4">
         <div class="w-16 h-16 rounded-xl bg-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0">
           ${boss.imageUrl
@@ -302,7 +324,7 @@ function renderBossResult(result) {
   if (result.chestCode && result.chestName) {
     dropsHtml += `
       <div class="flex justify-between text-sm py-1.5 border-b border-slate-700">
-        <span class="text-cyan-400 font-semibold">🎁 ${escapeHtml(result.chestName)}</span>
+        <span class="text-cyan-400 font-semibold flex items-center gap-2">${renderChestIcon("w-8 h-8")} ${escapeHtml(result.chestName)}</span>
         <span class="text-slate-400">x1</span>
       </div>
     `;

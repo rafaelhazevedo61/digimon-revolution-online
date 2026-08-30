@@ -7,28 +7,48 @@ async function renderMorePage() {
       label: "Combate",
       items: [
         {
-          route: "activity-calendar",
-          icon: "📅",
-          title: "Calendário de Atividades",
-          desc: "Complete metas diárias e ganhe baús",
-        },
-        {
           route: "bosses",
-          icon: "👹",
+          iconImage: "assets/img/batalhadochefe.webp",
           title: "Chefes",
           desc: "Desafie chefes poderosos",
         },
         {
           route: "arena",
           icon: "⚔️",
+          iconImage: "assets/img/arena.webp",
           title: "Arena",
           desc: "Duele contra outros jogadores",
         },
         {
           route: "world-boss",
           icon: "🌍",
+          iconImage: "assets/img/chefe-mundial.webp",
           title: "Chefe Mundial",
           desc: "Boss compartilhado do servidor",
+        },
+      ],
+    },
+    {
+      label: "Atividades",
+      items: [
+        {
+          route: "activity-calendar",
+          icon: "📅",
+          iconImage: "assets/img/calendario-atividades.webp",
+          title: "Calendário de Atividades",
+          desc: "Complete metas diárias e ganhe baús",
+        },
+        {
+          route: "rebirth",
+          iconImage: "assets/img/rebirth.webp",
+          title: "Renascimento",
+          desc: "Renasça seu Digimon e aprimore seus atributos",
+        },
+        {
+          route: "forge",
+          icon: "🔨",
+          title: "Ferreiro",
+          desc: "Refine equipamentos e prepare-se para novos desafios",
         },
       ],
     },
@@ -38,31 +58,32 @@ async function renderMorePage() {
         {
           route: "mail",
           icon: "✉️",
+          iconImage: "assets/img/correio.webp",
           title: "Correio",
           badgeId: "mail-more-unread",
           desc: "Mensagens entre jogadores e comunicados",
         },
         {
           route: "clans",
-          icon: "🛡️",
+          iconImage: "assets/img/cla.webp",
           title: "Clãs",
           desc: "Crie ou entre em um clã",
         },
         {
           route: "ranking",
-          icon: "🏆",
+          iconImage: "assets/img/ranking.webp",
           title: "Classificação",
           desc: "Top jogadores",
         },
       ],
     },
     {
-      label: "Mercado",
+      label: "Comércio",
       items: [
         {
           route: "auction-house",
-          icon: "🏪",
-          title: "Casa de Leilões",
+          iconImage: "assets/img/casaleilao.webp",
+          title: "Casa de Leilão",
           desc: "Compre e venda itens com jogadores",
         },
       ],
@@ -72,21 +93,27 @@ async function renderMorePage() {
       items: [
         {
           route: "incubation",
-          icon: "🥚",
+          iconImage: "assets/img/incubacao.webp",
           title: "Incubação",
           desc: "Chocar novas digitamas",
         },
         {
           route: "storage",
-          icon: "📦",
+          iconImage: "assets/img/armazemdigimon.webp",
           title: "Armazém Digimon",
           desc: "Gerenciar Digimons armazenados e tornar um parceiro ativo",
         },
         {
           route: "pokedex",
-          icon: "📖",
+          iconImage: "assets/img/bibliotecadigimon.webp",
           title: "Biblioteca Digimon",
           desc: "Catálogo de todos os Digimons",
+        },
+        {
+          route: "collection",
+          icon: "📚",
+          title: "Coleção",
+          desc: "Registre Digimons e alcance marcos",
         },
       ],
     },
@@ -95,7 +122,8 @@ async function renderMorePage() {
       items: [
         {
           route: "settings",
-          icon: "⚙️",
+          iconClass: "more-icon-settings",
+          iconImage: "assets/img/configuracoes.webp",
           title: "Configurações",
           desc: "Conta e preferências",
         },
@@ -105,7 +133,7 @@ async function renderMorePage() {
 
   const renderItem = (item) => `
         <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('${item.route}')">
-          <span class="text-2xl">${item.icon}</span>
+          ${item.iconImage ? `<img src="${item.iconImage}" alt="" class="w-12 h-12 object-contain shrink-0 ${item.iconClass || ""}" />` : `<span class="text-2xl">${item.icon}</span>`}
           <div class="flex-1">
             <p class="font-bold text-sm">${item.title}${item.badgeId ? ` <span id="${item.badgeId}" class="badge hidden align-middle"></span>` : ""}</p>
             <p class="text-xs text-slate-400">${item.desc}</p>

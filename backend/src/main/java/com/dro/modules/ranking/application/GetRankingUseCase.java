@@ -26,25 +26,26 @@ public class GetRankingUseCase {
     private final DigimonInfosRepository digimonInfosRepository;
     private static final int DEFAULT_SIZE = 10;
     private static final int MAX_SIZE = 50;
+    private static final List<DigimonStatus> RANKING_STATUSES = List.of(DigimonStatus.ACTIVE, DigimonStatus.STORED);
 
     public List<RankingEntryResponse> byLevel(int page, int size) {
         int safePage = Math.max(page, 0);
         int safeSize = sanitizeSize(size);
-        Page<Digimon> result = digimonRepository.findByStatusOrderByLevelDescExperienceDesc(DigimonStatus.ACTIVE, PageRequest.of(safePage, safeSize));
+        Page<Digimon> result = digimonRepository.findByStatusInOrderByLevelDescExperienceDesc(RANKING_STATUSES, PageRequest.of(safePage, safeSize));
         return toResponse(result, safePage, safeSize);
     }
 
     public List<RankingEntryResponse> byGrade(int page, int size) {
         int safePage = Math.max(page, 0);
         int safeSize = sanitizeSize(size);
-        Page<Digimon> result = digimonRepository.findByStatusOrderByGradeQualityAscLevelDesc(DigimonStatus.ACTIVE, PageRequest.of(safePage, safeSize));
+        Page<Digimon> result = digimonRepository.findByStatusInOrderByGradeQualityAscLevelDesc(RANKING_STATUSES, PageRequest.of(safePage, safeSize));
         return toResponse(result, safePage, safeSize);
     }
 
     public List<RankingEntryResponse> byRebirth(int page, int size) {
         int safePage = Math.max(page, 0);
         int safeSize = sanitizeSize(size);
-        Page<Digimon> result = digimonRepository.findByStatusAndRebirthCountGreaterThanOrderByRebirthCountDescLevelDesc(DigimonStatus.ACTIVE, 0, PageRequest.of(safePage, safeSize));
+        Page<Digimon> result = digimonRepository.findByStatusInAndRebirthCountGreaterThanOrderByRebirthCountDescLevelDesc(RANKING_STATUSES, 0, PageRequest.of(safePage, safeSize));
         return toResponse(result, safePage, safeSize);
     }
 

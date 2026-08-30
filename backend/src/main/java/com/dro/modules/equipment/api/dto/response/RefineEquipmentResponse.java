@@ -8,6 +8,9 @@ public record RefineEquipmentResponse(
         boolean success,
         int newRefinementLevel,
         int successRate,
+        int breakChance,
+        boolean equipmentDestroyed,
+        boolean protectionConsumed,
         int costBits,
         int costStones,
         EquipmentResponse equipment

@@ -797,7 +797,7 @@ function clanStorageDepositItemIcon(item) {
     FRAGMENT: "🧩",
     DIGITAMA: "🥚",
     INCUBATOR: "📦",
-    CHEST: "🗝️"
+    CHEST: renderChestIcon("w-6 h-6")
   };
   const emoji = emojiByIcon[icon.toLowerCase()] || emojiByCategory[String(definition.category || "").toUpperCase()] || "📦";
   return `<span class="text-xl leading-none" aria-hidden="true">${emoji}</span>`;

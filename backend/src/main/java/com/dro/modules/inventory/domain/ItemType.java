@@ -64,6 +64,12 @@ public enum ItemType {
     REFINEMENT_STONE,
 
     // Reroll de raridade do Digimon
-    RARITY_REROLL
+    RARITY_REROLL,
+
+    // Preserva a raridade no Renascimento
+    RARITY_PRESERVATION,
+
+    // Registro permanente de Digimons na coleção
+    COLLECTION_DIGIVICE
 
 }
