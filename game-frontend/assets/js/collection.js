@@ -27,8 +27,8 @@ function collectionRenderSummary(summary) {
   document.getElementById("collection-digivices").textContent = collectionDigiviceCount();
   document.getElementById("collection-added").textContent = `${summary.addedDigimons} / ${summary.totalDigimons}`;
   document.getElementById("collection-completed").textContent = summary.completedDigimons;
-  const milestones = (summary.availableMilestones || []).map(value => `<span class="badge badge-epic mr-1 mb-1 inline-block">${value} pontos alcançados · Disco XP +20%</span>`).join("");
-  document.getElementById("collection-milestones").innerHTML = `<h3 class="font-bold mb-2">Marcos alcançados</h3>${milestones || '<p class="text-xs text-slate-400">Continue registrando Digimons para alcançar seu primeiro marco.</p>'}`;
+  const reached = (summary.milestones || []).filter(milestone => milestone.reached).length;
+  document.getElementById("collection-milestones").innerHTML = `<div class="flex items-center justify-between gap-3"><div><h3 class="font-bold">Marcos alcançados</h3><p class="text-xs text-slate-400 mt-1">${reached} de ${(summary.milestones || []).length} marcos alcançados</p></div><button class="btn-sm btn-primary shrink-0" type="button" onclick="collectionOpenMilestones()">Visualizar</button></div>`;
   const entries = (summary.entries || []).slice(0, 3).map(entry => `<li class="flex items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-sm"><span><strong>${escapeHtml(entry.speciesName || "Digimon")}</strong><span class="ml-2 badge badge-${String(entry.rarity).toLowerCase()}">${escapeHtml(entry.rarity)}</span></span><span class="text-xs text-slate-500">Registrado</span></li>`).join("");
   document.getElementById("collection-entries").innerHTML = `<div class="flex items-center justify-between mb-2"><h3 class="font-bold">Últimos registros</h3><button class="text-xs text-cyan-400 hover:text-cyan-300" type="button" onclick="collectionOpenAlbum()">Ver coleção completa</button></div><ul class="space-y-2">${entries || '<li class="text-xs text-slate-400">Nenhum Digimon registrado.</li>'}</ul>`;
 }
@@ -47,6 +47,22 @@ function collectionRenderDigimons() {
 
 function collectionApplySearch() {
   collectionRenderDigimons();
+}
+
+function collectionOpenMilestones() {
+  document.getElementById("collection-milestones-overlay")?.remove();
+  const milestones = collectionSummary?.milestones || [];
+  const overlay = document.createElement("div");
+  overlay.id = "collection-milestones-overlay";
+  overlay.className = "fixed inset-0 z-[60] flex items-end justify-center";
+  overlay.style.background = "rgba(0,0,0,0.72)";
+  overlay.innerHTML = `<div class="w-full max-w-lg rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:88vh;overflow-y:auto" onclick="event.stopPropagation()"><div class="flex items-center justify-between gap-3 mb-4"><div><p class="text-xs uppercase tracking-wider text-fuchsia-400 font-bold">Coleção</p><h3 class="font-bold text-lg">Marcos de coleção</h3><p class="text-xs text-slate-400">Alcance os pontos necessários para receber cada recompensa.</p></div><button class="text-slate-400 text-2xl" aria-label="Fechar" onclick="collectionCloseMilestones()">&times;</button></div><div class="flex flex-col gap-2">${milestones.map(milestone => `<div class="flex items-center justify-between gap-3 rounded-lg border ${milestone.reached ? "border-emerald-900/70 bg-emerald-950/20" : "border-slate-700 bg-slate-900/60"} px-3 py-3"><div><p class="font-bold text-sm">${milestone.pointsRequired} pontos</p><p class="text-xs text-slate-400">${escapeHtml(milestone.reward)}</p></div><span class="text-xs font-semibold ${milestone.reached ? "text-emerald-300" : "text-slate-500"}">${milestone.reached ? "✓ Alcançado" : "Bloqueado"}</span></div>`).join("")}</div></div>`;
+  overlay.onclick = event => { if (event.target === overlay) collectionCloseMilestones(); };
+  document.body.appendChild(overlay);
+}
+
+function collectionCloseMilestones() {
+  document.getElementById("collection-milestones-overlay")?.remove();
 }
 
 async function collectionOpenAlbum() {
