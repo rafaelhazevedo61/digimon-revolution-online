@@ -151,8 +151,10 @@ function shopProductsForCategory(category) {
 }
 function shopSwitchTab(cat) {
   document.querySelectorAll("#shop-tabs [data-cat]").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.cat === cat);
-    btn.setAttribute("aria-current", btn.dataset.cat === cat ? "page" : "false");
+    const active = btn.dataset.cat === cat;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-current", active ? "page" : "false");
+    if (active) btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
   });
   const items = shopProductsForCategory(cat);
   const container = document.getElementById("shop-list");

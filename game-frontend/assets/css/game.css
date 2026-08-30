@@ -1249,9 +1249,9 @@ body {
 .shop-section-note { color: #64748b; font-size: 0.58rem; font-weight: 700; text-align: right; }
 .shop-category-nav { display: flex; gap: 0.35rem; overflow-x: auto; padding: 0.1rem 0 0.38rem; scrollbar-width: none; }
 .shop-category-nav::-webkit-scrollbar { display: none; }
-.shop-category-button { flex: 0 0 auto; padding: 0.42rem 0.58rem; border: 1px solid rgba(71, 85, 105, 0.72); border-radius: 0.56rem; background: rgba(15, 23, 42, 0.5); color: #94a3b8; cursor: pointer; font-size: 0.6rem; font-weight: 800; white-space: nowrap; transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease; }
+.shop-category-button { display: inline-flex; width: 5.4rem; min-width: 5.4rem; height: 2.05rem; flex: 0 0 5.4rem; align-items: center; justify-content: center; overflow: hidden; padding: 0.42rem 0.35rem; border: 1px solid rgba(71, 85, 105, 0.72); border-radius: 0.56rem; background: rgba(15, 23, 42, 0.5); color: #94a3b8; cursor: pointer; font-size: 0.6rem; font-weight: 800; line-height: 1; text-align: center; text-overflow: ellipsis; white-space: nowrap; transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease; }
 .shop-category-button:hover { border-color: rgba(103, 232, 249, 0.5); color: #e0f2fe; }
-.shop-category-button.active { border-color: rgba(34, 211, 238, 0.5); background: rgba(8, 145, 178, 0.2); color: #a5f3fc; }
+.shop-category-button.active { border-color: rgba(34, 211, 238, 0.5); background: rgba(8, 145, 178, 0.2); color: #a5f3fc; box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.08); }
 .shop-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin: 0.55rem 0 0.48rem; padding-top: 0.62rem; border-top: 1px solid rgba(51, 65, 85, 0.64); }
 .shop-list-title { margin: 0; color: #cbd5e1; font-size: 0.68rem; font-weight: 850; }
 .shop-list-count { color: #64748b; font-size: 0.58rem; font-weight: 750; }
@@ -1259,7 +1259,7 @@ body {
 .shop-product-card { display: flex; min-width: 0; align-items: center; gap: 0.62rem; padding: 0.62rem; border: 1px solid rgba(71, 85, 105, 0.62); border-radius: 0.78rem; background: linear-gradient(145deg, rgba(30, 41, 59, 0.62), rgba(15, 23, 42, 0.55)); transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease; }
 .shop-product-card:hover { border-color: rgba(103, 232, 249, 0.5); background: linear-gradient(145deg, rgba(8, 51, 68, 0.42), rgba(15, 23, 42, 0.62)); box-shadow: 0 7px 16px rgba(2, 6, 23, 0.2); transform: translateY(-1px); }
 .shop-product-card-sell:hover { border-color: rgba(251, 191, 36, 0.46); background: linear-gradient(145deg, rgba(69, 39, 10, 0.3), rgba(15, 23, 42, 0.62)); }
-.shop-product-icon { display: flex; width: 2.55rem; height: 2.55rem; flex: 0 0 auto; align-items: center; justify-content: center; border: 1px solid rgba(34, 211, 238, 0.2); border-radius: 0.7rem; background: rgba(8, 145, 178, 0.12); font-size: 1.28rem; }
+.shop-product-icon { display: flex; width: 2.55rem; height: 2.55rem; flex: 0 0 auto; align-items: center; justify-content: center; overflow: visible; border: 1px solid rgba(34, 211, 238, 0.2); border-radius: 0.7rem; background: rgba(8, 145, 178, 0.12); font-family: "Apple Color Emoji", "Segoe UI Emoji", sans-serif; font-size: 1.4rem; line-height: 1; }
 .shop-product-card-sell .shop-product-icon { border-color: rgba(251, 191, 36, 0.2); background: rgba(180, 83, 9, 0.12); }
 .shop-equipment-icon { color: #fcd34d; }
 .shop-product-body { min-width: 0; flex: 1 1 auto; }
@@ -1291,7 +1291,8 @@ body {
   .shop-balance-card { min-width: 6.25rem; }
   .shop-balance-value { font-size: 0.78rem; }
   .shop-product-card { gap: 0.45rem; padding: 0.5rem; }
-  .shop-product-icon { width: 2.25rem; height: 2.25rem; font-size: 1.08rem; }
+  .shop-category-button { width: 5.4rem; min-width: 5.4rem; flex-basis: 5.4rem; }
+  .shop-product-icon { width: 2.25rem; height: 2.25rem; font-size: 1.22rem; }
   .shop-action-button { min-width: 3.55rem; padding-inline: 0.38rem; }
 }
 
