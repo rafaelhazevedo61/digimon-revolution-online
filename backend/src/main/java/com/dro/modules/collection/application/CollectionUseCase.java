@@ -40,13 +40,13 @@ public class CollectionUseCase {
     public CollectionDtos.RegisterResponse register(String token, UUID digimonId) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         Digimon digimon = digimonRepository.findByIdForUpdate(digimonId).orElseThrow(() -> new NotFoundException("Digimon not found"));
-        if (!playerId.equals(digimon.getPlayerId())) throw new BadRequestException("Digimon does not belong to player");
-        if (digimon.getStatus() != DigimonStatus.STORED && digimon.getStatus() != DigimonStatus.HATCHED) throw new BadRequestException("Only stored or newly hatched Digimons can be registered");
-        if (digimon.isLocked()) throw new BadRequestException("Locked Digimons cannot be registered");
-        if (digimon.getWeaponId() != null || digimon.getArmorId() != null || digimon.getAccessoryId() != null) throw new BadRequestException("Remove equipped items before registering this Digimon");
-        if (collectionRepository.existsByPlayerIdAndDigimonInfoIdAndRarity(playerId, digimon.getDigimonInfoId(), digimon.getRarity())) throw new BadRequestException("This species and rarity are already in the collection");
-        InventoryItem digivice = inventoryRepository.findByPlayerIdAndItemTypeForUpdate(playerId, ItemType.COLLECTION_DIGIVICE).orElseThrow(() -> new UnprocessableException("You do not have a Collection Digivice"));
-        if (digivice.getQuantity() < 1) throw new UnprocessableException("You do not have a Collection Digivice");
+        if (!playerId.equals(digimon.getPlayerId())) throw new BadRequestException("Este Digimon não pertence ao jogador");
+        if (digimon.getStatus() != DigimonStatus.STORED && digimon.getStatus() != DigimonStatus.HATCHED) throw new BadRequestException("Somente Digimons armazenados ou recém-nascidos podem ser registrados");
+        if (digimon.isLocked()) throw new BadRequestException("Digimons bloqueados não podem ser registrados");
+        if (digimon.getWeaponId() != null || digimon.getArmorId() != null || digimon.getAccessoryId() != null) throw new BadRequestException("Remova os equipamentos antes de registrar este Digimon");
+        if (collectionRepository.existsByPlayerIdAndDigimonInfoIdAndRarity(playerId, digimon.getDigimonInfoId(), digimon.getRarity())) throw new BadRequestException("Esta espécie e raridade já estão na coleção");
+        InventoryItem digivice = inventoryRepository.findByPlayerIdAndItemTypeForUpdate(playerId, ItemType.COLLECTION_DIGIVICE).orElseThrow(() -> new UnprocessableException("Você não possui Digivice de Registro"));
+        if (digivice.getQuantity() < 1) throw new UnprocessableException("Você não possui Digivice de Registro");
         digivice.setQuantity(digivice.getQuantity() - 1);
         if (digivice.getQuantity() == 0) inventoryRepository.delete(digivice); else inventoryRepository.save(digivice);
         long before = collectionRepository.countByPlayer(playerId);
@@ -57,7 +57,7 @@ public class CollectionUseCase {
         int milestoneRewards = (int) java.util.Arrays.stream(MILESTONES).filter(m -> before < m && after >= m).count();
         if (milestoneRewards > 0) addItemUseCase.execute(playerId, ItemType.XP_DISC_20, milestoneRewards);
         boolean mastery = collectionRepository.countRaritiesForSpecies(playerId, digimon.getDigimonInfoId()) == 4;
-        String message = milestoneRewards > 0 ? "Digimon registered; XP Disc milestone reward granted" : "Digimon registered in the collection";
+        String message = milestoneRewards > 0 ? "Digimon registrado; recompensa de marco recebida" : "Digimon registrado na coleção";
         return new CollectionDtos.RegisterResponse(CollectionDtos.EntryResponse.from(entry), after, mastery, message);
     }
 
