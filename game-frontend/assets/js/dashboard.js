@@ -647,7 +647,7 @@ function showEquipDetailModal(equipmentId) {
           <div><span class="text-slate-500">Conjunto</span><p class="font-semibold">${eq.setCode ? escapeHtml(setLabel) : 'Sem conjunto'}</p></div>
           <div><span class="text-slate-500">Refinamento</span><p class="font-semibold text-yellow-400">${eq.refinementLevel}</p><p class="text-[10px] text-slate-500">${refinementImpactDisplay}</p></div>
           <div><span class="text-slate-500">Ascensão</span><p class="font-semibold text-amber-300">${ascensionLevel} (${ascensionBonus})</p><p class="text-[10px] text-slate-500">${ascensionImpact}</p></div>
-          <div><span class="text-slate-500">Uso mínimo</span><p class="font-semibold">${requiredRebirths} Rebirth${requiredRebirths === 1 ? '' : 's'}</p></div>
+          <div><span class="text-slate-500">Uso mínimo</span><p class="font-semibold">${requiredRebirths} ${requiredRebirths === 1 ? 'Renascimento' : 'Renascimentos'}</p></div>
           <div class="col-span-2"><span class="text-slate-500">Bônus base</span><p class="font-semibold text-slate-300">HP ${eq.bonusHp || 0} · ATK ${eq.bonusAttack || 0} · DEF ${eq.bonusDefense || 0}</p></div>
         </div>
       </details>
