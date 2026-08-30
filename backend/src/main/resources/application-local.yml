@@ -16,11 +16,11 @@ dro:
   gameplay:
     rarity-reroll:
       keep-cost-bits: ${DRO_RARITY_REROLL_KEEP_COST_BITS:5000}
-    auto-boss-respawn-after-defeat-enabled: true
-    boss-cooldown-enabled: ${DRO_BOSS_COOLDOWN_ENABLED:true}
+    auto-boss-respawn-after-defeat-enabled: false
+    boss-cooldown-enabled: ${DRO_BOSS_COOLDOWN_ENABLED:false}
 
     clan-raid:
-      cooldown-enabled: ${DRO_CLAN_RAID_COOLDOWN_ENABLED:true}
+      cooldown-enabled: ${DRO_CLAN_RAID_COOLDOWN_ENABLED:false}
 
     world-boss:
       cooldown-enabled: ${DRO_WORLD_BOSS_COOLDOWN_ENABLED:true}
