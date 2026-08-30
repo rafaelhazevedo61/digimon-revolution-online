@@ -5,7 +5,7 @@ let collectionInventory = [];
 async function renderCollectionPage() {
   const app = document.getElementById("app");
   showBottomNav("more");
-  app.innerHTML = `<div class="page-container"><div class="flex items-center justify-between mb-4"><div><h2 class="text-lg font-bold">Coleção</h2><p class="text-xs text-slate-400">Registre Digimons usando um Digivice.</p></div><button class="btn-sm" onclick="navigateTo('more')">Voltar</button></div><div class="card flex items-center justify-between"><div><p class="text-3xl font-black text-cyan-400" id="collection-points">—</p><p class="text-xs text-slate-400">pontos de coleção</p></div><div class="text-right"><p class="text-2xl font-black text-fuchsia-300" id="collection-digivices">—</p><p class="text-xs text-slate-400">Digivices de Registro</p></div></div><div id="collection-milestones" class="card mt-3"></div><div class="card mt-3"><div class="flex items-center justify-between gap-3 mb-3"><h3 class="font-bold">Digimons disponíveis para registro</h3><input id="collection-search" class="input w-40" type="search" placeholder="Buscar por nome" autocomplete="off" oninput="collectionRenderDigimons()" /></div><p class="text-xs text-amber-200 mb-3">O Digivice e o Digimon serão consumidos permanentemente. Duplicatas não geram pontos.</p><div id="collection-digimons"><p class="text-sm text-slate-400">Carregando...</p></div></div><div id="collection-entries" class="card mt-3"></div></div>`;
+  app.innerHTML = `<div class="page-container"><div class="flex items-center justify-between mb-4"><div><h2 class="text-lg font-bold">Coleção</h2><p class="text-xs text-slate-400">Registre Digimons usando um Digivice.</p></div><button class="btn-sm" onclick="navigateTo('more')">Voltar</button></div><div class="card flex items-center justify-between"><div><p class="text-3xl font-black text-cyan-400" id="collection-points">—</p><p class="text-xs text-slate-400">pontos de coleção</p></div><div class="text-right"><p class="text-2xl font-black text-fuchsia-300" id="collection-digivices">—</p><p class="text-xs text-slate-400">Digivices de Registro</p></div></div><div id="collection-milestones" class="card mt-3"></div><div class="card mt-3"><h3 class="font-bold mb-3">Digimons disponíveis para registro</h3><div class="flex w-full items-center gap-2 mb-3"><input id="collection-search" class="input flex-1 min-w-0" type="search" placeholder="Buscar por nome" autocomplete="off" onkeydown="if (event.key === 'Enter') collectionApplySearch()" /><button type="button" class="btn-primary shrink-0" onclick="collectionApplySearch()">Buscar</button></div><p class="text-xs text-amber-200 mb-3">O Digivice e o Digimon serão consumidos permanentemente. Duplicatas não geram pontos.</p><div id="collection-digimons"><p class="text-sm text-slate-400">Carregando...</p></div></div><div id="collection-entries" class="card mt-3"></div></div>`;
   try {
     const [summary, digimons, inventory] = await Promise.all([apiGet("/collection"), apiGet("/digimon/storage"), apiGet("/inventory")]);
     collectionSummary = summary;
@@ -38,6 +38,10 @@ function collectionRenderDigimons() {
   const target = document.getElementById("collection-digimons");
   if (!target) return;
   target.innerHTML = eligible.length ? eligible.map(d => `<div class="flex items-center justify-between gap-2 border-b border-slate-800 py-2"><div><p class="font-bold text-sm">${escapeHtml(d.name || "Digimon")}</p><p class="text-xs text-slate-400">${escapeHtml(d.rarity)} · ${escapeHtml(d.stage)}</p></div><button class="btn-sm btn-primary" onclick="collectionOpenRegisterModal('${d.id}')">Registrar</button></div>`).join("") : '<p class="text-sm text-slate-400">Nenhum Digimon encontrado.</p>';
+}
+
+function collectionApplySearch() {
+  collectionRenderDigimons();
 }
 
 function collectionOpenRegisterModal(digimonId) {
