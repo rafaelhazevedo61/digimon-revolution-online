@@ -1,6 +1,21 @@
 let forgeEquipments = [];
 let forgeSearchQuery = "";
 let forgeInventory = [];
+const FORGE_SUPPORT_PREFERENCES_KEY = "dro-forge-support-preferences";
+
+function forgeSupportPreferences() {
+  try {
+    return JSON.parse(localStorage.getItem(FORGE_SUPPORT_PREFERENCES_KEY) || "{}");
+  } catch (err) {
+    return {};
+  }
+}
+
+function forgeSetSupportPreference(type, active) {
+  const preferences = forgeSupportPreferences();
+  preferences[type] = active;
+  localStorage.setItem(FORGE_SUPPORT_PREFERENCES_KEY, JSON.stringify(preferences));
+}
 
 async function renderForgePage() {
   const app = document.getElementById("app");
@@ -147,6 +162,9 @@ async function forgeShowRefine(equipmentId) {
   const nextHp = eq.bonusHp > 0 ? Number(eq.effectiveBonusHp || 0) + 2 : 0;
   const nextAtk = eq.bonusAttack > 0 ? Number(eq.effectiveBonusAttack || 0) + 2 : 0;
   const nextDef = eq.bonusDefense > 0 ? Number(eq.effectiveBonusDefense || 0) + 2 : 0;
+  const preferences = forgeSupportPreferences();
+  const successBoostActive = preferences.successBoost === true && forgeFindItemCount("REFINEMENT_SUCCESS_BOOST") > 0;
+  const protectionActive = preferences.protection === true && forgeFindItemCount("REFINEMENT_PROTECTION") > 0 && preview.breakChance > 0;
   const overlay = document.createElement("div");
   overlay.id = "forge-refine-overlay";
   overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;display:flex;align-items:flex-end;justify-content:center;";
@@ -178,11 +196,11 @@ async function forgeShowRefine(equipmentId) {
         <p class="text-xs text-slate-400 mb-2">Itens de suporte</p>
         <div class="flex items-center justify-between gap-2 text-xs ${forgeFindItemCount("REFINEMENT_SUCCESS_BOOST") > 0 ? "text-slate-300" : "text-slate-600"}">
           <span>Pergaminho de Refinamento <span class="text-[10px] text-slate-500">(+10%)</span></span>
-          <button id="forge-success-boost" type="button" role="switch" aria-checked="false" class="forge-support-toggle" onclick="forgeToggleSupport('success-boost')" ${forgeFindItemCount("REFINEMENT_SUCCESS_BOOST") < 1 ? "disabled" : ""}>OFF</button>
+          <button id="forge-success-boost" type="button" role="switch" aria-checked="${successBoostActive}" data-active="${successBoostActive}" class="forge-support-toggle ${successBoostActive ? "is-active" : ""}" onclick="forgeToggleSupport('success-boost')" ${forgeFindItemCount("REFINEMENT_SUCCESS_BOOST") < 1 ? "disabled" : ""}>${successBoostActive ? "ON" : "OFF"}</button>
         </div>
         <div class="flex items-center justify-between gap-2 text-xs mt-2 ${forgeFindItemCount("REFINEMENT_PROTECTION") > 0 && preview.breakChance > 0 ? "text-slate-300" : "text-slate-600"}">
           <span>Cristal de Proteção <span class="text-[10px] text-slate-500">(${forgeFindItemCount("REFINEMENT_PROTECTION")} disponível(is))</span></span>
-          <button id="forge-protection" type="button" role="switch" aria-checked="false" class="forge-support-toggle" onclick="forgeToggleSupport('protection')" ${forgeFindItemCount("REFINEMENT_PROTECTION") < 1 || preview.breakChance < 1 ? "disabled" : ""}>OFF</button>
+          <button id="forge-protection" type="button" role="switch" aria-checked="${protectionActive}" data-active="${protectionActive}" class="forge-support-toggle ${protectionActive ? "is-active" : ""}" onclick="forgeToggleSupport('protection')" ${forgeFindItemCount("REFINEMENT_PROTECTION") < 1 || preview.breakChance < 1 ? "disabled" : ""}>${protectionActive ? "ON" : "OFF"}</button>
         </div>
         ${preview.breakChance > 0 ? `<p class="text-[10px] text-red-300 mt-2">Atenção: esta tentativa tem ${preview.breakChance}% de chance de quebrar o equipamento.</p>` : ""}
       </div>
@@ -191,6 +209,7 @@ async function forgeShowRefine(equipmentId) {
     </div>
   `;
   document.body.appendChild(overlay);
+  if (successBoostActive) forgeUpdateRefineChance();
 }
 
 async function forgeDoRefine(equipmentId, canRefine = true) {
@@ -237,6 +256,7 @@ function forgeToggleSupport(type) {
   if (!toggle || toggle.disabled) return;
   const active = toggle.dataset.active !== "true";
   toggle.dataset.active = String(active);
+  forgeSetSupportPreference(type === "success-boost" ? "successBoost" : "protection", active);
   toggle.textContent = active ? "ON" : "OFF";
   toggle.setAttribute("aria-checked", String(active));
   toggle.classList.toggle("is-active", active);
