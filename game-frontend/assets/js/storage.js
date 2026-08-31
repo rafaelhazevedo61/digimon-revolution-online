@@ -304,7 +304,10 @@ function storageRenderList() {
           />
           <span class="storage-selection-label">Selecionar</span>
         </label>
-        ${renderDigimonVisual(d.imageUrl, d.stage, "storage-digimon-visual w-16 h-16", "text-4xl")}
+        <div class="storage-digimon-visual-column">
+          ${renderDigimonVisual(d.imageUrl, d.stage, "storage-digimon-visual w-16 h-16", "text-4xl")}
+          <button type="button" class="storage-info-button storage-info-button-desktop" onclick="storageOpenInfoModal('${escapeAttr(d.id)}')" aria-label="Ver mais informações de ${escapeAttr(d.name || "Digimon")}">+Info</button>
+        </div>
         <div class="storage-digimon-body">
           <div class="storage-digimon-heading">
             <p class="storage-digimon-name">${escapeHtml(d.name)}</p>
@@ -318,6 +321,7 @@ function storageRenderList() {
           <p class="storage-digimon-reward ${locked ? "storage-digimon-reward-locked" : ""}">${locked ? "Protegido contra sacrifício" : `Sacrifício: +${calculateDigitalDataPreview(d)} Dados Digitais`}</p>
         </div>
         <div class="storage-digimon-actions">
+          <button type="button" class="storage-info-button storage-info-button-mobile" onclick="storageOpenInfoModal('${escapeAttr(d.id)}')" aria-label="Ver mais informações de ${escapeAttr(d.name || "Digimon")}">+Info</button>
           <button type="button" class="storage-action-button storage-action-lock ${locked ? "storage-action-lock-active" : ""}"
             onclick="storageToggleLock('${escapeAttr(d.id)}')"
             aria-label="${locked ? "Desbloquear" : "Bloquear"} ${escapeAttr(d.name || "Digimon")}">
@@ -339,6 +343,121 @@ function storageRenderList() {
 
   storageRenderPagination(filtered.length, totalPages);
   storageUpdateBulkActions();
+}
+
+function storageOpenInfoModal(digimonId) {
+  const digimon = storageDigimons.find(item => String(item.id) === String(digimonId));
+  if (!digimon) return;
+
+  storageCloseInfoModal();
+  const registered = storageCollectionEntries.has(`${digimon.digimonInfoId}:${String(digimon.rarity || "").toUpperCase()}`);
+  const level = Math.max(1, Number(digimon.level) || 1);
+  const experience = Math.max(0, Number(digimon.experience) || 0);
+  const xpNeeded = typeof getXpForLevel === "function" ? getXpForLevel(level) : level * 100;
+  const xpPercent = level >= 100 || xpNeeded <= 0 ? 100 : Math.min(100, Math.round((experience / xpNeeded) * 100));
+  const formatNumber = value => Number(value || 0).toLocaleString("pt-BR");
+  const stageLabel = typeof formatStage === "function" ? formatStage(digimon.stage) : (digimon.stage || "—");
+  const personalityLabel = typeof formatPersonality === "function" ? formatPersonality(digimon.personality) : (digimon.personality || "—");
+  const personalityEffect = typeof formatPersonalityEffect === "function" ? formatPersonalityEffect(digimon.personality) : "";
+  const traitLabel = typeof formatTraitName === "function" ? formatTraitName(digimon.trait) : (digimon.trait || "—");
+  const traitEffect = typeof formatTraitEffect === "function" ? formatTraitEffect(digimon.trait) : "";
+  const attributeLabel = typeof formatAttribute === "function" ? formatAttribute(digimon.attribute) : (digimon.attribute || "—");
+  const elementLabel = typeof formatElement === "function" ? formatElement(digimon.element) : (digimon.element || "—");
+  const baseHp = Number(digimon.hp) || 0;
+  const baseAttack = Number(digimon.attack) || 0;
+  const baseDefense = Number(digimon.defense) || 0;
+  const equipHp = Number(digimon.equipBonusHp) || 0;
+  const equipAttack = Number(digimon.equipBonusAttack) || 0;
+  const equipDefense = Number(digimon.equipBonusDefense) || 0;
+  const clanHp = Number(digimon.clanBonusHp) || 0;
+  const clanAttack = Number(digimon.clanBonusAttack) || 0;
+  const clanDefense = Number(digimon.clanBonusDefense) || 0;
+  const ivHp = Math.min(100, Math.max(0, Number(digimon.ivHp) || 0));
+  const ivAttack = Math.min(100, Math.max(0, Number(digimon.ivAttack) || 0));
+  const ivDefense = Math.min(100, Math.max(0, Number(digimon.ivDefense) || 0));
+  const averageIv = Math.round((ivHp + ivAttack + ivDefense) / 3);
+  const overlay = document.createElement("div");
+  overlay.id = "storage-info-modal-overlay";
+  overlay.className = "storage-info-modal-overlay";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-labelledby", "storage-info-modal-title");
+  overlay.innerHTML = `
+    <div class="storage-info-modal" role="document">
+      <div class="storage-info-modal-heading">
+        <div>
+          <p class="storage-info-modal-kicker">Detalhes do Digimon</p>
+          <h3 id="storage-info-modal-title" class="storage-info-modal-title">${escapeHtml(digimon.name || "Digimon")}</h3>
+        </div>
+        <button type="button" class="storage-info-modal-close" onclick="storageCloseInfoModal()" aria-label="Fechar detalhes">&times;</button>
+      </div>
+      <div class="storage-info-identity">
+        ${renderDigimonVisual(digimon.imageUrl, digimon.stage, "storage-info-visual", "text-6xl")}
+        <div class="storage-info-identity-copy">
+          <div class="storage-info-badges">
+            <span class="badge badge-${String(digimon.rarity || "common").toLowerCase()}">${escapeHtml(formatRarity(digimon.rarity))}</span>
+            <span class="storage-collection-badge ${registered ? "storage-collection-badge-registered" : "storage-collection-badge-available"}">${registered ? "✓ Registrado" : "Não registrado"}</span>
+            ${digimon.locked ? '<span class="storage-locked-badge">🔒 Bloqueado</span>' : ""}
+          </div>
+          <p class="storage-info-identity-meta">Lv.${level} <span>•</span> ${escapeHtml(stageLabel)}</p>
+          <p class="storage-info-identity-note">${digimon.rarityChangedByDie ? "Raridade alterada pelo Dado de Raridade." : "Digimon armazenado na sua coleção."}</p>
+        </div>
+      </div>
+      <section class="storage-info-section" aria-labelledby="storage-info-progress-title">
+        <div class="storage-info-section-heading"><h4 id="storage-info-progress-title">Progressão</h4><span>${level >= 100 ? "Nível máximo" : `${formatNumber(experience)} / ${formatNumber(xpNeeded)} XP`}</span></div>
+        <div class="storage-info-progress-track" role="progressbar" aria-valuenow="${xpPercent}" aria-valuemin="0" aria-valuemax="100" aria-label="${xpPercent}% da experiência para o próximo nível"><span style="width:${xpPercent}%"></span></div>
+        <div class="storage-info-progress-meta"><span>${xpPercent}% para o próximo nível</span><span>${formatNumber(digimon.rebirthCount)} renascimento${Number(digimon.rebirthCount) === 1 ? "" : "s"}</span></div>
+      </section>
+      <section class="storage-info-section" aria-labelledby="storage-info-profile-title">
+        <div class="storage-info-section-heading"><h4 id="storage-info-profile-title">Perfil e especializações</h4><span>Dados do Digimon</span></div>
+        <div class="storage-info-profile-grid">
+          <div class="storage-info-profile-item"><span>Personalidade</span><strong>${escapeHtml(personalityLabel)}</strong><small>${escapeHtml(personalityEffect)}</small></div>
+          <div class="storage-info-profile-item"><span>Especialidade</span><strong>${escapeHtml(traitLabel)}</strong><small>${escapeHtml(traitEffect)}</small></div>
+          <div class="storage-info-profile-item"><span>Atributo</span><strong>${escapeHtml(attributeLabel)}</strong></div>
+          <div class="storage-info-profile-item"><span>Elemento</span><strong>${escapeHtml(elementLabel)}</strong></div>
+          <div class="storage-info-profile-item"><span>Tier</span><strong>${escapeHtml(digimon.grade || "—")}</strong></div>
+          <div class="storage-info-profile-item"><span>Energia</span><strong>${formatNumber(digimon.energy)} / ${formatNumber(digimon.maxEnergy)}</strong>${Number(digimon.clanBonusMaxEnergy) ? `<small>+${formatNumber(digimon.clanBonusMaxEnergy)} do clã</small>` : ""}</div>
+        </div>
+      </section>
+      <section class="storage-info-section" aria-labelledby="storage-info-potential-title">
+        <div class="storage-info-section-heading"><h4 id="storage-info-potential-title">Potencial base</h4><span>Média ${averageIv}%</span></div>
+        <div class="storage-info-potential-grid">
+          ${storageRenderInfoPotential("HP", ivHp, "storage-info-potential-hp")}
+          ${storageRenderInfoPotential("ATK", ivAttack, "storage-info-potential-atk")}
+          ${storageRenderInfoPotential("DEF", ivDefense, "storage-info-potential-def")}
+        </div>
+      </section>
+      <section class="storage-info-section" aria-labelledby="storage-info-combat-title">
+        <div class="storage-info-section-heading"><h4 id="storage-info-combat-title">Leitura de combate</h4><span>Valores efetivos</span></div>
+        <div class="storage-info-combat-grid">
+          ${storageRenderInfoCombatStat("HP", baseHp, equipHp, clanHp, "storage-info-combat-hp")}
+          ${storageRenderInfoCombatStat("ATK", baseAttack, equipAttack, clanAttack, "storage-info-combat-atk")}
+          ${storageRenderInfoCombatStat("DEF", baseDefense, equipDefense, clanDefense, "storage-info-combat-def")}
+        </div>
+      </section>
+      <div class="storage-info-modal-footer"><button type="button" class="btn-secondary" onclick="storageCloseInfoModal()">Fechar</button></div>
+    </div>
+  `;
+  overlay.addEventListener("click", event => { if (event.target === overlay) storageCloseInfoModal(); });
+  overlay.addEventListener("keydown", event => { if (event.key === "Escape") storageCloseInfoModal(); });
+  document.body.appendChild(overlay);
+  overlay.querySelector(".storage-info-modal-close")?.focus();
+}
+
+function storageCloseInfoModal() {
+  document.getElementById("storage-info-modal-overlay")?.remove();
+}
+
+function storageRenderInfoPotential(label, value, toneClass) {
+  return `<div class="storage-info-potential-item"><div><span>${label}</span><strong>${value}%</strong></div><div class="storage-info-potential-track" role="progressbar" aria-label="Potencial ${label}" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="100"><span class="${toneClass}" style="width:${value}%"></span></div></div>`;
+}
+
+function storageRenderInfoCombatStat(label, base, equipment, clan, toneClass) {
+  const total = base + equipment + clan;
+  const bonuses = [];
+  if (equipment) bonuses.push(`Equipamentos: +${equipment.toLocaleString("pt-BR")}`);
+  if (clan) bonuses.push(`Clã: +${clan.toLocaleString("pt-BR")}`);
+  return `<div class="storage-info-combat-stat"><div class="storage-info-combat-heading"><span class="${toneClass}">${label}</span><strong>${total.toLocaleString("pt-BR")}</strong></div><div class="storage-info-combat-breakdown"><span>Base: ${base.toLocaleString("pt-BR")}</span>${bonuses.map(bonus => `<span>${escapeHtml(bonus)}</span>`).join("")}</div></div>`;
 }
 
 function storageRenderPagination(totalItems, totalPages) {
