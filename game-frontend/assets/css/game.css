@@ -1661,3 +1661,55 @@ body {
 .active-incubation-digitama > span {
   flex: 0 0 auto;
 }
+
+/* Incubation card visual test: minimal in-progress state */
+.active-incubation-card.is-minimal {
+  padding: 0.8rem 0.9rem;
+  border-color: rgba(30, 64, 175, 0.42);
+  background: rgba(15, 23, 42, 0.72);
+  box-shadow: none;
+}
+
+.active-incubation-card.is-minimal::after {
+  width: 0.14rem;
+  background: #22d3ee;
+}
+
+.active-incubation-card.is-minimal .active-incubation-icon {
+  font-size: 1.7rem;
+  filter: saturate(0.85);
+}
+
+.active-incubation-card.is-minimal .active-incubation-header {
+  gap: 0.6rem;
+}
+
+.active-incubation-card.is-minimal .active-incubation-digitama {
+  margin-top: 0.35rem;
+}
+
+.active-incubation-card.is-minimal .active-incubation-digitama h3 {
+  font-size: 0.88rem;
+}
+
+.active-incubation-card.is-minimal .active-incubation-meta .badge {
+  font-size: 0.6rem;
+  padding: 0.25rem 0.45rem;
+}
+
+.active-incubation-card.is-minimal > .mt-4 {
+  margin-top: 0.8rem;
+}
+
+.active-incubation-card.is-minimal > .mt-4 > p {
+  font-size: 1.35rem;
+}
+
+.active-incubation-card.is-minimal > [id^="incub-slot-action-"] {
+  margin-top: 0.7rem;
+}
+
+.active-incubation-card.is-minimal > [id^="incub-slot-action-"] p {
+  color: #64748b;
+  font-size: 0.68rem;
+}

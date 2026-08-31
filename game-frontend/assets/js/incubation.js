@@ -181,10 +181,10 @@ function incubRenderSlot(slot) {
   const incubatorEmoji = incubIncubatorEmoji(incubation.incubatorType);
 
   return `
-    <article class="card active-incubation-card ${done ? "is-ready" : ""}" data-incub-slot="${slotNumber}" data-incubation-id="${escapeAttr(String(incubation.id))}">
+    <article class="card active-incubation-card ${done ? "is-ready" : "is-minimal"}" data-incub-slot="${slotNumber}" data-incubation-id="${escapeAttr(String(incubation.id))}">
       <div class="active-incubation-header flex items-start justify-between gap-3">
         <div class="active-incubation-main flex items-center gap-3 min-w-0">
-          <span class="text-3xl shrink-0">${incubatorEmoji}</span>
+          <span class="active-incubation-icon text-3xl shrink-0">${incubatorEmoji}</span>
           <div class="active-incubation-copy min-w-0">
             <p class="active-incubation-incubator text-xs uppercase tracking-wider text-amber-400 font-semibold">${escapeHtml(incubatorName)}</p>
             <p class="active-incubation-slot text-xs text-slate-500 mt-1">${slotLabel}</p>
