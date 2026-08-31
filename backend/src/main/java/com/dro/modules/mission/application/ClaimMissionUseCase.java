@@ -16,6 +16,7 @@ import com.dro.modules.mission.domain.MissionDefinition;
 import com.dro.modules.mission.domain.MissionDefinitionMapper;
 import com.dro.modules.mission.domain.MissionInstance;
 import com.dro.modules.mission.domain.MissionReward;
+import com.dro.modules.mission.domain.MissionProgressionRules;
 import com.dro.modules.mission.domain.PlayerMissionProgress;
 import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
@@ -406,11 +407,13 @@ public class ClaimMissionUseCase {
     }
 
     private double calculateProgressMultiplier(int completionCount) {
-        return 1 + (completionCount * 0.01);
+        return MissionProgressionRules.rewardMultiplier(completionCount);
     }
 
     private void incrementProgress(PlayerMissionProgress progress) {
-        progress.setCompletionCount(progress.getCompletionCount() + 1);
+        progress.setCompletionCount(
+                MissionProgressionRules.nextCompletionCount(progress.getCompletionCount())
+        );
         progressRepository.save(progress);
     }
 }
