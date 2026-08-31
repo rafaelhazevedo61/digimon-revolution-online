@@ -3302,3 +3302,112 @@ body {
     transition: none;
   }
 }
+
+/* ===================== Dashboard: resumo desktop do Digimon ===================== */
+.dashboard-digimon-desktop-info {
+  display: none;
+}
+.dashboard-digimon-profile-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+.dashboard-digimon-profile-stat {
+  min-width: 0;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid rgba(51, 65, 85, 0.7);
+  border-radius: 0.65rem;
+  background: rgba(2, 6, 23, 0.34);
+}
+.dashboard-digimon-profile-stat span,
+.dashboard-digimon-potential-heading span {
+  display: block;
+  color: #64748b;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.dashboard-digimon-profile-stat strong {
+  display: block;
+  overflow: hidden;
+  margin-top: 0.22rem;
+  color: #e2e8f0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dashboard-digimon-potential-panel {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(51, 65, 85, 0.66);
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 42, 0.48);
+}
+.dashboard-digimon-potential-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.dashboard-digimon-potential-heading strong {
+  color: #cbd5e1;
+  font-size: 0.65rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.dashboard-digimon-potential-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+}
+.dashboard-digimon-potential-card {
+  min-width: 0;
+}
+.dashboard-digimon-potential-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem;
+  color: #94a3b8;
+  font-size: 0.6rem;
+  font-weight: 800;
+}
+.dashboard-digimon-potential-label strong {
+  color: #e2e8f0;
+  font-size: 0.62rem;
+}
+.dashboard-digimon-potential-track {
+  height: 0.28rem;
+  margin-top: 0.32rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: #1e293b;
+}
+.dashboard-digimon-potential-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+.dashboard-potential-hp { background: linear-gradient(90deg, #be123c, #fb7185); }
+.dashboard-potential-atk { background: linear-gradient(90deg, #c2410c, #fb923c); }
+.dashboard-potential-def { background: linear-gradient(90deg, #1d4ed8, #60a5fa); }
+
+@media (min-width: 46rem) {
+  .dashboard-digimon-grid {
+    align-items: stretch;
+  }
+  .dashboard-digimon-main {
+    display: flex;
+    min-height: 100%;
+    flex-direction: column;
+  }
+  .dashboard-digimon-desktop-info {
+    display: grid;
+    gap: 0.65rem;
+    margin-top: auto;
+    padding-top: 0.9rem;
+  }
+}

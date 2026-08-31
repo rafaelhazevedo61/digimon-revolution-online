@@ -31,3 +31,9 @@ Na sessão visual desktop, o painel de leitura de combate mediu 140,77 px fechad
 ## Reserva de altura no painel de combate
 
 As capturas desktop com os detalhes fechados e expandidos confirmaram que o painel de leitura de combate mantém a mesma altura externa nos dois estados. O conteúdo expandido cabe dentro da área reservada, evitando deslocamento vertical do cartão e da coluna lateral quando o usuário abre os atributos. A regra foi limitada ao breakpoint desktop; no mobile a altura continua natural.
+
+## Enriquecimento desktop do cartão
+
+A captura desktop confirmou a inclusão de status, estágio, renascimentos e potencial base com barras de IV dentro da área principal do Digimon. A captura mobile confirmou que o bloco `dashboard-digimon-desktop-info` permanece oculto e não altera a altura ou a ordem do cartão móvel.
+
+O harness visual usado nesta etapa não forneceu valores de IV no objeto de teste, por isso as barras apareceram em 0%; o contrato real da API possui `ivHp`, `ivAttack` e `ivDefense`, que são usados diretamente na implementação.

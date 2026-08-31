@@ -242,10 +242,24 @@ function renderDigimonCard(d) {
             <div class="xp-bar xp-bar-with-label" role="progressbar" aria-valuenow="${xpPercent}" aria-valuemin="0" aria-valuemax="100" aria-label="${xpPercent}% da experiência para o próximo nível">
               <div class="xp-bar-fill" style="width: ${xpPercent}%"></div>
               <span class="xp-bar-label">${xpPercent}%</span>
+                        </div>
+          </div>
+          <div class="dashboard-digimon-desktop-info" aria-label="Informações gerais do Digimon">
+            <div class="dashboard-digimon-profile-strip">
+              <div class="dashboard-digimon-profile-stat"><span>Status</span><strong>${formatDashboardDigimonStatus(d.status)}</strong></div>
+              <div class="dashboard-digimon-profile-stat"><span>Estágio</span><strong>${escapeHtml(formatStage(d.stage))}</strong></div>
+              <div class="dashboard-digimon-profile-stat"><span>Renascimentos</span><strong>${Number(d.rebirthCount || 0)}</strong></div>
+            </div>
+            <div class="dashboard-digimon-potential-panel">
+              <div class="dashboard-digimon-potential-heading"><span>Potencial base</span><strong>Média ${dashboardAverageIv(d)}%</strong></div>
+              <div class="dashboard-digimon-potential-grid">
+                ${renderDashboardPotential("HP", d.ivHp, "dashboard-potential-hp")}
+                ${renderDashboardPotential("ATK", d.ivAttack, "dashboard-potential-atk")}
+                ${renderDashboardPotential("DEF", d.ivDefense, "dashboard-potential-def")}
+              </div>
             </div>
           </div>
         </div>
-
         <!-- Effective stats -->
         <div class="dashboard-digimon-stats-panel">
           <div class="dashboard-digimon-stats-heading"><span class="dashboard-eyebrow dashboard-eyebrow-blue">Leitura de combate</span><span class="dashboard-sidebar-mark">◎</span></div>
@@ -279,6 +293,26 @@ function renderDigimonCard(d) {
 function dashboardStatNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : 0;
+}
+
+function formatDashboardDigimonStatus(status) {
+  const labels = { ACTIVE: "Ativo", STORED: "Armazenado", HATCHED: "Recém-chocado", REBORN: "Renascido" };
+  return labels[String(status || "ACTIVE").toUpperCase()] || "Ativo";
+}
+
+function dashboardAverageIv(d) {
+  const total = dashboardStatNumber(d.ivHp) + dashboardStatNumber(d.ivAttack) + dashboardStatNumber(d.ivDefense);
+  return Math.round(total / 3);
+}
+
+function renderDashboardPotential(label, value, toneClass) {
+  const percent = Math.min(100, Math.max(0, dashboardStatNumber(value)));
+  return `
+    <div class="dashboard-digimon-potential-card">
+      <div class="dashboard-digimon-potential-label"><span>${label}</span><strong>${percent}%</strong></div>
+      <div class="dashboard-digimon-potential-track" role="progressbar" aria-label="Potencial ${label}" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100"><span class="${toneClass}" style="width:${percent}%"></span></div>
+    </div>
+  `;
 }
 
 function dashboardFormatStat(value) {
