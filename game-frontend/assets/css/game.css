@@ -3456,3 +3456,41 @@ body {
     display: none;
   }
 }
+
+/* ===================== Missões: composição responsiva ===================== */
+.missions-page-layout {
+  display: grid;
+  gap: 0.85rem;
+}
+.missions-page-active-column,
+.missions-map-section {
+  min-width: 0;
+}
+@media (min-width: 46rem) {
+  .missions-page-layout {
+    grid-template-columns: minmax(17rem, 0.82fr) minmax(0, 1.18fr);
+    align-items: start;
+  }
+  .missions-page-layout:has(#active-missions:empty) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .missions-page-active-column .missions-active-card {
+    grid-template-columns: 2.35rem minmax(0, 1fr);
+    align-items: start;
+  }
+  .missions-page-active-column .missions-active-action {
+    grid-column: 2;
+    justify-content: flex-start;
+    min-width: 0;
+    margin-top: 0.25rem;
+  }
+  .missions-page-layout .mission-area-group-content {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 46rem) {
+  .missions-page-container {
+    max-width: 74rem;
+  }
+}
