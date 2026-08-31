@@ -222,10 +222,9 @@ function renderDigimonCard(d) {
                 <button class="text-slate-500 hover:text-slate-300 text-xs" data-rename-digimon-id="${escapeAttr(d.id)}" data-rename-digimon-name="${escapeAttr(d.name)}" title="Renomear">✏️</button>
                 <span class="text-sm font-bold text-cyan-400">Lv.${d.level}</span>
               </div>
-              <p class="text-xs text-slate-400">${escapeHtml(formatDigimonType(d.type))}</p>
               <div class="flex gap-2 mt-1 flex-wrap">
                 <span class="badge dashboard-stage-badge badge-${d.stage.toLowerCase()}">${escapeHtml(formatStage(d.stage))}</span>
-                <span class="badge badge-${d.rarity.toLowerCase()}">${escapeHtml(formatRarity(d.rarity))}</span>${renderRarityDieIndicator(d)}
+                ${renderRarityDieIndicator(d)}
                 ${d.attribute ? `<span class="badge badge-common">${escapeHtml(formatAttribute(d.attribute))}</span>` : ""}
                 ${d.element ? `<span class="badge badge-common">${escapeHtml(formatElement(d.element))}</span>` : ""}
               </div>
@@ -249,7 +248,13 @@ function renderDigimonCard(d) {
               <div class="dashboard-digimon-profile-stat"><span>Renascimentos</span><strong>${Number(d.rebirthCount || 0)}</strong></div>
             </div>
             <div class="dashboard-digimon-potential-panel">
-              <div class="dashboard-digimon-potential-heading"><span>Potencial base</span><strong>Média ${dashboardAverageIv(d)}%</strong></div>
+              <div class="dashboard-digimon-potential-heading">
+                <span>Potencial base</span>
+                <div class="dashboard-digimon-potential-meta">
+                  <strong>Média ${dashboardAverageIv(d)}%</strong>
+                  <span class="dashboard-digimon-tier-indicator">Tier ${escapeHtml(d.grade || "—")}</span>
+                </div>
+              </div>
               <div class="dashboard-digimon-potential-grid">
                 ${renderDashboardPotential("HP", d.ivHp, "dashboard-potential-hp")}
                 ${renderDashboardPotential("ATK", d.ivAttack, "dashboard-potential-atk")}
@@ -279,7 +284,7 @@ function renderDigimonCard(d) {
 
       <!-- Traits -->
       <div class="dashboard-digimon-traits flex gap-2 mt-3 flex-wrap">
-        <span class="badge-xs">${d.grade}</span>
+        <span class="badge-xs dashboard-digimon-tier-badge">${d.grade}</span>
         <span class="badge-xs">${formatPersonality(d.personality)}</span>
         ${d.trait ? `<span class="badge-xs badge-trait">${formatTrait(d.trait)}</span>` : ""}
         ${d.rebirthCount > 0 ? `<span class="badge-xs dashboard-rebirth-badge badge-rebirth">Rebirth ×${d.rebirthCount}</span>` : ""}

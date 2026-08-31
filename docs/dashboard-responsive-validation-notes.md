@@ -37,3 +37,7 @@ As capturas desktop com os detalhes fechados e expandidos confirmaram que o pain
 A captura desktop confirmou a inclusão de status, estágio, renascimentos e potencial base com barras de IV dentro da área principal do Digimon. A captura mobile confirmou que o bloco `dashboard-digimon-desktop-info` permanece oculto e não altera a altura ou a ordem do cartão móvel.
 
 O harness visual usado nesta etapa não forneceu valores de IV no objeto de teste, por isso as barras apareceram em 0%; o contrato real da API possui `ivHp`, `ivAttack` e `ivDefense`, que são usados diretamente na implementação.
+
+## Simplificação de tipo, raridade e tier
+
+A captura desktop confirmou que o tipo e o badge de raridade não aparecem mais, enquanto o tier foi integrado ao painel de potencial base ao lado da média. O estágio e os renascimentos permanecem nas caixas dedicadas. A captura mobile confirmou que o tipo e a raridade também foram removidos, enquanto os badges de estágio e grade/tier continuam disponíveis nessa versão, conforme solicitado.

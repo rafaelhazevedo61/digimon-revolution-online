@@ -3320,7 +3320,7 @@ body {
   background: rgba(2, 6, 23, 0.34);
 }
 .dashboard-digimon-profile-stat span,
-.dashboard-digimon-potential-heading span {
+.dashboard-digimon-potential-heading > span {
   display: block;
   color: #64748b;
   font-size: 0.55rem;
@@ -3351,10 +3351,30 @@ body {
   justify-content: space-between;
   gap: 0.75rem;
 }
+.dashboard-digimon-potential-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  min-width: 0;
+}
 .dashboard-digimon-potential-heading strong {
   color: #cbd5e1;
   font-size: 0.65rem;
   font-weight: 800;
+  white-space: nowrap;
+}
+.dashboard-digimon-tier-indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.42rem;
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  border-radius: 0.38rem;
+  color: #fde68a;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1.1;
   white-space: nowrap;
 }
 .dashboard-digimon-potential-grid {
@@ -3414,7 +3434,8 @@ body {
 
 @media (min-width: 46rem) {
   .dashboard-stage-badge,
-  .dashboard-rebirth-badge {
+  .dashboard-rebirth-badge,
+  .dashboard-digimon-tier-badge {
     display: none;
   }
 }
