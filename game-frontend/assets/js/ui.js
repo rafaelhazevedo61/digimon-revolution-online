@@ -97,7 +97,13 @@ async function savePlayerShortcutPreference(routes) {
   const normalized = normalizePlayerShortcutRoutes(routes);
   const preference = await apiPut("/players/me/preferences/shortcuts", { routes: normalized });
   playerShortcutRoutes = normalizePlayerShortcutRoutes(preference?.routes || normalized);
-  renderShortcutBar(window.location.hash.replace("#", "").split("?")[0] || "dashboard");
+  try {
+    renderShortcutBar(window.location.hash.replace("#", "").split("?")[0] || "dashboard");
+  } catch (error) {
+    // A preferência já foi persistida. Um erro visual da barra não deve
+    // fazer o editor informar que o salvamento falhou.
+    console.warn("Preferência de atalhos salva, mas a barra não foi atualizada visualmente.", error);
+  }
   return playerShortcutRoutes;
 }
 

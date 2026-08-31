@@ -163,6 +163,7 @@ function settingsClosePanel() {
 }
 
 let settingsShortcutDraft = [];
+let settingsShortcutSaveInProgress = false;
 
 async function settingsShowShortcuts() {
   document.getElementById("settings-shortcuts-modal")?.remove();
@@ -240,22 +241,34 @@ function settingsMoveShortcut(route, direction) {
 }
 
 async function settingsSaveShortcuts() {
+  if (settingsShortcutSaveInProgress) return;
+
   const button = document.getElementById("settings-shortcuts-save");
   const feedback = document.getElementById("settings-shortcuts-feedback");
   if (!button || !feedback) return;
+
+  settingsShortcutSaveInProgress = true;
+  const routesToSave = [...settingsShortcutDraft];
   button.disabled = true;
+  button.setAttribute("aria-busy", "true");
   button.textContent = "Salvando...";
   feedback.className = "hidden settings-feedback";
+
   try {
-    await savePlayerShortcutPreference(settingsShortcutDraft);
-    feedback.textContent = "Atalhos salvos com sucesso.";
-    feedback.className = "settings-feedback settings-feedback-success";
-    setTimeout(() => document.getElementById("settings-shortcuts-modal")?.remove(), 450);
+    await savePlayerShortcutPreference(routesToSave);
+    document.getElementById("settings-shortcuts-modal")?.remove();
+    showToast("Atalhos salvos com sucesso.");
   } catch (err) {
     feedback.textContent = err.message || "Não foi possível salvar os atalhos.";
     feedback.className = "settings-feedback settings-feedback-error";
-    button.disabled = false;
-    button.textContent = "Salvar atalhos";
+  } finally {
+    settingsShortcutSaveInProgress = false;
+    const currentButton = document.getElementById("settings-shortcuts-save");
+    if (currentButton) {
+      currentButton.disabled = false;
+      currentButton.removeAttribute("aria-busy");
+      currentButton.textContent = "Salvar atalhos";
+    }
   }
 }
 
