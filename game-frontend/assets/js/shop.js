@@ -64,13 +64,26 @@ async function renderShopPage() {
         </div>
       </section>
 
+      <div class="shop-workspace">
+        <aside class="shop-context-column">
+          <div class="shop-context-card">
+            <span class="progression-eyebrow progression-eyebrow-cyan">Operações</span>
+            <strong>Central de comércio</strong>
+            <p>Escolha um modo para administrar seus recursos.</p>
+          </div>
+
       <div class="shop-mode-switch" id="shop-mode-tabs" role="tablist" aria-label="Modo da loja">
         <button class="shop-mode-button active" data-mode="buy" role="tab" aria-selected="true" onclick="shopSetMode('buy')"><span aria-hidden="true">＋</span> Comprar</button>
         <button class="shop-mode-button" data-mode="sell" role="tab" aria-selected="false" onclick="shopSetMode('sell')"><span aria-hidden="true">↗</span> Vender</button>
       </div>
 
+        </aside>
+
+        <main class="shop-content-column">
       <div id="shop-content">
         <div class="card animate-pulse"><div class="h-32"></div></div>
+      </div>
+        </main>
       </div>
     </div>
   `;

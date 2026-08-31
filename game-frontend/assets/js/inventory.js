@@ -52,6 +52,13 @@ async function renderInventoryPage() {
         </div>
       </section>
 
+      <div class="inventory-workspace">
+        <aside class="inventory-control-rail">
+          <div class="inventory-control-heading">
+            <span class="progression-eyebrow progression-eyebrow-cyan">Organização</span>
+            <p>Filtre e encontre seus recursos</p>
+          </div>
+
       <div id="inv-config-panel" class="card-sm inventory-config-panel mb-3 hidden">
         <div class="mb-3 rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-2">
           <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
@@ -140,6 +147,9 @@ async function renderInventoryPage() {
         <button class="inventory-category-button" data-category="OTHER" onclick="invSwitchCategory('OTHER')">Outros</button>
       </nav>
 
+        </aside>
+
+        <main class="inventory-content-column">
       <form id="inv-search-form" class="inventory-search-row mb-3">
         <span class="inventory-search-icon" aria-hidden="true">⌕</span>
         <input
@@ -166,6 +176,8 @@ async function renderInventoryPage() {
 
       <div id="inv-content">
         <div class="card animate-pulse"><div class="h-32"></div></div>
+      </div>
+        </main>
       </div>
     </div>
   `;

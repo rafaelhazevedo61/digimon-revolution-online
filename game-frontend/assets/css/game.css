@@ -3545,3 +3545,179 @@ body {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ===================== Inventário e loja: visão desktop/mobile ===================== */
+.inventory-control-heading,
+.shop-context-card {
+  padding: 0.72rem;
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  border-radius: 0.78rem;
+  background: linear-gradient(145deg, rgba(8, 51, 68, 0.24), rgba(15, 23, 42, 0.58));
+}
+.inventory-control-heading p,
+.shop-context-card p {
+  margin: 0.28rem 0 0;
+  color: #64748b;
+  font-size: 0.62rem;
+  line-height: 1.4;
+}
+.inventory-control-heading .progression-eyebrow,
+.shop-context-card .progression-eyebrow {
+  margin-bottom: 0.22rem;
+}
+.shop-context-card strong {
+  display: block;
+  color: #e2e8f0;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+@media (min-width: 46rem) {
+  .inventory-page,
+  .shop-page {
+    max-width: 74rem;
+  }
+
+  .inventory-workspace,
+  .shop-workspace {
+    display: grid;
+    grid-template-columns: minmax(14rem, 0.27fr) minmax(0, 0.73fr);
+    align-items: start;
+    gap: 1rem;
+  }
+
+  .inventory-control-rail,
+  .shop-context-column {
+    position: sticky;
+    top: 1rem;
+    min-width: 0;
+    padding: 0.78rem;
+    border: 1px solid rgba(51, 65, 85, 0.78);
+    border-radius: 0.95rem;
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.76), rgba(2, 6, 23, 0.52));
+    box-shadow: 0 10px 26px rgba(2, 6, 23, 0.16);
+  }
+
+  .shop-context-column {
+    border-color: rgba(34, 211, 238, 0.3);
+  }
+
+  .inventory-control-heading,
+  .shop-context-card {
+    margin-bottom: 0.7rem;
+  }
+
+  .inventory-control-rail .inventory-mode-switch,
+  .shop-context-column .shop-mode-switch {
+    margin-bottom: 0.7rem;
+  }
+
+  .inventory-control-rail .inventory-category-nav,
+  .shop-context-column .shop-category-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inventory-content-column,
+  .shop-content-column {
+    min-width: 0;
+  }
+
+  .inventory-content-column #inv-content {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 0.62rem;
+  }
+
+  .inventory-content-column #inv-content > .inventory-item-card,
+  .inventory-content-column #inv-content > .inventory-equipment-card {
+    height: 100%;
+    margin-bottom: 0;
+  }
+
+  .inventory-content-column #inv-content > .inventory-empty-state,
+  .inventory-content-column #inv-content > div.flex.items-center.justify-between {
+    grid-column: 1 / -1;
+  }
+
+  .inventory-content-column .inventory-item-card,
+  .inventory-content-column .inventory-equipment-card {
+    align-items: flex-start;
+    padding: 0.72rem;
+  }
+
+  .inventory-content-column .inventory-item-action,
+  .inventory-content-column .inventory-equipment-action {
+    align-self: center;
+  }
+
+  .shop-content-column .shop-section {
+    padding: 1rem;
+  }
+
+  .shop-content-column .shop-product-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 0.62rem;
+  }
+
+  .shop-content-column .shop-product-card {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    align-items: start;
+    height: 100%;
+    padding: 0.72rem;
+  }
+
+  .shop-content-column .shop-product-icon {
+    grid-row: 1;
+  }
+
+  .shop-content-column .shop-product-body {
+    min-width: 0;
+  }
+
+  .shop-content-column .shop-product-description {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .shop-content-column .shop-action-button {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 0.55rem;
+  }
+
+  .shop-content-column .shop-empty-state {
+    min-height: 12rem;
+  }
+}
+
+@media (min-width: 90rem) {
+  .inventory-content-column #inv-content,
+  .shop-content-column .shop-product-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 45.99rem) {
+  .inventory-workspace,
+  .shop-workspace {
+    display: block;
+  }
+
+  .inventory-control-rail,
+  .shop-context-column,
+  .inventory-content-column,
+  .shop-content-column {
+    min-width: 0;
+  }
+
+  .inventory-control-heading,
+  .shop-context-card {
+    display: none;
+  }
+}
