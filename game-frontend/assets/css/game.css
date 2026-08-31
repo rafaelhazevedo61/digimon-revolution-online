@@ -1636,3 +1636,28 @@ body {
     font-size: 0.62rem;
   }
 }
+
+.active-incubation-incubator,
+.active-incubation-slot,
+.active-incubation-digitama {
+  min-width: 0;
+}
+
+.active-incubation-incubator {
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.active-incubation-slot {
+  line-height: 1.2;
+}
+
+.active-incubation-digitama h3 {
+  min-width: 0;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.active-incubation-digitama > span {
+  flex: 0 0 auto;
+}

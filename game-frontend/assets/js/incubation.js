@@ -186,9 +186,12 @@ function incubRenderSlot(slot) {
         <div class="active-incubation-main flex items-center gap-3 min-w-0">
           <span class="text-3xl shrink-0">${incubatorEmoji}</span>
           <div class="active-incubation-copy min-w-0">
-            <p class="active-incubation-label text-xs uppercase tracking-wider text-amber-400 font-semibold">${escapeHtml(incubatorName)} · ${slotLabel}</p>
-            <h3 class="font-bold text-slate-200 mt-1 break-words">${digitamaEmoji} ${escapeHtml(digitamaName)}</h3>
-            <p class="text-xs text-slate-500 mt-1">Digitama em incubação</p>
+            <p class="active-incubation-incubator text-xs uppercase tracking-wider text-amber-400 font-semibold">${escapeHtml(incubatorName)}</p>
+            <p class="active-incubation-slot text-xs text-slate-500 mt-1">${slotLabel}</p>
+            <div class="active-incubation-digitama flex items-center gap-1.5 mt-2">
+              <span class="text-base" aria-hidden="true">${digitamaEmoji}</span>
+              <h3 class="font-bold text-slate-200 break-words">${escapeHtml(digitamaName)}</h3>
+            </div>
           </div>
         </div>
         <div class="active-incubation-meta flex items-center gap-2 shrink-0">
