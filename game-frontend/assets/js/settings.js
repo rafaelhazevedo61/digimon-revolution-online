@@ -35,8 +35,9 @@ async function renderSettingsPage() {
 }
 
 function settingsMenuItem(type, icon, title, description, category, comingSoon = false) {
+  const action = type === "shortcuts" ? "settingsShowShortcuts()" : `settingsOpenPanel('${type}')`;
   return `
-    <button type="button" class="settings-menu-item ${comingSoon ? "is-coming-soon" : ""}" onclick="${comingSoon ? "settingsShowShortcuts()" : `settingsOpenPanel('${type}')`}">
+    <button type="button" class="settings-menu-item ${comingSoon ? "is-coming-soon" : ""}" onclick="${action}">
       <span class="settings-menu-item-icon" aria-hidden="true">${icon}</span>
       <span class="settings-menu-item-content">
         <span class="settings-menu-item-category">${category}</span>
