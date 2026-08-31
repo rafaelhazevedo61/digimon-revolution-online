@@ -3914,3 +3914,9 @@ body {
   .storage-header-tools { gap: 0.35rem; }
   .storage-config-button { padding-inline: 0.48rem; }
 }
+
+
+.storage-digimon-status-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; margin-top: 0.28rem; }
+.storage-collection-badge { display: inline-flex; align-items: center; min-height: 1.1rem; padding: 0.18rem 0.36rem; border: 1px solid transparent; border-radius: 9999px; font-size: 0.5rem; font-weight: 850; line-height: 1; white-space: nowrap; }
+.storage-collection-badge-registered { border-color: rgba(74, 222, 128, 0.28); background: rgba(22, 101, 52, 0.28); color: #86efac; }
+.storage-collection-badge-available { border-color: rgba(103, 232, 249, 0.2); background: rgba(8, 145, 178, 0.12); color: #a5f3fc; }

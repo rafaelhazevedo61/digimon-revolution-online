@@ -32,3 +32,11 @@ A página deve aproveitar a largura desktop sem comprimir a informação em uma 
 Após a revisão visual, foi identificado que o breakpoint de telas pequenas havia reduzido indevidamente o cartão para uma imagem de `3.3rem` e um gap de `0.48rem`, aproximando os textos da imagem. O override mobile foi corrigido para recuperar a imagem de `4rem`, o gap de `0.75rem` e uma composição mais próxima da versão anterior. Os botões continuam reposicionados em uma linha própria com três colunas.
 
 A correção foi conferida em capturas headless de 375×812 e 1440×1000. No mobile, o nome, nível e atributos agora possuem separação visual clara da imagem; no desktop, a grade e o rail lateral permanecem inalterados.
+
+## Indicador de coleção
+
+O storage passou a consultar `GET /collection` em paralelo com o storage e o dashboard. Cada cartão cruza `digimonInfoId` e `rarity` com as entradas da coleção e exibe um badge **Registrado** ou **Não registrado**. O indicador é informativo e não altera o fluxo de registro existente na página de Coleção.
+
+A caixa textual de detalhes sobre o Dado de Raridade foi removida do cartão. O indicador compacto `🎲` permanece junto à raridade, conforme a preferência de interface.
+
+A revisão visual foi conferida em 375×812 e 1440×1000; os badges permanecem legíveis em mobile e desktop, sem aproximar o conteúdo da imagem do Digimon.

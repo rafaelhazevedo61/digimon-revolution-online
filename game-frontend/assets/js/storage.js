@@ -1,5 +1,6 @@
 let storageDigimons = [];
 let storageSelectedDigimonIds = new Set();
+let storageCollectionEntries = new Set();
 const STORAGE_PAGE_SIZE = 5;
 let storageCurrentPage = 1;
 
@@ -13,6 +14,7 @@ let storageFilterState = {
 
 async function renderStoragePage() {
   storageSelectedDigimonIds.clear();
+  storageCollectionEntries.clear();
   storageCurrentPage = 1;
   const app = document.getElementById("app");
   showBottomNav("digimons");
@@ -186,12 +188,14 @@ async function renderStoragePage() {
   }
 
   try {
-    const [stored, dashboard] = await Promise.all([
+    const [stored, dashboard, collection] = await Promise.all([
       apiGet("/digimon/storage"),
-      apiGet("/players/me/dashboard")
+      apiGet("/players/me/dashboard"),
+      apiGet("/collection")
     ]);
 
     storageDigimons = Array.isArray(stored) ? stored : [];
+    storageCollectionEntries = new Set((collection?.entries || []).map(entry => `${entry.digimonInfoId}:${String(entry.rarity || "").toUpperCase()}`));
 
     const slotInfo = dashboard.slotInfo;
     const infoEl = document.getElementById("storage-info");
@@ -284,6 +288,7 @@ function storageRenderList() {
 
   container.innerHTML = pageItems.map(d => {
     const locked = d.locked === true;
+    const registered = storageCollectionEntries.has(`${d.digimonInfoId}:${String(d.rarity || "").toUpperCase()}`);
     const selected = storageSelectedDigimonIds.has(String(d.id));
     return `
       <article class="storage-digimon-card ${locked ? "storage-digimon-card-locked" : ""}">
@@ -303,10 +308,12 @@ function storageRenderList() {
         <div class="storage-digimon-body">
           <div class="storage-digimon-heading">
             <p class="storage-digimon-name">${escapeHtml(d.name)}</p>
+          </div>
+          <div class="storage-digimon-status-row">
+            <span class="storage-collection-badge ${registered ? "storage-collection-badge-registered" : "storage-collection-badge-available"}" title="${registered ? "Esta espécie e raridade já estão registradas na coleção" : "Esta espécie e raridade ainda não estão registradas na coleção"}">${registered ? "✓ Registrado" : "Não registrado"}</span>
             ${locked ? '<span class="storage-locked-badge" title="Protegido contra sacrifício">🔒 Bloqueado</span>' : ""}
           </div>
           <p class="storage-digimon-meta">Lv.${d.level} <span>•</span> ${escapeHtml(d.stage)} <span>•</span> ${formatRarity(d.rarity)} ${renderRarityDieIndicator(d)}</p>
-          ${renderRarityDieDetails(d)}
           <p class="storage-digimon-stats"><span>HP ${d.hp}</span><span>ATK ${d.attack}</span><span>DEF ${d.defense}</span></p>
           <p class="storage-digimon-reward ${locked ? "storage-digimon-reward-locked" : ""}">${locked ? "Protegido contra sacrifício" : `Sacrifício: +${calculateDigitalDataPreview(d)} Dados Digitais`}</p>
         </div>
