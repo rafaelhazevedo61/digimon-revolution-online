@@ -3145,3 +3145,314 @@ body {
   .world-boss-loading-hero,
   .world-boss-loading-line { animation: none; }
 }
+
+/* ===================== Dashboard: composição responsiva ===================== */
+.dashboard-page {
+  max-width: 78rem;
+}
+.dashboard-notices,
+.dashboard-content-grid,
+.dashboard-primary-column,
+.dashboard-secondary-column {
+  min-width: 0;
+}
+.dashboard-content-grid {
+  display: grid;
+  gap: 1rem;
+}
+.dashboard-digimon-card {
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.94), rgba(8, 15, 31, 0.88));
+  box-shadow: 0 16px 38px rgba(2, 6, 23, 0.26), inset 0 1px 0 rgba(148, 163, 184, 0.04);
+}
+.dashboard-digimon-grid {
+  display: grid;
+  gap: 1rem;
+}
+.dashboard-digimon-main,
+.dashboard-digimon-stats-panel {
+  min-width: 0;
+}
+.dashboard-digimon-stats-panel {
+  padding: 0.8rem;
+  border: 1px solid rgba(51, 65, 85, 0.72);
+  border-radius: 0.85rem;
+  background: linear-gradient(145deg, rgba(2, 6, 23, 0.5), rgba(15, 23, 42, 0.58));
+}
+.dashboard-digimon-stats-heading,
+.dashboard-sidebar-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.dashboard-digimon-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+.dashboard-digimon-stat-grid > div {
+  min-width: 0;
+}
+.dashboard-sidebar-mark {
+  color: #67e8f9;
+  font-size: 1.1rem;
+  font-weight: 900;
+  line-height: 1;
+}
+.dashboard-secondary-column {
+  display: flex;
+  flex-direction: column;
+}
+.dashboard-secondary-column .dashboard-actions {
+  padding: 0.85rem;
+  border: 1px solid rgba(51, 65, 85, 0.78);
+  border-radius: 1rem;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.64));
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.18);
+}
+.dashboard-secondary-column .dashboard-actions .dashboard-action {
+  margin-top: 0.5rem;
+}
+.dashboard-secondary-column .dashboard-actions .dashboard-action:first-of-type {
+  margin-top: 0.75rem;
+}
+.dashboard-secondary-column .dashboard-missions-section,
+.dashboard-secondary-column .dashboard-incubation-section {
+  margin-bottom: 1rem;
+}
+.dashboard-secondary-column .dashboard-mission-card {
+  grid-template-columns: 2.35rem minmax(0, 1fr);
+}
+.dashboard-secondary-column .dashboard-mission-action {
+  grid-column: 2;
+  justify-content: flex-start;
+  min-width: 0;
+  margin-top: 0.15rem;
+}
+
+@media (min-width: 46rem) {
+  .dashboard-page {
+    padding-top: 1.5rem;
+  }
+  .dashboard-header {
+    align-items: center;
+    padding: 1.1rem 1.3rem 1.2rem;
+    border: 1px solid rgba(51, 65, 85, 0.74);
+    border-radius: 1rem;
+    background: linear-gradient(110deg, rgba(15, 23, 42, 0.86), rgba(8, 47, 73, 0.32));
+    box-shadow: 0 14px 30px rgba(2, 6, 23, 0.16);
+  }
+  .dashboard-title {
+    font-size: 1.65rem;
+  }
+  .dashboard-content-grid {
+    grid-template-columns: minmax(0, 1.45fr) minmax(19rem, 0.85fr);
+    align-items: start;
+  }
+  .dashboard-digimon-card {
+    padding: 1.2rem;
+  }
+  .dashboard-digimon-grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(15rem, 0.85fr);
+    align-items: center;
+  }
+  .dashboard-digimon-stats-panel {
+    padding: 0.9rem;
+  }
+  /* Mantém o painel estável quando os detalhes dos atributos são abertos. */
+  .dashboard-digimon-details {
+    min-height: 15rem;
+  }
+  .dashboard-secondary-column {
+    position: sticky;
+    top: 1rem;
+  }
+  .dashboard-resource-card {
+    padding-inline: 0.8rem;
+  }
+}
+
+@media (max-width: 30rem) {
+  .dashboard-page {
+    padding-inline: 0.8rem;
+  }
+  .dashboard-header {
+    padding-inline: 0;
+  }
+  .dashboard-digimon-card {
+    padding: 0.85rem;
+  }
+  .dashboard-digimon-grid {
+    gap: 0.75rem;
+  }
+  .dashboard-digimon-stats-panel {
+    padding: 0.7rem;
+  }
+  .dashboard-secondary-column .dashboard-actions,
+  .dashboard-secondary-column .dashboard-missions-section,
+  .dashboard-secondary-column .dashboard-incubation-section {
+    border-radius: 0.9rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-digimon-card,
+  .dashboard-secondary-column .dashboard-actions {
+    transition: none;
+  }
+}
+
+/* ===================== Dashboard: resumo desktop do Digimon ===================== */
+.dashboard-digimon-desktop-info {
+  display: none;
+}
+.dashboard-digimon-profile-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+.dashboard-digimon-profile-stat {
+  min-width: 0;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid rgba(51, 65, 85, 0.7);
+  border-radius: 0.65rem;
+  background: rgba(2, 6, 23, 0.34);
+}
+.dashboard-digimon-profile-stat span,
+.dashboard-digimon-potential-heading > span {
+  display: block;
+  color: #64748b;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.dashboard-digimon-profile-stat strong {
+  display: block;
+  overflow: hidden;
+  margin-top: 0.22rem;
+  color: #e2e8f0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dashboard-digimon-profile-stat small {
+  display: block;
+  overflow: hidden;
+  margin-top: 0.18rem;
+  color: #64748b;
+  font-size: 0.58rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dashboard-digimon-potential-panel {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(51, 65, 85, 0.66);
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 42, 0.48);
+}
+.dashboard-digimon-potential-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.dashboard-digimon-potential-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  min-width: 0;
+}
+.dashboard-digimon-potential-heading strong {
+  color: #cbd5e1;
+  font-size: 0.65rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.dashboard-digimon-tier-indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.42rem;
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  border-radius: 0.38rem;
+  color: #fde68a;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.dashboard-digimon-potential-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+}
+.dashboard-digimon-potential-card {
+  min-width: 0;
+}
+.dashboard-digimon-potential-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem;
+  color: #94a3b8;
+  font-size: 0.6rem;
+  font-weight: 800;
+}
+.dashboard-digimon-potential-label strong {
+  color: #e2e8f0;
+  font-size: 0.62rem;
+}
+.dashboard-digimon-potential-track {
+  height: 0.28rem;
+  margin-top: 0.32rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: #1e293b;
+}
+.dashboard-digimon-potential-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+.dashboard-potential-hp { background: linear-gradient(90deg, #be123c, #fb7185); }
+.dashboard-potential-atk { background: linear-gradient(90deg, #c2410c, #fb923c); }
+.dashboard-potential-def { background: linear-gradient(90deg, #1d4ed8, #60a5fa); }
+
+@media (min-width: 46rem) {
+  .dashboard-digimon-grid {
+    align-items: stretch;
+  }
+  .dashboard-digimon-profile-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .dashboard-digimon-main {
+    display: flex;
+    min-height: 100%;
+    flex-direction: column;
+  }
+  .dashboard-digimon-desktop-info {
+    display: grid;
+    gap: 0.65rem;
+    margin-top: auto;
+    padding-top: 0.9rem;
+  }
+}
+
+@media (min-width: 46rem) {
+  .dashboard-stage-badge,
+  .dashboard-rebirth-badge,
+  .dashboard-digimon-tier-badge,
+  .dashboard-attribute-badge,
+  .dashboard-element-badge,
+  .dashboard-trait-badge,
+  .dashboard-personality-badge {
+    display: none;
+  }
+}
