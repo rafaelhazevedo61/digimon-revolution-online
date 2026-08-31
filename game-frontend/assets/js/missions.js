@@ -723,7 +723,7 @@ async function renderMissionAreaPage(params) {
   showBottomNav("missions");
 
   app.innerHTML = `
-    <div class="page-container">
+    <div class="page-container mission-area-page-container">
       <header class="mission-area-page-header mb-4">
         <button class="progression-back-button mb-3" onclick="navigateTo('missions')"><span aria-hidden="true">←</span> Voltar às áreas</button>
         <div class="mission-area-title-row">
