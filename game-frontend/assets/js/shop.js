@@ -715,7 +715,7 @@ function shopOpenSell(itemDefCode, maxQty, sellPrice) {
           <label class="label" for="shop-qty">Quantidade (máx: ${maxSellQuantity})</label>
           <div class="shop-sell-quantity-controls flex flex-wrap items-center gap-2">
             <button type="button" class="btn-sm btn-primary" onclick="shopQtyChange(-1)" aria-label="Diminuir quantidade">−</button>
-            <input type="number" id="shop-qty" class="input text-center" value="1" min="1" max="${maxSellQuantity}" style="width:4rem" oninput="shopSellQtyUpdate(${sellPrice})">
+            <input type="number" id="shop-qty" class="input text-center" value="1" min="1" max="${maxSellQuantity}" oninput="shopSellQtyUpdate(${sellPrice})">
             <button type="button" class="btn-sm btn-primary" onclick="shopQtyChange(1)" aria-label="Aumentar quantidade">+</button>
             <button type="button" class="btn-sm btn-secondary shop-sell-max-button" onclick="shopSetMaxSellQuantity(${maxSellQuantity}, ${sellPrice})" aria-label="Selecionar quantidade máxima">Máx.</button>
           </div>
