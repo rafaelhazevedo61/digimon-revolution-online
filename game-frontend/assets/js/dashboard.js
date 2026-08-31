@@ -5,7 +5,7 @@ async function renderDashboardPage() {
   showBottomNav("dashboard");
 
   app.innerHTML = `
-    <div class="page-container">
+    <div class="page-container dashboard-page">
       <div id="dash-content">
         <div class="card animate-pulse mb-4"><div class="h-40"></div></div>
       </div>
@@ -43,74 +43,83 @@ function renderDashContent(data) {
       </button>
     </header>
 
-    <div id="dash-mail-notice"></div>
-
-    <div id="dash-weekend-double-reward"></div>
-
-    <div id="tutorial-card"></div>
-
-    ${d ? renderDigimonCard(d) : `
-      <div class="card text-center mb-4">
-        <p class="text-slate-400">Nenhum Digimon ativo</p>
-      </div>
-    `}
-
-    <!-- Resources -->
-    <div class="dashboard-resource-grid ${d ? "" : "dashboard-resource-grid-single"} mb-4">
-      ${d ? `
-      <div class="dashboard-resource-card dashboard-resource-bits">
-        <span class="dashboard-resource-icon" aria-hidden="true">◈</span>
-        <div><p class="dashboard-resource-label">Bits</p><p class="dashboard-resource-value">${Number(d.bits || 0).toLocaleString("pt-BR")}</p></div>
-      </div>
-      <div class="dashboard-resource-card dashboard-resource-energy">
-        <span class="dashboard-resource-icon" aria-hidden="true">ϟ</span>
-        <div><p class="dashboard-resource-label">Energia</p><p class="dashboard-resource-value">${d.energy}/${d.maxEnergy}${d.clanBonusMaxEnergy ? `<span class="dashboard-resource-bonus">+${d.clanBonusMaxEnergy}</span>` : ""}</p></div>
-      </div>
-      ` : ""}
-      <div class="dashboard-resource-card dashboard-resource-data">
-        <span class="dashboard-resource-icon" aria-hidden="true">⌁</span>
-        <div><p class="dashboard-resource-label">Dados digitais</p><p class="dashboard-resource-value">${Number(data.digitalData || 0).toLocaleString("pt-BR")}</p></div>
-      </div>
+    <div class="dashboard-notices">
+      <div id="dash-mail-notice"></div>
+      <div id="dash-weekend-double-reward"></div>
+      <div id="tutorial-card"></div>
     </div>
 
-    <!-- Equipped items -->
-    ${d ? `
-    <section class="dashboard-section mb-4">
-      <div class="dashboard-section-heading">
-        <div><p class="dashboard-eyebrow">Loadout ativo</p><h3 class="dashboard-section-title">Equipamentos</h3></div>
-        <span class="dashboard-section-count">${(data.equippedItems || []).length}/3</span>
-      </div>
-      <p class="dashboard-section-note">Toque em um item para ver atributos, ascensão e alternativas.</p>
-      <div class="dashboard-equipment-grid">
-        ${renderEquipSlots(data.equippedItems || [])}
-      </div>
-      ${renderSetBonus(data.setBonus)}
-    </section>
+    <div class="dashboard-content-grid">
+      <main class="dashboard-primary-column">
+        ${d ? renderDigimonCard(d) : `
+          <div class="card text-center mb-4">
+            <p class="text-slate-400">Nenhum Digimon ativo</p>
+          </div>
+        `}
 
-    <!-- Actions -->
-    <section class="dashboard-actions mb-4" aria-label="Ações rápidas">
-      <button class="dashboard-action dashboard-action-primary" onclick="navigateTo('evolution')"><span class="dashboard-action-icon">ϟ</span><span><strong>Evoluir</strong><small>Fortaleça seu Digimon</small></span><span class="dashboard-action-arrow">›</span></button>
-      <button class="dashboard-action dashboard-action-amber" onclick="navigateTo('rebirth')"><span class="dashboard-action-icon">↻</span><span><strong>Renascer</strong><small>Recomece mais forte</small></span><span class="dashboard-action-arrow">›</span></button>
-      <button class="dashboard-action dashboard-action-cyan" onclick="navigateTo('storage')"><span class="dashboard-action-icon">▣</span><span><strong>Armazém</strong><small>Gerencie seus itens</small></span><span class="dashboard-action-arrow">›</span></button>
-    </section>
-    ` : ""}
+        <!-- Resources -->
+        <div class="dashboard-resource-grid ${d ? "" : "dashboard-resource-grid-single"} mb-4">
+          ${d ? `
+          <div class="dashboard-resource-card dashboard-resource-bits">
+            <span class="dashboard-resource-icon" aria-hidden="true">◈</span>
+            <div><p class="dashboard-resource-label">Bits</p><p class="dashboard-resource-value">${Number(d.bits || 0).toLocaleString("pt-BR")}</p></div>
+          </div>
+          <div class="dashboard-resource-card dashboard-resource-energy">
+            <span class="dashboard-resource-icon" aria-hidden="true">ϟ</span>
+            <div><p class="dashboard-resource-label">Energia</p><p class="dashboard-resource-value">${d.energy}/${d.maxEnergy}${d.clanBonusMaxEnergy ? `<span class="dashboard-resource-bonus">+${d.clanBonusMaxEnergy}</span>` : ""}</p></div>
+          </div>
+          ` : ""}
+          <div class="dashboard-resource-card dashboard-resource-data">
+            <span class="dashboard-resource-icon" aria-hidden="true">⌁</span>
+            <div><p class="dashboard-resource-label">Dados digitais</p><p class="dashboard-resource-value">${Number(data.digitalData || 0).toLocaleString("pt-BR")}</p></div>
+          </div>
+        </div>
 
-    <!-- Active missions -->
-    ${data.activeMissions && data.activeMissions.length > 0 ? `
-    <section class="dashboard-missions-section mb-4">
-      <div class="dashboard-section-heading">
-        <div><p class="dashboard-eyebrow dashboard-eyebrow-blue">Atividade em campo</p><h3 class="dashboard-section-title">Missões ativas</h3></div>
-        <span class="dashboard-section-count dashboard-section-count-blue">${data.activeMissions.length}</span>
-      </div>
-      <p class="dashboard-section-note">Acompanhe seus objetivos e resgate suas recompensas.</p>
-      <div class="dashboard-missions-list">
-        ${data.activeMissions.map(renderActiveMission).join("")}
-      </div>
-    </section>
-    ` : ""}
+        <!-- Equipped items -->
+        ${d ? `
+        <section class="dashboard-section mb-4">
+          <div class="dashboard-section-heading">
+            <div><p class="dashboard-eyebrow">Loadout ativo</p><h3 class="dashboard-section-title">Equipamentos</h3></div>
+            <span class="dashboard-section-count">${(data.equippedItems || []).length}/3</span>
+          </div>
+          <p class="dashboard-section-note">Toque em um item para ver atributos, ascensão e alternativas.</p>
+          <div class="dashboard-equipment-grid">
+            ${renderEquipSlots(data.equippedItems || [])}
+          </div>
+          ${renderSetBonus(data.setBonus)}
+        </section>
+        ` : ""}
+      </main>
 
-    <!-- Incubation -->
-    ${data.incubation ? renderIncubation(data.incubation) : ""}
+      <aside class="dashboard-secondary-column">
+        <!-- Actions -->
+        ${d ? `
+        <section class="dashboard-actions mb-4" aria-label="Ações rápidas">
+          <div class="dashboard-sidebar-heading"><div><p class="dashboard-eyebrow dashboard-eyebrow-amber">Atalhos do treinador</p><h3 class="dashboard-section-title">Acesso rápido</h3></div><span class="dashboard-sidebar-mark">↗</span></div>
+          <button class="dashboard-action dashboard-action-primary" onclick="navigateTo('evolution')"><span class="dashboard-action-icon">ϟ</span><span><strong>Evoluir</strong><small>Fortaleça seu Digimon</small></span><span class="dashboard-action-arrow">›</span></button>
+          <button class="dashboard-action dashboard-action-amber" onclick="navigateTo('rebirth')"><span class="dashboard-action-icon">↻</span><span><strong>Renascer</strong><small>Recomece mais forte</small></span><span class="dashboard-action-arrow">›</span></button>
+          <button class="dashboard-action dashboard-action-cyan" onclick="navigateTo('storage')"><span class="dashboard-action-icon">▣</span><span><strong>Armazém</strong><small>Gerencie seus itens</small></span><span class="dashboard-action-arrow">›</span></button>
+        </section>
+        ` : ""}
+
+        <!-- Active missions -->
+        ${data.activeMissions && data.activeMissions.length > 0 ? `
+        <section class="dashboard-missions-section mb-4">
+          <div class="dashboard-section-heading">
+            <div><p class="dashboard-eyebrow dashboard-eyebrow-blue">Atividade em campo</p><h3 class="dashboard-section-title">Missões ativas</h3></div>
+            <span class="dashboard-section-count dashboard-section-count-blue">${data.activeMissions.length}</span>
+          </div>
+          <p class="dashboard-section-note">Acompanhe seus objetivos e resgate suas recompensas.</p>
+          <div class="dashboard-missions-list">
+            ${data.activeMissions.map(renderActiveMission).join("")}
+          </div>
+        </section>
+        ` : ""}
+
+        <!-- Incubation -->
+        ${data.incubation ? renderIncubation(data.incubation) : ""}
+      </aside>
+    </div>
   `;
 
   container.querySelectorAll("[data-rename-digimon-id]").forEach(button => {
@@ -202,54 +211,62 @@ function renderDigimonCard(d) {
   const xpPercent = d.level >= 100 ? 100 : Math.min(100, Math.round((d.experience / xpNeeded) * 100));
 
   return `
-    <div class="card ${borderClass} mb-4">
-      <div class="flex items-center gap-3 mb-3">
-        ${renderDigimonVisual(d.imageUrl, d.stage, "w-16 h-16", "text-5xl")}
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2">
-            <h3 class="font-bold text-lg truncate">${escapeHtml(d.name)}</h3>
-            <button class="text-slate-500 hover:text-slate-300 text-xs" data-rename-digimon-id="${escapeAttr(d.id)}" data-rename-digimon-name="${escapeAttr(d.name)}" title="Renomear">✏️</button>
-            <span class="text-sm font-bold text-cyan-400">Lv.${d.level}</span>
+    <div class="card ${borderClass} dashboard-digimon-card mb-4">
+      <div class="dashboard-digimon-grid">
+        <div class="dashboard-digimon-main">
+          <div class="dashboard-digimon-identity flex items-center gap-3">
+            ${renderDigimonVisual(d.imageUrl, d.stage, "w-16 h-16", "text-5xl")}
+            <div class="flex-1 min-w-0">
+              <p class="dashboard-eyebrow">Digimon ativo</p>
+              <div class="flex items-center gap-2 mt-1">
+                <h3 class="font-bold text-lg truncate">${escapeHtml(d.name)}</h3>
+                <button class="text-slate-500 hover:text-slate-300 text-xs" data-rename-digimon-id="${escapeAttr(d.id)}" data-rename-digimon-name="${escapeAttr(d.name)}" title="Renomear">✏️</button>
+                <span class="text-sm font-bold text-cyan-400">Lv.${d.level}</span>
+              </div>
+              <p class="text-xs text-slate-400">${escapeHtml(formatDigimonType(d.type))}</p>
+              <div class="flex gap-2 mt-1 flex-wrap">
+                <span class="badge badge-${d.stage.toLowerCase()}">${escapeHtml(formatStage(d.stage))}</span>
+                <span class="badge badge-${d.rarity.toLowerCase()}">${escapeHtml(formatRarity(d.rarity))}</span>${renderRarityDieIndicator(d)}
+                ${d.attribute ? `<span class="badge badge-common">${escapeHtml(formatAttribute(d.attribute))}</span>` : ""}
+                ${d.element ? `<span class="badge badge-common">${escapeHtml(formatElement(d.element))}</span>` : ""}
+              </div>
+            </div>
           </div>
-          <p class="text-xs text-slate-400">${escapeHtml(formatDigimonType(d.type))}</p>
-          <div class="flex gap-2 mt-1 flex-wrap">
-            <span class="badge badge-${d.stage.toLowerCase()}">${escapeHtml(formatStage(d.stage))}</span>
-            <span class="badge badge-${d.rarity.toLowerCase()}">${escapeHtml(formatRarity(d.rarity))}</span>${renderRarityDieIndicator(d)}
-            ${d.attribute ? `<span class="badge badge-common">${escapeHtml(formatAttribute(d.attribute))}</span>` : ""}
-            ${d.element ? `<span class="badge badge-common">${escapeHtml(formatElement(d.element))}</span>` : ""}
+
+          <!-- XP bar -->
+          <div class="dashboard-digimon-progress mt-4 mb-1">
+            <div class="flex justify-between text-xs text-slate-500 mb-1">
+              <span>XP para o próximo nível</span>
+              <span>${d.experience} / ${xpNeeded}</span>
+            </div>
+            <div class="xp-bar xp-bar-with-label" role="progressbar" aria-valuenow="${xpPercent}" aria-valuemin="0" aria-valuemax="100" aria-label="${xpPercent}% da experiência para o próximo nível">
+              <div class="xp-bar-fill" style="width: ${xpPercent}%"></div>
+              <span class="xp-bar-label">${xpPercent}%</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- XP bar -->
-      <div class="mb-3">
-        <div class="flex justify-between text-xs text-slate-500 mb-1">
-          <span>XP</span>
-          <span>${d.experience} / ${xpNeeded}</span>
-        </div>
-        <div class="xp-bar xp-bar-with-label" role="progressbar" aria-valuenow="${xpPercent}" aria-valuemin="0" aria-valuemax="100" aria-label="${xpPercent}% da experiência para o próximo nível">
-          <div class="xp-bar-fill" style="width: ${xpPercent}%"></div>
-          <span class="xp-bar-label">${xpPercent}%</span>
+        <!-- Effective stats -->
+        <div class="dashboard-digimon-stats-panel">
+          <div class="dashboard-digimon-stats-heading"><span class="dashboard-eyebrow dashboard-eyebrow-blue">Leitura de combate</span><span class="dashboard-sidebar-mark">◎</span></div>
+          <div class="dashboard-digimon-stat-grid grid grid-cols-3 gap-2 text-center text-sm">
+            ${renderDashboardStat("HP", d.hp, d.equipBonusHp, d.clanBonusHp, "text-red-400")}
+            ${renderDashboardStat("ATK", d.attack, d.equipBonusAttack, d.clanBonusAttack, "text-orange-400")}
+            ${renderDashboardStat("DEF", d.defense, d.equipBonusDefense, d.clanBonusDefense, "text-blue-400")}
+          </div>
+          <details class="dashboard-digimon-details mt-3 rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2">
+            <summary class="cursor-pointer select-none text-xs font-semibold text-slate-400 hover:text-slate-200">Ver detalhes dos atributos</summary>
+            <div class="mt-3 grid grid-cols-1 gap-2">
+              ${renderDashboardStatBreakdown("HP", d.hp, d.equipBonusHp, d.clanBonusHp, "text-red-400")}
+              ${renderDashboardStatBreakdown("ATK", d.attack, d.equipBonusAttack, d.clanBonusAttack, "text-orange-400")}
+              ${renderDashboardStatBreakdown("DEF", d.defense, d.equipBonusDefense, d.clanBonusDefense, "text-blue-400")}
+            </div>
+          </details>
         </div>
       </div>
-
-      <!-- Effective stats -->
-      <div class="grid grid-cols-3 gap-2 text-center text-sm">
-        ${renderDashboardStat("HP", d.hp, d.equipBonusHp, d.clanBonusHp, "text-red-400")}
-        ${renderDashboardStat("ATK", d.attack, d.equipBonusAttack, d.clanBonusAttack, "text-orange-400")}
-        ${renderDashboardStat("DEF", d.defense, d.equipBonusDefense, d.clanBonusDefense, "text-blue-400")}
-      </div>
-      <details class="mt-3 rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2">
-        <summary class="cursor-pointer select-none text-xs font-semibold text-slate-400 hover:text-slate-200">Ver detalhes dos atributos</summary>
-        <div class="mt-3 grid grid-cols-1 gap-2">
-          ${renderDashboardStatBreakdown("HP", d.hp, d.equipBonusHp, d.clanBonusHp, "text-red-400")}
-          ${renderDashboardStatBreakdown("ATK", d.attack, d.equipBonusAttack, d.clanBonusAttack, "text-orange-400")}
-          ${renderDashboardStatBreakdown("DEF", d.defense, d.equipBonusDefense, d.clanBonusDefense, "text-blue-400")}
-        </div>
-      </details>
 
       <!-- Traits -->
-      <div class="flex gap-2 mt-3 flex-wrap">
+      <div class="dashboard-digimon-traits flex gap-2 mt-3 flex-wrap">
         <span class="badge-xs">${d.grade}</span>
         <span class="badge-xs">${formatPersonality(d.personality)}</span>
         ${d.trait ? `<span class="badge-xs badge-trait">${formatTrait(d.trait)}</span>` : ""}
