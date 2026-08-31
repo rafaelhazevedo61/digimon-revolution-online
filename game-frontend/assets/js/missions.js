@@ -24,14 +24,18 @@ function missionNumber(mission) {
   return match ? Number(match[1]) : -1;
 }
 
-function compareMissionsByProgression(a, b) {
-  const levelDifference = (Number(b.requiredLevel) || 0) - (Number(a.requiredLevel) || 0);
-  if (levelDifference !== 0) return levelDifference;
+function compareMissionsByDescendingProgression(a, b) {
+  const requiredLevelA = Number(a.requiredLevel) || 0;
+  const requiredLevelB = Number(b.requiredLevel) || 0;
+  if (requiredLevelA !== requiredLevelB) return requiredLevelB - requiredLevelA;
 
-  const numberDifference = missionNumber(b) - missionNumber(a);
-  if (numberDifference !== 0) return numberDifference;
+  const missionNumberA = missionNumber(a);
+  const missionNumberB = missionNumber(b);
+  if (missionNumberA !== missionNumberB) return missionNumberB - missionNumberA;
 
-  return String(b.id || b.missionId || "").localeCompare(String(a.id || a.missionId || ""));
+  const missionIdA = String(a.id || a.missionId || "");
+  const missionIdB = String(b.id || b.missionId || "");
+  return missionIdB.localeCompare(missionIdA);
 }
 
 async function renderMissionsPage() {
@@ -785,7 +789,7 @@ function renderMissionCards(missions, area) {
     return;
   }
 
-  const sortedMissions = [...missions].sort(compareMissionsByProgression);
+  const sortedMissions = [...missions].sort(compareMissionsByDescendingProgression);
 
   container.innerHTML = sortedMissions.map((m, index) => `
     <article class="mission-detail-card">
