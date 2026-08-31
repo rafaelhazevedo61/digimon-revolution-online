@@ -39,7 +39,7 @@ async function renderMissionsPage() {
   showBottomNav("missions");
 
   app.innerHTML = `
-    <div class="page-container">
+    <div class="page-container missions-page-container">
       <header class="missions-page-header mb-4">
         <div>
           <p class="progression-eyebrow progression-eyebrow-cyan">Central de operações</p>
@@ -48,18 +48,20 @@ async function renderMissionsPage() {
         </div>
         <div class="missions-hero-emblem" aria-hidden="true">✦</div>
       </header>
-      <div id="active-missions"></div>
-      <section class="missions-map-section">
-        <div class="dashboard-section-heading">
-          <div><p class="progression-eyebrow progression-eyebrow-cyan">Exploração</p><h3 class="progression-panel-title">Áreas disponíveis</h3></div>
-          <span class="missions-map-key"><span class="missions-map-key-dot"></span> acessível</span>
-        </div>
-        <p class="dashboard-section-note">Avance pelas áreas para desbloquear missões mais desafiadoras.</p>
-        <div id="areas-list">
-          <div class="mission-area-skeleton"></div>
-          <div class="mission-area-skeleton"></div>
-        </div>
-      </section>
+      <div class="missions-page-layout">
+        <div id="active-missions" class="missions-page-active-column"></div>
+        <section class="missions-map-section">
+          <div class="dashboard-section-heading">
+            <div><p class="progression-eyebrow progression-eyebrow-cyan">Exploração</p><h3 class="progression-panel-title">Áreas disponíveis</h3></div>
+            <span class="missions-map-key"><span class="missions-map-key-dot"></span> acessível</span>
+          </div>
+          <p class="dashboard-section-note">Avance pelas áreas para desbloquear missões mais desafiadoras.</p>
+          <div id="areas-list">
+            <div class="mission-area-skeleton"></div>
+            <div class="mission-area-skeleton"></div>
+          </div>
+        </section>
+      </div>
     </div>
   `;
 
@@ -685,9 +687,9 @@ function renderMissionAreaCard(a, index) {
 function renderAreaCards(areas) {
   const container = document.getElementById("areas-list");
   const sorted = [...areas].sort((a, b) => {
-    const areaDifference = areaProgressionRank(a.area) - areaProgressionRank(b.area);
+    const areaDifference = areaProgressionRank(b.area) - areaProgressionRank(a.area);
     if (areaDifference !== 0) return areaDifference;
-    return stageProgressionRank(a.requiredStage) - stageProgressionRank(b.requiredStage);
+    return stageProgressionRank(b.requiredStage) - stageProgressionRank(a.requiredStage);
   });
   const available = sorted.filter(area => area.unlocked);
   const locked = sorted.filter(area => !area.unlocked);
