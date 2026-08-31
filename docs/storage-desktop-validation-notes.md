@@ -40,3 +40,9 @@ O storage passou a consultar `GET /collection` em paralelo com o storage e o das
 A caixa textual de detalhes sobre o Dado de Raridade foi removida do cartão. O indicador compacto `🎲` permanece junto à raridade, conforme a preferência de interface.
 
 A revisão visual foi conferida em 375×812 e 1440×1000; os badges permanecem legíveis em mobile e desktop, sem aproximar o conteúdo da imagem do Digimon.
+
+## Ajuste de legibilidade tipográfica
+
+Foi testado um aumento leve nas fontes dos cartões de Digimon: nome de `0.72rem` para `0.78rem`, metadados e atributos para aproximadamente `0.61–0.62rem`, recompensa para `0.62rem`, badges para `0.53rem` e botões para `0.63rem`. A altura mínima dos botões também passou para `2.1rem`.
+
+As capturas em 375×812 e 1440×1000 mostraram ganho de legibilidade sem necessidade de ampliar a largura do cartão/modal. O nome continua com espaço suficiente para quebra de linha, o status de coleção permanece legível e os três botões continuam utilizáveis.

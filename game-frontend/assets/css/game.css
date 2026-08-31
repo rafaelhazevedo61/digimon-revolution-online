@@ -3810,20 +3810,20 @@ body {
 .storage-selection-control-locked { cursor: not-allowed; }
 .storage-sacrifice-checkbox { width: 1rem; height: 1rem; margin: 0; accent-color: #06b6d4; cursor: pointer; }
 .storage-sacrifice-checkbox:disabled { cursor: not-allowed; opacity: 0.55; }
-.storage-selection-label { font-size: 0.45rem; font-weight: 800; line-height: 1; text-align: center; }
+.storage-selection-label { font-size: 0.5rem; font-weight: 800; line-height: 1; text-align: center; }
 .storage-digimon-visual { border: 1px solid rgba(34, 211, 238, 0.2); border-radius: 0.72rem; background: rgba(8, 145, 178, 0.1); }
 .storage-digimon-card-locked .storage-digimon-visual { border-color: rgba(251, 191, 36, 0.24); filter: saturate(0.75); }
 .storage-digimon-body { min-width: 0; }
 .storage-digimon-heading { display: flex; min-width: 0; align-items: flex-start; justify-content: space-between; gap: 0.42rem; }
-.storage-digimon-name { min-width: 0; margin: 0; overflow-wrap: anywhere; color: #e2e8f0; font-size: 0.72rem; font-weight: 850; line-height: 1.25; }
-.storage-locked-badge { flex: 0 0 auto; padding: 0.2rem 0.35rem; border-radius: 9999px; background: rgba(180, 83, 9, 0.2); color: #fde68a; font-size: 0.5rem; font-weight: 850; white-space: nowrap; }
-.storage-digimon-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; margin: 0.28rem 0 0; color: #94a3b8; font-size: 0.57rem; line-height: 1.3; }
+.storage-digimon-name { min-width: 0; margin: 0; overflow-wrap: anywhere; color: #e2e8f0; font-size: 0.78rem; font-weight: 850; line-height: 1.25; }
+.storage-locked-badge { flex: 0 0 auto; padding: 0.2rem 0.35rem; border-radius: 9999px; background: rgba(180, 83, 9, 0.2); color: #fde68a; font-size: 0.53rem; font-weight: 850; white-space: nowrap; }
+.storage-digimon-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; margin: 0.28rem 0 0; color: #94a3b8; font-size: 0.62rem; line-height: 1.3; }
 .storage-digimon-meta span { color: #475569; }
-.storage-digimon-stats { display: flex; flex-wrap: wrap; gap: 0.38rem; margin: 0.32rem 0 0; color: #64748b; font-size: 0.57rem; font-weight: 750; }
-.storage-digimon-reward { margin: 0.32rem 0 0; color: #67e8f9; font-size: 0.58rem; font-weight: 800; line-height: 1.3; }
+.storage-digimon-stats { display: flex; flex-wrap: wrap; gap: 0.38rem; margin: 0.32rem 0 0; color: #64748b; font-size: 0.61rem; font-weight: 750; }
+.storage-digimon-reward { margin: 0.32rem 0 0; color: #67e8f9; font-size: 0.62rem; font-weight: 800; line-height: 1.3; }
 .storage-digimon-reward-locked { color: #fcd34d; }
 .storage-digimon-actions { display: flex; flex: 0 0 auto; flex-direction: column; gap: 0.32rem; }
-.storage-action-button { display: inline-flex; min-width: 6.3rem; min-height: 2rem; align-items: center; justify-content: center; gap: 0.28rem; padding: 0.35rem 0.5rem; border: 1px solid transparent; border-radius: 0.58rem; cursor: pointer; font-size: 0.59rem; font-weight: 850; line-height: 1.15; transition: filter 0.18s ease, transform 0.18s ease, opacity 0.18s ease; }
+.storage-action-button { display: inline-flex; min-width: 6.3rem; min-height: 2.1rem; align-items: center; justify-content: center; gap: 0.28rem; padding: 0.38rem 0.5rem; border: 1px solid transparent; border-radius: 0.58rem; cursor: pointer; font-size: 0.63rem; font-weight: 850; line-height: 1.15; transition: filter 0.18s ease, transform 0.18s ease, opacity 0.18s ease; }
 .storage-action-button:hover { filter: brightness(1.1); }
 .storage-action-button:active { transform: scale(0.97); }
 .storage-action-button:disabled { cursor: not-allowed; opacity: 0.5; }
@@ -3917,6 +3917,6 @@ body {
 
 
 .storage-digimon-status-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; margin-top: 0.28rem; }
-.storage-collection-badge { display: inline-flex; align-items: center; min-height: 1.1rem; padding: 0.18rem 0.36rem; border: 1px solid transparent; border-radius: 9999px; font-size: 0.5rem; font-weight: 850; line-height: 1; white-space: nowrap; }
+.storage-collection-badge { display: inline-flex; align-items: center; min-height: 1.1rem; padding: 0.18rem 0.36rem; border: 1px solid transparent; border-radius: 9999px; font-size: 0.53rem; font-weight: 850; line-height: 1; white-space: nowrap; }
 .storage-collection-badge-registered { border-color: rgba(74, 222, 128, 0.28); background: rgba(22, 101, 52, 0.28); color: #86efac; }
 .storage-collection-badge-available { border-color: rgba(103, 232, 249, 0.2); background: rgba(8, 145, 178, 0.12); color: #a5f3fc; }
