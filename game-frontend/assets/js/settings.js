@@ -3,14 +3,27 @@ async function renderSettingsPage() {
   showBottomNav("more");
 
   app.innerHTML = `
-    <div class="page-container">
-      <h2 class="text-lg font-bold mb-4 px-1">Configurações</h2>
+    <div class="page-container settings-page">
+      <header class="settings-page-header">
+        <div class="settings-title-group">
+          <div class="settings-title-icon">⚙</div>
+          <div>
+            <p class="settings-eyebrow">Conta e preferências</p>
+            <h2 class="settings-page-title">Configurações</h2>
+            <p class="settings-page-subtitle">Gerencie seus dados de acesso e a segurança da conta.</p>
+          </div>
+        </div>
+        <span class="settings-status-pill"><span class="settings-status-dot"></span>Conta protegida</span>
+      </header>
 
       <!-- Segurança -->
-      <div class="card mb-4">
-        <div class="flex items-center gap-2 mb-4">
-          <span class="text-xl">🔐</span>
-          <h3 class="font-bold">Segurança</h3>
+      <section class="card settings-security-card mb-4">
+        <div class="settings-section-header flex items-center gap-3 mb-4">
+          <span class="settings-section-icon">🔐</span>
+          <div>
+            <p class="settings-eyebrow">Acesso e identidade</p>
+            <h3 class="font-bold">Segurança</h3>
+          </div>
         </div>
 
         <div
@@ -23,7 +36,8 @@ async function renderSettingsPage() {
           class="hidden mb-4 p-3 rounded-lg bg-green-950/50 border border-green-900 text-green-300 text-sm"
         ></div>
 
-        <div class="mb-6 p-3 rounded-lg bg-slate-900/50 border border-slate-800">
+        <div class="settings-security-grid">
+        <div class="settings-account-summary mb-6 p-3 rounded-lg bg-slate-900/50 border border-slate-800">
           <p class="text-xs text-slate-400">Username atual</p>
           <p id="current-username-value" class="font-medium text-slate-200 mt-1">Carregando...</p>
           <p id="username-change-cost" class="text-xs text-amber-300 mt-2">Custo da próxima troca: carregando...</p>
@@ -33,7 +47,7 @@ async function renderSettingsPage() {
         <form
           id="change-username-form"
           onsubmit="settingsChangeUsername(event)"
-          class="mb-8"
+          class="settings-form-panel mb-8"
         >
           <div class="mb-4">
             <label class="label" for="new-username">Novo username</label>
@@ -58,7 +72,7 @@ async function renderSettingsPage() {
           </button>
         </form>
 
-        <div class="mb-6 p-3 rounded-lg bg-slate-900/50 border border-slate-800">
+        <div class="settings-account-summary mb-6 p-3 rounded-lg bg-slate-900/50 border border-slate-800">
           <p class="text-xs text-slate-400">E-mail atual</p>
           <p id="current-email-value" class="font-medium text-slate-200 mt-1">Carregando...</p>
         </div>
@@ -66,7 +80,7 @@ async function renderSettingsPage() {
         <form
           id="change-email-form"
           onsubmit="settingsChangeEmail(event)"
-          class="mb-8"
+          class="settings-form-panel mb-8"
         >
           <div class="mb-4">
             <label class="label" for="new-email">Novo e-mail</label>
@@ -108,6 +122,7 @@ async function renderSettingsPage() {
         <form
           id="change-password-form"
           onsubmit="settingsChangePassword(event)"
+          class="settings-form-panel settings-password-panel"
         >
           <div class="mb-4">
             <label class="label">Senha atual</label>
@@ -164,13 +179,17 @@ async function renderSettingsPage() {
             Alterar senha
           </button>
         </form>
-      </div>
+        </div>
+      </section>
 
       <!-- Sessão -->
-      <div class="card mb-4">
-        <div class="flex items-center gap-2 mb-4">
-          <span class="text-xl">🚪</span>
-          <h3 class="font-bold">Sessão</h3>
+      <section class="card settings-session-card mb-4">
+        <div class="settings-section-header flex items-center gap-3 mb-4">
+          <span class="settings-section-icon">🚪</span>
+          <div>
+            <p class="settings-eyebrow">Controle de acesso</p>
+            <h3 class="font-bold">Sessão</h3>
+          </div>
         </div>
 
         <button
