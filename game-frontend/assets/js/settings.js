@@ -25,7 +25,7 @@ async function renderSettingsPage() {
           ${settingsMenuItem("email", "✉", "Alterar e-mail", "Atualize o endereço associado à conta", "Conta")}
           ${settingsMenuItem("password", "🔐", "Alterar senha", "Mantenha sua conta protegida", "Segurança")}
           ${settingsMenuItem("sessions", "🚪", "Sessões e acesso", "Sair ou encerrar sessões em outros dispositivos", "Segurança")}
-          ${settingsMenuItem("shortcuts", "⌨", "Barra de atalhos", "Configure seus atalhos de jogo", "Personalização", true)}
+          ${settingsMenuItem("shortcuts", "⌨", "Barra de atalhos", "Configure seus atalhos de jogo", "Personalização")}
         </nav>
       </section>
 
@@ -35,8 +35,9 @@ async function renderSettingsPage() {
 }
 
 function settingsMenuItem(type, icon, title, description, category, comingSoon = false) {
+  const action = type === "shortcuts" ? "settingsShowShortcuts()" : `settingsOpenPanel('${type}')`;
   return `
-    <button type="button" class="settings-menu-item ${comingSoon ? "is-coming-soon" : ""}" onclick="${comingSoon ? "settingsShowShortcuts()" : `settingsOpenPanel('${type}')`}">
+    <button type="button" class="settings-menu-item ${comingSoon ? "is-coming-soon" : ""}" onclick="${action}">
       <span class="settings-menu-item-icon" aria-hidden="true">${icon}</span>
       <span class="settings-menu-item-content">
         <span class="settings-menu-item-category">${category}</span>
@@ -161,23 +162,134 @@ function settingsClosePanel() {
   document.getElementById("settings-panel-modal")?.remove();
 }
 
-function settingsShowShortcuts() {
+let settingsShortcutDraft = [];
+let settingsShortcutSaveInProgress = false;
+let settingsShortcutDirty = false;
+
+async function settingsShowShortcuts() {
   document.getElementById("settings-shortcuts-modal")?.remove();
-  const overlay = document.createElement("div");
+  try {
+    settingsShortcutDraft = [...await loadPlayerShortcutPreference()];
+  } catch (_) {
+    settingsShortcutDraft = [];
+  }
+  settingsShortcutDirty = false;
+  settingsRenderShortcutsModal();
+}
+
+function settingsRenderShortcutsModal() {
+  const catalog = getPlayerShortcutCatalog();
+  const selected = new Set(settingsShortcutDraft);
+
+  const renderShortcutOption = (item, isSelected, selectedIndex = -1) => {
+    const icon = item.image
+      ? `<img src="${escapeAttr(item.image)}" alt="" class="settings-shortcut-option-image" />`
+      : `<span class="settings-shortcut-option-emoji">${item.icon || "•"}</span>`;
+    return `
+      <div class="settings-shortcut-option ${isSelected ? "is-selected" : ""}">
+        <button type="button" class="settings-shortcut-toggle" onclick="settingsToggleShortcut('${escapeAttr(item.route)}')" aria-pressed="${isSelected}">
+          <span class="settings-shortcut-option-icon">${icon}</span>
+          <span class="settings-shortcut-option-label">${escapeHtml(item.label)}</span>
+          <span class="settings-shortcut-option-check">${isSelected ? "✓" : ""}</span>
+        </button>
+        ${isSelected ? `<span class="settings-shortcut-order"><button type="button" onclick="settingsMoveShortcut('${escapeAttr(item.route)}', -1)" aria-label="Mover ${escapeAttr(item.label)} para cima" ${selectedIndex <= 0 ? "disabled" : ""}>↑</button><button type="button" onclick="settingsMoveShortcut('${escapeAttr(item.route)}', 1)" aria-label="Mover ${escapeAttr(item.label)} para baixo" ${selectedIndex >= settingsShortcutDraft.length - 1 ? "disabled" : ""}>↓</button></span>` : ""}
+      </div>
+    `;
+  };
+
+  // Os selecionados são renderizados na mesma ordem usada pela barra.
+  // Assim, as setas movimentam exatamente o item que o jogador está vendo.
+  const selectedRows = settingsShortcutDraft
+    .map(route => catalog.find(item => item.route === route))
+    .filter(Boolean)
+    .map((item, index) => renderShortcutOption(item, true, index));
+  const unselectedRows = catalog
+    .filter(item => !selected.has(item.route))
+    .map(item => renderShortcutOption(item, false));
+  const rows = [...selectedRows, ...unselectedRows].join("");
+  const existingOverlay = document.getElementById("settings-shortcuts-modal");
+  const existingList = existingOverlay?.querySelector(".settings-shortcuts-list");
+  const listScrollTop = existingList?.scrollTop || 0;
+  const overlay = existingOverlay || document.createElement("div");
   overlay.id = "settings-shortcuts-modal";
   overlay.className = "settings-panel-overlay fixed inset-0 z-50 flex items-center justify-center p-4";
   overlay.onclick = event => { if (event.target === overlay) overlay.remove(); };
   overlay.innerHTML = `
-    <div class="settings-panel-modal card text-center">
+    <div class="settings-panel-modal settings-shortcuts-modal card">
       <button type="button" class="settings-panel-close" onclick="document.getElementById('settings-shortcuts-modal')?.remove()" aria-label="Fechar">×</button>
-      <span class="settings-panel-icon settings-panel-icon-centered">⌨</span>
-      <p class="settings-eyebrow mt-4">Personalização</p>
-      <h3 class="settings-panel-title mt-1">Barra de atalhos</h3>
-      <p class="settings-panel-description mt-2">A configuração dos atalhos estará disponível em breve.</p>
-      <button type="button" class="btn-primary w-full mt-5" onclick="document.getElementById('settings-shortcuts-modal')?.remove()">Entendi</button>
+      <div class="settings-panel-heading">
+        <span class="settings-panel-icon">⌨</span>
+        <div>
+          <p class="settings-eyebrow">Personalização</p>
+          <h3 class="settings-panel-title">Barra de atalhos</h3>
+          <p class="settings-panel-description">Escolha e ordene os atalhos que deseja acessar rapidamente.</p>
+        </div>
+      </div>
+      <div class="settings-shortcuts-limit"><span>Mobile</span><strong>Até 4 atalhos + Mais</strong><span>Desktop</span><strong>Até 8 atalhos + Mais</strong></div>
+      <button type="button" class="btn-primary w-full mt-4" id="settings-shortcuts-save" onclick="settingsSaveShortcuts()" ${settingsShortcutDirty ? "" : "disabled"} aria-disabled="${!settingsShortcutDirty}">Salvar atalhos</button>
+      <div id="settings-shortcuts-feedback" class="hidden settings-feedback"></div>
+      <div class="settings-shortcuts-list">${rows}</div>
     </div>
   `;
-  document.body.appendChild(overlay);
+  if (!existingOverlay) document.body.appendChild(overlay);
+  const updatedList = overlay.querySelector(".settings-shortcuts-list");
+  if (updatedList) updatedList.scrollTop = listScrollTop;
+}
+
+function settingsToggleShortcut(route) {
+  const index = settingsShortcutDraft.indexOf(route);
+  if (index >= 0) {
+    settingsShortcutDraft.splice(index, 1);
+  } else if (settingsShortcutDraft.length < 8) {
+    settingsShortcutDraft.push(route);
+  } else {
+    showToast("Você pode escolher até 8 atalhos no desktop.", "info");
+    return;
+  }
+  settingsShortcutDirty = true;
+  settingsRenderShortcutsModal();
+}
+
+function settingsMoveShortcut(route, direction) {
+  const index = settingsShortcutDraft.indexOf(route);
+  const target = index + direction;
+  if (index < 0 || target < 0 || target >= settingsShortcutDraft.length) return;
+  [settingsShortcutDraft[index], settingsShortcutDraft[target]] = [settingsShortcutDraft[target], settingsShortcutDraft[index]];
+  settingsShortcutDirty = true;
+  settingsRenderShortcutsModal();
+}
+
+async function settingsSaveShortcuts() {
+  if (settingsShortcutSaveInProgress || !settingsShortcutDirty) return;
+
+  const button = document.getElementById("settings-shortcuts-save");
+  const feedback = document.getElementById("settings-shortcuts-feedback");
+  if (!button || !feedback) return;
+
+  settingsShortcutSaveInProgress = true;
+  const routesToSave = [...settingsShortcutDraft];
+  button.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  button.textContent = "Salvando...";
+  feedback.className = "hidden settings-feedback";
+
+  try {
+    await savePlayerShortcutPreference(routesToSave);
+    settingsShortcutDirty = false;
+    document.getElementById("settings-shortcuts-modal")?.remove();
+    showToast("Atalhos salvos com sucesso.");
+  } catch (err) {
+    feedback.textContent = err.message || "Não foi possível salvar os atalhos.";
+    feedback.className = "settings-feedback settings-feedback-error";
+  } finally {
+    settingsShortcutSaveInProgress = false;
+    const currentButton = document.getElementById("settings-shortcuts-save");
+    if (currentButton) {
+      currentButton.disabled = false;
+      currentButton.removeAttribute("aria-busy");
+      currentButton.textContent = "Salvar atalhos";
+    }
+  }
 }
 
 async function settingsLoadUsernameChangeInfo() {

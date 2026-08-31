@@ -12,15 +12,119 @@ function escapeAttr(value) {
   return escapeHtml(value);
 }
 
+const PLAYER_SHORTCUT_STORAGE_KEY = "dro_player_shortcut_routes_v1";
+const PLAYER_SHORTCUT_DEFAULTS = ["dashboard", "missions", "inventory", "shop"];
+const PLAYER_SHORTCUT_MOBILE_LIMIT = 4;
+const PLAYER_SHORTCUT_DESKTOP_LIMIT = 8;
+let playerShortcutRoutes = null;
+let playerShortcutPreferenceLoading = false;
+let playerShortcutResizeBound = false;
+
+const PLAYER_SHORTCUT_CATALOG = [
+  { route: "dashboard", label: "Home", icon: "🏠" },
+  { route: "activity-calendar", label: "Atividades", image: "assets/img/calendario-atividades.webp" },
+  { route: "missions", label: "Missões", image: "assets/img/missoes.webp" },
+  { route: "shop", label: "Loja", image: "assets/img/loja.webp" },
+  { route: "forge", label: "Ferreiro", icon: "🔨" },
+  { route: "auction-house", label: "Leilão", icon: "🔨" },
+  { route: "mail", label: "Correio", icon: "✉️" },
+  { route: "inventory", label: "Mochila", image: "assets/img/mochila.webp", imageClass: "nav-backpack" },
+  { route: "evolution", label: "Digimon", icon: "🧬" },
+  { route: "rebirth", label: "Renascimento", icon: "↻" },
+  { route: "incubation", label: "Incubação", image: "assets/img/incubacao.webp" },
+  { route: "pokedex", label: "Biblioteca", image: "assets/img/bibliotecadigimon.webp" },
+  { route: "bosses", label: "Chefes", image: "assets/img/batalhadochefe.webp" },
+  { route: "arena", label: "Arena", image: "assets/img/arena.webp" },
+  { route: "ranking", label: "Ranking", image: "assets/img/ranking.webp" },
+  { route: "storage", label: "Armazém", image: "assets/img/armazemdigimon.webp" },
+  { route: "collection", label: "Coleção", icon: "📚" },
+  { route: "clans", label: "Clãs", image: "assets/img/cla.webp" },
+  { route: "world-boss", label: "Chefe mundial", image: "assets/img/chefe-mundial.webp" }
+];
+
+function getPlayerShortcutCatalog() {
+  return PLAYER_SHORTCUT_CATALOG.map(item => ({ ...item }));
+}
+
+function normalizePlayerShortcutRoutes(routes) {
+  const allowed = new Set(PLAYER_SHORTCUT_CATALOG.map(item => item.route));
+  return [...new Set((Array.isArray(routes) ? routes : []).filter(route => allowed.has(route)))].slice(0, PLAYER_SHORTCUT_DESKTOP_LIMIT);
+}
+
+function isShortcutMobileViewport() {
+  return window.matchMedia ? window.matchMedia("(max-width: 640px)").matches : window.innerWidth <= 640;
+}
+
+function renderShortcutBar(activeRoute) {
+  const nav = document.getElementById("bottom-nav");
+  if (!nav) return;
+  const routes = normalizePlayerShortcutRoutes(playerShortcutRoutes || PLAYER_SHORTCUT_DEFAULTS);
+  const visibleRoutes = routes.slice(0, isShortcutMobileViewport() ? PLAYER_SHORTCUT_MOBILE_LIMIT : PLAYER_SHORTCUT_DESKTOP_LIMIT);
+  const items = visibleRoutes.map(route => PLAYER_SHORTCUT_CATALOG.find(item => item.route === route)).filter(Boolean);
+  items.push({ route: "more", label: "Mais", icon: "⋯", required: true });
+  nav.innerHTML = `<div class="bottom-nav-inner">${items.map(shortcutNavItem).join("")}</div>`;
+  nav.classList.remove("hidden");
+  nav.querySelectorAll(".nav-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.route === activeRoute));
+  if (!playerShortcutResizeBound) {
+    window.addEventListener("resize", () => renderShortcutBar(window.location.hash.replace("#", "").split("?")[0] || "dashboard"));
+    playerShortcutResizeBound = true;
+  }
+}
+
+function shortcutNavItem(item) {
+  const icon = item.image
+    ? `<img class="nav-icon nav-image ${item.imageClass || ""}" src="${escapeAttr(item.image)}" alt="" />`
+    : `<span class="nav-icon">${item.icon || "•"}</span>`;
+  return `<button class="nav-btn" data-route="${escapeAttr(item.route)}" onclick="navigateTo('${escapeAttr(item.route)}')">${icon}<span>${escapeHtml(item.label)}</span></button>`;
+}
+
+async function loadPlayerShortcutPreference() {
+  if (playerShortcutRoutes !== null) return playerShortcutRoutes;
+  if (playerShortcutPreferenceLoading) return PLAYER_SHORTCUT_DEFAULTS;
+  playerShortcutPreferenceLoading = true;
+  try {
+    const stored = localStorage.getItem(PLAYER_SHORTCUT_STORAGE_KEY);
+    if (stored === null) {
+      playerShortcutRoutes = [...PLAYER_SHORTCUT_DEFAULTS];
+    } else {
+      const parsed = JSON.parse(stored);
+      playerShortcutRoutes = Array.isArray(parsed)
+        ? normalizePlayerShortcutRoutes(parsed)
+        : [...PLAYER_SHORTCUT_DEFAULTS];
+    }
+  } catch (_) {
+    // O localStorage pode estar indisponível ou conter dados inválidos.
+    playerShortcutRoutes = [...PLAYER_SHORTCUT_DEFAULTS];
+  } finally {
+    playerShortcutPreferenceLoading = false;
+  }
+  renderShortcutBar(window.location.hash.replace("#", "").split("?")[0] || "dashboard");
+  return playerShortcutRoutes;
+}
+
+async function savePlayerShortcutPreference(routes) {
+  const normalized = normalizePlayerShortcutRoutes(routes);
+  try {
+    localStorage.setItem(PLAYER_SHORTCUT_STORAGE_KEY, JSON.stringify(normalized));
+  } catch (_) {
+    throw new Error("Não foi possível salvar os atalhos neste navegador.");
+  }
+  playerShortcutRoutes = normalized;
+  try {
+    renderShortcutBar(window.location.hash.replace("#", "").split("?")[0] || "dashboard");
+  } catch (error) {
+    // A preferência já foi persistida. Um erro visual da barra não deve
+    // fazer o editor informar que o salvamento falhou.
+    console.warn("Preferência de atalhos salva, mas a barra não foi atualizada visualmente.", error);
+  }
+  return playerShortcutRoutes;
+}
+
 function showBottomNav(activeRoute) {
   const nav = document.getElementById("bottom-nav");
-  if (nav) {
-    nav.classList.remove("hidden");
-    nav.querySelectorAll(".nav-btn").forEach(btn => {
-      btn.classList.remove("active");
-      if (btn.dataset.route === activeRoute) btn.classList.add("active");
-    });
-  }
+  if (!nav) return;
+  renderShortcutBar(activeRoute);
+  if (playerShortcutRoutes === null && !playerShortcutPreferenceLoading) loadPlayerShortcutPreference();
 }
 
 function localizeGameMessage(message) {
