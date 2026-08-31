@@ -41,3 +41,7 @@ O harness visual usado nesta etapa não forneceu valores de IV no objeto de test
 ## Simplificação de tipo, raridade e tier
 
 A captura desktop confirmou que o tipo e o badge de raridade não aparecem mais, enquanto o tier foi integrado ao painel de potencial base ao lado da média. O estágio e os renascimentos permanecem nas caixas dedicadas. A captura mobile confirmou que o tipo e a raridade também foram removidos, enquanto os badges de estágio e grade/tier continuam disponíveis nessa versão, conforme solicitado.
+
+## Caixas de especialidade e afinidades
+
+No desktop, especialidade/efeito, atributo e elemento agora aparecem como caixas equivalentes às de estágio e renascimentos. Os badges compactos correspondentes permanecem ocultos no desktop para evitar duplicação. No mobile, as caixas desktop não são renderizadas visualmente e os badges de atributo, elemento e especialidade continuam no fluxo compacto.

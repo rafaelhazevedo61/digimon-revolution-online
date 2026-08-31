@@ -3339,6 +3339,16 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.dashboard-digimon-profile-stat small {
+  display: block;
+  overflow: hidden;
+  margin-top: 0.18rem;
+  color: #64748b;
+  font-size: 0.58rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .dashboard-digimon-potential-panel {
   padding: 0.65rem 0.75rem;
   border: 1px solid rgba(51, 65, 85, 0.66);
@@ -3419,6 +3429,9 @@ body {
   .dashboard-digimon-grid {
     align-items: stretch;
   }
+  .dashboard-digimon-profile-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   .dashboard-digimon-main {
     display: flex;
     min-height: 100%;
@@ -3435,7 +3448,10 @@ body {
 @media (min-width: 46rem) {
   .dashboard-stage-badge,
   .dashboard-rebirth-badge,
-  .dashboard-digimon-tier-badge {
+  .dashboard-digimon-tier-badge,
+  .dashboard-attribute-badge,
+  .dashboard-element-badge,
+  .dashboard-trait-badge {
     display: none;
   }
 }

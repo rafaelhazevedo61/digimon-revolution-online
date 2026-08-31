@@ -225,8 +225,8 @@ function renderDigimonCard(d) {
               <div class="flex gap-2 mt-1 flex-wrap">
                 <span class="badge dashboard-stage-badge badge-${d.stage.toLowerCase()}">${escapeHtml(formatStage(d.stage))}</span>
                 ${renderRarityDieIndicator(d)}
-                ${d.attribute ? `<span class="badge badge-common">${escapeHtml(formatAttribute(d.attribute))}</span>` : ""}
-                ${d.element ? `<span class="badge badge-common">${escapeHtml(formatElement(d.element))}</span>` : ""}
+                ${d.attribute ? `<span class="badge dashboard-attribute-badge badge-common">${escapeHtml(formatAttribute(d.attribute))}</span>` : ""}
+                ${d.element ? `<span class="badge dashboard-element-badge badge-common">${escapeHtml(formatElement(d.element))}</span>` : ""}
               </div>
             </div>
           </div>
@@ -246,6 +246,9 @@ function renderDigimonCard(d) {
             <div class="dashboard-digimon-profile-strip">
               <div class="dashboard-digimon-profile-stat"><span>Estágio</span><strong>${escapeHtml(formatStage(d.stage))}</strong></div>
               <div class="dashboard-digimon-profile-stat"><span>Renascimentos</span><strong>${Number(d.rebirthCount || 0)}</strong></div>
+              <div class="dashboard-digimon-profile-stat"><span>Especialidade</span><strong>${escapeHtml(formatTraitName(d.trait))}</strong><small>${escapeHtml(formatTraitEffect(d.trait))}</small></div>
+              <div class="dashboard-digimon-profile-stat"><span>Atributo</span><strong>${d.attribute ? escapeHtml(formatAttribute(d.attribute)) : "—"}</strong></div>
+              <div class="dashboard-digimon-profile-stat"><span>Elemento</span><strong>${d.element ? escapeHtml(formatElement(d.element)) : "—"}</strong></div>
             </div>
             <div class="dashboard-digimon-potential-panel">
               <div class="dashboard-digimon-potential-heading">
@@ -286,7 +289,7 @@ function renderDigimonCard(d) {
       <div class="dashboard-digimon-traits flex gap-2 mt-3 flex-wrap">
         <span class="badge-xs dashboard-digimon-tier-badge">${d.grade}</span>
         <span class="badge-xs">${formatPersonality(d.personality)}</span>
-        ${d.trait ? `<span class="badge-xs badge-trait">${formatTrait(d.trait)}</span>` : ""}
+        ${d.trait ? `<span class="badge-xs dashboard-trait-badge badge-trait">${formatTrait(d.trait)}</span>` : ""}
         ${d.rebirthCount > 0 ? `<span class="badge-xs dashboard-rebirth-badge badge-rebirth">Rebirth ×${d.rebirthCount}</span>` : ""}
       </div>
     </div>
@@ -589,9 +592,18 @@ function formatPersonality(p) {
   return map[p] || p;
 }
 
+function formatTraitName(t) {
+  const map = { FAST_LEARNER: "Aprendiz rápido", ENERGETIC: "Energético", VITALITY: "Vitalidade", BERSERKER: "Berserker", IRON_BODY: "Corpo de ferro" };
+  return map[t] || t || "—";
+}
+
+function formatTraitEffect(t) {
+  const map = { FAST_LEARNER: "XP +10%", ENERGETIC: "Energia +5", VITALITY: "HP +10%", BERSERKER: "ATK +10%", IRON_BODY: "DEF +10%" };
+  return map[t] || "Sem efeito registrado";
+}
+
 function formatTrait(t) {
-  const map = { FAST_LEARNER: "XP+10%", ENERGETIC: "Energia+5", VITALITY: "HP+10%", BERSERKER: "ATK+10%", IRON_BODY: "DEF+10%" };
-  return map[t] || t;
+  return formatTraitEffect(t);
 }
 
 function formatItemType(t) {
