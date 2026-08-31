@@ -246,6 +246,7 @@ function renderDigimonCard(d) {
             <div class="dashboard-digimon-profile-strip">
               <div class="dashboard-digimon-profile-stat"><span>Estágio</span><strong>${escapeHtml(formatStage(d.stage))}</strong></div>
               <div class="dashboard-digimon-profile-stat"><span>Renascimentos</span><strong>${Number(d.rebirthCount || 0)}</strong></div>
+              <div class="dashboard-digimon-profile-stat"><span>Personalidade</span><strong>${escapeHtml(formatPersonality(d.personality))}</strong><small>${escapeHtml(formatPersonalityEffect(d.personality))}</small></div>
               <div class="dashboard-digimon-profile-stat"><span>Especialidade</span><strong>${escapeHtml(formatTraitName(d.trait))}</strong><small>${escapeHtml(formatTraitEffect(d.trait))}</small></div>
               <div class="dashboard-digimon-profile-stat"><span>Atributo</span><strong>${d.attribute ? escapeHtml(formatAttribute(d.attribute)) : "—"}</strong></div>
               <div class="dashboard-digimon-profile-stat"><span>Elemento</span><strong>${d.element ? escapeHtml(formatElement(d.element)) : "—"}</strong></div>
@@ -288,7 +289,7 @@ function renderDigimonCard(d) {
       <!-- Traits -->
       <div class="dashboard-digimon-traits flex gap-2 mt-3 flex-wrap">
         <span class="badge-xs dashboard-digimon-tier-badge">${d.grade}</span>
-        <span class="badge-xs">${formatPersonality(d.personality)}</span>
+        <span class="badge-xs dashboard-personality-badge">${formatPersonality(d.personality)}</span>
         ${d.trait ? `<span class="badge-xs dashboard-trait-badge badge-trait">${formatTrait(d.trait)}</span>` : ""}
         ${d.rebirthCount > 0 ? `<span class="badge-xs dashboard-rebirth-badge badge-rebirth">Rebirth ×${d.rebirthCount}</span>` : ""}
       </div>
@@ -589,7 +590,19 @@ function formatStage(stage) {
 
 function formatPersonality(p) {
   const map = { DURABLE: "Durável", LIVELY: "Vivaz", FIGHTER: "Lutador", DEFENDER: "Defensor", BRAINY: "Esperto", NIMBLE: "Ágil" };
-  return map[p] || p;
+  return map[p] || p || "—";
+}
+
+function formatPersonalityEffect(p) {
+  const map = {
+    DURABLE: "HP +10%",
+    LIVELY: "XP +10%",
+    FIGHTER: "ATK +10%",
+    DEFENDER: "DEF +10%",
+    BRAINY: "ATK +5% · XP +5%",
+    NIMBLE: "ATK +5% · DEF +5%"
+  };
+  return map[p] || "Sem efeito registrado";
 }
 
 function formatTraitName(t) {
