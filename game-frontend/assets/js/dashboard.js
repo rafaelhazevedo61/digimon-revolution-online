@@ -217,7 +217,6 @@ function renderDigimonCard(d) {
           <div class="dashboard-digimon-identity flex items-center gap-3">
             ${renderDigimonVisual(d.imageUrl, d.stage, "w-16 h-16", "text-5xl")}
             <div class="flex-1 min-w-0">
-              <p class="dashboard-eyebrow">Digimon ativo</p>
               <div class="flex items-center gap-2 mt-1">
                 <h3 class="font-bold text-lg truncate">${escapeHtml(d.name)}</h3>
                 <button class="text-slate-500 hover:text-slate-300 text-xs" data-rename-digimon-id="${escapeAttr(d.id)}" data-rename-digimon-name="${escapeAttr(d.name)}" title="Renomear">✏️</button>
@@ -225,7 +224,7 @@ function renderDigimonCard(d) {
               </div>
               <p class="text-xs text-slate-400">${escapeHtml(formatDigimonType(d.type))}</p>
               <div class="flex gap-2 mt-1 flex-wrap">
-                <span class="badge badge-${d.stage.toLowerCase()}">${escapeHtml(formatStage(d.stage))}</span>
+                <span class="badge dashboard-stage-badge badge-${d.stage.toLowerCase()}">${escapeHtml(formatStage(d.stage))}</span>
                 <span class="badge badge-${d.rarity.toLowerCase()}">${escapeHtml(formatRarity(d.rarity))}</span>${renderRarityDieIndicator(d)}
                 ${d.attribute ? `<span class="badge badge-common">${escapeHtml(formatAttribute(d.attribute))}</span>` : ""}
                 ${d.element ? `<span class="badge badge-common">${escapeHtml(formatElement(d.element))}</span>` : ""}
@@ -283,7 +282,7 @@ function renderDigimonCard(d) {
         <span class="badge-xs">${d.grade}</span>
         <span class="badge-xs">${formatPersonality(d.personality)}</span>
         ${d.trait ? `<span class="badge-xs badge-trait">${formatTrait(d.trait)}</span>` : ""}
-        ${d.rebirthCount > 0 ? `<span class="badge-xs badge-rebirth">Rebirth ×${d.rebirthCount}</span>` : ""}
+        ${d.rebirthCount > 0 ? `<span class="badge-xs dashboard-rebirth-badge badge-rebirth">Rebirth ×${d.rebirthCount}</span>` : ""}
       </div>
     </div>
   `;

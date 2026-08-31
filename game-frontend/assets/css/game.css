@@ -3411,3 +3411,10 @@ body {
     padding-top: 0.9rem;
   }
 }
+
+@media (min-width: 46rem) {
+  .dashboard-stage-badge,
+  .dashboard-rebirth-badge {
+    display: none;
+  }
+}
