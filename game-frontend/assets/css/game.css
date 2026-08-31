@@ -614,13 +614,11 @@ body {
   font-size: 0.7rem;
 }
 
-/* Nomes de inventário preservam duas linhas e o nome completo fica no tooltip. */
+/* Nomes de inventário ocupam quantas linhas forem necessárias para não cortar o texto. */
 .inventory-item-name {
-  display: -webkit-box;
+  display: block;
   max-width: 100%;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  overflow: visible;
   overflow-wrap: anywhere;
   line-height: 1.25;
 }
@@ -1263,7 +1261,7 @@ body {
 .shop-equipment-icon { color: #fcd34d; }
 .shop-product-body { min-width: 0; flex: 1 1 auto; }
 .shop-product-heading { display: flex; align-items: center; justify-content: space-between; gap: 0.45rem; }
-.shop-product-name { min-width: 0; margin: 0; overflow: hidden; color: #e2e8f0; font-size: 0.72rem; font-weight: 850; text-overflow: ellipsis; white-space: nowrap; }
+.shop-product-name { min-width: 0; margin: 0; overflow: visible; overflow-wrap: anywhere; color: #e2e8f0; font-size: 0.72rem; font-weight: 850; line-height: 1.25; text-overflow: clip; white-space: normal; }
 .shop-product-type { flex: 0 0 auto; padding: 0.2rem 0.35rem; border-radius: 9999px; background: rgba(71, 85, 105, 0.28); color: #94a3b8; font-size: 0.52rem; font-weight: 800; white-space: nowrap; }
 .shop-product-description { margin: 0.22rem 0 0; overflow: hidden; color: #64748b; font-size: 0.59rem; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
 .shop-product-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.42rem; margin-top: 0.3rem; }
@@ -3719,5 +3717,33 @@ body {
   .inventory-control-heading,
   .shop-context-card {
     display: none;
+  }
+}
+
+/* ===================== Cards: nomes legíveis em telas largas ===================== */
+@media (min-width: 46rem) {
+  .inventory-content-column #inv-content {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inventory-content-column .inventory-item-heading,
+  .inventory-content-column .inventory-equipment-heading,
+  .shop-content-column .shop-product-heading {
+    align-items: flex-start;
+  }
+
+  .inventory-content-column .inventory-item-name,
+  .shop-content-column .shop-product-name {
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.25;
+  }
+}
+
+@media (min-width: 90rem) {
+  .inventory-content-column #inv-content {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
