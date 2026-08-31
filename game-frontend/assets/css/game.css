@@ -753,6 +753,43 @@ body {
 .clan-management-actions { display: grid; gap: 0.55rem; padding: 0.9rem; border: 1px solid rgba(127, 29, 29, 0.48); border-radius: 0.9rem; background: rgba(69, 10, 10, 0.2); }
 .clan-rail-label { margin: 0 0 0.15rem; color: #fca5a5; font-size: 0.61rem; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; }
 .clan-tab-heading { margin-bottom: 0.8rem; }
+.clan-missions-heading { margin-bottom: 0.7rem; }
+.clan-missions-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+.clan-mission-card { display: flex; flex-direction: column; min-width: 0; min-height: 14rem; padding: 0.85rem; border: 1px solid rgba(51, 65, 85, 0.76); border-radius: 0.85rem; background: linear-gradient(145deg, rgba(15, 23, 42, 0.82), rgba(2, 6, 23, 0.55)); transition: border-color 0.2s, transform 0.2s, background 0.2s; }
+.clan-mission-card:hover { border-color: rgba(34, 211, 238, 0.38); background: linear-gradient(145deg, rgba(8, 47, 73, 0.42), rgba(2, 6, 23, 0.64)); transform: translateY(-1px); }
+.clan-mission-card.is-active { border-color: rgba(34, 211, 238, 0.58); box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.08); }
+.clan-mission-card.is-done { border-color: rgba(71, 85, 105, 0.62); opacity: 0.72; }
+.clan-mission-card.is-locked { border-color: rgba(245, 158, 11, 0.24); }
+.clan-mission-card-topline, .clan-current-mission-heading, .clan-current-mission-footer { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.clan-mission-card-topline { min-height: 1.25rem; }
+.clan-mission-type { overflow: hidden; color: #64748b; font-size: 0.52rem; font-weight: 850; letter-spacing: 0.1em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.clan-mission-status { display: inline-flex; align-items: center; gap: 0.3rem; flex: 0 0 auto; font-size: 0.57rem; font-weight: 800; text-align: right; }
+.clan-status-cyan { color: #67e8f9; }
+.clan-status-green { color: #86efac; }
+.clan-status-amber { color: #fcd34d; }
+.clan-status-muted { color: #64748b; }
+.clan-status-dot { width: 0.32rem; height: 0.32rem; border-radius: 9999px; background: currentColor; box-shadow: 0 0 0.5rem currentColor; }
+.clan-mission-card-body { min-height: 4.5rem; margin-top: 0.55rem; }
+.clan-mission-title { margin: 0; color: #f1f5f9; font-size: 0.82rem; font-weight: 850; line-height: 1.25; }
+.clan-mission-description { display: -webkit-box; min-height: 2.25rem; margin-top: 0.35rem; overflow: hidden; color: #94a3b8; font-size: 0.65rem; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.clan-mission-specs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem; margin-top: 0.55rem; }
+.clan-mission-spec { min-width: 0; padding: 0.48rem 0.52rem; border: 1px solid rgba(51, 65, 85, 0.62); border-radius: 0.55rem; background: rgba(2, 6, 23, 0.3); }
+.clan-mission-spec span, .clan-mission-spec small { display: block; overflow: hidden; color: #64748b; font-size: 0.48rem; font-weight: 800; letter-spacing: 0.06em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.clan-mission-spec strong { display: block; margin-top: 0.25rem; overflow: hidden; color: #67e8f9; font-size: 0.62rem; font-weight: 800; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.clan-mission-spec small { margin-top: 0.2rem; color: #a78bfa; font-size: 0.52rem; font-weight: 650; letter-spacing: 0; text-transform: none; }
+.clan-mission-card-footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 0.5rem; min-height: 2.2rem; margin-top: auto; padding-top: 0.7rem; }
+.clan-mission-availability { color: #64748b; font-size: 0.54rem; line-height: 1.25; }
+.clan-mission-action { flex: 0 0 auto; min-height: 2rem; padding: 0.45rem 0.65rem; font-size: 0.64rem; white-space: nowrap; }
+.clan-current-mission-card { margin-bottom: 0.85rem; padding: 0.85rem; border: 1px solid rgba(34, 211, 238, 0.34); border-radius: 0.85rem; background: linear-gradient(135deg, rgba(8, 47, 73, 0.38), rgba(15, 23, 42, 0.62)); }
+.clan-current-mission-title { margin-top: 0.2rem; color: #f1f5f9; font-size: 0.85rem; font-weight: 850; }
+.clan-current-mission-progress { color: #67e8f9; font-size: 0.78rem; font-weight: 900; }
+.clan-current-mission-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; margin-top: 0.65rem; color: #94a3b8; font-size: 0.61rem; }
+.clan-current-mission-track { height: 0.45rem; margin-top: 0.55rem; overflow: hidden; border: 1px solid rgba(34, 211, 238, 0.18); border-radius: 9999px; background: rgba(2, 6, 23, 0.72); }
+.clan-current-mission-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #0891b2, #2563eb); }
+.clan-current-mission-footer { align-items: center; margin-top: 0.7rem; }
+.clan-mission-ranking { padding: 1rem; }
+.clan-mission-ranking-list { margin-top: 0.65rem; }
+.clan-mission-ranking-row { gap: 0.65rem; }
 .clan-section-count { display: grid; min-width: 1.9rem; height: 1.9rem; padding: 0 0.45rem; place-items: center; border: 1px solid rgba(34, 211, 238, 0.2); border-radius: 0.6rem; background: rgba(8, 145, 178, 0.1); color: #67e8f9; font-size: 0.72rem; font-weight: 850; }
 .clan-invite-card { margin-bottom: 1rem; padding: 1rem; border: 1px solid rgba(34, 211, 238, 0.18); border-radius: 0.9rem; background: rgba(8, 47, 73, 0.22); }
 .clan-inline-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.6rem; }
@@ -852,6 +889,7 @@ body {
 }
 @media (min-width: 70rem) {
   .clan-list-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .clan-missions-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .clan-upgrades-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .clan-storage-items-panel #clan-storage-items-list > div:last-child { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
@@ -861,7 +899,11 @@ body {
   .clan-header-action { width: 100%; min-width: 0; justify-content: flex-start; }
   .clan-list-layout, .clan-detail-layout { display: block; }
   .clan-list-aside, .clan-detail-rail { position: static; margin-top: 1rem; }
-  .clan-list-grid, .clan-upgrades-grid { grid-template-columns: 1fr; }
+  .clan-list-grid, .clan-upgrades-grid, .clan-missions-grid { grid-template-columns: 1fr; }
+  .clan-mission-card { min-height: 0; }
+  .clan-mission-card-body { min-height: 0; }
+  .clan-mission-card-footer { align-items: center; }
+  .clan-current-mission-meta { flex-direction: column; gap: 0.2rem; }
   .clan-list-card { grid-template-columns: 2.65rem minmax(0, 1fr) auto; }
   .clan-detail-identity { align-items: flex-start; }
   .clan-detail-emblem { width: 3.8rem; height: 3.8rem; border-radius: 1rem; font-size: 1.65rem; }

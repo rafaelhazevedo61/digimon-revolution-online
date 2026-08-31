@@ -950,35 +950,57 @@ async function clanLoadMissions() {
 
     const hasActive = myMission && myMission.status !== "CLAIMED";
 
-    let html = `<h3 class="font-bold mb-2">Missões de Clã</h3>`;
+    let html = `
+      <div class="clan-missions-section">
+        <div class="clan-tab-heading clan-missions-heading">
+          <div>
+            <p class="clan-eyebrow clan-eyebrow-cyan">Objetivos coletivos</p>
+            <h2 class="clan-section-title">Missões de Clã</h2>
+          </div>
+          <span class="clan-section-count">${catalog.length}</span>
+        </div>
+    `;
 
     if (hasActive) {
       html += renderPlayerMission(myMission);
     }
 
+    html += `<div class="clan-missions-grid">`;
     html += catalog.map(m => {
       const active = myMission && myMission.missionId === m.id && myMission.status !== "CLAIMED";
       const doneToday = m.alreadyAccepted && !active;
-      const canAccept = !hasActive && !doneToday && !active && m.minClanLevel <= clan.level;
+      const locked = !active && !doneToday && m.minClanLevel > clan.level;
+      const canAccept = !hasActive && !doneToday && !active && !locked;
+      const missionStateClass = active ? "is-active" : doneToday ? "is-done" : locked ? "is-locked" : "";
+      const stateHtml = active
+        ? `<span class="clan-mission-status clan-status-cyan"><span class="clan-status-dot"></span>Ativa agora</span>`
+        : doneToday
+          ? `<span class="clan-mission-status clan-status-muted">Disponível amanhã</span>`
+          : locked
+            ? `<span class="clan-mission-status clan-status-amber">Requer nível ${m.minClanLevel}</span>`
+            : `<span class="clan-mission-status clan-status-green"><span class="clan-status-dot"></span>Disponível</span>`;
       return `
-        <div class="card-sm mb-2 ${active || doneToday ? 'border-cyan-800' : ''}">
-          <div class="flex justify-between items-start">
-            <div>
-              <p class="font-bold text-sm">${escapeHtml(m.title)}</p>
-              <p class="text-xs text-slate-400">${escapeHtml(m.description || "")}</p>
-              <p class="text-xs text-slate-500">Objetivo: <span class="text-cyan-400">${formatObjective(m.objectiveType)} ${m.targetValue}</span></p>
-              <p class="text-xs text-slate-500">Recompensa: ${m.minHonorMarksReward}-${m.maxHonorMarksReward} Marcas de Honra · ${m.clanXpReward} Experiência do Clã</p>
-            </div>
-            <div class="text-right">
-              ${active ? `<span class="text-xs text-cyan-400">Ativa</span>` : ""}
-              ${doneToday ? `<span class="text-xs text-slate-500">Disponível amanhã</span>` : ""}
-              ${!active && !doneToday && m.minClanLevel > clan.level ? `<span class="text-xs text-slate-500">Nv ${m.minClanLevel}</span>` : ""}
-            </div>
+        <article class="clan-mission-card ${missionStateClass}">
+          <div class="clan-mission-card-topline">
+            <span class="clan-mission-type">${escapeHtml(formatObjective(m.objectiveType).replace(/:$/, ""))}</span>
+            ${stateHtml}
           </div>
-          ${canAccept ? `<button class="btn-primary w-full mt-2 text-sm py-1" onclick="clanAcceptMission('${m.id}')">Aceitar</button>` : ""}
-        </div>
+          <div class="clan-mission-card-body">
+            <h3 class="clan-mission-title">${escapeHtml(m.title)}</h3>
+            <p class="clan-mission-description">${escapeHtml(m.description || "Sem descrição disponível.")}</p>
+          </div>
+          <div class="clan-mission-specs">
+            <div class="clan-mission-spec"><span>Objetivo</span><strong>${formatObjective(m.objectiveType)} ${Number(m.targetValue).toLocaleString("pt-BR")}</strong></div>
+            <div class="clan-mission-spec"><span>Recompensa</span><strong>${Number(m.minHonorMarksReward).toLocaleString("pt-BR")}-${Number(m.maxHonorMarksReward).toLocaleString("pt-BR")} HM</strong><small>+${Number(m.clanXpReward).toLocaleString("pt-BR")} XP de clã</small></div>
+          </div>
+          <div class="clan-mission-card-footer">
+            <span class="clan-mission-availability">${locked ? `Nível atual: ${clan.level}` : active ? "Uma missão por vez" : "Contribua com sua equipe"}</span>
+            ${canAccept ? `<button class="btn-primary clan-mission-action" onclick="clanAcceptMission('${m.id}')">Aceitar missão</button>` : ""}
+          </div>
+        </article>
       `;
     }).join("");
+    html += `</div></div>`;
 
     html += renderHonorMarksRanking(ranking);
 
@@ -992,17 +1014,12 @@ function renderPlayerMission(m) {
   const complete = m.progress >= m.targetValue;
   const percent = Math.min(100, Math.round((m.progress / m.targetValue) * 100));
   return `
-    <div class="card mb-3 border-cyan-800">
-      <div class="flex justify-between items-start">
-        <div>
-          <p class="font-bold text-sm">${escapeHtml(m.title)}</p>
-          <p class="text-xs text-slate-400">${formatObjective(m.objectiveType)} ${m.progress}/${m.targetValue}</p>
-          <p class="text-xs text-slate-500">Recompensa: ${m.honorMarksReward} Marcas de Honra · ${m.clanXpReward} Experiência do Clã</p>
-        </div>
-        ${m.status === "COMPLETED" || complete ? `<button class="btn-primary text-sm py-1 px-2" onclick="clanClaimMission('${m.id}')">Resgatar</button>` : `<span class="text-xs text-slate-500">${formatMissionStatus(m.status)}</span>`}
-      </div>
-      <div class="w-full bg-slate-800 rounded-full h-1.5 mt-2"><div class="bg-cyan-500 h-1.5 rounded-full" style="width:${percent}%"></div></div>
-    </div>
+    <article class="clan-current-mission-card">
+      <div class="clan-current-mission-heading"><div><p class="clan-eyebrow clan-eyebrow-cyan">Sua missão atual</p><h3 class="clan-current-mission-title">${escapeHtml(m.title)}</h3></div><span class="clan-current-mission-progress">${percent}%</span></div>
+      <div class="clan-current-mission-meta"><span>${formatObjective(m.objectiveType)} ${Number(m.progress).toLocaleString("pt-BR")}/${Number(m.targetValue).toLocaleString("pt-BR")}</span><span>${Number(m.honorMarksReward).toLocaleString("pt-BR")} HM · ${Number(m.clanXpReward).toLocaleString("pt-BR")} XP</span></div>
+      <div class="clan-current-mission-track"><span style="width:${percent}%"></span></div>
+      <div class="clan-current-mission-footer">${m.status === "COMPLETED" || complete ? `<button class="btn-primary clan-mission-action" onclick="clanClaimMission('${m.id}')">Resgatar recompensa</button>` : `<span class="clan-mission-status clan-status-cyan">${formatMissionStatus(m.status)}</span>`}<span class="clan-mission-availability">Progresso compartilhado</span></div>
+    </article>
   `;
 }
 
@@ -1037,20 +1054,20 @@ function renderHonorMarksRanking(ranking) {
   };
 
   const rows = ranking.map((entry, i) => `
-    <div class="flex justify-between items-center py-1.5 border-b border-slate-800 last:border-0">
+    <div class="clan-mission-ranking-row flex justify-between items-center py-1.5 border-b border-slate-800 last:border-0">
       <div class="flex items-center gap-2">
         <span class="font-bold w-5 ${rankColor(i)}">${i + 1}.</span>
         <span class="text-sm text-slate-200">${escapeHtml(entry.username)}</span>
       </div>
-      <span class="text-xs text-cyan-400 font-mono">${entry.contribution} Marcas de Honra</span>
+      <span class="text-xs text-cyan-400 font-mono">${Number(entry.contribution).toLocaleString("pt-BR")} Marcas de Honra</span>
     </div>
   `).join("");
 
   return `
-    <div class="card mt-4 border-cyan-900">
-          <p class="font-bold mb-2 text-sm">Classificação de Contribuição</p>
-      ${rows}
-    </div>
+    <section class="clan-mission-ranking card mt-4 border-cyan-900">
+      <div class="clan-tab-heading"><div><p class="clan-eyebrow clan-eyebrow-amber">Contribuição da equipe</p><h3 class="clan-section-title clan-section-title-sm">Classificação de Contribuição</h3></div><span class="clan-section-mark">✦</span></div>
+      <div class="clan-mission-ranking-list">${rows}</div>
+    </section>
   `;
 }
 
