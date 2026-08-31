@@ -30,6 +30,7 @@ public class CaffeineCacheConfiguration {
                 createCache("itemDefinitions", maximumSize, ttl),
                 createCache("equipmentTemplates", maximumSize, ttl),
                 createCache("playerPaginationPreferences", maximumSize, ttl),
+                createCache("playerShortcutPreferences", maximumSize, ttl),
                 createCache("playerArenaStatistics", maximumSize, ttl)
         );
         SimpleCacheManager manager = new SimpleCacheManager();
