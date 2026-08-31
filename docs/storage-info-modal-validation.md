@@ -21,3 +21,9 @@ As capturas desktop (1440×1000) e mobile (375×812) confirmaram que a remoção
 O botão `+Info` foi retirado da linha de status. Em desktop, ele aparece abaixo da imagem do Digimon, centralizado na coluna visual. Em mobile, ocupa uma linha própria acima de Bloquear/Desbloquear, mantendo os três botões de ação principais na linha seguinte.
 
 A composição foi conferida em 1440×1000 e 375×812. O botão permanece acessível nas duas versões e não interfere no badge de coleção, nos metadados ou nas ações existentes.
+
+## Alinhamento da busca
+
+A lupa da busca estava posicionada em relação à altura total do formulário quando o layout mobile empilhava o input e os botões, fazendo o símbolo descer para fora do centro do campo. Foi adicionado um override mobile que ancora o ícone no centro vertical do input (`top: 1.175rem` e `translateY(-50%)`).
+
+A correção foi validada em 375×500 e 1440×500. No mobile, a lupa ficou centralizada dentro do campo; no desktop, o posicionamento original permaneceu intacto.
