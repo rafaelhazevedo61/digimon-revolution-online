@@ -402,6 +402,7 @@ async function shopConfirmBuy(code, unitPrice) {
     document.getElementById("shop-bits").textContent = shopFormatNumber(shopPlayerBits);
     shopCloseModal();
     showToast(`${escapeHtml(result.name)} x${result.quantity} comprado! -${shopFormatBits(result.totalPrice)}`);
+    setTimeout(() => window.location.reload(), 350);
   } catch (err) {
     showToast(err.message, "error");
     if (btn) { btn.disabled = false; btn.textContent = "Confirmar"; }
