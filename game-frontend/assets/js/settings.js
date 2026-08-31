@@ -178,9 +178,8 @@ async function settingsShowShortcuts() {
 function settingsRenderShortcutsModal() {
   const catalog = getPlayerShortcutCatalog();
   const selected = new Set(settingsShortcutDraft);
-  const rows = catalog.map(item => {
-    const isSelected = selected.has(item.route);
-    const selectedIndex = settingsShortcutDraft.indexOf(item.route);
+
+  const renderShortcutOption = (item, isSelected, selectedIndex = -1) => {
     const icon = item.image
       ? `<img src="${escapeAttr(item.image)}" alt="" class="settings-shortcut-option-image" />`
       : `<span class="settings-shortcut-option-emoji">${item.icon || "•"}</span>`;
@@ -191,10 +190,22 @@ function settingsRenderShortcutsModal() {
           <span class="settings-shortcut-option-label">${escapeHtml(item.label)}</span>
           <span class="settings-shortcut-option-check">${isSelected ? "✓" : ""}</span>
         </button>
-        ${isSelected ? `<span class="settings-shortcut-order"><button type="button" onclick="settingsMoveShortcut('${escapeAttr(item.route)}', -1)" aria-label="Mover ${escapeAttr(item.label)} para cima" ${selectedIndex === 0 ? "disabled" : ""}>↑</button><button type="button" onclick="settingsMoveShortcut('${escapeAttr(item.route)}', 1)" aria-label="Mover ${escapeAttr(item.label)} para baixo" ${selectedIndex === settingsShortcutDraft.length - 1 ? "disabled" : ""}>↓</button></span>` : ""}
+        ${isSelected ? `<span class="settings-shortcut-order"><button type="button" onclick="settingsMoveShortcut('${escapeAttr(item.route)}', -1)" aria-label="Mover ${escapeAttr(item.label)} para cima" ${selectedIndex <= 0 ? "disabled" : ""}>↑</button><button type="button" onclick="settingsMoveShortcut('${escapeAttr(item.route)}', 1)" aria-label="Mover ${escapeAttr(item.label)} para baixo" ${selectedIndex >= settingsShortcutDraft.length - 1 ? "disabled" : ""}>↓</button></span>` : ""}
       </div>
     `;
-  }).join("");
+  };
+
+  // Os selecionados são renderizados na mesma ordem usada pela barra.
+  // Assim, as setas movimentam exatamente o item que o jogador está vendo.
+  const selectedRows = settingsShortcutDraft
+    .map(route => catalog.find(item => item.route === route))
+    .filter(Boolean)
+    .map((item, index) => renderShortcutOption(item, true, index));
+  const unselectedRows = catalog
+    .filter(item => !selected.has(item.route))
+    .map(item => renderShortcutOption(item, false));
+  const rows = [...selectedRows, ...unselectedRows].join("");
+
   const overlay = document.createElement("div");
   overlay.id = "settings-shortcuts-modal";
   overlay.className = "settings-panel-overlay fixed inset-0 z-50 flex items-center justify-center p-4";
@@ -211,9 +222,9 @@ function settingsRenderShortcutsModal() {
         </div>
       </div>
       <div class="settings-shortcuts-limit"><span>Mobile</span><strong>Até 4 atalhos + Mais</strong><span>Desktop</span><strong>Até 8 atalhos + Mais</strong></div>
-      <div class="settings-shortcuts-list">${rows}</div>
-      <div id="settings-shortcuts-feedback" class="hidden settings-feedback"></div>
       <button type="button" class="btn-primary w-full mt-4" id="settings-shortcuts-save" onclick="settingsSaveShortcuts()">Salvar atalhos</button>
+      <div id="settings-shortcuts-feedback" class="hidden settings-feedback"></div>
+      <div class="settings-shortcuts-list">${rows}</div>
     </div>
   `;
   document.body.appendChild(overlay);
