@@ -3494,3 +3494,54 @@ body {
     max-width: 74rem;
   }
 }
+
+/* ===================== Mission-area: composição responsiva ===================== */
+@media (min-width: 46rem) {
+  .mission-area-page-container {
+    max-width: 74rem;
+  }
+  .mission-area-page-container #mission-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+  .mission-area-page-container .mission-detail-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1.22fr) minmax(8rem, 0.78fr);
+    column-gap: 0.85rem;
+    align-content: start;
+  }
+  .mission-area-page-container .mission-detail-topline,
+  .mission-area-page-container .mission-detail-heading {
+    grid-column: 1 / -1;
+  }
+  .mission-area-page-container .mission-detail-description {
+    grid-column: 1;
+    margin-top: 0.65rem;
+  }
+  .mission-area-page-container .mission-detail-reward-row {
+    grid-column: 1;
+    align-self: start;
+  }
+  .mission-area-page-container .mission-detail-meta {
+    grid-column: 2;
+    grid-row: 3 / span 2;
+    grid-template-columns: 1fr;
+    margin-top: 0.65rem;
+  }
+  .mission-area-page-container .mission-detail-actions {
+    grid-column: 1;
+    display: flex;
+    gap: 0.5rem;
+    align-self: end;
+  }
+  .mission-area-page-container .mission-detail-actions .btn-secondary,
+  .mission-area-page-container .mission-detail-actions .btn-primary {
+    flex: 1;
+  }
+}
+
+@media (min-width: 46rem) {
+  .mission-area-page-container #mission-list:has(.mission-detail-card:only-child) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
