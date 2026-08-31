@@ -15,3 +15,9 @@ A captura desktop confirmou uma largura confortável, perfil em quatro colunas, 
 A informação de origem/tipo associada à Digitama foi removida da identidade do modal, que agora mostra apenas nível e estágio no resumo principal. O valor de Bits também foi removido do rodapé, deixando o botão `Fechar` alinhado à direita.
 
 As capturas desktop (1440×1000) e mobile (375×812) confirmaram que a remoção reduziu ruído sem criar desalinhamento ou espaço visual inadequado. As checagens `node --check` e `git diff --check` continuam aprovadas.
+
+## Posicionamento do botão +Info
+
+O botão `+Info` foi retirado da linha de status. Em desktop, ele aparece abaixo da imagem do Digimon, centralizado na coluna visual. Em mobile, ocupa uma linha própria acima de Bloquear/Desbloquear, mantendo os três botões de ação principais na linha seguinte.
+
+A composição foi conferida em 1440×1000 e 375×812. O botão permanece acessível nas duas versões e não interfere no badge de coleção, nos metadados ou nas ações existentes.

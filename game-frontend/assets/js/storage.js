@@ -304,7 +304,10 @@ function storageRenderList() {
           />
           <span class="storage-selection-label">Selecionar</span>
         </label>
-        ${renderDigimonVisual(d.imageUrl, d.stage, "storage-digimon-visual w-16 h-16", "text-4xl")}
+        <div class="storage-digimon-visual-column">
+          ${renderDigimonVisual(d.imageUrl, d.stage, "storage-digimon-visual w-16 h-16", "text-4xl")}
+          <button type="button" class="storage-info-button storage-info-button-desktop" onclick="storageOpenInfoModal('${escapeAttr(d.id)}')" aria-label="Ver mais informações de ${escapeAttr(d.name || "Digimon")}">+Info</button>
+        </div>
         <div class="storage-digimon-body">
           <div class="storage-digimon-heading">
             <p class="storage-digimon-name">${escapeHtml(d.name)}</p>
@@ -312,13 +315,13 @@ function storageRenderList() {
           <div class="storage-digimon-status-row">
             <span class="storage-collection-badge ${registered ? "storage-collection-badge-registered" : "storage-collection-badge-available"}" title="${registered ? "Esta espécie e raridade já estão registradas na coleção" : "Esta espécie e raridade ainda não estão registradas na coleção"}">${registered ? "✓ Registrado" : "Não registrado"}</span>
             ${locked ? '<span class="storage-locked-badge" title="Protegido contra sacrifício">🔒 Bloqueado</span>' : ""}
-            <button type="button" class="storage-info-button" onclick="storageOpenInfoModal('${escapeAttr(d.id)}')" aria-label="Ver mais informações de ${escapeAttr(d.name || "Digimon")}">+Info</button>
           </div>
           <p class="storage-digimon-meta">Lv.${d.level} <span>•</span> ${escapeHtml(d.stage)} <span>•</span> ${formatRarity(d.rarity)} ${renderRarityDieIndicator(d)}</p>
           <p class="storage-digimon-stats"><span>HP ${d.hp}</span><span>ATK ${d.attack}</span><span>DEF ${d.defense}</span></p>
           <p class="storage-digimon-reward ${locked ? "storage-digimon-reward-locked" : ""}">${locked ? "Protegido contra sacrifício" : `Sacrifício: +${calculateDigitalDataPreview(d)} Dados Digitais`}</p>
         </div>
         <div class="storage-digimon-actions">
+          <button type="button" class="storage-info-button storage-info-button-mobile" onclick="storageOpenInfoModal('${escapeAttr(d.id)}')" aria-label="Ver mais informações de ${escapeAttr(d.name || "Digimon")}">+Info</button>
           <button type="button" class="storage-action-button storage-action-lock ${locked ? "storage-action-lock-active" : ""}"
             onclick="storageToggleLock('${escapeAttr(d.id)}')"
             aria-label="${locked ? "Desbloquear" : "Bloquear"} ${escapeAttr(d.name || "Digimon")}">
