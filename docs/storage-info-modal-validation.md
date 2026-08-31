@@ -9,3 +9,9 @@ A composição desktop foi conferida em viewport ampla. O overlay recebeu `role=
 A primeira captura mobile revelou que a animação global `fade-in` aplicava `translateX(-50%)` ao modal, deslocando-o parcialmente para fora da viewport. Foi criada uma animação específica, `storage-info-modal-fade-in`, que usa apenas deslocamento vertical. Após a correção, o modal ficou centralizado no desktop e ocupou corretamente a largura mobile, com rolagem vertical para o conteúdo completo.
 
 A captura desktop confirmou uma largura confortável, perfil em quatro colunas, potencial em três colunas e estatísticas efetivas distribuídas horizontalmente. A captura mobile confirmou perfil em duas colunas, estatísticas de combate empilhadas e acesso ao restante do conteúdo por rolagem.
+
+## Simplificação de conteúdo
+
+A informação de origem/tipo associada à Digitama foi removida da identidade do modal, que agora mostra apenas nível e estágio no resumo principal. O valor de Bits também foi removido do rodapé, deixando o botão `Fechar` alinhado à direita.
+
+As capturas desktop (1440×1000) e mobile (375×812) confirmaram que a remoção reduziu ruído sem criar desalinhamento ou espaço visual inadequado. As checagens `node --check` e `git diff --check` continuam aprovadas.

@@ -354,7 +354,6 @@ function storageOpenInfoModal(digimonId) {
   const xpPercent = level >= 100 || xpNeeded <= 0 ? 100 : Math.min(100, Math.round((experience / xpNeeded) * 100));
   const formatNumber = value => Number(value || 0).toLocaleString("pt-BR");
   const stageLabel = typeof formatStage === "function" ? formatStage(digimon.stage) : (digimon.stage || "—");
-  const typeLabel = typeof formatDigimonType === "function" ? formatDigimonType(digimon.type) : (digimon.type || "—");
   const personalityLabel = typeof formatPersonality === "function" ? formatPersonality(digimon.personality) : (digimon.personality || "—");
   const personalityEffect = typeof formatPersonalityEffect === "function" ? formatPersonalityEffect(digimon.personality) : "";
   const traitLabel = typeof formatTraitName === "function" ? formatTraitName(digimon.trait) : (digimon.trait || "—");
@@ -397,7 +396,7 @@ function storageOpenInfoModal(digimonId) {
             <span class="storage-collection-badge ${registered ? "storage-collection-badge-registered" : "storage-collection-badge-available"}">${registered ? "✓ Registrado" : "Não registrado"}</span>
             ${digimon.locked ? '<span class="storage-locked-badge">🔒 Bloqueado</span>' : ""}
           </div>
-          <p class="storage-info-identity-meta">Lv.${level} <span>•</span> ${escapeHtml(stageLabel)} <span>•</span> ${escapeHtml(typeLabel)}</p>
+          <p class="storage-info-identity-meta">Lv.${level} <span>•</span> ${escapeHtml(stageLabel)}</p>
           <p class="storage-info-identity-note">${digimon.rarityChangedByDie ? "Raridade alterada pelo Dado de Raridade." : "Digimon armazenado na sua coleção."}</p>
         </div>
       </div>
@@ -433,7 +432,7 @@ function storageOpenInfoModal(digimonId) {
           ${storageRenderInfoCombatStat("DEF", baseDefense, equipDefense, clanDefense, "storage-info-combat-def")}
         </div>
       </section>
-      <div class="storage-info-modal-footer"><span>Bits: <strong>${formatNumber(digimon.bits)}</strong></span><button type="button" class="btn-secondary" onclick="storageCloseInfoModal()">Fechar</button></div>
+      <div class="storage-info-modal-footer"><button type="button" class="btn-secondary" onclick="storageCloseInfoModal()">Fechar</button></div>
     </div>
   `;
   overlay.addEventListener("click", event => { if (event.target === overlay) storageCloseInfoModal(); });
