@@ -201,7 +201,7 @@ function incubRenderSlot(slot) {
       </div>
 
       <div class="mt-4">
-        <p class="text-2xl font-bold ${done ? "text-green-400" : "text-amber-400"}" id="incub-timer-${slotNumber}">
+        <p class="text-2xl font-bold text-center w-full ${done ? "text-green-400" : "text-amber-400"}" id="incub-timer-${slotNumber}">
           ${done ? "Pronta para chocar!" : incubFormatTime(remaining)}
         </p>
         ${done ? "" : `<div class="w-full bg-slate-800 rounded-full h-2 mt-3"><div class="h-2 rounded-full" style="background:#f59e0b;width:${incubProgress(incubation)}%" id="incub-bar-${slotNumber}"></div></div>`}
@@ -243,7 +243,7 @@ function incubMarkReady(slotNumber, incubationId) {
   if (!timerEl || !actionEl || !slotEl) return;
 
   timerEl.textContent = "Pronta para chocar!";
-  timerEl.className = "text-2xl font-bold text-green-400";
+  timerEl.className = "text-2xl font-bold text-center w-full text-green-400";
   slotEl.classList.remove("border-amber-800", "bg-amber-950/10");
   slotEl.classList.add("border-green-800", "bg-green-950/10");
   actionEl.innerHTML = incubClaimButton(incubationId);
