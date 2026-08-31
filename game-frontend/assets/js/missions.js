@@ -24,6 +24,10 @@ function missionNumber(mission) {
   return match ? Number(match[1]) : -1;
 }
 
+function missionIdentity(mission) {
+  return String(mission && (mission.id || mission.missionId) || "");
+}
+
 function compareMissionsByDescendingProgression(a, b) {
   const requiredLevelA = Number(a.requiredLevel) || 0;
   const requiredLevelB = Number(b.requiredLevel) || 0;
@@ -33,9 +37,19 @@ function compareMissionsByDescendingProgression(a, b) {
   const missionNumberB = missionNumber(b);
   if (missionNumberA !== missionNumberB) return missionNumberB - missionNumberA;
 
-  const missionIdA = String(a.id || a.missionId || "");
-  const missionIdB = String(b.id || b.missionId || "");
-  return missionIdB.localeCompare(missionIdA);
+  return missionIdentity(b).localeCompare(missionIdentity(a));
+}
+
+function compareMissionsByAscendingProgression(a, b) {
+  const requiredLevelA = Number(a.requiredLevel) || 0;
+  const requiredLevelB = Number(b.requiredLevel) || 0;
+  if (requiredLevelA !== requiredLevelB) return requiredLevelA - requiredLevelB;
+
+  const missionNumberA = missionNumber(a);
+  const missionNumberB = missionNumber(b);
+  if (missionNumberA !== missionNumberB) return missionNumberA - missionNumberB;
+
+  return missionIdentity(a).localeCompare(missionIdentity(b));
 }
 
 async function renderMissionsPage() {
@@ -789,11 +803,15 @@ function renderMissionCards(missions, area) {
     return;
   }
 
-  const sortedMissions = [...missions].sort(compareMissionsByDescendingProgression);
-
+    const sortedMissions = [...missions].sort(compareMissionsByDescendingProgression);
+  const progressionNumbers = new Map(
+    [...missions]
+      .sort(compareMissionsByAscendingProgression)
+      .map((mission, index) => [missionIdentity(mission), index + 1])
+  );
   container.innerHTML = sortedMissions.map((m, index) => `
     <article class="mission-detail-card">
-      <div class="mission-detail-topline"><p class="progression-eyebrow progression-eyebrow-cyan">Missão ${String(index + 1).padStart(2, "0")}</p><span class="mission-detail-code">${escapeHtml(missionFriendlyCode(m.id || "OPS"))}</span></div>
+      <div class="mission-detail-topline"><p class="progression-eyebrow progression-eyebrow-cyan">Missão ${String(progressionNumbers.get(missionIdentity(m)) || index + 1).padStart(2, "0")}</p><span class="mission-detail-code">${escapeHtml(missionFriendlyCode(m.id || "OPS"))}</span></div>
       <div class="mission-detail-heading"><div><h3 class="mission-detail-title">${escapeHtml(formatMissionName(m))}</h3><span class="mission-detail-status"><span></span> Operação disponível</span></div><span class="mission-detail-arrow" aria-hidden="true">✦</span></div>
       <p class="mission-detail-description">${escapeHtml(m.description) || "Sem descrição disponível."}</p>
       <div class="mission-detail-reward-row"><span class="mission-detail-reward-label">Retorno previsto</span><span class="mission-detail-reward-xp">+${m.xpReward} XP base</span>${m.bitsReward > 0 ? `<span class="mission-detail-reward-bits">+${m.bitsReward} bits base</span>` : ""}</div>
