@@ -790,6 +790,77 @@ body {
 .clan-mission-ranking { padding: 1rem; }
 .clan-mission-ranking-list { margin-top: 0.65rem; }
 .clan-mission-ranking-row { gap: 0.65rem; }
+.clan-eyebrow-red { color: #fca5a5; }
+.clan-raid-shell { margin-top: 0.2rem; }
+.clan-raid-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 0.8rem; }
+.clan-raid-subtitle { max-width: 42rem; margin-top: 0.3rem; color: #94a3b8; font-size: 0.68rem; line-height: 1.45; }
+.clan-raid-status { display: inline-flex; align-items: center; gap: 0.4rem; flex: 0 0 auto; padding: 0.45rem 0.65rem; border: 1px solid rgba(248, 113, 113, 0.28); border-radius: 9999px; background: rgba(127, 29, 29, 0.18); color: #fca5a5; font-size: 0.59rem; font-weight: 850; white-space: nowrap; }
+.clan-raid-status--success { border-color: rgba(74, 222, 128, 0.28); background: rgba(20, 83, 45, 0.2); color: #86efac; }
+.clan-raid-stage { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(18rem, 0.7fr); gap: 0.7rem; align-items: stretch; }
+.clan-raid-boss-card, .clan-raid-command-card, .clan-raid-panel { min-width: 0; border: 1px solid rgba(51, 65, 85, 0.78); border-radius: 0.9rem; background: rgba(15, 23, 42, 0.58); }
+.clan-raid-boss-card { padding: 1rem; border-color: rgba(248, 113, 113, 0.26); background: radial-gradient(circle at 12% 15%, rgba(127, 29, 29, 0.28), transparent 42%), linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.72)); }
+.clan-raid-boss-intro { display: flex; align-items: center; gap: 0.85rem; }
+.clan-raid-boss-portrait { display: grid; width: 5.2rem; height: 5.2rem; flex: 0 0 auto; place-items: center; overflow: hidden; border: 1px solid rgba(248, 113, 113, 0.36); border-radius: 1rem; background: radial-gradient(circle, rgba(248, 113, 113, 0.24), rgba(15, 23, 42, 0.9)); color: #fca5a5; font-size: 2.3rem; box-shadow: 0 0 1.5rem rgba(248, 113, 113, 0.12); }
+.clan-raid-boss-portrait img { width: 100%; height: 100%; object-fit: cover; }
+.clan-raid-boss-copy { min-width: 0; }
+.clan-raid-boss-copy h3 { margin-top: 0.22rem; overflow: hidden; color: #f8fafc; font-size: 1rem; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+.clan-raid-boss-copy > span { display: block; margin-top: 0.28rem; color: #fda4af; font-size: 0.62rem; }
+.clan-raid-health-block { margin-top: 1rem; padding-top: 0.9rem; border-top: 1px solid rgba(248, 113, 113, 0.18); }
+.clan-raid-health-heading, .clan-raid-health-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.7rem; }
+.clan-raid-health-heading { color: #cbd5e1; font-size: 0.65rem; font-weight: 800; }
+.clan-raid-health-heading strong { color: #fda4af; font-size: 0.72rem; }
+.clan-raid-health-heading small { color: #64748b; font-size: 0.58rem; font-weight: 650; }
+.clan-raid-health-track { height: 0.75rem; margin-top: 0.55rem; overflow: hidden; border: 1px solid rgba(248, 113, 113, 0.22); border-radius: 9999px; background: rgba(2, 6, 23, 0.75); }
+.clan-raid-health-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ef4444, #f97316); box-shadow: 0 0 0.85rem rgba(239, 68, 68, 0.3); transition: width 0.3s ease; }
+.clan-raid-health-track span.clan-raid-health-fill--success { background: linear-gradient(90deg, #22c55e, #14b8a6); box-shadow: 0 0 0.85rem rgba(34, 197, 94, 0.25); }
+.clan-raid-health-meta { margin-top: 0.38rem; color: #64748b; font-size: 0.57rem; }
+.clan-raid-contribution-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; margin-top: 1rem; }
+.clan-raid-contribution-grid > div { min-width: 0; padding: 0.6rem 0.65rem; border: 1px solid rgba(51, 65, 85, 0.68); border-radius: 0.65rem; background: rgba(2, 6, 23, 0.28); }
+.clan-raid-contribution-grid span, .clan-raid-contribution-grid small { display: block; color: #64748b; font-size: 0.53rem; }
+.clan-raid-contribution-grid strong { display: block; margin: 0.28rem 0 0.15rem; overflow: hidden; color: #67e8f9; font-size: 0.9rem; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+.clan-raid-contribution-grid small { color: #475569; }
+.clan-raid-command-card { display: flex; flex-direction: column; padding: 1rem; border-color: rgba(34, 211, 238, 0.24); background: linear-gradient(145deg, rgba(8, 47, 73, 0.34), rgba(15, 23, 42, 0.7)); }
+.clan-raid-command-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+.clan-raid-command-heading h3 { margin-top: 0.25rem; color: #f1f5f9; font-size: 1rem; font-weight: 900; }
+.clan-raid-command-icon { display: grid; width: 2.4rem; height: 2.4rem; place-items: center; border: 1px solid rgba(34, 211, 238, 0.3); border-radius: 0.75rem; background: rgba(8, 145, 178, 0.16); color: #67e8f9; font-size: 1.2rem; }
+.clan-raid-command-copy { margin-top: 0.7rem; color: #94a3b8; font-size: 0.66rem; line-height: 1.5; }
+.clan-raid-cooldown-block { display: flex; align-items: center; justify-content: space-between; gap: 0.65rem; margin-top: auto; padding: 0.7rem; border: 1px solid rgba(34, 211, 238, 0.18); border-radius: 0.7rem; background: rgba(2, 6, 23, 0.3); }
+.clan-raid-cooldown-label { color: #67e8f9; font-size: 0.55rem; font-weight: 850; letter-spacing: 0.08em; text-transform: uppercase; }
+.clan-raid-cooldown-block p { margin-top: 0.25rem; color: #64748b; font-size: 0.56rem; }
+.clan-raid-cooldown-block > strong { flex: 0 0 auto; font-size: 0.65rem; text-align: right; }
+.clan-raid-cooldown-block > strong.is-ready { color: #86efac; }
+.clan-raid-cooldown-block > strong.is-waiting { color: #fcd34d; }
+.clan-raid-attack-btn { width: 100%; min-height: 2.7rem; margin-top: 0.65rem; font-size: 0.75rem; }
+.clan-raid-complete-block { display: flex; align-items: center; gap: 0.6rem; margin-top: auto; padding: 0.75rem; border: 1px solid rgba(74, 222, 128, 0.22); border-radius: 0.7rem; background: rgba(20, 83, 45, 0.17); color: #86efac; font-size: 0.68rem; font-weight: 800; line-height: 1.35; }
+.clan-raid-complete-block small { color: #94a3b8; font-size: 0.57rem; font-weight: 500; }
+.clan-raid-complete-icon, .clan-raid-summary-icon { display: grid; width: 1.75rem; height: 1.75rem; flex: 0 0 auto; place-items: center; border-radius: 0.55rem; background: rgba(34, 197, 94, 0.16); color: #86efac; font-weight: 900; }
+.clan-raid-support-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 0.7rem; margin-top: 0.7rem; }
+.clan-raid-panel { padding: 1rem; }
+.clan-raid-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.7rem; }
+.clan-raid-ranking-list, .clan-raid-attacks-list { margin-top: 0.65rem; }
+.clan-raid-ranking-row { display: grid; grid-template-columns: 2rem minmax(0, 1fr) auto; align-items: center; gap: 0.65rem; padding: 0.6rem 0; border-top: 1px solid rgba(51, 65, 85, 0.58); }
+.clan-raid-rank { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border: 1px solid rgba(71, 85, 105, 0.72); border-radius: 0.55rem; color: #94a3b8; font-size: 0.68rem; font-weight: 900; }
+.clan-raid-rank--1 { border-color: rgba(250, 204, 21, 0.35); background: rgba(161, 98, 7, 0.18); color: #fcd34d; }
+.clan-raid-rank--2 { border-color: rgba(203, 213, 225, 0.3); color: #cbd5e1; }
+.clan-raid-rank--3 { border-color: rgba(251, 146, 60, 0.3); color: #fdba74; }
+.clan-raid-ranking-identity { min-width: 0; }
+.clan-raid-ranking-identity strong, .clan-raid-ranking-identity span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clan-raid-ranking-identity strong { color: #e2e8f0; font-size: 0.69rem; }
+.clan-raid-ranking-identity span { margin-top: 0.18rem; color: #64748b; font-size: 0.54rem; }
+.clan-raid-ranking-damage { color: #67e8f9; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.65rem; }
+.clan-raid-attack-row { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.65rem 0; border-top: 1px solid rgba(51, 65, 85, 0.58); color: #cbd5e1; font-size: 0.65rem; }
+.clan-raid-attack-row strong { color: #67e8f9; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.62rem; }
+.clan-raid-defeat-summary { margin-top: 0.7rem; padding: 0.75rem; border: 1px solid rgba(74, 222, 128, 0.22); border-radius: 0.75rem; background: rgba(20, 83, 45, 0.12); }
+.clan-raid-summary-heading { display: flex; align-items: center; gap: 0.5rem; }
+.clan-raid-summary-heading p { color: #bbf7d0; font-size: 0.68rem; font-weight: 850; }
+.clan-raid-summary-heading span:not(.clan-raid-summary-icon) { color: #64748b; font-size: 0.54rem; }
+.clan-raid-summary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem; margin-top: 0.65rem; }
+.clan-raid-summary-grid > div { min-width: 0; padding: 0.5rem; border-radius: 0.5rem; background: rgba(2, 6, 23, 0.28); }
+.clan-raid-summary-grid span, .clan-raid-summary-grid small { display: block; color: #64748b; font-size: 0.49rem; }
+.clan-raid-summary-grid strong { display: block; margin-top: 0.2rem; overflow: hidden; color: #e2e8f0; font-size: 0.61rem; text-overflow: ellipsis; white-space: nowrap; }
+.clan-raid-summary-grid small { margin-top: 0.15rem; color: #67e8f9; }
+.clan-raid-next-cycle { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.4rem; padding-top: 0.5rem; border-top: 1px solid rgba(74, 222, 128, 0.15); color: #64748b; font-size: 0.52rem; }
+.clan-raid-next-cycle strong { color: #fcd34d; font-size: 0.56rem; text-align: right; }
 .clan-section-count { display: grid; min-width: 1.9rem; height: 1.9rem; padding: 0 0.45rem; place-items: center; border: 1px solid rgba(34, 211, 238, 0.2); border-radius: 0.6rem; background: rgba(8, 145, 178, 0.1); color: #67e8f9; font-size: 0.72rem; font-weight: 850; }
 .clan-invite-card { margin-bottom: 1rem; padding: 1rem; border: 1px solid rgba(34, 211, 238, 0.18); border-radius: 0.9rem; background: rgba(8, 47, 73, 0.22); }
 .clan-inline-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.6rem; }
@@ -889,6 +960,8 @@ body {
 }
 @media (min-width: 70rem) {
   .clan-list-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .clan-raid-stage { grid-template-columns: minmax(0, 1.38fr) minmax(20rem, 0.62fr); }
+
   .clan-missions-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .clan-upgrades-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .clan-storage-items-panel #clan-storage-items-list > div:last-child { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -897,7 +970,12 @@ body {
   .clan-page-container { max-width: 30rem; padding: 1rem 1rem 5rem; }
   .clan-page-header { align-items: stretch; flex-direction: column; gap: 1.2rem; min-height: 0; }
   .clan-header-action { width: 100%; min-width: 0; justify-content: flex-start; }
-  .clan-list-layout, .clan-detail-layout { display: block; }
+  .clan-list-layout, .clan-detail-layout, .clan-raid-stage, .clan-raid-support-grid { display: block; }
+  .clan-raid-heading { flex-direction: column; gap: 0.6rem; }
+  .clan-raid-status { align-self: flex-start; }
+  .clan-raid-command-card, .clan-raid-panel { margin-top: 0.7rem; }
+  .clan-raid-cooldown-block { margin-top: 0.9rem; }
+  .clan-raid-summary-grid { grid-template-columns: 1fr 1fr; }
   .clan-list-aside, .clan-detail-rail { position: static; margin-top: 1rem; }
   .clan-list-grid, .clan-upgrades-grid, .clan-missions-grid { grid-template-columns: 1fr; }
   .clan-mission-card { min-height: 0; }

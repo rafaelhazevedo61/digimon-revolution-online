@@ -1114,79 +1114,87 @@ async function clanLoadRaid() {
       && !defeated
       && Number.isFinite(nextAttackAt)
       && nextAttackAt > Date.now();
-    const cooldownInfoHtml = cooldownEnabled
-      ? `<p class="text-xs text-slate-500 mb-2 text-center">Intervalo entre ataques: ${cooldownMinutes} minuto(s)</p>`
-      : `<p class="text-xs text-green-400 mb-2 text-center">Intervalo desativado pelo administrador</p>`;
+    const formatNumber = (value) => Number(value || 0).toLocaleString("pt-BR");
+    const cooldownCopy = cooldownEnabled
+      ? `Intervalo de ${cooldownMinutes} minuto(s) entre ataques.`
+      : "Intervalo desativado pelo administrador.";
 
     let rankingHtml = "";
     if (raid.ranking && raid.ranking.length > 0) {
-      const rankColor = (index) => {
-        if (index === 0) return "text-yellow-400";
-        if (index === 1) return "text-slate-300";
-        if (index === 2) return "text-amber-600";
-        return "text-slate-400";
-      };
       rankingHtml = `
-        <div class="card mt-4 border-cyan-900">
-          <p class="font-bold mb-2 text-sm">Classificação de Dano</p>
-          ${raid.ranking.map((entry, i) => `
-            <div class="flex justify-between items-center py-1.5 border-b border-slate-800 last:border-0">
-              <div class="flex items-center gap-2">
-                <span class="font-bold w-5 ${rankColor(i)}">${entry.position}.</span>
-                <span class="text-sm text-slate-200">${escapeHtml(entry.username)}</span>
+        <section class="clan-raid-panel clan-raid-ranking-panel">
+          <div class="clan-raid-panel-heading"><div><p class="clan-eyebrow clan-eyebrow-cyan">Impacto da equipe</p><h3 class="clan-section-title clan-section-title-sm">Classificação de dano</h3></div><span class="clan-section-mark">✦</span></div>
+          <div class="clan-raid-ranking-list">
+            ${raid.ranking.map((entry, i) => `
+              <div class="clan-raid-ranking-row">
+                <span class="clan-raid-rank ${i < 3 ? `clan-raid-rank--${i + 1}` : ""}">${entry.position || i + 1}</span>
+                <div class="clan-raid-ranking-identity"><strong>${escapeHtml(entry.username)}</strong><span>Contribuição individual</span></div>
+                <strong class="clan-raid-ranking-damage">${formatNumber(entry.totalDamage)}</strong>
               </div>
-              <span class="text-xs text-cyan-400 font-mono">${entry.totalDamage.toLocaleString()}</span>
-            </div>
-          `).join("")}
-        </div>
+            `).join("")}
+          </div>
+        </section>
       `;
     }
 
     let attacksHtml = "";
     if (raid.recentAttacks && raid.recentAttacks.length > 0) {
       attacksHtml = `
-        <div class="card mt-4 border-slate-800">
-          <p class="font-bold mb-2 text-sm">Últimos ataques</p>
-          ${raid.recentAttacks.map(a => `
-            <div class="flex justify-between items-center py-1 border-b border-slate-800 last:border-0">
-              <span class="text-sm text-slate-200">${escapeHtml(a.username)}</span>
-              <span class="text-xs text-cyan-400 font-mono">${a.damage.toLocaleString()}</span>
-            </div>
-          `).join("")}
-        </div>
+        <section class="clan-raid-panel clan-raid-attacks-panel">
+          <div class="clan-raid-panel-heading"><div><p class="clan-eyebrow">Registro de combate</p><h3 class="clan-section-title clan-section-title-sm">Últimos ataques</h3></div><span class="clan-section-count">${raid.recentAttacks.length}</span></div>
+          <div class="clan-raid-attacks-list">
+            ${raid.recentAttacks.map(a => `
+              <div class="clan-raid-attack-row"><span>${escapeHtml(a.username)}</span><strong>+${formatNumber(a.damage)}</strong></div>
+            `).join("")}
+          </div>
+        </section>
       `;
     }
 
-    container.innerHTML = `
-      <h3 class="font-bold mb-2">Incursão de Clã</h3>
-
-      <div class="card mb-3">
-        <div class="flex items-center gap-3 mb-3">
-          <div class="w-16 h-16 rounded-lg flex items-center justify-center text-2xl shrink-0" style="background:#334155;color:#94a3b8">
-            ${raid.bossImageUrl ? `<img src="${escapeHtml(raid.bossImageUrl)}" class="w-16 h-16 rounded-lg object-cover" alt="" onerror="this.style.display='none'">` : "👾"}
-          </div>
-          <div>
-            <p class="font-bold">${escapeHtml(raid.bossName)}</p>
-            <p class="text-xs ${defeated ? 'text-green-400' : 'text-slate-400'}">${defeated ? 'Derrotado' : 'Em batalha'}</p>
-          </div>
+    const defeatSummary = raid.defeatSummary;
+    const defeatSummaryHtml = defeated && defeatSummary ? `
+      <div class="clan-raid-defeat-summary">
+        <div class="clan-raid-summary-heading"><span class="clan-raid-summary-icon">✓</span><div><p>Vitória confirmada</p><span>Resumo da última incursão</span></div></div>
+        <div class="clan-raid-summary-grid">
+          <div><span>Golpe final</span><strong>${escapeHtml(defeatSummary.finalBlowUsername || "Desconhecido")}</strong></div>
+          <div><span>Maior dano</span><strong>${escapeHtml(defeatSummary.topDamageUsername || "Desconhecido")}</strong><small>${formatNumber(defeatSummary.topDamage)} de dano</small></div>
+          <div><span>Ataques totais</span><strong>${formatNumber(defeatSummary.totalAttacks)}</strong></div>
+          <div><span>Tempo vivo</span><strong>${formatBossAliveDuration(defeatSummary.aliveDurationSeconds)}</strong></div>
         </div>
-
-        <div class="flex justify-between text-xs mb-1">
-          <span class="text-slate-400">HP</span>
-          <span class="text-slate-400">${raid.remainingHp.toLocaleString()} / ${raid.maxHp.toLocaleString()}</span>
-        </div>
-        <div class="w-full bg-slate-800 rounded-full h-2.5 mb-4">
-          <div class="${defeated ? 'bg-green-500' : 'bg-red-500'} h-2.5 rounded-full" style="width:${percent}%"></div>
-        </div>
-
-        <p class="text-xs text-slate-400 mb-3">Seu dano: <span class="text-cyan-400">${raid.myTotalDamage.toLocaleString()}</span></p>
-
-        ${!defeated ? `${cooldownInfoHtml}<button id="clan-raid-attack-button" class="btn-primary w-full" onclick="clanAttackRaid()"${cooldownActive ? " disabled" : ""}>${cooldownActive ? "Próximo ataque em <span id=\"clan-raid-countdown\">--:--</span>" : "Atacar Incursão"}</button>` : ""}
-        ${defeated ? `<p class="text-xs text-green-400 text-center">Incursão derrotada. O próximo renascimento ocorrerá uma hora após a derrota.</p>${raid.defeatSummary ? `<div class="mt-3 rounded-lg border border-green-800/70 bg-green-950/20 p-3 text-xs"><p class="font-bold text-green-300 mb-2">Resumo da derrota</p><div class="grid grid-cols-2 gap-2"><div class="rounded-md bg-slate-900/60 p-2"><p class="text-[10px] uppercase text-slate-500">Golpe final</p><p class="mt-1 font-semibold text-white">${escapeHtml(raid.defeatSummary.finalBlowUsername || "Desconhecido")}</p></div><div class="rounded-md bg-slate-900/60 p-2"><p class="text-[10px] uppercase text-slate-500">Maior dano</p><p class="mt-1 font-semibold text-white">${escapeHtml(raid.defeatSummary.topDamageUsername || "Desconhecido")}<br><span class="text-cyan-300">${Number(raid.defeatSummary.topDamage || 0).toLocaleString("pt-BR")} de dano</span></p></div><div class="rounded-md bg-slate-900/60 p-2"><p class="text-[10px] uppercase text-slate-500">Ataques totais</p><p class="mt-1 font-semibold text-white">${Number(raid.defeatSummary.totalAttacks || 0).toLocaleString("pt-BR")}</p></div><div class="rounded-md bg-slate-900/60 p-2"><p class="text-[10px] uppercase text-slate-500">Tempo vivo</p><p class="mt-1 font-semibold text-white">${formatBossAliveDuration(raid.defeatSummary.aliveDurationSeconds)}</p></div><div class="col-span-2 rounded-md bg-slate-900/60 p-2"><p class="text-[10px] uppercase text-slate-500">Próximo ciclo</p><p class="mt-1 font-semibold text-amber-300">${formatBossDateTime(raid.defeatSummary.nextCycleAt)}</p></div></div></div>` : ""}` : ""}
+        <div class="clan-raid-next-cycle"><span>Próximo ciclo</span><strong>${formatBossDateTime(defeatSummary.nextCycleAt)}</strong></div>
       </div>
+    ` : "";
 
-      ${rankingHtml}
-      ${attacksHtml}
+    container.innerHTML = `
+      <div class="clan-raid-shell">
+        <header class="clan-raid-heading">
+          <div><p class="clan-eyebrow clan-eyebrow-red">Confronto cooperativo</p><h2 class="clan-section-title">Incursão de Clã</h2><p class="clan-raid-subtitle">Concentre o dano da equipe no mesmo alvo e acompanhe a evolução da batalha.</p></div>
+          <span class="clan-raid-status ${defeated ? "clan-raid-status--success" : "clan-raid-status--battle"}"><span class="clan-status-dot"></span>${defeated ? "Incursão concluída" : "Batalha em andamento"}</span>
+        </header>
+
+        <div class="clan-raid-stage">
+          <section class="clan-raid-boss-card">
+            <div class="clan-raid-boss-intro">
+              <div class="clan-raid-boss-portrait">${raid.bossImageUrl ? `<img src="${escapeHtml(raid.bossImageUrl)}" alt="${escapeHtml(raid.bossName || "Chefe da incursão")}" onerror="this.style.display='none'">` : "👾"}</div>
+              <div class="clan-raid-boss-copy"><p class="clan-eyebrow">Alvo da incursão</p><h3>${escapeHtml(raid.bossName)}</h3><span>${defeated ? "Ameaça neutralizada pela equipe" : "Chefe ativo · Ataques coordenados"}</span></div>
+            </div>
+            <div class="clan-raid-health-block">
+              <div class="clan-raid-health-heading"><span>Vitalidade do chefe</span><strong>${formatNumber(raid.remainingHp)} <small>/ ${formatNumber(raid.maxHp)} HP</small></strong></div>
+              <div class="clan-raid-health-track" role="progressbar" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100" aria-label="${percent}% de vida restante"><span class="${defeated ? "clan-raid-health-fill--success" : ""}" style="width:${percent}%"></span></div>
+              <div class="clan-raid-health-meta"><span>${percent}% restante</span><span>${defeated ? "Recompensas processadas" : "Não deixe a barra estabilizar"}</span></div>
+            </div>
+            <div class="clan-raid-contribution-grid"><div><span>Sua contribuição</span><strong>${formatNumber(raid.myTotalDamage)}</strong><small>dano total causado</small></div><div><span>Registro recente</span><strong>${formatNumber(raid.recentAttacks?.length || 0)}</strong><small>ataques no histórico</small></div></div>
+          </section>
+
+          <section class="clan-raid-command-card">
+            <div class="clan-raid-command-heading"><div><p class="clan-eyebrow clan-eyebrow-cyan">Centro de comando</p><h3>${defeated ? "Incursão finalizada" : "Pronto para atacar?"}</h3></div><span class="clan-raid-command-icon">ϟ</span></div>
+            <p class="clan-raid-command-copy">${defeated ? "A equipe venceu este confronto. Reúna seus aliados para o próximo ciclo." : "Cada ataque reduz a vitalidade do chefe e registra sua contribuição no ranking."}</p>
+            ${!defeated ? `<div class="clan-raid-cooldown-block"><div><span class="clan-raid-cooldown-label">Janela de ataque</span><p>${cooldownCopy}</p></div><strong class="${cooldownActive ? "is-waiting" : "is-ready"}">${cooldownActive ? `Aguardar <span id="clan-raid-countdown">--:--</span>` : "Disponível agora"}</strong></div><button id="clan-raid-attack-button" class="btn-primary clan-raid-attack-btn" onclick="clanAttackRaid()"${cooldownActive ? " disabled" : ""}>${cooldownActive ? "Aguardar janela" : "Atacar chefe"}</button>` : `<div class="clan-raid-complete-block"><span class="clan-raid-complete-icon">✓</span><p>Incursão derrotada.<br><small>O próximo renascimento ocorrerá uma hora após a derrota.</small></p></div>${defeatSummaryHtml}`}
+          </section>
+        </div>
+
+        ${rankingHtml || attacksHtml ? `<div class="clan-raid-support-grid">${rankingHtml}${attacksHtml}</div>` : ""}
+      </div>
     `;
 
     if (cooldownActive) {
