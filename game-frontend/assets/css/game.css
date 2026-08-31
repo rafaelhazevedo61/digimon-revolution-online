@@ -3040,8 +3040,10 @@ body {
 .world-boss-cooldown-info-safe { color: #6ee7b7; }
 
 .world-boss-attack-button {
+  display: block;
+  width: min(100%, 24rem);
   min-height: 2.85rem;
-  margin-top: 0.1rem;
+  margin: 0.1rem auto 0;
   border-radius: 0.8rem;
   background: linear-gradient(135deg, #be123c, #e11d48 55%, #f97316);
   box-shadow: 0 0.55rem 1.2rem rgba(190, 24, 93, 0.2);
