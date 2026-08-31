@@ -2653,3 +2653,495 @@ body {
   .more-menu-item,
   .more-menu-arrow { transition: none; }
 }
+
+
+/* ===================== World Boss ===================== */
+.world-boss-page {
+  max-width: 68rem;
+  padding-top: 1.25rem;
+}
+
+.world-boss-page-header {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 1.15rem;
+  padding: 1.15rem 1.25rem 1.35rem;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(circle at 90% 14%, rgba(239, 68, 68, 0.2), transparent 32%),
+    radial-gradient(circle at 70% 110%, rgba(124, 58, 237, 0.16), transparent 38%),
+    linear-gradient(135deg, rgba(30, 15, 28, 0.98), rgba(15, 23, 42, 0.9));
+  box-shadow: 0 1rem 2.5rem rgba(2, 6, 23, 0.22);
+}
+
+.world-boss-page-header::before,
+.world-boss-page-header::after {
+  position: absolute;
+  border: 1px solid rgba(248, 113, 113, 0.11);
+  border-radius: 999px;
+  content: "";
+  pointer-events: none;
+}
+
+.world-boss-page-header::before {
+  right: -3.5rem;
+  top: -4.8rem;
+  width: 12rem;
+  height: 12rem;
+}
+
+.world-boss-page-header::after {
+  right: 1.5rem;
+  bottom: -5rem;
+  width: 9rem;
+  height: 9rem;
+}
+
+.world-boss-back {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.72rem;
+  transition: color 160ms ease-out, transform 160ms ease-out;
+}
+
+.world-boss-back:hover {
+  color: #fda4af;
+  transform: translateX(-0.1rem);
+}
+
+.world-boss-kicker {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 1.1rem;
+  color: #fda4af;
+  font-size: 0.63rem;
+  font-weight: 850;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.world-boss-kicker-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: #fb7185;
+  box-shadow: 0 0 0 0.25rem rgba(251, 113, 133, 0.12);
+}
+
+.world-boss-heading-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.7rem;
+}
+
+.world-boss-page-title {
+  margin: 0;
+  color: #fff1f2;
+  font-size: clamp(1.65rem, 4vw, 2.35rem);
+  font-weight: 950;
+  letter-spacing: -0.045em;
+}
+
+.world-boss-page-subtitle {
+  max-width: 38rem;
+  margin: 0.4rem 0 0;
+  color: #cbd5e1;
+  font-size: 0.79rem;
+  line-height: 1.55;
+}
+
+.world-boss-header-mark {
+  display: grid;
+  width: 3.3rem;
+  height: 3.3rem;
+  flex: 0 0 3.3rem;
+  place-items: center;
+  border: 1px solid rgba(251, 113, 133, 0.35);
+  border-radius: 1rem;
+  background: rgba(127, 29, 29, 0.22);
+  color: #fda4af;
+  font-size: 1.55rem;
+  transform: rotate(-8deg);
+}
+
+.world-boss-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid #1e293b;
+  border-radius: 1.1rem;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.world-boss-loading-hero,
+.world-boss-loading-line {
+  border-radius: 0.65rem;
+  background: linear-gradient(90deg, #1e293b, #334155, #1e293b);
+  background-size: 200% 100%;
+  animation: world-boss-loading-shimmer 1.5s linear infinite;
+}
+
+.world-boss-loading-hero { height: 7rem; }
+.world-boss-loading-line { width: 62%; height: 0.75rem; }
+.world-boss-loading-line-wide { width: 86%; }
+
+@keyframes world-boss-loading-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+.world-boss-combat-card {
+  position: relative;
+  overflow: hidden;
+  padding: 1.15rem;
+  border: 1px solid rgba(248, 113, 113, 0.24);
+  border-radius: 1.15rem;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(239, 68, 68, 0.15), transparent 28%),
+    linear-gradient(145deg, rgba(30, 15, 28, 0.96), rgba(15, 23, 42, 0.88));
+  box-shadow: 0 1rem 2rem rgba(2, 6, 23, 0.22);
+}
+
+.world-boss-combat-card.is-defeated {
+  border-color: rgba(52, 211, 153, 0.3);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.14), transparent 30%),
+    linear-gradient(145deg, rgba(6, 38, 35, 0.92), rgba(15, 23, 42, 0.9));
+}
+
+.world-boss-combat-topline,
+.world-boss-hp-heading,
+.world-boss-hp-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.world-boss-combat-topline { margin-bottom: 1.15rem; }
+
+.world-boss-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid rgba(248, 113, 113, 0.24);
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.world-boss-status-active { background: rgba(127, 29, 29, 0.24); color: #fda4af; }
+.world-boss-status-defeated { border-color: rgba(52, 211, 153, 0.26); background: rgba(6, 78, 59, 0.24); color: #6ee7b7; }
+
+.world-boss-live-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.world-boss-cycle-label {
+  color: #64748b;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.world-boss-identity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.world-boss-portrait {
+  position: relative;
+  display: grid;
+  width: 5.7rem;
+  height: 5.7rem;
+  flex: 0 0 5.7rem;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(251, 113, 133, 0.4);
+  border-radius: 1.2rem;
+  background: radial-gradient(circle, rgba(127, 29, 29, 0.58), rgba(2, 6, 23, 0.92));
+  box-shadow: 0 0.75rem 1.5rem rgba(2, 6, 23, 0.3);
+}
+
+.world-boss-portrait-ring {
+  position: absolute;
+  inset: 0.28rem;
+  border: 1px solid rgba(253, 164, 175, 0.18);
+  border-radius: 0.95rem;
+  pointer-events: none;
+}
+
+.world-boss-portrait-image {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.world-boss-portrait-fallback {
+  position: absolute;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.world-boss-portrait-image + .world-boss-portrait-fallback { display: none; }
+.world-boss-portrait.has-fallback .world-boss-portrait-fallback { display: block; }
+
+.world-boss-identity-copy { min-width: 0; }
+.world-boss-identity-eyebrow,
+.world-boss-stat-label,
+.world-boss-panel-kicker {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.world-boss-name {
+  overflow: hidden;
+  margin: 0.25rem 0 0;
+  color: #fff1f2;
+  font-size: clamp(1.1rem, 3.5vw, 1.45rem);
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.world-boss-identity-description {
+  margin: 0.35rem 0 0;
+  color: #94a3b8;
+  font-size: 0.73rem;
+  line-height: 1.45;
+}
+
+.world-boss-hp-block {
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(71, 85, 105, 0.42);
+}
+
+.world-boss-hp-heading {
+  color: #cbd5e1;
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.world-boss-hp-heading strong {
+  color: #fda4af;
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.world-boss-hp-heading small {
+  color: #64748b;
+  font-size: 0.62rem;
+  font-weight: 650;
+}
+
+.world-boss-hp-track {
+  height: 0.72rem;
+  margin-top: 0.55rem;
+  overflow: hidden;
+  border: 1px solid rgba(127, 29, 29, 0.65);
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.72);
+}
+
+.world-boss-hp-fill {
+  height: 100%;
+  min-width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #be123c, #ef4444, #fb7185);
+  box-shadow: 0 0 0.8rem rgba(239, 68, 68, 0.35);
+  transition: width 300ms ease-out;
+}
+
+.world-boss-hp-fill.is-defeated {
+  background: linear-gradient(90deg, #059669, #34d399);
+  box-shadow: 0 0 0.8rem rgba(52, 211, 153, 0.25);
+}
+
+.world-boss-hp-foot {
+  margin-top: 0.45rem;
+  color: #64748b;
+  font-size: 0.61rem;
+}
+
+.world-boss-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.8rem;
+}
+
+.world-boss-stat-card {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem;
+  border: 1px solid rgba(71, 85, 105, 0.45);
+  border-radius: 0.75rem;
+  background: rgba(2, 6, 23, 0.3);
+}
+
+.world-boss-stat-icon {
+  display: grid;
+  width: 1.7rem;
+  height: 1.7rem;
+  flex: 0 0 1.7rem;
+  place-items: center;
+  border-radius: 0.5rem;
+  background: rgba(244, 63, 94, 0.12);
+  color: #fda4af;
+  font-size: 0.95rem;
+}
+
+.world-boss-stat-icon-muted { background: rgba(34, 211, 238, 0.1); color: #67e8f9; }
+.world-boss-stat-card > div { min-width: 0; }
+.world-boss-stat-card strong { display: block; overflow: hidden; margin-top: 0.2rem; color: #f8fafc; font-size: 0.78rem; text-overflow: ellipsis; white-space: nowrap; }
+
+.world-boss-cooldown-info {
+  margin: 0.9rem 0 0.45rem;
+  color: #94a3b8;
+  font-size: 0.66rem;
+  text-align: center;
+}
+
+.world-boss-cooldown-info-safe { color: #6ee7b7; }
+
+.world-boss-attack-button {
+  display: block;
+  width: min(100%, 24rem);
+  min-height: 2.85rem;
+  margin: 0.1rem auto 0;
+  border-radius: 0.8rem;
+  background: linear-gradient(135deg, #be123c, #e11d48 55%, #f97316);
+  box-shadow: 0 0.55rem 1.2rem rgba(190, 24, 93, 0.2);
+  transition: filter 160ms ease-out, transform 160ms ease-out, box-shadow 160ms ease-out;
+}
+
+.world-boss-attack-button:hover:not(:disabled) {
+  box-shadow: 0 0.75rem 1.4rem rgba(190, 24, 93, 0.3);
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.world-boss-attack-button:active:not(:disabled) { transform: scale(0.985); }
+
+.world-boss-defeated-message {
+  margin: 0.9rem 0 0;
+  color: #6ee7b7;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.world-boss-secondary-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.world-boss-panel {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid rgba(51, 65, 85, 0.78);
+  border-radius: 1rem;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.66));
+}
+
+.world-boss-panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.8rem;
+}
+
+.world-boss-panel-title { margin: 0.2rem 0 0; color: #f1f5f9; font-size: 0.93rem; font-weight: 850; }
+.world-boss-panel-mark { color: #67e8f9; font-size: 1.1rem; font-weight: 900; }
+.world-boss-ranking-list,
+.world-boss-attacks-list { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.world-boss-ranking-row,
+.world-boss-attack-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.45);
+  color: #cbd5e1;
+  font-size: 0.76rem;
+}
+
+.world-boss-ranking-row:last-child,
+.world-boss-attack-row:last-child { border-bottom: 0; }
+.world-boss-ranking-player { display: flex; min-width: 0; align-items: center; gap: 0.55rem; }
+.world-boss-ranking-player > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.world-boss-ranking-position { width: 1.35rem; font-weight: 900; text-align: center; }
+.world-boss-ranking-damage,
+.world-boss-attack-damage { color: #67e8f9; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.7rem; font-weight: 800; }
+.world-boss-attack-row { color: #94a3b8; }
+.world-boss-empty-copy { margin: 0; color: #64748b; font-size: 0.76rem; line-height: 1.5; }
+
+@media (min-width: 46rem) {
+  .world-boss-page { padding-top: 1.75rem; }
+  .world-boss-page-header { padding: 1.45rem 1.6rem 1.65rem; }
+  .world-boss-combat-card { padding: 1.35rem; }
+  .world-boss-secondary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+}
+
+@media (max-width: 30rem) {
+  .world-boss-page-header { padding-inline: 1rem; }
+  .world-boss-heading-row { align-items: center; }
+  .world-boss-header-mark { width: 2.7rem; height: 2.7rem; flex-basis: 2.7rem; font-size: 1.25rem; }
+  .world-boss-page-subtitle { font-size: 0.72rem; }
+  .world-boss-combat-card { padding: 0.9rem; }
+  .world-boss-portrait { width: 4.6rem; height: 4.6rem; flex-basis: 4.6rem; }
+  .world-boss-identity { gap: 0.75rem; }
+  .world-boss-identity-description { font-size: 0.68rem; }
+  .world-boss-hp-foot { align-items: flex-start; flex-direction: column; gap: 0.2rem; }
+  .world-boss-stat-card { padding: 0.55rem; }
+  .world-boss-stat-label { font-size: 0.56rem; }
+  .world-boss-stat-card strong { font-size: 0.7rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-boss-back,
+  .world-boss-attack-button,
+  .world-boss-hp-fill { transition: none; }
+  .world-boss-loading-hero,
+  .world-boss-loading-line { animation: none; }
+}
