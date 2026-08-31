@@ -11,9 +11,7 @@ import com.dro.modules.player.api.dto.response.PlayerDashboardResponse;
 import com.dro.modules.player.api.dto.response.PlayerResponse;
 import com.dro.modules.player.api.dto.response.PlayerStartupResponse;
 import com.dro.modules.player.api.dto.response.PlayerPaginationPreferenceResponse;
-import com.dro.modules.player.api.dto.response.PlayerShortcutPreferenceResponse;
 import com.dro.modules.player.api.dto.request.UpdatePlayerPaginationPreferenceRequest;
-import com.dro.modules.player.api.dto.request.UpdatePlayerShortcutPreferenceRequest;
 import com.dro.modules.player.application.PlayerDisplayPreferenceService;
 import com.dro.shared.util.TokenExtractor;
 import com.dro.modules.player.application.ChangePlayerEmailUseCase;
@@ -65,16 +63,6 @@ public class PlayerController {
     @PutMapping("/me/preferences/pagination")
     public ResponseEntity<PlayerPaginationPreferenceResponse> updatePaginationPreference(@RequestHeader("Authorization") String authorization, @RequestBody @Valid UpdatePlayerPaginationPreferenceRequest request) {
         return ResponseEntity.ok(PlayerPaginationPreferenceResponse.from(displayPreferenceService.set(TokenExtractor.extractPlayerId(authorization), request.paginationEnabled())));
-    }
-
-    @GetMapping("/me/preferences/shortcuts")
-    public ResponseEntity<PlayerShortcutPreferenceResponse> shortcutPreference(@RequestHeader("Authorization") String authorization) {
-        return ResponseEntity.ok(new PlayerShortcutPreferenceResponse(displayPreferenceService.getShortcutRoutes(TokenExtractor.extractPlayerId(authorization))));
-    }
-
-    @PutMapping("/me/preferences/shortcuts")
-    public ResponseEntity<PlayerShortcutPreferenceResponse> updateShortcutPreference(@RequestHeader("Authorization") String authorization, @RequestBody @Valid UpdatePlayerShortcutPreferenceRequest request) {
-        return ResponseEntity.ok(new PlayerShortcutPreferenceResponse(displayPreferenceService.setShortcutRoutes(TokenExtractor.extractPlayerId(authorization), request.routes())));
     }
 
     @PostMapping("/me/change-email")

@@ -12,6 +12,7 @@ function escapeAttr(value) {
   return escapeHtml(value);
 }
 
+const PLAYER_SHORTCUT_STORAGE_KEY = "dro_player_shortcut_routes_v1";
 const PLAYER_SHORTCUT_DEFAULTS = ["dashboard", "missions", "inventory", "shop"];
 const PLAYER_SHORTCUT_MOBILE_LIMIT = 4;
 const PLAYER_SHORTCUT_DESKTOP_LIMIT = 8;
@@ -82,9 +83,17 @@ async function loadPlayerShortcutPreference() {
   if (playerShortcutPreferenceLoading) return PLAYER_SHORTCUT_DEFAULTS;
   playerShortcutPreferenceLoading = true;
   try {
-    const preference = await apiGet("/players/me/preferences/shortcuts");
-    playerShortcutRoutes = normalizePlayerShortcutRoutes(preference?.routes);
+    const stored = localStorage.getItem(PLAYER_SHORTCUT_STORAGE_KEY);
+    if (stored === null) {
+      playerShortcutRoutes = [...PLAYER_SHORTCUT_DEFAULTS];
+    } else {
+      const parsed = JSON.parse(stored);
+      playerShortcutRoutes = Array.isArray(parsed)
+        ? normalizePlayerShortcutRoutes(parsed)
+        : [...PLAYER_SHORTCUT_DEFAULTS];
+    }
   } catch (_) {
+    // O localStorage pode estar indisponível ou conter dados inválidos.
     playerShortcutRoutes = [...PLAYER_SHORTCUT_DEFAULTS];
   } finally {
     playerShortcutPreferenceLoading = false;
@@ -95,8 +104,12 @@ async function loadPlayerShortcutPreference() {
 
 async function savePlayerShortcutPreference(routes) {
   const normalized = normalizePlayerShortcutRoutes(routes);
-  const preference = await apiPut("/players/me/preferences/shortcuts", { routes: normalized });
-  playerShortcutRoutes = normalizePlayerShortcutRoutes(preference?.routes || normalized);
+  try {
+    localStorage.setItem(PLAYER_SHORTCUT_STORAGE_KEY, JSON.stringify(normalized));
+  } catch (_) {
+    throw new Error("Não foi possível salvar os atalhos neste navegador.");
+  }
+  playerShortcutRoutes = normalized;
   try {
     renderShortcutBar(window.location.hash.replace("#", "").split("?")[0] || "dashboard");
   } catch (error) {
