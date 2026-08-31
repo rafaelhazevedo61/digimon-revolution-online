@@ -6,14 +6,20 @@ async function renderIncubationPage() {
   incubStopTimer();
 
   app.innerHTML = `
-    <div class="page-container">
-      <div class="flex items-center justify-between mb-4 px-1">
-        <div>
-          <p class="text-xs uppercase tracking-wider text-cyan-400 font-semibold">Sistema de Digimons</p>
-          <h2 class="text-xl font-bold mt-1">Incubação</h2>
+    <div class="page-container incubation-page">
+      <header class="incubation-page-header">
+        <div class="incubation-title-group">
+          <div class="incubation-title-icon">🥚</div>
+          <div>
+            <p class="incubation-eyebrow">Sistema de Digimons</p>
+            <h2 class="incubation-page-title">Incubação</h2>
+          </div>
         </div>
-        <span class="badge text-cyan-200">3 SLOTS</span>
-      </div>
+        <div class="incubation-header-status">
+          <span class="incubation-status-dot"></span>
+          <span>Ativa</span>
+        </div>
+      </header>
       <div id="incub-content">
         <div class="card animate-pulse"><div class="h-32"></div></div>
       </div>
@@ -64,8 +70,8 @@ function incubRenderSlots(response, inventory = []) {
   window._incubInventory = inventory;
 
   content.innerHTML = `
-    <section class="mb-6">
-      <div class="flex items-end justify-between gap-3 mb-3">
+    <section class="incubation-section mb-6">
+      <div class="incubation-section-heading flex items-end justify-between gap-3 mb-3">
         <div>
           <p class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Comece uma nova incubação</p>
           <h3 class="text-sm font-bold text-slate-200 mt-1">Escolha uma incubadora</h3>
@@ -75,19 +81,22 @@ function incubRenderSlots(response, inventory = []) {
           <p class="text-[10px] text-slate-500">Incubadoras disponíveis</p>
         </div>
       </div>
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="incub-incubator-options">
+      <div class="incubator-card-grid grid grid-cols-2 sm:grid-cols-4 gap-2" id="incub-incubator-options">
         ${incubators.length > 0
           ? incubators.map(item => incubRenderIncubatorCard(item, availableSlots.length > 0)).join("")
           : `<div class="card-sm col-span-full text-center text-sm text-slate-500">Você não possui incubadoras disponíveis.</div>`}
       </div>
     </section>
 
-    <section>
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-xs uppercase tracking-wider text-cyan-300 font-semibold">Incubações ativas</h3>
+    <section class="incubation-section">
+      <div class="incubation-section-heading flex items-center justify-between mb-3">
+        <div>
+          <p class="incubation-eyebrow text-cyan-300">Acompanhe o progresso</p>
+          <h3 class="incubation-section-title">Incubações ativas</h3>
+        </div>
         <span class="text-xs text-slate-500">${renderSlots.filter(slot => slot.unlocked && slot.incubation).length}/${unlockedSlots}</span>
       </div>
-      <div class="grid grid-cols-1 gap-3" id="incub-slots">
+      <div class="active-incubation-list grid grid-cols-1 gap-3" id="incub-slots">
         ${renderSlots.map(incubRenderSlot).join("")}
       </div>
     </section>
@@ -111,8 +120,9 @@ function incubRenderIncubatorCard(item, hasAvailableSlot) {
   const incubatorName = item.itemDefinition?.name || incubItemName(type);
   const duration = incubDuration(type);
   const disabled = !hasAvailableSlot;
+  const rarity = type.replace(/^INCUBATOR_/, "").toLowerCase();
   return `
-    <button type="button" class="card-sm text-center incubator-option-card ${disabled ? "opacity-50 cursor-not-allowed" : "hover:border-cyan-500"}"
+    <button type="button" class="card-sm text-center incubator-option-card ${disabled ? "is-disabled opacity-50 cursor-not-allowed" : ""}" data-rarity="${escapeAttr(rarity)}"
       onclick="incubChooseIncubator('${escapeAttr(type)}')" ${disabled ? "disabled" : ""}>
       <span class="text-3xl block mb-2">${incubIncubatorEmoji(type)}</span>
       <p class="text-xs font-bold text-slate-200">${escapeHtml(incubatorName.replace(/^Incubadora /i, ""))}</p>
@@ -128,7 +138,7 @@ function incubRenderSlot(slot) {
 
   if (!slot.unlocked) {
     return `
-      <article class="card border-slate-700 bg-slate-900/60 opacity-80" data-incub-slot="${slotNumber}">
+      <article class="card active-incubation-card is-locked border-slate-700 bg-slate-900/60 opacity-80" data-incub-slot="${slotNumber}">
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-3">
             <span class="text-3xl">🔒</span>
@@ -146,7 +156,7 @@ function incubRenderSlot(slot) {
 
   if (!slot.incubation) {
     return `
-      <article class="card border-emerald-800 bg-emerald-950/10" data-incub-slot="${slotNumber}">
+      <article class="card active-incubation-card is-empty border-emerald-800 bg-emerald-950/10" data-incub-slot="${slotNumber}">
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-3">
             <span class="text-3xl">🥚</span>
@@ -171,7 +181,7 @@ function incubRenderSlot(slot) {
   const incubatorEmoji = incubIncubatorEmoji(incubation.incubatorType);
 
   return `
-    <article class="card border-amber-800 bg-amber-950/10" data-incub-slot="${slotNumber}" data-incubation-id="${escapeAttr(String(incubation.id))}">
+    <article class="card active-incubation-card ${done ? "is-ready" : ""}" data-incub-slot="${slotNumber}" data-incubation-id="${escapeAttr(String(incubation.id))}">
       <div class="flex items-start justify-between gap-3">
         <div class="flex items-center gap-3">
             <span class="text-3xl">${incubatorEmoji}</span>
