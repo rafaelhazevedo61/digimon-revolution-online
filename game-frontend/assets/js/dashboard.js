@@ -254,7 +254,7 @@ function renderDigimonCard(d) {
             ${renderDashboardStat("ATK", d.attack, d.equipBonusAttack, d.clanBonusAttack, "text-orange-400")}
             ${renderDashboardStat("DEF", d.defense, d.equipBonusDefense, d.clanBonusDefense, "text-blue-400")}
           </div>
-          <details class="dashboard-digimon-details mt-3 rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2">
+          <details open class="dashboard-digimon-details mt-3 rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2">
             <summary class="cursor-pointer select-none text-xs font-semibold text-slate-400 hover:text-slate-200">Ver detalhes dos atributos</summary>
             <div class="mt-3 grid grid-cols-1 gap-2">
               ${renderDashboardStatBreakdown("HP", d.hp, d.equipBonusHp, d.clanBonusHp, "text-red-400")}
