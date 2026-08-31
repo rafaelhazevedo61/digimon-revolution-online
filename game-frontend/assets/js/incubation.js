@@ -6,14 +6,20 @@ async function renderIncubationPage() {
   incubStopTimer();
 
   app.innerHTML = `
-    <div class="page-container">
-      <div class="flex items-center justify-between mb-4 px-1">
-        <div>
-          <p class="text-xs uppercase tracking-wider text-cyan-400 font-semibold">Sistema de Digimons</p>
-          <h2 class="text-xl font-bold mt-1">Incubação</h2>
+    <div class="page-container incubation-page">
+      <header class="incubation-page-header">
+        <div class="incubation-title-group">
+          <div class="incubation-title-icon">🥚</div>
+          <div>
+            <p class="incubation-eyebrow">Sistema de Digimons</p>
+            <h2 class="incubation-page-title">Incubação</h2>
+          </div>
         </div>
-        <span class="badge text-cyan-200">3 SLOTS</span>
-      </div>
+        <div class="incubation-header-status">
+          <span class="incubation-status-dot"></span>
+          <span>Ativa</span>
+        </div>
+      </header>
       <div id="incub-content">
         <div class="card animate-pulse"><div class="h-32"></div></div>
       </div>
@@ -26,10 +32,10 @@ async function renderIncubationPage() {
       apiGet("/players/me/dashboard")
     ]);
 
+    const inventory = invAggregateItems(await apiGet("/inventory") || []);
     window._incubSlotInfo = dashboard?.slotInfo;
     window._incubSlotsResponse = slotsResponse;
-    incubRenderSlots(slotsResponse);
-    await incubRenderStart(slotsResponse);
+    incubRenderSlots(slotsResponse, inventory);
   } catch (err) {
     const content = document.getElementById("incub-content");
     if (content) {
@@ -46,7 +52,7 @@ async function incubFetchSlots() {
   return await apiGet("/incubation/me");
 }
 
-function incubRenderSlots(response) {
+function incubRenderSlots(response, inventory = []) {
   const content = document.getElementById("incub-content");
   if (!content) return;
 
@@ -58,30 +64,72 @@ function incubRenderSlots(response) {
     unlocked: index < unlockedSlots,
     incubation: null
   });
+  const availableSlots = renderSlots.filter(slot => slot.unlocked && !slot.incubation);
+  const incubators = inventory.filter(item => incubIsItem(item, "INCUBATOR") && Number(item.quantity) > 0);
+  const availableIncubators = availableSlots.length;
+  window._incubInventory = inventory;
 
   content.innerHTML = `
-    <div class="card mb-4 border-cyan-800 bg-cyan-950/20">
-      <div class="flex items-center justify-between gap-3">
+    <section class="incubation-section mb-6">
+      <div class="incubation-section-heading flex items-end justify-between gap-3 mb-3">
         <div>
-          <p class="text-xs text-slate-400">Slots desbloqueados</p>
-          <p class="text-lg font-bold text-cyan-300 mt-1">${unlockedSlots}/${totalSlots}</p>
+          <p class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Comece uma nova incubação</p>
+          <h3 class="text-sm font-bold text-slate-200 mt-1">Escolha uma incubadora</h3>
         </div>
-        <p class="text-xs text-right text-slate-500 max-w-[12rem]">Cada slot possui sua própria incubação e contador.</p>
+        <div class="rounded-lg border border-cyan-800/70 bg-cyan-950/30 px-3 py-2 text-right">
+          <p class="text-sm font-bold text-cyan-300">${availableIncubators}/${totalSlots}</p>
+          <p class="text-[10px] text-slate-500">Incubadoras disponíveis</p>
+        </div>
       </div>
-    </div>
+      <div class="incubator-card-grid grid grid-cols-2 sm:grid-cols-4 gap-2" id="incub-incubator-options">
+        ${incubators.length > 0
+          ? incubators.map(item => incubRenderIncubatorCard(item, availableSlots.length > 0)).join("")
+          : `<div class="card-sm col-span-full text-center text-sm text-slate-500">Você não possui incubadoras disponíveis.</div>`}
+      </div>
+    </section>
 
-    <div class="grid grid-cols-1 gap-3 mb-5" id="incub-slots">
-      ${renderSlots.map(incubRenderSlot).join("")}
-    </div>
-
-    <div id="incub-start-form"></div>
+    <section class="incubation-section">
+      <div class="incubation-section-heading flex items-center justify-between mb-3">
+        <div>
+          <p class="incubation-eyebrow text-cyan-300">Acompanhe o progresso</p>
+          <h3 class="incubation-section-title">Incubações ativas</h3>
+        </div>
+        <span class="text-xs text-slate-500">${renderSlots.filter(slot => slot.unlocked && slot.incubation).length}/${unlockedSlots}</span>
+      </div>
+      <div class="active-incubation-list grid grid-cols-1 gap-3" id="incub-slots">
+        ${renderSlots.map(incubRenderSlot).join("")}
+      </div>
+    </section>
   `;
 
   slots.forEach(slot => {
-    if (slot.unlocked && slot.incubation) {
-      incubRenderTimer(slot);
-    }
+    if (slot.unlocked && slot.incubation) incubRenderTimer(slot);
   });
+}
+
+function incubIsItem(item, category) {
+  const type = String(item.itemType || "");
+  const itemCategory = String(item.itemDefinition?.category || "").toUpperCase();
+  if (category === "INCUBATOR") return itemCategory === "INCUBATOR" || type.startsWith("INCUBATOR_");
+  if (category === "DIGITAMA") return itemCategory === "DIGITAMA" || type.startsWith("DIGITAMA_");
+  return itemCategory === category;
+}
+
+function incubRenderIncubatorCard(item, hasAvailableSlot) {
+  const type = String(item.itemType || "");
+  const incubatorName = item.itemDefinition?.name || incubItemName(type);
+  const duration = incubDuration(type);
+  const disabled = !hasAvailableSlot;
+  const rarity = type.replace(/^INCUBATOR_/, "").toLowerCase();
+  return `
+    <button type="button" class="card-sm text-center incubator-option-card ${disabled ? "is-disabled opacity-50 cursor-not-allowed" : ""}" data-rarity="${escapeAttr(rarity)}"
+      onclick="incubChooseIncubator('${escapeAttr(type)}')" ${disabled ? "disabled" : ""}>
+      <span class="text-3xl block mb-2">${incubIncubatorEmoji(type)}</span>
+      <p class="text-xs font-bold text-slate-200">${escapeHtml(incubatorName.replace(/^Incubadora /i, ""))}</p>
+      <p class="text-[11px] text-slate-500 mt-1">◷ ${escapeHtml(duration)}</p>
+      <p class="text-[11px] text-cyan-300 mt-1">Qtd: ${Number(item.quantity) || 0}</p>
+    </button>
+  `;
 }
 
 function incubRenderSlot(slot) {
@@ -90,7 +138,7 @@ function incubRenderSlot(slot) {
 
   if (!slot.unlocked) {
     return `
-      <article class="card border-slate-700 bg-slate-900/60 opacity-80" data-incub-slot="${slotNumber}">
+      <article class="card active-incubation-card is-locked border-slate-700 bg-slate-900/60 opacity-80" data-incub-slot="${slotNumber}">
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-3">
             <span class="text-3xl">🔒</span>
@@ -108,18 +156,18 @@ function incubRenderSlot(slot) {
 
   if (!slot.incubation) {
     return `
-      <article class="card border-emerald-800 bg-emerald-950/10" data-incub-slot="${slotNumber}">
+      <article class="card active-incubation-card is-empty border-emerald-800 bg-emerald-950/10" data-incub-slot="${slotNumber}">
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-3">
             <span class="text-3xl">🥚</span>
             <div>
               <p class="text-xs uppercase tracking-wider text-emerald-400 font-semibold">${slotLabel}</p>
-              <h3 class="font-bold text-slate-200 mt-1">Disponível</h3>
+              <h3 class="font-bold text-slate-200 mt-1">Slot livre</h3>
             </div>
           </div>
           <span class="badge text-emerald-300">LIVRE</span>
         </div>
-        <button class="btn-primary w-full mt-4" onclick="incubChooseEmptySlot(${slotNumber})">Usar este slot</button>
+        <p class="text-xs text-slate-500 mt-3">Escolha uma incubadora acima para usar este slot automaticamente.</p>
       </article>
     `;
   }
@@ -130,23 +178,30 @@ function incubRenderSlot(slot) {
   const digitamaName = incubItemName(incubation.digitamaType);
   const digitamaEmoji = incubDigitamaEmoji(incubation.digitamaType);
   const incubatorName = incubItemName(incubation.incubatorType);
+  const incubatorEmoji = incubIncubatorEmoji(incubation.incubatorType);
 
   return `
-    <article class="card border-amber-800 bg-amber-950/10" data-incub-slot="${slotNumber}" data-incubation-id="${escapeAttr(String(incubation.id))}">
-      <div class="flex items-start justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <span class="text-3xl">${digitamaEmoji}</span>
-          <div>
-            <p class="text-xs uppercase tracking-wider text-amber-400 font-semibold">${slotLabel}</p>
-            <h3 class="font-bold text-slate-200 mt-1">${escapeHtml(digitamaName)}</h3>
-            <p class="text-xs text-slate-500 mt-1">${escapeHtml(incubatorName)}</p>
+    <article class="card active-incubation-card ${done ? "is-ready" : "is-minimal"}" data-incub-slot="${slotNumber}" data-incubation-id="${escapeAttr(String(incubation.id))}">
+      <div class="active-incubation-header flex items-start justify-between gap-3">
+        <div class="active-incubation-main flex items-center gap-3 min-w-0">
+          <span class="active-incubation-icon text-3xl shrink-0">${incubatorEmoji}</span>
+          <div class="active-incubation-copy min-w-0">
+            <p class="active-incubation-incubator text-xs uppercase tracking-wider text-amber-400 font-semibold">${escapeHtml(incubatorName)}</p>
+            <p class="active-incubation-slot text-xs text-slate-500 mt-1">${slotLabel}</p>
+            <div class="active-incubation-digitama flex items-center gap-1.5 mt-2">
+              <span class="text-base" aria-hidden="true">${digitamaEmoji}</span>
+              <h3 class="font-bold text-slate-200 break-words">${escapeHtml(digitamaName)}</h3>
+            </div>
           </div>
         </div>
-        <span class="badge ${done ? "text-green-300" : "text-amber-300"}">${done ? "PRONTO" : "EM ANDAMENTO"}</span>
+        <div class="active-incubation-meta flex items-center gap-2 shrink-0">
+          <span class="text-lg text-slate-500" aria-hidden="true">⋯</span>
+          <span class="badge whitespace-nowrap ${done ? "text-green-300" : "text-amber-300"}">${done ? "PRONTO" : "EM ANDAMENTO"}</span>
+        </div>
       </div>
 
       <div class="mt-4">
-        <p class="text-2xl font-bold ${done ? "text-green-400" : "text-amber-400"}" id="incub-timer-${slotNumber}">
+        <p class="text-2xl font-bold text-center w-full ${done ? "text-green-400" : "text-amber-400"}" id="incub-timer-${slotNumber}">
           ${done ? "Pronta para chocar!" : incubFormatTime(remaining)}
         </p>
         ${done ? "" : `<div class="w-full bg-slate-800 rounded-full h-2 mt-3"><div class="h-2 rounded-full" style="background:#f59e0b;width:${incubProgress(incubation)}%" id="incub-bar-${slotNumber}"></div></div>`}
@@ -188,7 +243,7 @@ function incubMarkReady(slotNumber, incubationId) {
   if (!timerEl || !actionEl || !slotEl) return;
 
   timerEl.textContent = "Pronta para chocar!";
-  timerEl.className = "text-2xl font-bold text-green-400";
+  timerEl.className = "text-2xl font-bold text-center w-full text-green-400";
   slotEl.classList.remove("border-amber-800", "bg-amber-950/10");
   slotEl.classList.add("border-green-800", "bg-green-950/10");
   actionEl.innerHTML = incubClaimButton(incubationId);
@@ -436,6 +491,105 @@ function incubClaimButton(incubationId) {
 }
 
 // ==================== START INCUBATION ====================
+
+function incubChooseIncubator(incubatorType) {
+  const slots = Array.isArray(window._incubSlotsResponse?.slots) ? window._incubSlotsResponse.slots : [];
+  const totalSlots = Number(window._incubSlotsResponse?.totalSlots) || 3;
+  const unlockedSlots = Number(window._incubSlotsResponse?.unlockedSlots) || 1;
+  const firstFreeSlot = Array.from({ length: totalSlots }, (_, index) => slots.find(slot => Number(slot.slotNumber) === index + 1) || {
+    slotNumber: index + 1,
+    unlocked: index < unlockedSlots,
+    incubation: null
+  }).find(slot => slot.unlocked && !slot.incubation);
+  if (!firstFreeSlot) {
+    showToast("Nenhum slot de incubação está livre.", "error");
+    return;
+  }
+
+  const inventory = Array.isArray(window._incubInventory) ? window._incubInventory : [];
+  const digitamas = inventory.filter(item => incubIsItem(item, "DIGITAMA") && Number(item.quantity) > 0);
+  incubShowDigitamaPicker(incubatorType, firstFreeSlot.slotNumber, digitamas);
+}
+
+function incubShowDigitamaPicker(incubatorType, slotNumber, digitamas) {
+  document.getElementById("incub-digitama-picker-modal")?.remove();
+  const incubatorName = incubItemName(incubatorType);
+  const overlay = document.createElement("div");
+  overlay.id = "incub-digitama-picker-modal";
+  overlay.className = "fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-labelledby", "incub-digitama-picker-title");
+  overlay.innerHTML = `
+    <div class="card w-full max-w-md border-cyan-800 bg-slate-950 shadow-2xl">
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <p class="text-xs uppercase tracking-wider text-cyan-400 font-semibold">${escapeHtml(incubatorName)}</p>
+          <h3 id="incub-digitama-picker-title" class="text-xl font-bold mt-1">Escolha a Digitama</h3>
+          <p class="text-xs text-slate-400 mt-1">Selecione uma Digitama para iniciar no slot ${Number(slotNumber)}.</p>
+        </div>
+        <button type="button" class="text-2xl text-slate-500 hover:text-slate-200" onclick="incubCloseDigitamaPicker()" aria-label="Fechar">×</button>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        ${digitamas.length > 0
+          ? digitamas.map(item => {
+              const type = String(item.itemType || "");
+              const name = item.itemDefinition?.name || incubItemName(type);
+              return `<button type="button" class="card-sm text-center hover:border-cyan-500" onclick="incubStartFromPicker('${escapeAttr(incubatorType)}', '${escapeAttr(type)}', ${Number(slotNumber)})">
+                <span class="text-3xl block mb-2">${incubDigitamaEmoji(type)}</span>
+                <p class="text-xs font-bold text-slate-200">${escapeHtml(name.replace(/^Digitama /i, ""))}</p>
+                <p class="text-[11px] text-slate-500 mt-1">Qtd: ${Number(item.quantity) || 0}</p>
+              </button>`;
+            }).join("")
+          : `<p class="col-span-full text-center text-sm text-slate-500 py-4">Você não possui Digitamas disponíveis.</p>`}
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+function incubCloseDigitamaPicker() {
+  document.getElementById("incub-digitama-picker-modal")?.remove();
+}
+
+async function incubStartFromPicker(incubatorType, digitamaType, slotNumber) {
+  incubCloseDigitamaPicker();
+  try {
+    await apiPost("/incubation/start", { slotNumber: Number(slotNumber), digitamaType, incubatorType });
+    showToast("Incubação iniciada!");
+    await renderIncubationPage();
+    incubShowStartResult(digitamaType, incubatorType);
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+function incubShowStartResult(digitamaType, incubatorType) {
+  document.getElementById("incub-start-result-modal")?.remove();
+  const overlay = document.createElement("div");
+  overlay.id = "incub-start-result-modal";
+  overlay.className = "fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.innerHTML = `
+    <div class="card w-full max-w-sm text-center border-cyan-700 bg-slate-950 shadow-2xl">
+      <div class="text-6xl mb-4">${incubIncubatorEmoji(incubatorType)}</div>
+      <h3 class="text-xl font-bold">Incubação iniciada!</h3>
+      <p class="text-sm text-slate-400 mt-2"><strong class="text-cyan-300">${escapeHtml(incubItemName(digitamaType))}</strong> está sendo incubada na <strong class="text-cyan-300">${escapeHtml(incubItemName(incubatorType))}</strong>.</p>
+      <div class="mt-4 rounded-lg border border-slate-700 bg-slate-900/70 p-3">
+        <p class="text-xs text-slate-400">Tempo de incubação</p>
+        <p class="text-lg font-bold text-cyan-300 mt-1">◷ ${escapeHtml(incubDuration(incubatorType))}</p>
+      </div>
+      <p class="text-xs text-slate-500 mt-4">Acompanhe o progresso na lista de incubações ativas.</p>
+      <button type="button" class="btn-primary w-full mt-5" onclick="incubCloseStartResult()">Perfeito!</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+function incubCloseStartResult() {
+  document.getElementById("incub-start-result-modal")?.remove();
+}
 
 async function incubRenderStart(response) {
   const form = document.getElementById("incub-start-form");
