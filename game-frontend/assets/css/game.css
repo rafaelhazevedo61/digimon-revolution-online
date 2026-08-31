@@ -1376,9 +1376,12 @@ body {
 .inventory-equipment-stats { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.32rem; font-size: 0.6rem; font-weight: 850; }
 .inventory-item-action { display: flex; flex: 0 0 auto; flex-direction: column; align-items: stretch; gap: 0.32rem; }
 .inventory-item-action .btn-sm { min-height: 2rem; padding: 0.35rem 0.52rem; font-size: 0.6rem; }
-.inventory-item-action .inventory-chest-controls { display: flex; align-items: center; gap: 0.3rem; }
+.inventory-item-action .inventory-batch-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.3rem; }
+.inventory-item-action .inventory-chest-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.3rem; }
 .inventory-action-danger { border: 1px solid rgba(248, 113, 113, 0.25); background: rgba(127, 29, 29, 0.7); color: #fca5a5; }
 .inventory-action-ascend { border: 1px solid rgba(251, 191, 36, 0.25); background: rgba(133, 77, 14, 0.8); color: #fde68a; }
+.inventory-max-btn { border: 1px solid rgba(34, 211, 238, 0.3); background: rgba(8, 145, 178, 0.2); color: #a5f3fc; }
+.inventory-max-btn:hover { border-color: rgba(103, 232, 249, 0.58); background: rgba(8, 145, 178, 0.32); }
 .inventory-equipment-card-equipped { border-color: rgba(34, 211, 238, 0.48); background: linear-gradient(145deg, rgba(8, 51, 68, 0.36), rgba(15, 23, 42, 0.62)); }
 .inventory-page #inv-content > .card.animate-pulse { border-color: rgba(34, 211, 238, 0.28); }
 
@@ -1394,6 +1397,8 @@ body {
   .inventory-item-card, .inventory-equipment-card { gap: 0.45rem; padding: 0.5rem; }
   .inventory-item-icon, .inventory-equipment-icon { width: 2.25rem; height: 2.25rem; font-size: 1.2rem; }
   .inventory-item-action .btn-sm { padding-inline: 0.38rem; }
+  .inventory-item-action .inventory-batch-controls { gap: 0.22rem; }
+  .inventory-max-btn { padding-inline: 0.38rem; }
 }
 
 .inventory-empty-state { display: flex; min-height: 8rem; flex-direction: column; align-items: center; justify-content: center; gap: 0.28rem; padding: 1.25rem; border: 1px dashed rgba(71, 85, 105, 0.7); border-radius: 0.78rem; background: rgba(15, 23, 42, 0.36); text-align: center; }
