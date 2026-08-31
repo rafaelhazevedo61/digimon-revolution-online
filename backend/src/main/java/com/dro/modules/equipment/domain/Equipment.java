@@ -40,6 +40,8 @@ public class Equipment {
     private int tier;
     @Column(name = "refinement_level", nullable = false)
     private int refinementLevel;
+    @Column(name = "ascension_level", nullable = false)
+    private int ascensionLevel;
     @Column(nullable = false)
     private LocalDateTime createdAt;
     @Column(nullable = false)
@@ -64,7 +66,7 @@ public class Equipment {
      */
     public int getEffectiveBonusHp() {
         if (bonusHp <= 0) return 0;
-        return (int) Math.round(bonusHp * rarity.getStatMultiplier()) + (refinementLevel * 2);
+        return ascensionAdjustedBonus((int) Math.round(bonusHp * rarity.getStatMultiplier()) + (refinementLevel * 2));
     }
 
     /**
@@ -72,7 +74,7 @@ public class Equipment {
      */
     public int getEffectiveBonusAttack() {
         if (bonusAttack <= 0) return 0;
-        return (int) Math.round(bonusAttack * rarity.getStatMultiplier()) + (refinementLevel * 2);
+        return ascensionAdjustedBonus((int) Math.round(bonusAttack * rarity.getStatMultiplier()) + (refinementLevel * 2));
     }
 
     /**
@@ -80,7 +82,11 @@ public class Equipment {
      */
     public int getEffectiveBonusDefense() {
         if (bonusDefense <= 0) return 0;
-        return (int) Math.round(bonusDefense * rarity.getStatMultiplier()) + (refinementLevel * 2);
+        return ascensionAdjustedBonus((int) Math.round(bonusDefense * rarity.getStatMultiplier()) + (refinementLevel * 2));
+    }
+
+    private int ascensionAdjustedBonus(int baseBonus) {
+        return (int) Math.round(baseBonus * EquipmentRules.ascensionMultiplier(ascensionLevel));
     }
 
     private static int $default$refinementLevel() {
@@ -106,6 +112,7 @@ public class Equipment {
         private int tier;
         private boolean refinementLevel$set;
         private int refinementLevel$value;
+        private int ascensionLevel$value;
         private LocalDateTime createdAt;
         private boolean equipped$set;
         private boolean equipped$value;
@@ -210,6 +217,11 @@ public class Equipment {
         /**
          * @return {@code this}.
          */
+        public Equipment.EquipmentBuilder ascensionLevel(final int ascensionLevel) {
+            this.ascensionLevel$value = ascensionLevel;
+            return this;
+        }
+
         public Equipment.EquipmentBuilder createdAt(final LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -229,7 +241,7 @@ public class Equipment {
             if (!this.refinementLevel$set) refinementLevel$value = Equipment.$default$refinementLevel();
             boolean equipped$value = this.equipped$value;
             if (!this.equipped$set) equipped$value = Equipment.$default$equipped();
-            return new Equipment(this.id, this.playerId, this.digimonId, this.name, this.slot, this.rarity, this.bonusHp, this.bonusAttack, this.bonusDefense, this.setCode, this.tier, refinementLevel$value, this.createdAt, equipped$value);
+            return new Equipment(this.id, this.playerId, this.digimonId, this.name, this.slot, this.rarity, this.bonusHp, this.bonusAttack, this.bonusDefense, this.setCode, this.tier, refinementLevel$value, ascensionLevel$value, this.createdAt, equipped$value);
         }
 
         @Override
@@ -290,6 +302,10 @@ public class Equipment {
         return this.refinementLevel;
     }
 
+    public int getAscensionLevel() {
+        return this.ascensionLevel;
+    }
+
     public LocalDateTime getCreatedAt() {
         return this.createdAt;
     }
@@ -346,6 +362,10 @@ public class Equipment {
         this.refinementLevel = refinementLevel;
     }
 
+    public void setAscensionLevel(final int ascensionLevel) {
+        this.ascensionLevel = ascensionLevel;
+    }
+
     public void setCreatedAt(final LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
@@ -356,10 +376,11 @@ public class Equipment {
 
     public Equipment() {
         this.refinementLevel = Equipment.$default$refinementLevel();
+        this.ascensionLevel = 0;
         this.equipped = Equipment.$default$equipped();
     }
 
-    public Equipment(final UUID id, final UUID playerId, final UUID digimonId, final String name, final EquipmentSlot slot, final EquipmentRarity rarity, final int bonusHp, final int bonusAttack, final int bonusDefense, final String setCode, final int tier, final int refinementLevel, final LocalDateTime createdAt, final boolean equipped) {
+    public Equipment(final UUID id, final UUID playerId, final UUID digimonId, final String name, final EquipmentSlot slot, final EquipmentRarity rarity, final int bonusHp, final int bonusAttack, final int bonusDefense, final String setCode, final int tier, final int refinementLevel, final int ascensionLevel, final LocalDateTime createdAt, final boolean equipped) {
         this.id = id;
         this.playerId = playerId;
         this.digimonId = digimonId;
@@ -372,12 +393,17 @@ public class Equipment {
         this.setCode = setCode;
         this.tier = tier;
         this.refinementLevel = refinementLevel;
+        this.ascensionLevel = ascensionLevel;
         this.createdAt = createdAt;
         this.equipped = equipped;
     }
 
+    public Equipment(final UUID id, final UUID playerId, final UUID digimonId, final String name, final EquipmentSlot slot, final EquipmentRarity rarity, final int bonusHp, final int bonusAttack, final int bonusDefense, final String setCode, final int tier, final int refinementLevel, final LocalDateTime createdAt, final boolean equipped) {
+        this(id, playerId, digimonId, name, slot, rarity, bonusHp, bonusAttack, bonusDefense, setCode, tier, refinementLevel, 0, createdAt, equipped);
+    }
+
     /** Compatibilidade para fixtures antigas que ainda não informam o jogador. */
     public Equipment(final UUID id, final UUID digimonId, final String name, final EquipmentSlot slot, final EquipmentRarity rarity, final int bonusHp, final int bonusAttack, final int bonusDefense, final String setCode, final int tier, final int refinementLevel, final LocalDateTime createdAt, final boolean equipped) {
-        this(id, null, digimonId, name, slot, rarity, bonusHp, bonusAttack, bonusDefense, setCode, tier, refinementLevel, createdAt, equipped);
+        this(id, null, digimonId, name, slot, rarity, bonusHp, bonusAttack, bonusDefense, setCode, tier, refinementLevel, 0, createdAt, equipped);
     }
 }

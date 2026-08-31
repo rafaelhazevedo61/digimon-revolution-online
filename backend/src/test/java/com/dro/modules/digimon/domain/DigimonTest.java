@@ -51,6 +51,19 @@ class DigimonTest {
     }
 
     @Test
+    void gainExperience_returnsTheAmountAppliedAfterDigimonMultipliers() {
+        Digimon digimon = createDigimon();
+        digimon.setRarity(Rarity.EPIC);
+        digimon.setPersonality(Personality.LIVELY);
+
+        int appliedXp = digimon.gainExperience(102);
+
+        assertEquals(123, appliedXp);
+        assertEquals(2, digimon.getLevel());
+        assertEquals(23, digimon.getExperience());
+    }
+
+    @Test
     void gainExperience_increasesStats_onLevelUp() {
         Digimon digimon = createDigimon();
         int initialHp = digimon.getHp();

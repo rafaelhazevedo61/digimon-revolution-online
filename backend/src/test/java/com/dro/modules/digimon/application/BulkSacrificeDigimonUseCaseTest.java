@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,8 +27,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -109,6 +112,36 @@ class BulkSacrificeDigimonUseCaseTest {
 
         assertThrows(RuntimeException.class, () -> useCase.execute(
                 JwtTestToken.create(playerId), List.of(digimonId, digimonId)));
+    }
+
+    @Test
+    void processesMoreThanOneHundredDigimonsInBatches() {
+        UUID playerId = UUID.randomUUID();
+        Player player = Player.builder().id(playerId).digitalData(10).build();
+        List<UUID> ids = new ArrayList<>();
+        List<Digimon> digimons = new ArrayList<>();
+        for (int index = 0; index < 201; index++) {
+            UUID digimonId = UUID.randomUUID();
+            ids.add(digimonId);
+            digimons.add(digimon(digimonId, playerId, 3));
+        }
+
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findAllByIdForUpdate(eq(playerId), anyList())).thenAnswer(invocation -> {
+            List<UUID> batchIds = invocation.getArgument(1);
+            return digimons.stream().filter(digimon -> batchIds.contains(digimon.getId())).toList();
+        });
+        when(missionInstanceRepository.existsByDigimonIdAndStatus(any(), any())).thenReturn(false);
+
+        BulkSacrificeDigimonResponse result = new BulkSacrificeDigimonUseCase(
+                digimonRepository, playerRepository, missionInstanceRepository, inventoryRepository
+        ).execute(JwtTestToken.create(playerId), ids);
+
+        assertEquals(201, result.sacrificedCount());
+        verify(digimonRepository, times(3)).findAllByIdForUpdate(eq(playerId), anyList());
+        verify(inventoryRepository, times(201)).deleteByDigimonId(any());
+        verify(digimonRepository, times(201)).save(any());
+        verify(playerRepository).save(player);
     }
 
     private Digimon digimon(UUID id, UUID playerId, int level) {

@@ -31,13 +31,17 @@ function renderDashContent(data) {
 
   container.innerHTML = `
     <!-- Player header -->
-    <div class="flex items-center justify-between mb-4 px-1">
+    <header class="dashboard-header mb-4">
       <div>
-        <h2 class="text-lg font-bold">${escapeHtml(data.username)}</h2>
-        <p class="text-xs text-slate-400">Tamer</p>
+        <p class="dashboard-eyebrow">Painel do treinador</p>
+        <h2 class="dashboard-title">${escapeHtml(data.username)}</h2>
+        <p class="dashboard-subtitle">Tamer · visão geral da sua jornada</p>
       </div>
-      <button class="text-xs text-slate-500 hover:text-red-400" onclick="authLogout()">Sair</button>
-    </div>
+      <button class="dashboard-logout" onclick="authLogout()" aria-label="Sair da conta" title="Sair">
+        <span aria-hidden="true">↗</span>
+        <span>Sair</span>
+      </button>
+    </header>
 
     <div id="dash-mail-notice"></div>
 
@@ -52,47 +56,57 @@ function renderDashContent(data) {
     `}
 
     <!-- Resources -->
-    <div class="grid grid-cols-2 gap-3 mb-4">
+    <div class="dashboard-resource-grid ${d ? "" : "dashboard-resource-grid-single"} mb-4">
       ${d ? `
-      <div class="card-sm text-center">
-        <p class="text-xs text-slate-500">Bits</p>
-        <p class="text-lg font-bold text-yellow-400">${Number(d.bits || 0).toLocaleString("pt-BR")}</p>
+      <div class="dashboard-resource-card dashboard-resource-bits">
+        <span class="dashboard-resource-icon" aria-hidden="true">◈</span>
+        <div><p class="dashboard-resource-label">Bits</p><p class="dashboard-resource-value">${Number(d.bits || 0).toLocaleString("pt-BR")}</p></div>
       </div>
-      <div class="card-sm text-center">
-        <p class="text-xs text-slate-500">Energia</p>
-        <p class="text-lg font-bold text-green-400">${d.energy}/${d.maxEnergy}${d.clanBonusMaxEnergy ? `<span class="text-xs text-cyan-400">+${d.clanBonusMaxEnergy}</span>` : ""}</p>
+      <div class="dashboard-resource-card dashboard-resource-energy">
+        <span class="dashboard-resource-icon" aria-hidden="true">ϟ</span>
+        <div><p class="dashboard-resource-label">Energia</p><p class="dashboard-resource-value">${d.energy}/${d.maxEnergy}${d.clanBonusMaxEnergy ? `<span class="dashboard-resource-bonus">+${d.clanBonusMaxEnergy}</span>` : ""}</p></div>
       </div>
       ` : ""}
-      <div class="card-sm text-center">
-        <p class="text-xs text-slate-500">Dados Digitais</p>
-        <p class="text-lg font-bold text-cyan-400">${Number(data.digitalData || 0).toLocaleString("pt-BR")}</p>
+      <div class="dashboard-resource-card dashboard-resource-data">
+        <span class="dashboard-resource-icon" aria-hidden="true">⌁</span>
+        <div><p class="dashboard-resource-label">Dados digitais</p><p class="dashboard-resource-value">${Number(data.digitalData || 0).toLocaleString("pt-BR")}</p></div>
       </div>
     </div>
 
     <!-- Equipped items -->
     ${d ? `
-    <div class="mb-4">
-      <h3 class="text-sm font-bold text-slate-300 mb-2 px-1">Equipamentos</h3>
-      <div class="grid grid-cols-3 gap-2">
+    <section class="dashboard-section mb-4">
+      <div class="dashboard-section-heading">
+        <div><p class="dashboard-eyebrow">Loadout ativo</p><h3 class="dashboard-section-title">Equipamentos</h3></div>
+        <span class="dashboard-section-count">${(data.equippedItems || []).length}/3</span>
+      </div>
+      <p class="dashboard-section-note">Toque em um item para ver atributos, ascensão e alternativas.</p>
+      <div class="dashboard-equipment-grid">
         ${renderEquipSlots(data.equippedItems || [])}
       </div>
       ${renderSetBonus(data.setBonus)}
-    </div>
+    </section>
 
     <!-- Actions -->
-    <div class="grid grid-cols-3 gap-2 mb-4">
-      <button class="btn-primary w-full" onclick="navigateTo('evolution')">⚡ Evoluir</button>
-      <button class="w-full py-2 rounded-lg font-bold text-sm" style="background:#854d0e;color:#fbbf24" onclick="navigateTo('rebirth')">🔄 Renascer</button>
-      <button class="w-full py-2 rounded-lg font-bold text-sm" style="background:#164e63;color:#67e8f9" onclick="navigateTo('storage')">📦 Armazém</button>
-    </div>
+    <section class="dashboard-actions mb-4" aria-label="Ações rápidas">
+      <button class="dashboard-action dashboard-action-primary" onclick="navigateTo('evolution')"><span class="dashboard-action-icon">ϟ</span><span><strong>Evoluir</strong><small>Fortaleça seu Digimon</small></span><span class="dashboard-action-arrow">›</span></button>
+      <button class="dashboard-action dashboard-action-amber" onclick="navigateTo('rebirth')"><span class="dashboard-action-icon">↻</span><span><strong>Renascer</strong><small>Recomece mais forte</small></span><span class="dashboard-action-arrow">›</span></button>
+      <button class="dashboard-action dashboard-action-cyan" onclick="navigateTo('storage')"><span class="dashboard-action-icon">▣</span><span><strong>Armazém</strong><small>Gerencie seus itens</small></span><span class="dashboard-action-arrow">›</span></button>
+    </section>
     ` : ""}
 
     <!-- Active missions -->
     ${data.activeMissions && data.activeMissions.length > 0 ? `
-    <div class="mb-4">
-      <h3 class="text-sm font-bold text-slate-300 mb-2 px-1">Missões Ativas</h3>
-      ${data.activeMissions.map(renderActiveMission).join("")}
-    </div>
+    <section class="dashboard-missions-section mb-4">
+      <div class="dashboard-section-heading">
+        <div><p class="dashboard-eyebrow dashboard-eyebrow-blue">Atividade em campo</p><h3 class="dashboard-section-title">Missões ativas</h3></div>
+        <span class="dashboard-section-count dashboard-section-count-blue">${data.activeMissions.length}</span>
+      </div>
+      <p class="dashboard-section-note">Acompanhe seus objetivos e resgate suas recompensas.</p>
+      <div class="dashboard-missions-list">
+        ${data.activeMissions.map(renderActiveMission).join("")}
+      </div>
+    </section>
     ` : ""}
 
     <!-- Incubation -->
@@ -283,37 +297,37 @@ function renderEquipSlots(items) {
   const slots = ["WEAPON", "ARMOR", "ACCESSORY"];
   const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
   const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
-  const rarityBorder = {
-    COMMON: "border-slate-600",
-    RARE: "border-blue-500",
-    EPIC: "border-purple-500",
-    LEGENDARY: "border-yellow-500"
-  };
+  const rarityClass = { COMMON: "dashboard-rarity-common", RARE: "dashboard-rarity-rare", EPIC: "dashboard-rarity-epic", LEGENDARY: "dashboard-rarity-legendary" };
 
   return slots.map(slot => {
     const item = items.find(i => i.slot === slot);
     if (item) {
-      const border = rarityBorder[item.rarity] || "border-slate-600";
+      const rarity = String(item.rarity || "COMMON").toUpperCase();
       const refLabel = item.refinementLevel > 0 ? ` +${item.refinementLevel}` : "";
+      const ascension = Number(item.ascensionLevel) || 0;
+      const stats = [];
+      if (Number(item.effectiveBonusHp) > 0) stats.push(`<span class="text-red-300">HP ${item.effectiveBonusHp}</span>`);
+      if (Number(item.effectiveBonusAttack) > 0) stats.push(`<span class="text-orange-300">ATK ${item.effectiveBonusAttack}</span>`);
+      if (Number(item.effectiveBonusDefense) > 0) stats.push(`<span class="text-blue-300">DEF ${item.effectiveBonusDefense}</span>`);
       return `
-        <div class="card-sm text-center ${border}" style="cursor:pointer" onclick="showEquipDetailModal('${item.id}')">
-          <p class="text-lg">${slotEmoji[slot]}</p>
-          <p class="text-xs font-bold truncate">${escapeHtml(item.name)}${refLabel}</p>
-          <div class="flex gap-1 justify-center flex-wrap mb-3">
-            <span class="badge badge-${item.rarity ? item.rarity.toLowerCase() : 'common'}" style="font-size:0.6rem">T${item.tier || '?'}</span>
-          </div>
-          <div class="flex flex-col gap-1" onclick="event.stopPropagation()">
-            <button class="btn-sm w-full text-[10px] py-1" style="background:#7f1d1d;color:#fca5a5" onclick="invUnequip('${item.id}')">Desequipar</button>
-          </div>
-        </div>
+        <article class="dashboard-equipment-slot ${rarityClass[rarity] || rarityClass.COMMON}" role="button" tabindex="0" aria-label="Ver detalhes de ${escapeAttr(item.name)}" onclick="showEquipDetailModal('${item.id}')" onkeydown="if (event.key === 'Enter' || event.key === ' ') showEquipDetailModal('${item.id}')">
+          <div class="dashboard-slot-topline"><span class="dashboard-slot-label">${slotName[slot]}</span><span class="dashboard-slot-status">Equipado</span></div>
+          <div class="dashboard-slot-icon" aria-hidden="true">${slotEmoji[slot]}</div>
+          <p class="dashboard-slot-name" title="${escapeAttr(`${item.name}${refLabel}`)}">${escapeHtml(item.name)}${refLabel}</p>
+          <div class="dashboard-slot-meta"><span class="badge badge-${rarity.toLowerCase()}">T${item.tier || '?'}</span>${ascension > 0 ? `<span class="badge badge-legendary">Asc. ${ascension}</span>` : ''}</div>
+          ${stats.length ? `<div class="dashboard-slot-stats">${stats.join('')}</div>` : '<div class="dashboard-slot-stats dashboard-slot-stats-muted">Toque para ver detalhes</div>'}
+          <div class="dashboard-slot-action" onclick="event.stopPropagation()"><button class="btn-sm w-full" onclick="invUnequip('${item.id}')">Desequipar</button></div>
+        </article>
       `;
     }
     return `
-      <div class="card-sm text-center opacity-70 cursor-pointer hover:border-cyan-700 transition-colors" role="button" tabindex="0" aria-label="Equipar ${slotName[slot]}" onclick="dashboardOpenEmptyEquipmentSlot('${slot}')" onkeydown="if (event.key === 'Enter' || event.key === ' ') dashboardOpenEmptyEquipmentSlot('${slot}')">
-        <p class="text-lg">${slotEmoji[slot]}</p>
-        <p class="text-xs text-slate-500">${slotName[slot]}</p>
-        <p class="text-[10px] text-cyan-400 mt-1">Clique para equipar</p>
-      </div>
+      <article class="dashboard-equipment-slot dashboard-equipment-slot-empty" role="button" tabindex="0" aria-label="Equipar ${slotName[slot]}" onclick="dashboardOpenEmptyEquipmentSlot('${slot}')" onkeydown="if (event.key === 'Enter' || event.key === ' ') dashboardOpenEmptyEquipmentSlot('${slot}')">
+        <div class="dashboard-slot-topline"><span class="dashboard-slot-label">${slotName[slot]}</span><span class="dashboard-slot-status dashboard-slot-status-empty">Livre</span></div>
+        <div class="dashboard-slot-icon dashboard-slot-icon-empty" aria-hidden="true">${slotEmoji[slot]}</div>
+        <p class="dashboard-slot-name dashboard-slot-name-empty">Nenhum item equipado</p>
+        <div class="dashboard-slot-stats dashboard-slot-stats-muted">Escolher equipamento</div>
+        <div class="dashboard-slot-action"><span class="dashboard-slot-add">+ Adicionar</span></div>
+      </article>
     `;
   }).join("");
 }
@@ -341,17 +355,15 @@ function renderActiveMission(m) {
   const done = remaining <= 0;
 
   return `
-    <div class="card-sm mb-2 flex items-center justify-between" data-mission-instance="${m.instanceId}" data-ends-at="${m.endsAt}">
-      <div>
-        <p class="font-bold text-sm">${escapeHtml(m.missionName)}</p>
-        <p class="text-xs text-slate-500 mission-timer">${done ? "Concluída!" : formatTime(remaining)}</p>
+    <article class="dashboard-mission-card ${done ? "dashboard-mission-card-ready" : ""}" data-mission-instance="${m.instanceId}" data-ends-at="${m.endsAt}">
+      <div class="dashboard-mission-icon" aria-hidden="true">✦</div>
+      <div class="dashboard-mission-main">
+        <p class="dashboard-mission-label">Objetivo em campo</p>
+        <p class="dashboard-mission-name">${escapeHtml(m.missionName)}</p>
+        <div class="dashboard-mission-state"><span class="dashboard-mission-dot ${done ? "dashboard-mission-dot-ready" : ""}"></span><span class="mission-timer">${done ? "Concluída!" : `Retorno em ${formatTime(remaining)}`}</span></div>
       </div>
-      ${done ? `
-        <button class="btn-sm btn-primary" onclick="claimMission('${m.instanceId}')">Resgatar</button>
-      ` : `
-        <span class="badge">Em andamento</span>
-      `}
-    </div>
+      <div class="dashboard-mission-action">${done ? `<button class="btn-sm btn-primary" onclick="claimMission('${m.instanceId}')">Resgatar</button>` : `<span class="dashboard-mission-badge">Em andamento</span>`}</div>
+    </article>
   `;
 }
 
@@ -361,15 +373,16 @@ function renderIncubation(inc) {
   if (activeSlots.length === 0) return "";
 
   return `
-    <div class="mb-4" id="dash-incubation">
-      <div class="flex items-center justify-between mb-2 px-1">
-        <h3 class="text-sm font-bold text-slate-300">Incubação</h3>
-        <button class="text-xs text-cyan-400" onclick="navigateTo('incubation')">Ver slots</button>
+    <section class="dashboard-incubation-section mb-4" id="dash-incubation">
+      <div class="dashboard-section-heading">
+        <div><p class="dashboard-eyebrow dashboard-eyebrow-amber">Ciclo ativo</p><h3 class="dashboard-section-title">Incubação</h3></div>
+        <button class="dashboard-section-link" onclick="navigateTo('incubation')">Ver slots <span aria-hidden="true">›</span></button>
       </div>
-      <div class="grid grid-cols-1 gap-2">
+      <p class="dashboard-section-note">Acompanhe seus Digitamas enquanto eles evoluem.</p>
+      <div class="dashboard-incubation-list">
         ${activeSlots.map(slot => renderDashboardIncubationSlot(slot)).join("")}
       </div>
-    </div>
+    </section>
   `;
 }
 
@@ -377,8 +390,9 @@ function renderDashboardIncubationSlot(slot) {
   const slotNumber = Number(slot.slotNumber);
   if (!slot.unlocked) {
     return `
-      <div class="card-sm flex items-center justify-between opacity-70" data-dash-incub-slot="${slotNumber}">
-        <div class="flex items-center gap-2"><span>🔒</span><span class="text-sm">Slot ${slotNumber}</span></div>
+      <div class="dashboard-incubation-card dashboard-incubation-card-locked" data-dash-incub-slot="${slotNumber}">
+        <div class="dashboard-incubation-icon" aria-hidden="true">🔒</div>
+        <div class="min-w-0"><p class="dashboard-incubation-label">Slot ${slotNumber}</p><p class="dashboard-incubation-name">Slot bloqueado</p></div>
         <span class="badge">Bloqueado</span>
       </div>
     `;
@@ -386,9 +400,10 @@ function renderDashboardIncubationSlot(slot) {
 
   if (!slot.incubation) {
     return `
-      <div class="card-sm flex items-center justify-between" data-dash-incub-slot="${slotNumber}" onclick="navigateTo('incubation')">
-        <div class="flex items-center gap-2"><span>🥚</span><span class="text-sm">Slot ${slotNumber}</span></div>
-        <span class="badge text-emerald-300">Livre</span>
+      <div class="dashboard-incubation-card dashboard-incubation-card-free" data-dash-incub-slot="${slotNumber}" onclick="navigateTo('incubation')">
+        <div class="dashboard-incubation-icon" aria-hidden="true">🥚</div>
+        <div class="min-w-0"><p class="dashboard-incubation-label">Slot ${slotNumber}</p><p class="dashboard-incubation-name">Disponível para uso</p></div>
+        <span class="dashboard-incubation-link">Abrir <span aria-hidden="true">›</span></span>
       </div>
     `;
   }
@@ -396,18 +411,32 @@ function renderDashboardIncubationSlot(slot) {
   const incubation = slot.incubation;
   const remaining = Math.max(0, Number(incubation.remainingSeconds) || 0);
   const done = incubation.status === "READY" || remaining <= 0;
+  const progress = dashboardIncubationProgress(incubation);
+  const digitamaEmoji = dashboardIncubationEmoji(incubation.digitamaType);
   return `
-    <div class="card-sm flex items-center justify-between cursor-pointer" data-dash-incub-slot="${slotNumber}" data-finish-at="${escapeAttr(incubation.finishAt)}" data-started-at="${escapeAttr(incubation.startedAt)}" data-remaining-seconds="${remaining}" onclick="navigateTo('incubation')">
-      <div class="min-w-0">
-        <p class="font-bold text-sm truncate">Slot ${slotNumber} · ${formatItemType(incubation.digitamaType)}</p>
-        <p class="text-xs text-slate-500">${formatItemType(incubation.incubatorType)}</p>
+    <article class="dashboard-incubation-card ${done ? "dashboard-incubation-card-ready" : "dashboard-incubation-card-active"}" data-dash-incub-slot="${slotNumber}" data-finish-at="${escapeAttr(incubation.finishAt)}" data-started-at="${escapeAttr(incubation.startedAt)}" data-remaining-seconds="${remaining}" onclick="navigateTo('incubation')">
+      <div class="dashboard-incubation-icon" aria-hidden="true">${digitamaEmoji}</div>
+      <div class="dashboard-incubation-main">
+        <div class="dashboard-incubation-topline"><span class="dashboard-incubation-label">Slot ${slotNumber}</span><span class="dashboard-incubation-status">${done ? "Pronto" : "Em andamento"}</span></div>
+        <p class="dashboard-incubation-name">${escapeHtml(formatItemType(incubation.digitamaType))}</p>
+        <p class="dashboard-incubation-meta">${escapeHtml(formatItemType(incubation.incubatorType))}</p>
+        <div class="dashboard-incubation-progress" role="progressbar" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100" aria-label="${progress}% da incubação concluída"><span id="incub-dash-bar-${slotNumber}" style="width:${progress}%"></span></div>
       </div>
-      <div class="text-right shrink-0 ml-2">
-        <p class="text-xs ${done ? "text-green-400 font-bold" : "text-amber-400"}" id="incub-dash-timer-${slotNumber}">${done ? "Pronta! 🐣" : formatTime(remaining)}</p>
-        ${done ? `<button class="btn-sm btn-primary mt-1" onclick="event.stopPropagation(); navigateTo('incubation')">Chocar</button>` : ""}
-      </div>
-    </div>
+      <div class="dashboard-incubation-timer-wrap"><p class="dashboard-incubation-timer ${done ? "dashboard-incubation-timer-ready" : ""}" id="incub-dash-timer-${slotNumber}">${done ? "Pronta!" : formatTime(remaining)}</p>${done ? `<button class="btn-sm btn-primary" onclick="event.stopPropagation(); navigateTo('incubation')">Chocar</button>` : `<span class="dashboard-incubation-open">Ver detalhes</span>`}</div>
+    </article>
   `;
+}
+
+function dashboardIncubationProgress(incubation) {
+  const total = (new Date(incubation.finishAt) - new Date(incubation.startedAt)) / 1000;
+  if (!Number.isFinite(total) || total <= 0) return 0;
+  const remaining = Math.max(0, Number(incubation.remainingSeconds) || 0);
+  return Math.min(100, Math.round(((total - remaining) / total) * 100));
+}
+
+function dashboardIncubationEmoji(type) {
+  const map = { DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿", DIGITAMA_EARTH: "🪨", DIGITAMA_WIND: "🌪️", DIGITAMA_LIGHT: "✨", DIGITAMA_DARK: "🌑", DIGITAMA_THUNDER: "⚡", DIGITAMA_ICE: "❄️", DIGITAMA_STEEL: "⚙️" };
+  return map[type] || "🥚";
 }
 
 async function claimMission(instanceId) {
@@ -441,6 +470,7 @@ function startIncubationTimer(inc = null) {
       startedAt: incubation.startedAt,
       remainingSeconds: remaining,
       timerId: `incub-dash-timer-${Number(slot.slotNumber)}`,
+      barId: `incub-dash-bar-${Number(slot.slotNumber)}`,
       formatter: formatTime,
       onComplete: () => dashboardMarkIncubationReady(Number(slot.slotNumber))
     });
@@ -451,11 +481,20 @@ function dashboardMarkIncubationReady(slotNumber) {
   const timerEl = document.getElementById(`incub-dash-timer-${slotNumber}`);
   if (!timerEl) return;
 
-  timerEl.textContent = "Pronta! 🐣";
-  timerEl.className = "text-xs text-green-400 font-bold";
+  timerEl.textContent = "Pronta!";
+  timerEl.className = "dashboard-incubation-timer dashboard-incubation-timer-ready";
+  const barEl = document.getElementById(`incub-dash-bar-${slotNumber}`);
+  if (barEl) barEl.style.width = "100%";
+  const card = timerEl.closest(".dashboard-incubation-card");
+  if (card) {
+    card.classList.remove("dashboard-incubation-card-active");
+    card.classList.add("dashboard-incubation-card-ready");
+  }
   const parent = timerEl.parentElement;
   if (parent && !parent.querySelector("button")) {
-    parent.insertAdjacentHTML("beforeend", `<button class="btn-sm btn-primary mt-1" onclick="event.stopPropagation(); navigateTo('incubation')">Chocar</button>`);
+    const details = parent.querySelector(".dashboard-incubation-open");
+    if (details) details.remove();
+    parent.insertAdjacentHTML("beforeend", `<button class="btn-sm btn-primary" onclick="event.stopPropagation(); navigateTo('incubation')">Chocar</button>`);
   }
 }
 
@@ -473,15 +512,18 @@ function startMissionTimers() {
 
       if (remaining <= 0) {
         timerEl.textContent = "Concluída!";
+        el.classList.add("dashboard-mission-card-ready");
+        const dot = el.querySelector(".dashboard-mission-dot");
+        if (dot) dot.classList.add("dashboard-mission-dot-ready");
         const btn = el.querySelector("button");
         if (!btn) {
-          const badgeEl = el.querySelector(".badge");
+          const badgeEl = el.querySelector(".dashboard-mission-badge");
           if (badgeEl) {
             badgeEl.outerHTML = `<button class="btn-sm btn-primary" onclick="claimMission('${el.dataset.missionInstance}')">Resgatar</button>`;
           }
         }
       } else {
-        timerEl.textContent = formatTime(remaining);
+        timerEl.textContent = `Retorno em ${formatTime(remaining)}`;
       }
     });
   }, 1000);
@@ -520,7 +562,8 @@ function formatItemType(t) {
     DIGITAMA_STEEL: "Digitama de Metal",
     INCUBATOR_COMMON: "Incubadora Comum",
     INCUBATOR_RARE: "Incubadora Rara",
-    INCUBATOR_EPIC: "Incubadora Épica"
+    INCUBATOR_EPIC: "Incubadora Épica",
+    INCUBATOR_LEGENDARY: "Incubadora Lendária"
   };
   return map[t] || t.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }
@@ -604,8 +647,19 @@ function showEquipDetailModal(equipmentId) {
   const emoji = slotEmoji[eq.slot] || "⚔️";
   const refLabel = eq.refinementLevel > 0 ? ` +${eq.refinementLevel}` : "";
   const setLabel = typeof invSetLabel === "function" ? invSetLabel(eq.setCode) : (eq.setCode || "");
-  const setBadge = typeof invSetBadge === "function" ? invSetBadge(eq.setCode) : "common";
-  const rarityLabel = { COMMON: "Common", RARE: "Rare", EPIC: "Epic", LEGENDARY: "Legendary" };
+  const rarityLabel = { COMMON: "Comum", RARE: "Rara", EPIC: "Épica", LEGENDARY: "Lendária" };
+  const rarityPercent = { COMMON: 0, RARE: 15, EPIC: 30, LEGENDARY: 50 };
+  const rarityMultiplier = { COMMON: 1, RARE: 1.15, EPIC: 1.30, LEGENDARY: 1.50 };
+  const ascensionLevel = Number(eq.ascensionLevel) || 0;
+  const ascensionBonus = { 0: "Nenhum", 1: "+30%", 2: "+50%", 3: "+100%" }[ascensionLevel];
+  const requiredRebirths = [0, 1, 10, 20][ascensionLevel] || 0;
+  const statImpact = (values) => Object.entries(values).filter(([, value]) => value > 0).map(([label, value]) => `+${label} ${value}`).join(" · ") || "nenhum";
+  const rarityImpact = statImpact({ HP: Math.round((eq.bonusHp || 0) * ((rarityMultiplier[eq.rarity] || 1) - 1)), ATK: Math.round((eq.bonusAttack || 0) * ((rarityMultiplier[eq.rarity] || 1) - 1)), DEF: Math.round((eq.bonusDefense || 0) * ((rarityMultiplier[eq.rarity] || 1) - 1)) });
+  const refinedStat = (base) => Math.round(base * (rarityMultiplier[eq.rarity] || 1)) + ((Number(eq.refinementLevel) || 0) * 2);
+  const ascensionMultiplier = { 0: 1, 1: 1.30, 2: 1.50, 3: 2.00 }[ascensionLevel] || 1;
+  const ascensionImpact = statImpact({ HP: Math.round(refinedStat(eq.bonusHp || 0) * (ascensionMultiplier - 1)), ATK: Math.round(refinedStat(eq.bonusAttack || 0) * (ascensionMultiplier - 1)), DEF: Math.round(refinedStat(eq.bonusDefense || 0) * (ascensionMultiplier - 1)) });
+  const refinementImpact = statImpact({ HP: eq.bonusHp > 0 ? (Number(eq.refinementLevel) || 0) * 2 : 0, ATK: eq.bonusAttack > 0 ? (Number(eq.refinementLevel) || 0) * 2 : 0, DEF: eq.bonusDefense > 0 ? (Number(eq.refinementLevel) || 0) * 2 : 0 });
+  const refinementImpactDisplay = refinementImpact.replaceAll(" · ", " - ");
 
   const overlay = document.createElement("div");
   overlay.id = "dashboard-equipment-detail-overlay";
@@ -614,35 +668,32 @@ function showEquipDetailModal(equipmentId) {
 
   overlay.innerHTML = `
     <div class="card dashboard-equipment-detail-card" style="max-width:560px;width:100%;max-height:92vh;overflow:hidden;border-radius:1rem;margin:0 auto;">
-      <div class="text-center mb-3">
-        <div class="text-3xl mb-1">${emoji}</div>
-        <h3 class="text-lg font-bold">${escapeHtml(eq.name)}${refLabel}</h3>
-        <p class="text-xs text-slate-400 mb-2">${slotName[eq.slot] || eq.slot}</p>
-        <div class="flex gap-1 justify-center flex-wrap">
-          ${eq.setCode ? `<span class="badge badge-${setBadge}">${escapeHtml(setLabel)}</span>` : ''}
-          <span class="badge badge-${eq.rarity ? eq.rarity.toLowerCase() : 'common'}">${rarityLabel[eq.rarity] || eq.rarity}</span>
-          <span class="badge badge-common">T${eq.tier || '?'}</span>
-        </div>
+      <div class="flex items-center gap-3 mb-4">
+        <div class="text-3xl shrink-0">${emoji}</div>
+        <div class="min-w-0"><h3 class="text-lg font-bold truncate">${escapeHtml(eq.name)}${refLabel}</h3><p class="text-xs text-slate-400 mt-1">${slotName[eq.slot] || eq.slot}</p></div>
       </div>
 
       <div class="card-sm mb-3">
-        <div class="flex items-center justify-between mb-2">
-          <p class="text-xs text-slate-400">Atributos</p>
-          <p class="text-[10px] text-slate-500">Base <span class="mx-1">→</span> Efetivo</p>
-        </div>
+        <p class="text-xs text-slate-400 mb-2">Atributos finais</p>
         <div class="grid grid-cols-3 gap-2 text-center text-xs">
-          ${eq.bonusHp > 0 ? `<div><span class="text-slate-400">HP</span><br><span class="text-red-400">${eq.bonusHp}</span> <span class="text-slate-500">→</span> <strong class="text-red-300">${eq.effectiveBonusHp}</strong></div>` : ''}
-          ${eq.bonusAttack > 0 ? `<div><span class="text-slate-400">ATK</span><br><span class="text-orange-400">${eq.bonusAttack}</span> <span class="text-slate-500">→</span> <strong class="text-orange-300">${eq.effectiveBonusAttack}</strong></div>` : ''}
-          ${eq.bonusDefense > 0 ? `<div><span class="text-slate-400">DEF</span><br><span class="text-blue-400">${eq.bonusDefense}</span> <span class="text-slate-500">→</span> <strong class="text-blue-300">${eq.effectiveBonusDefense}</strong></div>` : ''}
+          <div class="rounded-lg border border-red-900/50 bg-red-950/20 p-2"><span class="text-slate-400">HP</span><br><strong class="text-red-300 text-base">${eq.effectiveBonusHp || 0}</strong></div>
+          <div class="rounded-lg border border-orange-900/50 bg-orange-950/20 p-2"><span class="text-slate-400">ATK</span><br><strong class="text-orange-300 text-base">${eq.effectiveBonusAttack || 0}</strong></div>
+          <div class="rounded-lg border border-blue-900/50 bg-blue-950/20 p-2"><span class="text-slate-400">DEF</span><br><strong class="text-blue-300 text-base">${eq.effectiveBonusDefense || 0}</strong></div>
         </div>
       </div>
 
-      ${eq.refinementLevel > 0 ? `
-      <div class="card-sm mb-3">
-        <p class="text-xs text-slate-400 mb-1">Refinamento</p>
-        <p class="text-center text-sm font-bold text-yellow-400">+${eq.refinementLevel} (+${eq.refinementLevel * 2} em cada stat)</p>
-      </div>
-      ` : ''}
+      <details class="card-sm mb-3 group">
+        <summary class="cursor-pointer list-none flex items-center justify-between text-xs text-slate-400"><span>Detalhes do equipamento</span><span class="text-slate-500 group-open:rotate-180 transition-transform">⌄</span></summary>
+        <div class="mt-3 pt-3 border-t border-slate-700/70 grid grid-cols-2 gap-2 text-xs">
+          <div><span class="text-slate-500">Tier</span><p class="font-semibold">T${eq.tier || '?'}</p></div>
+          <div><span class="text-slate-500">Raridade</span><p class="font-semibold">${rarityLabel[eq.rarity] || eq.rarity} <span class="text-amber-300">(+${rarityPercent[eq.rarity] || 0}%)</span></p><p class="text-[10px] text-slate-500">${rarityImpact}</p></div>
+          <div><span class="text-slate-500">Conjunto</span><p class="font-semibold">${eq.setCode ? escapeHtml(setLabel) : 'Sem conjunto'}</p></div>
+          <div><span class="text-slate-500">Refinamento</span><p class="font-semibold text-yellow-400">${eq.refinementLevel}</p><p class="text-[10px] text-slate-500">${refinementImpactDisplay}</p></div>
+          <div><span class="text-slate-500">Ascensão</span><p class="font-semibold text-amber-300">${ascensionLevel} (${ascensionBonus})</p><p class="text-[10px] text-slate-500">${ascensionImpact}</p></div>
+          <div><span class="text-slate-500">Uso mínimo</span><p class="font-semibold">${requiredRebirths} ${requiredRebirths === 1 ? 'Renascimento' : 'Renascimentos'}</p></div>
+          <div class="col-span-2"><span class="text-slate-500">Bônus base</span><p class="font-semibold text-slate-300">HP ${eq.bonusHp || 0} · ATK ${eq.bonusAttack || 0} · DEF ${eq.bonusDefense || 0}</p></div>
+        </div>
+      </details>
 
       <div class="card-sm mb-3">
         <p class="text-xs text-slate-400 mb-2">Outros equipamentos para este slot</p>

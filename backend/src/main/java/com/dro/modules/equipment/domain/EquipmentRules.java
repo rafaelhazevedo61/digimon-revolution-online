@@ -1,6 +1,8 @@
 package com.dro.modules.equipment.domain;
 
 import com.dro.shared.exception.ConflictException;
+import com.dro.shared.exception.UnprocessableException;
+import com.dro.modules.digimon.domain.Digimon;
 
 import java.util.List;
 import java.util.Map;
@@ -22,11 +24,51 @@ public class EquipmentRules {
         }
     }
 
+    public static void validateAscensionEquipRequirement(Equipment equipment, Digimon digimon) {
+        if (equipment.getAscensionLevel() <= 0) return;
+        int required = ascensionRebirthRequirement(equipment.getAscensionLevel());
+        if (digimon.getRebirthCount() < required) {
+            throw new UnprocessableException("Este equipamento exige um Digimon com pelo menos " + required + " Renascimento(s)");
+        }
+    }
+
     /** Maior nível de refinamento permitido. */
     public static final int MAX_REFINEMENT_LEVEL = 11;
     public static final int REFINEMENT_SUCCESS_BOOST_POINTS = 10;
     public static final int MAX_REFINEMENT_BREAK_LEVEL = 10;
     public static final int REFINEMENT_BREAK_CHANCE_AT_MAX = 25;
+    public static final int MAX_ASCENSION_LEVEL = 3;
+    public static final int ASCENSION_REFINEMENT_REQUIREMENT = MAX_REFINEMENT_LEVEL;
+    private static final int[] ASCENSION_REBIRTH_REQUIREMENTS = {0, 1, 10, 20};
+    private static final int[] ASCENSION_CORE_COSTS = {0, 10, 30, 100};
+    private static final int[] ASCENSION_BITS_COSTS = {0, 100_000, 500_000, 2_000_000};
+    private static final double[] ASCENSION_MULTIPLIERS = {1.0, 1.30, 1.50, 2.00};
+
+    public static int ascensionRebirthRequirement(int targetLevel) {
+        validateAscensionTarget(targetLevel);
+        return ASCENSION_REBIRTH_REQUIREMENTS[targetLevel];
+    }
+
+    public static int ascensionCoreCost(int targetLevel) {
+        validateAscensionTarget(targetLevel);
+        return ASCENSION_CORE_COSTS[targetLevel];
+    }
+
+    public static int ascensionBitsCost(int targetLevel) {
+        validateAscensionTarget(targetLevel);
+        return ASCENSION_BITS_COSTS[targetLevel];
+    }
+
+    public static double ascensionMultiplier(int level) {
+        if (level < 0 || level > MAX_ASCENSION_LEVEL) return 1.0;
+        return ASCENSION_MULTIPLIERS[level];
+    }
+
+    public static void validateAscensionTarget(int targetLevel) {
+        if (targetLevel < 1 || targetLevel > MAX_ASCENSION_LEVEL) {
+            throw new IllegalArgumentException("Invalid ascension target: " + targetLevel);
+        }
+    }
 
     // Set bonus percentages: [2-piece HP%, 2-piece ATK%, 2-piece DEF%, 3-piece HP%, 3-piece ATK%, 3-piece DEF%]
     private static final Map<String, int[]> SET_BONUSES = Map.of(

@@ -23,6 +23,7 @@ public record RebirthPreviewResponse(
         IvRangeResponse defenseIvRange,
         double statMultiplier,
         int equippedEquipmentCount,
+        int pendingCompletedMissionCount,
         Rarity currentRarity,
         int rarityPreservationItemQuantity
 ) {

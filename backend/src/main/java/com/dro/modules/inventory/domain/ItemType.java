@@ -31,6 +31,7 @@ public enum ItemType {
     INCUBATOR_COMMON,
     INCUBATOR_RARE,
     INCUBATOR_EPIC,
+    INCUBATOR_LEGENDARY,
 
     // Expansão da incubadora
     INCUBATION_SLOT_UNLOCK,
@@ -62,6 +63,9 @@ public enum ItemType {
 
     // Material de refinamento
     REFINEMENT_STONE,
+
+    // Material de Ascensão de equipamentos
+    ASCENSION_CORE,
 
     // Reroll de raridade do Digimon
     RARITY_REROLL,

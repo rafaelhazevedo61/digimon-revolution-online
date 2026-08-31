@@ -9,6 +9,6 @@ import java.util.UUID;
 
 public record BulkSacrificeDigimonRequest(
         @NotEmpty(message = "Selecione pelo menos um Digimon")
-        @Size(max = 100, message = "É possível sacrificar no máximo 100 Digimons por operação")
+        @Size(max = 500, message = "É possível sacrificar no máximo 500 Digimons por operação")
         List<@NotNull UUID> digimonIds
 ) {}

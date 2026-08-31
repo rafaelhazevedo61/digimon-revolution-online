@@ -1,7 +1,9 @@
 package com.dro.modules.equipment.infra;
 
 import com.dro.modules.equipment.domain.Equipment;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -10,6 +12,10 @@ import java.util.UUID;
 
 /** Componente da camada de repositório de persistência do módulo de Equipamentos. */
 public interface EquipmentRepository extends JpaRepository<Equipment, UUID> {
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT equipment FROM Equipment equipment WHERE equipment.id = :id")
+    java.util.Optional<Equipment> findByIdForUpdate(@Param("id") UUID id);
+
     List<Equipment> findByPlayerId(UUID playerId);
     List<Equipment> findByPlayerIdAndEquippedFalse(UUID playerId);
 

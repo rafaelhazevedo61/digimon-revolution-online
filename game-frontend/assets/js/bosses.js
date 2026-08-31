@@ -96,11 +96,14 @@ function renderBossTypeTabs() {
     const info = BOSS_TYPE_INFO[t];
     const active = t === bossActiveType;
     const count = bossesData.filter(b => b.requiredStage === bossActiveStage && b.bossType === t).length;
+    const availableCount = bossesData.filter(b => b.requiredStage === bossActiveStage && b.bossType === t && b.available).length;
+    const available = availableCount > 0;
     return `
-      <button class="py-2 rounded-xl text-xs font-bold text-center transition-colors border border-transparent
+      <button class="relative py-2 rounded-xl text-xs font-bold text-center transition-colors border border-transparent
+        ${available ? "boss-stage-available" : ""}
         ${active ? info.color : "bg-slate-800 text-slate-400 hover:bg-slate-700"}"
         onclick="bossActiveType='${t}'; renderBossTypeTabs(); renderBossList();">
-        ${escapeHtml(info.label)} (${count})
+        ${escapeHtml(info.label)} (${count})${available ? `<span class="boss-stage-availability-dot" title="${availableCount} chefe(s) disponível(is) nesta frequência" aria-label="${availableCount} chefe(s) disponível(is) nesta frequência">${availableCount}</span>` : ""}
       </button>
     `;
   }).join("");

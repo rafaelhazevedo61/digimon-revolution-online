@@ -184,13 +184,19 @@ public class Digimon {
      * definido por {@link DigimonLevelRules}.</p>
      *
      * @param baseXp experiência base recebida pela atividade
+     * @return experiência efetivamente aplicada após os multiplicadores do Digimon
      */
-    public void gainExperience(int baseXp) {
+    public int gainExperience(int baseXp) {
+        if (baseXp <= 0 || this.level >= MAX_LEVEL) {
+            return 0;
+        }
+
         double rarityMultiplier = RarityRules.getXpMultiplier(this.rarity);
         double personalityMultiplier = PersonalityRules.getXpMultiplier(this.personality);
         double traitMultiplier = TraitRules.getXpMultiplier(this.trait);
         int finalXp = (int) Math.floor(baseXp * rarityMultiplier * personalityMultiplier * traitMultiplier);
         applyExperience(finalXp);
+        return finalXp;
     }
 
     /**

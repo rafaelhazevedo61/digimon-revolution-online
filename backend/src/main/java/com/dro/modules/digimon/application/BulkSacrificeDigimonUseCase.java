@@ -27,6 +27,9 @@ import java.util.UUID;
 /** Sacrifica vários Digimons armazenados de forma atômica. */
 @Service
 public class BulkSacrificeDigimonUseCase {
+    private static final int MAX_BATCH_SIZE = 100;
+    private static final int MAX_REQUEST_SIZE = 500;
+
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
     private final MissionInstanceRepository missionInstanceRepository;
@@ -39,25 +42,30 @@ public class BulkSacrificeDigimonUseCase {
                 .orElseThrow(() -> new NotFoundException("Player not found"));
         validateIds(digimonIds);
 
-        List<Digimon> digimons = digimonRepository.findAllByIdForUpdate(playerId, digimonIds);
-        if (digimons.size() != digimonIds.size()) {
-            throw new NotFoundException("One or more Digimons not found");
-        }
-
-        Map<UUID, Digimon> byId = new HashMap<>();
-        digimons.forEach(digimon -> byId.put(digimon.getId(), digimon));
+        List<Digimon> digimons = new ArrayList<>(digimonIds.size());
         int totalReward = 0;
         List<BulkSacrificeDigimonResponse.SacrificedDigimonResponse> sacrificed = new ArrayList<>();
 
-        for (UUID digimonId : digimonIds) {
-            Digimon digimon = byId.get(digimonId);
-            validateSacrifice(playerId, player, digimon);
-            int reward = DigitalDataRules.calculate(
-                    digimon.getStage(), digimon.getLevel(),
-                    digimon.getIvHp(), digimon.getIvAttack(), digimon.getIvDefense());
-            totalReward += reward;
-            sacrificed.add(new BulkSacrificeDigimonResponse.SacrificedDigimonResponse(
-                    digimon.getId(), digimon.getName(), reward));
+        for (int offset = 0; offset < digimonIds.size(); offset += MAX_BATCH_SIZE) {
+            List<UUID> batchIds = digimonIds.subList(offset, Math.min(offset + MAX_BATCH_SIZE, digimonIds.size()));
+            List<Digimon> batch = digimonRepository.findAllByIdForUpdate(playerId, batchIds);
+            if (batch.size() != batchIds.size()) {
+                throw new NotFoundException("One or more Digimons not found");
+            }
+
+            Map<UUID, Digimon> byId = new HashMap<>();
+            batch.forEach(digimon -> byId.put(digimon.getId(), digimon));
+            for (UUID digimonId : batchIds) {
+                Digimon digimon = byId.get(digimonId);
+                validateSacrifice(playerId, player, digimon);
+                int reward = DigitalDataRules.calculate(
+                        digimon.getStage(), digimon.getLevel(),
+                        digimon.getIvHp(), digimon.getIvAttack(), digimon.getIvDefense());
+                totalReward += reward;
+                sacrificed.add(new BulkSacrificeDigimonResponse.SacrificedDigimonResponse(
+                        digimon.getId(), digimon.getName(), reward));
+            }
+            digimons.addAll(batch);
         }
 
         for (Digimon digimon : digimons) {
@@ -75,8 +83,8 @@ public class BulkSacrificeDigimonUseCase {
         if (digimonIds == null || digimonIds.isEmpty()) {
             throw new BadRequestException("Selecione pelo menos um Digimon");
         }
-        if (digimonIds.size() > 100) {
-            throw new BadRequestException("É possível sacrificar no máximo 100 Digimons por operação");
+        if (digimonIds.size() > MAX_REQUEST_SIZE) {
+            throw new BadRequestException("É possível sacrificar no máximo 500 Digimons por operação");
         }
         if (new HashSet<>(digimonIds).size() != digimonIds.size()) {
             throw new BadRequestException("Não é possível selecionar o mesmo Digimon mais de uma vez");

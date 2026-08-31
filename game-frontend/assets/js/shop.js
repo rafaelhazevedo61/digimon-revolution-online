@@ -1,9 +1,28 @@
 let shopData = null;
+const SHOP_MAX_BUY_QUANTITY = 999;
+
 let shopPlayerBits = 0;
+let shopModalStartingBits = 0;
 let shopModalUnitPrice = 0;
 let shopMode = "buy"; // "buy" or "sell"
 let shopInventoryItems = [];
 let shopInventoryEquipments = [];
+let shopSearchQuery = "";
+let shopBuyCategory = "ALL";
+let shopSellCategory = "ALL";
+
+const SHOP_CATEGORY_LABELS = {
+  ALL: "Todos",
+  CONSUMABLE: "Consumíveis",
+  MATERIAL: "Materiais",
+  EVOLUTION_MATERIAL: "Evolução",
+  FRAGMENT: "Fragmentos",
+  DIGITAMA: "Digitamas",
+  INCUBATOR: "Incubadoras",
+  CHEST: "Baús",
+  OTHER: "Outros",
+  EQUIPMENT: "Equipamentos"
+};
 
 const SHOP_RARITY_LABELS = {
   COMMON: "Comum",
@@ -17,19 +36,37 @@ async function renderShopPage() {
   showBottomNav("shop");
 
   app.innerHTML = `
-    <div class="page-container">
-      <div class="flex items-center justify-between mb-4 px-1">
-        <h2 class="text-lg font-bold">Loja</h2>
-        <div class="flex items-center gap-2">
-          <span class="text-yellow-400 font-bold" id="shop-bits">--</span>
-          <span class="text-xs text-slate-400">Bits</span>
+    <div class="page-container shop-page">
+      <header class="progression-page-header shop-page-header">
+        <div>
+          <p class="progression-eyebrow progression-eyebrow-cyan">Economia do servidor</p>
+          <h2 class="progression-page-title">Loja</h2>
+          <p class="progression-page-subtitle">Compre recursos, venda equipamentos e mantenha seu Digimon pronto para a próxima missão.</p>
         </div>
-      </div>
+        <div class="shop-balance-card" aria-label="Saldo atual de Bits">
+          <span class="shop-balance-label">Saldo atual</span>
+          <strong class="shop-balance-value" id="shop-bits">--</strong>
+          <span class="shop-balance-currency">Bits</span>
+        </div>
+      </header>
 
-      <!-- Buy/Sell toggle -->
-      <div class="flex gap-2 mb-4" id="shop-mode-tabs">
-        <button class="tab-btn active" data-mode="buy" onclick="shopSetMode('buy')">Comprar</button>
-        <button class="tab-btn" data-mode="sell" onclick="shopSetMode('sell')">Vender</button>
+      <section class="progression-hero progression-hero-cyan shop-hero mb-4">
+        <div class="progression-hero-topline">
+          <span class="progression-hero-kicker">Central de comércio</span>
+          <span class="progression-hero-status">Mercado ativo</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="progression-hero-visual shop-hero-visual" aria-hidden="true">🛒</div>
+          <div class="min-w-0">
+            <h3 class="progression-panel-title">Recursos para sua jornada</h3>
+            <p class="shop-hero-copy">Use seus Bits com estratégia ou transforme equipamentos parados em novas oportunidades.</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="shop-mode-switch" id="shop-mode-tabs" role="tablist" aria-label="Modo da loja">
+        <button class="shop-mode-button active" data-mode="buy" role="tab" aria-selected="true" onclick="shopSetMode('buy')"><span aria-hidden="true">＋</span> Comprar</button>
+        <button class="shop-mode-button" data-mode="sell" role="tab" aria-selected="false" onclick="shopSetMode('sell')"><span aria-hidden="true">↗</span> Vender</button>
       </div>
 
       <div id="shop-content">
@@ -39,8 +76,13 @@ async function renderShopPage() {
   `;
 
   try {
-    shopData = await apiGet("/shop");
-    const dashboard = await apiGet("/players/me/dashboard");
+    const [catalog, dashboard, inventory] = await Promise.all([
+      apiGet("/shop"),
+      apiGet("/players/me/dashboard"),
+      apiGet("/inventory")
+    ]);
+    shopData = catalog;
+    shopInventoryItems = inventory || [];
     shopPlayerBits = dashboard.activeDigimon ? dashboard.activeDigimon.bits : 0;
     document.getElementById("shop-bits").textContent = shopFormatNumber(shopPlayerBits);
     shopMode = "buy";
@@ -56,8 +98,10 @@ async function renderShopPage() {
 
 function shopSetMode(mode) {
   shopMode = mode;
-  document.querySelectorAll("#shop-mode-tabs .tab-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.mode === mode);
+  document.querySelectorAll("#shop-mode-tabs [data-mode]").forEach(btn => {
+    const active = btn.dataset.mode === mode;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-selected", String(active));
   });
   if (mode === "buy") {
     shopRenderBuyMode();
@@ -71,22 +115,41 @@ function shopSetMode(mode) {
 function shopRenderBuyMode() {
   const content = document.getElementById("shop-content");
   content.innerHTML = `
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4" id="shop-tabs">
-      <button class="tab-btn w-full" data-cat="ALL" onclick="shopSwitchTab('ALL')">Todos</button>
-      <button class="tab-btn w-full" data-cat="CONSUMABLE" onclick="shopSwitchTab('CONSUMABLE')">Consumíveis</button>
-      <button class="tab-btn w-full" data-cat="MATERIAL" onclick="shopSwitchTab('MATERIAL')">Materiais</button>
-      <button class="tab-btn w-full" data-cat="EVOLUTION_MATERIAL" onclick="shopSwitchTab('EVOLUTION_MATERIAL')">Evolução</button>
-      <button class="tab-btn w-full" data-cat="FRAGMENT" onclick="shopSwitchTab('FRAGMENT')">Fragmentos</button>
-      <button class="tab-btn w-full" data-cat="DIGITAMA" onclick="shopSwitchTab('DIGITAMA')">Digitamas</button>
-      <button class="tab-btn w-full" data-cat="INCUBATOR" onclick="shopSwitchTab('INCUBATOR')">Incubadoras</button>
-      <button class="tab-btn w-full" data-cat="CHEST" onclick="shopSwitchTab('CHEST')">Baús</button>
-      <button class="tab-btn w-full" data-cat="OTHER" onclick="shopSwitchTab('OTHER')">Outros</button>
-      <button class="tab-btn w-full" data-cat="EQUIPMENT" onclick="shopSwitchTab('EQUIPMENT')">Equipamentos</button>
-    </div>
-    <div id="shop-list"></div>
+    <section class="shop-section">
+      <div class="shop-section-heading">
+        <div>
+          <p class="progression-eyebrow progression-eyebrow-cyan">Catálogo</p>
+          <h3 class="shop-section-title">Comprar recursos</h3>
+        </div>
+        <span class="shop-section-note">Escolha uma categoria</span>
+      </div>
+      <div class="shop-search-row">
+        <span class="shop-search-icon" aria-hidden="true">⌕</span>
+        <input id="shop-search" class="input shop-search-input" type="search" placeholder="Buscar no catálogo..." value="${escapeHtml(shopSearchQuery)}" oninput="shopSearchUpdate(this.value)" aria-label="Buscar produtos">
+      </div>
+      <nav class="shop-category-nav" id="shop-tabs" aria-label="Categorias da loja">
+        ${shopCategoryButtons()}
+      </nav>
+      <div class="shop-list-heading">
+        <p class="shop-list-title" id="shop-list-title">Todos os produtos</p>
+        <span class="shop-list-count" id="shop-list-count"></span>
+      </div>
+      <div id="shop-list"></div>
+    </section>
   `;
   shopSwitchTab("ALL");
 }
+function shopProductInventoryQuantity(product) {
+  const targetCode = product.itemDefinitionCode || product.itemType || product.code;
+  return shopInventoryItems
+    .filter(item => {
+      const definitionCode = item.itemDefinition && item.itemDefinition.code;
+      if (product.itemDefinitionCode) return definitionCode === product.itemDefinitionCode;
+      return definitionCode === targetCode || (!definitionCode && item.itemType === targetCode);
+    })
+    .reduce((total, item) => total + Math.max(0, Number(item.quantity) || 0), 0);
+}
+
 function shopAllProducts() {
   const products = [
     ...(shopData.potions || []),
@@ -116,32 +179,81 @@ function shopProductsForCategory(category) {
     return false;
   });
 }
+function shopCategoryButtons() {
+  return Object.entries(SHOP_CATEGORY_LABELS).map(([category, label]) => `
+    <button class="shop-category-button" data-cat="${category}" onclick="shopCategorySelect('${category}')">${label}</button>
+  `).join("");
+}
+
+function shopCategorySelect(category) {
+  if (shopMode === "sell") {
+    shopSwitchSellTab(category);
+  } else {
+    shopSwitchTab(category);
+  }
+}
+
+function shopMatchesSearch(values, query = shopSearchQuery) {
+  const normalizedQuery = String(query || "").trim().toLowerCase();
+  if (!normalizedQuery) return true;
+  return values.some(value => String(value || "").toLowerCase().includes(normalizedQuery));
+}
+
+function shopSearchUpdate(value) {
+  shopSearchQuery = String(value || "").trimStart();
+  if (shopMode === "buy") {
+    shopSwitchTab(shopBuyCategory);
+  } else {
+    shopSwitchSellTab(shopSellCategory);
+  }
+}
+
 function shopSwitchTab(cat) {
-  document.querySelectorAll("#shop-tabs .tab-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.cat === cat);
+  shopBuyCategory = cat;
+  document.querySelectorAll("#shop-tabs [data-cat]").forEach(btn => {
+    const active = btn.dataset.cat === cat;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-current", active ? "page" : "false");
   });
-  const items = shopProductsForCategory(cat);
+  const query = shopSearchQuery.toLowerCase();
+  const items = shopProductsForCategory(cat).filter(product => shopMatchesSearch([
+    product.code, product.name, product.description, product.itemType, product.category, product.equipmentTemplateName
+  ], query));
   const container = document.getElementById("shop-list");
+  const listTitle = document.getElementById("shop-list-title");
+  const listCount = document.getElementById("shop-list-count");
+  const categoryName = SHOP_CATEGORY_LABELS[cat] || "Produtos";
+  if (listTitle) listTitle.textContent = categoryName;
+  if (listCount) listCount.textContent = `${items.length} ${items.length === 1 ? "produto" : "produtos"}`;
 
   if (items.length === 0) {
-    container.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">Nenhum produto nesta categoria.</p>`;
+    container.innerHTML = `
+      <div class="shop-empty-state">
+        <span class="shop-empty-icon" aria-hidden="true">⌁</span>
+        <p>Nenhum produto nesta categoria.</p>
+        <span>Volte ao catálogo para explorar outras opções.</span>
+      </div>
+    `;
     return;
   }
 
-  container.innerHTML = items.map(p => `
-    <div class="card-sm mb-2 flex items-center gap-3">
-      <div class="text-2xl">${shopItemEmoji(p)}</div>
-      <div class="flex-1 min-w-0">
-        <p class="font-bold text-sm break-words">${escapeHtml(p.name)}</p>
-        <p class="text-xs text-slate-400 break-words">${escapeHtml(p.description || "")}</p>
-        <div class="flex gap-2 mt-1">
-          <span class="text-xs text-yellow-400 font-bold">${shopFormatBits(p.price)}</span>
-          ${p.sellPrice > 0 ? `<span class="text-xs text-slate-500">Venda: ${shopFormatBits(p.sellPrice)}</span>` : ""}
+  container.innerHTML = `<div class="shop-product-list">${items.map(p => `
+    <article class="shop-product-card">
+      <div class="shop-product-icon" aria-hidden="true">${shopItemEmoji(p)}</div>
+      <div class="shop-product-body">
+        <div class="shop-product-heading">
+          <p class="shop-product-name">${escapeHtml(p.name)}</p>
+          ${p.productType === "EQUIPMENT" ? `<span class="shop-product-type">Equipamento</span>` : ""}
+        </div>
+        <p class="shop-product-description">${escapeHtml(p.description || "")}</p>
+        <div class="shop-product-meta">
+          <span class="shop-product-price">${shopFormatBits(p.price)}</span>
+          ${p.sellPrice > 0 ? `<span class="shop-product-resale">Venda: ${shopFormatBits(p.sellPrice)}</span>` : ""}
         </div>
       </div>
-      <button class="btn-sm btn-primary" onclick="shopOpenBuy('${escapeHtml(p.code)}')">Comprar</button>
-    </div>
-  `).join("");
+      <button class="shop-action-button shop-action-buy" onclick="shopOpenBuy('${escapeHtml(p.code)}')">Comprar</button>
+    </article>
+  `).join("")}</div>`;
 }
 
 function shopItemEmoji(p) {
@@ -151,7 +263,7 @@ function shopItemEmoji(p) {
     DIGITAMA_STARTER: "⭐", DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿",
     DIGITAMA_EARTH: "🌍", DIGITAMA_WIND: "🌪️", DIGITAMA_LIGHT: "✨", DIGITAMA_DARK: "🌑",
     DIGITAMA_THUNDER: "⚡", DIGITAMA_NEUTRAL: "⚪", DIGITAMA_ICE: "❄️", DIGITAMA_STEEL: "⚙️",
-    INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "📦", INCUBATOR_EPIC: "📦",
+    INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "📦", INCUBATOR_EPIC: "📦", INCUBATOR_LEGENDARY: "🌟",
     FRAGMENT_ROOKIE: "🧩", FRAGMENT_CHAMPION: "🧩", FRAGMENT_ULTIMATE: "🧩", FRAGMENT_MEGA: "🧩",
     EVOLUTION_MATERIAL: "⭐", LOOT_CHEST: renderChestIcon("w-10 h-10")
   };
@@ -163,7 +275,17 @@ function shopOpenBuy(code) {
   if (!product) return;
 
   const isEquip = product.productType === "EQUIPMENT";
-  const maxQty = isEquip ? 1 : Math.floor(shopPlayerBits / product.price) || 1;
+  const inventoryQuantity = isEquip ? 0 : shopProductInventoryQuantity(product);
+  const remainingStackQuantity = Math.max(0, SHOP_MAX_BUY_QUANTITY - inventoryQuantity);
+  const affordableQuantity = product.price > 0 ? Math.floor(shopPlayerBits / product.price) : SHOP_MAX_BUY_QUANTITY;
+  const maxQty = isEquip ? 1 : Math.min(SHOP_MAX_BUY_QUANTITY, remainingStackQuantity, affordableQuantity);
+  const purchaseUnavailable = maxQty < 1 || shopPlayerBits < product.price;
+  const purchaseUnavailableMessage = remainingStackQuantity < 1
+    ? "Limite de stack atingido para este item."
+    : "Bits insuficientes para comprar este recurso.";
+  const initialQuantity = purchaseUnavailable ? 0 : 1;
+  const initialTotal = initialQuantity * product.price;
+  shopModalStartingBits = shopPlayerBits;
   shopModalUnitPrice = product.price;
 
   const overlay = document.createElement("div");
@@ -171,28 +293,51 @@ function shopOpenBuy(code) {
   overlay.id = "shop-modal";
   overlay.innerHTML = `
     <div class="shop-modal">
-      <h3 class="font-bold text-lg mb-1">${escapeHtml(product.name)}</h3>
-      <p class="text-xs text-slate-400 mb-3">${escapeHtml(product.description || "")}</p>
-      <div class="flex justify-between text-sm mb-4">
-        <span class="text-slate-400">Preço unitário</span>
-        <span class="text-yellow-400 font-bold">${shopFormatBits(product.price)}</span>
+      <div class="shop-modal-heading">
+        <div>
+          <p class="shop-modal-kicker shop-modal-kicker-buy">Comprar recurso</p>
+          <h3 class="shop-modal-title">${escapeHtml(product.name)}</h3>
+        </div>
+        <span class="shop-modal-mark shop-modal-mark-buy" aria-hidden="true">＋</span>
       </div>
-      ${!isEquip ? `
-      <div class="mb-4">
-        <label class="label">Quantidade</label>
-        <div class="flex items-center gap-2">
-          <button class="btn-sm btn-primary" onclick="shopQtyChange(-1)">−</button>
-          <input type="number" id="shop-qty" class="input text-center" value="1" min="1" max="${maxQty}" style="width:4rem" oninput="shopQtyUpdate()">
-          <button class="btn-sm btn-primary" onclick="shopQtyChange(1)">+</button>
+      <p class="shop-modal-description">${escapeHtml(product.description || "")}</p>
+      <div class="shop-modal-summary">
+        <div class="shop-modal-row">
+          <span>Preço unitário</span>
+          <strong class="shop-modal-value-buy">${shopFormatBits(product.price)}</strong>
+        </div>
+        <div class="shop-modal-row">
+          <span>Bits atuais</span>
+          <strong id="shop-bits-current" class="shop-modal-value-buy">${shopFormatBits(shopModalStartingBits)}</strong>
+        </div>
+        ${!isEquip ? `
+        <div class="shop-modal-quantity">
+          <label class="label" for="shop-qty">Quantidade</label>
+          <div class="shop-buy-quantity-controls">
+            <button class="btn-sm btn-primary" onclick="shopQtyChange(-1)" aria-label="Diminuir quantidade">−</button>
+            <input type="number" id="shop-qty" class="input text-center" value="${initialQuantity}" min="1" max="${maxQty}" oninput="shopQtyUpdate()" ${purchaseUnavailable ? "disabled" : ""}>
+            <button class="btn-sm btn-primary" onclick="shopQtyChange(1)" aria-label="Aumentar quantidade" ${purchaseUnavailable ? "disabled" : ""}>+</button>
+            <button class="btn-sm btn-primary" onclick="shopBuyMax()" aria-label="Comprar quantidade máxima" title="Comprar máximo" ${purchaseUnavailable ? "disabled" : ""}>MAX</button>
+          </div>
+          <p class="text-xs text-slate-500 mt-2">No inventário: ${shopFormatNumber(inventoryQuantity)} / ${SHOP_MAX_BUY_QUANTITY} · Restante: ${shopFormatNumber(remainingStackQuantity)}</p>
+          ${purchaseUnavailable ? `<p class="text-xs text-red-400 mt-2">${purchaseUnavailableMessage}</p>` : ""}
+        </div>
+        ` : ""}
+        <div class="shop-modal-row">
+          <span>Bits a debitar</span>
+          <strong id="shop-bits-debit" class="shop-modal-value-buy">${shopFormatBits(initialTotal)}</strong>
+        </div>
+        <div class="shop-modal-row">
+          <span>Saldo após a transação</span>
+          <strong id="shop-bits-remaining" class="shop-modal-value-buy">${shopFormatBits(Math.max(0, shopModalStartingBits - initialTotal))}</strong>
+        </div>
+        <div class="shop-modal-total shop-modal-total-buy">
+          <span>Total</span>
+          <strong id="shop-total">${shopFormatBits(initialTotal)}</strong>
         </div>
       </div>
-      ` : ""}
-      <div class="flex justify-between text-sm mb-4">
-        <span class="text-slate-400">Total</span>
-        <span class="text-yellow-400 font-bold" id="shop-total">${shopFormatBits(product.price)}</span>
-      </div>
-      <div class="flex gap-2">
-        <button class="btn-primary flex-1" onclick="shopConfirmBuy('${escapeHtml(code)}', ${product.price})" id="shop-buy-btn">Confirmar</button>
+      <div class="shop-modal-actions">
+        <button class="btn-primary flex-1" onclick="shopConfirmBuy('${escapeHtml(code)}', ${product.price})" id="shop-buy-btn" ${purchaseUnavailable ? "disabled" : ""}>Confirmar</button>
         <button class="btn-sm flex-1" style="background:#334155;color:#94a3b8" onclick="shopCloseModal()">Cancelar</button>
       </div>
     </div>
@@ -215,17 +360,39 @@ function shopQtyChange(delta) {
   }
 }
 
+function shopBuyMax() {
+  const input = document.getElementById("shop-qty");
+  if (!input || input.disabled) return;
+
+  const max = Math.min(SHOP_MAX_BUY_QUANTITY, parseInt(input.max, 10) || 1);
+  if (max < 1) return;
+
+  input.value = max;
+  shopQtyUpdate();
+}
+
 function shopQtyUpdate() {
   const input = document.getElementById("shop-qty");
   const totalEl = document.getElementById("shop-total");
   if (!input || !totalEl) return;
-  const qty = parseInt(input.value) || 1;
-  totalEl.textContent = shopFormatBits(qty * shopModalUnitPrice);
+
+  const min = parseInt(input.min, 10) || 1;
+  const max = Math.min(SHOP_MAX_BUY_QUANTITY, parseInt(input.max, 10) || SHOP_MAX_BUY_QUANTITY);
+  const qty = Math.max(min, Math.min(max, parseInt(input.value, 10) || min));
+  const total = qty * shopModalUnitPrice;
+  input.value = qty;
+  totalEl.textContent = shopFormatBits(total);
+
+  const debitEl = document.getElementById("shop-bits-debit");
+  const remainingEl = document.getElementById("shop-bits-remaining");
+  if (debitEl) debitEl.textContent = shopFormatBits(total);
+  if (remainingEl) remainingEl.textContent = shopFormatBits(Math.max(0, shopModalStartingBits - total));
 }
 
 async function shopConfirmBuy(code, unitPrice) {
   const qtyInput = document.getElementById("shop-qty");
-  const qty = qtyInput ? parseInt(qtyInput.value) || 1 : 1;
+  const max = qtyInput ? Math.min(SHOP_MAX_BUY_QUANTITY, parseInt(qtyInput.max, 10) || SHOP_MAX_BUY_QUANTITY) : 1;
+  const qty = qtyInput ? Math.max(1, Math.min(max, parseInt(qtyInput.value, 10) || 1)) : 1;
   const btn = document.getElementById("shop-buy-btn");
   if (btn) { btn.disabled = true; btn.textContent = "Comprando..."; }
 
@@ -235,6 +402,7 @@ async function shopConfirmBuy(code, unitPrice) {
     document.getElementById("shop-bits").textContent = shopFormatNumber(shopPlayerBits);
     shopCloseModal();
     showToast(`${escapeHtml(result.name)} x${result.quantity} comprado! -${shopFormatBits(result.totalPrice)}`);
+    setTimeout(() => window.location.reload(), 350);
   } catch (err) {
     showToast(err.message, "error");
     if (btn) { btn.disabled = false; btn.textContent = "Confirmar"; }
@@ -261,7 +429,7 @@ async function shopRenderSellMode() {
     shopInventoryItems = inventory || [];
     shopInventoryEquipments = await apiGet(`/equipment/inventory`) || [];
 
-    shopRenderSellList();
+    shopRenderSellLayout();
   } catch (err) {
     content.innerHTML = `
       <div class="card border-red-900">
@@ -277,6 +445,145 @@ function shopSellItemEmoji(category) {
     EVOLUTION_MATERIAL: "⭐", DIGITAMA: "🥚", INCUBATOR: "📦", CHEST: renderChestIcon("w-10 h-10")
   };
   return map[category] || "📦";
+}
+
+function shopRenderSellLayout() {
+  const content = document.getElementById("shop-content");
+  content.innerHTML = `
+    <section class="shop-section shop-sell-section">
+      <div class="shop-section-heading">
+        <div>
+          <p class="progression-eyebrow progression-eyebrow-amber">Inventário</p>
+          <h3 class="shop-section-title">Vender itens</h3>
+        </div>
+        <span class="shop-section-note">Filtre e encontre rapidamente</span>
+      </div>
+      <div class="shop-search-row">
+        <span class="shop-search-icon" aria-hidden="true">⌕</span>
+        <input id="shop-search" class="input shop-search-input" type="search" placeholder="Buscar no inventário..." value="${escapeHtml(shopSearchQuery)}" oninput="shopSearchUpdate(this.value)" aria-label="Buscar itens para vender">
+      </div>
+      <nav class="shop-category-nav" id="shop-tabs" aria-label="Categorias do inventário">
+        ${shopCategoryButtons()}
+      </nav>
+      <div class="shop-list-heading">
+        <p class="shop-list-title" id="shop-list-title">Todos</p>
+        <span class="shop-list-count" id="shop-list-count"></span>
+      </div>
+      <div id="shop-sell-list"></div>
+    </section>
+  `;
+  shopSwitchSellTab(shopSellCategory);
+}
+
+function shopSellCategoryMatches(item, category) {
+  const def = item.itemDefinition || {};
+  const itemType = String(def.code || item.itemType || "").toUpperCase();
+  const itemCategory = String(def.category || "").toUpperCase();
+  if (category === "ALL") return true;
+  if (category === "CONSUMABLE") return itemCategory === "POTION" || itemCategory === "CONSUMABLE";
+  if (category === "MATERIAL") return itemCategory === "MATERIAL" && itemType !== "EVOLUTION_MATERIAL";
+  if (category === "EVOLUTION_MATERIAL") return itemType === "EVOLUTION_MATERIAL";
+  if (category === "FRAGMENT") return itemCategory === "FRAGMENT" || itemType.startsWith("FRAGMENT_");
+  if (category === "DIGITAMA") return itemType.startsWith("DIGITAMA_");
+  if (category === "INCUBATOR") return itemType.startsWith("INCUBATOR_");
+  if (category === "CHEST") return itemCategory === "CHEST" || itemType === "LOOT_CHEST";
+  if (category === "EQUIPMENT") return false;
+  if (category === "OTHER") return !["CONSUMABLE", "MATERIAL", "EVOLUTION_MATERIAL", "FRAGMENT", "DIGITAMA", "INCUBATOR", "CHEST"].some(group => shopSellCategoryMatches(item, group));
+  return false;
+}
+
+function shopSwitchSellTab(category) {
+  shopSellCategory = category;
+  document.querySelectorAll("#shop-tabs [data-cat]").forEach(btn => {
+    const active = btn.dataset.cat === category;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-current", active ? "page" : "false");
+  });
+  const list = document.getElementById("shop-sell-list");
+  if (!list) return;
+
+  const query = shopSearchQuery.toLowerCase();
+  const sellableItems = shopInventoryItems
+    .filter(item => item.quantity > 0 && item.itemDefinition && item.itemDefinition.sellable && item.itemDefinition.sellPrice > 0)
+    .filter(item => shopSellCategoryMatches(item, category))
+    .filter(item => shopMatchesSearch([
+      item.itemDefinition.code, item.itemDefinition.name, item.itemDefinition.description, item.itemDefinition.category
+    ], query));
+
+  const allShopProducts = [
+    ...(shopData.potions || []),
+    ...(shopData.materials || []),
+    ...(shopData.equipments || []),
+    ...(shopData.consumables || []),
+    ...(shopData.chests || [])
+  ];
+  const sellableEquipments = shopInventoryEquipments
+    .filter(eq => !eq.equipped)
+    .map(eq => {
+      const shopProduct = allShopProducts.find(p => p.equipmentTemplateName && p.equipmentTemplateName.toLowerCase() === eq.name.toLowerCase());
+      return { ...eq, shopProduct };
+    })
+    .filter(eq => eq.shopProduct && eq.shopProduct.sellPrice > 0)
+    .filter(eq => category === "ALL" || category === "EQUIPMENT")
+    .filter(eq => shopMatchesSearch([eq.name, eq.rarity, eq.shopProduct.name, eq.shopProduct.description], query));
+
+  const totalItems = sellableItems.length + sellableEquipments.length;
+  const listTitle = document.getElementById("shop-list-title");
+  const listCount = document.getElementById("shop-list-count");
+  if (listTitle) listTitle.textContent = SHOP_CATEGORY_LABELS[category] || "Todos";
+  if (listCount) listCount.textContent = `${totalItems} ${totalItems === 1 ? "item" : "itens"}`;
+
+  if (totalItems === 0) {
+    list.innerHTML = `
+      <div class="shop-empty-state">
+        <span class="shop-empty-icon" aria-hidden="true">⌕</span>
+        <p>Nenhum item encontrado.</p>
+        <span>Tente outra categoria ou ajuste o termo da busca.</span>
+      </div>
+    `;
+    return;
+  }
+
+  let html = "";
+  if (sellableItems.length > 0) {
+    html += `<div class="shop-subsection-heading"><span>Itens do inventário</span><strong>${sellableItems.length}</strong></div>`;
+    html += `<div class="shop-product-list">${sellableItems.map(item => {
+      const def = item.itemDefinition;
+      return `
+      <article class="shop-product-card shop-product-card-sell">
+        <div class="shop-product-icon" aria-hidden="true">${shopSellItemEmoji(def.category)}</div>
+        <div class="shop-product-body">
+          <div class="shop-product-heading">
+            <p class="shop-product-name">${escapeHtml(def.name)}</p>
+            <span class="shop-product-type">${item.quantity} disponíveis</span>
+          </div>
+          <div class="shop-product-meta">
+            <span class="shop-product-resale">+${shopFormatBits(def.sellPrice)} / un.</span>
+          </div>
+        </div>
+        <button class="shop-action-button shop-action-sell" onclick="shopOpenSell('${escapeHtml(def.code)}', ${item.quantity}, ${def.sellPrice})">Vender</button>
+      </article>
+    `;}).join("")}</div>`;
+  }
+  if (sellableEquipments.length > 0) {
+    html += `<div class="shop-subsection-heading ${sellableItems.length > 0 ? "shop-subsection-heading-spaced" : ""}"><span>Equipamentos disponíveis</span><strong>${sellableEquipments.length}</strong></div>`;
+    html += `<div class="shop-product-list">${sellableEquipments.map(eq => `
+      <article class="shop-product-card shop-product-card-sell">
+        <div class="shop-product-icon shop-equipment-icon" aria-hidden="true">⚔️</div>
+        <div class="shop-product-body">
+          <div class="shop-product-heading">
+            <p class="shop-product-name">${escapeHtml(eq.name)}</p>
+            <span class="shop-product-type">${escapeHtml(shopRarityLabel(eq.rarity))}</span>
+          </div>
+          <div class="shop-product-meta">
+            <span class="shop-product-resale">+${shopFormatBits(eq.shopProduct.sellPrice)}</span>
+          </div>
+        </div>
+        <button class="shop-action-button shop-action-sell" onclick="shopConfirmSellEquipment('${eq.id}')">Vender</button>
+      </article>
+    `).join("")}</div>`;
+  }
+  list.innerHTML = html;
 }
 
 function shopRenderSellList() {
@@ -303,48 +610,70 @@ function shopRenderSellList() {
     .filter(eq => eq.shopProduct && eq.shopProduct.sellPrice > 0);
 
   if (sellableItems.length === 0 && sellableEquipments.length === 0) {
-    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">Nenhum item vendível no inventário.</p>`;
+    content.innerHTML = `
+      <section class="shop-section shop-sell-section">
+        <div class="shop-empty-state">
+          <span class="shop-empty-icon" aria-hidden="true">↗</span>
+          <p>Nenhum item vendível no inventário.</p>
+          <span>Equipamentos equipados não podem ser vendidos.</span>
+        </div>
+      </section>
+    `;
     return;
   }
 
-  let html = "";
+  let html = `
+    <section class="shop-section shop-sell-section">
+      <div class="shop-section-heading">
+        <div>
+          <p class="progression-eyebrow progression-eyebrow-amber">Inventário</p>
+          <h3 class="shop-section-title">Vender itens</h3>
+        </div>
+        <span class="shop-section-note">Converta excessos em Bits</span>
+      </div>
+  `;
 
   if (sellableItems.length > 0) {
-    html += `<h3 class="text-sm font-bold text-slate-300 mb-2 px-1">Itens</h3>`;
-    html += sellableItems.map(item => {
+    html += `<div class="shop-subsection-heading"><span>Itens do inventário</span><strong>${sellableItems.length}</strong></div>`;
+    html += `<div class="shop-product-list">${sellableItems.map(item => {
       const def = item.itemDefinition;
       return `
-      <div class="card-sm mb-2 flex items-center gap-3">
-        <div class="text-2xl">${shopSellItemEmoji(def.category)}</div>
-        <div class="flex-1 min-w-0">
-          <p class="font-bold text-sm truncate">${escapeHtml(def.name)}</p>
-          <div class="flex gap-2 mt-1">
-            <span class="text-xs text-slate-400">Qtd: ${item.quantity}</span>
-            <span class="text-xs text-green-400 font-bold">+${shopFormatBits(def.sellPrice)}/un.</span>
+      <article class="shop-product-card shop-product-card-sell">
+        <div class="shop-product-icon" aria-hidden="true">${shopSellItemEmoji(def.category)}</div>
+        <div class="shop-product-body">
+          <div class="shop-product-heading">
+            <p class="shop-product-name">${escapeHtml(def.name)}</p>
+            <span class="shop-product-type">${item.quantity} disponíveis</span>
+          </div>
+          <div class="shop-product-meta">
+            <span class="shop-product-resale">+${shopFormatBits(def.sellPrice)} / un.</span>
           </div>
         </div>
-        <button class="btn-sm" style="background:#166534;color:#86efac" onclick="shopOpenSell('${escapeHtml(def.code)}', ${item.quantity}, ${def.sellPrice})">Vender</button>
-      </div>
-    `;}).join("");
+        <button class="shop-action-button shop-action-sell" onclick="shopOpenSell('${escapeHtml(def.code)}', ${item.quantity}, ${def.sellPrice})">Vender</button>
+      </article>
+    `;}).join("")}</div>`;
   }
 
   if (sellableEquipments.length > 0) {
-    html += `<h3 class="text-sm font-bold text-slate-300 mb-2 mt-4 px-1">Equipamentos</h3>`;
-    html += sellableEquipments.map(eq => `
-      <div class="card-sm mb-2 flex items-center gap-3">
-        <div class="text-2xl">⚔️</div>
-        <div class="flex-1 min-w-0">
-          <p class="font-bold text-sm truncate">${escapeHtml(eq.name)}</p>
-          <div class="flex gap-2 mt-1">
-            <span class="badge badge-${eq.rarity ? eq.rarity.toLowerCase() : 'common'}">${escapeHtml(shopRarityLabel(eq.rarity))}</span>
-            <span class="text-xs text-green-400 font-bold">+${shopFormatBits(eq.shopProduct.sellPrice)}</span>
+    html += `<div class="shop-subsection-heading ${sellableItems.length > 0 ? "shop-subsection-heading-spaced" : ""}"><span>Equipamentos disponíveis</span><strong>${sellableEquipments.length}</strong></div>`;
+    html += `<div class="shop-product-list">${sellableEquipments.map(eq => `
+      <article class="shop-product-card shop-product-card-sell">
+        <div class="shop-product-icon shop-equipment-icon" aria-hidden="true">⚔️</div>
+        <div class="shop-product-body">
+          <div class="shop-product-heading">
+            <p class="shop-product-name">${escapeHtml(eq.name)}</p>
+            <span class="shop-product-type">${escapeHtml(shopRarityLabel(eq.rarity))}</span>
+          </div>
+          <div class="shop-product-meta">
+            <span class="shop-product-resale">+${shopFormatBits(eq.shopProduct.sellPrice)}</span>
           </div>
         </div>
-        <button class="btn-sm" style="background:#166534;color:#86efac" onclick="shopConfirmSellEquipment('${eq.id}')">Vender</button>
-      </div>
-    `).join("");
+        <button class="shop-action-button shop-action-sell" onclick="shopConfirmSellEquipment('${eq.id}')">Vender</button>
+      </article>
+    `).join("")}</div>`;
   }
 
+  html += `</section>`;
   content.innerHTML = html;
 }
 
@@ -356,24 +685,32 @@ function shopOpenSell(itemDefCode, maxQty, sellPrice) {
   overlay.id = "shop-modal";
   overlay.innerHTML = `
     <div class="shop-modal">
-      <h3 class="font-bold text-lg mb-3">Vender Item</h3>
-      <div class="flex justify-between text-sm mb-4">
-        <span class="text-slate-400">Preço unitário</span>
-        <span class="text-green-400 font-bold">+${shopFormatBits(sellPrice)}</span>
+      <div class="shop-modal-heading">
+        <div>
+          <p class="shop-modal-kicker shop-modal-kicker-sell">Vender recurso</p>
+          <h3 class="shop-modal-title">Vender Item</h3>
+        </div>
+        <span class="shop-modal-mark shop-modal-mark-sell" aria-hidden="true">↗</span>
       </div>
-      <div class="mb-4">
-        <label class="label">Quantidade (máx: ${maxQty})</label>
-        <div class="flex items-center gap-2">
-          <button class="btn-sm btn-primary" onclick="shopQtyChange(-1)">−</button>
-          <input type="number" id="shop-qty" class="input text-center" value="1" min="1" max="${maxQty}" style="width:4rem" oninput="shopSellQtyUpdate(${sellPrice})">
-          <button class="btn-sm btn-primary" onclick="shopQtyChange(1)">+</button>
+      <div class="shop-modal-summary shop-modal-summary-sell">
+        <div class="shop-modal-row">
+          <span>Preço unitário</span>
+          <strong class="shop-modal-value-sell">+${shopFormatBits(sellPrice)}</strong>
+        </div>
+        <div class="shop-modal-quantity">
+          <label class="label" for="shop-qty">Quantidade (máx: ${maxQty})</label>
+          <div class="flex items-center gap-2">
+            <button class="btn-sm btn-primary" onclick="shopQtyChange(-1)" aria-label="Diminuir quantidade">−</button>
+            <input type="number" id="shop-qty" class="input text-center" value="1" min="1" max="${maxQty}" style="width:4rem" oninput="shopSellQtyUpdate(${sellPrice})">
+            <button class="btn-sm btn-primary" onclick="shopQtyChange(1)" aria-label="Aumentar quantidade">+</button>
+          </div>
+        </div>
+        <div class="shop-modal-total shop-modal-total-sell">
+          <span>Total</span>
+          <strong id="shop-total">+${shopFormatBits(sellPrice)}</strong>
         </div>
       </div>
-      <div class="flex justify-between text-sm mb-4">
-        <span class="text-slate-400">Total</span>
-        <span class="text-green-400 font-bold" id="shop-total">+${shopFormatBits(sellPrice)}</span>
-      </div>
-      <div class="flex gap-2">
+      <div class="shop-modal-actions">
         <button class="flex-1 btn-sm" style="background:#166534;color:#86efac;padding:0.6rem" onclick="shopConfirmSellItem('${escapeHtml(itemDefCode)}')" id="shop-sell-btn">Confirmar Venda</button>
         <button class="btn-sm flex-1" style="background:#334155;color:#94a3b8;padding:0.6rem" onclick="shopCloseModal()">Cancelar</button>
       </div>

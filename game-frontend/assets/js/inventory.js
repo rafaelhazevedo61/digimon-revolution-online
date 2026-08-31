@@ -21,21 +21,38 @@ async function renderInventoryPage() {
   showBottomNav("inventory");
 
   app.innerHTML = `
-      <div class="page-container">
-      <div class="flex items-center justify-between gap-2 mb-4 px-1">
-        <h2 class="text-lg font-bold truncate">Inventário</h2>
+    <div class="page-container inventory-page">
+      <header class="progression-page-header inventory-page-header">
+        <div>
+          <p class="progression-eyebrow progression-eyebrow-cyan">Gestão de recursos</p>
+          <h2 class="progression-page-title">Mochila</h2>
+          <p class="progression-page-subtitle">Organize seus itens e equipamentos para manter seu Digimon pronto para qualquer desafio.</p>
+        </div>
         <button
           id="inv-config-btn"
           type="button"
-          class="btn-sm whitespace-nowrap"
-          style="background:#334155;color:#cbd5e1"
+          class="inventory-config-button"
           aria-expanded="false"
         >
-          ⚙ Configurar
+          <span aria-hidden="true">⚙</span> Filtros
         </button>
-      </div>
+      </header>
 
-      <div id="inv-config-panel" class="card-sm mb-3 hidden">
+      <section class="progression-hero progression-hero-cyan inventory-hero mb-4">
+        <div class="progression-hero-topline">
+          <span class="progression-hero-kicker">Mochila do jogador</span>
+          <span class="progression-hero-status">Organização ativa</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="progression-hero-visual inventory-hero-visual" aria-hidden="true">🎒</div>
+          <div class="min-w-0">
+            <h3 class="progression-panel-title">Tudo em um só lugar</h3>
+            <p class="inventory-hero-copy">Pesquise, filtre e use seus recursos sem perder de vista o que está disponível.</p>
+          </div>
+        </div>
+      </section>
+
+      <div id="inv-config-panel" class="card-sm inventory-config-panel mb-3 hidden">
         <div class="mb-3 rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-2">
           <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
             <input id="inv-pagination-enabled" type="checkbox" class="accent-cyan-500" checked>
@@ -106,38 +123,46 @@ async function renderInventoryPage() {
         <p id="inv-filter-summary" class="text-xs text-slate-500 mt-3"></p>
       </div>
 
-      <!-- Tabs -->
-      <div class="flex gap-2 mb-4" id="inv-tabs">
-        <button class="tab-btn active" data-tab="items" onclick="invSwitchTab('items')">Itens</button>
-        <button class="tab-btn" data-tab="equipment" onclick="invSwitchTab('equipment')">Equipamentos</button>
+      <div class="inventory-mode-switch" id="inv-tabs" role="tablist" aria-label="Tipo de inventário">
+        <button class="inventory-mode-button active" data-tab="items" role="tab" aria-selected="true" onclick="invSwitchTab('items')"><span aria-hidden="true">▦</span> Itens</button>
+        <button class="inventory-mode-button" data-tab="equipment" role="tab" aria-selected="false" onclick="invSwitchTab('equipment')"><span aria-hidden="true">⚔</span> Equipamentos</button>
       </div>
 
-      <div id="inv-category-tabs" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-        <button class="tab-btn w-full" data-category="ALL" onclick="invSwitchCategory('ALL')">Todos</button>
-        <button class="tab-btn w-full" data-category="CONSUMABLE" onclick="invSwitchCategory('CONSUMABLE')">Consumíveis</button>
-        <button class="tab-btn w-full" data-category="MATERIAL" onclick="invSwitchCategory('MATERIAL')">Materiais</button>
-        <button class="tab-btn w-full" data-category="EVOLUTION_MATERIAL" onclick="invSwitchCategory('EVOLUTION_MATERIAL')">Evolução</button>
-        <button class="tab-btn w-full" data-category="FRAGMENT" onclick="invSwitchCategory('FRAGMENT')">Fragmentos</button>
-        <button class="tab-btn w-full" data-category="DIGITAMA" onclick="invSwitchCategory('DIGITAMA')">Digitamas</button>
-        <button class="tab-btn w-full" data-category="INCUBATOR" onclick="invSwitchCategory('INCUBATOR')">Incubadoras</button>
-        <button class="tab-btn w-full" data-category="CHEST" onclick="invSwitchCategory('CHEST')">Baús</button>
-        <button class="tab-btn w-full" data-category="OTHER" onclick="invSwitchCategory('OTHER')">Outros</button>
-      </div>
+      <nav id="inv-category-tabs" class="inventory-category-nav mb-3" aria-label="Categorias do inventário">
+        <button class="inventory-category-button" data-category="ALL" onclick="invSwitchCategory('ALL')">Todos</button>
+        <button class="inventory-category-button" data-category="CONSUMABLE" onclick="invSwitchCategory('CONSUMABLE')">Consumíveis</button>
+        <button class="inventory-category-button" data-category="MATERIAL" onclick="invSwitchCategory('MATERIAL')">Materiais</button>
+        <button class="inventory-category-button" data-category="EVOLUTION_MATERIAL" onclick="invSwitchCategory('EVOLUTION_MATERIAL')">Evolução</button>
+        <button class="inventory-category-button" data-category="FRAGMENT" onclick="invSwitchCategory('FRAGMENT')">Fragmentos</button>
+        <button class="inventory-category-button" data-category="DIGITAMA" onclick="invSwitchCategory('DIGITAMA')">Digitamas</button>
+        <button class="inventory-category-button" data-category="INCUBATOR" onclick="invSwitchCategory('INCUBATOR')">Incubadoras</button>
+        <button class="inventory-category-button" data-category="CHEST" onclick="invSwitchCategory('CHEST')">Baús</button>
+        <button class="inventory-category-button" data-category="OTHER" onclick="invSwitchCategory('OTHER')">Outros</button>
+      </nav>
 
-      <form id="inv-search-form" class="flex flex-col sm:flex-row gap-2 mb-4">
+      <form id="inv-search-form" class="inventory-search-row mb-3">
+        <span class="inventory-search-icon" aria-hidden="true">⌕</span>
         <input
           id="inv-search"
-          class="input flex-1"
+          class="input inventory-search-input flex-1"
           type="search"
           value="${escapeHtml(invFilterState.search)}"
           placeholder="Pesquisar item ou equipamento..."
           aria-label="Pesquisar no Inventário"
         />
         <div class="flex gap-2">
-          <button type="submit" class="btn-primary flex-1 sm:flex-none">Buscar</button>
-          <button id="inv-clear-search" type="button" class="btn-secondary flex-1 sm:flex-none">Limpar</button>
+          <button type="submit" class="inventory-search-button">Buscar</button>
+          <button id="inv-clear-search" type="button" class="inventory-clear-button">Limpar</button>
         </div>
       </form>
+
+      <div class="inventory-list-heading">
+        <div>
+          <p class="inventory-list-title">Conteúdo da mochila</p>
+          <p id="inv-visible-summary" class="inventory-list-summary">Carregando inventário...</p>
+        </div>
+        <span class="inventory-list-state">${invFilterState.open ? "Filtros visíveis" : "Filtros rápidos"}</span>
+      </div>
 
       <div id="inv-content">
         <div class="card animate-pulse"><div class="h-32"></div></div>
@@ -186,8 +211,10 @@ async function renderInventoryPage() {
 function invSwitchTab(tab) {
   invTab = tab;
   invPagination[tab] = 0;
-  document.querySelectorAll("#inv-tabs .tab-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.tab === tab);
+  document.querySelectorAll("#inv-tabs [data-tab]").forEach(btn => {
+    const active = btn.dataset.tab === tab;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-selected", String(active));
   });
   invRenderActiveTab();
 }
@@ -200,8 +227,10 @@ function invSwitchCategory(category) {
 }
 
 function invSyncCategoryTabs() {
-  document.querySelectorAll("#inv-category-tabs .tab-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.category === invFilterState.category);
+  document.querySelectorAll("#inv-category-tabs [data-category]").forEach(btn => {
+    const active = btn.dataset.category === invFilterState.category;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-current", active ? "page" : "false");
   });
 }
 
@@ -355,9 +384,11 @@ function invUpdateFilterVisibility() {
 }
 
 function invUpdateFilterSummary(visible, total, label) {
+  const text = `Exibindo ${visible} de ${total} ${label}${total === 1 ? "" : "s"}.`;
   const summary = document.getElementById("inv-filter-summary");
-  if (!summary) return;
-  summary.textContent = `Exibindo ${visible} de ${total} ${label}${total === 1 ? "" : "s"}.`;
+  const visibleSummary = document.getElementById("inv-visible-summary");
+  if (summary) summary.textContent = text;
+  if (visibleSummary) visibleSummary.textContent = text;
 }
 
 function invNormalize(value) {
@@ -451,7 +482,8 @@ function invRenderItems() {
   );
 
   if (items.length === 0) {
-    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${page.totalElements === 0 ? "Nenhum item no inventário." : "Nenhum item nesta página."}</p>`;
+    const emptyMessage = page.totalElements === 0 ? "Nenhum item no inventário." : "Nenhum item encontrado com os filtros atuais.";
+    content.innerHTML = `<div class="inventory-empty-state"><span class="inventory-empty-icon" aria-hidden="true">⌁</span><p>${emptyMessage}</p><span>Tente ajustar a categoria, a busca ou os filtros avançados.</span></div>`;
     return;
   }
 
@@ -490,17 +522,19 @@ function invRenderItems() {
     ` : "";
 
     return `
-      <div class="card-sm mb-2 flex items-center gap-3">
-        <div class="shrink-0">${isChest ? renderChestIcon("w-14 h-14") : emoji}</div>
-        <div class="flex-1 min-w-0">
-          <p class="font-bold text-sm inventory-item-name" title="${escapeAttr(name)}" aria-label="${escapeAttr(name)}">${escapeHtml(name)}</p>
-          <div class="flex gap-2 mt-1">
-            <span class="text-xs text-slate-400">Qtd: ${item.quantity}</span>
+      <article class="inventory-item-card">
+        <div class="inventory-item-icon ${isChest ? "inventory-item-icon-chest" : ""}" aria-hidden="true">${isChest ? renderChestIcon("w-12 h-12") : emoji}</div>
+        <div class="inventory-item-body">
+          <div class="inventory-item-heading">
+            <p class="inventory-item-name" title="${escapeAttr(name)}" aria-label="${escapeAttr(name)}">${escapeHtml(name)}</p>
+            <span class="inventory-quantity-badge">x${item.quantity}</span>
+          </div>
+          <div class="inventory-item-meta">
             <span class="badge badge-${catBadge}">${escapeHtml(catName)}</span>
           </div>
         </div>
-        ${action}
-      </div>
+        <div class="inventory-item-action">${action}</div>
+      </article>
     `;
   }).join("") + invRenderPagination("items", page.totalElements, page.totalPages);
 }
@@ -815,6 +849,7 @@ function invItemName(itemType) {
     INCUBATOR_COMMON: "Incubadora Comum",
     INCUBATOR_RARE: "Incubadora Rara",
     INCUBATOR_EPIC: "Incubadora Épica",
+    INCUBATOR_LEGENDARY: "Incubadora Lendária",
     INCUBATION_SLOT_UNLOCK: "Expansor de Slot de Incubação",
     STORAGE_SLOT_1: "+1 Storage",
     STORAGE_SLOT_5: "+5 Storage",
@@ -842,7 +877,7 @@ function invItemEmoji(itemType) {
     DIGITAMA_STARTER: "⭐", DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿",
     DIGITAMA_EARTH: "🌍", DIGITAMA_WIND: "🌪️", DIGITAMA_LIGHT: "✨", DIGITAMA_DARK: "🌑",
     DIGITAMA_THUNDER: "⚡", DIGITAMA_NEUTRAL: "⚪", DIGITAMA_ICE: "❄️", DIGITAMA_STEEL: "⚙️",
-    INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "📦", INCUBATOR_EPIC: "📦",
+    INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "📦", INCUBATOR_EPIC: "📦", INCUBATOR_LEGENDARY: "🌟",
     INCUBATION_SLOT_UNLOCK: "🔓",
     STORAGE_SLOT_1: "🗄️", STORAGE_SLOT_5: "🗄️", STORAGE_SLOT_10: "🗄️",
     XP_DISC_1: "💿", XP_DISC_3: "💿", XP_DISC_5: "💿",
@@ -1037,7 +1072,8 @@ function invRenderEquipment() {
   );
 
   if (equipments.length === 0) {
-    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">${page.totalElements === 0 ? "Nenhum equipamento no inventário." : "Nenhum equipamento nesta página."}</p>`;
+    const emptyMessage = page.totalElements === 0 ? "Nenhum equipamento no inventário." : "Nenhum equipamento encontrado com os filtros atuais.";
+    content.innerHTML = `<div class="inventory-empty-state"><span class="inventory-empty-icon" aria-hidden="true">⚔</span><p>${emptyMessage}</p><span>Tente ajustar a busca, raridade, slot ou ordenação.</span></div>`;
     return;
   }
 
@@ -1046,6 +1082,9 @@ function invRenderEquipment() {
     const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
     const emoji = slotEmoji[eq.slot] || "⚔️";
     const refLabel = eq.refinementLevel > 0 ? ` +${eq.refinementLevel}` : "";
+    const ascensionLevel = Number(eq.ascensionLevel) || 0;
+    const ascensionLabel = ascensionLevel > 0 ? `<span class="badge badge-legendary">Ascensão ${ascensionLevel}</span>` : "";
+    const canAscend = !eq.equipped && ascensionLevel < 3 && Number(eq.refinementLevel) >= 11;
 
     const stats = [];
     if (eq.effectiveBonusHp > 0) stats.push(`<span class="text-red-400">HP+${eq.effectiveBonusHp}</span>`);
@@ -1053,30 +1092,30 @@ function invRenderEquipment() {
     if (eq.effectiveBonusDefense > 0) stats.push(`<span class="text-blue-400">DEF+${eq.effectiveBonusDefense}</span>`);
 
     return `
-      <div class="card-sm mb-2 ${eq.equipped ? 'border-cyan-800' : ''}">
-        <div class="flex items-center gap-3">
-          <div class="text-2xl">${emoji}</div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2">
-              <p class="font-bold text-sm inventory-item-name" title="${escapeAttr(`${eq.name}${refLabel}`)}" aria-label="${escapeAttr(`${eq.name}${refLabel}`)}">${escapeHtml(eq.name)}${refLabel}</p>
-              ${eq.equipped ? '<span class="badge badge-success">Equipado</span>' : ''}
-            </div>
-            <div class="flex gap-2 mt-1 flex-wrap">
-              ${eq.setCode ? `<span class="badge badge-${invSetBadge(eq.setCode)}">${escapeHtml(invSetLabel(eq.setCode))}</span>` : ''}
-              <span class="badge badge-${eq.rarity ? eq.rarity.toLowerCase() : 'common'}">T${eq.tier || '?'}</span>
-              <span class="text-xs text-slate-500">${slotName[eq.slot] || eq.slot}</span>
-            </div>
-            ${stats.length > 0 ? `<div class="flex gap-2 mt-1 text-xs font-bold">${stats.join(" ")}</div>` : ""}
+      <article class="inventory-equipment-card ${eq.equipped ? "inventory-equipment-card-equipped" : ""}">
+        <div class="inventory-equipment-icon" aria-hidden="true">${emoji}</div>
+        <div class="inventory-equipment-body">
+          <div class="inventory-equipment-heading">
+            <p class="inventory-item-name" title="${escapeAttr(`${eq.name}${refLabel}`)}" aria-label="${escapeAttr(`${eq.name}${refLabel}`)}">${escapeHtml(eq.name)}${refLabel}</p>
+            ${eq.equipped ? '<span class="badge badge-success">Equipado</span>' : '<span class="inventory-equipment-state">Disponível</span>'}
           </div>
-          <div class="flex flex-col gap-1">
-            ${eq.equipped ? `
-              <button class="btn-sm" style="background:#7f1d1d;color:#fca5a5" onclick="invUnequip('${eq.id}')">Desequipar</button>
-            ` : `
-              <button class="btn-sm btn-primary" onclick="invEquip('${eq.id}')">Equipar</button>
-            `}
+          <div class="inventory-equipment-meta">
+            ${eq.setCode ? `<span class="badge badge-${invSetBadge(eq.setCode)}">${escapeHtml(invSetLabel(eq.setCode))}</span>` : ''}
+            <span class="badge badge-${eq.rarity ? eq.rarity.toLowerCase() : 'common'}">T${eq.tier || '?'}</span>
+            ${ascensionLabel}
+            <span class="inventory-equipment-slot">${slotName[eq.slot] || eq.slot}</span>
           </div>
+          ${stats.length > 0 ? `<div class="inventory-equipment-stats">${stats.join(" ")}</div>` : ""}
         </div>
-      </div>
+        <div class="inventory-item-action inventory-equipment-action">
+          ${eq.equipped ? `
+            <button class="btn-sm inventory-action-danger" onclick="invUnequip('${eq.id}')">Desequipar</button>
+          ` : `
+            <button class="btn-sm btn-primary" onclick="invEquip('${eq.id}')">Equipar</button>
+            ${canAscend ? `<button class="btn-sm inventory-action-ascend" onclick="invOpenAscensionPreview('${eq.id}')">Ascender</button>` : ''}
+          `}
+        </div>
+      </article>
     `;
   }).join("") + invRenderPagination("equipment", page.totalElements, page.totalPages);
 }
@@ -1099,6 +1138,62 @@ async function invUnequip(equipmentId) {
     if (typeof renderDashboardPage === "function") renderDashboardPage();
   } catch (err) {
     showToast(err.message, "error");
+  }
+}
+
+async function invOpenAscensionPreview(equipmentId) {
+  try {
+    const preview = await apiGet(`/equipment/${equipmentId}/ascend-preview`);
+    invRenderAscensionPreview(preview);
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+function invFormatNumber(value) {
+  return Number(value || 0).toLocaleString("pt-BR");
+}
+
+function invRenderAscensionPreview(preview) {
+  document.getElementById("inventory-ascension-preview")?.remove();
+  const overlay = document.createElement("div");
+  overlay.id = "inventory-ascension-preview";
+  overlay.className = "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70";
+  const ascensionBonus = { 1: "+30%", 2: "+50%", 3: "+100%" }[preview.nextAscensionLevel] || "";
+  const statRow = (label, before, after, color) => `<div class="flex items-center justify-between rounded-lg bg-slate-900/70 px-3 py-2"><span class="text-xs text-slate-400">${label}</span><span class="text-sm font-bold"><span class="${color}">${invFormatNumber(before)}</span><span class="text-slate-500 mx-2">→</span><span class="text-emerald-300">${invFormatNumber(after)}</span></span></div>`;
+  const costRow = (label, current, required) => `<div class="flex items-center justify-between text-sm"><span class="text-slate-400">${label}</span><span class="font-bold ${current >= required ? "text-emerald-300" : "text-red-300"}">${invFormatNumber(current)} / ${invFormatNumber(required)}</span></div>`;
+  const restriction = preview.restrictionMessage ? `<div class="rounded-lg border border-red-900/70 bg-red-950/30 px-3 py-2 text-xs text-red-300">${escapeHtml(preview.restrictionMessage)}</div>` : `<div class="rounded-lg border border-emerald-900/70 bg-emerald-950/30 px-3 py-2 text-xs text-emerald-300">Todos os requisitos foram atendidos.</div>`;
+  overlay.innerHTML = `
+    <div class="card w-full max-w-md max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div><p class="text-xs uppercase tracking-wider text-amber-400 font-bold">Evolução de equipamento</p><h3 class="font-bold text-lg">Preview da Ascensão ${preview.nextAscensionLevel}</h3><p class="text-xs text-slate-400 mt-1">${escapeHtml(preview.equipment.name)} +${preview.equipment.refinementLevel} <span class="text-amber-300">(${ascensionBonus} atributos)</span></p></div>
+        <button class="text-slate-400 text-2xl leading-none" aria-label="Fechar" onclick="invCloseAscensionPreview()">&times;</button>
+      </div>
+      <div class="rounded-xl border border-amber-900/60 bg-amber-950/20 p-3 mb-4"><p class="text-xs uppercase tracking-wider text-slate-500 mb-2">Status do equipamento</p><div class="grid grid-cols-2 gap-2 text-center"><div class="rounded-lg bg-slate-900/70 p-2"><p class="text-[10px] text-slate-500">Atual</p><p class="font-black text-lg">Ascensão ${preview.equipment.ascensionLevel || 0}</p><p class="text-xs text-slate-400">${preview.equipment.refinementLevel >= preview.requiredRefinementLevel ? "Refinamento máximo" : `Refinamento +${preview.equipment.refinementLevel}`}</p></div><div class="rounded-lg bg-amber-900/30 p-2"><p class="text-[10px] text-amber-300">Depois</p><p class="font-black text-lg text-amber-200">Ascensão ${preview.nextAscensionLevel}</p><p class="text-xs text-slate-400">Mesmo cap de refinamento</p></div></div></div>
+      <div class="mb-4"><p class="text-xs uppercase tracking-wider text-slate-500 mb-2">Atributos efetivos</p><div class="flex flex-col gap-2">${statRow("HP", preview.beforeHp, preview.afterHp, "text-red-300")}${statRow("ATK", preview.beforeAttack, preview.afterAttack, "text-orange-300")}${statRow("DEF", preview.beforeDefense, preview.afterDefense, "text-blue-300")}</div></div>
+      <div class="mb-4"><p class="text-xs uppercase tracking-wider text-slate-500 mb-2">Custos e requisitos</p><div class="rounded-lg border border-slate-700 bg-slate-950/50 p-3 flex flex-col gap-2">${costRow("Núcleos de Ascensão", preview.currentCores, preview.coreCost)}${costRow("Bits", preview.currentBits, preview.bitsCost)}<div class="text-[11px] text-slate-500 pt-1">Refinamento necessário: +${preview.requiredRefinementLevel}</div></div></div>
+      ${restriction}
+      <div class="flex gap-2 mt-4"><button class="btn-sm flex-1" style="background:#334155;color:#cbd5e1;padding:0.65rem" onclick="invCloseAscensionPreview()">Fechar</button><button id="inventory-ascend-submit" class="btn-sm flex-1" style="background:${preview.canAscend ? "#854d0e" : "#334155"};color:${preview.canAscend ? "#fde68a" : "#64748b"};padding:0.65rem" ${preview.canAscend ? `onclick="invSubmitAscension('${preview.equipment.id}', ${preview.nextAscensionLevel})"` : "disabled"}>Realizar Ascensão</button></div>
+    </div>`;
+  overlay.onclick = event => { if (event.target === overlay) invCloseAscensionPreview(); };
+  document.body.appendChild(overlay);
+}
+
+function invCloseAscensionPreview() {
+  document.getElementById("inventory-ascension-preview")?.remove();
+}
+
+async function invSubmitAscension(equipmentId, targetLevel) {
+  const button = document.getElementById("inventory-ascend-submit");
+  if (button) { button.disabled = true; button.textContent = "Ascendendo..."; }
+  try {
+    const result = await apiPost("/equipment/ascend", { equipmentId });
+    invCloseAscensionPreview();
+    showToast(result.message || `Ascensão ${targetLevel} realizada!`);
+    await invReloadEquipment();
+  } catch (err) {
+    showToast(err.message, "error");
+    if (button) { button.disabled = false; button.textContent = "Realizar Ascensão"; }
   }
 }
 

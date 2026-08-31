@@ -42,6 +42,7 @@ public class EquipUseCase {
             throw new BadRequestException("Equipment is already equipped by another Digimon");
         }
         EquipmentRules.validateEquip(equipment);
+        EquipmentRules.validateAscensionEquipRequirement(equipment, digimon);
         UUID currentEquipmentId = digimon.getEquipmentIdBySlot(equipment.getSlot());
         if (currentEquipmentId != null) {
             Equipment currentEquipment = equipmentRepository.findById(currentEquipmentId).orElse(null);
