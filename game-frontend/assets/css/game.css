@@ -1584,3 +1584,55 @@ body {
   outline: 2px solid #67e8f9;
   outline-offset: 2px;
 }
+
+.active-incubation-header,
+.active-incubation-main,
+.active-incubation-copy {
+  min-width: 0;
+}
+
+.active-incubation-main {
+  flex: 1 1 auto;
+}
+
+.active-incubation-copy {
+  overflow-wrap: anywhere;
+}
+
+.active-incubation-label {
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.active-incubation-meta {
+  flex: 0 0 auto;
+  padding-top: 0.1rem;
+}
+
+@media (max-width: 380px) {
+  .active-incubation-header {
+    gap: 0.45rem;
+  }
+
+  .active-incubation-main {
+    gap: 0.55rem;
+  }
+
+  .active-incubation-main > .text-3xl {
+    font-size: 1.55rem;
+  }
+
+  .active-incubation-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+  }
+
+  .active-incubation-meta {
+    gap: 0.25rem;
+  }
+
+  .active-incubation-meta .badge {
+    padding-inline: 0.42rem;
+    font-size: 0.62rem;
+  }
+}

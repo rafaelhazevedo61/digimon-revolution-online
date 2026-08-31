@@ -182,19 +182,19 @@ function incubRenderSlot(slot) {
 
   return `
     <article class="card active-incubation-card ${done ? "is-ready" : ""}" data-incub-slot="${slotNumber}" data-incubation-id="${escapeAttr(String(incubation.id))}">
-      <div class="flex items-start justify-between gap-3">
-        <div class="flex items-center gap-3">
-            <span class="text-3xl">${incubatorEmoji}</span>
-            <div>
-              <p class="text-xs uppercase tracking-wider text-amber-400 font-semibold">${escapeHtml(incubatorName)} · ${slotLabel}</p>
-              <h3 class="font-bold text-slate-200 mt-1">${digitamaEmoji} ${escapeHtml(digitamaName)}</h3>
-              <p class="text-xs text-slate-500 mt-1">Digitama em incubação</p>
-            </div>
+      <div class="active-incubation-header flex items-start justify-between gap-3">
+        <div class="active-incubation-main flex items-center gap-3 min-w-0">
+          <span class="text-3xl shrink-0">${incubatorEmoji}</span>
+          <div class="active-incubation-copy min-w-0">
+            <p class="active-incubation-label text-xs uppercase tracking-wider text-amber-400 font-semibold">${escapeHtml(incubatorName)} · ${slotLabel}</p>
+            <h3 class="font-bold text-slate-200 mt-1 break-words">${digitamaEmoji} ${escapeHtml(digitamaName)}</h3>
+            <p class="text-xs text-slate-500 mt-1">Digitama em incubação</p>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="text-lg text-slate-500" aria-hidden="true">⋯</span>
-            <span class="badge ${done ? "text-green-300" : "text-amber-300"}">${done ? "PRONTO" : "EM ANDAMENTO"}</span>
-          </div>
+        </div>
+        <div class="active-incubation-meta flex items-center gap-2 shrink-0">
+          <span class="text-lg text-slate-500" aria-hidden="true">⋯</span>
+          <span class="badge whitespace-nowrap ${done ? "text-green-300" : "text-amber-300"}">${done ? "PRONTO" : "EM ANDAMENTO"}</span>
+        </div>
       </div>
 
       <div class="mt-4">
