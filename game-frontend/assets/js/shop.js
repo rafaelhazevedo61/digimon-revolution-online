@@ -64,13 +64,26 @@ async function renderShopPage() {
         </div>
       </section>
 
+      <div class="shop-workspace">
+        <aside class="shop-context-column">
+          <div class="shop-context-card">
+            <span class="progression-eyebrow progression-eyebrow-cyan">Operações</span>
+            <strong>Central de comércio</strong>
+            <p>Escolha um modo para administrar seus recursos.</p>
+          </div>
+
       <div class="shop-mode-switch" id="shop-mode-tabs" role="tablist" aria-label="Modo da loja">
         <button class="shop-mode-button active" data-mode="buy" role="tab" aria-selected="true" onclick="shopSetMode('buy')"><span aria-hidden="true">＋</span> Comprar</button>
         <button class="shop-mode-button" data-mode="sell" role="tab" aria-selected="false" onclick="shopSetMode('sell')"><span aria-hidden="true">↗</span> Vender</button>
       </div>
 
+        </aside>
+
+        <main class="shop-content-column">
       <div id="shop-content">
         <div class="card animate-pulse"><div class="h-32"></div></div>
+      </div>
+        </main>
       </div>
     </div>
   `;
@@ -679,6 +692,7 @@ function shopRenderSellList() {
 
 function shopOpenSell(itemDefCode, maxQty, sellPrice) {
   shopModalUnitPrice = sellPrice;
+  const maxSellQuantity = Math.min(999, Math.max(1, Number(maxQty) || 1));
 
   const overlay = document.createElement("div");
   overlay.className = "shop-modal-overlay";
@@ -698,11 +712,12 @@ function shopOpenSell(itemDefCode, maxQty, sellPrice) {
           <strong class="shop-modal-value-sell">+${shopFormatBits(sellPrice)}</strong>
         </div>
         <div class="shop-modal-quantity">
-          <label class="label" for="shop-qty">Quantidade (máx: ${maxQty})</label>
-          <div class="flex items-center gap-2">
-            <button class="btn-sm btn-primary" onclick="shopQtyChange(-1)" aria-label="Diminuir quantidade">−</button>
-            <input type="number" id="shop-qty" class="input text-center" value="1" min="1" max="${maxQty}" style="width:4rem" oninput="shopSellQtyUpdate(${sellPrice})">
-            <button class="btn-sm btn-primary" onclick="shopQtyChange(1)" aria-label="Aumentar quantidade">+</button>
+          <label class="label" for="shop-qty">Quantidade (máx: ${maxSellQuantity})</label>
+          <div class="shop-sell-quantity-controls">
+            <button type="button" class="btn-sm btn-primary" onclick="shopQtyChange(-1)" aria-label="Diminuir quantidade">−</button>
+            <input type="number" id="shop-qty" class="input text-center" value="1" min="1" max="${maxSellQuantity}" oninput="shopSellQtyUpdate(${sellPrice})">
+            <button type="button" class="btn-sm btn-primary" onclick="shopQtyChange(1)" aria-label="Aumentar quantidade">+</button>
+            <button type="button" class="btn-sm btn-secondary shop-sell-max-button" onclick="shopSetMaxSellQuantity(${maxSellQuantity}, ${sellPrice})" aria-label="Selecionar quantidade máxima">Máx.</button>
           </div>
         </div>
         <div class="shop-modal-total shop-modal-total-sell">
@@ -718,6 +733,13 @@ function shopOpenSell(itemDefCode, maxQty, sellPrice) {
   `;
   document.body.appendChild(overlay);
   overlay.addEventListener("click", e => { if (e.target === overlay) shopCloseModal(); });
+}
+
+function shopSetMaxSellQuantity(maxQty, sellPrice) {
+  const input = document.getElementById("shop-qty");
+  if (!input) return;
+  input.value = Math.min(999, Math.max(1, Number(maxQty) || 1));
+  shopSellQtyUpdate(sellPrice);
 }
 
 function shopSellQtyUpdate(sellPrice) {

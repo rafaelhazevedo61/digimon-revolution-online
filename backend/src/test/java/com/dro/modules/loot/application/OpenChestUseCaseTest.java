@@ -278,7 +278,7 @@ class OpenChestUseCaseTest {
                 token(playerId),
                 new OpenChestRequest(chestCode, "request-1")
         )).isInstanceOf(UnprocessableException.class)
-                .hasMessageContaining("max stack");
+                .hasMessageContaining("limite máximo de 2 unidades para o item Fragmento do Agumon.");
 
         assertThat(chestInventory.getQuantity()).isEqualTo(2);
         verify(inventoryRepository, never()).delete(chestInventory);

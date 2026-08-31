@@ -614,13 +614,11 @@ body {
   font-size: 0.7rem;
 }
 
-/* Nomes de inventário preservam duas linhas e o nome completo fica no tooltip. */
+/* Nomes de inventário ocupam quantas linhas forem necessárias para não cortar o texto. */
 .inventory-item-name {
-  display: -webkit-box;
+  display: block;
   max-width: 100%;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  overflow: visible;
   overflow-wrap: anywhere;
   line-height: 1.25;
 }
@@ -1263,7 +1261,7 @@ body {
 .shop-equipment-icon { color: #fcd34d; }
 .shop-product-body { min-width: 0; flex: 1 1 auto; }
 .shop-product-heading { display: flex; align-items: center; justify-content: space-between; gap: 0.45rem; }
-.shop-product-name { min-width: 0; margin: 0; overflow: hidden; color: #e2e8f0; font-size: 0.72rem; font-weight: 850; text-overflow: ellipsis; white-space: nowrap; }
+.shop-product-name { min-width: 0; margin: 0; overflow: visible; overflow-wrap: anywhere; color: #e2e8f0; font-size: 0.72rem; font-weight: 850; line-height: 1.25; text-overflow: clip; white-space: normal; }
 .shop-product-type { flex: 0 0 auto; padding: 0.2rem 0.35rem; border-radius: 9999px; background: rgba(71, 85, 105, 0.28); color: #94a3b8; font-size: 0.52rem; font-weight: 800; white-space: nowrap; }
 .shop-product-description { margin: 0.22rem 0 0; overflow: hidden; color: #64748b; font-size: 0.59rem; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
 .shop-product-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.42rem; margin-top: 0.3rem; }
@@ -1313,11 +1311,21 @@ body {
 .shop-modal-value-sell { color: #86efac; }
 .shop-modal-quantity { padding-top: 0.62rem; border-top: 1px solid rgba(51, 65, 85, 0.58); }
 .shop-modal-quantity .label { margin-bottom: 0.35rem; font-size: 0.64rem; }
+.shop-sell-quantity-controls { display: grid !important; grid-template-columns: 3rem minmax(0, 1fr) 3rem 5.25rem; grid-auto-flow: column; align-items: stretch; gap: 0.65rem; width: 100%; }
+.shop-sell-quantity-controls > .btn-sm,
+.shop-sell-quantity-controls > .input { width: 100%; min-width: 0; }
+.shop-sell-max-button { min-width: 3.5rem; padding: 0.35rem 0.55rem; border: 1px solid rgba(34, 211, 238, 0.3); background: rgba(8, 145, 178, 0.2); color: #a5f3fc; font-size: 0.68rem; }
+.shop-sell-max-button:hover { border-color: rgba(103, 232, 249, 0.58); background: rgba(8, 145, 178, 0.32); opacity: 1; }
 .shop-buy-quantity-controls { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr) 2.4rem 4.25rem; align-items: stretch; gap: 0.5rem; width: 100%; }
 .shop-buy-quantity-controls .btn-sm { width: 100%; min-width: 0; padding-inline: 0.25rem; }
 .shop-buy-quantity-controls .input { width: 100%; min-width: 0; padding-inline: 0.45rem; }
+@media (min-width: 768px) {
+  .shop-modal { max-width: 28rem; }
+}
 @media (max-width: 360px) {
   .shop-buy-quantity-controls { grid-template-columns: 2.2rem minmax(0, 1fr) 2.2rem 3.8rem; gap: 0.35rem; }
+  .shop-sell-quantity-controls { grid-template-columns: 2.2rem minmax(0, 1fr) 2.2rem 3.25rem; gap: 0.35rem; }
+  .shop-sell-max-button { min-width: 0; padding-inline: 0.45rem; }
 }
 .shop-modal-total { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding-top: 0.62rem; border-top: 1px solid rgba(51, 65, 85, 0.58); color: #cbd5e1; font-size: 0.72rem; font-weight: 850; }
 .shop-modal-total strong { font-size: 0.82rem; }
@@ -1378,9 +1386,12 @@ body {
 .inventory-equipment-stats { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.32rem; font-size: 0.6rem; font-weight: 850; }
 .inventory-item-action { display: flex; flex: 0 0 auto; flex-direction: column; align-items: stretch; gap: 0.32rem; }
 .inventory-item-action .btn-sm { min-height: 2rem; padding: 0.35rem 0.52rem; font-size: 0.6rem; }
-.inventory-item-action .inventory-chest-controls { display: flex; align-items: center; gap: 0.3rem; }
+.inventory-item-action .inventory-batch-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.3rem; }
+.inventory-item-action .inventory-chest-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.3rem; }
 .inventory-action-danger { border: 1px solid rgba(248, 113, 113, 0.25); background: rgba(127, 29, 29, 0.7); color: #fca5a5; }
 .inventory-action-ascend { border: 1px solid rgba(251, 191, 36, 0.25); background: rgba(133, 77, 14, 0.8); color: #fde68a; }
+.inventory-max-btn { border: 1px solid rgba(34, 211, 238, 0.3); background: rgba(8, 145, 178, 0.2); color: #a5f3fc; }
+.inventory-max-btn:hover { border-color: rgba(103, 232, 249, 0.58); background: rgba(8, 145, 178, 0.32); }
 .inventory-equipment-card-equipped { border-color: rgba(34, 211, 238, 0.48); background: linear-gradient(145deg, rgba(8, 51, 68, 0.36), rgba(15, 23, 42, 0.62)); }
 .inventory-page #inv-content > .card.animate-pulse { border-color: rgba(34, 211, 238, 0.28); }
 
@@ -1396,6 +1407,8 @@ body {
   .inventory-item-card, .inventory-equipment-card { gap: 0.45rem; padding: 0.5rem; }
   .inventory-item-icon, .inventory-equipment-icon { width: 2.25rem; height: 2.25rem; font-size: 1.2rem; }
   .inventory-item-action .btn-sm { padding-inline: 0.38rem; }
+  .inventory-item-action .inventory-batch-controls { gap: 0.22rem; }
+  .inventory-max-btn { padding-inline: 0.38rem; }
 }
 
 .inventory-empty-state { display: flex; min-height: 8rem; flex-direction: column; align-items: center; justify-content: center; gap: 0.28rem; padding: 1.25rem; border: 1px dashed rgba(71, 85, 105, 0.7); border-radius: 0.78rem; background: rgba(15, 23, 42, 0.36); text-align: center; }
@@ -3543,5 +3556,209 @@ body {
 @media (min-width: 46rem) {
   .mission-area-page-container #mission-list:has(.mission-detail-card:only-child) {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ===================== Inventário e loja: visão desktop/mobile ===================== */
+.inventory-control-heading,
+.shop-context-card {
+  padding: 0.72rem;
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  border-radius: 0.78rem;
+  background: linear-gradient(145deg, rgba(8, 51, 68, 0.24), rgba(15, 23, 42, 0.58));
+}
+.inventory-control-heading p,
+.shop-context-card p {
+  margin: 0.28rem 0 0;
+  color: #64748b;
+  font-size: 0.62rem;
+  line-height: 1.4;
+}
+.inventory-control-heading .progression-eyebrow,
+.shop-context-card .progression-eyebrow {
+  margin-bottom: 0.22rem;
+}
+.shop-context-card strong {
+  display: block;
+  color: #e2e8f0;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+@media (min-width: 46rem) {
+  .inventory-page,
+  .shop-page {
+    max-width: 74rem;
+  }
+
+  .inventory-workspace,
+  .shop-workspace {
+    display: grid;
+    grid-template-columns: minmax(14rem, 0.27fr) minmax(0, 0.73fr);
+    align-items: start;
+    gap: 1rem;
+  }
+
+  .inventory-control-rail,
+  .shop-context-column {
+    position: sticky;
+    top: 1rem;
+    min-width: 0;
+    padding: 0.78rem;
+    border: 1px solid rgba(51, 65, 85, 0.78);
+    border-radius: 0.95rem;
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.76), rgba(2, 6, 23, 0.52));
+    box-shadow: 0 10px 26px rgba(2, 6, 23, 0.16);
+  }
+
+  .shop-context-column {
+    border-color: rgba(34, 211, 238, 0.3);
+  }
+
+  .inventory-control-heading,
+  .shop-context-card {
+    margin-bottom: 0.7rem;
+  }
+
+  .inventory-control-rail .inventory-mode-switch,
+  .shop-context-column .shop-mode-switch {
+    margin-bottom: 0.7rem;
+  }
+
+  .inventory-control-rail .inventory-category-nav,
+  .shop-context-column .shop-category-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inventory-content-column,
+  .shop-content-column {
+    min-width: 0;
+  }
+
+  .inventory-content-column #inv-content {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 0.62rem;
+  }
+
+  .inventory-content-column #inv-content > .inventory-item-card,
+  .inventory-content-column #inv-content > .inventory-equipment-card {
+    height: 100%;
+    margin-bottom: 0;
+  }
+
+  .inventory-content-column #inv-content > .inventory-empty-state,
+  .inventory-content-column #inv-content > div.flex.items-center.justify-between {
+    grid-column: 1 / -1;
+  }
+
+  .inventory-content-column .inventory-item-card,
+  .inventory-content-column .inventory-equipment-card {
+    align-items: flex-start;
+    padding: 0.72rem;
+  }
+
+  .inventory-content-column .inventory-item-action,
+  .inventory-content-column .inventory-equipment-action {
+    align-self: center;
+  }
+
+  .shop-content-column .shop-section {
+    padding: 1rem;
+  }
+
+  .shop-content-column .shop-product-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 0.62rem;
+  }
+
+  .shop-content-column .shop-product-card {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    align-items: start;
+    height: 100%;
+    padding: 0.72rem;
+  }
+
+  .shop-content-column .shop-product-icon {
+    grid-row: 1;
+  }
+
+  .shop-content-column .shop-product-body {
+    min-width: 0;
+  }
+
+  .shop-content-column .shop-product-description {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .shop-content-column .shop-action-button {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 0.55rem;
+  }
+
+  .shop-content-column .shop-empty-state {
+    min-height: 12rem;
+  }
+}
+
+@media (min-width: 90rem) {
+  .inventory-content-column #inv-content,
+  .shop-content-column .shop-product-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 45.99rem) {
+  .inventory-workspace,
+  .shop-workspace {
+    display: block;
+  }
+
+  .inventory-control-rail,
+  .shop-context-column,
+  .inventory-content-column,
+  .shop-content-column {
+    min-width: 0;
+  }
+
+  .inventory-control-heading,
+  .shop-context-card {
+    display: none;
+  }
+}
+
+/* ===================== Cards: nomes legíveis em telas largas ===================== */
+@media (min-width: 46rem) {
+  .inventory-content-column #inv-content {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inventory-content-column .inventory-item-heading,
+  .inventory-content-column .inventory-equipment-heading,
+  .shop-content-column .shop-product-heading {
+    align-items: flex-start;
+  }
+
+  .inventory-content-column .inventory-item-name,
+  .shop-content-column .shop-product-name {
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.25;
+  }
+}
+
+@media (min-width: 90rem) {
+  .inventory-content-column #inv-content {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

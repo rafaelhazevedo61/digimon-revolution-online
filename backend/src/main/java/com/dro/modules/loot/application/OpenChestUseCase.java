@@ -145,7 +145,7 @@ public class OpenChestUseCase {
         int currentQuantity = inventoryItem == null ? 0 : inventoryItem.getQuantity();
         int newQuantity = currentQuantity + reward.quantity();
         if (itemDefinition.getMaxStack() != null && newQuantity > itemDefinition.getMaxStack()) {
-            throw new UnprocessableException("Cannot exceed max stack of " + itemDefinition.getMaxStack() + " for item " + itemDefinition.getCode());
+            throw new UnprocessableException("Não é possível exceder o limite máximo de " + itemDefinition.getMaxStack() + " unidades para o item " + itemDefinition.getName() + ".");
         }
         if (inventoryItem == null) {
             inventoryRepository.save(InventoryItem.builder().id(UUID.randomUUID()).playerId(playerId).itemType(reward.itemType()).itemDefinition(itemDefinition).quantity(reward.quantity()).build());
