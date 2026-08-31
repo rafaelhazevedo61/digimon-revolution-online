@@ -687,9 +687,9 @@ function renderMissionAreaCard(a, index) {
 function renderAreaCards(areas) {
   const container = document.getElementById("areas-list");
   const sorted = [...areas].sort((a, b) => {
-    const areaDifference = areaProgressionRank(a.area) - areaProgressionRank(b.area);
+    const areaDifference = areaProgressionRank(b.area) - areaProgressionRank(a.area);
     if (areaDifference !== 0) return areaDifference;
-    return stageProgressionRank(a.requiredStage) - stageProgressionRank(b.requiredStage);
+    return stageProgressionRank(b.requiredStage) - stageProgressionRank(a.requiredStage);
   });
   const available = sorted.filter(area => area.unlocked);
   const locked = sorted.filter(area => !area.unlocked);
