@@ -47,7 +47,7 @@ async function renderClansPage() {
   showBottomNav("more");
 
   app.innerHTML = `
-    <div class="page-container">
+    <div class="page-container clan-page-container">
       <div id="clan-content">
         <div class="card animate-pulse"><div class="h-40"></div></div>
       </div>
@@ -70,21 +70,67 @@ async function renderClansPage() {
 
 function renderClanList() {
   const el = setHtml("clan-content", `
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-bold px-1">Clãs</h2>
-      <button class="btn-primary text-sm py-1.5 px-3" onclick="renderClanCreate()">Criar Clã</button>
-    </div>
+    <header class="clan-page-header">
+      <div class="clan-page-header-copy">
+        <p class="clan-eyebrow">Comunidade · Conexões</p>
+        <h1 class="clan-page-title">Clãs</h1>
+        <p class="clan-page-subtitle">Encontre uma equipe para evoluir, competir e conquistar o mundo digital.</p>
+      </div>
+      <button class="btn-primary clan-header-action" onclick="renderClanCreate()">
+        <span class="clan-header-action-icon" aria-hidden="true">+</span>
+        <span><strong>Criar Clã</strong><small>Comece sua própria jornada</small></span>
+      </button>
+    </header>
 
-    <div class="flex gap-2 mb-4">
-      <input type="text" id="clan-search" class="input flex-1" placeholder="Buscar por nome ou tag..." value="${escapeHtml(clanListQuery)}" onkeydown="if(event.key==='Enter')clanSearch()">
-      <button class="btn-secondary" onclick="clanSearch()">Buscar</button>
-    </div>
+    <div class="clan-list-layout">
+      <main class="clan-list-main">
+        <section class="clan-surface clan-discovery-panel">
+          <div class="clan-section-heading">
+            <div>
+              <p class="clan-eyebrow clan-eyebrow-cyan">Explorar</p>
+              <h2 class="clan-section-title">Encontre seu próximo grupo</h2>
+            </div>
+            <span class="clan-section-mark" aria-hidden="true">⌕</span>
+          </div>
+          <form class="clan-search-row" onsubmit="event.preventDefault(); clanSearch()">
+            <label class="sr-only" for="clan-search">Buscar clã</label>
+            <span class="clan-search-icon" aria-hidden="true">⌕</span>
+            <input type="search" id="clan-search" class="input" placeholder="Buscar por nome ou tag..." value="${escapeHtml(clanListQuery)}" autocomplete="off">
+            <button type="submit" class="btn-secondary">Buscar</button>
+          </form>
+        </section>
 
-    <div id="clan-list">
-      <div class="card animate-pulse"><div class="h-32"></div></div>
-    </div>
+        <section class="clan-list-surface">
+          <div class="clan-section-heading clan-list-heading">
+            <div>
+              <p class="clan-eyebrow">Diretório aberto</p>
+              <h2 class="clan-section-title">Clãs disponíveis</h2>
+            </div>
+            <span class="clan-section-caption">Toque em um card para ver detalhes</span>
+          </div>
+          <div id="clan-list" class="clan-list-grid">
+            <div class="card animate-pulse"><div class="h-32"></div></div>
+          </div>
+        </section>
+      </main>
 
-    <button class="btn-primary w-full mt-4" onclick="renderClanRanking()">Ver Classificação de Clãs</button>
+      <aside class="clan-list-aside">
+        <section class="clan-aside-card clan-ranking-promo">
+          <div class="clan-aside-icon" aria-hidden="true">✦</div>
+          <p class="clan-eyebrow clan-eyebrow-amber">Competição</p>
+          <h2 class="clan-aside-title">Ranking de Clãs</h2>
+          <p class="clan-aside-copy">Compare o poder total das equipes e descubra quem lidera a temporada.</p>
+          <button class="btn-primary w-full" onclick="renderClanRanking()">Ver classificação</button>
+        </section>
+        <section class="clan-aside-card clan-aside-note">
+          <span class="clan-aside-note-mark" aria-hidden="true">i</span>
+          <div>
+            <p class="font-bold text-sm">Uma boa equipe faz diferença</p>
+            <p class="text-xs text-slate-400 mt-1">Participe de missões, incursões e melhorias para fortalecer seu clã.</p>
+          </div>
+        </section>
+      </aside>
+    </div>
   `);
   return el;
 }
@@ -121,21 +167,28 @@ function clanRenderList() {
   }
 
   let html = clanListEntries.map(c => `
-    <div class="card-sm mb-2 flex items-center gap-3 cursor-pointer" onclick="clanOpenDetail('${c.id}')">
-      <div class="flex-1 min-w-0">
-        <p class="font-bold text-sm truncate">${escapeHtml(c.name)} <span class="text-cyan-400">[${escapeHtml(c.tag)}]</span></p>
-        <p class="text-xs text-slate-400 truncate">${escapeHtml(c.description || "Sem descrição")}</p>
-        <p class="text-xs text-slate-500 mt-1">👥 ${c.memberCount}/${c.maxMembers} · Nível ${c.level}</p>
+    <article class="clan-list-card" onclick="clanOpenDetail('${c.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); clanOpenDetail('${c.id}'); }">
+      <div class="clan-card-emblem" aria-hidden="true">${c.emblem ? escapeHtml(c.emblem) : "✦"}</div>
+      <div class="clan-card-body">
+        <div class="clan-card-title-row">
+          <p class="clan-card-title">${escapeHtml(c.name)}</p>
+          <span class="clan-card-tag">[${escapeHtml(c.tag)}]</span>
+        </div>
+        <p class="clan-card-description">${escapeHtml(c.description || "Sem descrição")}</p>
+        <div class="clan-card-meta">
+          <span>${c.memberCount}/${c.maxMembers} membros</span>
+          <span>Nível ${c.level}</span>
+        </div>
       </div>
-      <div class="flex items-center gap-2">
-        <button class="text-slate-500 text-lg" onclick="event.stopPropagation(); clanShowPreview('${c.id}')">👁️</button>
-        <button class="btn-primary text-xs py-1 px-2" onclick="event.stopPropagation(); clanJoin('${c.id}')">Entrar</button>
+      <div class="clan-card-actions">
+        <button class="clan-icon-button" aria-label="Ver prévia de ${escapeAttr(c.name)}" title="Ver prévia" onclick="event.stopPropagation(); clanShowPreview('${c.id}')">◉</button>
+        <button class="btn-primary clan-card-join" onclick="event.stopPropagation(); clanJoin('${c.id}')">Entrar</button>
       </div>
-    </div>
+    </article>
   `).join("");
 
   if (clanListHasMore) {
-    html += `<button class="btn-secondary w-full mt-2" id="clan-load-more" onclick="clanLoadMore()">Carregar mais</button>`;
+    html += `<button class="btn-secondary clan-list-load-more" id="clan-load-more" onclick="clanLoadMore()">Carregar mais</button>`;
   }
 
   list.innerHTML = html;
@@ -169,12 +222,12 @@ async function clanShowPreview(id) {
     const clan = await apiGet(`/clans/${id}`);
     const overlay = document.createElement("div");
     overlay.id = "clan-preview-overlay";
-    overlay.className = "fixed inset-0 z-50 flex items-end justify-center";
+    overlay.className = "clan-preview-overlay fixed inset-0 z-50 flex items-end justify-center";
     overlay.style.background = "rgba(0,0,0,0.6)";
     overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 
     overlay.innerHTML = `
-      <div class="w-full max-w-md rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:85vh;overflow-y:auto">
+      <div class="clan-preview-modal w-full max-w-md rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:85vh;overflow-y:auto">
         <div class="flex justify-between items-center mb-3">
           <h3 class="font-bold text-lg">Pré-visualização do Clã</h3>
           <button class="text-slate-400 text-xl" onclick="document.getElementById('clan-preview-overlay').remove()">&times;</button>
@@ -203,13 +256,13 @@ function clanShowTab(tab) {
   if (!container) return;
 
   document.querySelectorAll(".clan-tab-btn").forEach(b => {
-    b.classList.remove("bg-cyan-600", "text-white");
+    b.classList.remove("bg-cyan-600", "text-white", "is-active");
     b.classList.add("bg-slate-800", "text-slate-300");
   });
   const activeBtn = safeContent(`clan-tab-${tab}`);
   if (activeBtn) {
     activeBtn.classList.remove("bg-slate-800", "text-slate-300");
-    activeBtn.classList.add("bg-cyan-600", "text-white");
+    activeBtn.classList.add("bg-cyan-600", "text-white", "is-active");
   }
 
   if (tab === "members") {
@@ -241,9 +294,10 @@ function renderClanDetailHtml(clan, opts = {}) {
 
   const managementButtons = !preview && clan.isMember
     ? `
-      <div class="flex gap-2 mt-4">
-        ${!isLeader ? `<button class="btn-secondary flex-1" onclick="clanLeave('${clan.id}')">Sair do Clã</button>` : ""}
-        ${isLeader ? `<button class="btn-red flex-1" onclick="clanDissolve('${clan.id}')">Dissolver Clã</button>` : ""}
+      <div class="clan-management-actions">
+        <p class="clan-rail-label">Gestão do clã</p>
+        ${!isLeader ? `<button class="btn-secondary w-full" onclick="clanLeave('${clan.id}')">Sair do Clã</button>` : ""}
+        ${isLeader ? `<button class="btn-red w-full" onclick="clanDissolve('${clan.id}')">Dissolver Clã</button>` : ""}
       </div>
     `
     : "";
@@ -253,45 +307,57 @@ function renderClanDetailHtml(clan, opts = {}) {
   return `
     ${backButton}
 
-    <div class="card mb-4">
-      <div class="flex items-start justify-between">
-        <div>
-          <h2 class="text-lg font-bold">${escapeHtml(clan.name)} <span class="text-cyan-400">[${escapeHtml(clan.tag)}]</span></h2>
-          <p class="text-sm text-slate-400">${escapeHtml(clan.description || "Sem descrição")}</p>
+    <section class="clan-detail-hero">
+      <div class="clan-detail-identity">
+        <div class="clan-detail-emblem" aria-hidden="true">${clan.emblem ? escapeHtml(clan.emblem) : "✦"}</div>
+        <div class="clan-detail-identity-copy">
+          <p class="clan-eyebrow ${clan.isMember ? "clan-eyebrow-cyan" : ""}">${clan.isMember ? "Seu clã" : "Perfil público"}</p>
+          <div class="clan-detail-title-row">
+            <h1 class="clan-detail-title">${escapeHtml(clan.name)}</h1>
+            <span class="clan-detail-tag">[${escapeHtml(clan.tag)}]</span>
+          </div>
+          <p class="clan-detail-description">${escapeHtml(clan.description || "Sem descrição")}</p>
         </div>
-        ${canManage ? `<button class="text-xs text-cyan-400" onclick="clanEdit('${clan.id}')">Editar</button>` : ""}
+        ${canManage ? `<button class="clan-edit-action" onclick="clanEdit('${clan.id}')"><span aria-hidden="true">✎</span> Editar</button>` : ""}
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4 text-center">
-        <div class="card-sm"><p class="text-xs text-slate-500">Nível</p><p class="font-bold text-cyan-400">${clan.level}</p></div>
-        <div class="card-sm"><p class="text-xs text-slate-500">Membros</p><p class="font-bold">${clan.memberCount}/${clan.maxMembers}</p></div>
-        <div class="card-sm"><p class="text-xs text-slate-500">Vagas base</p><p class="font-bold text-green-400">${clan.baseMaxMembers}</p></div>
-        <div class="card-sm"><p class="text-xs text-slate-500">Vagas extras</p><p class="font-bold text-amber-400">+${clan.memberCapacityUpgradeLevel}</p></div>
-        <div class="card-sm col-span-2 sm:col-span-1"><p class="text-xs text-slate-500">Marcas de Honra</p><p class="font-bold text-purple-400">${clan.honorMarks}</p></div>
+      <div class="clan-stat-grid">
+        <div class="clan-stat-card clan-stat-cyan"><span>Nível</span><strong>${clan.level}</strong><small>progressão atual</small></div>
+        <div class="clan-stat-card"><span>Membros</span><strong>${clan.memberCount}/${clan.maxMembers}</strong><small>participantes</small></div>
+        <div class="clan-stat-card clan-stat-green"><span>Vagas base</span><strong>${clan.baseMaxMembers}</strong><small>capacidade inicial</small></div>
+        <div class="clan-stat-card clan-stat-amber"><span>Vagas extras</span><strong>+${clan.memberCapacityUpgradeLevel}</strong><small>melhorias ativas</small></div>
+        <div class="clan-stat-card clan-stat-purple"><span>Marcas de Honra</span><strong>${Number(clan.honorMarks || 0).toLocaleString("pt-BR")}</strong><small>saldo disponível</small></div>
       </div>
 
-      <div class="mt-4">
-        <div class="flex justify-between text-xs mb-1">
-          <span class="text-slate-400">Experiência do Clã</span>
-          <span class="text-slate-400">${clan.xpToNextLevel > 0 ? clan.xpToNextLevel + " para o próximo" : "Máximo"}</span>
-        </div>
-        <div class="w-full bg-slate-800 rounded-full h-2"><div class="bg-cyan-500 h-2 rounded-full" style="width:${xpPercent}%"></div></div>
+      <div class="clan-xp-block">
+        <div class="clan-xp-heading"><span>Experiência do Clã</span><strong>${xpPercent}%</strong></div>
+        <div class="clan-xp-track" role="progressbar" aria-valuenow="${xpPercent}" aria-valuemin="0" aria-valuemax="100" aria-label="${xpPercent}% de experiência do clã"><span style="width:${xpPercent}%"></span></div>
+        <div class="clan-xp-meta"><span>${Number(clan.experience || 0).toLocaleString("pt-BR")} XP acumulada</span><span>${clan.xpToNextLevel > 0 ? Number(clan.xpToNextLevel).toLocaleString("pt-BR") + " para o próximo nível" : "Nível máximo alcançado"}</span></div>
       </div>
+    </section>
+
+    <nav class="clan-tabs ${showMemberTabs ? "clan-tabs--full" : "clan-tabs--compact"}" aria-label="Seções do clã">
+      <button id="clan-tab-members" class="clan-tab-btn font-bold bg-cyan-600 text-white is-active" onclick="clanShowTab('members')"><span aria-hidden="true">◉</span> Membros</button>
+      <button id="clan-tab-upgrades" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('upgrades')"><span aria-hidden="true">◇</span> Melhorias</button>
+      ${showMemberTabs ? `<button id="clan-tab-storage" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('storage')"><span aria-hidden="true">▣</span> Armazém</button>` : ""}
+      ${showMemberTabs ? `<button id="clan-tab-missions" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('missions')"><span aria-hidden="true">✦</span> Missões</button>` : ""}
+      ${showMemberTabs ? `<button id="clan-tab-raid" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('raid')"><span aria-hidden="true">ϟ</span> Incursão</button>` : ""}
+    </nav>
+
+    <div class="clan-detail-layout ${preview ? "clan-detail-layout--preview" : ""}">
+      <main id="clan-tab-content" class="clan-tab-content"></main>
+      ${!preview ? `
+        <aside class="clan-detail-rail">
+          ${managementButtons}
+          <div class="clan-rail-card">
+            <p class="clan-eyebrow clan-eyebrow-amber">Competição</p>
+            <h2 class="clan-rail-title">Ranking de Clãs</h2>
+            <p class="text-xs text-slate-400 mt-1">Veja o poder das equipes mais fortes.</p>
+            <button class="btn-secondary w-full mt-3" onclick="renderClanRanking()">Ver classificação</button>
+          </div>
+        </aside>
+      ` : ""}
     </div>
-
-    <div class="clan-tabs ${showMemberTabs ? "clan-tabs--full" : "clan-tabs--compact"} mb-3">
-      <button id="clan-tab-members" class="clan-tab-btn font-bold bg-cyan-600 text-white" onclick="clanShowTab('members')">Membros</button>
-      <button id="clan-tab-upgrades" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('upgrades')">Melhorias</button>
-      ${showMemberTabs ? `<button id="clan-tab-storage" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('storage')">Armazém</button>` : ""}
-      ${showMemberTabs ? `<button id="clan-tab-missions" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('missions')">Missões</button>` : ""}
-      ${showMemberTabs ? `<button id="clan-tab-raid" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('raid')">Incursão</button>` : ""}
-    </div>
-
-    <div id="clan-tab-content" class="mb-4"></div>
-
-    ${managementButtons}
-
-    ${!preview ? `<button class="btn-primary w-full mt-4" onclick="renderClanRanking()">Classificação de Clãs</button>` : ""}
   `;
 }
 
@@ -308,44 +374,56 @@ function clanRenderMembersTab() {
 
   const membersHtml = clan.members.map(m => {
     const roleLabel = { LEADER: "Líder", OFFICER: "Oficial", MEMBER: "Membro" }[m.role] || m.role;
+    const roleKey = String(m.role || "MEMBER").toLowerCase();
     const isSelf = m.id === currentPlayerId;
+    const avatar = String(m.username || "?").trim().slice(0, 1).toUpperCase();
     let actions = "";
     if (canManage && !isSelf && m.role !== "LEADER") {
       if (isLeader && m.role === "MEMBER") {
-        actions += `<button class="text-xs text-cyan-400 ml-2" data-clan-action="promote" data-clan-id="${escapeAttr(clan.id)}" data-clan-username="${escapeAttr(m.username)}">Promover</button>`;
+        actions += `<button class="clan-action-link clan-action-cyan" data-clan-action="promote" data-clan-id="${escapeAttr(clan.id)}" data-clan-username="${escapeAttr(m.username)}">Promover</button>`;
       }
       if (isLeader && m.role === "OFFICER") {
-        actions += `<button class="text-xs text-amber-400 ml-2" data-clan-action="demote" data-clan-id="${escapeAttr(clan.id)}" data-clan-username="${escapeAttr(m.username)}">Rebaixar</button>`;
+        actions += `<button class="clan-action-link clan-action-amber" data-clan-action="demote" data-clan-id="${escapeAttr(clan.id)}" data-clan-username="${escapeAttr(m.username)}">Rebaixar</button>`;
       }
       if ((isLeader && m.role !== "LEADER") || (isOfficer && m.role === "MEMBER")) {
-        actions += `<button class="text-xs text-red-400 ml-2" data-clan-action="kick" data-clan-id="${escapeAttr(clan.id)}" data-clan-username="${escapeAttr(m.username)}">Expulsar</button>`;
+        actions += `<button class="clan-action-link clan-action-red" data-clan-action="kick" data-clan-id="${escapeAttr(clan.id)}" data-clan-username="${escapeAttr(m.username)}">Expulsar</button>`;
       }
       if (isLeader) {
-        actions += `<button class="text-xs text-amber-300 ml-2" data-clan-action="transfer" data-clan-id="${escapeAttr(clan.id)}" data-clan-username="${escapeAttr(m.username)}">Transferir</button>`;
+        actions += `<button class="clan-action-link clan-action-amber" data-clan-action="transfer" data-clan-id="${escapeAttr(clan.id)}" data-clan-username="${escapeAttr(m.username)}">Transferir</button>`;
       }
     }
     return `
-      <div class="card-sm mb-2 flex items-center justify-between">
-        <div>
-          <p class="font-bold text-sm">${escapeHtml(m.username)} <span class="text-xs text-slate-400">(${escapeHtml(roleLabel)})</span></p>
-          ${m.activeDigimonPower ? `<p class="text-xs text-slate-500">⚔️ Poder ${m.activeDigimonPower}</p>` : ""}
+      <article class="clan-member-card">
+        <div class="clan-member-avatar" aria-hidden="true">${escapeHtml(avatar)}</div>
+        <div class="clan-member-identity">
+          <div class="clan-member-name-row">
+            <p class="clan-member-name">${escapeHtml(m.username)}</p>
+            ${isSelf ? `<span class="clan-member-self">Você</span>` : ""}
+          </div>
+          <div class="clan-member-meta">
+            <span class="clan-member-role clan-role-${roleKey}">${escapeHtml(roleLabel)}</span>
+            ${m.activeDigimonPower ? `<span>⚔ Poder ${Number(m.activeDigimonPower).toLocaleString("pt-BR")}</span>` : `<span>Poder não informado</span>`}
+          </div>
         </div>
-        <div class="text-right">${actions}</div>
-      </div>
+        <div class="clan-member-actions">${actions || `<span class="clan-member-muted">—</span>`}</div>
+      </article>
     `;
   }).join("");
 
   const inviteHtml = canManage ? `
-    <form class="card-sm mb-4" onsubmit="clanInvite(event, '${clan.id}')">
-      <p class="font-bold text-sm mb-1">Convidar jogador</p>
-      <p class="text-xs text-slate-400 mb-2">O jogador receberá um convite no Correio e poderá aceitar ou recusar.</p>
-      <div class="flex gap-2">
-        <input id="clan-invite-username" class="input flex-1 min-w-0" maxlength="30" required placeholder="Nome do jogador">
-        <button class="btn-primary text-sm" type="submit">Convidar</button>
+    <form class="clan-invite-card" onsubmit="clanInvite(event, '${clan.id}')">
+      <div class="clan-section-heading">
+        <div><p class="clan-eyebrow clan-eyebrow-cyan">Recrutamento</p><p class="clan-section-title clan-section-title-sm">Convidar jogador</p></div>
+        <span class="clan-section-mark" aria-hidden="true">+</span>
+      </div>
+      <p class="text-xs text-slate-400 mt-2 mb-3">O jogador receberá um convite no Correio e poderá aceitar ou recusar.</p>
+      <div class="clan-inline-form">
+        <input id="clan-invite-username" class="input" maxlength="30" required placeholder="Nome do jogador">
+        <button class="btn-primary" type="submit">Convidar</button>
       </div>
     </form>
   ` : "";
-  container.innerHTML = `${inviteHtml}<h3 class="font-bold mb-2">Membros</h3>${membersHtml}`;
+  container.innerHTML = `${inviteHtml}<div class="clan-tab-heading"><div><p class="clan-eyebrow">Equipe atual</p><h2 class="clan-section-title">Membros</h2></div><span class="clan-section-count">${clan.members.length}</span></div><div class="clan-members-grid">${membersHtml}</div>`;
   container.querySelectorAll("[data-clan-action]").forEach(button => {
     const action = button.dataset.clanAction;
     const id = button.dataset.clanId;
@@ -364,37 +442,36 @@ async function clanLoadUpgrades() {
     const upgrades = await apiGet(`/clans/${clan.id}/upgrades`);
     const isLeader = clan.myRole && clan.myRole.role === "LEADER";
 
-    let html = `<h3 class="font-bold mb-2">Melhorias</h3>`;
+    let html = `<div class="clan-tab-heading"><div><p class="clan-eyebrow">Progressão coletiva</p><h2 class="clan-section-title">Melhorias</h2></div><span class="clan-section-caption">Use Marcas de Honra para evoluir</span></div>`;
     if (upgrades.length === 0) {
       html += `<p class="text-slate-400 text-sm">Nenhuma melhoria disponível.</p>`;
     } else {
-      html += upgrades.map(u => {
+      html += `<div class="clan-upgrades-grid">${upgrades.map(u => {
         const locked = !u.unlocked;
         const maxed = u.maxed;
         const canBuy = isLeader && u.unlocked && !maxed && clan.honorMarks >= u.nextCostHonorMarks;
         return `
-          <div class="card-sm mb-2 ${locked ? 'opacity-60' : ''}">
-            <div class="flex justify-between items-start">
-              <div>
-                <p class="font-bold text-sm">${escapeHtml(u.name)} <span class="text-xs text-slate-400">Nv ${u.currentLevel}/${u.maxLevel}</span></p>
-                <p class="text-xs text-slate-400">${escapeHtml(u.description || "")}</p>
-                <p class="text-xs text-slate-500">Efeito total: <span class="text-cyan-400">${formatEffect(u)}</span></p>
-              </div>
-              <div class="text-right">
-                ${locked ? `<span class="text-xs text-slate-500">Nv clã ${u.unlockedAtClanLevel}</span>` : ""}
-                ${!locked && !maxed ? `<p class="text-xs ${canBuy ? 'text-green-400' : 'text-slate-400'}">${u.nextCostHonorMarks} HM</p>` : ""}
-                ${maxed ? `<p class="text-xs text-amber-400">Max</p>` : ""}
+          <article class="clan-upgrade-card ${locked ? 'is-locked' : ''}">
+            <div class="clan-upgrade-heading">
+              <div class="clan-upgrade-icon" aria-hidden="true">${locked ? "◇" : maxed ? "✓" : "↗"}</div>
+              <div class="min-w-0"><p class="clan-upgrade-name">${escapeHtml(u.name)}</p><p class="clan-upgrade-level">Nível ${u.currentLevel}/${u.maxLevel}</p></div>
+              <div class="clan-upgrade-status">
+                ${locked ? `<span>Clã nível ${u.unlockedAtClanLevel}</span>` : ""}
+                ${!locked && !maxed ? `<strong class="${canBuy ? 'is-affordable' : ''}">${Number(u.nextCostHonorMarks).toLocaleString("pt-BR")} HM</strong>` : ""}
+                ${maxed ? `<strong class="is-maxed">Máx.</strong>` : ""}
               </div>
             </div>
+            <p class="clan-upgrade-description">${escapeHtml(u.description || "")}</p>
+            <div class="clan-upgrade-effect"><span>Efeito total</span><strong>${formatEffect(u)}</strong></div>
             ${isLeader && !locked && !maxed ? `
-              <button class="btn-primary w-full mt-2 text-sm py-1 ${canBuy ? '' : 'opacity-50 cursor-not-allowed'}" 
+              <button class="btn-primary w-full clan-upgrade-action ${canBuy ? '' : 'opacity-50 cursor-not-allowed'}"
                 ${canBuy ? `onclick="clanBuyUpgrade('${clan.id}', '${escapeHtml(u.code)}')"` : 'disabled'}>
-                Melhorar (${u.nextCostHonorMarks} HM)
+                Melhorar · ${Number(u.nextCostHonorMarks).toLocaleString("pt-BR")} HM
               </button>
             ` : ""}
-          </div>
+          </article>
         `;
-      }).join("");
+      }).join("")}</div>`;
     }
     container.innerHTML = html;
   } catch (err) {
@@ -445,44 +522,38 @@ async function clanLoadStorage() {
     clanStorageItemsPage = 0;
 
     let html = `
-      <div class="flex items-center justify-between mb-2">
-        <h3 class="font-bold">Armazém do Clã</h3>
-        <span class="text-xs text-slate-400">${storage.usedSlots}/${storage.capacity} slots</span>
+      <div class="clan-tab-heading clan-storage-heading">
+        <div><p class="clan-eyebrow">Logística compartilhada</p><h2 class="clan-section-title">Armazém do Clã</h2></div>
+        <span class="clan-storage-capacity-label">${storage.usedSlots}/${storage.capacity} slots</span>
       </div>
-      <div class="card-sm mb-3">
-        <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Capacidade utilizada</span><span class="text-cyan-400">${storage.availableSlots} livres</span></div>
-        <div class="w-full bg-slate-800 rounded-full h-2"><div class="bg-cyan-500 h-2 rounded-full" style="width:${storage.capacity ? Math.min(100, Math.round(storage.usedSlots / storage.capacity * 100)) : 0}%"></div></div>
-      </div>
-    `;
-
-    html += `
-      <div class="card-sm mb-4">
-        <div class="flex items-start justify-between gap-3">
-          <div class="min-w-0">
-            <p class="font-bold text-sm mb-1">Depositar item</p>
-            <p class="text-xs text-slate-400">Qualquer membro pode depositar itens negociáveis do próprio inventário.</p>
-          </div>
-          <button type="button" class="btn-primary text-sm shrink-0" ${depositableItems.length ? "" : "disabled"} onclick="clanOpenStorageDepositModal()">Depositar</button>
-        </div>
-        ${depositableItems.length
-          ? `<p class="text-xs text-slate-500 mt-3">Use a busca para localizar rapidamente o item que deseja enviar ao armazém.</p>`
-          : `<p class="text-xs text-slate-500 mt-3">Nenhum item negociável disponível para depósito.</p>`}
+      <div class="clan-storage-overview-grid">
+        <section class="clan-storage-capacity-card">
+          <div class="clan-storage-card-heading"><div><p class="clan-eyebrow clan-eyebrow-cyan">Capacidade</p><p class="clan-section-title clan-section-title-sm">Espaço utilizado</p></div><strong>${storage.availableSlots} livres</strong></div>
+          <div class="clan-xp-track clan-storage-progress"><span style="width:${storage.capacity ? Math.min(100, Math.round(storage.usedSlots / storage.capacity * 100)) : 0}%"></span></div>
+          <p class="clan-storage-progress-meta">${storage.usedSlots} ocupados de ${storage.capacity} slots</p>
+        </section>
+        <section class="clan-storage-deposit-card">
+          <div class="clan-storage-card-heading"><div><p class="clan-eyebrow clan-eyebrow-amber">Colaboração</p><p class="clan-section-title clan-section-title-sm">Depositar item</p></div><span class="clan-section-mark" aria-hidden="true">↗</span></div>
+          <p class="text-xs text-slate-400 mt-2">Qualquer membro pode depositar itens negociáveis do próprio inventário.</p>
+          <div class="clan-storage-deposit-footer"><span class="text-xs text-slate-500">${depositableItems.length ? "Itens prontos para envio" : "Nenhum item negociável"}</span><button type="button" class="btn-primary text-sm" ${depositableItems.length ? "" : "disabled"} onclick="clanOpenStorageDepositModal()">Depositar</button></div>
+        </section>
       </div>
     `;
 
     html += `
-      <div class="flex items-center justify-between gap-3 mb-2">
-        <h4 class="font-bold text-sm">Itens armazenados</h4>
-        <span class="text-xs text-slate-500">${clanStorageItems.length} ${clanStorageItems.length === 1 ? "item armazenado" : "itens armazenados"}</span>
-      </div>
-      <form id="clan-storage-items-search-form" class="flex flex-col sm:flex-row gap-2 mb-3" onsubmit="clanStorageSearchItems(event)">
-        <input id="clan-storage-items-search" class="input flex-1 min-w-0" type="search" placeholder="Buscar item armazenado..." aria-label="Buscar item armazenado" autocomplete="off">
-        <button type="submit" class="btn-primary w-full sm:w-auto shrink-0">Buscar</button>
-      </form>
-      <div id="clan-storage-items-list">${clanStorageRenderItemsHtml()}</div>
+      <section class="clan-storage-items-panel">
+        <div class="clan-tab-heading clan-storage-items-heading"><div><p class="clan-eyebrow">Inventário compartilhado</p><h3 class="clan-section-title clan-section-title-sm">Itens armazenados</h3></div><span class="clan-section-caption">${clanStorageItems.length} ${clanStorageItems.length === 1 ? "item armazenado" : "itens armazenados"}</span></div>
+        <form id="clan-storage-items-search-form" class="clan-search-row clan-storage-search-row" onsubmit="clanStorageSearchItems(event)">
+          <label class="sr-only" for="clan-storage-items-search">Buscar item armazenado</label>
+          <span class="clan-search-icon" aria-hidden="true">⌕</span>
+          <input id="clan-storage-items-search" class="input" type="search" placeholder="Buscar item armazenado..." aria-label="Buscar item armazenado" autocomplete="off">
+          <button type="submit" class="btn-primary">Buscar</button>
+        </form>
+        <div id="clan-storage-items-list">${clanStorageRenderItemsHtml()}</div>
+      </section>
     `;
 
-    html += `<details class="card-sm mt-4"><summary class="cursor-pointer font-bold text-sm">Histórico de movimentações</summary><div id="clan-storage-history-list" class="mt-3">${clanStorageRenderHistoryHtml()}</div></details>`;
+    html += `<details class="clan-storage-history"><summary class="cursor-pointer font-bold text-sm">Histórico de movimentações</summary><div id="clan-storage-history-list" class="mt-3">${clanStorageRenderHistoryHtml()}</div></details>`;
     container.innerHTML = html;
   } catch (err) {
     container.innerHTML = `<div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>`;
@@ -515,14 +586,14 @@ function clanStorageRenderItemsHtml() {
   const canWithdraw = currentClan && currentClan.myRole && ["LEADER", "OFFICER"].includes(currentClan.myRole.role);
   const clanId = currentClan ? currentClan.id : "";
   const rows = pageItems.map(item => `
-    <div class="card-sm mb-2 flex items-center gap-3 overflow-hidden">
-      ${item.icon ? `<img src="${escapeAttr(item.icon)}" class="w-8 h-8 object-contain shrink-0" onerror="this.style.display='none'">` : ""}
-      <div class="flex-1 min-w-0">
-        <p class="font-bold text-sm truncate">${escapeHtml(item.name || item.code)}</p>
-        <p class="text-xs text-slate-400 truncate">Quantidade: ${item.quantity}${item.maxStack ? `/${item.maxStack}` : ""}</p>
+    <article class="clan-storage-item-card">
+      ${item.icon ? `<img src="${escapeAttr(item.icon)}" class="clan-storage-item-icon" alt="" onerror="this.style.display='none'">` : `<span class="clan-storage-item-icon clan-storage-item-icon-fallback" aria-hidden="true">▣</span>`}
+      <div class="clan-storage-item-body">
+        <p class="clan-storage-item-name">${escapeHtml(item.name || item.code)}</p>
+        <p class="clan-storage-item-meta">Quantidade: ${Number(item.quantity).toLocaleString("pt-BR")}${item.maxStack ? `/${Number(item.maxStack).toLocaleString("pt-BR")}` : ""}</p>
       </div>
-      ${canWithdraw ? `<button class="btn-secondary text-xs py-1 px-2 shrink-0" onclick="clanStorageWithdraw('${clanId}', ${item.itemDefinitionId}, '${escapeAttr(item.name || item.code)}', ${item.quantity})">Retirar</button>` : ""}
-    </div>
+      ${canWithdraw ? `<button class="btn-secondary clan-storage-withdraw" onclick="clanStorageWithdraw('${clanId}', ${item.itemDefinitionId}, '${escapeAttr(item.name || item.code)}', ${item.quantity})">Retirar</button>` : ""}
+    </article>
   `).join("");
 
   return `
@@ -567,10 +638,11 @@ function clanStorageRenderHistoryHtml() {
   const pageEntries = clanStorageHistory.slice(start, start + clanStorageHistoryPageSize);
   const end = start + pageEntries.length;
   const rows = pageEntries.map(entry => `
-    <div class="border-t border-slate-800 py-2 text-xs">
-      <div class="flex justify-between gap-2"><span class="${entry.action === "DEPOSIT" ? "text-green-400" : "text-amber-400"}">${entry.action === "DEPOSIT" ? "Depósito" : "Retirada"}</span><span class="text-slate-500">${new Date(entry.createdAt).toLocaleString()}</span></div>
-      <p class="text-slate-300">${escapeHtml(entry.actorUsername)} · ${escapeHtml(entry.itemName)} × ${entry.quantity}</p>
-    </div>
+    <article class="clan-history-row">
+      <div class="clan-history-action ${entry.action === "DEPOSIT" ? "is-deposit" : "is-withdraw"}"><span aria-hidden="true">${entry.action === "DEPOSIT" ? "↓" : "↑"}</span>${entry.action === "DEPOSIT" ? "Depósito" : "Retirada"}</div>
+      <div class="clan-history-copy"><strong>${escapeHtml(entry.itemName)}</strong><span>${escapeHtml(entry.actorUsername)} · ${entry.quantity} unidade(s)</span></div>
+      <time class="clan-history-date">${new Date(entry.createdAt).toLocaleString("pt-BR")}</time>
+    </article>
   `).join("");
 
   return `
@@ -1205,13 +1277,12 @@ function showRaidAttackModal(result) {
 }
 
 function renderClanCreate() {
-  setHtml("clan-content", `
-    <div class="mb-4">
-      <button class="text-sm text-slate-400" onclick="renderClansPage()">← Voltar</button>
-      <h2 class="text-lg font-bold mt-2">Criar Clã</h2>
-    </div>
-
-    <div class="card">
+    setHtml("clan-content", `
+    <div class="clan-form-page">
+      <button class="clan-back-action" onclick="renderClansPage()">← Voltar</button>
+      <header class="clan-form-header"><p class="clan-eyebrow clan-eyebrow-cyan">Novo grupo</p><h1 class="clan-page-title">Criar Clã</h1><p class="clan-page-subtitle">Reúna sua equipe e construa uma comunidade forte.</p></header>
+      <div class="clan-form-card">
+        <div class="clan-section-heading"><div><p class="clan-eyebrow">Identidade</p><h2 class="clan-section-title">Apresente seu clã</h2></div><span class="clan-section-mark" aria-hidden="true">✦</span></div>
       <label class="block text-sm text-slate-400 mb-1">Nome do Clã</label>
       <input type="text" id="clan-create-name" class="input w-full mb-3" maxlength="30" placeholder="Ex: DRO Heroes">
 
@@ -1221,7 +1292,8 @@ function renderClanCreate() {
       <label class="block text-sm text-slate-400 mb-1">Descrição (opcional)</label>
       <textarea id="clan-create-desc" class="input w-full mb-4" maxlength="280" rows="3" placeholder="Descreva seu clã..."></textarea>
 
-      <button class="btn-primary w-full" onclick="clanCreate()">Criar Clã</button>
+        <button class="btn-primary w-full" onclick="clanCreate()">Criar Clã</button>
+      </div>
     </div>
   `);
 }
@@ -1336,19 +1408,19 @@ async function clanDissolve(id) {
 
 function clanEdit(id) {
   setHtml("clan-content", `
-    <div class="mb-4">
-      <button class="text-sm text-slate-400" onclick="renderClansPage()">← Voltar</button>
-      <h2 class="text-lg font-bold mt-2">Editar Clã</h2>
-    </div>
-
-    <div class="card">
+    <div class="clan-form-page">
+      <button class="clan-back-action" onclick="renderClansPage()">← Voltar</button>
+      <header class="clan-form-header"><p class="clan-eyebrow clan-eyebrow-cyan">Configurações</p><h1 class="clan-page-title">Editar Clã</h1><p class="clan-page-subtitle">Mantenha a identidade da sua equipe atualizada.</p></header>
+      <div class="clan-form-card">
+        <div class="clan-section-heading"><div><p class="clan-eyebrow">Identidade</p><h2 class="clan-section-title">Informações públicas</h2></div><span class="clan-section-mark" aria-hidden="true">✎</span></div>
       <label class="block text-sm text-slate-400 mb-1">Descrição</label>
       <textarea id="clan-edit-desc" class="input w-full mb-3" maxlength="280" rows="3"></textarea>
 
       <label class="block text-sm text-slate-400 mb-1">Emblema (código/icon curto)</label>
       <input type="text" id="clan-edit-emblem" class="input w-full mb-4" maxlength="50" placeholder="Ex: 🛡️">
 
-      <button class="btn-primary w-full" onclick="clanUpdate('${id}')">Salvar</button>
+        <button class="btn-primary w-full" onclick="clanUpdate('${id}')">Salvar</button>
+      </div>
     </div>
   `);
 }
@@ -1373,14 +1445,21 @@ async function renderClanRanking() {
   showBottomNav("more");
 
   app.innerHTML = `
-    <div class="page-container">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-bold px-1">🏆 Classificação de Clãs</h2>
-        <button class="text-sm text-slate-400" onclick="renderClansPage()">Voltar</button>
-      </div>
-      <div id="clan-ranking-content">
-        <div class="card animate-pulse"><div class="h-32"></div></div>
-      </div>
+    <div class="page-container clan-page-container clan-ranking-page">
+      <header class="clan-page-header clan-ranking-header">
+        <div class="clan-page-header-copy">
+          <p class="clan-eyebrow clan-eyebrow-amber">Competição · Temporada</p>
+          <h1 class="clan-page-title">Classificação de Clãs</h1>
+          <p class="clan-page-subtitle">Acompanhe as equipes que estão no topo pelo poder total.</p>
+        </div>
+        <button class="clan-back-action" onclick="renderClansPage()">Voltar</button>
+      </header>
+      <section class="clan-ranking-surface">
+        <div class="clan-section-heading"><div><p class="clan-eyebrow">Panorama competitivo</p><h2 class="clan-section-title">Melhores equipes</h2></div><span class="clan-section-mark" aria-hidden="true">✦</span></div>
+        <div id="clan-ranking-content">
+          <div class="card animate-pulse"><div class="h-32"></div></div>
+        </div>
+      </section>
     </div>
   `;
 
@@ -1424,23 +1503,17 @@ function clanRenderRanking() {
   let html = clanRankingEntries.map(e => {
     const posIcon = e.position === 1 ? "🥇" : e.position === 2 ? "🥈" : e.position === 3 ? "🥉" : `<span class="text-slate-500 font-bold text-sm">#${e.position}</span>`;
     return `
-      <div class="card-sm mb-2 flex items-center gap-3" onclick="clanShowPreview('${e.id}')">
-        <div class="w-8 text-center text-lg">${posIcon}</div>
-        <div class="flex-1">
-          <p class="font-bold text-sm">${escapeHtml(e.name)} <span class="text-cyan-400">[${escapeHtml(e.tag)}]</span></p>
-          <p class="text-xs text-slate-500">👥 ${e.memberCount} membros</p>
-        </div>
-        <div class="text-right">
-          <p class="text-xs text-slate-500">Poder total</p>
-          <p class="font-bold text-amber-400">${e.totalPower.toLocaleString()}</p>
-        </div>
-        <div class="text-slate-500 text-lg">👁️</div>
-      </div>
+      <article class="clan-ranking-row" onclick="clanShowPreview('${e.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); clanShowPreview('${e.id}'); }">
+        <div class="clan-ranking-position">${posIcon}</div>
+        <div class="clan-ranking-identity"><p class="clan-ranking-name">${escapeHtml(e.name)} <span>${escapeHtml(e.tag)}</span></p><p class="clan-ranking-members">${e.memberCount} membros</p></div>
+        <div class="clan-ranking-power"><span>Poder total</span><strong>${Number(e.totalPower || 0).toLocaleString("pt-BR")}</strong></div>
+        <div class="clan-icon-button" aria-hidden="true">◉</div>
+      </article>
     `;
   }).join("");
 
   if (clanRankingHasMore) {
-    html += `<button class="btn-secondary w-full mt-2" id="clan-ranking-load-more" onclick="clanRankingLoadMore()">Carregar mais</button>`;
+    html += `<button class="btn-secondary clan-list-load-more" id="clan-ranking-load-more" onclick="clanRankingLoadMore()">Carregar mais</button>`;
   }
 
   content.innerHTML = html;
