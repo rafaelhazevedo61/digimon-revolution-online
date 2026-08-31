@@ -26,3 +26,9 @@ Aplicar à tela `storage` a mesma composição visual responsiva adotada recente
 ## Critérios de aceite
 
 A página deve aproveitar a largura desktop sem comprimir a informação em uma lista estreita. Os cartões devem manter nomes longos legíveis, diferenciar visualmente Digimons protegidos e manter as três ações principais acessíveis. Em mobile, a composição deve retornar a uma coluna, preservar a busca e manter os botões de ação utilizáveis lado a lado.
+
+## Correção posterior no PR
+
+Após a revisão visual, foi identificado que o breakpoint de telas pequenas havia reduzido indevidamente o cartão para uma imagem de `3.3rem` e um gap de `0.48rem`, aproximando os textos da imagem. O override mobile foi corrigido para recuperar a imagem de `4rem`, o gap de `0.75rem` e uma composição mais próxima da versão anterior. Os botões continuam reposicionados em uma linha própria com três colunas.
+
+A correção foi conferida em capturas headless de 375×812 e 1440×1000. No mobile, o nome, nível e atributos agora possuem separação visual clara da imagem; no desktop, a grade e o rail lateral permanecem inalterados.
