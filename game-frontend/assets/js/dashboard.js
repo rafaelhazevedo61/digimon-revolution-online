@@ -246,7 +246,6 @@ function renderDigimonCard(d) {
           </div>
           <div class="dashboard-digimon-desktop-info" aria-label="Informações gerais do Digimon">
             <div class="dashboard-digimon-profile-strip">
-              <div class="dashboard-digimon-profile-stat"><span>Status</span><strong>${formatDashboardDigimonStatus(d.status)}</strong></div>
               <div class="dashboard-digimon-profile-stat"><span>Estágio</span><strong>${escapeHtml(formatStage(d.stage))}</strong></div>
               <div class="dashboard-digimon-profile-stat"><span>Renascimentos</span><strong>${Number(d.rebirthCount || 0)}</strong></div>
             </div>
@@ -293,11 +292,6 @@ function renderDigimonCard(d) {
 function dashboardStatNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : 0;
-}
-
-function formatDashboardDigimonStatus(status) {
-  const labels = { ACTIVE: "Ativo", STORED: "Armazenado", HATCHED: "Recém-chocado", REBORN: "Renascido" };
-  return labels[String(status || "ACTIVE").toUpperCase()] || "Ativo";
 }
 
 function dashboardAverageIv(d) {
