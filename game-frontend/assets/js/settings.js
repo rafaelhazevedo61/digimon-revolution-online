@@ -164,6 +164,7 @@ function settingsClosePanel() {
 
 let settingsShortcutDraft = [];
 let settingsShortcutSaveInProgress = false;
+let settingsShortcutDirty = false;
 
 async function settingsShowShortcuts() {
   document.getElementById("settings-shortcuts-modal")?.remove();
@@ -172,6 +173,7 @@ async function settingsShowShortcuts() {
   } catch (_) {
     settingsShortcutDraft = [];
   }
+  settingsShortcutDirty = false;
   settingsRenderShortcutsModal();
 }
 
@@ -205,8 +207,10 @@ function settingsRenderShortcutsModal() {
     .filter(item => !selected.has(item.route))
     .map(item => renderShortcutOption(item, false));
   const rows = [...selectedRows, ...unselectedRows].join("");
-
-  const overlay = document.createElement("div");
+  const existingOverlay = document.getElementById("settings-shortcuts-modal");
+  const existingList = existingOverlay?.querySelector(".settings-shortcuts-list");
+  const listScrollTop = existingList?.scrollTop || 0;
+  const overlay = existingOverlay || document.createElement("div");
   overlay.id = "settings-shortcuts-modal";
   overlay.className = "settings-panel-overlay fixed inset-0 z-50 flex items-center justify-center p-4";
   overlay.onclick = event => { if (event.target === overlay) overlay.remove(); };
@@ -222,12 +226,14 @@ function settingsRenderShortcutsModal() {
         </div>
       </div>
       <div class="settings-shortcuts-limit"><span>Mobile</span><strong>Até 4 atalhos + Mais</strong><span>Desktop</span><strong>Até 8 atalhos + Mais</strong></div>
-      <button type="button" class="btn-primary w-full mt-4" id="settings-shortcuts-save" onclick="settingsSaveShortcuts()">Salvar atalhos</button>
+      <button type="button" class="btn-primary w-full mt-4" id="settings-shortcuts-save" onclick="settingsSaveShortcuts()" ${settingsShortcutDirty ? "" : "disabled"} aria-disabled="${!settingsShortcutDirty}">Salvar atalhos</button>
       <div id="settings-shortcuts-feedback" class="hidden settings-feedback"></div>
       <div class="settings-shortcuts-list">${rows}</div>
     </div>
   `;
-  document.body.appendChild(overlay);
+  if (!existingOverlay) document.body.appendChild(overlay);
+  const updatedList = overlay.querySelector(".settings-shortcuts-list");
+  if (updatedList) updatedList.scrollTop = listScrollTop;
 }
 
 function settingsToggleShortcut(route) {
@@ -240,6 +246,7 @@ function settingsToggleShortcut(route) {
     showToast("Você pode escolher até 8 atalhos no desktop.", "info");
     return;
   }
+  settingsShortcutDirty = true;
   settingsRenderShortcutsModal();
 }
 
@@ -248,11 +255,12 @@ function settingsMoveShortcut(route, direction) {
   const target = index + direction;
   if (index < 0 || target < 0 || target >= settingsShortcutDraft.length) return;
   [settingsShortcutDraft[index], settingsShortcutDraft[target]] = [settingsShortcutDraft[target], settingsShortcutDraft[index]];
+  settingsShortcutDirty = true;
   settingsRenderShortcutsModal();
 }
 
 async function settingsSaveShortcuts() {
-  if (settingsShortcutSaveInProgress) return;
+  if (settingsShortcutSaveInProgress || !settingsShortcutDirty) return;
 
   const button = document.getElementById("settings-shortcuts-save");
   const feedback = document.getElementById("settings-shortcuts-feedback");
@@ -267,6 +275,7 @@ async function settingsSaveShortcuts() {
 
   try {
     await savePlayerShortcutPreference(routesToSave);
+    settingsShortcutDirty = false;
     document.getElementById("settings-shortcuts-modal")?.remove();
     showToast("Atalhos salvos com sucesso.");
   } catch (err) {
