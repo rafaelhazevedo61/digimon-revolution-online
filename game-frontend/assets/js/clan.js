@@ -597,10 +597,10 @@ function clanStorageRenderItemsHtml() {
   `).join("");
 
   return `
-    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+    <div class="clan-storage-pagination-toolbar clan-storage-items-pagination flex flex-wrap items-center justify-between gap-2">
       <p class="text-xs text-slate-500">${start + 1}-${end} de ${filteredItems.length} ${itemLabel}</p>
       ${totalPages > 1 ? `
-        <div class="flex items-center gap-2">
+        <div class="clan-storage-pagination-controls flex items-center gap-2">
           <button type="button" class="btn-secondary text-xs" onclick="clanStorageChangeItemsPage(-1)" ${clanStorageItemsPage === 0 ? "disabled" : ""}>Anterior</button>
           <span class="text-xs text-slate-400 whitespace-nowrap">${clanStorageItemsPage + 1}/${totalPages}</span>
           <button type="button" class="btn-secondary text-xs" onclick="clanStorageChangeItemsPage(1)" ${clanStorageItemsPage >= totalPages - 1 ? "disabled" : ""}>Próxima</button>
@@ -646,10 +646,10 @@ function clanStorageRenderHistoryHtml() {
   `).join("");
 
   return `
-    <div class="flex items-center justify-between gap-3 mb-2">
+    <div class="clan-storage-pagination-toolbar clan-storage-history-pagination flex items-center justify-between gap-3">
       <p class="text-xs text-slate-500">${start + 1}-${end} de ${clanStorageHistory.length} movimentação(ões)</p>
       ${totalPages > 1 ? `
-        <div class="flex items-center gap-2">
+        <div class="clan-storage-pagination-controls flex items-center gap-2">
           <button type="button" class="btn-secondary text-xs" onclick="clanStorageChangeHistoryPage(-1)" ${clanStorageHistoryPage === 0 ? "disabled" : ""}>Anterior</button>
           <span class="text-xs text-slate-400 whitespace-nowrap">${clanStorageHistoryPage + 1}/${totalPages}</span>
           <button type="button" class="btn-secondary text-xs" onclick="clanStorageChangeHistoryPage(1)" ${clanStorageHistoryPage >= totalPages - 1 ? "disabled" : ""}>Próxima</button>
@@ -802,10 +802,10 @@ function clanStorageRenderDepositModalResults() {
     : `<p class="text-sm text-slate-500 py-6 text-center">Nenhum item negociável encontrado.</p>`;
 
   container.innerHTML = `
-    <div class="flex items-center justify-between gap-3 mb-2">
+    <div class="clan-storage-pagination-toolbar clan-storage-deposit-pagination flex items-center justify-between gap-3">
       <p class="text-xs text-slate-500">${filteredItems.length} item(ns) encontrado(s)</p>
       ${totalPages > 1 ? `
-        <div class="flex items-center gap-2">
+        <div class="clan-storage-pagination-controls flex items-center gap-2">
           <button type="button" class="btn-secondary text-xs" data-clan-storage-deposit-page="-1" ${clanStorageDepositPage === 0 ? "disabled" : ""}>Anterior</button>
           <span class="text-xs text-slate-400 whitespace-nowrap">${clanStorageDepositPage + 1}/${totalPages}</span>
           <button type="button" class="btn-secondary text-xs" data-clan-storage-deposit-page="1" ${clanStorageDepositPage >= totalPages - 1 ? "disabled" : ""}>Próxima</button>
