@@ -1,5 +1,6 @@
 let storageDigimons = [];
 let storageSelectedDigimonIds = new Set();
+let storageCollectionEntries = new Set();
 const STORAGE_PAGE_SIZE = 5;
 let storageCurrentPage = 1;
 
@@ -13,98 +14,129 @@ let storageFilterState = {
 
 async function renderStoragePage() {
   storageSelectedDigimonIds.clear();
+  storageCollectionEntries.clear();
   storageCurrentPage = 1;
   const app = document.getElementById("app");
   showBottomNav("digimons");
   storageFilterState.open = false;
 
   app.innerHTML = `
-    <div class="page-container">
-      <div class="flex items-center justify-between gap-2 mb-4 px-1">
-        <div class="flex items-center gap-2 min-w-0">
-          <button class="btn-sm" style="background:#334155;color:#94a3b8" onclick="navigateTo('dashboard')">← Voltar</button>
-          <h2 class="text-lg font-bold truncate">Armazém Digimon</h2>
+    <div class="page-container storage-page">
+      <header class="progression-page-header storage-page-header">
+        <div class="storage-page-heading">
+          <button type="button" class="storage-back-button" onclick="navigateTo('dashboard')"><span aria-hidden="true">←</span> Voltar para a Home</button>
+          <p class="progression-eyebrow progression-eyebrow-cyan">Gestão de Digimons</p>
+          <h2 class="progression-page-title">Armazém Digimon</h2>
+          <p class="progression-page-subtitle">Organize sua coleção, proteja seus favoritos e transforme duplicatas em Dados Digitais.</p>
         </div>
-        <button
-          id="storage-config-btn"
-          type="button"
-          class="btn-sm whitespace-nowrap"
-          style="background:#334155;color:#cbd5e1"
-          aria-expanded="false"
-        >
-          ⚙ Configurar
-        </button>
-      </div>
+        <div class="storage-header-tools">
+          <button id="storage-config-btn" type="button" class="storage-config-button" aria-expanded="false"><span aria-hidden="true">⚙</span> Filtros</button>
+          <div class="storage-header-emblem" aria-hidden="true">▦</div>
+        </div>
+      </header>
 
-      <form id="storage-search-form" class="flex flex-col sm:flex-row gap-2 mb-3">
-        <input
-          id="storage-search"
-          class="input flex-1"
-          type="search"
-          value="${escapeHtml(storageFilterState.search)}"
-          placeholder="Pesquisar Digimon por nome..."
-          aria-label="Pesquisar Digimon no Armazém Digimon"
-        />
-        <div class="flex gap-2">
-          <button type="submit" class="btn-primary flex-1 sm:flex-none">Buscar</button>
-          <button id="storage-clear-search" type="button" class="btn-secondary flex-1 sm:flex-none">Limpar</button>
+      <section class="progression-hero progression-hero-cyan storage-hero mb-4">
+        <div class="progression-hero-topline">
+          <span class="progression-hero-kicker">Coleção do jogador</span>
+          <span class="progression-hero-status">Armazém ativo</span>
         </div>
-      </form>
+        <div class="flex items-center gap-3">
+          <div class="progression-hero-visual storage-hero-visual" aria-hidden="true">◈</div>
+          <div class="min-w-0">
+            <h3 class="progression-panel-title">Seu próximo parceiro começa aqui</h3>
+            <p class="storage-hero-copy">Pesquise sua coleção, mantenha os Digimons importantes protegidos e recupere um parceiro quando precisar.</p>
+          </div>
+        </div>
+      </section>
 
-      <div id="storage-config-panel" class="card-sm mb-3 hidden">
-        <div class="mb-3 rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-2">
-          <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
-            <input id="storage-pagination-enabled" type="checkbox" class="accent-cyan-500" checked>
-            Usar paginação no armazém
-          </label>
-          <p class="text-xs text-slate-500 mt-1">Desative para exibir todos os Digimons de uma vez.</p>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label class="text-xs text-slate-400 flex flex-col min-w-0">
-            <span class="min-h-8 leading-4 flex items-start">Estágio</span>
-            <select id="storage-stage-filter" class="input mt-1" aria-label="Filtrar por estágio">
-              <option value="ALL">Todos os estágios</option>
-              <option value="MEGA">Mega</option>
-              <option value="ULTIMATE">Ultimate</option>
-              <option value="CHAMPION">Champion</option>
-              <option value="ROOKIE">Rookie</option>
-              <option value="BABY_II">Baby II</option>
-              <option value="BABY">Baby</option>
-            </select>
-          </label>
-          <label class="text-xs text-slate-400 flex flex-col min-w-0">
-            <span class="min-h-8 leading-4 flex items-start">Raridade</span>
-            <select id="storage-rarity-filter" class="input mt-1" aria-label="Filtrar por raridade">
-              <option value="ALL">Todas as raridades</option>
-              <option value="LEGENDARY">${formatRarity("LEGENDARY")}</option>
-              <option value="EPIC">${formatRarity("EPIC")}</option>
-              <option value="RARE">${formatRarity("RARE")}</option>
-              <option value="COMMON">${formatRarity("COMMON")}</option>
-            </select>
-          </label>
-          <label class="text-xs text-slate-400 flex flex-col min-w-0">
-            <span class="min-h-8 leading-4 flex items-start">Ordenar por</span>
-            <select id="storage-sort" class="input mt-1" aria-label="Ordenar Armazém Digimon">
-              <option value="level-desc">Nível: maior para menor</option>
-              <option value="level-asc">Nível: menor para maior</option>
-              <option value="stage-desc">Estágio: maior para menor</option>
-              <option value="stage-asc">Estágio: menor para maior</option>
-              <option value="rarity-desc">Raridade: maior para menor</option>
-              <option value="rarity-asc">Raridade: menor para maior</option>
-              <option value="name-asc">Nome: A–Z</option>
-              <option value="name-desc">Nome: Z–A</option>
-            </select>
-          </label>
-        </div>
-        <p id="storage-filter-summary" class="text-xs text-slate-500 mt-3"></p>
-      </div>
+      <div class="storage-workspace">
+        <aside class="storage-control-rail">
+          <div class="storage-control-heading">
+            <span class="progression-eyebrow progression-eyebrow-cyan">Visão geral</span>
+            <p>Capacidade, recursos e filtros da coleção.</p>
+          </div>
+          <div id="storage-info" class="storage-info-grid mb-3"></div>
 
-      <div id="storage-info" class="mb-3"></div>
-      <div id="storage-bulk-actions" class="mb-3"></div>
-      <div id="storage-list">
-        <div class="card animate-pulse"><div class="h-20"></div></div>
+          <div id="storage-config-panel" class="card-sm storage-config-panel mb-3 hidden">
+            <div class="storage-pagination-toggle">
+              <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+                <input id="storage-pagination-enabled" type="checkbox" class="accent-cyan-500" checked>
+                Usar paginação no armazém
+              </label>
+              <p>Desative para exibir todos os Digimons de uma vez.</p>
+            </div>
+            <div class="grid grid-cols-1 gap-3">
+              <label class="text-xs text-slate-400 flex flex-col min-w-0">
+                <span class="storage-filter-label">Estágio</span>
+                <select id="storage-stage-filter" class="input mt-1" aria-label="Filtrar por estágio">
+                  <option value="ALL">Todos os estágios</option>
+                  <option value="MEGA">Mega</option>
+                  <option value="ULTIMATE">Ultimate</option>
+                  <option value="CHAMPION">Champion</option>
+                  <option value="ROOKIE">Rookie</option>
+                  <option value="BABY_II">Baby II</option>
+                  <option value="BABY">Baby</option>
+                </select>
+              </label>
+              <label class="text-xs text-slate-400 flex flex-col min-w-0">
+                <span class="storage-filter-label">Raridade</span>
+                <select id="storage-rarity-filter" class="input mt-1" aria-label="Filtrar por raridade">
+                  <option value="ALL">Todas as raridades</option>
+                  <option value="LEGENDARY">${formatRarity("LEGENDARY")}</option>
+                  <option value="EPIC">${formatRarity("EPIC")}</option>
+                  <option value="RARE">${formatRarity("RARE")}</option>
+                  <option value="COMMON">${formatRarity("COMMON")}</option>
+                </select>
+              </label>
+              <label class="text-xs text-slate-400 flex flex-col min-w-0">
+                <span class="storage-filter-label">Ordenar por</span>
+                <select id="storage-sort" class="input mt-1" aria-label="Ordenar Armazém Digimon">
+                  <option value="level-desc">Nível: maior para menor</option>
+                  <option value="level-asc">Nível: menor para maior</option>
+                  <option value="stage-desc">Estágio: maior para menor</option>
+                  <option value="stage-asc">Estágio: menor para maior</option>
+                  <option value="rarity-desc">Raridade: maior para menor</option>
+                  <option value="rarity-asc">Raridade: menor para maior</option>
+                  <option value="name-asc">Nome: A–Z</option>
+                  <option value="name-desc">Nome: Z–A</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </aside>
+
+        <main class="storage-content-column">
+          <form id="storage-search-form" class="storage-search-row mb-3">
+            <span class="storage-search-icon" aria-hidden="true">⌕</span>
+            <input
+              id="storage-search"
+              class="input storage-search-input flex-1"
+              type="search"
+              value="${escapeHtml(storageFilterState.search)}"
+              placeholder="Pesquisar Digimon por nome, estágio ou raridade..."
+              aria-label="Pesquisar Digimon no Armazém Digimon"
+            />
+            <div>
+              <button type="submit" class="storage-search-button">Buscar</button>
+              <button id="storage-clear-search" type="button" class="storage-clear-button">Limpar</button>
+            </div>
+          </form>
+
+          <div class="storage-list-heading">
+            <div>
+              <p class="storage-list-title">Digimons armazenados</p>
+              <p id="storage-filter-summary" class="storage-list-summary">Carregando armazém...</p>
+            </div>
+            <span id="storage-list-state" class="storage-list-state">Filtros rápidos</span>
+          </div>
+
+          <div id="storage-bulk-actions" class="mb-3"></div>
+          <div id="storage-list">
+            <div class="storage-digimon-skeleton"></div>
+          </div>
+          <div id="storage-pagination" class="storage-pagination mt-4"></div>
+        </main>
       </div>
-      <div id="storage-pagination" class="mt-4"></div>
     </div>
   `;
 
@@ -156,24 +188,30 @@ async function renderStoragePage() {
   }
 
   try {
-    const [stored, dashboard] = await Promise.all([
+    const [stored, dashboard, collection] = await Promise.all([
       apiGet("/digimon/storage"),
-      apiGet("/players/me/dashboard")
+      apiGet("/players/me/dashboard"),
+      apiGet("/collection")
     ]);
 
     storageDigimons = Array.isArray(stored) ? stored : [];
+    storageCollectionEntries = new Set((collection?.entries || []).map(entry => `${entry.digimonInfoId}:${String(entry.rarity || "").toUpperCase()}`));
 
     const slotInfo = dashboard.slotInfo;
     const infoEl = document.getElementById("storage-info");
     infoEl.innerHTML = `
-      <div class="grid grid-cols-2 gap-2">
-        <div class="card-sm text-center">
-          <p class="text-xs text-slate-400">Digimons armazenados</p>
-          <p class="font-bold text-sm ${slotInfo.storedDigimons >= slotInfo.maxStorageSlots ? 'text-red-400' : 'text-cyan-400'}">${slotInfo.storedDigimons}/${slotInfo.maxStorageSlots}</p>
+      <div class="storage-stat-card">
+        <span class="storage-stat-icon" aria-hidden="true">▦</span>
+        <div>
+          <p class="storage-stat-label">Slots ocupados</p>
+          <p class="storage-stat-value ${slotInfo.storedDigimons >= slotInfo.maxStorageSlots ? "storage-stat-value-danger" : ""}">${slotInfo.storedDigimons}/${slotInfo.maxStorageSlots}</p>
         </div>
-        <div class="card-sm text-center">
-          <p class="text-xs text-slate-400">Dados Digitais</p>
-          <p class="font-bold text-sm text-cyan-400">${Number(dashboard.digitalData || 0).toLocaleString()}</p>
+      </div>
+      <div class="storage-stat-card storage-stat-card-data">
+        <span class="storage-stat-icon" aria-hidden="true">✦</span>
+        <div>
+          <p class="storage-stat-label">Dados Digitais</p>
+          <p class="storage-stat-value">${Number(dashboard.digitalData || 0).toLocaleString()}</p>
         </div>
       </div>
     `;
@@ -181,8 +219,8 @@ async function renderStoragePage() {
     storageRenderList();
     storageUpdateBulkActions();
   } catch (err) {
-    document.getElementById("storage-list").innerHTML = `
-      <div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>
+      document.getElementById("storage-list").innerHTML = `
+      <div class="storage-empty-state storage-empty-state-error"><p>Não foi possível carregar o armazém.</p><span>${escapeHtml(err.message)}</span></div>
     `;
   }
 }
@@ -195,6 +233,8 @@ function storageToggleConfig() {
   storageFilterState.open = panel.classList.contains("hidden");
   panel.classList.toggle("hidden", !storageFilterState.open);
   button.setAttribute("aria-expanded", String(storageFilterState.open));
+  const state = document.getElementById("storage-list-state");
+  if (state) state.textContent = storageFilterState.open ? "Filtros visíveis" : "Filtros rápidos";
 }
 
 function storageSubmitSearch(event) {
@@ -240,8 +280,7 @@ function storageRenderList() {
   }
 
   if (filtered.length === 0) {
-    container.innerHTML = `<div class="card text-center text-slate-400 text-sm">${storageDigimons.length === 0 ? "Armazém Digimon vazio" : "Nenhum Digimon corresponde aos filtros atuais."}
-</div>`;
+    container.innerHTML = `<div class="storage-empty-state"><span class="storage-empty-icon" aria-hidden="true">◈</span><p>${storageDigimons.length === 0 ? "Armazém Digimon vazio" : "Nenhum Digimon corresponde aos filtros atuais."}</p><span>${storageDigimons.length === 0 ? "Quando um Digimon for armazenado, ele aparecerá aqui." : "Tente ajustar a busca ou os filtros da coleção."}</span></div>`;
     storageRenderPagination(0, 1);
     storageUpdateBulkActions();
     return;
@@ -249,51 +288,52 @@ function storageRenderList() {
 
   container.innerHTML = pageItems.map(d => {
     const locked = d.locked === true;
+    const registered = storageCollectionEntries.has(`${d.digimonInfoId}:${String(d.rarity || "").toUpperCase()}`);
     const selected = storageSelectedDigimonIds.has(String(d.id));
     return `
-      <div class="card mb-2 flex items-center gap-3 ${locked ? "border-amber-700/70 bg-amber-950/10" : ""}">
-        <label class="shrink-0 flex items-center justify-center ${locked ? "cursor-not-allowed" : "cursor-pointer"}" title="${locked ? "Digimon bloqueado contra sacrifício" : "Selecionar Digimon para sacrifício"}">
+      <article class="storage-digimon-card ${locked ? "storage-digimon-card-locked" : ""}">
+        <label class="storage-selection-control ${locked ? "storage-selection-control-locked" : ""}" title="${locked ? "Digimon bloqueado contra sacrifício" : "Selecionar Digimon para sacrifício"}">
           <input
             type="checkbox"
-            class="storage-sacrifice-checkbox h-5 w-5 accent-cyan-500"
+            class="storage-sacrifice-checkbox"
             data-digimon-id="${escapeAttr(d.id)}"
             ${selected ? "checked" : ""}
             ${locked ? "disabled" : ""}
             onchange="storageToggleSelection('${escapeAttr(d.id)}', this.checked)"
             aria-label="Selecionar ${escapeAttr(d.name || "Digimon")} para sacrifício"
           />
+          <span class="storage-selection-label">Selecionar</span>
         </label>
-        ${renderDigimonVisual(d.imageUrl, d.stage, "w-16 h-16", "text-4xl")}
-        <div class="flex-1 min-w-0">
-          <div class="min-w-0">
-            <p class="font-bold text-sm break-words" style="overflow-wrap:anywhere">${escapeHtml(d.name)}</p>
-            ${locked ? '<span class="block text-xs text-amber-300 mt-1" title="Protegido contra sacrifício">🔒 Bloqueado</span>' : ""}
+        ${renderDigimonVisual(d.imageUrl, d.stage, "storage-digimon-visual w-16 h-16", "text-4xl")}
+        <div class="storage-digimon-body">
+          <div class="storage-digimon-heading">
+            <p class="storage-digimon-name">${escapeHtml(d.name)}</p>
           </div>
-          <p class="text-xs text-slate-400">Lv.${d.level} | ${escapeHtml(d.stage)} | ${formatRarity(d.rarity)} ${renderRarityDieIndicator(d)}</p>
-          ${renderRarityDieDetails(d)}
-          <p class="text-xs text-slate-500">HP ${d.hp} ATK ${d.attack} DEF ${d.defense}</p>
-          <p class="text-xs ${locked ? "text-amber-300" : "text-cyan-300"} mt-1">${locked ? "Protegido contra sacrifício" : `Sacrifício: +${calculateDigitalDataPreview(d)} Dados Digitais`}</p>
+          <div class="storage-digimon-status-row">
+            <span class="storage-collection-badge ${registered ? "storage-collection-badge-registered" : "storage-collection-badge-available"}" title="${registered ? "Esta espécie e raridade já estão registradas na coleção" : "Esta espécie e raridade ainda não estão registradas na coleção"}">${registered ? "✓ Registrado" : "Não registrado"}</span>
+            ${locked ? '<span class="storage-locked-badge" title="Protegido contra sacrifício">🔒 Bloqueado</span>' : ""}
+          </div>
+          <p class="storage-digimon-meta">Lv.${d.level} <span>•</span> ${escapeHtml(d.stage)} <span>•</span> ${formatRarity(d.rarity)} ${renderRarityDieIndicator(d)}</p>
+          <p class="storage-digimon-stats"><span>HP ${d.hp}</span><span>ATK ${d.attack}</span><span>DEF ${d.defense}</span></p>
+          <p class="storage-digimon-reward ${locked ? "storage-digimon-reward-locked" : ""}">${locked ? "Protegido contra sacrifício" : `Sacrifício: +${calculateDigitalDataPreview(d)} Dados Digitais`}</p>
         </div>
-        <div class="flex flex-col gap-1">
-          <button class="btn-sm"
-            style="background:${locked ? "#78350f;color:#fde68a" : "#475569;color:#e2e8f0"}"
+        <div class="storage-digimon-actions">
+          <button type="button" class="storage-action-button storage-action-lock ${locked ? "storage-action-lock-active" : ""}"
             onclick="storageToggleLock('${escapeAttr(d.id)}')"
             aria-label="${locked ? "Desbloquear" : "Bloquear"} ${escapeAttr(d.name || "Digimon")}">
-            ${locked ? "🔓 Desbloquear" : "🔒 Bloquear"}
+            <span aria-hidden="true">${locked ? "🔓" : "🔒"}</span><span>${locked ? "Desbloquear" : "Bloquear"}</span>
           </button>
-          <button class="btn-sm"
-            style="background:#065f46;color:#6ee7b7"
+          <button type="button" class="storage-action-button storage-action-retrieve"
             onclick="storageRetrieve('${escapeHtml(d.id)}')">
-            Tornar ativo
+            <span aria-hidden="true">↗</span><span>Tornar ativo</span>
           </button>
-          <button class="btn-sm"
-            style="background:#7f1d1d;color:#fecaca${locked ? ";opacity:.55;cursor:not-allowed" : ""}"
+          <button type="button" class="storage-action-button storage-action-danger"
             onclick="storageSacrifice('${escapeHtml(d.id)}', '${encodeURIComponent(d.name || "Digimon")}')"
             ${locked ? "disabled" : ""}>
-            ${locked ? "Bloqueado" : "Sacrificar"}
+            <span aria-hidden="true">×</span><span>${locked ? "Bloqueado" : "Sacrificar"}</span>
           </button>
         </div>
-      </div>
+      </article>
     `;
   }).join("");
 
@@ -340,31 +380,31 @@ function storageUpdateBulkActions() {
   const count = selected.length;
   const totalReward = selected.reduce((sum, digimon) => sum + calculateDigitalDataPreview(digimon), 0);
   const selectionActions = count === 0 ? "" : `
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3 pt-3 border-t border-cyan-800/60">
+        <div class="storage-bulk-selection">
           <div>
-            <p class="font-bold text-sm text-cyan-200">${count} Digimon${count === 1 ? " selecionado" : "s selecionados"}</p>
-            <p class="text-xs text-cyan-300 mt-1">Total estimado: +${totalReward.toLocaleString()} Dados Digitais</p>
+            <p class="storage-bulk-selection-title">${count} Digimon${count === 1 ? " selecionado" : "s selecionados"}</p>
+            <p class="storage-bulk-selection-reward">Total estimado: +${totalReward.toLocaleString()} Dados Digitais</p>
           </div>
-          <div class="flex gap-2">
-            <button type="button" class="btn-secondary" onclick="storageClearSelection()">Limpar</button>
-            <button type="button" class="btn-sm" style="background:#7f1d1d;color:#fecaca" onclick="storageSacrificeSelected()">Sacrificar selecionados</button>
+          <div class="storage-bulk-selection-actions">
+            <button type="button" class="storage-bulk-clear" onclick="storageClearSelection()">Limpar</button>
+            <button type="button" class="storage-action-button storage-action-danger" onclick="storageSacrificeSelected()">Sacrificar selecionados</button>
           </div>
         </div>
   `;
 
   container.innerHTML = `
-    <div class="card-sm border-slate-700 bg-slate-900/50">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <section class="storage-bulk-card">
+      <div class="storage-bulk-heading">
         <div>
-          <p class="font-bold text-sm text-slate-200">Seleção em massa</p>
-          <p class="text-xs text-slate-400 mt-1">${eligible.length} Digimon${eligible.length === 1 ? " desbloqueado" : "s desbloqueados"} disponível${eligible.length === 1 ? "" : "eis"}. Digimons com cadeado ficam de fora.</p>
+          <p class="storage-bulk-title">Seleção em massa</p>
+          <p class="storage-bulk-copy">${eligible.length} Digimon${eligible.length === 1 ? " desbloqueado" : "s desbloqueados"} disponível${eligible.length === 1 ? "" : "eis"}. Digimons com cadeado ficam de fora.</p>
         </div>
-        <button type="button" class="btn-primary whitespace-nowrap" onclick="storageSelectAllUnlocked()" ${eligible.length === 0 ? "disabled" : ""}>
+        <button type="button" class="storage-select-all-button" onclick="storageSelectAllUnlocked()" ${eligible.length === 0 ? "disabled" : ""}>
           Selecionar todos
         </button>
       </div>
       ${selectionActions}
-    </div>
+    </section>
   `;
 }
 
