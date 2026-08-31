@@ -1,5 +1,8 @@
 let shopData = null;
+const SHOP_MAX_BUY_QUANTITY = 999;
+
 let shopPlayerBits = 0;
+let shopModalStartingBits = 0;
 let shopModalUnitPrice = 0;
 let shopMode = "buy"; // "buy" or "sell"
 let shopInventoryItems = [];
@@ -73,8 +76,13 @@ async function renderShopPage() {
   `;
 
   try {
-    shopData = await apiGet("/shop");
-    const dashboard = await apiGet("/players/me/dashboard");
+    const [catalog, dashboard, inventory] = await Promise.all([
+      apiGet("/shop"),
+      apiGet("/players/me/dashboard"),
+      apiGet("/inventory")
+    ]);
+    shopData = catalog;
+    shopInventoryItems = inventory || [];
     shopPlayerBits = dashboard.activeDigimon ? dashboard.activeDigimon.bits : 0;
     document.getElementById("shop-bits").textContent = shopFormatNumber(shopPlayerBits);
     shopMode = "buy";
@@ -131,6 +139,17 @@ function shopRenderBuyMode() {
   `;
   shopSwitchTab("ALL");
 }
+function shopProductInventoryQuantity(product) {
+  const targetCode = product.itemDefinitionCode || product.itemType || product.code;
+  return shopInventoryItems
+    .filter(item => {
+      const definitionCode = item.itemDefinition && item.itemDefinition.code;
+      if (product.itemDefinitionCode) return definitionCode === product.itemDefinitionCode;
+      return definitionCode === targetCode || (!definitionCode && item.itemType === targetCode);
+    })
+    .reduce((total, item) => total + Math.max(0, Number(item.quantity) || 0), 0);
+}
+
 function shopAllProducts() {
   const products = [
     ...(shopData.potions || []),
@@ -256,7 +275,17 @@ function shopOpenBuy(code) {
   if (!product) return;
 
   const isEquip = product.productType === "EQUIPMENT";
-  const maxQty = isEquip ? 1 : Math.floor(shopPlayerBits / product.price) || 1;
+  const inventoryQuantity = isEquip ? 0 : shopProductInventoryQuantity(product);
+  const remainingStackQuantity = Math.max(0, SHOP_MAX_BUY_QUANTITY - inventoryQuantity);
+  const affordableQuantity = product.price > 0 ? Math.floor(shopPlayerBits / product.price) : SHOP_MAX_BUY_QUANTITY;
+  const maxQty = isEquip ? 1 : Math.min(SHOP_MAX_BUY_QUANTITY, remainingStackQuantity, affordableQuantity);
+  const purchaseUnavailable = maxQty < 1 || shopPlayerBits < product.price;
+  const purchaseUnavailableMessage = remainingStackQuantity < 1
+    ? "Limite de stack atingido para este item."
+    : "Bits insuficientes para comprar este recurso.";
+  const initialQuantity = purchaseUnavailable ? 0 : 1;
+  const initialTotal = initialQuantity * product.price;
+  shopModalStartingBits = shopPlayerBits;
   shopModalUnitPrice = product.price;
 
   const overlay = document.createElement("div");
@@ -277,23 +306,38 @@ function shopOpenBuy(code) {
           <span>Preço unitário</span>
           <strong class="shop-modal-value-buy">${shopFormatBits(product.price)}</strong>
         </div>
+        <div class="shop-modal-row">
+          <span>Bits atuais</span>
+          <strong id="shop-bits-current" class="shop-modal-value-buy">${shopFormatBits(shopModalStartingBits)}</strong>
+        </div>
         ${!isEquip ? `
         <div class="shop-modal-quantity">
           <label class="label" for="shop-qty">Quantidade</label>
-          <div class="flex items-center gap-2">
+          <div class="shop-buy-quantity-controls">
             <button class="btn-sm btn-primary" onclick="shopQtyChange(-1)" aria-label="Diminuir quantidade">−</button>
-            <input type="number" id="shop-qty" class="input text-center" value="1" min="1" max="${maxQty}" style="width:4rem" oninput="shopQtyUpdate()">
-            <button class="btn-sm btn-primary" onclick="shopQtyChange(1)" aria-label="Aumentar quantidade">+</button>
+            <input type="number" id="shop-qty" class="input text-center" value="${initialQuantity}" min="1" max="${maxQty}" oninput="shopQtyUpdate()" ${purchaseUnavailable ? "disabled" : ""}>
+            <button class="btn-sm btn-primary" onclick="shopQtyChange(1)" aria-label="Aumentar quantidade" ${purchaseUnavailable ? "disabled" : ""}>+</button>
+            <button class="btn-sm btn-primary" onclick="shopBuyMax()" aria-label="Comprar quantidade máxima" title="Comprar máximo" ${purchaseUnavailable ? "disabled" : ""}>MAX</button>
           </div>
+          <p class="text-xs text-slate-500 mt-2">No inventário: ${shopFormatNumber(inventoryQuantity)} / ${SHOP_MAX_BUY_QUANTITY} · Restante: ${shopFormatNumber(remainingStackQuantity)}</p>
+          ${purchaseUnavailable ? `<p class="text-xs text-red-400 mt-2">${purchaseUnavailableMessage}</p>` : ""}
         </div>
         ` : ""}
+        <div class="shop-modal-row">
+          <span>Bits a debitar</span>
+          <strong id="shop-bits-debit" class="shop-modal-value-buy">${shopFormatBits(initialTotal)}</strong>
+        </div>
+        <div class="shop-modal-row">
+          <span>Saldo após a transação</span>
+          <strong id="shop-bits-remaining" class="shop-modal-value-buy">${shopFormatBits(Math.max(0, shopModalStartingBits - initialTotal))}</strong>
+        </div>
         <div class="shop-modal-total shop-modal-total-buy">
           <span>Total</span>
-          <strong id="shop-total">${shopFormatBits(product.price)}</strong>
+          <strong id="shop-total">${shopFormatBits(initialTotal)}</strong>
         </div>
       </div>
       <div class="shop-modal-actions">
-        <button class="btn-primary flex-1" onclick="shopConfirmBuy('${escapeHtml(code)}', ${product.price})" id="shop-buy-btn">Confirmar</button>
+        <button class="btn-primary flex-1" onclick="shopConfirmBuy('${escapeHtml(code)}', ${product.price})" id="shop-buy-btn" ${purchaseUnavailable ? "disabled" : ""}>Confirmar</button>
         <button class="btn-sm flex-1" style="background:#334155;color:#94a3b8" onclick="shopCloseModal()">Cancelar</button>
       </div>
     </div>
@@ -316,17 +360,39 @@ function shopQtyChange(delta) {
   }
 }
 
+function shopBuyMax() {
+  const input = document.getElementById("shop-qty");
+  if (!input || input.disabled) return;
+
+  const max = Math.min(SHOP_MAX_BUY_QUANTITY, parseInt(input.max, 10) || 1);
+  if (max < 1) return;
+
+  input.value = max;
+  shopQtyUpdate();
+}
+
 function shopQtyUpdate() {
   const input = document.getElementById("shop-qty");
   const totalEl = document.getElementById("shop-total");
   if (!input || !totalEl) return;
-  const qty = parseInt(input.value) || 1;
-  totalEl.textContent = shopFormatBits(qty * shopModalUnitPrice);
+
+  const min = parseInt(input.min, 10) || 1;
+  const max = Math.min(SHOP_MAX_BUY_QUANTITY, parseInt(input.max, 10) || SHOP_MAX_BUY_QUANTITY);
+  const qty = Math.max(min, Math.min(max, parseInt(input.value, 10) || min));
+  const total = qty * shopModalUnitPrice;
+  input.value = qty;
+  totalEl.textContent = shopFormatBits(total);
+
+  const debitEl = document.getElementById("shop-bits-debit");
+  const remainingEl = document.getElementById("shop-bits-remaining");
+  if (debitEl) debitEl.textContent = shopFormatBits(total);
+  if (remainingEl) remainingEl.textContent = shopFormatBits(Math.max(0, shopModalStartingBits - total));
 }
 
 async function shopConfirmBuy(code, unitPrice) {
   const qtyInput = document.getElementById("shop-qty");
-  const qty = qtyInput ? parseInt(qtyInput.value) || 1 : 1;
+  const max = qtyInput ? Math.min(SHOP_MAX_BUY_QUANTITY, parseInt(qtyInput.max, 10) || SHOP_MAX_BUY_QUANTITY) : 1;
+  const qty = qtyInput ? Math.max(1, Math.min(max, parseInt(qtyInput.value, 10) || 1)) : 1;
   const btn = document.getElementById("shop-buy-btn");
   if (btn) { btn.disabled = true; btn.textContent = "Comprando..."; }
 
@@ -336,6 +402,7 @@ async function shopConfirmBuy(code, unitPrice) {
     document.getElementById("shop-bits").textContent = shopFormatNumber(shopPlayerBits);
     shopCloseModal();
     showToast(`${escapeHtml(result.name)} x${result.quantity} comprado! -${shopFormatBits(result.totalPrice)}`);
+    setTimeout(() => window.location.reload(), 350);
   } catch (err) {
     showToast(err.message, "error");
     if (btn) { btn.disabled = false; btn.textContent = "Confirmar"; }

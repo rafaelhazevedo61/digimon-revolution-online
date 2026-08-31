@@ -7,6 +7,8 @@ import com.dro.modules.equipment.domain.EquipmentRarityRules;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.inventory.domain.InventoryItem;
+import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
@@ -38,9 +40,12 @@ import java.util.UUID;
  */
 @Service
 public class BuyShopProductUseCase {
+    private static final int MAX_PURCHASE_QUANTITY = 999;
+
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final AddItemUseCase addItemUseCase;
+    private final InventoryRepository inventoryRepository;
     private final ItemDefinitionRepository itemDefinitionRepository;
     private final GrantEquipmentUseCase grantEquipmentUseCase;
     private final ShopProductRepository shopProductRepository;
@@ -71,8 +76,14 @@ public class BuyShopProductUseCase {
         }
         ShopProduct product = shopProductRepository.findById(request.productCode()).map(ShopProductMapper::toProduct).orElseThrow(() -> new NotFoundException("Produto da loja não encontrado: " + request.productCode()));
         int quantity = request.quantity();
+        if (quantity > MAX_PURCHASE_QUANTITY) {
+            throw new BadRequestException("A quantidade máxima por compra é 999 unidades");
+        }
         if (product.getProductType() == ShopProductType.EQUIPMENT && quantity > 1) {
             throw new BadRequestException("Equipamentos devem ser comprados um por vez");
+        }
+        if (product.getProductType() == ShopProductType.ITEM) {
+            validateItemStack(playerId, product, quantity);
         }
         int totalPrice = product.getPrice() * quantity;
         if (digimon.getBits() < totalPrice) {
@@ -98,10 +109,35 @@ public class BuyShopProductUseCase {
         return new BuyShopProductResponse(product.getCode(), product.getName(), product.getProductType(), quantity, totalPrice, digimon.getBits(), equipmentId, "Produto comprado com sucesso");
     }
 
-    public BuyShopProductUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final AddItemUseCase addItemUseCase, final ItemDefinitionRepository itemDefinitionRepository, final GrantEquipmentUseCase grantEquipmentUseCase, final ShopProductRepository shopProductRepository, final TutorialService tutorialService, final TransactionAuditPublisher transactionAuditPublisher) {
+    private void validateItemStack(UUID playerId, ShopProduct product, int quantity) {
+        InventoryItem inventoryItem = null;
+        ItemDefinition itemDefinition = null;
+        if (product.getItemDefinitionCode() != null) {
+            itemDefinition = itemDefinitionRepository.findByCode(product.getItemDefinitionCode()).orElse(null);
+        }
+        if (itemDefinition != null) {
+            inventoryItem = inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, itemDefinition.getId()).orElse(null);
+        } else if (product.getItemType() != null) {
+            itemDefinition = itemDefinitionRepository.findByCode(product.getItemType().name()).orElse(null);
+            if (itemDefinition != null) {
+                inventoryItem = inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, itemDefinition.getId()).orElse(null);
+            } else {
+                inventoryItem = inventoryRepository.findByPlayerIdAndItemTypeForUpdate(playerId, product.getItemType()).orElse(null);
+            }
+        }
+
+        int currentQuantity = inventoryItem == null ? 0 : inventoryItem.getQuantity();
+        int remainingStack = Math.max(0, MAX_PURCHASE_QUANTITY - currentQuantity);
+        if (quantity > remainingStack) {
+            throw new BadRequestException("A quantidade ultrapassa o limite de stack. Espaço restante: " + remainingStack);
+        }
+    }
+
+    public BuyShopProductUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final AddItemUseCase addItemUseCase, final InventoryRepository inventoryRepository, final ItemDefinitionRepository itemDefinitionRepository, final GrantEquipmentUseCase grantEquipmentUseCase, final ShopProductRepository shopProductRepository, final TutorialService tutorialService, final TransactionAuditPublisher transactionAuditPublisher) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.addItemUseCase = addItemUseCase;
+        this.inventoryRepository = inventoryRepository;
         this.itemDefinitionRepository = itemDefinitionRepository;
         this.grantEquipmentUseCase = grantEquipmentUseCase;
         this.shopProductRepository = shopProductRepository;
