@@ -3260,6 +3260,10 @@ body {
   .dashboard-digimon-stats-panel {
     padding: 0.9rem;
   }
+  /* Mantém o painel estável quando os detalhes dos atributos são abertos. */
+  .dashboard-digimon-details {
+    min-height: 15rem;
+  }
   .dashboard-secondary-column {
     position: sticky;
     top: 1rem;

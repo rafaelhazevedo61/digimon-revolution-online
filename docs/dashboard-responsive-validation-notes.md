@@ -23,3 +23,11 @@ A captura também revelou que o novo painel de estatísticas estava vertical qua
 ## Validação após correção
 
 As capturas corrigidas confirmaram HP, ATK e DEF em três colunas tanto no desktop quanto no mobile. No desktop, o cartão do Digimon ativo ficou equilibrado entre identidade/progresso e leitura de combate; no mobile, o cartão voltou a uma composição vertical compacta, com os três atributos preservados em uma única linha e os equipamentos seguindo abaixo em três slots estreitos, sem overflow horizontal visível.
+
+## Ajuste da leitura de combate
+
+Na sessão visual desktop, o painel de leitura de combate mediu 140,77 px fechado e 346,77 px expandido. A caixa `details` mediu 34 px fechada e 240 px expandida, com diferença de 206 px. O ajuste deve reservar a altura expandida na caixa de detalhes/painel apenas a partir do breakpoint desktop; o mobile deve continuar com altura natural para evitar espaço vazio excessivo.
+
+## Reserva de altura no painel de combate
+
+As capturas desktop com os detalhes fechados e expandidos confirmaram que o painel de leitura de combate mantém a mesma altura externa nos dois estados. O conteúdo expandido cabe dentro da área reservada, evitando deslocamento vertical do cartão e da coluna lateral quando o usuário abre os atributos. A regra foi limitada ao breakpoint desktop; no mobile a altura continua natural.
