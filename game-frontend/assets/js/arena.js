@@ -327,15 +327,24 @@ function renderArenaShop(shop) {
 
   const productsHtml = shop.products.map(p => {
     const canBuy = coins >= p.priceCoins;
-    return `<article class="arena-shop-card"><div class="arena-shop-icon">✦</div><div class="arena-shop-copy"><h3>${escapeHtml(p.name)}${p.quantity > 1 ? `<small>×${p.quantity}</small>` : ""}</h3><p>Recompensa especial da Arena</p><strong>🪙 ${Number(p.priceCoins).toLocaleString("pt-BR")}</strong></div><button type="button" class="arena-shop-button ${canBuy ? "" : "is-disabled"}" ${canBuy ? `data-arena-shop-code="${escapeAttr(p.code)}" data-arena-shop-name="${escapeAttr(p.name)}"` : "disabled"}>${canBuy ? "Comprar" : "Saldo insuficiente"}</button></article>`;
+    return `<article class="arena-shop-card"><div class="arena-shop-icon">✦</div><div class="arena-shop-copy"><h3>${escapeHtml(p.name)}${p.quantity > 1 ? `<small>×${p.quantity}</small>` : ""}</h3><p>Recompensa especial da Arena</p><strong>🪙 ${Number(p.priceCoins).toLocaleString("pt-BR")}</strong></div><button type="button" class="arena-shop-button ${canBuy ? "" : "is-disabled"}" ${canBuy ? `data-arena-shop-code="${escapeAttr(p.code)}" data-arena-shop-name="${escapeAttr(p.name)}" data-arena-shop-price="${p.priceCoins}"` : "disabled"}>${canBuy ? "Comprar" : "Saldo insuficiente"}</button></article>`;
   }).join("");
 
   container.innerHTML = `<div class="arena-shop-balance"><span><span class="arena-eyebrow">Seu saldo</span><strong>🪙 ${Number(coins).toLocaleString("pt-BR")} <small>Moedas de Arena</small></strong></span><p>As moedas são obtidas em vitórias e derrotas na Arena.</p></div><div class="arena-shop-grid">${productsHtml}</div>`;
   container.querySelectorAll("[data-arena-shop-code]").forEach(button => {
     button.addEventListener("click", () => {
-      buyArenaShopItem(button.dataset.arenaShopCode, button.dataset.arenaShopName);
+      confirmArenaShopPurchase(button.dataset.arenaShopCode, button.dataset.arenaShopName, Number(button.dataset.arenaShopPrice || 0));
     });
   });
+}
+
+async function confirmArenaShopPurchase(productCode, productName, priceCoins) {
+  const confirmed = await showConfirm(`Comprar por 🪙 ${Number(priceCoins || 0).toLocaleString("pt-BR")}?`, {
+    title: productName,
+    confirmText: "Comprar",
+    cancelText: "Cancelar"
+  });
+  if (confirmed) buyArenaShopItem(productCode, productName);
 }
 
 async function buyArenaShopItem(productCode, productName) {
