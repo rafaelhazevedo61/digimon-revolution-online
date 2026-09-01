@@ -41,7 +41,7 @@ async function renderIncubationPage() {
     window._incubSlotInfo = dashboard?.slotInfo;
     window._incubSlotsResponse = slotsResponse;
     incubNotifyAutomationPause(slotsResponse);
-    incubRenderSlots(slotsResponse, inventory);
+    incubRenderSlots(slotsResponse, inventory, window._incubSlotInfo);
     incubStartAutoRefresh();
   } catch (err) {
     const content = document.getElementById("incub-content");
@@ -59,7 +59,7 @@ async function incubFetchSlots() {
   return await apiGet("/incubation/me");
 }
 
-function incubRenderSlots(response, inventory = []) {
+function incubRenderSlots(response, inventory = [], slotInfo = window._incubSlotInfo) {
   const content = document.getElementById("incub-content");
   if (!content) return;
 
@@ -75,6 +75,10 @@ function incubRenderSlots(response, inventory = []) {
   const incubators = inventory.filter(item => incubIsItem(item, "INCUBATOR") && Number(item.quantity) > 0);
   const availableIncubators = availableSlots.length;
   const automationSource = renderSlots.find(slot => slot.incubation)?.incubation || null;
+  const storedDigimons = Number(slotInfo?.storedDigimons);
+  const maxStorageSlots = Number(slotInfo?.maxStorageSlots);
+  const storageFull = Number.isFinite(storedDigimons) && Number.isFinite(maxStorageSlots)
+    && storedDigimons >= maxStorageSlots;
   window._incubInventory = inventory;
 
   content.innerHTML = `
@@ -232,7 +236,9 @@ function incubRenderSlot(slot) {
 
       <div id="incub-slot-action-${slotNumber}" class="mt-4">
         ${done
-          ? (autoClaimEnabled ? incubAutomaticClaimStatus() : incubClaimButton(incubation.id))
+          ? (autoClaimEnabled
+            ? incubAutomaticClaimStatus()
+            : incubClaimButton(incubation.id, storageFull, storedDigimons, maxStorageSlots))
           : `<p class="text-xs text-slate-500">Aguardando incubação...</p>`}
       </div>
     </article>
@@ -350,13 +356,14 @@ function incubStartAutoRefresh() {
     }
     if (incubRefreshInFlight) return;
     incubRefreshInFlight = true;
-    Promise.all([incubFetchSlots(), apiGet("/inventory")])
-      .then(([slotsResponse, inventoryResponse]) => {
+    Promise.all([incubFetchSlots(), apiGet("/inventory"), apiGet("/players/me/dashboard")])
+      .then(([slotsResponse, inventoryResponse, dashboard]) => {
         const inventory = invAggregateItems(inventoryResponse || []);
         window._incubSlotsResponse = slotsResponse;
         window._incubInventory = inventory;
         incubNotifyAutomationPause(slotsResponse);
-        incubRenderSlots(slotsResponse, inventory);
+        window._incubSlotInfo = dashboard?.slotInfo;
+        incubRenderSlots(slotsResponse, inventory, window._incubSlotInfo);
       })
       .catch(() => {})
       .finally(() => {
@@ -445,6 +452,11 @@ async function incubClaim(incubationId) {
   if (btn) {
     btn.disabled = true;
     btn.textContent = "Chocando...";
+  }
+
+  if (Number(window._incubSlotInfo?.storedDigimons) >= Number(window._incubSlotInfo?.maxStorageSlots)) {
+    incubShowStorageFullModal();
+    return;
   }
 
   try {
@@ -598,8 +610,14 @@ async function incubStoreHatched(digimonId) {
   }
 }
 
-function incubClaimButton(incubationId) {
+function incubClaimButton(incubationId, storageFull = false, storedDigimons = null, maxStorageSlots = null) {
   const safeId = escapeAttr(String(incubationId));
+  if (storageFull) {
+    const capacity = Number.isFinite(storedDigimons) && Number.isFinite(maxStorageSlots)
+      ? ` (${storedDigimons}/${maxStorageSlots})`
+      : "";
+    return `<button type="button" class="btn-secondary w-full text-lg py-3 opacity-70 cursor-not-allowed" disabled title="Armazém de Digimons lotado">Armazém de Digimons lotado${capacity}</button><p class="text-xs text-amber-300 text-center mt-2">Libere um espaço no armazém para chocar esta Digitama.</p>`;
+  }
   return `<button class="btn-primary w-full text-lg py-3" id="incub-claim-${safeId}" onclick="incubClaim('${safeId}')">🐣 Chocar!</button>`;
 }
 

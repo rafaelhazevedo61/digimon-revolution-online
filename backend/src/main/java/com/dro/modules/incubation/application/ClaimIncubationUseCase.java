@@ -65,6 +65,7 @@ public class ClaimIncubationUseCase {
             validateIncubationFinished(incubation);
         }
 
+        ensureStorageHasSpace(player);
         Digimon digimon = createDigimonFromIncubation(playerId, incubation);
         digimonRepository.save(digimon);
         finalizeIncubation(incubation);
@@ -86,6 +87,13 @@ public class ClaimIncubationUseCase {
             throw new BadRequestException("Incubation not finished yet");
         }
         incubation.markReadyIfFinished();
+    }
+
+    private void ensureStorageHasSpace(Player player) {
+        long storedCount = digimonRepository.countByPlayerIdAndStatus(player.getId(), DigimonStatus.STORED);
+        if (storedCount >= player.getMaxStorageSlots()) {
+            throw new BadRequestException("Storage cheio (" + storedCount + "/" + player.getMaxStorageSlots() + "). Libere um espaço no armazém antes de chocar a Digitama.");
+        }
     }
 
     private Digimon createDigimonFromIncubation(UUID playerId, Incubation incubation) {
