@@ -4883,8 +4883,6 @@ body {
 .mail-side-link b { margin-left: auto; color: #64748b; font-size: 0.75rem; }
 .mail-side-link:hover { color: #f8fafc; }
 .mail-side-link:hover b { color: #67e8f9; }
-.mail-side-note { border-color: rgba(251, 191, 36, 0.2); background: rgba(120, 53, 15, 0.12); }
-.mail-side-note p { color: #a8a29e; }
 
 @media (max-width: 60rem) {
   .mail-layout { grid-template-columns: minmax(0, 1fr) 13.5rem; }
@@ -4897,8 +4895,6 @@ body {
   .mail-unread-card { flex: 1; }
   .mail-compose-button { flex: 1; justify-content: center; }
   .mail-layout { grid-template-columns: 1fr; }
-  .mail-sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .mail-side-note { grid-column: 1 / -1; }
 }
 @media (max-width: 32rem) {
   .mail-header-actions, .mail-toolbar { align-items: stretch; flex-direction: column; }
@@ -4910,8 +4906,6 @@ body {
   .mail-message-icon { width: 1.9rem; height: 1.9rem; }
   .mail-message-topline time { font-size: 0.48rem; }
   .mail-message-open { display: none; }
-  .mail-sidebar { grid-template-columns: 1fr; }
-  .mail-side-note { grid-column: auto; }
   .mail-pagination { padding-inline: 0.1rem; }
 }
 
@@ -4949,25 +4943,17 @@ body {
   .mail-side-card { padding: 1.15rem; }
 }
 
-/* Mobile mail sidebar order */
-@media (max-width: 46rem) {
-  .mail-sidebar { display: flex; flex-direction: column; }
-  .mail-side-card.mail-side-highlight { order: 3; }
-  .mail-side-card:not(.mail-side-highlight):not(.mail-side-note) { order: 1; }
-  .mail-side-card.mail-side-note { order: 2; }
-}
-
 /* Explicit mail sidebar ordering */
 @media (min-width: 46rem) {
   .mail-side-card.mail-side-highlight { order: 1; }
-  .mail-side-card:not(.mail-side-highlight):not(.mail-side-note) { order: 2; }
-  .mail-side-card.mail-side-note { order: 3; }
+  .mail-side-card:not(.mail-side-highlight) { order: 2; }
 }
 @media (max-width: 46rem) {
-  .mail-side-card:not(.mail-side-highlight):not(.mail-side-note) { order: 1; }
-  .mail-side-card.mail-side-note { order: 2; }
-  .mail-side-card.mail-side-highlight { order: 3; }
+  .mail-sidebar { display: flex; flex-direction: column; }
+  .mail-side-card:not(.mail-side-highlight) { order: 1; }
+  .mail-side-card.mail-side-highlight { order: 2; }
 }
+
 
 /* Mobile mail flow: context cards before the inbox */
 @media (min-width: 46rem) {
