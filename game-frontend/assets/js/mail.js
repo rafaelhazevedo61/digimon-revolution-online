@@ -16,10 +16,6 @@ function renderMailPage() {
           <p class="mail-page-subtitle">Centralize comunicados, convites e mensagens importantes da sua jornada.</p>
         </div>
         <div class="mail-header-actions">
-          <div class="mail-unread-card">
-            <span class="mail-unread-icon" aria-hidden="true">✉</span>
-            <span><small>Caixa de entrada</small><strong><span id="mail-unread-count">--</span> não lidas</strong></span>
-          </div>
           <button class="mail-compose-button" type="button" onclick="mailOpenCompose()"><span aria-hidden="true">＋</span> Nova mensagem</button>
         </div>
       </header>
@@ -109,13 +105,11 @@ async function mailMarkAllRead() {
 }
 
 async function mailRefreshUnreadCount() {
-  const countEl = document.getElementById("mail-unread-count");
+  const countEl = document.getElementById("mail-unread-side");
   try {
     const result = await apiGet("/mail/unread-count");
     const count = Number(result.count || 0);
     if (countEl) countEl.textContent = count;
-    const sideCount = document.getElementById("mail-unread-side");
-    if (sideCount) sideCount.textContent = count;
     const shortcutCount = document.getElementById("mail-more-unread");
     if (shortcutCount) {
       shortcutCount.textContent = count > 99 ? "99+" : String(count);

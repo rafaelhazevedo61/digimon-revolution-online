@@ -4948,3 +4948,11 @@ body {
   .mail-message-subject { font-size: 0.84rem; }
   .mail-side-card { padding: 1.15rem; }
 }
+
+/* Mobile mail sidebar order */
+@media (max-width: 46rem) {
+  .mail-sidebar { display: flex; flex-direction: column; }
+  .mail-side-card.mail-side-highlight { order: 3; }
+  .mail-side-card:not(.mail-side-highlight):not(.mail-side-note) { order: 1; }
+  .mail-side-card.mail-side-note { order: 2; }
+}
