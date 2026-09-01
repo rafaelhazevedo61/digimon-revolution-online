@@ -17,6 +17,8 @@ public record ActiveMissionResponse(
         Instant startedAt,
         Instant endsAt,
         long remainingSeconds,
+        boolean autoRepeatEnabled,
+        boolean autoClaimEnabled,
         UUID teamId,
         String teamName,
         List<UUID> digimonIds

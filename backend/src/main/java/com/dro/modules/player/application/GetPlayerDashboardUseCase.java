@@ -264,6 +264,8 @@ public class GetPlayerDashboardUseCase {
                             instance.getStartedAt(),
                             instance.getEndsAt(),
                             remaining,
+                            instance.isAutoRepeatEnabled(),
+                            instance.isAutoClaimEnabled(),
                             instance.getTeamId(),
                             instance.getTeamId() == null
                                     ? null
