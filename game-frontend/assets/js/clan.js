@@ -219,7 +219,12 @@ async function clanOpenDetail(id) {
 async function clanShowPreview(id) {
   try {
     const clan = await apiGet(`/clans/${id}`);
-    const previewClan = { ...clan, members: Array.isArray(clan.members) ? clan.members : [] };
+    const previewClan = {
+      ...clan,
+      isMember: false,
+      myRole: null,
+      members: Array.isArray(clan.members) ? clan.members : []
+    };
     const previousClan = currentClan;
     const previousTab = currentClanTab;
     const overlay = document.createElement("div");
