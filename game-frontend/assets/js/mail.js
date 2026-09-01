@@ -255,6 +255,26 @@ function mailAuctionBodyMarkup(message) {
   }).join("");
 }
 
+function mailSystemBodyMarkup(message) {
+  const isMission = message.sourceType === "MISSION_AUTOMATION";
+  const title = isMission ? "Automação de missão interrompida" : "Automação de incubação interrompida";
+  const reason = isMission
+    ? "Um item recebido atingiu o limite máximo permitido no inventário."
+    : "O armazém de Digimons atingiu a capacidade máxima.";
+  const impact = isMission
+    ? "O resgate automático e a repetição da missão foram pausados para evitar novos itens excedentes."
+    : "A coleta automática e a repetição da incubação foram pausadas. Nenhum novo item será consumido enquanto o espaço não for liberado.";
+  const action = isMission
+    ? "Libere espaço ou ajuste a quantidade do item no inventário e reative a automação na tela de Missões."
+    : "Libere um espaço no Armazém de Digimons e reative a automação na tela de Incubação.";
+  return `
+    <div class="mail-system-alert-heading"><span class="mail-system-alert-icon" aria-hidden="true">⚠</span><div><p class="mail-system-kicker">Atenção necessária</p><h4>${title}</h4></div></div>
+    <div class="mail-system-message-section mail-system-message-reason"><span class="mail-system-section-label">Motivo</span><p>${reason}</p></div>
+    <div class="mail-system-message-section mail-system-message-impact"><span class="mail-system-section-label">O que aconteceu</span><p>${impact}</p></div>
+    <div class="mail-system-message-section mail-system-message-action"><span class="mail-system-section-label">Como continuar</span><p>${action}</p></div>
+  `;
+}
+
 function mailShowMessageModal(message) {
   const root = document.getElementById("mail-modal-root");
   if (!root) return;
@@ -289,7 +309,7 @@ function mailShowMessageModal(message) {
           <p>Para: <strong class="text-slate-200">${escapeHtml(message.recipientUsername || "Você")}</strong></p>
           <p class="col-span-2">${mailFormatDate(message.createdAt)}</p>
         </div>
-        <div class="rounded-lg ${isSystem ? "mail-system-message-body" : "bg-slate-900/70 border border-slate-700"} p-4 text-sm text-slate-200 break-words space-y-1">${mailAuctionBodyMarkup(message)}</div>
+        <div class="rounded-lg ${isSystem ? "mail-system-message-body" : "bg-slate-900/70 border border-slate-700"} p-4 text-sm text-slate-200 break-words space-y-1">${isSystem ? mailSystemBodyMarkup(message) : mailAuctionBodyMarkup(message)}</div>
         <p class="text-xs text-slate-500 mt-3">O MVP ainda não possui respostas diretas. Para escrever novamente, use “Nova mensagem”.</p>
         ${actionMarkup}
         <div class="grid grid-cols-2 gap-2 mt-4">

@@ -4986,6 +4986,19 @@ body {
 .mail-system-message-modal { border-color: rgba(232, 121, 249, 0.8) !important; background: linear-gradient(145deg, rgba(59, 7, 100, 0.98), rgba(15, 23, 42, 0.98) 68%) !important; box-shadow: 0 0 42px rgba(168, 85, 247, 0.22); }
 .mail-system-message-body { border: 1px solid rgba(232, 121, 249, 0.5); background: linear-gradient(135deg, rgba(88, 28, 135, 0.28), rgba(8, 47, 73, 0.36)); color: #f5d0fe; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06); }
 .mail-system-message-body p { color: #f5d0fe; }
+.mail-system-alert-heading { display: flex; align-items: center; gap: 0.75rem; padding-bottom: 0.85rem; border-bottom: 1px solid rgba(232, 121, 249, 0.25); }
+.mail-system-alert-icon { display: grid; width: 2.25rem; height: 2.25rem; flex: none; place-items: center; border: 1px solid rgba(251, 191, 36, 0.7); border-radius: 0.7rem; background: rgba(180, 83, 9, 0.3); color: #fde68a; font-size: 1.15rem; font-weight: 900; }
+.mail-system-kicker { margin: 0; color: #fbbf24 !important; font-size: 0.58rem; font-weight: 850; letter-spacing: 0.1em; text-transform: uppercase; }
+.mail-system-alert-heading h4 { margin: 0.15rem 0 0; color: #fdf4ff; font-size: 1.05rem; line-height: 1.25; }
+.mail-system-message-section { margin-top: 0.7rem; padding: 0.7rem 0.8rem; border-left: 3px solid; border-radius: 0.45rem; }
+.mail-system-message-section p { margin: 0.25rem 0 0; color: #f8fafc !important; line-height: 1.5; }
+.mail-system-section-label { display: block; font-size: 0.62rem; font-weight: 850; letter-spacing: 0.08em; text-transform: uppercase; }
+.mail-system-message-reason { border-color: #f59e0b; background: rgba(120, 53, 15, 0.3); }
+.mail-system-message-reason .mail-system-section-label { color: #fcd34d; }
+.mail-system-message-impact { border-color: #38bdf8; background: rgba(7, 89, 133, 0.25); }
+.mail-system-message-impact .mail-system-section-label { color: #7dd3fc; }
+.mail-system-message-action { border-color: #34d399; background: rgba(6, 78, 59, 0.28); }
+.mail-system-message-action .mail-system-section-label { color: #6ee7b7; }
 .mail-system-message-body strong { color: #fef3c7; }
 .mail-message-card.is-system .mail-message-topline time { color: #d8b4fe; }
 .mail-message-card.is-system .mail-message-footer .mail-message-open { color: #c4b5fd; }
