@@ -819,7 +819,7 @@ function incubIncubatorEmoji(type) {
 }
 
 function incubDuration(type) {
-  const map = { INCUBATOR_COMMON: "5 min", INCUBATOR_RARE: "2 min", INCUBATOR_EPIC: "30 seg", INCUBATOR_LEGENDARY: "0 seg" };
+  const map = { INCUBATOR_COMMON: "5 min", INCUBATOR_RARE: "2 min", INCUBATOR_EPIC: "30 seg", INCUBATOR_LEGENDARY: "1 seg" };
   return map[type] || "?";
 }
 
