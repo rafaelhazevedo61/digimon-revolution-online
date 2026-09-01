@@ -382,12 +382,22 @@ function arenaShopQtyUpdate() {
 
 async function confirmArenaShopQuantity(productCode, productName, priceCoins) {
   const quantity = Math.max(1, Number(document.getElementById("arena-shop-qty")?.value) || 1);
-  closeArenaShopPurchase();
-  await buyArenaShopItem(productCode, productName, quantity);
+  const button = document.querySelector(".arena-shop-modal-buy");
+  if (button) { button.disabled = true; button.textContent = "Comprando..."; }
+  const purchased = await buyArenaShopItem(productCode, productName, quantity);
+  if (purchased) closeArenaShopPurchase();
+  else if (button) { button.disabled = false; button.textContent = "Comprar"; }
 }
 
 function closeArenaShopPurchase() {
   document.getElementById("arena-shop-modal")?.remove();
+}
+
+function arenaShopPurchaseErrorMessage(err) {
+  const message = String(err?.message || "Não foi possível concluir a compra.");
+  const maxStack = message.match(/Maximum stack:\s*(\d+)/i);
+  if (/stack/i.test(message)) return maxStack ? `Quantidade excede o limite de stack deste item (${maxStack[1]} unidades).` : "Quantidade excede o limite de stack deste item.";
+  return message;
 }
 
 async function buyArenaShopItem(productCode, productName, quantity = 1) {
@@ -396,7 +406,9 @@ async function buyArenaShopItem(productCode, productName, quantity = 1) {
     showToast(`Comprou ${result.quantity}x ${productName} (🪙 ${result.arenaCoinsBalance} restantes)`);
     const shop = await apiGet("/arena/shop");
     renderArenaShop(shop);
+    return true;
   } catch (err) {
-    showToast(err.message, "error");
+    showToast(arenaShopPurchaseErrorMessage(err), "error");
+    return false;
   }
 }
