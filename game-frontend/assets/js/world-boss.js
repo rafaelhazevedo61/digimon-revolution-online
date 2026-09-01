@@ -3,15 +3,25 @@ async function renderWorldBossPage() {
   showBottomNav("more");
 
   app.innerHTML = `
-    <div class="page-container">
-      <div class="flex items-center gap-2 mb-4">
-        <button class="text-sm text-slate-400" onclick="navigateTo('more')">← Voltar</button>
-      </div>
-      <h2 class="text-lg font-bold mb-1">Chefe Mundial</h2>
-      <p class="text-xs text-slate-400 mb-4">Chefe compartilhado por todo o servidor. Todos os jogadores contribuem para derrotá-lo.</p>
+    <div class="page-container world-boss-page">
+      <header class="world-boss-page-header">
+        <button class="world-boss-back" onclick="navigateTo('more')">← <span>Voltar para Mais</span></button>
+        <div class="world-boss-kicker"><span class="world-boss-kicker-dot"></span> Evento global do servidor</div>
+        <div class="world-boss-heading-row">
+          <div>
+            <h2 class="world-boss-page-title">Chefe Mundial</h2>
+            <p class="world-boss-page-subtitle">Una-se aos jogadores para derrubar um inimigo que pertence a todo o servidor.</p>
+          </div>
+          <div class="world-boss-header-mark" aria-hidden="true">⚔</div>
+        </div>
+      </header>
 
       <div id="world-boss-content">
-        <div class="card animate-pulse"><div class="h-32"></div></div>
+        <div class="world-boss-loading" aria-label="Carregando Chefe Mundial">
+          <div class="world-boss-loading-hero"></div>
+          <div class="world-boss-loading-line world-boss-loading-line-wide"></div>
+          <div class="world-boss-loading-line"></div>
+        </div>
       </div>
     </div>
   `;
@@ -56,10 +66,10 @@ function renderWorldBossContent(boss) {
     && Number.isFinite(nextAttackAt)
     && nextAttackAt > Date.now();
   const cooldownInfoHtml = cooldownEnabled
-    ? `<p class="text-xs text-slate-500 mb-2 text-center">Intervalo entre ataques: ${cooldownMinutes} minuto(s)</p>`
-    : `<p class="text-xs text-green-400 mb-2 text-center">Intervalo desativado pelo administrador</p>`;
+    ? `<p class="world-boss-cooldown-info">Intervalo entre ataques: ${cooldownMinutes} minuto(s)</p>`
+    : `<p class="world-boss-cooldown-info world-boss-cooldown-info-safe">Intervalo desativado pelo administrador</p>`;
   const attackButtonHtml = !defeated
-    ? `${cooldownInfoHtml}<button id="world-boss-attack-button" class="btn-primary w-full" onclick="attackWorldBoss()"${cooldownActive ? " disabled" : ""}>${cooldownActive ? "Próximo ataque em <span id=\"world-boss-countdown\">--:--</span>" : "Atacar Chefe Mundial"}</button>`
+    ? `${cooldownInfoHtml}<button id="world-boss-attack-button" class="btn-primary world-boss-attack-button" onclick="attackWorldBoss()"${cooldownActive ? " disabled" : ""}>${cooldownActive ? "Próximo ataque em <span id=\"world-boss-countdown\">--:--</span>" : "Atacar Chefe Mundial"}</button>`
     : "";
 
   let rankingHtml = "";
@@ -71,72 +81,87 @@ function renderWorldBossContent(boss) {
       return "text-slate-400";
     };
     rankingHtml = `
-      <div class="card mt-4 border-cyan-900">
-        <p class="font-bold mb-2 text-sm">Ranking de Dano Global</p>
-        ${boss.ranking.map((entry, i) => `
-          <div class="flex justify-between items-center py-1.5 border-b border-slate-800 last:border-0">
-            <div class="flex items-center gap-2">
-              <span class="font-bold w-5 ${rankColor(i)}">${entry.position}.</span>
-              <span class="text-sm text-slate-200">${escapeHtml(entry.username)}</span>
+      <section class="world-boss-panel world-boss-ranking-panel">
+        <div class="world-boss-panel-heading"><div><p class="world-boss-panel-kicker">Contribuição global</p><h3 class="world-boss-panel-title">Ranking de Dano</h3></div><span class="world-boss-panel-mark">#</span></div>
+        <div class="world-boss-ranking-list">
+          ${boss.ranking.map((entry, i) => `
+            <div class="world-boss-ranking-row">
+              <div class="world-boss-ranking-player"><span class="world-boss-ranking-position ${rankColor(i)}">${entry.position}.</span><span>${escapeHtml(entry.username)}</span></div>
+              <span class="world-boss-ranking-damage">${Number(entry.totalDamage || 0).toLocaleString("pt-BR")}</span>
             </div>
-            <span class="text-xs text-cyan-400 font-mono">${entry.totalDamage.toLocaleString()}</span>
-          </div>
-        `).join("")}
-      </div>
+          `).join("")}
+        </div>
+      </section>
     `;
   } else {
     rankingHtml = `
-      <div class="card mt-4 border-slate-800">
-        <p class="font-bold mb-2 text-sm">Ranking de Dano Global</p>
-        <p class="text-sm text-slate-500">Ainda nenhum jogador atacou o Chefe Mundial neste ciclo. Seja o primeiro!</p>
-      </div>
+      <section class="world-boss-panel world-boss-ranking-panel world-boss-empty-panel">
+        <div class="world-boss-panel-heading"><div><p class="world-boss-panel-kicker">Contribuição global</p><h3 class="world-boss-panel-title">Ranking de Dano</h3></div><span class="world-boss-panel-mark">#</span></div>
+        <p class="world-boss-empty-copy">Ainda nenhum jogador atacou o Chefe Mundial neste ciclo. Seja o primeiro!</p>
+      </section>
     `;
   }
 
   let attacksHtml = "";
   if (boss.recentAttacks && boss.recentAttacks.length > 0) {
     attacksHtml = `
-      <div class="card mt-4 border-slate-800">
-        <p class="font-bold mb-2 text-sm">Últimos ataques</p>
-        ${boss.recentAttacks.map(a => `
-          <div class="flex justify-between items-center py-1 border-b border-slate-800 last:border-0">
-            <span class="text-sm text-slate-200">${escapeHtml(a.username)}</span>
-            <span class="text-xs text-cyan-400 font-mono">${a.damage.toLocaleString()}</span>
-          </div>
-        `).join("")}
-      </div>
+      <section class="world-boss-panel world-boss-attacks-panel">
+        <div class="world-boss-panel-heading"><div><p class="world-boss-panel-kicker">Atividade recente</p><h3 class="world-boss-panel-title">Últimos ataques</h3></div><span class="world-boss-panel-mark">↯</span></div>
+        <div class="world-boss-attacks-list">
+          ${boss.recentAttacks.map(a => `
+            <div class="world-boss-attack-row"><span>${escapeHtml(a.username)}</span><span class="world-boss-attack-damage">${Number(a.damage || 0).toLocaleString("pt-BR")}</span></div>
+          `).join("")}
+        </div>
+      </section>
     `;
   }
 
+  const remainingHp = Number(boss.remainingHp || 0).toLocaleString("pt-BR");
+  const maxHp = Number(boss.maxHp || 0).toLocaleString("pt-BR");
+  const myDamage = Number(boss.myTotalDamage || 0).toLocaleString("pt-BR");
+  const statusLabel = defeated ? "Derrotado hoje" : "Em batalha";
+  const statusClass = defeated ? "world-boss-status-defeated" : "world-boss-status-active";
+
   container.innerHTML = `
-    <div class="card mb-3">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-16 h-16 rounded-lg flex items-center justify-center text-2xl shrink-0" style="background:#334155;color:#94a3b8">
-          ${boss.bossImageUrl ? `<img src="${escapeHtml(boss.bossImageUrl)}" class="w-16 h-16 rounded-lg object-cover" alt="" onerror="this.style.display='none'; this.parentElement.textContent='👾'">` : "👾"}
+    <section class="world-boss-combat-card ${defeated ? "is-defeated" : ""}">
+      <div class="world-boss-combat-topline">
+        <span class="world-boss-live-badge ${statusClass}"><span class="world-boss-live-dot"></span>${statusLabel}</span>
+        <span class="world-boss-cycle-label">Ciclo atual</span>
+      </div>
+      <div class="world-boss-identity">
+        <div class="world-boss-portrait">
+          <div class="world-boss-portrait-ring"></div>
+          ${boss.bossImageUrl ? `<img src="${escapeHtml(boss.bossImageUrl)}" class="world-boss-portrait-image" alt="${escapeHtml(boss.bossName || "Chefe Mundial")}" onerror="this.style.display='none'; this.parentElement.classList.add('has-fallback')">` : ""}
+          <span class="world-boss-portrait-fallback" aria-hidden="true">👾</span>
         </div>
-        <div>
-          <p class="font-bold">${escapeHtml(boss.bossName)}</p>
-          <p class="text-xs ${defeated ? 'text-green-400' : 'text-slate-400'}">${defeated ? 'Derrotado hoje' : 'Em batalha'}</p>
+        <div class="world-boss-identity-copy">
+          <p class="world-boss-identity-eyebrow">Alvo compartilhado</p>
+          <h3 class="world-boss-name">${escapeHtml(boss.bossName)}</h3>
+          <p class="world-boss-identity-description">Cada ataque contribui para o progresso global da batalha.</p>
         </div>
       </div>
 
-      <div class="flex justify-between text-xs mb-1">
-        <span class="text-slate-400">HP</span>
-        <span class="text-slate-400">${boss.remainingHp.toLocaleString()} / ${boss.maxHp.toLocaleString()}</span>
-      </div>
-      <div class="w-full bg-slate-800 rounded-full h-2.5 mb-4">
-        <div class="${defeated ? 'bg-green-500' : 'bg-red-500'} h-2.5 rounded-full" style="width:${percent}%"></div>
+      <div class="world-boss-hp-block">
+        <div class="world-boss-hp-heading"><span>Vitalidade do chefe</span><strong>${remainingHp} <small>/ ${maxHp} HP</small></strong></div>
+        <div class="world-boss-hp-track" role="progressbar" aria-label="Vitalidade restante" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100">
+          <div class="world-boss-hp-fill ${defeated ? "is-defeated" : ""}" style="width:${percent}%"></div>
+        </div>
+        <div class="world-boss-hp-foot"><span>${percent}% de vitalidade restante</span><span>${defeated ? "Próximo ciclo em breve" : "Ataque coletivo em andamento"}</span></div>
       </div>
 
-      <p class="text-xs text-slate-400 mb-3">Seu dano: <span class="text-cyan-400">${boss.myTotalDamage.toLocaleString()}</span></p>
+      <div class="world-boss-stat-grid">
+        <div class="world-boss-stat-card"><span class="world-boss-stat-icon">✦</span><div><span class="world-boss-stat-label">Seu dano total</span><strong>${myDamage}</strong></div></div>
+        <div class="world-boss-stat-card"><span class="world-boss-stat-icon world-boss-stat-icon-muted">◎</span><div><span class="world-boss-stat-label">Participação</span><strong>${boss.ranking && boss.ranking.length ? "No ranking" : "Primeiro ataque"}</strong></div></div>
+      </div>
 
       ${attackButtonHtml}
-      ${defeated ? `<p class="text-xs text-green-400 text-center">Chefe Mundial derrotado. O próximo renascimento ocorrerá uma hora após a derrota.</p>${defeatSummaryHtml}` : ""}
+      ${defeated ? `<p class="world-boss-defeated-message">Chefe Mundial derrotado. O próximo renascimento ocorrerá uma hora após a derrota.</p>${defeatSummaryHtml}` : ""}
+    </section>
 
+    <div class="world-boss-secondary-grid">
+      ${rankingHtml}
+      ${attacksHtml}
     </div>
-
-    ${rankingHtml}
-    ${attacksHtml}
   `;
 
   if (cooldownActive) {

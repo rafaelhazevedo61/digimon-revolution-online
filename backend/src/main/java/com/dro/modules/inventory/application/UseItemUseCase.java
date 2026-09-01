@@ -198,7 +198,7 @@ public class UseItemUseCase {
     }
 
     private boolean isBatchUsableItem(ItemType type) {
-        return isXpDisk(type) || type == ItemType.POTION_SMALL || type == ItemType.TRAINING_STONE;
+        return isXpDisk(type) || type == ItemType.POTION_SMALL || type == ItemType.TRAINING_STONE || type == ItemType.DATA_CORE;
     }
 
     private boolean isXpDisk(ItemType type) {

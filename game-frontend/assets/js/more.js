@@ -131,28 +131,56 @@ async function renderMorePage() {
     },
   ];
 
+  const groupDescriptions = {
+    Combate: "Desafios e confrontos para testar seu parceiro",
+    Atividades: "Rotinas, progressão e recompensas especiais",
+    Comunidade: "Conecte-se com jogadores e acompanhe o servidor",
+    Comércio: "Negocie recursos e equipamentos",
+    Digimon: "Gerencie sua coleção e evolução",
+    Conta: "Preferências, acesso e segurança",
+  };
+
   const renderItem = (item) => `
-        <button class="card-sm flex items-center gap-3 text-left w-full" onclick="navigateTo('${item.route}')">
-          ${item.iconImage ? `<img src="${item.iconImage}" alt="" class="w-12 h-12 object-contain shrink-0 ${item.iconClass || ""}" />` : `<span class="text-2xl">${item.icon}</span>`}
-          <div class="flex-1">
-            <p class="font-bold text-sm">${item.title}${item.badgeId ? ` <span id="${item.badgeId}" class="badge hidden align-middle"></span>` : ""}</p>
-            <p class="text-xs text-slate-400">${item.desc}</p>
-          </div>
+        <button class="more-menu-item" onclick="navigateTo('${item.route}')" aria-label="Abrir ${item.title}">
+          <span class="more-menu-icon">
+            ${item.iconImage ? `<img src="${item.iconImage}" alt="" class="more-menu-image ${item.iconClass || ""}" />` : `<span class="more-menu-emoji">${item.icon}</span>`}
+          </span>
+          <span class="more-menu-copy">
+            <span class="more-menu-title">${item.title}${item.badgeId ? ` <span id="${item.badgeId}" class="badge hidden align-middle"></span>` : ""}</span>
+            <span class="more-menu-description">${item.desc}</span>
+          </span>
+          <span class="more-menu-arrow" aria-hidden="true">→</span>
         </button>`;
 
-  const renderGroup = (group) => `
-      <div class="mb-4">
-        <p class="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-2 px-1">${group.label}</p>
-        <div class="flex flex-col gap-2">
+  const renderGroup = (group, index) => `
+      <section class="more-section">
+        <div class="more-section-heading">
+          <span class="more-section-number">${String(index + 1).padStart(2, "0")}</span>
+          <div>
+            <h3 class="more-section-title">${group.label}</h3>
+            <p class="more-section-description">${groupDescriptions[group.label] || "Ações disponíveis"}</p>
+          </div>
+        </div>
+        <div class="more-menu-list">
 ${group.items.map(renderItem).join("\n")}
         </div>
-      </div>`;
+      </section>`;
 
   app.innerHTML = `
-    <div class="page-container">
-      <h2 class="text-lg font-bold mb-4 px-1">Mais</h2>
-
+    <div class="page-container more-page-container">
+      <header class="more-page-header">
+        <div class="more-page-kicker"><span class="more-page-kicker-dot"></span> Central de navegação</div>
+        <div class="more-page-heading-row">
+          <div>
+            <h2 class="more-page-title">Mais</h2>
+            <p class="more-page-subtitle">Tudo o que você precisa para explorar o mundo de Digimon.</p>
+          </div>
+          <span class="more-page-count">${groups.reduce((total, group) => total + group.items.length, 0)}<small> opções</small></span>
+        </div>
+      </header>
+      <div class="more-sections-grid">
 ${groups.map(renderGroup).join("\n")}
+      </div>
     </div>
   `;
   moreLoadMailUnread();

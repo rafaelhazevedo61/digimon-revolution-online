@@ -24,14 +24,32 @@ function missionNumber(mission) {
   return match ? Number(match[1]) : -1;
 }
 
-function compareMissionsByProgression(a, b) {
-  const levelDifference = (Number(b.requiredLevel) || 0) - (Number(a.requiredLevel) || 0);
-  if (levelDifference !== 0) return levelDifference;
+function missionIdentity(mission) {
+  return String(mission && (mission.id || mission.missionId) || "");
+}
 
-  const numberDifference = missionNumber(b) - missionNumber(a);
-  if (numberDifference !== 0) return numberDifference;
+function compareMissionsByDescendingProgression(a, b) {
+  const requiredLevelA = Number(a.requiredLevel) || 0;
+  const requiredLevelB = Number(b.requiredLevel) || 0;
+  if (requiredLevelA !== requiredLevelB) return requiredLevelB - requiredLevelA;
 
-  return String(b.id || b.missionId || "").localeCompare(String(a.id || a.missionId || ""));
+  const missionNumberA = missionNumber(a);
+  const missionNumberB = missionNumber(b);
+  if (missionNumberA !== missionNumberB) return missionNumberB - missionNumberA;
+
+  return missionIdentity(b).localeCompare(missionIdentity(a));
+}
+
+function compareMissionsByAscendingProgression(a, b) {
+  const requiredLevelA = Number(a.requiredLevel) || 0;
+  const requiredLevelB = Number(b.requiredLevel) || 0;
+  if (requiredLevelA !== requiredLevelB) return requiredLevelA - requiredLevelB;
+
+  const missionNumberA = missionNumber(a);
+  const missionNumberB = missionNumber(b);
+  if (missionNumberA !== missionNumberB) return missionNumberA - missionNumberB;
+
+  return missionIdentity(a).localeCompare(missionIdentity(b));
 }
 
 async function renderMissionsPage() {
@@ -39,7 +57,7 @@ async function renderMissionsPage() {
   showBottomNav("missions");
 
   app.innerHTML = `
-    <div class="page-container">
+    <div class="page-container missions-page-container">
       <header class="missions-page-header mb-4">
         <div>
           <p class="progression-eyebrow progression-eyebrow-cyan">Central de operações</p>
@@ -48,18 +66,20 @@ async function renderMissionsPage() {
         </div>
         <div class="missions-hero-emblem" aria-hidden="true">✦</div>
       </header>
-      <div id="active-missions"></div>
-      <section class="missions-map-section">
-        <div class="dashboard-section-heading">
-          <div><p class="progression-eyebrow progression-eyebrow-cyan">Exploração</p><h3 class="progression-panel-title">Áreas disponíveis</h3></div>
-          <span class="missions-map-key"><span class="missions-map-key-dot"></span> acessível</span>
-        </div>
-        <p class="dashboard-section-note">Avance pelas áreas para desbloquear missões mais desafiadoras.</p>
-        <div id="areas-list">
-          <div class="mission-area-skeleton"></div>
-          <div class="mission-area-skeleton"></div>
-        </div>
-      </section>
+      <div class="missions-page-layout">
+        <div id="active-missions" class="missions-page-active-column"></div>
+        <section class="missions-map-section">
+          <div class="dashboard-section-heading">
+            <div><p class="progression-eyebrow progression-eyebrow-cyan">Exploração</p><h3 class="progression-panel-title">Áreas disponíveis</h3></div>
+            <span class="missions-map-key"><span class="missions-map-key-dot"></span> acessível</span>
+          </div>
+          <p class="dashboard-section-note">Avance pelas áreas para desbloquear missões mais desafiadoras.</p>
+          <div id="areas-list">
+            <div class="mission-area-skeleton"></div>
+            <div class="mission-area-skeleton"></div>
+          </div>
+        </section>
+      </div>
     </div>
   `;
 
@@ -685,9 +705,9 @@ function renderMissionAreaCard(a, index) {
 function renderAreaCards(areas) {
   const container = document.getElementById("areas-list");
   const sorted = [...areas].sort((a, b) => {
-    const areaDifference = areaProgressionRank(a.area) - areaProgressionRank(b.area);
+    const areaDifference = areaProgressionRank(b.area) - areaProgressionRank(a.area);
     if (areaDifference !== 0) return areaDifference;
-    return stageProgressionRank(a.requiredStage) - stageProgressionRank(b.requiredStage);
+    return stageProgressionRank(b.requiredStage) - stageProgressionRank(a.requiredStage);
   });
   const available = sorted.filter(area => area.unlocked);
   const locked = sorted.filter(area => !area.unlocked);
@@ -721,7 +741,7 @@ async function renderMissionAreaPage(params) {
   showBottomNav("missions");
 
   app.innerHTML = `
-    <div class="page-container">
+    <div class="page-container mission-area-page-container">
       <header class="mission-area-page-header mb-4">
         <button class="progression-back-button mb-3" onclick="navigateTo('missions')"><span aria-hidden="true">←</span> Voltar às áreas</button>
         <div class="mission-area-title-row">
@@ -783,11 +803,15 @@ function renderMissionCards(missions, area) {
     return;
   }
 
-  const sortedMissions = [...missions].sort(compareMissionsByProgression);
-
+    const sortedMissions = [...missions].sort(compareMissionsByDescendingProgression);
+  const progressionNumbers = new Map(
+    [...missions]
+      .sort(compareMissionsByAscendingProgression)
+      .map((mission, index) => [missionIdentity(mission), index + 1])
+  );
   container.innerHTML = sortedMissions.map((m, index) => `
     <article class="mission-detail-card">
-      <div class="mission-detail-topline"><p class="progression-eyebrow progression-eyebrow-cyan">Missão ${String(index + 1).padStart(2, "0")}</p><span class="mission-detail-code">${escapeHtml(missionFriendlyCode(m.id || "OPS"))}</span></div>
+      <div class="mission-detail-topline"><p class="progression-eyebrow progression-eyebrow-cyan">Missão ${String(progressionNumbers.get(missionIdentity(m)) || index + 1).padStart(2, "0")}</p><span class="mission-detail-code">${escapeHtml(missionFriendlyCode(m.id || "OPS"))}</span></div>
       <div class="mission-detail-heading"><div><h3 class="mission-detail-title">${escapeHtml(formatMissionName(m))}</h3><span class="mission-detail-status"><span></span> Operação disponível</span></div><span class="mission-detail-arrow" aria-hidden="true">✦</span></div>
       <p class="mission-detail-description">${escapeHtml(m.description) || "Sem descrição disponível."}</p>
       <div class="mission-detail-reward-row"><span class="mission-detail-reward-label">Retorno previsto</span><span class="mission-detail-reward-xp">+${m.xpReward} XP base</span>${m.bitsReward > 0 ? `<span class="mission-detail-reward-bits">+${m.bitsReward} bits base</span>` : ""}</div>

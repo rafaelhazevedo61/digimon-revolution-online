@@ -3,210 +3,293 @@ async function renderSettingsPage() {
   showBottomNav("more");
 
   app.innerHTML = `
-    <div class="page-container">
-      <h2 class="text-lg font-bold mb-4 px-1">Configurações</h2>
-
-      <!-- Segurança -->
-      <div class="card mb-4">
-        <div class="flex items-center gap-2 mb-4">
-          <span class="text-xl">🔐</span>
-          <h3 class="font-bold">Segurança</h3>
+    <div class="page-container settings-menu-page">
+      <header class="settings-menu-header">
+        <div class="settings-menu-title-wrap">
+          <div class="settings-menu-icon">⚙</div>
+          <div>
+            <p class="settings-eyebrow">Conta e preferências</p>
+            <h2 class="settings-menu-title">Configurações</h2>
+          </div>
         </div>
+        <span class="settings-menu-caption">Minha conta</span>
+      </header>
 
-        <div
-          id="settings-error"
-          class="hidden mb-4 p-3 rounded-lg bg-red-950/50 border border-red-900 text-red-300 text-sm"
-        ></div>
-
-        <div
-          id="settings-success"
-          class="hidden mb-4 p-3 rounded-lg bg-green-950/50 border border-green-900 text-green-300 text-sm"
-        ></div>
-
-        <div class="mb-6 p-3 rounded-lg bg-slate-900/50 border border-slate-800">
-          <p class="text-xs text-slate-400">Username atual</p>
-          <p id="current-username-value" class="font-medium text-slate-200 mt-1">Carregando...</p>
-          <p id="username-change-cost" class="text-xs text-amber-300 mt-2">Custo da próxima troca: carregando...</p>
-          <p id="username-change-bits" class="text-xs text-slate-400 mt-1">Bits disponíveis: carregando...</p>
+      <section class="settings-menu-card">
+        <div class="settings-menu-intro">
+          <p class="settings-eyebrow">Gerencie sua experiência</p>
+          <p class="settings-menu-description">Escolha uma opção para atualizar seus dados, proteger sua conta ou configurar o jogo.</p>
         </div>
+        <nav class="settings-menu-list" aria-label="Opções de configurações">
+          ${settingsMenuItem("username", "👤", "Alterar username", "Atualize o nome exibido no jogo", "Conta")}
+          ${settingsMenuItem("email", "✉", "Alterar e-mail", "Atualize o endereço associado à conta", "Conta")}
+          ${settingsMenuItem("password", "🔐", "Alterar senha", "Mantenha sua conta protegida", "Segurança")}
+          ${settingsMenuItem("sessions", "🚪", "Sessões e acesso", "Sair ou encerrar sessões em outros dispositivos", "Segurança")}
+          ${settingsMenuItem("shortcuts", "⌨", "Barra de atalhos", "Configure seus atalhos de jogo", "Personalização")}
+        </nav>
+      </section>
 
-        <form
-          id="change-username-form"
-          onsubmit="settingsChangeUsername(event)"
-          class="mb-8"
-        >
-          <div class="mb-4">
-            <label class="label" for="new-username">Novo username</label>
-            <input
-              id="new-username"
-              type="text"
-              class="input"
-              placeholder="Seu novo username"
-              autocomplete="nickname"
-              minlength="3"
-              maxlength="50"
-              required
-            />
-          </div>
-
-          <p class="text-xs text-slate-500 mb-4">
-            A troca custa Bits do seu Digimon ativo. O valor aumenta a cada nova troca.
-          </p>
-
-          <button type="submit" class="btn-secondary w-full" id="change-username-btn">
-            Alterar username
-          </button>
-        </form>
-
-        <div class="mb-6 p-3 rounded-lg bg-slate-900/50 border border-slate-800">
-          <p class="text-xs text-slate-400">E-mail atual</p>
-          <p id="current-email-value" class="font-medium text-slate-200 mt-1">Carregando...</p>
-        </div>
-
-        <form
-          id="change-email-form"
-          onsubmit="settingsChangeEmail(event)"
-          class="mb-8"
-        >
-          <div class="mb-4">
-            <label class="label" for="new-email">Novo e-mail</label>
-            <input
-              id="new-email"
-              type="email"
-              class="input"
-              placeholder="seu-email@exemplo.com"
-              autocomplete="email"
-              required
-            />
-          </div>
-
-          <div class="mb-4">
-            <label class="label" for="email-current-password">Senha atual</label>
-            <input
-              id="email-current-password"
-              type="password"
-              class="input"
-              placeholder="••••••••"
-              autocomplete="current-password"
-              required
-            />
-          </div>
-
-          <p class="text-xs text-slate-500 mb-4">
-            Por segurança, confirme sua senha atual. As outras sessões serão encerradas e este dispositivo continuará conectado.
-          </p>
-
-          <button
-            type="submit"
-            class="btn-secondary w-full"
-            id="change-email-btn"
-          >
-            Alterar e-mail
-          </button>
-        </form>
-
-        <form
-          id="change-password-form"
-          onsubmit="settingsChangePassword(event)"
-        >
-          <div class="mb-4">
-            <label class="label">Senha atual</label>
-
-            <input
-              id="current-password"
-              type="password"
-              class="input"
-              placeholder="••••••••"
-              autocomplete="current-password"
-              required
-            />
-          </div>
-
-          <div class="mb-4">
-            <label class="label">Nova senha</label>
-
-            <input
-              id="new-password"
-              type="password"
-              class="input"
-              placeholder="••••••••"
-              autocomplete="new-password"
-              required
-              minlength="8"
-              maxlength="60"
-            />
-
-            <p class="text-xs text-slate-500 mt-1">
-              Entre 8 e 60 caracteres.
-            </p>
-          </div>
-
-          <div class="mb-6">
-            <label class="label">Confirmar nova senha</label>
-
-            <input
-              id="confirm-new-password"
-              type="password"
-              class="input"
-              placeholder="••••••••"
-              autocomplete="new-password"
-              required
-              minlength="8"
-              maxlength="60"
-            />
-          </div>
-
-          <button
-            type="submit"
-            class="btn-primary w-full"
-            id="change-password-btn"
-          >
-            Alterar senha
-          </button>
-        </form>
-      </div>
-
-      <!-- Sessão -->
-      <div class="card mb-4">
-        <div class="flex items-center gap-2 mb-4">
-          <span class="text-xl">🚪</span>
-          <h3 class="font-bold">Sessão</h3>
-        </div>
-
-        <button
-          type="button"
-          class="btn-secondary w-full"
-          onclick="authLogout()"
-        >
-          Sair
-        </button>
-
-        <button
-          type="button"
-          class="btn-secondary w-full mt-3"
-          id="logout-all-btn"
-        >
-          Encerrar sessões em todos os dispositivos
-        </button>
-
-        <p class="text-xs text-slate-500 mt-3">
-          Esta opção desconecta sua conta de todos os dispositivos onde ela estiver autenticada.
-        </p>
-      </div>
+      <p class="settings-menu-footer">Suas alterações são aplicadas imediatamente e protegidas pela sua sessão atual.</p>
     </div>
   `;
+}
 
-  const currentEmail = parseJwtPayload(getToken())?.email;
-  const currentEmailValue = document.getElementById("current-email-value");
-  if (currentEmailValue) {
-    currentEmailValue.textContent = currentEmail || "Não disponível";
+function settingsMenuItem(type, icon, title, description, category, comingSoon = false) {
+  const action = type === "shortcuts" ? "settingsShowShortcuts()" : `settingsOpenPanel('${type}')`;
+  return `
+    <button type="button" class="settings-menu-item ${comingSoon ? "is-coming-soon" : ""}" onclick="${action}">
+      <span class="settings-menu-item-icon" aria-hidden="true">${icon}</span>
+      <span class="settings-menu-item-content">
+        <span class="settings-menu-item-category">${category}</span>
+        <span class="settings-menu-item-title">${title}</span>
+        <span class="settings-menu-item-description">${description}</span>
+      </span>
+      <span class="settings-menu-item-arrow" aria-hidden="true">›</span>
+      ${comingSoon ? `<span class="settings-coming-soon">Em breve</span>` : ""}
+    </button>
+  `;
+}
+
+function settingsOpenPanel(type) {
+  const currentEmail = parseJwtPayload(getToken())?.email || "Não disponível";
+  const content = {
+    username: {
+      icon: "👤",
+      category: "Conta",
+      title: "Alterar username",
+      description: "Escolha um novo nome para sua conta."
+    },
+    email: {
+      icon: "✉",
+      category: "Conta",
+      title: "Alterar e-mail",
+      description: "Atualize o e-mail usado para acessar sua conta."
+    },
+    password: {
+      icon: "🔐",
+      category: "Segurança",
+      title: "Alterar senha",
+      description: "Use uma senha forte para manter sua conta protegida."
+    },
+    sessions: {
+      icon: "🚪",
+      category: "Segurança",
+      title: "Sessões e acesso",
+      description: "Gerencie o acesso à sua conta neste e em outros dispositivos."
+    }
+  }[type];
+  if (!content) return;
+
+  document.getElementById("settings-panel-modal")?.remove();
+  const overlay = document.createElement("div");
+  overlay.id = "settings-panel-modal";
+  overlay.className = "settings-panel-overlay fixed inset-0 z-50 flex items-center justify-center p-4";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.onclick = event => { if (event.target === overlay) settingsClosePanel(); };
+  overlay.innerHTML = `
+    <div class="settings-panel-modal card" role="document">
+      <button type="button" class="settings-panel-close" onclick="settingsClosePanel()" aria-label="Fechar">×</button>
+      <div class="settings-panel-heading">
+        <span class="settings-panel-icon">${content.icon}</span>
+        <div>
+          <p class="settings-eyebrow">${content.category}</p>
+          <h3 class="settings-panel-title">${content.title}</h3>
+          <p class="settings-panel-description">${content.description}</p>
+        </div>
+      </div>
+
+      <div id="settings-error" class="hidden settings-feedback settings-feedback-error"></div>
+      <div id="settings-success" class="hidden settings-feedback settings-feedback-success"></div>
+
+      ${type === "username" ? `
+        <div class="settings-current-value">
+          <span>Username atual</span>
+          <strong id="current-username-value">Carregando...</strong>
+          <small id="username-change-cost">Custo da próxima troca: carregando...</small>
+          <small id="username-change-bits">Bits disponíveis: carregando...</small>
+        </div>
+        <form id="change-username-form" onsubmit="settingsChangeUsername(event)" class="settings-panel-form">
+          <label class="label" for="new-username">Novo username</label>
+          <input id="new-username" type="text" class="input" placeholder="Seu novo username" autocomplete="nickname" minlength="3" maxlength="50" required />
+          <p class="settings-form-help">A troca custa Bits do seu Digimon ativo.</p>
+          <button type="submit" class="btn-primary w-full" id="change-username-btn">Alterar username</button>
+        </form>
+      ` : ""}
+
+      ${type === "email" ? `
+        <div class="settings-current-value">
+          <span>E-mail atual</span>
+          <strong id="current-email-value">${escapeHtml(currentEmail)}</strong>
+        </div>
+        <form id="change-email-form" onsubmit="settingsChangeEmail(event)" class="settings-panel-form">
+          <label class="label" for="new-email">Novo e-mail</label>
+          <input id="new-email" type="email" class="input" placeholder="seu-email@exemplo.com" autocomplete="email" required />
+          <label class="label" for="email-current-password">Senha atual</label>
+          <input id="email-current-password" type="password" class="input" placeholder="••••••••" autocomplete="current-password" required />
+          <p class="settings-form-help">Por segurança, confirme sua senha atual.</p>
+          <button type="submit" class="btn-primary w-full" id="change-email-btn">Alterar e-mail</button>
+        </form>
+      ` : ""}
+
+      ${type === "password" ? `
+        <form id="change-password-form" onsubmit="settingsChangePassword(event)" class="settings-panel-form">
+          <label class="label" for="current-password">Senha atual</label>
+          <input id="current-password" type="password" class="input" placeholder="••••••••" autocomplete="current-password" required />
+          <label class="label" for="new-password">Nova senha</label>
+          <input id="new-password" type="password" class="input" placeholder="••••••••" autocomplete="new-password" minlength="8" maxlength="60" required />
+          <p class="settings-form-help">A nova senha deve ter entre 8 e 60 caracteres.</p>
+          <label class="label" for="confirm-new-password">Confirmar nova senha</label>
+          <input id="confirm-new-password" type="password" class="input" placeholder="••••••••" autocomplete="new-password" minlength="8" maxlength="60" required />
+          <button type="submit" class="btn-primary w-full" id="change-password-btn">Alterar senha</button>
+        </form>
+      ` : ""}
+
+      ${type === "sessions" ? `
+        <div class="settings-session-actions">
+          <button type="button" class="btn-secondary w-full" onclick="authLogout()">Sair da conta</button>
+          <button type="button" class="btn-secondary w-full" id="logout-all-btn" onclick="settingsLogoutAll()">Encerrar sessões em todos os dispositivos</button>
+        </div>
+        <p class="settings-form-help">A segunda opção desconecta sua conta de todos os dispositivos autenticados, mantendo apenas esta sessão até a conclusão.</p>
+      ` : ""}
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  if (type === "username") settingsLoadUsernameChangeInfo();
+}
+
+function settingsClosePanel() {
+  document.getElementById("settings-panel-modal")?.remove();
+}
+
+let settingsShortcutDraft = [];
+let settingsShortcutSaveInProgress = false;
+let settingsShortcutDirty = false;
+
+async function settingsShowShortcuts() {
+  document.getElementById("settings-shortcuts-modal")?.remove();
+  try {
+    settingsShortcutDraft = [...await loadPlayerShortcutPreference()];
+  } catch (_) {
+    settingsShortcutDraft = [];
   }
+  settingsShortcutDirty = false;
+  settingsRenderShortcutsModal();
+}
 
-  document
-    .getElementById("logout-all-btn")
-    ?.addEventListener("click", settingsLogoutAll);
+function settingsRenderShortcutsModal() {
+  const catalog = getPlayerShortcutCatalog();
+  const selected = new Set(settingsShortcutDraft);
 
-  settingsLoadUsernameChangeInfo();
+  const renderShortcutOption = (item, isSelected, selectedIndex = -1) => {
+    const icon = item.image
+      ? `<img src="${escapeAttr(item.image)}" alt="" class="settings-shortcut-option-image" />`
+      : `<span class="settings-shortcut-option-emoji">${item.icon || "•"}</span>`;
+    return `
+      <div class="settings-shortcut-option ${isSelected ? "is-selected" : ""}">
+        <button type="button" class="settings-shortcut-toggle" onclick="settingsToggleShortcut('${escapeAttr(item.route)}')" aria-pressed="${isSelected}">
+          <span class="settings-shortcut-option-icon">${icon}</span>
+          <span class="settings-shortcut-option-label">${escapeHtml(item.label)}</span>
+          <span class="settings-shortcut-option-check">${isSelected ? "✓" : ""}</span>
+        </button>
+        ${isSelected ? `<span class="settings-shortcut-order"><button type="button" onclick="settingsMoveShortcut('${escapeAttr(item.route)}', -1)" aria-label="Mover ${escapeAttr(item.label)} para cima" ${selectedIndex <= 0 ? "disabled" : ""}>↑</button><button type="button" onclick="settingsMoveShortcut('${escapeAttr(item.route)}', 1)" aria-label="Mover ${escapeAttr(item.label)} para baixo" ${selectedIndex >= settingsShortcutDraft.length - 1 ? "disabled" : ""}>↓</button></span>` : ""}
+      </div>
+    `;
+  };
+
+  // Os selecionados são renderizados na mesma ordem usada pela barra.
+  // Assim, as setas movimentam exatamente o item que o jogador está vendo.
+  const selectedRows = settingsShortcutDraft
+    .map(route => catalog.find(item => item.route === route))
+    .filter(Boolean)
+    .map((item, index) => renderShortcutOption(item, true, index));
+  const unselectedRows = catalog
+    .filter(item => !selected.has(item.route))
+    .map(item => renderShortcutOption(item, false));
+  const rows = [...selectedRows, ...unselectedRows].join("");
+  const existingOverlay = document.getElementById("settings-shortcuts-modal");
+  const existingList = existingOverlay?.querySelector(".settings-shortcuts-list");
+  const listScrollTop = existingList?.scrollTop || 0;
+  const overlay = existingOverlay || document.createElement("div");
+  overlay.id = "settings-shortcuts-modal";
+  overlay.className = "settings-panel-overlay fixed inset-0 z-50 flex items-center justify-center p-4";
+  overlay.onclick = event => { if (event.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="settings-panel-modal settings-shortcuts-modal card">
+      <button type="button" class="settings-panel-close" onclick="document.getElementById('settings-shortcuts-modal')?.remove()" aria-label="Fechar">×</button>
+      <div class="settings-panel-heading">
+        <span class="settings-panel-icon">⌨</span>
+        <div>
+          <p class="settings-eyebrow">Personalização</p>
+          <h3 class="settings-panel-title">Barra de atalhos</h3>
+          <p class="settings-panel-description">Escolha e ordene os atalhos que deseja acessar rapidamente.</p>
+        </div>
+      </div>
+      <div class="settings-shortcuts-limit"><span>Mobile</span><strong>Até 4 atalhos + Mais</strong><span>Desktop</span><strong>Até 8 atalhos + Mais</strong></div>
+      <button type="button" class="btn-primary w-full mt-4" id="settings-shortcuts-save" onclick="settingsSaveShortcuts()" ${settingsShortcutDirty ? "" : "disabled"} aria-disabled="${!settingsShortcutDirty}">Salvar atalhos</button>
+      <div id="settings-shortcuts-feedback" class="hidden settings-feedback"></div>
+      <div class="settings-shortcuts-list">${rows}</div>
+    </div>
+  `;
+  if (!existingOverlay) document.body.appendChild(overlay);
+  const updatedList = overlay.querySelector(".settings-shortcuts-list");
+  if (updatedList) updatedList.scrollTop = listScrollTop;
+}
+
+function settingsToggleShortcut(route) {
+  const index = settingsShortcutDraft.indexOf(route);
+  if (index >= 0) {
+    settingsShortcutDraft.splice(index, 1);
+  } else if (settingsShortcutDraft.length < 8) {
+    settingsShortcutDraft.push(route);
+  } else {
+    showToast("Você pode escolher até 8 atalhos no desktop.", "info");
+    return;
+  }
+  settingsShortcutDirty = true;
+  settingsRenderShortcutsModal();
+}
+
+function settingsMoveShortcut(route, direction) {
+  const index = settingsShortcutDraft.indexOf(route);
+  const target = index + direction;
+  if (index < 0 || target < 0 || target >= settingsShortcutDraft.length) return;
+  [settingsShortcutDraft[index], settingsShortcutDraft[target]] = [settingsShortcutDraft[target], settingsShortcutDraft[index]];
+  settingsShortcutDirty = true;
+  settingsRenderShortcutsModal();
+}
+
+async function settingsSaveShortcuts() {
+  if (settingsShortcutSaveInProgress || !settingsShortcutDirty) return;
+
+  const button = document.getElementById("settings-shortcuts-save");
+  const feedback = document.getElementById("settings-shortcuts-feedback");
+  if (!button || !feedback) return;
+
+  settingsShortcutSaveInProgress = true;
+  const routesToSave = [...settingsShortcutDraft];
+  button.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  button.textContent = "Salvando...";
+  feedback.className = "hidden settings-feedback";
+
+  try {
+    await savePlayerShortcutPreference(routesToSave);
+    settingsShortcutDirty = false;
+    document.getElementById("settings-shortcuts-modal")?.remove();
+    showToast("Atalhos salvos com sucesso.");
+  } catch (err) {
+    feedback.textContent = err.message || "Não foi possível salvar os atalhos.";
+    feedback.className = "settings-feedback settings-feedback-error";
+  } finally {
+    settingsShortcutSaveInProgress = false;
+    const currentButton = document.getElementById("settings-shortcuts-save");
+    if (currentButton) {
+      currentButton.disabled = false;
+      currentButton.removeAttribute("aria-busy");
+      currentButton.textContent = "Salvar atalhos";
+    }
+  }
 }
 
 async function settingsLoadUsernameChangeInfo() {

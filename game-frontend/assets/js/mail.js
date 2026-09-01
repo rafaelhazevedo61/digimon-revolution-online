@@ -7,38 +7,55 @@ function renderMailPage() {
   showBottomNav("more");
 
   app.innerHTML = `
-    <div class="page-container">
-      <div class="flex items-center justify-between gap-3 mb-4 px-1">
-        <div>
-          <button class="text-sm text-cyan-400 mb-2" onclick="navigateTo('more')">← Voltar</button>
-          <h2 class="text-lg font-bold">Correio</h2>
-          <p class="text-xs text-slate-400">Mensagens e comunicados do Mundo Digital</p>
+    <div class="page-container mail-page-container">
+      <header class="mail-page-header">
+        <div class="mail-header-copy">
+          <button class="mail-back-link" onclick="navigateTo('more')"><span aria-hidden="true">←</span> Voltar ao menu</button>
+          <p class="mail-eyebrow">Comunicação · Mundo Digital</p>
+          <h1 class="mail-page-title">Correio</h1>
+          <p class="mail-page-subtitle">Centralize comunicados, convites e mensagens importantes da sua jornada.</p>
         </div>
-        <button class="btn-primary text-sm" onclick="mailOpenCompose()">+ Nova mensagem</button>
-      </div>
+        <div class="mail-header-actions">
+          <button class="mail-compose-button" type="button" onclick="mailOpenCompose()"><span aria-hidden="true">＋</span> Nova mensagem</button>
+        </div>
+      </header>
 
-      <div class="mb-3 px-1">
-        <p class="text-sm text-slate-400">Não lidas: <strong class="text-cyan-300" id="mail-unread-count">--</strong></p>
-      </div>
+      <div class="mail-layout">
+        <aside class="mail-sidebar">
+          <section class="mail-side-card">
+            <div class="mail-side-heading"><p class="mail-section-eyebrow">Atalhos</p><span class="mail-side-mark" aria-hidden="true">⌁</span></div>
+            <button class="mail-side-link" type="button" onclick="mailOpenCompose()"><span>＋</span> Escrever mensagem <b>→</b></button>
+          </section>
+          <section class="mail-side-card mail-side-highlight">
+            <div class="mail-side-heading"><p class="mail-section-eyebrow mail-section-eyebrow-cyan">Visão geral</p><span class="mail-side-mark" aria-hidden="true">✦</span></div>
+            <div class="mail-side-stat"><strong id="mail-unread-side">--</strong><span>mensagens não lidas</span></div>
+            <p>Abra uma mensagem para marcar como lida e manter sua central sempre organizada.</p>
+          </section>
+        </aside>
 
-      <div class="flex gap-2 mb-4" id="mail-folder-tabs">
-        <button class="tab-btn active flex-1" data-folder="inbox" onclick="mailSetFolder('inbox')">Entrada</button>
-        <button class="tab-btn flex-1" data-folder="sent" onclick="mailSetFolder('sent')">Enviadas</button>
+        <main class="mail-main-column">
+          <section class="mail-inbox-surface">
+            <div class="mail-toolbar">
+              <div class="mail-folder-tabs" id="mail-folder-tabs" role="tablist" aria-label="Pastas do correio">
+                <button class="mail-folder-tab ${mailFolder === "inbox" ? "is-active" : ""}" data-folder="inbox" role="tab" aria-selected="${mailFolder === "inbox"}" onclick="mailSetFolder('inbox')"><span class="mail-folder-icon" aria-hidden="true">⌑</span><span>Entrada</span></button>
+                <button class="mail-folder-tab ${mailFolder === "sent" ? "is-active" : ""}" data-folder="sent" role="tab" aria-selected="${mailFolder === "sent"}" onclick="mailSetFolder('sent')"><span class="mail-folder-icon" aria-hidden="true">↗</span><span>Enviadas</span></button>
+              </div>
+              <div class="mail-bulk-actions" id="mail-bulk-actions">
+                <button id="mail-mark-all-read" class="mail-action-button" type="button" onclick="mailMarkAllRead()"><span aria-hidden="true">✓</span> Marcar como lidas</button>
+                <button id="mail-delete-all" class="mail-action-button mail-action-danger" type="button" onclick="mailAskDeleteAll()"><span aria-hidden="true">⌫</span> Apagar todas</button>
+              </div>
+            </div>
+            <div class="mail-list-heading">
+              <div><p class="mail-section-eyebrow">${mailFolder === "inbox" ? "Recebidas" : "Histórico de envio"}</p><h2 id="mail-list-title">${mailFolder === "inbox" ? "Sua caixa de entrada" : "Mensagens enviadas"}</h2></div>
+              <span class="mail-list-count" id="mail-list-count">Carregando...</span>
+            </div>
+            <div id="mail-list" class="mail-list">
+              <div class="mail-loading-state"><span class="mail-loading-orb"></span><span>Carregando mensagens...</span></div>
+            </div>
+          </section>
+          <div id="mail-pagination" class="mail-pagination"></div>
+        </main>
       </div>
-
-      <div class="flex gap-2 mb-4" id="mail-bulk-actions">
-        <button id="mail-mark-all-read" class="tab-btn flex-1" onclick="mailMarkAllRead()">
-          Marcar todas como lidas
-        </button>
-        <button id="mail-delete-all" class="tab-btn flex-1 text-red-300" onclick="mailAskDeleteAll()">
-          Apagar todas
-        </button>
-      </div>
-
-      <div id="mail-list">
-        <div class="card animate-pulse"><div class="h-40"></div></div>
-      </div>
-      <div id="mail-pagination" class="flex items-center justify-between gap-3 mt-3"></div>
       <div id="mail-modal-root"></div>
     </div>
   `;
@@ -83,7 +100,7 @@ async function mailMarkAllRead() {
 }
 
 async function mailRefreshUnreadCount() {
-  const countEl = document.getElementById("mail-unread-count");
+  const countEl = document.getElementById("mail-unread-side");
   try {
     const result = await apiGet("/mail/unread-count");
     const count = Number(result.count || 0);
@@ -104,9 +121,15 @@ function mailSetFolder(folder) {
   mailFolder = folder === "sent" ? "sent" : "inbox";
   mailPage = 0;
   mailUpdateMarkAllReadButton();
-  document.querySelectorAll("#mail-folder-tabs .tab-btn").forEach(button => {
-    button.classList.toggle("active", button.dataset.folder === mailFolder);
+  document.querySelectorAll("#mail-folder-tabs [data-folder]").forEach(button => {
+    const active = button.dataset.folder === mailFolder;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-selected", String(active));
   });
+  const heading = document.getElementById("mail-list-title");
+  const eyebrow = heading?.previousElementSibling;
+  if (heading) heading.textContent = mailFolder === "inbox" ? "Sua caixa de entrada" : "Mensagens enviadas";
+  if (eyebrow) eyebrow.textContent = mailFolder === "inbox" ? "Recebidas" : "Histórico de envio";
   mailLoadFolder();
 }
 
@@ -129,13 +152,17 @@ function mailRenderList(result) {
   const list = document.getElementById("mail-list");
   if (!list) return;
   const messages = result.content || [];
+  const totalMessages = Number(result.totalElements ?? messages.length);
+  const countEl = document.getElementById("mail-list-count");
+  if (countEl) countEl.textContent = `${totalMessages} ${totalMessages === 1 ? "mensagem" : "mensagens"}`;
 
   if (messages.length === 0) {
     list.innerHTML = `
-      <div class="card text-center py-8">
-        <p class="text-3xl mb-2" aria-hidden="true">📭</p>
-        <p class="text-slate-300">${mailFolder === "inbox" ? "Sua caixa de entrada está vazia." : "Você ainda não enviou mensagens."}</p>
-        <p class="text-xs text-slate-500 mt-1">As mensagens aparecerão aqui quando houver novidades.</p>
+      <div class="mail-empty-state">
+        <span class="mail-empty-icon" aria-hidden="true">⌁</span>
+        <strong>${mailFolder === "inbox" ? "Sua caixa de entrada está vazia." : "Você ainda não enviou mensagens."}</strong>
+        <p>${mailFolder === "inbox" ? "Novos comunicados, convites e recompensas aparecerão aqui." : "As mensagens que você enviar ficarão disponíveis neste histórico."}</p>
+        ${mailFolder === "sent" ? `<button class="mail-empty-action" type="button" onclick="mailOpenCompose()">＋ Escrever mensagem</button>` : ""}
       </div>
     `;
   } else {
@@ -146,28 +173,25 @@ function mailRenderList(result) {
 }
 
 function mailRenderSummary(message) {
+  const isUnread = mailFolder === "inbox" && !message.read;
   const otherPlayer = mailFolder === "inbox" ? message.senderUsername : message.recipientUsername;
-  const unreadClass = mailFolder === "inbox" && !message.read ? "border-cyan-600 bg-cyan-950/20" : "";
-  const unreadLabel = mailFolder === "inbox" && !message.read
-    ? `<span class="badge text-cyan-300">Nova</span>`
-    : "";
+  const messageTypeLabels = { PLAYER: "Jogador", SYSTEM: "Sistema", AUCTION: "Leilão", CLAN: "Clã", EVENT: "Evento", ADMIN: "Administração" };
+  const originLabel = messageTypeLabels[message.messageType] || "Mensagem";
   const actionLabel = message.actionType === "CLAN_INVITE" || message.actionType === "EVENT_REWARD_CLAIM"
-    ? `<span class="badge text-amber-300">Ação pendente</span>`
+    ? `<span class="mail-message-action">Ação pendente</span>`
     : "";
+  const icon = isUnread ? "✉" : message.actionType ? "!" : message.messageType === "PLAYER" ? "↗" : "✦";
+  const subject = message.subject || "(Sem assunto)";
 
   return `
-    <button class="card-sm w-full text-left mb-2 ${unreadClass}" onclick="mailOpen('${message.id}')">
-      <div class="flex items-start gap-3">
-        <span class="text-2xl mt-1" aria-hidden="true">${message.read ? "✉️" : "📨"}</span>
-        <div class="min-w-0 flex-1">
-          <div class="flex items-start justify-between gap-2">
-            <p class="font-bold text-sm truncate">${escapeHtml(message.subject)}</p>
-            <div class="flex gap-1 flex-wrap justify-end">${unreadLabel}${actionLabel}</div>
-          </div>
-          <p class="text-xs text-slate-400 mt-1">${mailFolder === "inbox" ? "De" : "Para"}: ${escapeHtml(otherPlayer || "Sistema")}</p>
-          <p class="text-xs text-slate-500 mt-1">${mailFormatDate(message.createdAt)}</p>
-        </div>
-      </div>
+    <button class="mail-message-card ${isUnread ? "is-unread" : ""}" type="button" onclick="mailOpen('${message.id}')" aria-label="Abrir mensagem: ${escapeHtml(subject)}">
+      <span class="mail-message-icon ${isUnread ? "is-unread" : ""}" aria-hidden="true">${icon}</span>
+      <span class="mail-message-content">
+        <span class="mail-message-topline"><span class="mail-message-origin">${originLabel}</span><time>${mailFormatDate(message.createdAt)}</time></span>
+        <span class="mail-message-title-row"><strong class="mail-message-subject">${escapeHtml(subject)}</strong>${isUnread ? `<span class="mail-message-unread">Nova</span>` : ""}</span>
+        <span class="mail-message-participant"><span>${mailFolder === "inbox" ? "De" : "Para"}</span> ${escapeHtml(otherPlayer || "Sistema")}</span>
+        <span class="mail-message-footer">${actionLabel}<span class="mail-message-open">Abrir mensagem <b aria-hidden="true">→</b></span></span>
+      </span>
     </button>
   `;
 }
@@ -182,9 +206,9 @@ function mailRenderPagination(result) {
   }
 
   pagination.innerHTML = `
-    <button class="btn-sm ${mailPage <= 0 ? "opacity-40 pointer-events-none" : ""}" onclick="mailChangePage(-1)">Anterior</button>
-    <span class="text-xs text-slate-400">Página ${mailPage + 1} de ${totalPages}</span>
-    <button class="btn-sm ${mailPage >= totalPages - 1 ? "opacity-40 pointer-events-none" : ""}" onclick="mailChangePage(1)">Próxima</button>
+    <button class="mail-pagination-button ${mailPage <= 0 ? "is-disabled" : ""}" type="button" onclick="mailChangePage(-1)" ${mailPage <= 0 ? "disabled" : ""}>← Anterior</button>
+    <span class="mail-pagination-label">Página ${mailPage + 1} de ${totalPages}</span>
+    <button class="mail-pagination-button ${mailPage >= totalPages - 1 ? "is-disabled" : ""}" type="button" onclick="mailChangePage(1)" ${mailPage >= totalPages - 1 ? "disabled" : ""}>Próxima →</button>
   `;
 }
 

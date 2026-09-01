@@ -14,18 +14,112 @@ async function renderActivityCalendarPage() {
 
 function renderActivityCalendar(data) {
   const app = document.getElementById("app");
+  const dayEntries = Array.isArray(data.days) ? data.days : [];
   const completed = Number(data.claimedDays || 0);
-  const total = Number(data.daysInMonth || 0);
+  const total = Number(data.daysInMonth || dayEntries.length || 0);
   const percent = total ? Math.round(completed * 100 / total) : 0;
-  const days = (data.days || []).map(day => {
-    const status = day.rewardClaimed ? "resgatado" : day.goalReached ? "disponivel" : day.points > 0 ? "progresso" : "bloqueado";
-    const action = day.goalReached && !day.rewardClaimed ? `<button class="btn-sm btn-primary mt-2" onclick="claimActivityDay('${day.date}')">Resgatar</button>` : "";
+  const currentDay = dayEntries.find(day => day.date === data.currentDate);
+  const statusLabels = {
+    resgatado: "Resgatado",
+    disponivel: "Disponível",
+    progresso: "Em progresso",
+    bloqueado: "Sem atividade",
+    perdido: "Perdido"
+  };
+  const getStatus = (day) => {
+    const isPast = Boolean(day.date && data.currentDate && day.date < data.currentDate);
+    return day.rewardClaimed ? "resgatado" : isPast ? "perdido" : day.goalReached ? "disponivel" : day.points > 0 ? "progresso" : "bloqueado";
+  };
+  const currentStatus = currentDay ? getStatus(currentDay) : "bloqueado";
+  const currentStatusLabel = currentDay ? statusLabels[currentStatus] : "Aguardando atividade";
+  const monthlyMessage = data.monthlyRewardClaimed
+    ? "Baú mensal resgatado."
+    : data.monthlyCompletionEligible
+      ? "Você completou todos os dias e já pode abrir o baú mensal."
+      : "Resgate todos os dias para liberar o baú exclusivo.";
+  const monthlyAction = data.monthlyCompletionEligible && !data.monthlyRewardClaimed
+    ? `<button type="button" class="btn-primary activity-calendar-monthly-action" onclick="claimActivityMonthly('${data.yearMonth}')">Resgatar baú mensal</button>`
+    : "";
+
+  const days = dayEntries.map(day => {
+    const status = getStatus(day);
+    const isPast = Boolean(day.date && data.currentDate && day.date < data.currentDate);
+    const action = day.goalReached && !day.rewardClaimed && !isPast
+      ? `<button type="button" class="btn-sm btn-primary activity-day-action" onclick="claimActivityDay('${day.date}')">Resgatar</button>`
+      : "";
     const isToday = day.date === data.currentDate;
-    const todayClass = isToday ? "ring-2 ring-cyan-400 bg-cyan-950/50 shadow-lg shadow-cyan-900/30" : "";
-    const todayLabel = isToday ? `<span class="inline-block rounded-full bg-cyan-400 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-slate-950">Hoje</span>` : "";
-    return `<div class="card-sm text-center activity-day activity-day-${status} ${todayClass}">${todayLabel}<p class="text-xs ${isToday ? "font-bold text-cyan-200" : "text-slate-400"}">Dia ${day.dayOfMonth}</p><p class="text-xl font-bold mt-1 ${isToday ? "text-cyan-100" : ""}">${day.points}<span class="text-xs text-slate-500">/${data.dailyGoal}</span></p><p class="text-[10px] uppercase text-slate-500 mt-1">${day.rewardClaimed ? "Resgatado" : day.goalReached ? "Disponível" : "Em progresso"}</p>${action}</div>`;
+    const todayLabel = isToday ? `<span class="activity-day-today-label">Hoje</span>` : "";
+    return `<article class="activity-day activity-day-${status}${isToday ? " is-today" : ""}">
+      <div class="activity-day-topline">${todayLabel}<span class="activity-day-number">Dia ${day.dayOfMonth}</span></div>
+      <div class="activity-day-points"><strong>${Number(day.points || 0)}</strong><span>/${Number(data.dailyGoal || 0)}</span></div>
+      <div class="activity-day-state"><span class="activity-day-dot" aria-hidden="true"></span>${statusLabels[status]}</div>
+      ${action}
+    </article>`;
   }).join("");
-  app.innerHTML = `<div class="page-container"><div class="flex items-center justify-between mb-4"><div><h2 class="text-lg font-bold">Calendário de Atividades</h2><p class="text-xs text-slate-400">${escapeHtml(data.yearMonth)} · ${data.dailyGoal} pontos por dia</p></div><button class="btn-sm" onclick="navigateTo('more')">Voltar</button></div><div class="card mb-4"><div class="flex justify-between text-sm"><span>Conclusão mensal</span><strong class="text-cyan-400">${completed}/${total}</strong></div><div class="w-full h-2 bg-slate-800 rounded-full mt-3"><div class="h-2 bg-cyan-500 rounded-full" style="width:${percent}%"></div></div><p class="text-xs text-slate-400 mt-3">${data.monthlyRewardClaimed ? "Baú mensal resgatado." : data.monthlyCompletionEligible ? "Você completou todos os dias." : "Resgate todos os dias para liberar o baú exclusivo."}</p>${data.monthlyCompletionEligible && !data.monthlyRewardClaimed ? `<button class="btn-primary w-full mt-3" onclick="claimActivityMonthly('${data.yearMonth}')">Resgatar baú de conclusão mensal</button>` : ""}</div><div class="grid grid-cols-4 gap-2">${days}</div></div>`;
+
+  app.innerHTML = `<div class="page-container activity-calendar-page-container">
+    <header class="activity-calendar-header">
+      <div class="activity-calendar-header-copy">
+        <p class="activity-calendar-eyebrow">Rotina · Progresso</p>
+        <h1 class="activity-calendar-title">Calendário de Atividades</h1>
+        <p class="activity-calendar-subtitle">Construa sua sequência diária e acompanhe o caminho até a recompensa mensal.</p>
+      </div>
+      <div class="activity-calendar-header-actions">
+        <div class="activity-calendar-target"><span>Meta diária</span><strong>${Number(data.dailyGoal || 0)} pts</strong></div>
+        <button type="button" class="activity-calendar-back" onclick="navigateTo('more')">Voltar</button>
+      </div>
+    </header>
+
+    <div class="activity-calendar-layout">
+      <main class="activity-calendar-main">
+        <section class="activity-calendar-progress-card">
+          <div class="activity-calendar-card-heading">
+            <div><p class="activity-calendar-eyebrow activity-calendar-eyebrow-cyan">Resumo do mês</p><h2 class="activity-calendar-section-title">Conclusão mensal</h2></div>
+            <strong class="activity-calendar-progress-value">${completed}/${total}</strong>
+          </div>
+          <div class="activity-calendar-progress-track" role="progressbar" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100" aria-label="${percent}% de conclusão mensal"><span style="width:${percent}%"></span></div>
+          <div class="activity-calendar-progress-meta"><span>${percent}% concluído</span><span>${Math.max(total - completed, 0)} dias restantes</span></div>
+          <p class="activity-calendar-progress-copy">${monthlyMessage}</p>
+          ${monthlyAction}
+        </section>
+
+        <section class="activity-calendar-surface">
+          <div class="activity-calendar-section-heading">
+            <div><p class="activity-calendar-eyebrow">Calendário do mês</p><h2 class="activity-calendar-section-title">Sua atividade diária</h2></div>
+            <span class="activity-calendar-section-caption">${dayEntries.length} dias · ${Number(data.dailyGoal || 0)} pts/dia</span>
+          </div>
+          <div class="activity-calendar-legend" aria-label="Legenda dos estados">
+            <span><i class="activity-calendar-legend-dot is-resgatado"></i>Resgatado</span>
+            <span><i class="activity-calendar-legend-dot is-disponivel"></i>Disponível</span>
+            <span><i class="activity-calendar-legend-dot is-progresso"></i>Em progresso</span>
+            <span><i class="activity-calendar-legend-dot is-bloqueado"></i>Sem atividade</span>
+            <span><i class="activity-calendar-legend-dot is-perdido"></i>Perdido</span>
+          </div>
+          <div class="activity-calendar-grid">${days}</div>
+        </section>
+      </main>
+
+      <aside class="activity-calendar-sidebar">
+        <section class="activity-calendar-side-card activity-calendar-focus-card">
+          <div class="activity-calendar-side-heading"><p class="activity-calendar-eyebrow activity-calendar-eyebrow-cyan">Foco de hoje</p><span class="activity-calendar-side-mark">◎</span></div>
+          <div class="activity-calendar-focus-day"><strong>${currentDay ? `Dia ${currentDay.dayOfMonth}` : "—"}</strong><span>${currentStatusLabel}</span></div>
+          <div class="activity-calendar-focus-points"><strong>${Number(currentDay?.points || 0)}</strong><span>/${Number(data.dailyGoal || 0)} pontos acumulados</span></div>
+          <p>${currentDay?.goalReached ? "A meta de hoje foi alcançada." : "Continue ativo para alcançar a meta diária."}</p>
+        </section>
+        <section class="activity-calendar-side-card">
+          <div class="activity-calendar-side-heading"><p class="activity-calendar-eyebrow">Ritmo do mês</p><span class="activity-calendar-side-mark">✦</span></div>
+          <div class="activity-calendar-mini-stats"><div><strong>${completed}</strong><span>dias resgatados</span></div><div><strong>${Number(data.dailyGoal || 0)}</strong><span>meta diária</span></div></div>
+          <p class="activity-calendar-side-copy">Mantenha uma rotina constante para completar o calendário e liberar a recompensa final.</p>
+        </section>
+        <section class="activity-calendar-side-card activity-calendar-reward-card">
+          <p class="activity-calendar-eyebrow activity-calendar-eyebrow-amber">Recompensa mensal</p>
+          <h3>Baú de conclusão</h3>
+          <p>${data.monthlyRewardClaimed ? "Recompensa já resgatada neste ciclo." : data.monthlyCompletionEligible ? "O baú está liberado para resgate." : "Complete todos os dias do mês para liberar."}</p>
+          <span class="activity-calendar-reward-status ${data.monthlyRewardClaimed ? "is-claimed" : data.monthlyCompletionEligible ? "is-ready" : "is-progress"}">${data.monthlyRewardClaimed ? "Resgatado" : data.monthlyCompletionEligible ? "Disponível" : "Em andamento"}</span>
+        </section>
+      </aside>
+    </div>
+  </div>`;
 }
 
 async function claimActivityDay(date) {
