@@ -324,7 +324,7 @@ async function renderArenaShopPage() {
   }
 }
 
-function renderArenaShop(shop) {
+function renderArenaShop(shop, inventoryItems = []) {
   const container = document.getElementById("arena-shop-content");
   const coins = shop.arenaCoins || 0;
 
