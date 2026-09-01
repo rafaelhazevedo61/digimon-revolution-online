@@ -19,7 +19,7 @@ public final class IncubatorRules {
             case INCUBATOR_COMMON -> Duration.ofMinutes(5);
             case INCUBATOR_RARE -> Duration.ofMinutes(2);
             case INCUBATOR_EPIC -> Duration.ofSeconds(30);
-            case INCUBATOR_LEGENDARY -> Duration.ofSeconds(1);
+            case INCUBATOR_LEGENDARY -> Duration.ofSeconds(10);
             default -> throw new IllegalArgumentException("Invalid incubator type");
         };
     }
