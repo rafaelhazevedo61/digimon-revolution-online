@@ -1537,6 +1537,8 @@ body {
 .missions-active-dot { width: 0.4rem; height: 0.4rem; flex: 0 0 auto; border-radius: 9999px; background: #60a5fa; box-shadow: 0 0 8px rgba(96, 165, 250, 0.65); }
 .missions-active-dot-ready { background: #4ade80; box-shadow: 0 0 8px rgba(74, 222, 128, 0.65); }
 .missions-active-action { display: flex; min-width: 5.5rem; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.4rem; }
+.missions-auto-mode-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.missions-vip-mode-button { border-color: rgba(168, 85, 247, 0.28); background: rgba(88, 28, 135, 0.14); color: #c4b5fd; cursor: not-allowed; opacity: 0.72; }
 .missions-active-action .btn-sm { padding: 0.38rem 0.58rem; font-size: 0.62rem; }
 .missions-active-action .btn-sm { white-space: nowrap; }
 .missions-active-badge { padding: 0.3rem 0.45rem; border: 1px solid rgba(96, 165, 250, 0.2); border-radius: 9999px; background: rgba(37, 99, 235, 0.12); color: #93c5fd; font-size: 0.58rem; font-weight: 800; white-space: nowrap; }
@@ -1582,6 +1584,8 @@ body {
   .missions-hero-emblem { width: 2.55rem; height: 2.55rem; font-size: 1.35rem; }
   .missions-active-card { grid-template-columns: 2.35rem minmax(0, 1fr); }
   .missions-active-action { grid-column: 2; justify-content: flex-start; min-width: 0; }
+  .missions-auto-mode-actions { width: 100%; }
+  .missions-auto-mode-actions .btn-sm { flex: 1 1 auto; }
   .mission-area-card { grid-template-columns: 2.45rem minmax(0, 1fr) auto; padding: 0.58rem; }
   .mission-area-icon { width: 2.25rem; height: 2.25rem; font-size: 1.15rem; }
   .mission-area-status { font-size: 0.48rem; }
