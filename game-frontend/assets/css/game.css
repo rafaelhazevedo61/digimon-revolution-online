@@ -1611,6 +1611,11 @@ body {
     grid-column: 1 / -1;
     justify-self: start;
   }
+  .missions-active-action > .btn-sm {
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
+  }
 }
 
 @media (max-width: 23rem) {

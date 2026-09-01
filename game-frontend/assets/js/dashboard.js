@@ -576,8 +576,8 @@ function startMissionTimers() {
               el.dataset.autoClaiming = "false";
               if (isInventoryStackLimitError(err)) {
                 await pauseMissionAutomation(el.dataset.missionInstance);
-                showToast(missionStackLimitMessage(), "error");
                 renderDashboardPage();
+                showMissionStackLimitModal();
                 return;
               }
               showToast(`Resgate automático pausado: ${err.message}`, "error");

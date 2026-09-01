@@ -283,8 +283,34 @@ async function pauseMissionAutomation(instanceId) {
   ]);
 }
 
-function missionStackLimitMessage() {
-  return "Automação pausada: o inventário atingiu o limite de 999 unidades. A missão permanece pendente para resgate manual.";
+function showMissionStackLimitModal() {
+  const existing = document.getElementById("mission-stack-limit-modal");
+  if (existing) existing.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "mission-stack-limit-modal";
+  overlay.className = "fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80";
+  overlay.setAttribute("role", "alertdialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-labelledby", "mission-stack-limit-title");
+  overlay.innerHTML = `
+    <div class="card w-full max-w-md border border-amber-700 bg-slate-900" onclick="event.stopPropagation()">
+      <div class="flex items-start gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-amber-700 bg-amber-950/50 text-xl text-amber-300" aria-hidden="true">!</div>
+        <div>
+          <p class="text-xs uppercase tracking-wider text-amber-400 font-bold">Atenção necessária</p>
+          <h3 id="mission-stack-limit-title" class="text-xl font-bold mt-1">Automação pausada</h3>
+        </div>
+      </div>
+      <p class="mt-4 text-sm leading-relaxed text-slate-200">O item recebido atingiu o limite de <strong class="text-amber-300">999 unidades</strong> no inventário. Por segurança, a repetição automática e o resgate automático foram desligados.</p>
+      <p class="mt-3 text-sm leading-relaxed text-slate-400">A missão continua concluída e pendente de resgate. Libere espaço no inventário e faça o resgate manualmente.</p>
+      <button id="mission-stack-limit-confirm" class="btn-primary mt-6 w-full">Entendi</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const confirmButton = overlay.querySelector("#mission-stack-limit-confirm");
+  confirmButton?.focus();
+  confirmButton?.addEventListener("click", () => overlay.remove());
 }
 
 async function claimMissionAutomatically(instanceId) {
@@ -844,8 +870,8 @@ function startMissionsPageTimers() {
               el.dataset.mpAutoClaiming = "false";
               if (isInventoryStackLimitError(err)) {
                 await pauseMissionAutomation(el.dataset.mpInstance);
-                showToast(missionStackLimitMessage(), "error");
                 await loadActiveMissions();
+                showMissionStackLimitModal();
                 return;
               }
               showToast(`Resgate automático pausado: ${err.message}`, "error");
