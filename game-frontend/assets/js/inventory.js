@@ -707,6 +707,49 @@ async function invReloadItems() {
   if (document.getElementById("inv-content")) invRenderItems();
 }
 
+function invStackLimitDetails(err) {
+  const message = String(err && err.message || "");
+  const portugueseMatch = message.match(/limite máximo de (\d+) unidades para o item (.+?)\.\s*$/i);
+  if (portugueseMatch) return { itemName: portugueseMatch[2], maxStack: portugueseMatch[1] };
+  const englishMatch = message.match(/stack limit exceeded for item ['"](.+?)['"]\. Maximum stack: (\d+)/i);
+  if (englishMatch) return { itemName: englishMatch[1], maxStack: englishMatch[2] };
+  return { itemName: "o item recebido", maxStack: "999" };
+}
+
+function invIsStackLimitError(err) {
+  return /stack limit exceeded|limite máximo de|limite de stack/i.test(String(err && err.message || ""));
+}
+
+function invShowStackLimitModal(err) {
+  const existing = document.getElementById("inventory-stack-limit-modal");
+  if (existing) existing.remove();
+  const details = invStackLimitDetails(err);
+  const overlay = document.createElement("div");
+  overlay.id = "inventory-stack-limit-modal";
+  overlay.className = "fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80";
+  overlay.setAttribute("role", "alertdialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-labelledby", "inventory-stack-limit-title");
+  overlay.innerHTML = `
+    <div class="card w-full max-w-md border border-amber-700 bg-slate-900" onclick="event.stopPropagation()">
+      <div class="flex items-start gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-amber-700 bg-amber-950/50 text-xl text-amber-300" aria-hidden="true">!</div>
+        <div>
+          <p class="text-xs uppercase tracking-wider text-amber-400 font-bold">Limite do inventário</p>
+          <h3 id="inventory-stack-limit-title" class="text-xl font-bold mt-1">Não foi possível concluir</h3>
+        </div>
+      </div>
+      <p class="mt-4 text-sm leading-relaxed text-slate-200">O item <strong class="text-amber-300">${escapeHtml(details.itemName)}</strong> já atingiu o limite de <strong class="text-amber-300">${escapeHtml(details.maxStack)} unidades</strong> no inventário.</p>
+      <p class="mt-3 text-sm leading-relaxed text-slate-400">A operação foi cancelada e nenhum item foi consumido. Libere espaço ou use parte desse item antes de tentar novamente.</p>
+      <button id="inventory-stack-limit-confirm" class="btn-primary mt-6 w-full">Entendi</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const confirmButton = overlay.querySelector("#inventory-stack-limit-confirm");
+  confirmButton?.focus();
+  confirmButton?.addEventListener("click", () => overlay.remove());
+}
+
 async function invUseItem(itemType, quantity = null) {
   if (itemType === "RARITY_REROLL") {
     await invStartRarityReroll();
@@ -746,7 +789,11 @@ async function invUseItem(itemType, quantity = null) {
       showNewlyUnlockedContent(result.newlyUnlockedContent);
     }
   } catch (err) {
-    showToast(err.message, "error");
+    if (invIsStackLimitError(err)) {
+      invShowStackLimitModal(err);
+    } else {
+      showToast(err.message, "error");
+    }
   } finally {
     invItemUseInProgress = false;
   }
@@ -782,7 +829,11 @@ async function invOpenChest(chestCode, quantity = 1) {
     await invReloadItems();
     return result;
   } catch (err) {
-    showToast(err.message, "error");
+    if (invIsStackLimitError(err)) {
+      invShowStackLimitModal(err);
+    } else {
+      showToast(err.message, "error");
+    }
     return null;
   } finally {
     invChestOpeningInProgress = false;
