@@ -4738,6 +4738,7 @@ body {
 .arena-shop-quantity-button { width: 2rem; }
 .arena-shop-max-button { padding: 0 0.55rem; color: #67e8f9; font-size: 0.58rem; }
 .arena-shop-quantity-input { width: 3.5rem; height: 2rem; padding: 0.2rem; border: 1px solid rgba(34, 211, 238, 0.35); border-radius: 0.45rem; background: #020617; color: #f8fafc; text-align: center; font-size: 0.75rem; }
+.arena-shop-quantity-hint { margin: 0.35rem 0 0; color: #64748b; font-size: 0.52rem; line-height: 1.2; text-align: center; }
 .arena-shop-total-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; margin-top: 0.8rem; }
 .arena-shop-total-row span { min-width: 0; padding: 0.5rem; border-radius: 0.45rem; background: rgba(30, 41, 59, 0.55); }
 .arena-shop-total-row small, .arena-shop-total-row strong { display: block; }
