@@ -439,9 +439,11 @@ async function clanLoadUpgrades() {
 
   try {
     const upgrades = await apiGet(`/clans/${clan.id}/upgrades`);
-    const isLeader = clan.myRole && clan.myRole.role === "LEADER";
+    const isPublicReadOnly = !clan.isMember || !clan.id || !currentClan || String(clan.id) !== String(currentClan.id);
+    const isLeader = !isPublicReadOnly && clan.myRole && clan.myRole.role === "LEADER";
+    const upgradeCaption = isPublicReadOnly ? "Visualização pública · somente leitura" : "Use Marcas de Honra para evoluir";
 
-    let html = `<div class="clan-tab-heading"><div><p class="clan-eyebrow">Progressão coletiva</p><h2 class="clan-section-title">Melhorias</h2></div><span class="clan-section-caption">Use Marcas de Honra para evoluir</span></div>`;
+    let html = `<div class="clan-tab-heading"><div><p class="clan-eyebrow">Progressão coletiva</p><h2 class="clan-section-title">Melhorias</h2></div><span class="clan-section-caption">${upgradeCaption}</span></div>`;
     if (upgrades.length === 0) {
       html += `<p class="text-slate-400 text-sm">Nenhuma melhoria disponível.</p>`;
     } else {
@@ -462,7 +464,7 @@ async function clanLoadUpgrades() {
             </div>
             <p class="clan-upgrade-description">${escapeHtml(u.description || "")}</p>
             <div class="clan-upgrade-effect"><span>Efeito total</span><strong>${formatEffect(u)}</strong></div>
-            ${isLeader && !locked && !maxed ? `
+            ${isPublicReadOnly ? `<div class="clan-upgrade-readonly" role="note"><span aria-hidden="true">◉</span><span>Informação pública · apenas visualização</span></div>` : isLeader && !locked && !maxed ? `
               <button class="btn-primary w-full clan-upgrade-action ${canBuy ? '' : 'opacity-50 cursor-not-allowed'}"
                 ${canBuy ? `onclick="clanBuyUpgrade('${clan.id}', '${escapeHtml(u.code)}')"` : 'disabled'}>
                 Melhorar · ${Number(u.nextCostHonorMarks).toLocaleString("pt-BR")} HM
@@ -486,6 +488,16 @@ function formatEffect(u) {
 }
 
 async function clanBuyUpgrade(clanId, code) {
+  const canManageCurrentClan = currentClan
+    && currentClan.isMember
+    && String(currentClan.id) === String(clanId)
+    && currentClan.myRole
+    && currentClan.myRole.role === "LEADER";
+  if (!canManageCurrentClan) {
+    showToast("Apenas o líder pode melhorar o próprio clã.", "error");
+    return;
+  }
+
   try {
     await apiPost(`/clans/${clanId}/upgrades/${encodeURIComponent(code)}/buy`);
     showToast("Melhoria adquirida!", "success");
