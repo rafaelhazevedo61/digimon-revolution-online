@@ -4968,3 +4968,14 @@ body {
   .mail-side-card.mail-side-note { order: 2; }
   .mail-side-card.mail-side-highlight { order: 3; }
 }
+
+/* Mobile mail flow: context cards before the inbox */
+@media (min-width: 46rem) {
+  .mail-main-column { order: 1; }
+  .mail-sidebar { order: 2; }
+}
+@media (max-width: 46rem) {
+  .mail-layout { display: flex; flex-direction: column; }
+  .mail-sidebar { order: 1; width: 100%; }
+  .mail-main-column { order: 2; width: 100%; }
+}
