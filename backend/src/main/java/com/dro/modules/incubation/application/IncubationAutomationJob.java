@@ -27,6 +27,7 @@ public class IncubationAutomationJob {
     }
 
     @Scheduled(fixedDelay = INTERVAL_MS)
+    @Transactional
     public void processReadyIncubations() {
         List<UUID> ids = repository.findIdsReadyForAutomation(List.of(IncubationStatus.IN_PROGRESS, IncubationStatus.READY), LocalDateTime.now(), PageRequest.of(0, BATCH_SIZE));
         ids.forEach(id -> {
