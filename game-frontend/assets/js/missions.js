@@ -115,21 +115,24 @@ async function loadActiveMissions() {
     const mission = missionBySlot.get(slotNumber);
     if (slotNumber > unlockedSlots) {
       return `
-        <article class="missions-active-card missions-slot-card missions-slot-card-locked" data-mp-slot="${slotNumber}">
-          <div class="flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3"><span class="text-2xl">🔒</span><div><p class="missions-active-label">Slot ${slotNumber}</p><p class="font-bold text-slate-300 mt-1">Slot bloqueado</p></div></div>
+        <article class="missions-slot-card missions-slot-card-locked" data-mp-slot="${slotNumber}">
+          <div class="missions-slot-card-header">
+            <div class="missions-slot-card-info"><span class="missions-slot-card-icon" aria-hidden="true">🔒</span><div class="missions-slot-card-copy"><p class="missions-active-label">Slot ${slotNumber}</p><p class="missions-slot-card-title">Slot bloqueado</p></div></div>
             <span class="missions-active-badge">Bloqueado</span>
           </div>
-          <p class="text-xs text-slate-500 mt-3">Use um Expansor de Slot de Missão no inventário para liberar este espaço.</p>
-          <button class="btn-sm btn-secondary mt-3" onclick="navigateTo('inventory')">Ver inventário</button>
+          <p class="missions-slot-card-description">Use um Expansor de Slot de Missão no inventário para liberar este espaço.</p>
+          <button class="btn-sm btn-secondary missions-slot-card-action" onclick="navigateTo('inventory')">Ver inventário</button>
         </article>
       `;
     }
     if (!mission) {
       return `
-        <article class="missions-active-card missions-slot-card missions-slot-card-empty" data-mp-slot="${slotNumber}">
-          <div class="flex items-center justify-between gap-3"><div class="flex items-center gap-3"><span class="text-2xl">✦</span><div><p class="missions-active-label">Slot ${slotNumber}</p><p class="font-bold text-slate-200 mt-1">Slot livre</p></div></div><span class="missions-active-badge">Disponível</span></div>
-          <p class="text-xs text-slate-500 mt-3">Escolha uma missão e envie um time para ocupar este slot.</p>
+        <article class="missions-slot-card missions-slot-card-empty" data-mp-slot="${slotNumber}">
+          <div class="missions-slot-card-header">
+            <div class="missions-slot-card-info"><span class="missions-slot-card-icon" aria-hidden="true">✦</span><div class="missions-slot-card-copy"><p class="missions-active-label">Slot ${slotNumber}</p><p class="missions-slot-card-title">Slot livre</p></div></div>
+            <span class="missions-active-badge">Disponível</span>
+          </div>
+          <p class="missions-slot-card-description">Escolha uma missão e envie um time para ocupar este slot.</p>
         </article>
       `;
     }

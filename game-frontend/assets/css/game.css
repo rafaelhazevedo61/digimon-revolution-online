@@ -1510,6 +1510,17 @@ body {
 .missions-hero-emblem { display: flex; width: 3rem; height: 3rem; flex: 0 0 auto; align-items: center; justify-content: center; border: 1px solid rgba(34, 211, 238, 0.35); border-radius: 0.9rem; background: linear-gradient(145deg, rgba(8, 145, 178, 0.3), rgba(30, 64, 175, 0.18)); color: #67e8f9; font-size: 1.65rem; filter: drop-shadow(0 0 13px rgba(34, 211, 238, 0.2)); }
 .missions-active-section, .missions-map-section { padding: 0.85rem; border: 1px solid rgba(30, 64, 175, 0.62); border-radius: 1rem; background: linear-gradient(145deg, rgba(23, 37, 84, 0.27), rgba(15, 23, 42, 0.56)); box-shadow: 0 12px 30px rgba(2, 6, 23, 0.15); }
 .missions-active-list { display: flex; flex-direction: column; gap: 0.55rem; }
+.missions-slot-card { display: block; min-width: 0; padding: 0.85rem; border: 1px solid rgba(71, 85, 105, 0.62); border-radius: 0.8rem; background: linear-gradient(145deg, rgba(30, 41, 59, 0.68), rgba(15, 23, 42, 0.72)); }
+.missions-slot-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; min-width: 0; }
+.missions-slot-card-info { display: flex; align-items: flex-start; gap: 0.65rem; min-width: 0; flex: 1 1 auto; }
+.missions-slot-card-copy { min-width: 0; padding-top: 0.1rem; }
+.missions-slot-card-icon { display: flex; width: 2.25rem; height: 2.25rem; flex: 0 0 auto; align-items: center; justify-content: center; border: 1px solid rgba(100, 116, 139, 0.35); border-radius: 0.7rem; background: rgba(51, 65, 85, 0.28); font-size: 1.15rem; }
+.missions-slot-card-title { margin: 0.22rem 0 0; color: #e2e8f0; font-size: 0.78rem; font-weight: 800; line-height: 1.25; overflow-wrap: anywhere; }
+.missions-slot-card-description { margin: 0.75rem 0 0; color: #94a3b8; font-size: 0.68rem; line-height: 1.45; overflow-wrap: anywhere; }
+.missions-slot-card-action { display: flex; width: 100%; max-width: 100%; margin-top: 0.75rem; justify-content: center; white-space: normal; text-align: center; }
+.missions-slot-card-locked { border-color: rgba(100, 116, 139, 0.5); background: linear-gradient(145deg, rgba(30, 41, 59, 0.58), rgba(15, 23, 42, 0.7)); }
+.missions-slot-card-empty { border-color: rgba(16, 185, 129, 0.34); background: linear-gradient(145deg, rgba(6, 78, 59, 0.16), rgba(15, 23, 42, 0.7)); }
+.missions-slot-card-empty .missions-slot-card-icon { border-color: rgba(52, 211, 153, 0.28); background: rgba(16, 185, 129, 0.12); color: #6ee7b7; }
 .missions-active-card { display: grid; grid-template-columns: 2.55rem minmax(0, 1fr) auto; align-items: center; gap: 0.65rem; min-width: 0; padding: 0.65rem 0.7rem; border: 1px solid rgba(59, 130, 246, 0.42); border-radius: 0.8rem; background: linear-gradient(100deg, rgba(30, 58, 138, 0.2), rgba(15, 23, 42, 0.74)); box-shadow: inset 0 1px 0 rgba(147, 197, 253, 0.04); transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease; }
 .missions-active-card:hover { border-color: rgba(96, 165, 250, 0.78); box-shadow: 0 8px 22px rgba(2, 6, 23, 0.28), 0 0 16px rgba(59, 130, 246, 0.12); transform: translateY(-1px); }
 .missions-active-card-ready { border-color: rgba(34, 197, 94, 0.62); background: linear-gradient(100deg, rgba(20, 83, 45, 0.26), rgba(15, 23, 42, 0.72)); }
@@ -1562,6 +1573,11 @@ body {
 
 @media (max-width: 23rem) {
   .missions-page-header { align-items: flex-start; }
+  .missions-slot-card { padding: 0.72rem; }
+  .missions-slot-card-header { gap: 0.55rem; }
+  .missions-slot-card-info { gap: 0.5rem; }
+  .missions-slot-card-icon { width: 2rem; height: 2rem; font-size: 1rem; }
+  .missions-slot-card-header .missions-active-badge { max-width: 7rem; overflow: hidden; text-overflow: ellipsis; }
   .missions-hero-emblem { width: 2.55rem; height: 2.55rem; font-size: 1.35rem; }
   .missions-active-card { grid-template-columns: 2.35rem minmax(0, 1fr); }
   .missions-active-action { grid-column: 2; justify-content: flex-start; min-width: 0; }
