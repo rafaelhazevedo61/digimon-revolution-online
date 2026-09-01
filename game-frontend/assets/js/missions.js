@@ -62,9 +62,9 @@ async function renderMissionsPage() {
         <div>
           <p class="progression-eyebrow progression-eyebrow-cyan">Central de operações</p>
           <h2 class="progression-page-title">Mapa de missões</h2>
-          <p class="progression-page-subtitle">Envie seu Digimon para explorar novas áreas e conquistar recompensas.</p>
+          <p class="progression-page-subtitle">Envie formações completas para explorar áreas e conquistar recompensas.</p>
         </div>
-        <div class="missions-hero-emblem" aria-hidden="true">✦</div>
+        <div class="flex items-center gap-2"><button type="button" class="btn-secondary text-xs" onclick="navigateTo('mission-teams')">Meus times</button><div class="missions-hero-emblem" aria-hidden="true">✦</div></div>
       </header>
       <div class="missions-page-layout">
         <div id="active-missions" class="missions-page-active-column"></div>
@@ -73,7 +73,7 @@ async function renderMissionsPage() {
             <div><p class="progression-eyebrow progression-eyebrow-cyan">Exploração</p><h3 class="progression-panel-title">Áreas disponíveis</h3></div>
             <span class="missions-map-key"><span class="missions-map-key-dot"></span> acessível</span>
           </div>
-          <p class="dashboard-section-note">Avance pelas áreas para desbloquear missões mais desafiadoras.</p>
+          <p class="dashboard-section-note">Avance pelas áreas para desbloquear missões mais desafiadoras e envie seus times completos.</p>
           <div id="areas-list">
             <div class="mission-area-skeleton"></div>
             <div class="mission-area-skeleton"></div>
@@ -99,26 +99,53 @@ async function loadActiveMissions() {
   const container = document.getElementById("active-missions");
   if (!container) return;
 
-  let active;
+  let slotResponse;
   try {
-    active = await apiGet("/missions/active");
+    slotResponse = await apiGet("/missions/slots");
   } catch (err) {
     return;
   }
 
-  if (!active || active.length === 0) {
-    container.innerHTML = "";
-    return;
-  }
+  const active = Array.isArray(slotResponse) ? slotResponse : (slotResponse?.activeMissions || []);
+  const totalSlots = Math.max(1, Number(slotResponse?.totalSlots) || 3);
+  const unlockedSlots = Math.max(1, Math.min(totalSlots, Number(slotResponse?.unlockedSlots) || 1));
+  const missionBySlot = new Map(active.map(mission => [Number(mission.slotNumber), mission]));
+  const slotCards = Array.from({ length: totalSlots }, (_, index) => {
+    const slotNumber = index + 1;
+    const mission = missionBySlot.get(slotNumber);
+    if (slotNumber > unlockedSlots) {
+      return `
+        <article class="missions-slot-card missions-slot-card-locked" data-mp-slot="${slotNumber}">
+          <div class="missions-slot-card-header">
+            <div class="missions-slot-card-info"><span class="missions-slot-card-icon" aria-hidden="true">🔒</span><div class="missions-slot-card-copy"><p class="missions-active-label">Slot ${slotNumber}</p><p class="missions-slot-card-title">Slot bloqueado</p></div></div>
+            <span class="missions-active-badge">Bloqueado</span>
+          </div>
+          <p class="missions-slot-card-description">Use um Expansor de Slot de Missão no inventário para liberar este espaço.</p>
+        </article>
+      `;
+    }
+    if (!mission) {
+      return `
+        <article class="missions-slot-card missions-slot-card-empty" data-mp-slot="${slotNumber}">
+          <div class="missions-slot-card-header">
+            <div class="missions-slot-card-info"><span class="missions-slot-card-icon" aria-hidden="true">✦</span><div class="missions-slot-card-copy"><p class="missions-active-label">Slot ${slotNumber}</p><p class="missions-slot-card-title">Slot livre</p></div></div>
+            <span class="missions-active-badge">Disponível</span>
+          </div>
+          <p class="missions-slot-card-description">Escolha uma missão e envie um time para ocupar este slot.</p>
+        </article>
+      `;
+    }
+    return renderActiveMissionCard(mission);
+  }).join("");
 
   container.innerHTML = `
     <section class="missions-active-section mb-4">
       <div class="dashboard-section-heading">
-        <div><p class="progression-eyebrow progression-eyebrow-blue">Atividade em campo</p><h3 class="progression-panel-title">Missões em andamento</h3></div>
-        <span class="dashboard-section-count dashboard-section-count-blue">${active.length}</span>
+        <div><p class="progression-eyebrow progression-eyebrow-blue">Atividade em campo</p><h3 class="progression-panel-title">Slots de missão</h3></div>
+        <span class="dashboard-section-count dashboard-section-count-blue">${active.length}/${unlockedSlots}</span>
       </div>
-      <p class="dashboard-section-note">Acompanhe os retornos e resgate cada recompensa assim que estiver disponível.</p>
-      <div class="missions-active-list">${active.map(renderActiveMissionCard).join("")}</div>
+      <p class="dashboard-section-note">Você possui ${unlockedSlots} de ${totalSlots} slots desbloqueados. Acompanhe os retornos e resgate cada recompensa assim que estiver disponível.</p>
+      <div class="missions-active-list grid grid-cols-1 gap-3">${slotCards}</div>
     </section>
   `;
 
@@ -154,26 +181,171 @@ function renderActiveMissionCard(m) {
   const endsAt = new Date(m.endsAt).getTime();
   const remaining = Math.max(0, Math.floor((endsAt - now) / 1000));
   const done = m.status === "COMPLETED" || remaining <= 0;
+  const autoRepeatControls = m.teamId
+    ? `<div class="missions-auto-mode-actions">
+        <button class="btn-sm ${m.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoRepeat('${m.missionInstanceId}', ${!m.autoRepeatEnabled})">${m.autoRepeatEnabled ? "Repetição ativa" : "Repetir após resgate"}</button>
+        <button type="button" class="btn-sm ${m.autoClaimEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoClaim('${m.missionInstanceId}', ${!m.autoClaimEnabled})">${m.autoClaimEnabled ? "Automático ativo" : "Automático completo"}</button>
+      </div>`
+    : "";
 
   return `
-    <article class="missions-active-card ${done ? "missions-active-card-ready" : ""}" data-mp-instance="${m.missionInstanceId}" data-mp-ends-at="${m.endsAt}">
+    <article class="missions-active-card ${done ? "missions-active-card-ready" : ""}" data-mp-instance="${m.missionInstanceId}" data-mp-ends-at="${m.endsAt}" data-mp-auto-claim="${m.autoClaimEnabled ? "true" : "false"}">
       <div class="missions-active-icon" aria-hidden="true">✦</div>
       <div class="missions-active-main">
-        <p class="missions-active-label">Objetivo em campo</p>
+        <p class="missions-active-label">Objetivo em campo${m.slotNumber ? ` · Slot ${m.slotNumber}` : ""}</p>
         <p class="missions-active-name">${escapeHtml(formatMissionName(m))}</p>
+        <p class="missions-active-team">${escapeHtml(m.teamName || (m.teamId ? "Time de missão" : "Missão legada"))}${m.teamId ? " · 3 Digimons" : ""}</p>
         <div class="missions-active-state"><span class="missions-active-dot ${done ? "missions-active-dot-ready" : ""}"></span><span class="mp-timer">${done ? "Concluída!" : `Retorno em ${formatTime(remaining)}`}</span></div>
       </div>
-      <div class="missions-active-action">${done ? `<button class="btn-sm btn-primary" onclick="claimMissionFromList('${m.missionInstanceId}')">Resgatar</button>` : `<span class="missions-active-badge">Em andamento</span>`}</div>
+      <div class="missions-active-action">
+        ${autoRepeatControls}
+        ${done ? `<button class="btn-sm btn-primary" onclick="claimMissionFromList('${m.missionInstanceId}')">Resgatar</button>` : `<span class="missions-active-badge">Em andamento</span>`}
+      </div>
     </article>
   `;
+}
+
+async function refreshMissionAutomationView() {
+  if (document.getElementById("active-missions")) await loadActiveMissions();
+  if (document.querySelector(".dashboard-missions-list") && typeof renderDashboardPage === "function") {
+    await renderDashboardPage();
+  }
+}
+
+async function toggleMissionAutoClaim(instanceId, enabled) {
+  try {
+    await apiPatch(`/missions/${instanceId}/auto-claim`, { enabled });
+    showToast(enabled ? "Modo automático completo ativado." : "Modo automático completo pausado.", "success");
+        await refreshMissionAutomationView();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+async function toggleMissionAutoRepeat(instanceId, enabled) {
+  try {
+    await apiPatch(`/missions/${instanceId}/auto-repeat`, { enabled });
+    showToast(enabled ? "Auto-missão ativada para este slot." : "Auto-missão pausada.", "success");
+        await refreshMissionAutomationView();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+async function startMissionAutoRepeat(result, autoClaim = false) {
+  if (!result || !result.autoRepeatEnabled || !result.missionId || !result.teamId) return false;
+  try {
+    const nextMission = await apiPost("/missions/start-auto", {
+      missionId: result.missionId,
+      teamId: result.teamId,
+      autoClaim
+    });
+    const repeatButton = document.getElementById("mission-repeat-button");
+    if (repeatButton) {
+      repeatButton.disabled = true;
+      repeatButton.textContent = "Auto-missão ativa";
+      repeatButton.classList.add("opacity-70", "cursor-not-allowed");
+    }
+    showToast("Auto-missão: o mesmo time foi reenviado.", "success");
+    return nextMission;
+  } catch (err) {
+    showToast(`Auto-missão pausada: ${err.message}`, "error");
+    return false;
+  }
+}
+
+const MISSION_AUTO_CLAIM_MAX_ATTEMPTS = 4;
+const MISSION_AUTO_CLAIM_RETRY_DELAY_MS = 1000;
+
+function isMissionNotCompletedError(err) {
+  return /missão ainda não foi concluída/i.test(String(err && err.message || ""));
+}
+
+function waitForMissionAutoClaimRetry(attempt) {
+  return new Promise(resolve => setTimeout(resolve, MISSION_AUTO_CLAIM_RETRY_DELAY_MS * attempt));
+}
+
+async function claimMissionWithRetry(instanceId) {
+  for (let attempt = 1; attempt <= MISSION_AUTO_CLAIM_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      return await apiPost(`/missions/${instanceId}/claim`);
+    } catch (err) {
+      const canRetry = isMissionNotCompletedError(err) && attempt < MISSION_AUTO_CLAIM_MAX_ATTEMPTS;
+      if (!canRetry) throw err;
+      await waitForMissionAutoClaimRetry(attempt);
+    }
+  }
+
+  throw new Error("Não foi possível resgatar a missão automaticamente.");
+}
+
+function isInventoryStackLimitError(err) {
+  return /stack limit exceeded|maximum stack|limite.*stack/i.test(String(err && err.message || ""));
+}
+
+async function pauseMissionAutomation(instanceId) {
+  await Promise.allSettled([
+    apiPatch(`/missions/${instanceId}/auto-claim`, { enabled: false }),
+    apiPatch(`/missions/${instanceId}/auto-repeat`, { enabled: false })
+  ]);
+}
+
+function getMissionStackLimitItemName(err) {
+  const message = String(err && err.message || "");
+  const match = message.match(/Item stack limit exceeded for item ['"](.+?)['"]\. Maximum stack/i);
+  return match ? match[1] : "o item recebido";
+}
+
+function showMissionStackLimitModal(itemName = "o item recebido") {
+  const existing = document.getElementById("mission-stack-limit-modal");
+  if (existing) existing.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "mission-stack-limit-modal";
+  overlay.className = "fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80";
+  overlay.setAttribute("role", "alertdialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-labelledby", "mission-stack-limit-title");
+  overlay.innerHTML = `
+    <div class="card w-full max-w-md border border-amber-700 bg-slate-900" onclick="event.stopPropagation()">
+      <div class="flex items-start gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-amber-700 bg-amber-950/50 text-xl text-amber-300" aria-hidden="true">!</div>
+        <div>
+          <p class="text-xs uppercase tracking-wider text-amber-400 font-bold">Atenção necessária</p>
+          <h3 id="mission-stack-limit-title" class="text-xl font-bold mt-1">Automação pausada</h3>
+        </div>
+      </div>
+      <p class="mt-4 text-sm leading-relaxed text-slate-200">O item <strong class="text-amber-300">${escapeHtml(itemName)}</strong> atingiu o limite de <strong class="text-amber-300">999 unidades</strong> no inventário. Por segurança, a repetição automática e o resgate automático foram desligados.</p>
+      <p class="mt-3 text-sm leading-relaxed text-slate-400">A missão continua concluída e pendente de resgate. Libere espaço no inventário e faça o resgate manualmente.</p>
+      <button id="mission-stack-limit-confirm" class="btn-primary mt-6 w-full">Entendi</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const confirmButton = overlay.querySelector("#mission-stack-limit-confirm");
+  confirmButton?.focus();
+  confirmButton?.addEventListener("click", () => overlay.remove());
+}
+
+async function claimMissionAutomatically(instanceId) {
+  // O retry cobre somente o claim. Se o claim funcionar e o reenvio falhar,
+  // não tentamos reivindicar a mesma missão novamente.
+  const result = await claimMissionWithRetry(instanceId);
+  const nextMission = await startMissionAutoRepeat(result, true);
+  return { result, nextMission };
 }
 
 async function claimMissionFromList(instanceId) {
   try {
     const result = await apiPost(`/missions/${instanceId}/claim`);
-    showMissionClaimModal(result);
+    const fullAutomatic = Boolean(result && result.autoClaimEnabled);
+    if (!fullAutomatic) showMissionClaimModal(result);
+    await startMissionAutoRepeat(result, fullAutomatic);
     await loadActiveMissions();
   } catch (err) {
+    if (isInventoryStackLimitError(err)) {
+      await pauseMissionAutomation(instanceId);
+      await loadActiveMissions();
+      showMissionStackLimitModal(getMissionStackLimitItemName(err));
+      return;
+    }
     showToast(err.message, "error");
   }
 }
@@ -459,18 +631,27 @@ async function missionOpenRewardChest(chestCode, quantity = 1, button) {
   }
 }
 
-async function repeatMissionFromReward(missionId) {
+async function repeatMissionFromReward(missionId, teamId = null) {
   const button = document.getElementById("mission-repeat-button");
   if (!missionId || !button) return;
-
   button.disabled = true;
-  button.textContent = "Iniciando...";
-
+  button.textContent = "Enviando...";
   try {
-    await apiPost("/missions/start", { missionId });
+    if (teamId) {
+      await apiPost("/missions/start", { missionId, teamId });
+      document.getElementById("mission-claim-modal")?.remove();
+      missionTeamContextPromise = null;
+      showToast("Time reenviado para a missão!");
+      navigateTo("missions");
+      return;
+    }
+
+    if (!window._missionDefinitions || !window._missionDefinitions[missionId]) {
+      const missions = await apiGet("/missions");
+      window._missionDefinitions = Object.fromEntries((missions || []).map(mission => [missionIdentity(mission), mission]));
+    }
     document.getElementById("mission-claim-modal")?.remove();
-    showToast("Missão repetida!");
-    await refreshCurrentPage();
+    openMissionTeamSelectionModal(missionId);
   } catch (err) {
     showToast(err.message, "error");
     button.disabled = false;
@@ -534,6 +715,62 @@ function missionRewardBreakdownMarkup(title, breakdown, unit, digimonLabel) {
   `;
 }
 
+function missionDigimonExperienceMarkup(result) {
+  const members = Array.isArray(result && result.digimonExperience) ? result.digimonExperience : [];
+  if (members.length === 0) return "";
+
+  const cards = members.map(member => {
+    const percent = Math.max(0, Math.min(100, Number(member.experiencePercent) || 0));
+    const percentLabel = `${percent.toFixed(1).replace(/\.0$/, "")}%`;
+    const levelsGained = Math.max(0, Number(member.levelsGained) || 0);
+    const levelUpMarkup = levelsGained > 0
+      ? `<span class="whitespace-nowrap rounded-full border border-emerald-600/70 bg-emerald-950/50 px-2 py-1 text-[0.62rem] font-bold uppercase tracking-wide text-emerald-300">+${levelsGained} ${levelsGained === 1 ? "Nível" : "Níveis"}</span>`
+      : "";
+    const isMaxLevel = Number(member.experienceToNextLevel) <= 0;
+    const xpLabel = isMaxLevel
+      ? "Nível máximo"
+      : `${Number(member.experience) || 0} / ${Number(member.experienceToNextLevel) || 0} XP`;
+    return `
+      <article class="rounded-xl border border-purple-800/70 bg-purple-950/20 p-3">
+        <div class="flex items-center gap-3">
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-purple-700/70 bg-slate-950/60">
+            ${renderDigimonVisual(member.imageUrl, member.stage, "h-12 w-12", "text-3xl")}
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center justify-between gap-2">
+              <p class="truncate font-bold text-slate-100">${escapeHtml(member.name || "Digimon")}</p>
+              <div class="flex items-center gap-2">
+                ${levelUpMarkup}
+                <span class="whitespace-nowrap text-xs font-bold text-purple-200">Nv. ${Number(member.level) || 0}</span>
+              </div>
+            </div>
+            <div class="mt-2 flex items-center justify-between gap-2 text-[0.68rem]">
+              <span class="text-slate-400">${xpLabel}</span>
+              <strong class="text-purple-200">${percentLabel}</strong>
+            </div>
+            <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-800" role="progressbar" aria-label="XP de ${escapeAttr(member.name || "Digimon")}" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100">
+              <div class="h-full rounded-full bg-gradient-to-r from-purple-500 to-cyan-400 transition-all" style="width:${percent}%"></div>
+            </div>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
+
+  return `
+    <section class="mb-5 rounded-xl border border-purple-800/70 bg-purple-950/10 p-3">
+      <div class="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-purple-300">Formação recompensada</p>
+          <h4 class="mt-1 text-sm font-bold text-slate-200">XP de cada Digimon</h4>
+        </div>
+        <span class="text-xs text-slate-500">Após o resgate</span>
+      </div>
+      <div class="space-y-2">${cards}</div>
+    </section>
+  `;
+}
+
 function showMissionClaimModal(result) {
   const existing = document.getElementById("mission-claim-modal");
   if (existing) existing.remove();
@@ -590,29 +827,25 @@ function showMissionClaimModal(result) {
         </div>
       </div>
 
+      ${missionDigimonExperienceMarkup(result)}
+
+      ${result && result.missionId ? `
+        <div class="flex flex-col sm:flex-row gap-2 mt-5 mb-5">
+          <button id="mission-repeat-button" class="btn-primary flex-1" onclick="repeatMissionFromReward('${escapeAttr(result.missionId)}', '${escapeAttr(result.teamId || "")}')">Repetir missão</button>
+          <button id="mission-claim-continue" class="btn-secondary flex-1">Continuar</button>
+        </div>
+      ` : `
+        <button id="mission-claim-continue" class="btn-primary w-full mt-5 mb-5">Continuar</button>
+      `}
+
       <div class="mb-4">
         <h4 class="text-sm font-bold text-slate-300 mb-2">Itens recebidos</h4>
         <div class="space-y-2">${rewardMarkup}</div>
       </div>
 
-      ${result && result.levelUp ? `
-        <div class="rounded-lg border border-emerald-700 bg-emerald-950/40 px-3 py-3 mb-5 text-center">
-          <p class="font-bold text-emerald-300">Level Up!</p>
-          <p class="text-xs text-emerald-200 mt-1">Seu Digimon subiu de nível.</p>
-        </div>
-      ` : ""}
-
       ${missionRewardBreakdownMarkup("Experiência", result && result.experienceBreakdown, "XP", "Multiplicadores do Digimon")}
       ${missionRewardBreakdownMarkup("Bits", result && result.bitsBreakdown, "bits", "Multiplicador do Digimon")}
 
-      ${result && result.missionId ? `
-        <div class="flex flex-col sm:flex-row gap-2 mt-5">
-          <button id="mission-repeat-button" class="btn-primary flex-1" onclick="repeatMissionFromReward('${escapeAttr(result.missionId)}')">Repetir missão</button>
-          <button id="mission-claim-continue" class="btn-secondary flex-1">Continuar</button>
-        </div>
-      ` : `
-        <button id="mission-claim-continue" class="btn-primary w-full mt-5">Continuar</button>
-      `}
     </div>
   `;
   overlay.addEventListener("click", event => {
@@ -645,6 +878,24 @@ function startMissionsPageTimers() {
       if (!timerEl) return;
 
       if (remaining <= 0) {
+        if (el.dataset.mpAutoClaim === "true" && el.dataset.mpAutoClaiming !== "true") {
+          el.dataset.mpAutoClaiming = "true";
+          timerEl.textContent = "Resgatando...";
+          claimMissionAutomatically(el.dataset.mpInstance)
+            .then(() => loadActiveMissions())
+            .catch(async err => {
+              el.dataset.mpAutoClaiming = "false";
+              if (isInventoryStackLimitError(err)) {
+                await pauseMissionAutomation(el.dataset.mpInstance);
+                await loadActiveMissions();
+                showMissionStackLimitModal(getMissionStackLimitItemName(err));
+                return;
+              }
+              showToast(`Resgate automático pausado: ${err.message}`, "error");
+            });
+          return;
+        }
+
         timerEl.textContent = "Concluída!";
         el.classList.add("missions-active-card-ready");
         const dot = el.querySelector(".missions-active-dot");
@@ -716,7 +967,7 @@ function renderAreaCards(areas) {
     renderMissionAreaGroup({
       id: "mission-areas-available",
       title: "Áreas disponíveis",
-      description: "Acessíveis para o Digimon ativo",
+      description: "Acessíveis pelas formações do jogador",
       areas: available,
       expanded: true
     }),
@@ -750,7 +1001,7 @@ async function renderMissionAreaPage(params) {
             <div>
               <p class="progression-eyebrow progression-eyebrow-cyan">Área de exploração</p>
               <h2 class="progression-page-title">${info.name}</h2>
-              <p class="progression-page-subtitle">Selecione uma missão para enviar seu Digimon.</p>
+              <p class="progression-page-subtitle">Selecione uma missão para escolher o time que será enviado.</p>
             </div>
           </div>
           <div class="mission-area-terminal-mark" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -788,6 +1039,7 @@ function getMissionArea(mission) {
 
 function renderMissionCards(missions, area) {
   const container = document.getElementById("mission-list");
+  window._missionDefinitions = Object.fromEntries(missions.map(mission => [missionIdentity(mission), mission]));
 
   const countElement = document.getElementById("mission-area-count");
   if (countElement) countElement.textContent = String(missions.length);
@@ -797,7 +1049,7 @@ function renderMissionCards(missions, area) {
       <div class="mission-area-empty-state">
         <div class="mission-area-empty-icon" aria-hidden="true">⌁</div>
         <p class="mission-area-empty-title">Nenhuma missão disponível</p>
-        <p class="mission-area-empty-note">Seu Digimon pode não atender aos requisitos desta área.</p>
+        <p class="mission-area-empty-note">Nenhuma missão foi configurada para esta área.</p>
       </div>
     `;
     return;
@@ -829,11 +1081,5 @@ function renderMissionCards(missions, area) {
 }
 
 async function startMission(missionId, area) {
-  try {
-    await apiPost("/missions/start", { missionId: missionId });
-    showToast("Missão iniciada!");
-    navigateTo("missions");
-  } catch (err) {
-    showToast(err.message, "error");
-  }
+  openMissionTeamSelectionModal(missionId);
 }

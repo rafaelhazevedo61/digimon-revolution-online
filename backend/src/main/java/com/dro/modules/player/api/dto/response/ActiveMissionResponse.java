@@ -3,6 +3,7 @@ package com.dro.modules.player.api.dto.response;
 import com.dro.modules.mission.domain.MissionStatus;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -15,5 +16,10 @@ public record ActiveMissionResponse(
         MissionStatus status,
         Instant startedAt,
         Instant endsAt,
-        long remainingSeconds
+        long remainingSeconds,
+        boolean autoRepeatEnabled,
+        boolean autoClaimEnabled,
+        UUID teamId,
+        String teamName,
+        List<UUID> digimonIds
 ) {}

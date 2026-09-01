@@ -100,6 +100,48 @@ class UseItemUseCaseTest {
     }
 
     @Test
+    void consumesMissionSlotUnlockItemAndIncrementsMissionCapacity() {
+        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
+        Player player = createPlayer(playerId, digimonId, 1);
+        player.setUnlockedMissionSlots(1);
+        InventoryItem item = InventoryItem.builder()
+                .id(UUID.randomUUID())
+                .playerId(playerId)
+                .itemType(ItemType.MISSION_SLOT_UNLOCK)
+                .quantity(1)
+                .build();
+
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(inventoryRepository.findByPlayerIdAndItemTypeForUpdate(playerId, ItemType.MISSION_SLOT_UNLOCK))
+                .thenReturn(Optional.of(item));
+
+        UseItemResponse response = useItemUseCase.execute(tokenFor(playerId), ItemType.MISSION_SLOT_UNLOCK);
+
+        assertThat(response.itemType()).isEqualTo(ItemType.MISSION_SLOT_UNLOCK);
+        assertThat(response.message()).isEqualTo("Slot de missão desbloqueado!");
+        assertThat(player.getUnlockedMissionSlots()).isEqualTo(2);
+        assertThat(item.getQuantity()).isZero();
+        verify(inventoryRepository).delete(item);
+        verify(playerRepository).save(player);
+        verifyNoInteractions(digimonRepository);
+    }
+
+    @Test
+    void rejectsMissionSlotUnlockWhenAllMissionSlotsAreAlreadyUnlocked() {
+        UUID playerId = UUID.randomUUID();
+        Player player = createPlayer(playerId, UUID.randomUUID(), 1);
+        player.setUnlockedMissionSlots(3);
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+
+        assertThatThrownBy(() -> useItemUseCase.execute(tokenFor(playerId), ItemType.MISSION_SLOT_UNLOCK))
+                .isInstanceOf(com.dro.shared.exception.BadRequestException.class)
+                .hasMessageContaining("slots de missão");
+
+        verifyNoInteractions(inventoryRepository, digimonRepository);
+    }
+
+    @Test
     void consumesXpDiskAndGrantsInstantExperienceBasedOnNextLevelRequirement() {
         UUID playerId = UUID.randomUUID();
         UUID digimonId = UUID.randomUUID();

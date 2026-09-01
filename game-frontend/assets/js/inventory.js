@@ -424,7 +424,7 @@ function invResolvedCategory(item) {
   if (type === "LOOT_CHEST") return "CHEST";
   if (type === "EVOLUTION_MATERIAL") return "EVOLUTION_MATERIAL";
   if (type.startsWith("FRAGMENT_")) return "FRAGMENT";
-  if (type === "POTION_SMALL" || type.startsWith("XP_DISC_") || type.startsWith("STORAGE_SLOT_") || type === "INCUBATION_SLOT_UNLOCK") return "CONSUMABLE";
+  if (type === "POTION_SMALL" || type.startsWith("XP_DISC_") || type.startsWith("STORAGE_SLOT_") || type === "INCUBATION_SLOT_UNLOCK" || type === "MISSION_SLOT_UNLOCK") return "CONSUMABLE";
   if (type === "TRAINING_STONE" || type === "DATA_CORE" || type === "REFINEMENT_STONE") return "MATERIAL";
   return "OTHER";
 }
@@ -707,6 +707,49 @@ async function invReloadItems() {
   if (document.getElementById("inv-content")) invRenderItems();
 }
 
+function invStackLimitDetails(err) {
+  const message = String(err && err.message || "");
+  const portugueseMatch = message.match(/limite máximo de (\d+) unidades para o item (.+?)\.\s*$/i);
+  if (portugueseMatch) return { itemName: portugueseMatch[2], maxStack: portugueseMatch[1] };
+  const englishMatch = message.match(/stack limit exceeded for item ['"](.+?)['"]\. Maximum stack: (\d+)/i);
+  if (englishMatch) return { itemName: englishMatch[1], maxStack: englishMatch[2] };
+  return { itemName: "o item recebido", maxStack: "999" };
+}
+
+function invIsStackLimitError(err) {
+  return /stack limit exceeded|limite máximo de|limite de stack/i.test(String(err && err.message || ""));
+}
+
+function invShowStackLimitModal(err) {
+  const existing = document.getElementById("inventory-stack-limit-modal");
+  if (existing) existing.remove();
+  const details = invStackLimitDetails(err);
+  const overlay = document.createElement("div");
+  overlay.id = "inventory-stack-limit-modal";
+  overlay.className = "fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80";
+  overlay.setAttribute("role", "alertdialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-labelledby", "inventory-stack-limit-title");
+  overlay.innerHTML = `
+    <div class="card w-full max-w-md border border-amber-700 bg-slate-900" onclick="event.stopPropagation()">
+      <div class="flex items-start gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-amber-700 bg-amber-950/50 text-xl text-amber-300" aria-hidden="true">!</div>
+        <div>
+          <p class="text-xs uppercase tracking-wider text-amber-400 font-bold">Limite do inventário</p>
+          <h3 id="inventory-stack-limit-title" class="text-xl font-bold mt-1">Não foi possível concluir</h3>
+        </div>
+      </div>
+      <p class="mt-4 text-sm leading-relaxed text-slate-200">O item <strong class="text-amber-300">${escapeHtml(details.itemName)}</strong> já atingiu o limite de <strong class="text-amber-300">${escapeHtml(details.maxStack)} unidades</strong> no inventário.</p>
+      <p class="mt-3 text-sm leading-relaxed text-slate-400">A operação foi cancelada e nenhum item foi consumido. Libere espaço ou use parte desse item antes de tentar novamente.</p>
+      <button id="inventory-stack-limit-confirm" class="btn-primary mt-6 w-full">Entendi</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const confirmButton = overlay.querySelector("#inventory-stack-limit-confirm");
+  confirmButton?.focus();
+  confirmButton?.addEventListener("click", () => overlay.remove());
+}
+
 async function invUseItem(itemType, quantity = null) {
   if (itemType === "RARITY_REROLL") {
     await invStartRarityReroll();
@@ -746,7 +789,11 @@ async function invUseItem(itemType, quantity = null) {
       showNewlyUnlockedContent(result.newlyUnlockedContent);
     }
   } catch (err) {
-    showToast(err.message, "error");
+    if (invIsStackLimitError(err)) {
+      invShowStackLimitModal(err);
+    } else {
+      showToast(err.message, "error");
+    }
   } finally {
     invItemUseInProgress = false;
   }
@@ -782,7 +829,11 @@ async function invOpenChest(chestCode, quantity = 1) {
     await invReloadItems();
     return result;
   } catch (err) {
-    showToast(err.message, "error");
+    if (invIsStackLimitError(err)) {
+      invShowStackLimitModal(err);
+    } else {
+      showToast(err.message, "error");
+    }
     return null;
   } finally {
     invChestOpeningInProgress = false;
@@ -865,6 +916,7 @@ function invItemName(itemType) {
     INCUBATOR_EPIC: "Incubadora Épica",
     INCUBATOR_LEGENDARY: "Incubadora Lendária",
     INCUBATION_SLOT_UNLOCK: "Expansor de Slot de Incubação",
+    MISSION_SLOT_UNLOCK: "Expansor de Slot de Missão",
     STORAGE_SLOT_1: "+1 Storage",
     STORAGE_SLOT_5: "+5 Storage",
     STORAGE_SLOT_10: "+10 Storage",
@@ -892,7 +944,7 @@ function invItemEmoji(itemType) {
     DIGITAMA_EARTH: "🌍", DIGITAMA_WIND: "🌪️", DIGITAMA_LIGHT: "✨", DIGITAMA_DARK: "🌑",
     DIGITAMA_THUNDER: "⚡", DIGITAMA_NEUTRAL: "⚪", DIGITAMA_ICE: "❄️", DIGITAMA_STEEL: "⚙️",
     INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "📦", INCUBATOR_EPIC: "📦", INCUBATOR_LEGENDARY: "🌟",
-    INCUBATION_SLOT_UNLOCK: "🔓",
+    INCUBATION_SLOT_UNLOCK: "🔓", MISSION_SLOT_UNLOCK: "🚀",
     STORAGE_SLOT_1: "🗄️", STORAGE_SLOT_5: "🗄️", STORAGE_SLOT_10: "🗄️",
     XP_DISC_1: "💿", XP_DISC_3: "💿", XP_DISC_5: "💿",
     XP_DISC_10: "💿", XP_DISC_15: "💿", XP_DISC_20: "💿",
@@ -905,14 +957,14 @@ function invItemEmoji(itemType) {
 }
 
 function invIsUsable(itemType) {
-  const usable = ["POTION_SMALL", "TRAINING_STONE", "DATA_CORE", "INCUBATION_SLOT_UNLOCK",
+  const usable = ["POTION_SMALL", "TRAINING_STONE", "DATA_CORE", "INCUBATION_SLOT_UNLOCK", "MISSION_SLOT_UNLOCK",
     "STORAGE_SLOT_1", "STORAGE_SLOT_5", "STORAGE_SLOT_10",
     "XP_DISC_1", "XP_DISC_3", "XP_DISC_5", "XP_DISC_10", "XP_DISC_15", "XP_DISC_20", "RARITY_REROLL"];
   return usable.includes(itemType);
 }
 
 function invItemCategory(itemType) {
-  if (itemType === "POTION_SMALL" || itemType === "INCUBATION_SLOT_UNLOCK"
+  if (itemType === "POTION_SMALL" || itemType === "INCUBATION_SLOT_UNLOCK" || itemType === "MISSION_SLOT_UNLOCK"
       || itemType.startsWith("STORAGE_SLOT_")) return "common";
   if (itemType.startsWith("XP_DISC_")) return "rare";
   if (itemType.startsWith("DIGITAMA_")) return "rare";
@@ -927,6 +979,7 @@ function invItemCategory(itemType) {
 function invItemCategoryName(itemType) {
   if (itemType === "POTION_SMALL") return "Poção";
   if (itemType === "INCUBATION_SLOT_UNLOCK") return "Incubação";
+  if (itemType === "MISSION_SLOT_UNLOCK") return "Missões";
   if (itemType.startsWith("STORAGE_SLOT_")) return "Storage";
   if (itemType.startsWith("XP_DISC_")) return "Experiência";
   if (itemType === "TRAINING_STONE" || itemType === "DATA_CORE") return "Material";

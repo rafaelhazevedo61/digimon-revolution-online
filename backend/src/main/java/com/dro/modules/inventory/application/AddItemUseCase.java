@@ -49,7 +49,7 @@ public class AddItemUseCase {
         int requestedQuantity = currentQuantity + quantity;
         Integer maxStack = itemDefinition.getMaxStack();
         if (maxStack != null && requestedQuantity > maxStack) {
-            throw new UnprocessableException("Item stack limit exceeded. Maximum stack: " + maxStack);
+            throw new UnprocessableException("Item stack limit exceeded for item '" + itemDefinition.getName() + "'. Maximum stack: " + maxStack);
         }
         int newQuantity = requestedQuantity;
         if (existing.isPresent()) {

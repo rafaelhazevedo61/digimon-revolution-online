@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -18,8 +19,26 @@ public class MissionInstance {
     @Column(name = "player_id", nullable = false)
     private UUID playerId;
 
+    @Column(name = "team_id")
+    private UUID teamId;
+
+    @Column(name = "slot_number", nullable = false)
+    private int slotNumber;
+
+    @Column(name = "auto_repeat_enabled", nullable = false)
+    private boolean autoRepeatEnabled;
+
+    @Column(name = "auto_claim_enabled", nullable = false)
+    private boolean autoClaimEnabled;
+
     @Column(name = "digimon_id", nullable = false)
     private UUID digimonId;
+
+    @Column(name = "digimon_2_id")
+    private UUID digimon2Id;
+
+    @Column(name = "digimon_3_id")
+    private UUID digimon3Id;
 
     @Column(name = "mission_id", nullable = false)
     private String missionId;
@@ -38,20 +57,32 @@ public class MissionInstance {
     private Instant claimedAt;
 
     protected MissionInstance () {
-        // JPA
+        this.slotNumber = 1;
     }
 
-    public MissionInstance (UUID playerId,
-                            UUID digimonId,
-                            String missionId,
-                            Duration duration) {
+    public MissionInstance(UUID playerId, UUID digimonId, String missionId, Duration duration) {
+        this(playerId, null, 1, List.of(digimonId), missionId, duration);
+    }
 
+    public MissionInstance(UUID playerId, UUID teamId, List<UUID> digimonIds, String missionId, Duration duration) {
+        this(playerId, teamId, 1, digimonIds, missionId, duration);
+    }
+
+    public MissionInstance(UUID playerId, UUID teamId, int slotNumber, List<UUID> digimonIds, String missionId, Duration duration) {
+        if (slotNumber < 1 || slotNumber > 3) {
+            throw new IllegalArgumentException("Mission slot must be between 1 and 3");
+        }
+        if (digimonIds == null || digimonIds.isEmpty() || digimonIds.size() > 3) {
+            throw new IllegalArgumentException("A mission instance must have between one and three Digimons");
+        }
         this.playerId = playerId;
-        this.digimonId = digimonId;
+        this.teamId = teamId;
+        this.slotNumber = slotNumber;
+        this.digimonId = digimonIds.get(0);
+        this.digimon2Id = digimonIds.size() > 1 ? digimonIds.get(1) : null;
+        this.digimon3Id = digimonIds.size() > 2 ? digimonIds.get(2) : null;
         this.missionId = missionId;
-
         this.status = MissionStatus.RUNNING;
-
         this.startedAt = Instant.now();
         this.endsAt = startedAt.plus(duration);
     }
@@ -65,7 +96,7 @@ public class MissionInstance {
      */
     public boolean updateStatusIfFinished() {
         if (status == MissionStatus.RUNNING &&
-                Instant.now().isAfter(endsAt)) {
+                !Instant.now().isBefore(endsAt)) {
             this.status = MissionStatus.COMPLETED;
             return true;
         }
@@ -128,11 +159,49 @@ public class MissionInstance {
         return playerId;
     }
 
+    public UUID getTeamId() {
+        return teamId;
+    }
+
+    public int getSlotNumber() {
+        return slotNumber;
+    }
+
+    public boolean isAutoRepeatEnabled() {
+        return autoRepeatEnabled;
+    }
+
+    public void setAutoRepeatEnabled(boolean autoRepeatEnabled) {
+        this.autoRepeatEnabled = autoRepeatEnabled;
+    }
+
+    public boolean isAutoClaimEnabled() {
+        return autoClaimEnabled;
+    }
+
+    public void setAutoClaimEnabled(boolean autoClaimEnabled) {
+        this.autoClaimEnabled = autoClaimEnabled;
+    }
+
     public UUID getDigimonId () {
         return digimonId;
     }
 
-    public String getMissionId () {
+    public UUID getDigimon2Id() {
+        return digimon2Id;
+    }
+
+    public UUID getDigimon3Id() {
+        return digimon3Id;
+    }
+
+    public List<UUID> getDigimonIds() {
+        if (digimon2Id == null) return List.of(digimonId);
+        if (digimon3Id == null) return List.of(digimonId, digimon2Id);
+        return List.of(digimonId, digimon2Id, digimon3Id);
+    }
+
+    public String getMissionId() {
         return missionId;
     }
 

@@ -3,10 +3,12 @@ package com.dro.modules.mission.application;
 import com.dro.modules.clan.application.ClanBonusService;
 import com.dro.modules.clan.application.ClanMissionProgressTracker;
 import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.domain.DigimonInfos;
 import com.dro.modules.digimon.domain.enums.DigimonGrade;
 import com.dro.modules.digimon.domain.enums.Personality;
 import com.dro.modules.digimon.domain.enums.Rarity;
 import com.dro.modules.digimon.domain.enums.Stage;
+import com.dro.modules.digimon.infra.DigimonInfosRepository;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.domain.ItemDefinition;
@@ -59,6 +61,9 @@ class ClaimMissionUseCaseTest {
     private DigimonRepository digimonRepository;
 
     @Mock
+    private DigimonInfosRepository digimonInfosRepository;
+
+    @Mock
     private PlayerMissionProgressRepository progressRepository;
 
     @Mock
@@ -95,12 +100,14 @@ class ClaimMissionUseCaseTest {
     void executeDeliversAreaChestInsteadOfLegacyRandomItemAndIgnoresLegacyFixedRewards() {
         UUID playerId = UUID.randomUUID();
         UUID digimonId = UUID.randomUUID();
+        UUID teamId = UUID.randomUUID();
         String missionId = "MISSION_1";
         String chestCode = "CHEST_MISSION_MISSION_1";
 
         MissionInstance instance = new MissionInstance(
                 playerId,
-                digimonId,
+                teamId,
+                List.of(digimonId),
                 missionId,
                 Duration.ZERO
         );
@@ -112,6 +119,12 @@ class ClaimMissionUseCaseTest {
                 .completionCount(0)
                 .build();
         Digimon digimon = digimon(digimonId, playerId);
+        digimon.setExperience(90);
+        Long digimonInfoId = 100L;
+        digimon.setDigimonInfoId(digimonInfoId);
+        when(digimonInfosRepository.findById(digimonInfoId)).thenReturn(Optional.of(
+                DigimonInfos.builder().id(digimonInfoId).imageUrl("https://example.test/agumon.png").build()
+        ));
         Player player = Player.builder()
                 .id(playerId)
                 .activeDigimonId(digimonId)
@@ -138,6 +151,17 @@ class ClaimMissionUseCaseTest {
             WeekendDoubleRewardRules.setManualOverride(null, Instant.now());
         }
 
+        assertThat(response.missionId()).isEqualTo(missionId);
+        assertThat(response.teamId()).isEqualTo(teamId);
+        assertThat(response.digimonExperience()).hasSize(1);
+        assertThat(response.digimonExperience().get(0).id()).isEqualTo(digimonId);
+        assertThat(response.digimonExperience().get(0).name()).isEqualTo("Agumon");
+        assertThat(response.digimonExperience().get(0).imageUrl()).isEqualTo("https://example.test/agumon.png");
+        assertThat(response.digimonExperience().get(0).level()).isEqualTo(2);
+        assertThat(response.digimonExperience().get(0).levelsGained()).isEqualTo(1);
+        assertThat(response.digimonExperience().get(0).experience()).isEqualTo(50);
+        assertThat(response.digimonExperience().get(0).experienceToNextLevel()).isEqualTo(200);
+        assertThat(response.digimonExperience().get(0).experiencePercent()).isEqualTo(25.0);
         assertThat(response.xpGained()).isEqualTo(60);
         assertThat(response.bitsGained()).isEqualTo(0);
         assertThat(response.experienceBreakdown().baseAmount()).isEqualTo(30);
