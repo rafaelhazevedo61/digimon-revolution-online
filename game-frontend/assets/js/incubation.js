@@ -96,8 +96,8 @@ function incubRenderSlots(response, inventory = []) {
           <h3 class="incubation-section-title">Configuração de todos os slots</h3>
         </div>
         <div class="flex flex-wrap gap-2">
-          <button type="button" class="btn-sm ${automationSource?.autoClaimEnabled ? "btn-primary" : "btn-secondary"}" ${automationSource ? `onclick="incubToggleAutomation('${escapeAttr(String(automationSource.id))}', 'autoClaim', ${!automationSource.autoClaimEnabled})"` : "disabled"}>${automationSource?.autoClaimEnabled ? "Auto-coleta ativa" : "Ativar auto-coleta"}</button>
-          <button type="button" class="btn-sm ${automationSource?.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" ${automationSource ? `onclick="incubToggleAutomation('${escapeAttr(String(automationSource.id))}', 'autoRepeat', ${!automationSource.autoRepeatEnabled})"` : "disabled"}>${automationSource?.autoRepeatEnabled ? "Repetição ativa" : "Ativar repetição"}</button>
+          <button type="button" class="btn-sm incubation-global-toggle ${automationSource?.autoClaimEnabled ? "btn-primary" : "btn-secondary"}" ${automationSource ? `onclick="incubToggleAutomation('${escapeAttr(String(automationSource.id))}', 'autoClaim', ${!automationSource.autoClaimEnabled})"` : "disabled"}>${automationSource?.autoClaimEnabled ? "Auto-coleta ativa" : "Ativar auto-coleta"}</button>
+          <button type="button" class="btn-sm incubation-global-toggle ${automationSource?.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" ${automationSource ? `onclick="incubToggleAutomation('${escapeAttr(String(automationSource.id))}', 'autoRepeat', ${!automationSource.autoRepeatEnabled})"` : "disabled"}>${automationSource?.autoRepeatEnabled ? "Repetição ativa" : "Ativar repetição"}</button>
         </div>
       </div>
       <p class="text-xs text-slate-500 mt-2">As alterações valem para todas as incubações ativas.</p>

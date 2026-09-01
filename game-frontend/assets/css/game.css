@@ -2040,6 +2040,20 @@ body {
   position: relative;
 }
 
+.incubation-global-toggle {
+  width: 10.5rem;
+  min-width: 10.5rem;
+  min-height: 2.35rem;
+  justify-content: center;
+  text-align: center;
+}
+
+@media (max-width: 40rem) {
+  .incubation-global-toggle {
+    flex: 1 1 10.5rem;
+  }
+}
+
 .incubation-section + .incubation-section {
   margin-top: 1.75rem;
 }
