@@ -9,6 +9,7 @@ import java.util.UUID;
 public record MissionResultResponse(
         String missionId,
         UUID teamId,
+        List<MissionDigimonExperienceResponse> digimonExperience,
         int xpGained,
         int bitsGained,
         boolean levelUp,

@@ -1,6 +1,8 @@
 package com.dro.modules.mission.application;
 
 import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.domain.DigimonInfos;
+import com.dro.modules.digimon.infra.DigimonInfosRepository;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.domain.ItemDefinition;
@@ -10,6 +12,7 @@ import com.dro.modules.loot.domain.LootRoller;
 import com.dro.modules.loot.domain.ChestDefinitionEntity;
 import com.dro.modules.loot.infra.ChestDefinitionRepository;
 import com.dro.modules.inventory.infra.ItemDefinitionRepository;
+import com.dro.modules.mission.api.dto.response.MissionDigimonExperienceResponse;
 import com.dro.modules.mission.api.dto.response.MissionResultResponse;
 import com.dro.modules.mission.api.dto.response.RewardResponse;
 import com.dro.modules.mission.domain.MissionDefinition;
@@ -61,6 +64,7 @@ public class ClaimMissionUseCase {
 
     private final MissionInstanceRepository missionInstanceRepository;
     private final DigimonRepository digimonRepository;
+    private final DigimonInfosRepository digimonInfosRepository;
     private final PlayerMissionProgressRepository progressRepository;
     private final AddItemUseCase addItemUseCase;
     private final MissionDefinitionRepository missionDefinitionRepository;
@@ -77,6 +81,7 @@ public class ClaimMissionUseCase {
     public ClaimMissionUseCase(
             MissionInstanceRepository missionInstanceRepository,
             DigimonRepository digimonRepository,
+            DigimonInfosRepository digimonInfosRepository,
             PlayerMissionProgressRepository progressRepository,
             AddItemUseCase addItemUseCase,
             MissionDefinitionRepository missionDefinitionRepository,
@@ -89,7 +94,7 @@ public class ClaimMissionUseCase {
             TransactionAuditPublisher transactionAuditPublisher,
             ActivityCalendarService activityCalendarService
     ) {
-        this(missionInstanceRepository, digimonRepository, progressRepository, addItemUseCase, missionDefinitionRepository,
+        this(missionInstanceRepository, digimonRepository, digimonInfosRepository, progressRepository, addItemUseCase, missionDefinitionRepository,
                 tutorialService, clanBonusService, clanMissionProgressTracker, playerRepository, chestDefinitionRepository,
                 itemDefinitionRepository, transactionAuditPublisher, activityCalendarService, null);
     }
@@ -98,6 +103,7 @@ public class ClaimMissionUseCase {
     public ClaimMissionUseCase(
             MissionInstanceRepository missionInstanceRepository,
             DigimonRepository digimonRepository,
+            DigimonInfosRepository digimonInfosRepository,
             PlayerMissionProgressRepository progressRepository,
             AddItemUseCase addItemUseCase,
             MissionDefinitionRepository missionDefinitionRepository,
@@ -113,6 +119,7 @@ public class ClaimMissionUseCase {
     ) {
         this.missionInstanceRepository = missionInstanceRepository;
         this.digimonRepository = digimonRepository;
+        this.digimonInfosRepository = digimonInfosRepository;
         this.progressRepository = progressRepository;
         this.addItemUseCase = addItemUseCase;
         this.missionDefinitionRepository = missionDefinitionRepository;
@@ -251,9 +258,14 @@ public class ClaimMissionUseCase {
                 buildAuditPayload(playerId, mission, xpGained, bitsGained)
         );
 
+        List<MissionDigimonExperienceResponse> digimonExperience = digimons.stream()
+                .map(member -> MissionDigimonExperienceResponse.from(member, missionDigimonImageUrl(member)))
+                .toList();
+
         return new MissionResultResponse(
                 mission.getId(),
                 instance.getTeamId(),
+                digimonExperience,
                 xpGained,
                 bitsGained,
                 levelUp,
@@ -421,6 +433,13 @@ public class ClaimMissionUseCase {
         }
         payload.put("summary", "Mission claimed successfully");
         return payload;
+    }
+
+    private String missionDigimonImageUrl(Digimon digimon) {
+        if (digimonInfosRepository == null || digimon.getDigimonInfoId() == null) return null;
+        return digimonInfosRepository.findById(digimon.getDigimonInfoId())
+                .map(DigimonInfos::getImageUrl)
+                .orElse(null);
     }
 
     private double effectiveMultiplier(int baseAmount, int finalAmount) {

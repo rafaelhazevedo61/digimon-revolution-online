@@ -544,6 +544,55 @@ function missionRewardBreakdownMarkup(title, breakdown, unit, digimonLabel) {
   `;
 }
 
+function missionDigimonExperienceMarkup(result) {
+  const members = Array.isArray(result && result.digimonExperience) ? result.digimonExperience : [];
+  if (members.length === 0) return "";
+
+  const cards = members.map(member => {
+    const percent = Math.max(0, Math.min(100, Number(member.experiencePercent) || 0));
+    const percentLabel = `${percent.toFixed(1).replace(/\.0$/, "")}%`;
+    const isMaxLevel = Number(member.experienceToNextLevel) <= 0;
+    const xpLabel = isMaxLevel
+      ? "Nível máximo"
+      : `${Number(member.experience) || 0} / ${Number(member.experienceToNextLevel) || 0} XP`;
+    return `
+      <article class="rounded-xl border border-purple-800/70 bg-purple-950/20 p-3">
+        <div class="flex items-center gap-3">
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-purple-700/70 bg-slate-950/60">
+            ${renderDigimonVisual(member.imageUrl, member.stage, "h-12 w-12", "text-3xl")}
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center justify-between gap-2">
+              <p class="truncate font-bold text-slate-100">${escapeHtml(member.name || "Digimon")}</p>
+              <span class="whitespace-nowrap text-xs font-bold text-purple-200">Nv. ${Number(member.level) || 0}</span>
+            </div>
+            <div class="mt-2 flex items-center justify-between gap-2 text-[0.68rem]">
+              <span class="text-slate-400">${xpLabel}</span>
+              <strong class="text-purple-200">${percentLabel}</strong>
+            </div>
+            <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-800" role="progressbar" aria-label="XP de ${escapeAttr(member.name || "Digimon")}" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100">
+              <div class="h-full rounded-full bg-gradient-to-r from-purple-500 to-cyan-400 transition-all" style="width:${percent}%"></div>
+            </div>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
+
+  return `
+    <section class="mb-5 rounded-xl border border-purple-800/70 bg-purple-950/10 p-3">
+      <div class="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-purple-300">Formação recompensada</p>
+          <h4 class="mt-1 text-sm font-bold text-slate-200">XP de cada Digimon</h4>
+        </div>
+        <span class="text-xs text-slate-500">Após o resgate</span>
+      </div>
+      <div class="space-y-2">${cards}</div>
+    </section>
+  `;
+}
+
 function showMissionClaimModal(result) {
   const existing = document.getElementById("mission-claim-modal");
   if (existing) existing.remove();
@@ -599,6 +648,8 @@ function showMissionClaimModal(result) {
           <p class="text-xl font-bold text-yellow-200 mt-1">+${Number(result && result.bitsGained) || 0}</p>
         </div>
       </div>
+
+      ${missionDigimonExperienceMarkup(result)}
 
       <div class="mb-4">
         <h4 class="text-sm font-bold text-slate-300 mb-2">Itens recebidos</h4>
