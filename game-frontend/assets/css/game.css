@@ -1574,6 +1574,45 @@ body {
 .mission-detail-bits { color: #facc15; }
 .mission-detail-actions { display: flex; gap: 0.55rem; margin-top: 0.8rem; }
 
+@media (max-width: 40rem) {
+  .missions-active-card {
+    grid-template-columns: 2.35rem minmax(0, 1fr);
+    align-items: start;
+    gap: 0.55rem;
+    padding: 0.62rem;
+  }
+  .missions-active-main { padding-top: 0.1rem; }
+  .missions-active-action {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-column: 2;
+    min-width: 0;
+    width: 100%;
+    justify-content: stretch;
+    align-items: stretch;
+    gap: 0.4rem;
+  }
+  .missions-auto-mode-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 0.35rem;
+  }
+  .missions-auto-mode-actions .btn-sm {
+    min-width: 0;
+    width: 100%;
+    padding-right: 0.35rem;
+    padding-left: 0.35rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .missions-active-action > .missions-active-badge,
+  .missions-active-action > .btn-sm {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
 @media (max-width: 23rem) {
   .missions-page-header { align-items: flex-start; }
   .missions-slot-card { padding: 0.72rem; }
