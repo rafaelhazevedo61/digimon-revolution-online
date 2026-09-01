@@ -574,7 +574,7 @@ function startMissionTimers() {
             .then(() => renderDashboardPage())
             .catch(err => {
               el.dataset.autoClaiming = "false";
-              showToast(`Automático completo pausado: ${err.message}`, "error");
+              showToast(`Resgate automático pausado: ${err.message}`, "error");
             });
           return;
         }

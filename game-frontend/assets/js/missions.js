@@ -247,8 +247,35 @@ async function startMissionAutoRepeat(result, autoClaim = false) {
   }
 }
 
+const MISSION_AUTO_CLAIM_MAX_ATTEMPTS = 4;
+const MISSION_AUTO_CLAIM_RETRY_DELAY_MS = 1000;
+
+function isMissionNotCompletedError(err) {
+  return /missão ainda não foi concluída/i.test(String(err && err.message || ""));
+}
+
+function waitForMissionAutoClaimRetry(attempt) {
+  return new Promise(resolve => setTimeout(resolve, MISSION_AUTO_CLAIM_RETRY_DELAY_MS * attempt));
+}
+
+async function claimMissionWithRetry(instanceId) {
+  for (let attempt = 1; attempt <= MISSION_AUTO_CLAIM_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      return await apiPost(`/missions/${instanceId}/claim`);
+    } catch (err) {
+      const canRetry = isMissionNotCompletedError(err) && attempt < MISSION_AUTO_CLAIM_MAX_ATTEMPTS;
+      if (!canRetry) throw err;
+      await waitForMissionAutoClaimRetry(attempt);
+    }
+  }
+
+  throw new Error("Não foi possível resgatar a missão automaticamente.");
+}
+
 async function claimMissionAutomatically(instanceId) {
-  const result = await apiPost(`/missions/${instanceId}/claim`);
+  // O retry cobre somente o claim. Se o claim funcionar e o reenvio falhar,
+  // não tentamos reivindicar a mesma missão novamente.
+  const result = await claimMissionWithRetry(instanceId);
   await startMissionAutoRepeat(result, true);
   return result;
 }
@@ -800,7 +827,7 @@ function startMissionsPageTimers() {
             .then(() => loadActiveMissions())
             .catch(err => {
               el.dataset.mpAutoClaiming = "false";
-              showToast(`Automático completo pausado: ${err.message}`, "error");
+              showToast(`Resgate automático pausado: ${err.message}`, "error");
             });
           return;
         }
