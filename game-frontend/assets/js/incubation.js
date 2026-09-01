@@ -67,6 +67,7 @@ function incubRenderSlots(response, inventory = []) {
   const availableSlots = renderSlots.filter(slot => slot.unlocked && !slot.incubation);
   const incubators = inventory.filter(item => incubIsItem(item, "INCUBATOR") && Number(item.quantity) > 0);
   const availableIncubators = availableSlots.length;
+  const automationSource = renderSlots.find(slot => slot.incubation)?.incubation || null;
   window._incubInventory = inventory;
 
   content.innerHTML = `
@@ -86,6 +87,20 @@ function incubRenderSlots(response, inventory = []) {
           ? incubators.map(item => incubRenderIncubatorCard(item, availableSlots.length > 0)).join("")
           : `<div class="card-sm col-span-full text-center text-sm text-slate-500">Você não possui incubadoras disponíveis.</div>`}
       </div>
+    </section>
+
+    <section class="incubation-automation-panel card mb-6">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <p class="incubation-eyebrow text-cyan-300">Automação global</p>
+          <h3 class="incubation-section-title">Configuração de todos os slots</h3>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" class="btn-sm ${automationSource?.autoClaimEnabled ? "btn-primary" : "btn-secondary"}" ${automationSource ? `onclick="incubToggleAutomation('${escapeAttr(String(automationSource.id))}', 'autoClaim', ${!automationSource.autoClaimEnabled})"` : "disabled"}>${automationSource?.autoClaimEnabled ? "Auto-coleta ativa" : "Ativar auto-coleta"}</button>
+          <button type="button" class="btn-sm ${automationSource?.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" ${automationSource ? `onclick="incubToggleAutomation('${escapeAttr(String(automationSource.id))}', 'autoRepeat', ${!automationSource.autoRepeatEnabled})"` : "disabled"}>${automationSource?.autoRepeatEnabled ? "Repetição ativa" : "Ativar repetição"}</button>
+        </div>
+      </div>
+      <p class="text-xs text-slate-500 mt-2">As alterações valem para todas as incubações ativas.</p>
     </section>
 
     <section class="incubation-section">
@@ -208,10 +223,6 @@ function incubRenderSlot(slot) {
       </div>
 
       <div id="incub-slot-action-${slotNumber}" class="mt-4">
-        <div class="flex flex-wrap gap-2 mb-3">
-          <button type="button" class="btn-sm ${incubation.autoClaimEnabled ? "btn-primary" : "btn-secondary"}" onclick="incubToggleAutomation('${escapeAttr(String(incubation.id))}', 'autoClaim', ${!incubation.autoClaimEnabled})">${incubation.autoClaimEnabled ? "Auto-coleta ativa" : "Ativar auto-coleta"}</button>
-          <button type="button" class="btn-sm ${incubation.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" onclick="incubToggleAutomation('${escapeAttr(String(incubation.id))}', 'autoRepeat', ${!incubation.autoRepeatEnabled})">${incubation.autoRepeatEnabled ? "Repetição ativa" : "Ativar repetição"}</button>
-        </div>
         ${done ? incubClaimButton(incubation.id) : `<p class="text-xs text-slate-500">Aguardando incubação...</p>`}
       </div>
     </article>
