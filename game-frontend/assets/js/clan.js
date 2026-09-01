@@ -94,8 +94,7 @@ function renderClanList() {
           </div>
           <form class="clan-search-row" onsubmit="event.preventDefault(); clanSearch()">
             <label class="sr-only" for="clan-search">Buscar clã</label>
-            <span class="clan-search-icon" aria-hidden="true">⌕</span>
-            <input type="search" id="clan-search" class="input" placeholder="Buscar por nome ou tag..." value="${escapeHtml(clanListQuery)}" autocomplete="off">
+            <span class="clan-search-input-wrap"><span class="clan-search-icon" aria-hidden="true">⌕</span><input type="search" id="clan-search" class="input" placeholder="Buscar por nome ou tag..." value="${escapeHtml(clanListQuery)}" autocomplete="off"></span>
             <button type="submit" class="btn-secondary">Buscar</button>
           </form>
         </section>
@@ -545,8 +544,7 @@ async function clanLoadStorage() {
         <div class="clan-tab-heading clan-storage-items-heading"><div><p class="clan-eyebrow">Inventário compartilhado</p><h3 class="clan-section-title clan-section-title-sm">Itens armazenados</h3></div><span class="clan-section-caption">${clanStorageItems.length} ${clanStorageItems.length === 1 ? "item armazenado" : "itens armazenados"}</span></div>
         <form id="clan-storage-items-search-form" class="clan-search-row clan-storage-search-row" onsubmit="clanStorageSearchItems(event)">
           <label class="sr-only" for="clan-storage-items-search">Buscar item armazenado</label>
-          <span class="clan-search-icon" aria-hidden="true">⌕</span>
-          <input id="clan-storage-items-search" class="input" type="search" placeholder="Buscar item armazenado..." aria-label="Buscar item armazenado" autocomplete="off">
+          <span class="clan-search-input-wrap"><span class="clan-search-icon" aria-hidden="true">⌕</span><input id="clan-storage-items-search" class="input" type="search" placeholder="Buscar item armazenado..." aria-label="Buscar item armazenado" autocomplete="off"></span>
           <button type="submit" class="btn-primary">Buscar</button>
         </form>
         <div id="clan-storage-items-list">${clanStorageRenderItemsHtml()}</div>
