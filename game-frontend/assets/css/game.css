@@ -4745,4 +4745,26 @@ body {
   .arena-history-row time { grid-column: 2 / span 2; }
   .arena-shop-balance { align-items: flex-start; flex-direction: column; gap: 0.5rem; }
   .arena-shop-grid { grid-template-columns: 1fr; }
+  .arena-opponent-card { padding: 0.62rem; }
+  .arena-opponent-footer { flex-wrap: nowrap; gap: 0.35rem; margin-top: 0.55rem; }
+  .arena-opponent-reward { flex: 1 1 auto; }
+  .arena-challenge-button { flex: 0 0 auto; min-width: 5.4rem; padding: 0.45rem 0.55rem; }
+}
+
+/* Compact opponent cards: key stats share one scan line to reduce vertical scrolling. */
+.arena-opponent-card { padding: 0.65rem; }
+.arena-opponent-identity { gap: 0.45rem; }
+.arena-opponent-avatar { width: 2rem; height: 2rem; }
+.arena-opponent-identity p { margin-top: 0.12rem; }
+.arena-opponent-compact-meta { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.55rem; overflow: hidden; color: #94a3b8; font-size: 0.52rem; white-space: nowrap; }
+.arena-opponent-compact-meta span { overflow: hidden; padding-right: 0.4rem; border-right: 1px solid rgba(71, 85, 105, 0.65); text-overflow: ellipsis; }
+.arena-opponent-compact-meta strong { margin-left: auto; color: #facc15; font-size: 0.6rem; }
+.arena-opponent-footer { min-height: 0; margin-top: 0.55rem; }
+.arena-opponent-reward strong { margin-top: 0; }
+.arena-challenge-button { min-width: 5.3rem; padding: 0.44rem 0.6rem; }
+
+@media (min-width: 46rem) {
+  .arena-opponent-card { padding: 0.7rem; }
+  .arena-opponent-compact-meta { margin-top: 0.5rem; }
+  .arena-opponent-footer { margin-top: 0.5rem; }
 }
