@@ -5,9 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import java.util.UUID;
 
 /**
- * Contrato de dados do módulo de Missões.
+ * Contrato exclusivo para o reenvio automático de uma missão com time.
  */
-public record StartMissionRequest(
+public record StartAutoMissionRequest(
         @NotBlank
         String missionId,
         UUID teamId

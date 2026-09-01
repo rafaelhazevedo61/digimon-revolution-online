@@ -5,6 +5,7 @@ import com.dro.modules.mission.api.dto.response.MissionLootPreviewResponse;
 import com.dro.modules.mission.api.dto.response.MissionResponse;
 import com.dro.modules.mission.api.dto.response.MissionResultResponse;
 import com.dro.modules.mission.api.dto.request.MissionAutoRepeatRequest;
+import com.dro.modules.mission.api.dto.request.StartAutoMissionRequest;
 import com.dro.modules.mission.api.dto.request.StartMissionRequest;
 import com.dro.modules.mission.api.dto.response.MissionStartResponse;
 import com.dro.modules.mission.api.dto.response.MissionAutoRepeatResponse;
@@ -37,7 +38,15 @@ public class MissionController {
 
     @PostMapping("/start")
     public ResponseEntity<MissionStartResponse> start(@RequestHeader("Authorization") String authorization, @RequestBody StartMissionRequest request) {
-        return ResponseEntity.ok(startMissionUseCase.execute(authorization, request.missionId(), request.teamId(), request.autoRepeat()));
+        return ResponseEntity.ok(startMissionUseCase.execute(authorization, request.missionId(), request.teamId()));
+    }
+
+    @PostMapping("/start-auto")
+    public ResponseEntity<MissionStartResponse> startAuto(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody StartAutoMissionRequest request
+    ) {
+        return ResponseEntity.ok(startMissionUseCase.execute(authorization, request.missionId(), request.teamId(), true));
     }
 
     @PatchMapping("/{missionInstanceId}/auto-repeat")

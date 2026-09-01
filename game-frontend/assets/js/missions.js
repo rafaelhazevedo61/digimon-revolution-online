@@ -215,10 +215,9 @@ async function toggleMissionAutoRepeat(instanceId, enabled) {
 async function startMissionAutoRepeat(result) {
   if (!result || !result.autoRepeatEnabled || !result.missionId || !result.teamId) return false;
   try {
-    await apiPost("/missions/start", {
+    await apiPost("/missions/start-auto", {
       missionId: result.missionId,
-      teamId: result.teamId,
-      autoRepeat: true
+      teamId: result.teamId
     });
     const repeatButton = document.getElementById("mission-repeat-button");
     if (repeatButton) {
