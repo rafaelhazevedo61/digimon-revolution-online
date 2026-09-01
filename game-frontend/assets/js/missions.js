@@ -247,6 +247,7 @@ async function startMissionAutoRepeat(result, autoClaim = false) {
     showToast("Auto-missão: o mesmo time foi reenviado.", "success");
     return nextMission;
   } catch (err) {
+    if (autoClaim && isMissionAlreadyClaimedError(err)) return false;
     showToast(`Auto-missão pausada: ${err.message}`, "error");
     return false;
   }
@@ -257,6 +258,10 @@ const MISSION_AUTO_CLAIM_RETRY_DELAY_MS = 1000;
 
 function isMissionNotCompletedError(err) {
   return /missão ainda não foi concluída/i.test(String(err && err.message || ""));
+}
+
+function isMissionAlreadyClaimedError(err) {
+  return /missão já foi resgatada|mission already claimed/i.test(String(err && err.message || ""));
 }
 
 function waitForMissionAutoClaimRetry(attempt) {
@@ -885,6 +890,10 @@ function startMissionsPageTimers() {
             .then(() => loadActiveMissions())
             .catch(async err => {
               el.dataset.mpAutoClaiming = "false";
+              if (isMissionAlreadyClaimedError(err)) {
+                await loadActiveMissions();
+                return;
+              }
               if (isInventoryStackLimitError(err)) {
                 await pauseMissionAutomation(el.dataset.mpInstance);
                 await loadActiveMissions();
