@@ -1542,6 +1542,22 @@ body {
 .missions-active-action .btn-sm { padding: 0.38rem 0.58rem; font-size: 0.62rem; }
 .missions-active-action .btn-sm { white-space: nowrap; }
 .missions-active-badge { padding: 0.3rem 0.45rem; border: 1px solid rgba(96, 165, 250, 0.2); border-radius: 9999px; background: rgba(37, 99, 235, 0.12); color: #93c5fd; font-size: 0.58rem; font-weight: 800; white-space: nowrap; }
+@media (min-width: 41rem) {
+  .missions-active-action {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-width: 18rem;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .missions-auto-mode-actions { display: contents; }
+  .missions-active-action > .btn-sm,
+  .missions-active-action > .missions-active-badge {
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+  }
+}
 .missions-map-key { display: inline-flex; align-items: center; gap: 0.32rem; color: #86efac; font-size: 0.58rem; font-weight: 800; text-transform: uppercase; }
 .missions-map-key-dot, .mission-area-access-dot { width: 0.4rem; height: 0.4rem; flex: 0 0 auto; border-radius: 9999px; background: #4ade80; box-shadow: 0 0 8px rgba(74, 222, 128, 0.55); }
 #areas-list { display: grid; grid-template-columns: 1fr; gap: 0.65rem; }
