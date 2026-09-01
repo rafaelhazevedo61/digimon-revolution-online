@@ -572,8 +572,14 @@ function startMissionTimers() {
           timerEl.textContent = "Resgatando...";
           claimMissionAutomatically(el.dataset.missionInstance)
             .then(() => renderDashboardPage())
-            .catch(err => {
+            .catch(async err => {
               el.dataset.autoClaiming = "false";
+              if (isInventoryStackLimitError(err)) {
+                await pauseMissionAutomation(el.dataset.missionInstance);
+                showToast(missionStackLimitMessage(), "error");
+                renderDashboardPage();
+                return;
+              }
               showToast(`Resgate automático pausado: ${err.message}`, "error");
             });
           return;

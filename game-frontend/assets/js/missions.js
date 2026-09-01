@@ -272,6 +272,21 @@ async function claimMissionWithRetry(instanceId) {
   throw new Error("Não foi possível resgatar a missão automaticamente.");
 }
 
+function isInventoryStackLimitError(err) {
+  return /stack limit exceeded|maximum stack|limite.*stack/i.test(String(err && err.message || ""));
+}
+
+async function pauseMissionAutomation(instanceId) {
+  await Promise.allSettled([
+    apiPatch(`/missions/${instanceId}/auto-claim`, { enabled: false }),
+    apiPatch(`/missions/${instanceId}/auto-repeat`, { enabled: false })
+  ]);
+}
+
+function missionStackLimitMessage() {
+  return "Automação pausada: o inventário atingiu o limite de 999 unidades. A missão permanece pendente para resgate manual.";
+}
+
 async function claimMissionAutomatically(instanceId) {
   // O retry cobre somente o claim. Se o claim funcionar e o reenvio falhar,
   // não tentamos reivindicar a mesma missão novamente.
@@ -825,8 +840,14 @@ function startMissionsPageTimers() {
           timerEl.textContent = "Resgatando...";
           claimMissionAutomatically(el.dataset.mpInstance)
             .then(() => loadActiveMissions())
-            .catch(err => {
+            .catch(async err => {
               el.dataset.mpAutoClaiming = "false";
+              if (isInventoryStackLimitError(err)) {
+                await pauseMissionAutomation(el.dataset.mpInstance);
+                showToast(missionStackLimitMessage(), "error");
+                await loadActiveMissions();
+                return;
+              }
               showToast(`Resgate automático pausado: ${err.message}`, "error");
             });
           return;
