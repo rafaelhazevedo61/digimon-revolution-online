@@ -325,7 +325,9 @@ public class GetPlayerDashboardUseCase {
                 incubation.getStatus(),
                 incubation.getStartedAt(),
                 incubation.getFinishAt(),
-                remaining
+                remaining,
+                incubation.isAutoRepeatEnabled(),
+                incubation.isAutoClaimEnabled()
         );
     }
 

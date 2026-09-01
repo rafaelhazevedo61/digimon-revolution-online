@@ -32,7 +32,11 @@ public class StartIncubationUseCase {
 
     @Transactional
     public void execute(String token, int slotNumber, ItemType digitamaType, ItemType incubatorType) {
-        UUID playerId = TokenExtractor.extractPlayerId(token);
+        executeForPlayer(TokenExtractor.extractPlayerId(token), slotNumber, digitamaType, incubatorType, false, false);
+    }
+
+    @Transactional
+    public void executeForPlayer(UUID playerId, int slotNumber, ItemType digitamaType, ItemType incubatorType, boolean autoRepeat, boolean autoClaim) {
         if (!IncubatorRules.isValidSlot(slotNumber)) {
             throw new BadRequestException("Invalid incubation slot");
         }
@@ -89,6 +93,8 @@ public class StartIncubationUseCase {
                 .startedAt(now)
                 .finishAt(finishAt)
                 .status(IncubationStatus.IN_PROGRESS)
+                .autoRepeatEnabled(autoRepeat)
+                .autoClaimEnabled(autoClaim)
                 .build();
         incubationRepository.save(incubation);
     }

@@ -78,7 +78,9 @@ public class GetIncubationUseCase {
                 incubation.getStatus(),
                 incubation.getStartedAt(),
                 incubation.getFinishAt(),
-                remaining
+                remaining,
+                incubation.isAutoRepeatEnabled(),
+                incubation.isAutoClaimEnabled()
         );
     }
 

@@ -44,7 +44,11 @@ public class ClaimIncubationUseCase {
 
     @Transactional
     public Digimon execute(String token, UUID incubationId) {
-        UUID playerId = TokenExtractor.extractPlayerId(token);
+        return executeForPlayer(TokenExtractor.extractPlayerId(token), incubationId);
+    }
+
+    @Transactional
+    public Digimon executeForPlayer(UUID playerId, UUID incubationId) {
         Player player = playerRepository.findByIdForUpdate(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));
         Incubation incubation = incubationRepository.findByIdAndPlayerIdForUpdate(incubationId, playerId)

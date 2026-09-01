@@ -17,6 +17,8 @@ public record IncubationResponse(
         IncubationStatus status,
         LocalDateTime startedAt,
         LocalDateTime finishAt,
-        long remainingSeconds
+        long remainingSeconds,
+        boolean autoRepeatEnabled,
+        boolean autoClaimEnabled
 ) {
 }
