@@ -1,5 +1,8 @@
 let dashEquippedItems = [];
 
+// Temporariamente, missões permanecem disponíveis apenas na tela dedicada.
+const DASHBOARD_MISSIONS_ENABLED = false;
+
 async function renderDashboardPage() {
   const app = document.getElementById("app");
   showBottomNav("dashboard");
@@ -103,7 +106,7 @@ function renderDashContent(data) {
         ` : ""}
 
         <!-- Active missions -->
-        ${data.activeMissions && data.activeMissions.length > 0 ? `
+        ${DASHBOARD_MISSIONS_ENABLED && data.activeMissions && data.activeMissions.length > 0 ? `
         <section class="dashboard-missions-section mb-4">
           <div class="dashboard-section-heading">
             <div><p class="dashboard-eyebrow dashboard-eyebrow-blue">Atividade em campo</p><h3 class="dashboard-section-title">Missões ativas</h3></div>
@@ -432,6 +435,7 @@ function renderActiveMission(m) {
 }
 
 async function refreshDashboardMissionSection() {
+  if (!DASHBOARD_MISSIONS_ENABLED) return;
   const section = document.querySelector(".dashboard-missions-section");
   if (!section) return renderDashboardPage();
 
@@ -591,6 +595,7 @@ function dashboardMarkIncubationReady(slotNumber) {
 let missionTimerInterval = null;
 
 function startMissionTimers() {
+  if (!DASHBOARD_MISSIONS_ENABLED) return;
   if (missionTimerInterval) clearInterval(missionTimerInterval);
   missionTimerInterval = setInterval(() => {
     document.querySelectorAll("[data-mission-instance]").forEach(el => {
