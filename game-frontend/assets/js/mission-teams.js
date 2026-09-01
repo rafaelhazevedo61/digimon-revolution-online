@@ -70,9 +70,9 @@ function renderMissionTeamCard(team, digimonById, activeMissionDigimonIds = new 
       <div class="mt-4 space-y-2">
         ${[0, 1, 2].map(index => renderMissionTeamMember(members[index], team.captainDigimonId)).join("")}
       </div>
-      <div class="mt-4 flex gap-2">
-        <button type="button" class="btn-secondary flex-1 text-xs" onclick="openMissionTeamEditor('${escapeAttr(team.id)}')">Editar</button>
-        <button type="button" class="btn-sm btn-secondary text-xs" onclick="deleteMissionTeam('${escapeAttr(team.id)}')">Excluir</button>
+      <div class="mt-4 grid grid-cols-2 gap-2">
+        <button type="button" class="btn-secondary w-full text-xs" onclick="openMissionTeamEditor('${escapeAttr(team.id)}')">Editar</button>
+        <button type="button" class="btn-secondary w-full text-xs" onclick="deleteMissionTeam('${escapeAttr(team.id)}')">Excluir</button>
       </div>
     </article>
   `;
