@@ -28,7 +28,7 @@ public class IncubationAutomationJob {
 
     @Scheduled(fixedDelay = INTERVAL_MS)
     public void processReadyIncubations() {
-        List<UUID> ids = repository.findIdsReadyForAutomation(IncubationStatus.IN_PROGRESS, LocalDateTime.now(), PageRequest.of(0, BATCH_SIZE));
+        List<UUID> ids = repository.findIdsReadyForAutomation(List.of(IncubationStatus.IN_PROGRESS, IncubationStatus.READY), LocalDateTime.now(), PageRequest.of(0, BATCH_SIZE));
         ids.forEach(id -> {
             try { process(id); }
             catch (RuntimeException error) { pause(id); }
@@ -38,7 +38,7 @@ public class IncubationAutomationJob {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void process(UUID id) {
         Incubation incubation = repository.findByIdForUpdate(id).orElse(null);
-        if (incubation == null || !incubation.isAutoClaimEnabled() || incubation.getStatus() != IncubationStatus.IN_PROGRESS || incubation.getFinishAt().isAfter(LocalDateTime.now())) return;
+        if (incubation == null || !incubation.isAutoClaimEnabled() || incubation.getStatus() != IncubationStatus.IN_PROGRESS && incubation.getStatus() != IncubationStatus.READY || incubation.getFinishAt().isAfter(LocalDateTime.now())) return;
         claimUseCase.executeForPlayer(incubation.getPlayerId(), id);
         if (incubation.isAutoRepeatEnabled()) {
             startUseCase.executeForPlayer(incubation.getPlayerId(), incubation.getSlotNumber(), incubation.getDigitamaType(), incubation.getIncubatorType(), true, true);

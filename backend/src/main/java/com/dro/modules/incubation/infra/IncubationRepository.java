@@ -23,8 +23,8 @@ public interface IncubationRepository extends JpaRepository<Incubation, UUID> {
 
     Optional<Incubation> findByPlayerIdAndSlotNumberAndStatusNot(UUID playerId, int slotNumber, IncubationStatus status);
 
-    @Query("SELECT i.id FROM Incubation i WHERE i.status = :status AND i.autoClaimEnabled = true AND i.finishAt <= :finishAt ORDER BY i.finishAt ASC")
-    List<UUID> findIdsReadyForAutomation(@Param("status") IncubationStatus status, @Param("finishAt") LocalDateTime finishAt, Pageable pageable);
+    @Query("SELECT i.id FROM Incubation i WHERE i.status IN :statuses AND i.autoClaimEnabled = true AND i.finishAt <= :finishAt ORDER BY i.finishAt ASC")
+    List<UUID> findIdsReadyForAutomation(@Param("statuses") List<IncubationStatus> statuses, @Param("finishAt") LocalDateTime finishAt, Pageable pageable);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT i FROM Incubation i WHERE i.id = :id")
