@@ -121,7 +121,6 @@ async function loadActiveMissions() {
             <span class="missions-active-badge">Bloqueado</span>
           </div>
           <p class="missions-slot-card-description">Use um Expansor de Slot de Missão no inventário para liberar este espaço.</p>
-          <button class="btn-sm btn-secondary missions-slot-card-action" onclick="navigateTo('inventory')">Ver inventário</button>
         </article>
       `;
     }
