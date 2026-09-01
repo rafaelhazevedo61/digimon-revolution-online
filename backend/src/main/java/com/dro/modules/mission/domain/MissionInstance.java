@@ -31,6 +31,15 @@ public class MissionInstance {
     @Column(name = "auto_claim_enabled", nullable = false)
     private boolean autoClaimEnabled;
 
+    @Column(name = "automation_pause_reason")
+    private String automationPauseReason;
+
+    @Column(name = "automation_paused_at")
+    private Instant automationPausedAt;
+
+    @Column(name = "automation_last_error_code")
+    private String automationLastErrorCode;
+
     @Column(name = "digimon_id", nullable = false)
     private UUID digimonId;
 
@@ -181,6 +190,26 @@ public class MissionInstance {
 
     public void setAutoClaimEnabled(boolean autoClaimEnabled) {
         this.autoClaimEnabled = autoClaimEnabled;
+    }
+
+    public String getAutomationPauseReason() { return automationPauseReason; }
+
+    public Instant getAutomationPausedAt() { return automationPausedAt; }
+
+    public String getAutomationLastErrorCode() { return automationLastErrorCode; }
+
+    public void pauseAutomation(String reason, String errorCode) {
+        this.autoClaimEnabled = false;
+        this.autoRepeatEnabled = false;
+        this.automationPauseReason = reason;
+        this.automationLastErrorCode = errorCode;
+        this.automationPausedAt = Instant.now();
+    }
+
+    public void clearAutomationPause() {
+        this.automationPauseReason = null;
+        this.automationLastErrorCode = null;
+        this.automationPausedAt = null;
     }
 
     public UUID getDigimonId () {

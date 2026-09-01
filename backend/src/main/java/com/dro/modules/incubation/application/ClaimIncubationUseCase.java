@@ -20,8 +20,11 @@ import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.tutorial.domain.TutorialStep;
 import com.dro.modules.tutorial.application.TutorialService;
+import com.dro.shared.automation.AutomationFailureCode;
+import com.dro.shared.automation.AutomationFailureException;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
+import org.springframework.http.HttpStatus;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +47,11 @@ public class ClaimIncubationUseCase {
 
     @Transactional
     public Digimon execute(String token, UUID incubationId) {
-        UUID playerId = TokenExtractor.extractPlayerId(token);
+        return executeForPlayer(TokenExtractor.extractPlayerId(token), incubationId);
+    }
+
+    @Transactional
+    public Digimon executeForPlayer(UUID playerId, UUID incubationId) {
         Player player = playerRepository.findByIdForUpdate(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));
         Incubation incubation = incubationRepository.findByIdAndPlayerIdForUpdate(incubationId, playerId)
@@ -61,6 +68,7 @@ public class ClaimIncubationUseCase {
             validateIncubationFinished(incubation);
         }
 
+        ensureStorageHasSpace(player);
         Digimon digimon = createDigimonFromIncubation(playerId, incubation);
         digimonRepository.save(digimon);
         finalizeIncubation(incubation);
@@ -82,6 +90,17 @@ public class ClaimIncubationUseCase {
             throw new BadRequestException("Incubation not finished yet");
         }
         incubation.markReadyIfFinished();
+    }
+
+    private void ensureStorageHasSpace(Player player) {
+        long storedCount = digimonRepository.countByPlayerIdAndStatus(player.getId(), DigimonStatus.STORED);
+        if (storedCount >= player.getMaxStorageSlots()) {
+            throw new AutomationFailureException(
+                    "Storage cheio (" + storedCount + "/" + player.getMaxStorageSlots() + "). Libere um espaço no armazém antes de chocar a Digitama.",
+                    HttpStatus.BAD_REQUEST,
+                    AutomationFailureCode.DIGIMON_STORAGE_FULL
+            );
+        }
     }
 
     private Digimon createDigimonFromIncubation(UUID playerId, Incubation incubation) {

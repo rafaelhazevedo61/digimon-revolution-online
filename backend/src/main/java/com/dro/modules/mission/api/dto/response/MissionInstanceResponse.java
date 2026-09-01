@@ -19,6 +19,9 @@ public record MissionInstanceResponse(
         int slotNumber,
         boolean autoRepeatEnabled,
         boolean autoClaimEnabled,
+        String automationPauseReason,
+        Instant automationPausedAt,
+        String automationLastErrorCode,
         UUID teamId,
         String teamName,
         List<UUID> digimonIds
