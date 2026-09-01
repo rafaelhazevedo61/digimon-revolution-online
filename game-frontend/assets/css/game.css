@@ -899,6 +899,11 @@ body {
 .clan-upgrade-action { margin-top: 0.8rem; padding: 0.5rem 0.75rem; font-size: 0.7rem; }
 .clan-upgrade-readonly { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.8rem; padding-top: 0.55rem; border-top: 1px solid rgba(71, 85, 105, 0.55); color: #64748b; font-size: 0.57rem; line-height: 1.35; }
 .clan-upgrade-readonly span:first-child { display: grid; width: 1.35rem; height: 1.35rem; flex: 0 0 auto; place-items: center; border: 1px solid rgba(100, 116, 139, 0.4); border-radius: 0.45rem; color: #94a3b8; font-size: 0.6rem; }
+.clan-upgrades-public-list { display: grid; gap: 0.45rem; margin-top: 0.75rem; }
+.clan-upgrade-public-row { display: grid; grid-template-columns: 1.8rem minmax(0, 1fr) auto; align-items: center; gap: 0.65rem; min-width: 0; padding: 0.72rem 0.8rem; border: 1px solid rgba(51, 65, 85, 0.7); border-radius: 0.7rem; background: rgba(15, 23, 42, 0.48); }
+.clan-upgrade-public-icon { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border: 1px solid rgba(34, 211, 238, 0.22); border-radius: 0.55rem; background: rgba(8, 145, 178, 0.1); color: #67e8f9; font-size: 0.75rem; font-weight: 900; }
+.clan-upgrade-public-name { min-width: 0; overflow: hidden; color: #e2e8f0; font-size: 0.72rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.clan-upgrade-public-level { color: #67e8f9; font-size: 0.65rem; white-space: nowrap; }
 .clan-storage-heading { margin-bottom: 0.8rem; }
 .clan-storage-capacity-label { color: #94a3b8; font-size: 0.68rem; font-weight: 750; }
 .clan-storage-overview-grid { display: grid; gap: 0.65rem; }

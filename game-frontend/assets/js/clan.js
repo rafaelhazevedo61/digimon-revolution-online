@@ -446,6 +446,14 @@ async function clanLoadUpgrades() {
     let html = `<div class="clan-tab-heading"><div><p class="clan-eyebrow">Progressão coletiva</p><h2 class="clan-section-title">Melhorias</h2></div><span class="clan-section-caption">${upgradeCaption}</span></div>`;
     if (upgrades.length === 0) {
       html += `<p class="text-slate-400 text-sm">Nenhuma melhoria disponível.</p>`;
+    } else if (isPublicReadOnly) {
+      html += `<div class="clan-upgrades-public-list">${upgrades.map(u => `
+        <article class="clan-upgrade-public-row">
+          <span class="clan-upgrade-public-icon" aria-hidden="true">${u.maxed ? "✓" : "◇"}</span>
+          <p class="clan-upgrade-public-name">${escapeHtml(u.name)}</p>
+          <strong class="clan-upgrade-public-level">Nível ${Number(u.currentLevel || 0)}</strong>
+        </article>
+      `).join("")}</div>`;
     } else {
       html += `<div class="clan-upgrades-grid">${upgrades.map(u => {
         const locked = !u.unlocked;
