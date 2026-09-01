@@ -408,7 +408,7 @@ function renderActiveMission(m) {
   const done = remaining <= 0;
 
   return `
-    <article class="dashboard-mission-card ${done ? "dashboard-mission-card-ready" : ""}" data-mission-instance="${m.instanceId}" data-ends-at="${m.endsAt}">
+    <article class="dashboard-mission-card ${done ? "dashboard-mission-card-ready" : ""}" data-mission-instance="${m.instanceId}" data-ends-at="${m.endsAt}" data-auto-claim="${m.autoClaimEnabled ? "true" : "false"}">
       <div class="dashboard-mission-icon" aria-hidden="true">✦</div>
       <div class="dashboard-mission-main">
         <p class="dashboard-mission-label">Objetivo em campo</p>
@@ -496,8 +496,9 @@ function dashboardIncubationEmoji(type) {
 async function claimMission(instanceId) {
   try {
     const result = await apiPost(`/missions/${instanceId}/claim`);
-    showMissionClaimModal(result);
-    if (typeof startMissionAutoRepeat === "function") await startMissionAutoRepeat(result);
+    const fullAutomatic = Boolean(result && result.autoClaimEnabled);
+    if (!fullAutomatic) showMissionClaimModal(result);
+    if (typeof startMissionAutoRepeat === "function") await startMissionAutoRepeat(result, fullAutomatic);
     renderDashboardPage();
   } catch (err) {
     showToast(err.message, "error");
@@ -566,6 +567,18 @@ function startMissionTimers() {
       if (!timerEl) return;
 
       if (remaining <= 0) {
+        if (el.dataset.autoClaim === "true" && el.dataset.autoClaiming !== "true" && typeof claimMissionAutomatically === "function") {
+          el.dataset.autoClaiming = "true";
+          timerEl.textContent = "Resgatando...";
+          claimMissionAutomatically(el.dataset.missionInstance)
+            .then(() => renderDashboardPage())
+            .catch(err => {
+              el.dataset.autoClaiming = "false";
+              showToast(`Automático completo pausado: ${err.message}`, "error");
+            });
+          return;
+        }
+
         timerEl.textContent = "Concluída!";
         el.classList.add("dashboard-mission-card-ready");
         const dot = el.querySelector(".dashboard-mission-dot");

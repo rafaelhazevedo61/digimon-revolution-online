@@ -14,6 +14,7 @@ public record MissionResultResponse(
         int bitsGained,
         boolean levelUp,
         boolean autoRepeatEnabled,
+        boolean autoClaimEnabled,
         List<RewardResponse> rewards,
         NewlyUnlockedContentResponse newlyUnlockedContent,
         MissionRewardBreakdownResponse experienceBreakdown,

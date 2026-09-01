@@ -50,6 +50,11 @@ public class StartMissionUseCase {
 
     @Transactional
     public MissionStartResponse execute(String token, String missionId, UUID teamId, boolean autoRepeat) {
+        return execute(token, missionId, teamId, autoRepeat, false);
+    }
+
+    @Transactional
+    public MissionStartResponse execute(String token, String missionId, UUID teamId, boolean autoRepeat, boolean autoClaim) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         List<Digimon> digimons = teamId == null
@@ -111,6 +116,7 @@ public class StartMissionUseCase {
         Duration missionDuration = isAdmin ? Duration.ZERO : Duration.ofSeconds(mission.getDurationSeconds());
         MissionInstance instance = new MissionInstance(playerId, teamId, slotNumber, digimonIds, missionId, missionDuration);
         instance.setAutoRepeatEnabled(autoRepeat && teamId != null);
+        instance.setAutoClaimEnabled(autoClaim && teamId != null);
         missionInstanceRepository.save(instance);
         return new MissionStartResponse(instance.getId(), instance.getEndsAt());
     }

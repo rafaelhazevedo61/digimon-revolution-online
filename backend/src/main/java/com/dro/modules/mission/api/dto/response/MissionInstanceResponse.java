@@ -18,6 +18,7 @@ public record MissionInstanceResponse(
         Instant endsAt,
         int slotNumber,
         boolean autoRepeatEnabled,
+        boolean autoClaimEnabled,
         UUID teamId,
         String teamName,
         List<UUID> digimonIds

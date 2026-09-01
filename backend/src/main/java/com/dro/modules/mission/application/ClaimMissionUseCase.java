@@ -276,6 +276,7 @@ public class ClaimMissionUseCase {
                 bitsGained,
                 levelUp,
                 instance.isAutoRepeatEnabled(),
+                instance.isAutoClaimEnabled(),
                 rewards,
                 newlyUnlockedContent,
                 new MissionRewardBreakdownResponse(

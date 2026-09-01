@@ -28,6 +28,9 @@ public class MissionInstance {
     @Column(name = "auto_repeat_enabled", nullable = false)
     private boolean autoRepeatEnabled;
 
+    @Column(name = "auto_claim_enabled", nullable = false)
+    private boolean autoClaimEnabled;
+
     @Column(name = "digimon_id", nullable = false)
     private UUID digimonId;
 
@@ -170,6 +173,14 @@ public class MissionInstance {
 
     public void setAutoRepeatEnabled(boolean autoRepeatEnabled) {
         this.autoRepeatEnabled = autoRepeatEnabled;
+    }
+
+    public boolean isAutoClaimEnabled() {
+        return autoClaimEnabled;
+    }
+
+    public void setAutoClaimEnabled(boolean autoClaimEnabled) {
+        this.autoClaimEnabled = autoClaimEnabled;
     }
 
     public UUID getDigimonId () {

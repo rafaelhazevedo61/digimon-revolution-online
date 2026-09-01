@@ -184,12 +184,12 @@ function renderActiveMissionCard(m) {
   const autoRepeatControls = m.teamId
     ? `<div class="missions-auto-mode-actions">
         <button class="btn-sm ${m.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoRepeat('${m.missionInstanceId}', ${!m.autoRepeatEnabled})">${m.autoRepeatEnabled ? "Repetição ativa" : "Repetir após resgate"}</button>
-        <button type="button" class="btn-sm missions-vip-mode-button" disabled title="O modo totalmente automático será disponibilizado futuramente como benefício VIP">Automático completo · VIP</button>
+        <button type="button" class="btn-sm ${m.autoClaimEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoClaim('${m.missionInstanceId}', ${!m.autoClaimEnabled})">${m.autoClaimEnabled ? "Automático ativo" : "Automático completo"}</button>
       </div>`
     : "";
 
   return `
-    <article class="missions-active-card ${done ? "missions-active-card-ready" : ""}" data-mp-instance="${m.missionInstanceId}" data-mp-ends-at="${m.endsAt}">
+    <article class="missions-active-card ${done ? "missions-active-card-ready" : ""}" data-mp-instance="${m.missionInstanceId}" data-mp-ends-at="${m.endsAt}" data-mp-auto-claim="${m.autoClaimEnabled ? "true" : "false"}">
       <div class="missions-active-icon" aria-hidden="true">✦</div>
       <div class="missions-active-main">
         <p class="missions-active-label">Objetivo em campo${m.slotNumber ? ` · Slot ${m.slotNumber}` : ""}</p>
@@ -205,6 +205,16 @@ function renderActiveMissionCard(m) {
   `;
 }
 
+async function toggleMissionAutoClaim(instanceId, enabled) {
+  try {
+    await apiPatch(`/missions/${instanceId}/auto-claim`, { enabled });
+    showToast(enabled ? "Modo automático completo ativado." : "Modo automático completo pausado.", "success");
+    await loadActiveMissions();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
 async function toggleMissionAutoRepeat(instanceId, enabled) {
   try {
     await apiPatch(`/missions/${instanceId}/auto-repeat`, { enabled });
@@ -215,12 +225,13 @@ async function toggleMissionAutoRepeat(instanceId, enabled) {
   }
 }
 
-async function startMissionAutoRepeat(result) {
+async function startMissionAutoRepeat(result, autoClaim = false) {
   if (!result || !result.autoRepeatEnabled || !result.missionId || !result.teamId) return false;
   try {
     await apiPost("/missions/start-auto", {
       missionId: result.missionId,
-      teamId: result.teamId
+      teamId: result.teamId,
+      autoClaim
     });
     const repeatButton = document.getElementById("mission-repeat-button");
     if (repeatButton) {
@@ -236,11 +247,18 @@ async function startMissionAutoRepeat(result) {
   }
 }
 
+async function claimMissionAutomatically(instanceId) {
+  const result = await apiPost(`/missions/${instanceId}/claim`);
+  await startMissionAutoRepeat(result, true);
+  return result;
+}
+
 async function claimMissionFromList(instanceId) {
   try {
     const result = await apiPost(`/missions/${instanceId}/claim`);
-    showMissionClaimModal(result);
-    await startMissionAutoRepeat(result);
+    const fullAutomatic = Boolean(result && result.autoClaimEnabled);
+    if (!fullAutomatic) showMissionClaimModal(result);
+    await startMissionAutoRepeat(result, fullAutomatic);
     await loadActiveMissions();
   } catch (err) {
     showToast(err.message, "error");
@@ -775,6 +793,18 @@ function startMissionsPageTimers() {
       if (!timerEl) return;
 
       if (remaining <= 0) {
+        if (el.dataset.mpAutoClaim === "true" && el.dataset.mpAutoClaiming !== "true") {
+          el.dataset.mpAutoClaiming = "true";
+          timerEl.textContent = "Resgatando...";
+          claimMissionAutomatically(el.dataset.mpInstance)
+            .then(() => loadActiveMissions())
+            .catch(err => {
+              el.dataset.mpAutoClaiming = "false";
+              showToast(`Automático completo pausado: ${err.message}`, "error");
+            });
+          return;
+        }
+
         timerEl.textContent = "Concluída!";
         el.classList.add("missions-active-card-ready");
         const dot = el.querySelector(".missions-active-dot");

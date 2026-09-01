@@ -10,6 +10,7 @@ import java.util.UUID;
 public record StartAutoMissionRequest(
         @NotBlank
         String missionId,
-        UUID teamId
+        UUID teamId,
+        boolean autoClaim
 ) {
 }
