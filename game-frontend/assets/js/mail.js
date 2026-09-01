@@ -256,7 +256,11 @@ function mailAuctionBodyMarkup(message) {
 }
 
 function mailSystemBodyMarkup(message) {
-  const isMission = message.sourceType === "MISSION_AUTOMATION";
+  const subject = String(message.subject || "").toLowerCase();
+  const actionType = String(message.actionType || "").toUpperCase();
+  const isMission = actionType === "MISSION_AUTOMATION_RESUME" || subject.includes("missão");
+  const isIncubation = actionType === "INCUBATION_AUTOMATION_RESUME" || subject.includes("incubação");
+  if (!isMission && !isIncubation) return escapeHtml(message.body || "").replace(/\n/g, "<br>");
   const title = isMission ? "Automação de missão interrompida" : "Automação de incubação interrompida";
   const reason = isMission
     ? "Um item recebido atingiu o limite máximo permitido no inventário."
