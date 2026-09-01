@@ -25,7 +25,6 @@ function renderMailPage() {
           <section class="mail-side-card">
             <div class="mail-side-heading"><p class="mail-section-eyebrow">Atalhos</p><span class="mail-side-mark" aria-hidden="true">⌁</span></div>
             <button class="mail-side-link" type="button" onclick="mailOpenCompose()"><span>＋</span> Escrever mensagem <b>→</b></button>
-            <button class="mail-side-link" type="button" onclick="mailSetFolder('inbox')"><span>⌑</span> Voltar à entrada <b>→</b></button>
           </section>
           <section class="mail-side-card mail-side-highlight">
             <div class="mail-side-heading"><p class="mail-section-eyebrow mail-section-eyebrow-cyan">Visão geral</p><span class="mail-side-mark" aria-hidden="true">✦</span></div>
