@@ -85,11 +85,11 @@ public class MissionTeamUseCase {
     }
 
     private List<UUID> validateRequest(UUID playerId, SaveMissionTeamRequest request) {
-        if (request == null || request.digimonIds() == null || request.digimonIds().size() != 3) {
-            throw new BadRequestException("Um time precisa ter exatamente 3 Digimons");
+        if (request == null || request.digimonIds() == null || request.digimonIds().isEmpty() || request.digimonIds().size() > 3) {
+            throw new BadRequestException("Um time precisa ter entre 1 e 3 Digimons");
         }
         List<UUID> digimonIds = request.digimonIds();
-        if (digimonIds.stream().anyMatch(id -> id == null) || new HashSet<>(digimonIds).size() != 3) {
+        if (digimonIds.stream().anyMatch(id -> id == null) || new HashSet<>(digimonIds).size() != digimonIds.size()) {
             throw new BadRequestException("Um time não pode repetir Digimons");
         }
         if (!new HashSet<>(digimonIds).contains(request.captainDigimonId())) {
@@ -97,7 +97,7 @@ public class MissionTeamUseCase {
         }
 
         var digimons = digimonRepository.findAllByIdForUpdate(playerId, digimonIds);
-        if (digimons.size() != 3) {
+        if (digimons.size() != digimonIds.size()) {
             throw new NotFoundException("Um ou mais Digimons não pertencem ao jogador");
         }
         if (digimons.stream().anyMatch(digimon -> !USABLE_STATUSES.contains(digimon.getStatus()))) {

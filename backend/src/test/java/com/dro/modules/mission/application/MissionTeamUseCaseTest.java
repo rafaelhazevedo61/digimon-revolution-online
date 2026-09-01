@@ -77,6 +77,20 @@ class MissionTeamUseCaseTest {
     }
 
     @Test
+    void createsPartialTeamWithTwoDigimons() {
+        List<UUID> partialIds = digimonIds.subList(0, 2);
+        when(digimonRepository.findAllByIdForUpdate(playerId, partialIds))
+                .thenReturn(List.of(digimon(partialIds.get(0)), digimon(partialIds.get(1))));
+        MissionTeam saved = new MissionTeam(playerId, "Dupla", partialIds, partialIds.get(1));
+        when(missionTeamRepository.save(any(MissionTeam.class))).thenReturn(saved);
+
+        var response = useCase.create(token, new SaveMissionTeamRequest("Dupla", partialIds, partialIds.get(1)));
+
+        assertEquals(partialIds, response.digimonIds());
+        assertEquals(partialIds.get(1), response.captainDigimonId());
+    }
+
+    @Test
     void rejectsRepeatedDigimonInTeam() {
         List<UUID> repeated = List.of(digimonIds.get(0), digimonIds.get(0), digimonIds.get(2));
 

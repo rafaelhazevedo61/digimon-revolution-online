@@ -187,6 +187,31 @@ class StartMissionUseCaseTest {
         verify(digimonRepository).save(third);
     }
 
+    @Test
+    void startsMissionWithPartialTeamInOneSlot() {
+        UUID teamId = UUID.randomUUID();
+        UUID secondDigimonId = UUID.randomUUID();
+        Digimon first = digimonWithEnergy(10);
+        Digimon second = teamDigimon(secondDigimonId, 10);
+        MissionTeam team = mock(MissionTeam.class);
+        List<UUID> teamDigimonIds = List.of(digimonId, secondDigimonId);
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(missionTeamRepository.findByIdAndPlayerId(teamId, playerId)).thenReturn(Optional.of(team));
+        when(team.getDigimonIds()).thenReturn(teamDigimonIds);
+        when(digimonRepository.findAllByIdForUpdate(playerId, teamDigimonIds))
+                .thenReturn(List.of(first, second));
+        when(missionDefinitionRepository.findById("mission-1"))
+                .thenReturn(Optional.of(missionDefinition()));
+        when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(false);
+
+        useCase.execute(token, "mission-1", teamId);
+
+        ArgumentCaptor<MissionInstance> captor = ArgumentCaptor.forClass(MissionInstance.class);
+        verify(missionInstanceRepository).save(captor.capture());
+        assertEquals(teamDigimonIds, captor.getValue().getDigimonIds());
+    }
+
     private Digimon teamDigimon(UUID id, int energy) {
         return Digimon.builder()
                 .id(id)

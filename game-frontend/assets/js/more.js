@@ -35,7 +35,7 @@ async function renderMorePage() {
           route: "mission-teams",
           icon: "◈",
           title: "Meus Times",
-          desc: "Monte formações de três Digimons para missões",
+          desc: "Monte formações de até três Digimons para missões",
         },
         {
           route: "activity-calendar",

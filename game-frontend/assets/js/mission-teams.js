@@ -63,7 +63,7 @@ function renderMissionTeamCard(team, digimonById, activeMissionDigimonIds = new 
         <div class="min-w-0">
           <p class="text-xs font-bold uppercase tracking-wider text-cyan-400">Formação de missão</p>
           <h3 class="mt-1 truncate text-lg font-bold text-slate-100">${escapeHtml(team.name)}</h3>
-          <p class="mt-1 text-xs ${unavailable ? "text-amber-300" : "text-slate-400"}">${unavailable ? "Um membro está em missão" : "Disponível para envio"}</p>
+          <p class="mt-1 text-xs ${unavailable ? "text-amber-300" : "text-slate-400"}">${unavailable ? "Um membro está em missão" : `${members.length}/3 membros · disponível para envio`}</p>
         </div>
         <span class="rounded-full border ${unavailable ? "border-amber-800 bg-amber-950/30 text-amber-300" : "border-emerald-800 bg-emerald-950/30 text-emerald-300"} px-2 py-1 text-[0.58rem] font-bold uppercase tracking-wider">${unavailable ? "Ocupado" : "Pronto"}</span>
       </div>
@@ -88,7 +88,7 @@ async function renderMissionTeamsPage() {
           <button class="progression-back-button mb-3" onclick="navigateTo('missions')"><span aria-hidden="true">←</span> Voltar às missões</button>
           <p class="progression-eyebrow progression-eyebrow-cyan">Preparação de campo</p>
           <h2 class="progression-page-title">Meus times</h2>
-          <p class="progression-page-subtitle">Monte formações de três Digimons para enviar juntos às missões.</p>
+          <p class="progression-page-subtitle">Monte formações de até três Digimons para enviar juntos às missões.</p>
         </div>
         <button type="button" class="btn-primary shrink-0 text-xs" onclick="openMissionTeamEditor()">Novo time</button>
       </header>
@@ -114,7 +114,7 @@ async function renderMissionTeamsPage() {
         <div class="card border-dashed border-cyan-800 bg-cyan-950/15 text-center md:col-span-2">
           <p class="text-3xl">◈</p>
           <p class="mt-2 font-bold text-slate-100">Você ainda não criou um time</p>
-          <p class="mt-1 text-sm text-slate-400">Monte sua primeira formação com três Digimons para começar a enviar missões.</p>
+          <p class="mt-1 text-sm text-slate-400">Monte sua primeira formação com até três Digimons para começar a enviar missões.</p>
           <button type="button" class="btn-primary mt-4" onclick="openMissionTeamEditor()">Criar primeiro time</button>
         </div>
       `;
@@ -256,8 +256,8 @@ function openMissionTeamEditor(teamId = null) {
         <label class="mb-4 block text-xs font-bold uppercase tracking-wider text-slate-400">Nome do time<input id="mission-team-name" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-500" maxlength="40" value="${escapeAttr(team ? team.name : "Novo time")}" placeholder="Ex.: Exploradores" /></label>
         <div class="rounded-xl border border-slate-700 bg-slate-950/40 p-3"><div class="flex items-center justify-between gap-2"><div><p class="text-xs font-bold uppercase tracking-wider text-slate-400">Membros do time</p><p id="mission-team-selected-count" class="mt-1 text-xs text-cyan-300"></p></div><button type="button" class="btn-secondary text-xs" onclick="openMissionTeamPicker()">Buscar Digimons</button></div><div id="mission-team-selected-list" class="mt-3 space-y-2"></div></div>
         <label class="mt-4 block text-xs font-bold uppercase tracking-wider text-amber-300">Capitão do time<select id="mission-team-captain" class="mt-2 w-full rounded-lg border border-amber-800 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"></select></label>
-        ${missionTeamPickerDigimons.length < 3 ? `<p class="mt-4 rounded-lg border border-amber-800 bg-amber-950/30 px-3 py-2 text-xs text-amber-200">Você precisa ter pelo menos três Digimons disponíveis para salvar um time.</p>` : `<p class="mt-4 text-xs text-slate-500">Você pode buscar no armazém e trocar os membros a qualquer momento antes de salvar.</p>`}
-        <div class="mt-5 flex gap-2"><button type="button" class="btn-secondary flex-1" onclick="document.getElementById('mission-team-editor-modal')?.remove()">Cancelar</button><button id="mission-team-save-button" type="button" class="btn-primary flex-1" ${missionTeamPickerDigimons.length < 3 ? "disabled" : ""} onclick="saveMissionTeamFromEditor()">Salvar time</button></div>
+        ${missionTeamPickerDigimons.length < 1 ? `<p class="mt-4 rounded-lg border border-amber-800 bg-amber-950/30 px-3 py-2 text-xs text-amber-200">Você precisa ter pelo menos um Digimon disponível para salvar um time.</p>` : `<p class="mt-4 text-xs text-slate-500">Você pode buscar no armazém e adicionar até três membros antes de salvar.</p>`}
+        <div class="mt-5 flex gap-2"><button type="button" class="btn-secondary flex-1" onclick="document.getElementById('mission-team-editor-modal')?.remove()">Cancelar</button><button id="mission-team-save-button" type="button" class="btn-primary flex-1" ${missionTeamPickerDigimons.length < 1 ? "disabled" : ""} onclick="saveMissionTeamFromEditor()">Salvar time</button></div>
       </div>
     `;
     overlay.addEventListener("click", event => { if (event.target === overlay) overlay.remove(); });
@@ -270,8 +270,8 @@ async function saveMissionTeamFromEditor() {
   const name = document.getElementById("mission-team-name")?.value?.trim();
   const digimonIds = missionTeamEditorSelectedIds.map(String);
   const captainDigimonId = document.getElementById("mission-team-captain")?.value;
-  if (!name || digimonIds.length !== 3 || new Set(digimonIds).size !== 3 || !captainDigimonId) {
-    showToast("Busque e selecione três Digimons diferentes e escolha um capitão.", "error");
+  if (!name || digimonIds.length < 1 || digimonIds.length > 3 || new Set(digimonIds).size !== digimonIds.length || !captainDigimonId) {
+    showToast("Selecione de um a três Digimons diferentes e escolha um capitão.", "error");
     return;
   }
   const button = document.getElementById("mission-team-save-button");
@@ -346,7 +346,7 @@ function openMissionTeamSelectionModal(missionId) {
           <div><p class="text-xs font-bold uppercase tracking-wider text-cyan-400">Seleção de expedição</p><h3 class="mt-1 text-xl font-bold text-slate-100">Escolha o time para esta missão</h3><p class="mt-1 text-sm text-slate-400">${escapeHtml(formatMissionName(mission))} · Slot ${Math.min(occupiedSlots + 1, 3)} de 3</p></div>
           <button type="button" class="text-2xl leading-none text-slate-400 hover:text-white" aria-label="Fechar" onclick="document.getElementById('mission-team-selection-modal')?.remove()">&times;</button>
         </div>
-        ${context.teams.length ? `<div class="space-y-3">${cards}</div>` : `<div class="rounded-xl border border-dashed border-cyan-800 bg-cyan-950/20 p-5 text-center"><p class="font-bold text-slate-100">Nenhum time disponível</p><p class="mt-1 text-sm text-slate-400">Crie uma formação com três Digimons antes de iniciar esta missão.</p><button type="button" class="btn-primary mt-4" onclick="document.getElementById('mission-team-selection-modal')?.remove(); navigateTo('mission-teams')">Gerenciar times</button></div>`}
+        ${context.teams.length ? `<div class="space-y-3">${cards}</div>` : `<div class="rounded-xl border border-dashed border-cyan-800 bg-cyan-950/20 p-5 text-center"><p class="font-bold text-slate-100">Nenhum time disponível</p><p class="mt-1 text-sm text-slate-400">Crie uma formação com até três Digimons antes de iniciar esta missão.</p><button type="button" class="btn-primary mt-4" onclick="document.getElementById('mission-team-selection-modal')?.remove(); navigateTo('mission-teams')">Gerenciar times</button></div>`}
         <button type="button" class="btn-secondary mt-4 w-full" onclick="document.getElementById('mission-team-selection-modal')?.remove()">Cancelar</button>
       </div>
     `;

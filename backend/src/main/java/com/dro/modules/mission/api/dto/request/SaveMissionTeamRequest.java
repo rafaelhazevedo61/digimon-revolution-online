@@ -12,7 +12,7 @@ public record SaveMissionTeamRequest(
         @Size(max = 40)
         String name,
         @NotNull
-        @Size(min = 3, max = 3)
+        @Size(min = 1, max = 3)
         List<UUID> digimonIds,
         @NotNull
         UUID captainDigimonId

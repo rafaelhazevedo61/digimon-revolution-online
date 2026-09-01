@@ -129,8 +129,8 @@ public class StartMissionUseCase {
                 .orElseThrow(() -> new NotFoundException("Time não encontrado"));
         List<UUID> digimonIds = team.getDigimonIds();
         List<Digimon> digimons = digimonRepository.findAllByIdForUpdate(playerId, digimonIds);
-        if (digimons.size() != 3) {
-            throw new ConflictException("O time não possui três Digimons disponíveis");
+        if (digimons.size() != digimonIds.size()) {
+            throw new ConflictException("Um ou mais Digimons do time não estão disponíveis");
         }
         return digimonIds.stream()
                 .map(id -> digimons.stream().filter(digimon -> digimon.getId().equals(id)).findFirst()
