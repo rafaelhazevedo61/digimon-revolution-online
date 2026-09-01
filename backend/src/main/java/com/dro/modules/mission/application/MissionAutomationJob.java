@@ -48,17 +48,22 @@ public class MissionAutomationJob {
                 processor.process(id);
             } catch (RuntimeException exception) {
                 if (isStackLimitError(exception)) {
+                    UUID playerId = findPlayerId(id);
                     processor.pauseAutomation(id);
-                    createSystemMailMessageUseCase.create(
-                            MailMessageType.SYSTEM,
-                            "MISSION_AUTOMATION",
-                            findPlayerId(id),
-                            id,
-                            "MISSION_AUTOMATION_RESUME",
-                            "Automação de missão pausada",
-                            "A automação desta missão foi pausada porque um item atingiu o limite máximo do inventário. Libere espaço ou reduza a quantidade do item para continuar.",
-                            "mission-automation:inventory-full:" + id
-                    );
+                    if (playerId != null) {
+                        createSystemMailMessageUseCase.create(
+                                MailMessageType.SYSTEM,
+                                "MISSION_AUTOMATION",
+                                playerId,
+                                id,
+                                "MISSION_AUTOMATION_RESUME",
+                                "Automação de missão pausada",
+                                "A automação desta missão foi pausada porque um item atingiu o limite máximo do inventário. Libere espaço ou reduza a quantidade do item para continuar.",
+                                "mission-automation:inventory-full:" + id
+                        );
+                    } else {
+                        log.error("Could not notify player because mission {} was not found", id);
+                    }
                     log.warn("Paused mission automation for {} because the inventory stack is full", id);
                 } else {
                     log.error("Could not process automatic mission {}", id, exception);
@@ -74,9 +79,20 @@ public class MissionAutomationJob {
     }
 
     private boolean isStackLimitError(Throwable exception) {
-        String message = exception.getMessage();
-        return message != null && (message.contains("limite máximo")
-                || message.contains("stack limit exceeded")
-                || message.toLowerCase().contains("limite de stack"));
+        Throwable current = exception;
+        while (current != null) {
+            String message = current.getMessage();
+            if (message != null) {
+                String normalized = message.toLowerCase();
+                if (normalized.contains("stack limit exceeded")
+                        || normalized.contains("maximum stack")
+                        || normalized.contains("limite máximo")
+                        || normalized.contains("limite de stack")) {
+                    return true;
+                }
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 }
