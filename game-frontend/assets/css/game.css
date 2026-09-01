@@ -4956,3 +4956,15 @@ body {
   .mail-side-card:not(.mail-side-highlight):not(.mail-side-note) { order: 1; }
   .mail-side-card.mail-side-note { order: 2; }
 }
+
+/* Explicit mail sidebar ordering */
+@media (min-width: 46rem) {
+  .mail-side-card.mail-side-highlight { order: 1; }
+  .mail-side-card:not(.mail-side-highlight):not(.mail-side-note) { order: 2; }
+  .mail-side-card.mail-side-note { order: 3; }
+}
+@media (max-width: 46rem) {
+  .mail-side-card:not(.mail-side-highlight):not(.mail-side-note) { order: 1; }
+  .mail-side-card.mail-side-note { order: 2; }
+  .mail-side-card.mail-side-highlight { order: 3; }
+}

@@ -45,11 +45,6 @@ function renderMailPage() {
         </main>
 
         <aside class="mail-sidebar">
-          <section class="mail-side-card mail-side-highlight">
-            <div class="mail-side-heading"><p class="mail-section-eyebrow mail-section-eyebrow-cyan">Visão geral</p><span class="mail-side-mark" aria-hidden="true">✦</span></div>
-            <div class="mail-side-stat"><strong id="mail-unread-side">--</strong><span>mensagens não lidas</span></div>
-            <p>Abra uma mensagem para marcar como lida e manter sua central sempre organizada.</p>
-          </section>
           <section class="mail-side-card">
             <div class="mail-side-heading"><p class="mail-section-eyebrow">Atalhos</p><span class="mail-side-mark" aria-hidden="true">⌁</span></div>
             <button class="mail-side-link" type="button" onclick="mailOpenCompose()"><span>＋</span> Escrever mensagem <b>→</b></button>
@@ -58,6 +53,11 @@ function renderMailPage() {
           <section class="mail-side-card mail-side-note">
             <p class="mail-section-eyebrow mail-section-eyebrow-amber">Dica</p>
             <p>Convites de clã e recompensas de eventos aparecem aqui com uma ação pendente.</p>
+          </section>
+          <section class="mail-side-card mail-side-highlight">
+            <div class="mail-side-heading"><p class="mail-section-eyebrow mail-section-eyebrow-cyan">Visão geral</p><span class="mail-side-mark" aria-hidden="true">✦</span></div>
+            <div class="mail-side-stat"><strong id="mail-unread-side">--</strong><span>mensagens não lidas</span></div>
+            <p>Abra uma mensagem para marcar como lida e manter sua central sempre organizada.</p>
           </section>
         </aside>
       </div>
