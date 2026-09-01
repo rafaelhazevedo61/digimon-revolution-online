@@ -182,6 +182,8 @@ public class ClaimMissionUseCase {
 
         int completionCount = progress.getCompletionCount();
 
+        Map<UUID, Integer> previousLevels = new LinkedHashMap<>();
+        digimons.forEach(member -> previousLevels.put(member.getId(), member.getLevel()));
         int previousLevel = digimon.getLevel();
         Stage previousStage = digimon.getStage();
 
@@ -259,7 +261,11 @@ public class ClaimMissionUseCase {
         );
 
         List<MissionDigimonExperienceResponse> digimonExperience = digimons.stream()
-                .map(member -> MissionDigimonExperienceResponse.from(member, missionDigimonImageUrl(member)))
+                .map(member -> MissionDigimonExperienceResponse.from(
+                        member,
+                        missionDigimonImageUrl(member),
+                        previousLevels.getOrDefault(member.getId(), member.getLevel())
+                ))
                 .toList();
 
         return new MissionResultResponse(

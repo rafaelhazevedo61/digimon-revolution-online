@@ -14,11 +14,12 @@ public record MissionDigimonExperienceResponse(
         String stage,
         String imageUrl,
         int level,
+        int levelsGained,
         int experience,
         int experienceToNextLevel,
         double experiencePercent
 ) {
-    public static MissionDigimonExperienceResponse from(Digimon digimon, String imageUrl) {
+    public static MissionDigimonExperienceResponse from(Digimon digimon, String imageUrl, int previousLevel) {
         int experienceToNextLevel = digimon.getExperienceToNextLevel();
         double experiencePercent = experienceToNextLevel <= 0
                 ? 100.0
@@ -30,6 +31,7 @@ public record MissionDigimonExperienceResponse(
                 digimon.getStage() != null ? digimon.getStage().name() : null,
                 imageUrl,
                 digimon.getLevel(),
+                Math.max(0, digimon.getLevel() - previousLevel),
                 digimon.getExperience(),
                 experienceToNextLevel,
                 experiencePercent

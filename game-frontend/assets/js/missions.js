@@ -551,6 +551,10 @@ function missionDigimonExperienceMarkup(result) {
   const cards = members.map(member => {
     const percent = Math.max(0, Math.min(100, Number(member.experiencePercent) || 0));
     const percentLabel = `${percent.toFixed(1).replace(/\.0$/, "")}%`;
+    const levelsGained = Math.max(0, Number(member.levelsGained) || 0);
+    const levelUpMarkup = levelsGained > 0
+      ? `<span class="whitespace-nowrap rounded-full border border-emerald-600/70 bg-emerald-950/50 px-2 py-1 text-[0.62rem] font-bold uppercase tracking-wide text-emerald-300">+${levelsGained} ${levelsGained === 1 ? "Nível" : "Níveis"}</span>`
+      : "";
     const isMaxLevel = Number(member.experienceToNextLevel) <= 0;
     const xpLabel = isMaxLevel
       ? "Nível máximo"
@@ -564,7 +568,10 @@ function missionDigimonExperienceMarkup(result) {
           <div class="min-w-0 flex-1">
             <div class="flex items-center justify-between gap-2">
               <p class="truncate font-bold text-slate-100">${escapeHtml(member.name || "Digimon")}</p>
-              <span class="whitespace-nowrap text-xs font-bold text-purple-200">Nv. ${Number(member.level) || 0}</span>
+              <div class="flex items-center gap-2">
+                ${levelUpMarkup}
+                <span class="whitespace-nowrap text-xs font-bold text-purple-200">Nv. ${Number(member.level) || 0}</span>
+              </div>
             </div>
             <div class="mt-2 flex items-center justify-between gap-2 text-[0.68rem]">
               <span class="text-slate-400">${xpLabel}</span>

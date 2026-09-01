@@ -119,6 +119,7 @@ class ClaimMissionUseCaseTest {
                 .completionCount(0)
                 .build();
         Digimon digimon = digimon(digimonId, playerId);
+        digimon.setExperience(90);
         Long digimonInfoId = 100L;
         digimon.setDigimonInfoId(digimonInfoId);
         when(digimonInfosRepository.findById(digimonInfoId)).thenReturn(Optional.of(
@@ -156,10 +157,11 @@ class ClaimMissionUseCaseTest {
         assertThat(response.digimonExperience().get(0).id()).isEqualTo(digimonId);
         assertThat(response.digimonExperience().get(0).name()).isEqualTo("Agumon");
         assertThat(response.digimonExperience().get(0).imageUrl()).isEqualTo("https://example.test/agumon.png");
-        assertThat(response.digimonExperience().get(0).level()).isEqualTo(1);
-        assertThat(response.digimonExperience().get(0).experience()).isEqualTo(60);
-        assertThat(response.digimonExperience().get(0).experienceToNextLevel()).isEqualTo(100);
-        assertThat(response.digimonExperience().get(0).experiencePercent()).isEqualTo(60.0);
+        assertThat(response.digimonExperience().get(0).level()).isEqualTo(2);
+        assertThat(response.digimonExperience().get(0).levelsGained()).isEqualTo(1);
+        assertThat(response.digimonExperience().get(0).experience()).isEqualTo(50);
+        assertThat(response.digimonExperience().get(0).experienceToNextLevel()).isEqualTo(200);
+        assertThat(response.digimonExperience().get(0).experiencePercent()).isEqualTo(25.0);
         assertThat(response.xpGained()).isEqualTo(60);
         assertThat(response.bitsGained()).isEqualTo(0);
         assertThat(response.experienceBreakdown().baseAmount()).isEqualTo(30);
