@@ -2,6 +2,8 @@ const ARENA_STAGE_LABELS = {
   BABY: "Baby", BABY_II: "Baby II", ROOKIE: "Rookie", CHAMPION: "Champion", ULTIMATE: "Ultimate", MEGA: "Mega"
 };
 
+const ARENA_MAX_STACK_QUANTITY = 999;
+
 let arenaShopModalUnitPrice = 0;
 let arenaShopModalBalance = 0;
 
@@ -310,8 +312,11 @@ async function renderArenaShopPage() {
   `;
 
   try {
-    const shop = await apiGet("/arena/shop");
-    renderArenaShop(shop);
+    const [shop, inventory] = await Promise.all([
+      apiGet("/arena/shop"),
+      apiGet("/inventory")
+    ]);
+    renderArenaShop(shop, inventory || []);
   } catch (err) {
     document.getElementById("arena-shop-content").innerHTML = `
       <div class="card border-red-900"><p class="text-red-300 text-sm">${escapeHtml(err.message)}</p></div>
@@ -329,27 +334,59 @@ function renderArenaShop(shop) {
   }
 
   const productsHtml = shop.products.map(p => {
-    const canBuy = coins >= p.priceCoins;
-    return `<article class="arena-shop-card"><div class="arena-shop-icon">✦</div><div class="arena-shop-copy"><h3>${escapeHtml(p.name)}${p.quantity > 1 ? `<small>×${p.quantity}</small>` : ""}</h3></div><div class="arena-shop-purchase"><strong>🪙 ${Number(p.priceCoins).toLocaleString("pt-BR")}</strong><button type="button" class="arena-shop-button ${canBuy ? "" : "is-disabled"}" ${canBuy ? `data-arena-shop-code="${escapeAttr(p.code)}" data-arena-shop-name="${escapeAttr(p.name)}" data-arena-shop-price="${p.priceCoins}"` : "disabled"}>${canBuy ? "Comprar" : "Sem saldo"}</button></div></article>`;
+    const inventoryQuantity = arenaShopInventoryQuantity(p.itemType, inventoryItems);
+    const maxQty = arenaShopMaxPurchaseQuantity(p, coins, inventoryQuantity);
+    const canBuy = maxQty >= 1;
+    const unavailableLabel = coins < p.priceCoins ? "Sem saldo" : "Limite atingido";
+    return `<article class="arena-shop-card"><div class="arena-shop-icon">✦</div><div class="arena-shop-copy"><h3>${escapeHtml(p.name)}${p.quantity > 1 ? `<small>×${p.quantity}</small>` : ""}</h3></div><div class="arena-shop-purchase"><strong>🪙 ${Number(p.priceCoins).toLocaleString("pt-BR")}</strong><button type="button" class="arena-shop-button ${canBuy ? "" : "is-disabled"}" ${canBuy ? `data-arena-shop-code="${escapeAttr(p.code)}" data-arena-shop-name="${escapeAttr(p.name)}" data-arena-shop-price="${p.priceCoins}" data-arena-shop-inventory="${inventoryQuantity}" data-arena-shop-quantity="${p.quantity}"` : "disabled"}>${canBuy ? "Comprar" : unavailableLabel}</button></div></article>`;
   }).join("");
 
   container.innerHTML = `<div class="arena-shop-balance"><span><span class="arena-eyebrow">Seu saldo</span><strong>🪙 ${Number(coins).toLocaleString("pt-BR")} <small>Moedas de Arena</small></strong></span><p>As moedas são obtidas em vitórias e derrotas na Arena.</p></div><div class="arena-shop-grid">${productsHtml}</div>`;
   container.querySelectorAll("[data-arena-shop-code]").forEach(button => {
     button.addEventListener("click", () => {
-      openArenaShopPurchase(button.dataset.arenaShopCode, button.dataset.arenaShopName, Number(button.dataset.arenaShopPrice || 0), coins);
+      openArenaShopPurchase(
+        button.dataset.arenaShopCode,
+        button.dataset.arenaShopName,
+        Number(button.dataset.arenaShopPrice || 0),
+        coins,
+        Number(button.dataset.arenaShopInventory || 0),
+        Number(button.dataset.arenaShopQuantity || 1)
+      );
     });
   });
 }
 
-function openArenaShopPurchase(productCode, productName, priceCoins, balance) {
+function arenaShopInventoryQuantity(itemType, inventoryItems = []) {
+  const targetType = String(itemType || "");
+  return inventoryItems
+    .filter(item => {
+      const definitionCode = item.itemDefinition && item.itemDefinition.code;
+      return definitionCode === targetType || (!definitionCode && item.itemType === targetType);
+    })
+    .reduce((total, item) => total + Math.max(0, Number(item.quantity) || 0), 0);
+}
+
+function arenaShopMaxPurchaseQuantity(product, balance, inventoryQuantity) {
+  const productQuantity = Math.max(1, Number(product.quantity) || 1);
+  const remainingStackQuantity = Math.max(0, ARENA_MAX_STACK_QUANTITY - Math.max(0, Number(inventoryQuantity) || 0));
+  const stackPurchaseQuantity = Math.floor(remainingStackQuantity / productQuantity);
+  const affordableQuantity = product.priceCoins > 0
+    ? Math.floor(Math.max(0, Number(balance) || 0) / product.priceCoins)
+    : ARENA_MAX_STACK_QUANTITY;
+  return Math.max(0, Math.min(ARENA_MAX_STACK_QUANTITY, stackPurchaseQuantity, affordableQuantity));
+}
+
+function openArenaShopPurchase(productCode, productName, priceCoins, balance, inventoryQuantity = 0, productQuantity = 1) {
   arenaShopModalUnitPrice = Number(priceCoins || 0);
   arenaShopModalBalance = Number(balance || 0);
-  const maxQty = priceCoins > 0 ? Math.min(99, Math.floor(balance / priceCoins)) : 99;
+  const product = { quantity: productQuantity, priceCoins: Number(priceCoins || 0) };
+  const maxQty = arenaShopMaxPurchaseQuantity(product, balance, inventoryQuantity);
+  const remainingStackQuantity = Math.max(0, ARENA_MAX_STACK_QUANTITY - Math.max(0, Number(inventoryQuantity) || 0));
   if (maxQty < 1) return;
   const overlay = document.createElement("div");
   overlay.id = "arena-shop-modal";
   overlay.className = "shop-modal-overlay";
-  overlay.innerHTML = `<div class="shop-modal arena-shop-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="arena-shop-modal-title" onclick="event.stopPropagation()"><div class="arena-shop-confirm-heading"><div><p class="arena-eyebrow arena-eyebrow-amber">Comprar item</p><h3 id="arena-shop-modal-title">${escapeHtml(productName)}</h3></div><button type="button" class="arena-shop-modal-close" aria-label="Fechar" onclick="closeArenaShopPurchase()">×</button></div><div class="arena-shop-quantity-row"><button type="button" class="arena-shop-quantity-button" onclick="arenaShopQtyChange(-1)" aria-label="Diminuir quantidade">−</button><input id="arena-shop-qty" class="arena-shop-quantity-input" type="number" value="1" min="1" max="${maxQty}" inputmode="numeric" oninput="arenaShopQtyUpdate()"><button type="button" class="arena-shop-quantity-button" onclick="arenaShopQtyChange(1)" aria-label="Aumentar quantidade">+</button><button type="button" class="arena-shop-max-button" onclick="arenaShopQtyMax()">MAX</button></div><div class="arena-shop-total-row"><span><small>Preço unitário</small><strong>🪙 ${Number(priceCoins).toLocaleString("pt-BR")}</strong></span><span><small>Total</small><strong id="arena-shop-total">🪙 ${Number(priceCoins).toLocaleString("pt-BR")}</strong></span><span><small>Saldo após</small><strong id="arena-shop-remaining">🪙 ${Number(balance - priceCoins).toLocaleString("pt-BR")}</strong></span></div><div class="arena-shop-modal-actions"><button type="button" class="arena-shop-modal-buy" onclick="confirmArenaShopQuantity('${escapeAttr(productCode)}','${escapeAttr(productName)}',${Number(priceCoins)})">Comprar</button><button type="button" class="arena-shop-modal-cancel" onclick="closeArenaShopPurchase()">Cancelar</button></div></div>`;
+  overlay.innerHTML = `<div class="shop-modal arena-shop-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="arena-shop-modal-title" onclick="event.stopPropagation()"><div class="arena-shop-confirm-heading"><div><p class="arena-eyebrow arena-eyebrow-amber">Comprar item</p><h3 id="arena-shop-modal-title">${escapeHtml(productName)}</h3></div><button type="button" class="arena-shop-modal-close" aria-label="Fechar" onclick="closeArenaShopPurchase()">×</button></div><div class="arena-shop-quantity-row"><button type="button" class="arena-shop-quantity-button" onclick="arenaShopQtyChange(-1)" aria-label="Diminuir quantidade">−</button><input id="arena-shop-qty" class="arena-shop-quantity-input" type="number" value="1" min="1" max="${maxQty}" inputmode="numeric" oninput="arenaShopQtyUpdate()"><button type="button" class="arena-shop-quantity-button" onclick="arenaShopQtyChange(1)" aria-label="Aumentar quantidade">+</button><button type="button" class="arena-shop-max-button" onclick="arenaShopQtyMax()">MAX</button></div><p class="arena-shop-quantity-hint">No inventário: ${Number(inventoryQuantity).toLocaleString("pt-BR")} / ${ARENA_MAX_STACK_QUANTITY} · Restante: ${remainingStackQuantity.toLocaleString("pt-BR")}</p><div class="arena-shop-total-row"><span><small>Preço unitário</small><strong>🪙 ${Number(priceCoins).toLocaleString("pt-BR")}</strong></span><span><small>Total</small><strong id="arena-shop-total">🪙 ${Number(priceCoins).toLocaleString("pt-BR")}</strong></span><span><small>Saldo após</small><strong id="arena-shop-remaining">🪙 ${Number(balance - priceCoins).toLocaleString("pt-BR")}</strong></span></div><div class="arena-shop-modal-actions"><button type="button" class="arena-shop-modal-buy" onclick="confirmArenaShopQuantity('${escapeAttr(productCode)}','${escapeAttr(productName)}',${Number(priceCoins)})">Comprar</button><button type="button" class="arena-shop-modal-cancel" onclick="closeArenaShopPurchase()">Cancelar</button></div></div>`;
   overlay.addEventListener("click", event => { if (event.target === overlay) closeArenaShopPurchase(); });
   document.body.appendChild(overlay);
 }
@@ -357,7 +394,7 @@ function openArenaShopPurchase(productCode, productName, priceCoins, balance) {
 function arenaShopQtyChange(delta) {
   const input = document.getElementById("arena-shop-qty");
   if (!input) return;
-  input.value = Math.max(1, Math.min(Number(input.max) || 99, (Number(input.value) || 1) + delta));
+  input.value = Math.max(1, Math.min(Number(input.max) || ARENA_MAX_STACK_QUANTITY, (Number(input.value) || 1) + delta));
   arenaShopQtyUpdate();
 }
 
@@ -371,7 +408,7 @@ function arenaShopQtyMax() {
 function arenaShopQtyUpdate() {
   const input = document.getElementById("arena-shop-qty");
   if (!input) return;
-  const qty = Math.max(1, Math.min(Number(input.max) || 99, Number(input.value) || 1));
+  const qty = Math.max(1, Math.min(Number(input.max) || ARENA_MAX_STACK_QUANTITY, Number(input.value) || 1));
   input.value = qty;
   const total = qty * arenaShopModalUnitPrice;
   const totalEl = document.getElementById("arena-shop-total");
@@ -381,7 +418,9 @@ function arenaShopQtyUpdate() {
 }
 
 async function confirmArenaShopQuantity(productCode, productName, priceCoins) {
-  const quantity = Math.max(1, Number(document.getElementById("arena-shop-qty")?.value) || 1);
+  const input = document.getElementById("arena-shop-qty");
+  const max = Number(input?.max) || ARENA_MAX_STACK_QUANTITY;
+  const quantity = Math.max(1, Math.min(max, Number(input?.value) || 1));
   const button = document.querySelector(".arena-shop-modal-buy");
   if (button) { button.disabled = true; button.textContent = "Comprando..."; }
   const purchased = await buyArenaShopItem(productCode, productName, quantity);
@@ -404,8 +443,11 @@ async function buyArenaShopItem(productCode, productName, quantity = 1) {
   try {
     const result = await apiPost("/arena/shop/buy", { productCode, quantity });
     showToast(`Comprou ${result.quantity}x ${productName} (🪙 ${result.arenaCoinsBalance} restantes)`);
-    const shop = await apiGet("/arena/shop");
-    renderArenaShop(shop);
+    const [shop, inventory] = await Promise.all([
+      apiGet("/arena/shop"),
+      apiGet("/inventory")
+    ]);
+    renderArenaShop(shop, inventory || []);
     return true;
   } catch (err) {
     showToast(arenaShopPurchaseErrorMessage(err), "error");
