@@ -1394,18 +1394,20 @@ body {
 .dashboard-mission-action { display: flex; min-width: 5.5rem; justify-content: flex-end; }
 .dashboard-mission-action .btn-sm { padding: 0.38rem 0.58rem; font-size: 0.62rem; }
 .dashboard-mission-badge { padding: 0.3rem 0.45rem; border: 1px solid rgba(96, 165, 250, 0.2); border-radius: 9999px; background: rgba(37, 99, 235, 0.12); color: #93c5fd; font-size: 0.58rem; font-weight: 800; white-space: nowrap; }
-.dashboard-mission-auto-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .dashboard-mission-action .btn-sm { white-space: nowrap; }
+.dashboard-mission-mode-indicators { display: flex; flex-wrap: wrap; grid-column: 1 / -1; gap: 0.35rem; min-width: 0; }
+.dashboard-mission-mode-badge { min-width: 0; overflow: hidden; padding: 0.26rem 0.42rem; border: 1px solid rgba(100, 116, 139, 0.35); border-radius: 9999px; background: rgba(51, 65, 85, 0.28); color: #94a3b8; font-size: 0.54rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.dashboard-mission-mode-badge-active { border-color: rgba(34, 211, 238, 0.32); background: rgba(8, 145, 178, 0.16); color: #67e8f9; }
+.dashboard-mission-mode-badge-inactive { color: #64748b; }
 @media (min-width: 41rem) {
   .dashboard-mission-action {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
     min-width: 0;
     align-items: center;
     gap: 0.4rem;
   }
-  .dashboard-mission-auto-actions { display: contents; }
   .dashboard-mission-action > .btn-sm,
   .dashboard-mission-action > .dashboard-mission-badge {
     width: 100%;
@@ -1420,29 +1422,19 @@ body {
   }
   .dashboard-mission-action {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-column: 2;
     width: 100%;
     min-width: 0;
-    gap: 0.4rem;
-  }
-  .dashboard-mission-auto-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    width: 100%;
     gap: 0.35rem;
   }
-  .dashboard-mission-auto-actions .btn-sm,
-  .dashboard-mission-action > .btn-sm {
+  .dashboard-mission-action > .btn-sm,
+  .dashboard-mission-action > .dashboard-mission-badge {
     width: 100%;
     min-width: 0;
     overflow: hidden;
+    text-align: center;
     text-overflow: ellipsis;
-  }
-  .dashboard-mission-action > .dashboard-mission-badge,
-  .dashboard-mission-action > .btn-sm {
-    grid-column: 1 / -1;
-    justify-self: start;
   }
 }
 @media (max-width: 23rem) {

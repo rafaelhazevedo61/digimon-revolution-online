@@ -403,10 +403,10 @@ function renderSetBonus(sb) {
 
 function renderActiveMission(m) {
   const now = Date.now();
-  const autoRepeatControls = m.teamId
-    ? `<div class="dashboard-mission-auto-actions">
-        <button type="button" class="btn-sm ${m.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoRepeat('${m.instanceId}', ${!m.autoRepeatEnabled})">${m.autoRepeatEnabled ? "Repetição ativa" : "Repetir após resgate"}</button>
-        <button type="button" class="btn-sm ${m.autoClaimEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoClaim('${m.instanceId}', ${!m.autoClaimEnabled})">${m.autoClaimEnabled ? "Automático ativo" : "Automático completo"}</button>
+  const autoModeIndicators = m.teamId
+    ? `<div class="dashboard-mission-mode-indicators" aria-label="Status da automação">
+        <span class="dashboard-mission-mode-badge ${m.autoRepeatEnabled ? "dashboard-mission-mode-badge-active" : "dashboard-mission-mode-badge-inactive"}">${m.autoRepeatEnabled ? "Repetição ativa" : "Repetição desligada"}</span>
+        <span class="dashboard-mission-mode-badge ${m.autoClaimEnabled ? "dashboard-mission-mode-badge-active" : "dashboard-mission-mode-badge-inactive"}">${m.autoClaimEnabled ? "Automático ativo" : "Automático desligado"}</span>
       </div>`
     : "";
   const endsAt = new Date(m.endsAt).getTime();
@@ -423,7 +423,8 @@ function renderActiveMission(m) {
         <div class="dashboard-mission-state"><span class="dashboard-mission-dot ${done ? "dashboard-mission-dot-ready" : ""}"></span><span class="mission-timer">${done ? "Concluída!" : `Retorno em ${formatTime(remaining)}`}</span></div>
       </div>
       <div class="dashboard-mission-action">
-        ${autoRepeatControls}
+        ${autoModeIndicators}
+        ${m.teamId ? `<button type="button" class="btn-sm ${m.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoRepeat('${m.instanceId}', ${!m.autoRepeatEnabled})">${m.autoRepeatEnabled ? "Desligar repetição" : "Ligar repetição"}</button>` : ""}
         ${done ? `<button class="btn-sm btn-primary" onclick="claimMission('${m.instanceId}')">Resgatar</button>` : `<span class="dashboard-mission-badge">Em andamento</span>`}
       </div>
     </article>
