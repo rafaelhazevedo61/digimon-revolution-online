@@ -93,8 +93,8 @@ public class StartIncubationUseCase {
                 .startedAt(now)
                 .finishAt(finishAt)
                 .status(IncubationStatus.IN_PROGRESS)
-                .autoRepeatEnabled(autoRepeat)
-                .autoClaimEnabled(autoClaim)
+                .autoRepeatEnabled(player.isIncubationAutoRepeatEnabled())
+                .autoClaimEnabled(player.isIncubationAutoClaimEnabled())
                 .build();
         incubationRepository.save(incubation);
     }

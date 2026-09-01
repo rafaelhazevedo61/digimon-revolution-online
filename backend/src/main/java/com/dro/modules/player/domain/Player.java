@@ -64,6 +64,10 @@ public class Player {
     private LocalDateTime clanJoinedAt;
     @Column(name = "arena_daily_reset_at")
     private LocalDateTime arenaDailyResetAt;
+    @Column(name = "incubation_auto_repeat_enabled", nullable = false)
+    private boolean incubationAutoRepeatEnabled;
+    @Column(name = "incubation_auto_claim_enabled", nullable = false)
+    private boolean incubationAutoClaimEnabled;
 
     public static Player createPlayer(UUID id, String username, String email, String password, LocalDateTime createdAt) {
         Player player = new Player();
@@ -83,6 +87,11 @@ public class Player {
     /**
      * Informa se o jogador já concluiu a seleção do Digitama inicial.
      */
+    public boolean isIncubationAutoRepeatEnabled() { return incubationAutoRepeatEnabled; }
+    public boolean isIncubationAutoClaimEnabled() { return incubationAutoClaimEnabled; }
+    public void setIncubationAutoRepeatEnabled(boolean enabled) { this.incubationAutoRepeatEnabled = enabled; }
+    public void setIncubationAutoClaimEnabled(boolean enabled) { this.incubationAutoClaimEnabled = enabled; }
+
     public boolean hasSelectedStarter() {
         return starterSelected;
     }
