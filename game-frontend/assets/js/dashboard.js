@@ -500,11 +500,16 @@ async function claimMission(instanceId) {
     if (!fullAutomatic) showMissionClaimModal(result);
     if (typeof startMissionAutoRepeat === "function") await startMissionAutoRepeat(result, fullAutomatic);
     renderDashboardPage();
-  } catch (err) {
+    } catch (err) {
+    if (typeof isInventoryStackLimitError === "function" && isInventoryStackLimitError(err)) {
+      await pauseMissionAutomation(instanceId);
+      renderDashboardPage();
+      showMissionStackLimitModal(getMissionStackLimitItemName(err));
+      return;
+    }
     showToast(err.message, "error");
   }
 }
-
 // Incubation timers
 function startIncubationTimer(inc = null) {
   if (typeof incubStopTimer === "function") incubStopTimer();
@@ -577,7 +582,7 @@ function startMissionTimers() {
               if (isInventoryStackLimitError(err)) {
                 await pauseMissionAutomation(el.dataset.missionInstance);
                 renderDashboardPage();
-                showMissionStackLimitModal();
+                showMissionStackLimitModal(getMissionStackLimitItemName(err));
                 return;
               }
               showToast(`Resgate automático pausado: ${err.message}`, "error");

@@ -283,7 +283,13 @@ async function pauseMissionAutomation(instanceId) {
   ]);
 }
 
-function showMissionStackLimitModal() {
+function getMissionStackLimitItemName(err) {
+  const message = String(err && err.message || "");
+  const match = message.match(/Item stack limit exceeded for item ['"](.+?)['"]\. Maximum stack/i);
+  return match ? match[1] : "o item recebido";
+}
+
+function showMissionStackLimitModal(itemName = "o item recebido") {
   const existing = document.getElementById("mission-stack-limit-modal");
   if (existing) existing.remove();
 
@@ -302,7 +308,7 @@ function showMissionStackLimitModal() {
           <h3 id="mission-stack-limit-title" class="text-xl font-bold mt-1">Automação pausada</h3>
         </div>
       </div>
-      <p class="mt-4 text-sm leading-relaxed text-slate-200">O item recebido atingiu o limite de <strong class="text-amber-300">999 unidades</strong> no inventário. Por segurança, a repetição automática e o resgate automático foram desligados.</p>
+      <p class="mt-4 text-sm leading-relaxed text-slate-200">O item <strong class="text-amber-300">${escapeHtml(itemName)}</strong> atingiu o limite de <strong class="text-amber-300">999 unidades</strong> no inventário. Por segurança, a repetição automática e o resgate automático foram desligados.</p>
       <p class="mt-3 text-sm leading-relaxed text-slate-400">A missão continua concluída e pendente de resgate. Libere espaço no inventário e faça o resgate manualmente.</p>
       <button id="mission-stack-limit-confirm" class="btn-primary mt-6 w-full">Entendi</button>
     </div>
@@ -329,6 +335,12 @@ async function claimMissionFromList(instanceId) {
     await startMissionAutoRepeat(result, fullAutomatic);
     await loadActiveMissions();
   } catch (err) {
+    if (isInventoryStackLimitError(err)) {
+      await pauseMissionAutomation(instanceId);
+      await loadActiveMissions();
+      showMissionStackLimitModal(getMissionStackLimitItemName(err));
+      return;
+    }
     showToast(err.message, "error");
   }
 }
@@ -871,7 +883,7 @@ function startMissionsPageTimers() {
               if (isInventoryStackLimitError(err)) {
                 await pauseMissionAutomation(el.dataset.mpInstance);
                 await loadActiveMissions();
-                showMissionStackLimitModal();
+                showMissionStackLimitModal(getMissionStackLimitItemName(err));
                 return;
               }
               showToast(`Resgate automático pausado: ${err.message}`, "error");
