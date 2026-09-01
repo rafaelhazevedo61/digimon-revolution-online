@@ -25,6 +25,9 @@ public class MissionInstance {
     @Column(name = "slot_number", nullable = false)
     private int slotNumber;
 
+    @Column(name = "auto_repeat_enabled", nullable = false)
+    private boolean autoRepeatEnabled;
+
     @Column(name = "digimon_id", nullable = false)
     private UUID digimonId;
 
@@ -159,6 +162,14 @@ public class MissionInstance {
 
     public int getSlotNumber() {
         return slotNumber;
+    }
+
+    public boolean isAutoRepeatEnabled() {
+        return autoRepeatEnabled;
+    }
+
+    public void setAutoRepeatEnabled(boolean autoRepeatEnabled) {
+        this.autoRepeatEnabled = autoRepeatEnabled;
     }
 
     public UUID getDigimonId () {

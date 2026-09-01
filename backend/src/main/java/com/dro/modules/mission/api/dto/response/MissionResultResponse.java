@@ -13,6 +13,7 @@ public record MissionResultResponse(
         int xpGained,
         int bitsGained,
         boolean levelUp,
+        boolean autoRepeatEnabled,
         List<RewardResponse> rewards,
         NewlyUnlockedContentResponse newlyUnlockedContent,
         MissionRewardBreakdownResponse experienceBreakdown,

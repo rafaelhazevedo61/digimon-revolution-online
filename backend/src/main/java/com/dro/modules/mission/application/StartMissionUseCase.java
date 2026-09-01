@@ -40,11 +40,16 @@ public class StartMissionUseCase {
 
     @Transactional
     public MissionStartResponse execute(String token, String missionId) {
-        return execute(token, missionId, null);
+        return execute(token, missionId, null, false);
     }
 
     @Transactional
     public MissionStartResponse execute(String token, String missionId, UUID teamId) {
+        return execute(token, missionId, teamId, false);
+    }
+
+    @Transactional
+    public MissionStartResponse execute(String token, String missionId, UUID teamId, boolean autoRepeat) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         List<Digimon> digimons = teamId == null
@@ -105,6 +110,7 @@ public class StartMissionUseCase {
         digimons.forEach(digimonRepository::save);
         Duration missionDuration = isAdmin ? Duration.ZERO : Duration.ofSeconds(mission.getDurationSeconds());
         MissionInstance instance = new MissionInstance(playerId, teamId, slotNumber, digimonIds, missionId, missionDuration);
+        instance.setAutoRepeatEnabled(autoRepeat && teamId != null);
         missionInstanceRepository.save(instance);
         return new MissionStartResponse(instance.getId(), instance.getEndsAt());
     }

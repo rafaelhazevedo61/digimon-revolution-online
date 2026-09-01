@@ -66,6 +66,7 @@ public class GetActiveMissionsUseCase {
                     mission.getStartedAt(),
                     mission.getEndsAt(),
                     mission.getSlotNumber(),
+                    mission.isAutoRepeatEnabled(),
                     mission.getTeamId(),
                     mission.getTeamId() == null
                             ? null

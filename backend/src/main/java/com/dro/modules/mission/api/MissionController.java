@@ -4,8 +4,10 @@ import com.dro.modules.mission.api.dto.response.MissionInstanceResponse;
 import com.dro.modules.mission.api.dto.response.MissionLootPreviewResponse;
 import com.dro.modules.mission.api.dto.response.MissionResponse;
 import com.dro.modules.mission.api.dto.response.MissionResultResponse;
+import com.dro.modules.mission.api.dto.request.MissionAutoRepeatRequest;
 import com.dro.modules.mission.api.dto.request.StartMissionRequest;
 import com.dro.modules.mission.api.dto.response.MissionStartResponse;
+import com.dro.modules.mission.api.dto.response.MissionAutoRepeatResponse;
 import com.dro.modules.mission.api.dto.response.MissionSlotsResponse;
 import com.dro.modules.mission.application.ClaimMissionUseCase;
 import com.dro.modules.mission.application.GetActiveMissionsUseCase;
@@ -13,6 +15,7 @@ import com.dro.modules.mission.application.GetAvailableMissionsUseCase;
 import com.dro.modules.mission.application.GetMissionLootPreviewUseCase;
 import com.dro.modules.mission.application.GetMissionSlotsUseCase;
 import com.dro.modules.mission.application.StartMissionUseCase;
+import com.dro.modules.mission.application.SetMissionAutoRepeatUseCase;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -30,10 +33,20 @@ public class MissionController {
     private final ClaimMissionUseCase claimMissionUseCase;
     private final GetActiveMissionsUseCase getActiveMissionsUseCase;
     private final GetMissionSlotsUseCase getMissionSlotsUseCase;
+    private final SetMissionAutoRepeatUseCase setMissionAutoRepeatUseCase;
 
     @PostMapping("/start")
     public ResponseEntity<MissionStartResponse> start(@RequestHeader("Authorization") String authorization, @RequestBody StartMissionRequest request) {
-        return ResponseEntity.ok(startMissionUseCase.execute(authorization, request.missionId(), request.teamId()));
+        return ResponseEntity.ok(startMissionUseCase.execute(authorization, request.missionId(), request.teamId(), request.autoRepeat()));
+    }
+
+    @PatchMapping("/{missionInstanceId}/auto-repeat")
+    public MissionAutoRepeatResponse setAutoRepeat(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable UUID missionInstanceId,
+            @RequestBody MissionAutoRepeatRequest request
+    ) {
+        return setMissionAutoRepeatUseCase.execute(authorization, missionInstanceId, request.enabled());
     }
 
     @PostMapping("/{missionInstanceId}/claim")
@@ -70,7 +83,8 @@ public class MissionController {
             final GetMissionLootPreviewUseCase getMissionLootPreviewUseCase,
             final ClaimMissionUseCase claimMissionUseCase,
             final GetActiveMissionsUseCase getActiveMissionsUseCase,
-            final GetMissionSlotsUseCase getMissionSlotsUseCase
+            final GetMissionSlotsUseCase getMissionSlotsUseCase,
+            final SetMissionAutoRepeatUseCase setMissionAutoRepeatUseCase
     ) {
         this.startMissionUseCase = startMissionUseCase;
         this.getAvailableMissionsUseCase = getAvailableMissionsUseCase;
@@ -78,5 +92,6 @@ public class MissionController {
         this.claimMissionUseCase = claimMissionUseCase;
         this.getActiveMissionsUseCase = getActiveMissionsUseCase;
         this.getMissionSlotsUseCase = getMissionSlotsUseCase;
+        this.setMissionAutoRepeatUseCase = setMissionAutoRepeatUseCase;
     }
 }

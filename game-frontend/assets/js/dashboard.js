@@ -497,6 +497,7 @@ async function claimMission(instanceId) {
   try {
     const result = await apiPost(`/missions/${instanceId}/claim`);
     showMissionClaimModal(result);
+    if (typeof startMissionAutoRepeat === "function") await startMissionAutoRepeat(result);
     renderDashboardPage();
   } catch (err) {
     showToast(err.message, "error");

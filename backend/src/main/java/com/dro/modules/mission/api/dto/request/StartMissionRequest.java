@@ -10,5 +10,10 @@ import java.util.UUID;
 public record StartMissionRequest(
         @NotBlank
         String missionId,
-        UUID teamId
-) {}
+        UUID teamId,
+        boolean autoRepeat
+) {
+    public StartMissionRequest(String missionId, UUID teamId) {
+        this(missionId, teamId, false);
+    }
+}

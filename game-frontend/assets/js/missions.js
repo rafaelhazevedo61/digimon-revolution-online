@@ -181,6 +181,9 @@ function renderActiveMissionCard(m) {
   const endsAt = new Date(m.endsAt).getTime();
   const remaining = Math.max(0, Math.floor((endsAt - now) / 1000));
   const done = m.status === "COMPLETED" || remaining <= 0;
+  const autoRepeatControl = m.teamId
+    ? `<button class="btn-sm ${m.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoRepeat('${m.missionInstanceId}', ${!m.autoRepeatEnabled})">${m.autoRepeatEnabled ? "Auto: ativa" : "Ativar auto"}</button>`
+    : "";
 
   return `
     <article class="missions-active-card ${done ? "missions-active-card-ready" : ""}" data-mp-instance="${m.missionInstanceId}" data-mp-ends-at="${m.endsAt}">
@@ -191,15 +194,51 @@ function renderActiveMissionCard(m) {
         <p class="missions-active-team">${escapeHtml(m.teamName || (m.teamId ? "Time de missão" : "Missão legada"))}${m.teamId ? " · 3 Digimons" : ""}</p>
         <div class="missions-active-state"><span class="missions-active-dot ${done ? "missions-active-dot-ready" : ""}"></span><span class="mp-timer">${done ? "Concluída!" : `Retorno em ${formatTime(remaining)}`}</span></div>
       </div>
-      <div class="missions-active-action">${done ? `<button class="btn-sm btn-primary" onclick="claimMissionFromList('${m.missionInstanceId}')">Resgatar</button>` : `<span class="missions-active-badge">Em andamento</span>`}</div>
+      <div class="missions-active-action">
+        ${autoRepeatControl}
+        ${done ? `<button class="btn-sm btn-primary" onclick="claimMissionFromList('${m.missionInstanceId}')">Resgatar</button>` : `<span class="missions-active-badge">Em andamento</span>`}
+      </div>
     </article>
   `;
+}
+
+async function toggleMissionAutoRepeat(instanceId, enabled) {
+  try {
+    await apiPatch(`/missions/${instanceId}/auto-repeat`, { enabled });
+    showToast(enabled ? "Auto-missão ativada para este slot." : "Auto-missão pausada.", "success");
+    await loadActiveMissions();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function startMissionAutoRepeat(result) {
+  if (!result || !result.autoRepeatEnabled || !result.missionId || !result.teamId) return false;
+  try {
+    await apiPost("/missions/start", {
+      missionId: result.missionId,
+      teamId: result.teamId,
+      autoRepeat: true
+    });
+    const repeatButton = document.getElementById("mission-repeat-button");
+    if (repeatButton) {
+      repeatButton.disabled = true;
+      repeatButton.textContent = "Auto-missão ativa";
+      repeatButton.classList.add("opacity-70", "cursor-not-allowed");
+    }
+    showToast("Auto-missão: o mesmo time foi reenviado.", "success");
+    return true;
+  } catch (err) {
+    showToast(`Auto-missão pausada: ${err.message}`, "error");
+    return false;
+  }
 }
 
 async function claimMissionFromList(instanceId) {
   try {
     const result = await apiPost(`/missions/${instanceId}/claim`);
     showMissionClaimModal(result);
+    await startMissionAutoRepeat(result);
     await loadActiveMissions();
   } catch (err) {
     showToast(err.message, "error");
