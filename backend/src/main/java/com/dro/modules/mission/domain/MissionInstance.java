@@ -22,6 +22,9 @@ public class MissionInstance {
     @Column(name = "team_id")
     private UUID teamId;
 
+    @Column(name = "slot_number", nullable = false)
+    private int slotNumber;
+
     @Column(name = "digimon_id", nullable = false)
     private UUID digimonId;
 
@@ -48,19 +51,27 @@ public class MissionInstance {
     private Instant claimedAt;
 
     protected MissionInstance () {
-        // JPA
+        this.slotNumber = 1;
     }
 
     public MissionInstance(UUID playerId, UUID digimonId, String missionId, Duration duration) {
-        this(playerId, null, List.of(digimonId), missionId, duration);
+        this(playerId, null, 1, List.of(digimonId), missionId, duration);
     }
 
     public MissionInstance(UUID playerId, UUID teamId, List<UUID> digimonIds, String missionId, Duration duration) {
+        this(playerId, teamId, 1, digimonIds, missionId, duration);
+    }
+
+    public MissionInstance(UUID playerId, UUID teamId, int slotNumber, List<UUID> digimonIds, String missionId, Duration duration) {
+        if (slotNumber < 1 || slotNumber > 3) {
+            throw new IllegalArgumentException("Mission slot must be between 1 and 3");
+        }
         if (digimonIds == null || digimonIds.isEmpty() || digimonIds.size() > 3) {
             throw new IllegalArgumentException("A mission instance must have between one and three Digimons");
         }
         this.playerId = playerId;
         this.teamId = teamId;
+        this.slotNumber = slotNumber;
         this.digimonId = digimonIds.get(0);
         this.digimon2Id = digimonIds.size() > 1 ? digimonIds.get(1) : null;
         this.digimon3Id = digimonIds.size() > 2 ? digimonIds.get(2) : null;
@@ -146,7 +157,11 @@ public class MissionInstance {
         return teamId;
     }
 
-    public UUID getDigimonId() {
+    public int getSlotNumber() {
+        return slotNumber;
+    }
+
+    public UUID getDigimonId () {
         return digimonId;
     }
 

@@ -36,6 +36,9 @@ public enum ItemType {
     // Expansão da incubadora
     INCUBATION_SLOT_UNLOCK,
 
+    // Expansão dos slots de missão
+    MISSION_SLOT_UNLOCK,
+
     // Expansão permanente do Storage
     STORAGE_SLOT_1,
     STORAGE_SLOT_5,

@@ -16,6 +16,7 @@ public record MissionInstanceResponse(
         MissionStatus status,
         Instant startedAt,
         Instant endsAt,
+        int slotNumber,
         UUID teamId,
         String teamName,
         List<UUID> digimonIds

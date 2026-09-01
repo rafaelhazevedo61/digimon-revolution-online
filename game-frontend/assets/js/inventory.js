@@ -424,7 +424,7 @@ function invResolvedCategory(item) {
   if (type === "LOOT_CHEST") return "CHEST";
   if (type === "EVOLUTION_MATERIAL") return "EVOLUTION_MATERIAL";
   if (type.startsWith("FRAGMENT_")) return "FRAGMENT";
-  if (type === "POTION_SMALL" || type.startsWith("XP_DISC_") || type.startsWith("STORAGE_SLOT_") || type === "INCUBATION_SLOT_UNLOCK") return "CONSUMABLE";
+  if (type === "POTION_SMALL" || type.startsWith("XP_DISC_") || type.startsWith("STORAGE_SLOT_") || type === "INCUBATION_SLOT_UNLOCK" || type === "MISSION_SLOT_UNLOCK") return "CONSUMABLE";
   if (type === "TRAINING_STONE" || type === "DATA_CORE" || type === "REFINEMENT_STONE") return "MATERIAL";
   return "OTHER";
 }
@@ -865,6 +865,7 @@ function invItemName(itemType) {
     INCUBATOR_EPIC: "Incubadora Épica",
     INCUBATOR_LEGENDARY: "Incubadora Lendária",
     INCUBATION_SLOT_UNLOCK: "Expansor de Slot de Incubação",
+    MISSION_SLOT_UNLOCK: "Expansor de Slot de Missão",
     STORAGE_SLOT_1: "+1 Storage",
     STORAGE_SLOT_5: "+5 Storage",
     STORAGE_SLOT_10: "+10 Storage",
@@ -892,7 +893,7 @@ function invItemEmoji(itemType) {
     DIGITAMA_EARTH: "🌍", DIGITAMA_WIND: "🌪️", DIGITAMA_LIGHT: "✨", DIGITAMA_DARK: "🌑",
     DIGITAMA_THUNDER: "⚡", DIGITAMA_NEUTRAL: "⚪", DIGITAMA_ICE: "❄️", DIGITAMA_STEEL: "⚙️",
     INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "📦", INCUBATOR_EPIC: "📦", INCUBATOR_LEGENDARY: "🌟",
-    INCUBATION_SLOT_UNLOCK: "🔓",
+    INCUBATION_SLOT_UNLOCK: "🔓", MISSION_SLOT_UNLOCK: "🚀",
     STORAGE_SLOT_1: "🗄️", STORAGE_SLOT_5: "🗄️", STORAGE_SLOT_10: "🗄️",
     XP_DISC_1: "💿", XP_DISC_3: "💿", XP_DISC_5: "💿",
     XP_DISC_10: "💿", XP_DISC_15: "💿", XP_DISC_20: "💿",
@@ -905,14 +906,14 @@ function invItemEmoji(itemType) {
 }
 
 function invIsUsable(itemType) {
-  const usable = ["POTION_SMALL", "TRAINING_STONE", "DATA_CORE", "INCUBATION_SLOT_UNLOCK",
+  const usable = ["POTION_SMALL", "TRAINING_STONE", "DATA_CORE", "INCUBATION_SLOT_UNLOCK", "MISSION_SLOT_UNLOCK",
     "STORAGE_SLOT_1", "STORAGE_SLOT_5", "STORAGE_SLOT_10",
     "XP_DISC_1", "XP_DISC_3", "XP_DISC_5", "XP_DISC_10", "XP_DISC_15", "XP_DISC_20", "RARITY_REROLL"];
   return usable.includes(itemType);
 }
 
 function invItemCategory(itemType) {
-  if (itemType === "POTION_SMALL" || itemType === "INCUBATION_SLOT_UNLOCK"
+  if (itemType === "POTION_SMALL" || itemType === "INCUBATION_SLOT_UNLOCK" || itemType === "MISSION_SLOT_UNLOCK"
       || itemType.startsWith("STORAGE_SLOT_")) return "common";
   if (itemType.startsWith("XP_DISC_")) return "rare";
   if (itemType.startsWith("DIGITAMA_")) return "rare";
@@ -927,6 +928,7 @@ function invItemCategory(itemType) {
 function invItemCategoryName(itemType) {
   if (itemType === "POTION_SMALL") return "Poção";
   if (itemType === "INCUBATION_SLOT_UNLOCK") return "Incubação";
+  if (itemType === "MISSION_SLOT_UNLOCK") return "Missões";
   if (itemType.startsWith("STORAGE_SLOT_")) return "Storage";
   if (itemType.startsWith("XP_DISC_")) return "Experiência";
   if (itemType === "TRAINING_STONE" || itemType === "DATA_CORE") return "Material";

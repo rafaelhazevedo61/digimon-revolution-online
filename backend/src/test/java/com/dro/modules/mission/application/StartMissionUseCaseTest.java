@@ -21,6 +21,7 @@ import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.security.JwtSettings;
 import com.dro.shared.security.JwtTokenCodec;
@@ -96,6 +97,39 @@ class StartMissionUseCaseTest {
                 .activeDigimonId(digimonId)
                 .userType(UserType.PLAYER)
                 .build();
+    }
+
+    @Test
+    void blocksSecondMissionWhenOnlyFirstMissionSlotIsUnlocked() {
+        Digimon digimon = digimonWithEnergy(10);
+        stubMissionStart(digimon);
+        MissionInstance occupied = mock(MissionInstance.class);
+        when(occupied.getSlotNumber()).thenReturn(1);
+        when(missionInstanceRepository.findByPlayerIdAndStatusIn(
+                playerId, List.of(MissionStatus.RUNNING, MissionStatus.COMPLETED)
+        )).thenReturn(List.of(occupied));
+
+        assertThrows(ConflictException.class, () -> useCase.execute(token, "mission-1"));
+        verify(missionInstanceRepository, never()).save(any(MissionInstance.class));
+    }
+
+    @Test
+    void allocatesNextUnlockedMissionSlot() {
+        Digimon digimon = digimonWithEnergy(10);
+        stubMissionStart(digimon);
+        player.setUnlockedMissionSlots(2);
+        when(gameplayConfig.isEnergyConsumptionEnabled()).thenReturn(false);
+        MissionInstance occupied = mock(MissionInstance.class);
+        when(occupied.getSlotNumber()).thenReturn(1);
+        when(missionInstanceRepository.findByPlayerIdAndStatusIn(
+                playerId, List.of(MissionStatus.RUNNING, MissionStatus.COMPLETED)
+        )).thenReturn(List.of(occupied));
+
+        useCase.execute(token, "mission-1");
+
+        ArgumentCaptor<MissionInstance> captor = ArgumentCaptor.forClass(MissionInstance.class);
+        verify(missionInstanceRepository).save(captor.capture());
+        assertEquals(2, captor.getValue().getSlotNumber());
     }
 
     @Test

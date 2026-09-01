@@ -6,10 +6,12 @@ import com.dro.modules.mission.api.dto.response.MissionResponse;
 import com.dro.modules.mission.api.dto.response.MissionResultResponse;
 import com.dro.modules.mission.api.dto.request.StartMissionRequest;
 import com.dro.modules.mission.api.dto.response.MissionStartResponse;
+import com.dro.modules.mission.api.dto.response.MissionSlotsResponse;
 import com.dro.modules.mission.application.ClaimMissionUseCase;
 import com.dro.modules.mission.application.GetActiveMissionsUseCase;
 import com.dro.modules.mission.application.GetAvailableMissionsUseCase;
 import com.dro.modules.mission.application.GetMissionLootPreviewUseCase;
+import com.dro.modules.mission.application.GetMissionSlotsUseCase;
 import com.dro.modules.mission.application.StartMissionUseCase;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +29,7 @@ public class MissionController {
     private final GetMissionLootPreviewUseCase getMissionLootPreviewUseCase;
     private final ClaimMissionUseCase claimMissionUseCase;
     private final GetActiveMissionsUseCase getActiveMissionsUseCase;
+    private final GetMissionSlotsUseCase getMissionSlotsUseCase;
 
     @PostMapping("/start")
     public ResponseEntity<MissionStartResponse> start(@RequestHeader("Authorization") String authorization, @RequestBody StartMissionRequest request) {
@@ -41,6 +44,11 @@ public class MissionController {
     @GetMapping("/active")
     public List<MissionInstanceResponse> getActiveMissions(@RequestHeader("Authorization") String token) {
         return getActiveMissionsUseCase.execute(token);
+    }
+
+    @GetMapping("/slots")
+    public MissionSlotsResponse getMissionSlots(@RequestHeader("Authorization") String token) {
+        return getMissionSlotsUseCase.execute(token);
     }
 
     @GetMapping("/{missionId}/loot")
@@ -61,12 +69,14 @@ public class MissionController {
             final GetAvailableMissionsUseCase getAvailableMissionsUseCase,
             final GetMissionLootPreviewUseCase getMissionLootPreviewUseCase,
             final ClaimMissionUseCase claimMissionUseCase,
-            final GetActiveMissionsUseCase getActiveMissionsUseCase
+            final GetActiveMissionsUseCase getActiveMissionsUseCase,
+            final GetMissionSlotsUseCase getMissionSlotsUseCase
     ) {
         this.startMissionUseCase = startMissionUseCase;
         this.getAvailableMissionsUseCase = getAvailableMissionsUseCase;
         this.getMissionLootPreviewUseCase = getMissionLootPreviewUseCase;
         this.claimMissionUseCase = claimMissionUseCase;
         this.getActiveMissionsUseCase = getActiveMissionsUseCase;
+        this.getMissionSlotsUseCase = getMissionSlotsUseCase;
     }
 }

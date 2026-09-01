@@ -60,12 +60,20 @@ public class StartMissionUseCase {
         });
 
         boolean isAdmin = player.getUserType() == UserType.ADMIN;
-        if (missionInstanceRepository.countByPlayerIdAndStatusIn(
+        int availableMissionSlots = isAdmin
+                ? MissionSlotRules.TOTAL_SLOTS
+                : MissionSlotRules.normalizeUnlockedSlots(player.getUnlockedMissionSlots());
+        Set<Integer> occupiedMissionSlots = new HashSet<>();
+        missionInstanceRepository.findByPlayerIdAndStatusIn(
                 playerId,
                 List.of(MissionStatus.RUNNING, MissionStatus.COMPLETED)
-        ) >= 3) {
-            throw new ConflictException("Todos os slots de missão estão ocupados");
-        }
+        ).forEach(instance -> occupiedMissionSlots.add(instance.getSlotNumber()));
+        int slotNumber = java.util.stream.IntStream.rangeClosed(1, availableMissionSlots)
+                .filter(candidate -> !occupiedMissionSlots.contains(candidate))
+                .findFirst()
+                .orElseThrow(() -> new ConflictException(isAdmin
+                        ? "Todos os slots de missão estão ocupados"
+                        : "Todos os slots de missão desbloqueados estão ocupados"));
 
         UUID clanId = player.getClanId();
         if (!isAdmin && gameplayConfig.isEnergyConsumptionEnabled()) {
@@ -96,7 +104,7 @@ public class StartMissionUseCase {
 
         digimons.forEach(digimonRepository::save);
         Duration missionDuration = isAdmin ? Duration.ZERO : Duration.ofSeconds(mission.getDurationSeconds());
-        MissionInstance instance = new MissionInstance(playerId, teamId, digimonIds, missionId, missionDuration);
+        MissionInstance instance = new MissionInstance(playerId, teamId, slotNumber, digimonIds, missionId, missionDuration);
         missionInstanceRepository.save(instance);
         return new MissionStartResponse(instance.getId(), instance.getEndsAt());
     }

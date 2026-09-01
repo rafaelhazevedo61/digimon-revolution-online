@@ -99,26 +99,51 @@ async function loadActiveMissions() {
   const container = document.getElementById("active-missions");
   if (!container) return;
 
-  let active;
+  let slotResponse;
   try {
-    active = await apiGet("/missions/active");
+    slotResponse = await apiGet("/missions/slots");
   } catch (err) {
     return;
   }
 
-  if (!active || active.length === 0) {
-    container.innerHTML = "";
-    return;
-  }
+  const active = Array.isArray(slotResponse) ? slotResponse : (slotResponse?.activeMissions || []);
+  const totalSlots = Math.max(1, Number(slotResponse?.totalSlots) || 3);
+  const unlockedSlots = Math.max(1, Math.min(totalSlots, Number(slotResponse?.unlockedSlots) || 1));
+  const missionBySlot = new Map(active.map(mission => [Number(mission.slotNumber), mission]));
+  const slotCards = Array.from({ length: totalSlots }, (_, index) => {
+    const slotNumber = index + 1;
+    const mission = missionBySlot.get(slotNumber);
+    if (slotNumber > unlockedSlots) {
+      return `
+        <article class="missions-active-card missions-slot-card missions-slot-card-locked" data-mp-slot="${slotNumber}">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3"><span class="text-2xl">🔒</span><div><p class="missions-active-label">Slot ${slotNumber}</p><p class="font-bold text-slate-300 mt-1">Slot bloqueado</p></div></div>
+            <span class="missions-active-badge">Bloqueado</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-3">Use um Expansor de Slot de Missão no inventário para liberar este espaço.</p>
+          <button class="btn-sm btn-secondary mt-3" onclick="navigateTo('inventory')">Ver inventário</button>
+        </article>
+      `;
+    }
+    if (!mission) {
+      return `
+        <article class="missions-active-card missions-slot-card missions-slot-card-empty" data-mp-slot="${slotNumber}">
+          <div class="flex items-center justify-between gap-3"><div class="flex items-center gap-3"><span class="text-2xl">✦</span><div><p class="missions-active-label">Slot ${slotNumber}</p><p class="font-bold text-slate-200 mt-1">Slot livre</p></div></div><span class="missions-active-badge">Disponível</span></div>
+          <p class="text-xs text-slate-500 mt-3">Escolha uma missão e envie um time para ocupar este slot.</p>
+        </article>
+      `;
+    }
+    return renderActiveMissionCard(mission);
+  }).join("");
 
   container.innerHTML = `
     <section class="missions-active-section mb-4">
       <div class="dashboard-section-heading">
-        <div><p class="progression-eyebrow progression-eyebrow-blue">Atividade em campo</p><h3 class="progression-panel-title">Missões em andamento</h3></div>
-        <span class="dashboard-section-count dashboard-section-count-blue">${active.length}</span>
+        <div><p class="progression-eyebrow progression-eyebrow-blue">Atividade em campo</p><h3 class="progression-panel-title">Slots de missão</h3></div>
+        <span class="dashboard-section-count dashboard-section-count-blue">${active.length}/${unlockedSlots}</span>
       </div>
-      <p class="dashboard-section-note">Acompanhe os retornos e resgate cada recompensa assim que estiver disponível.</p>
-      <div class="missions-active-list">${active.map(renderActiveMissionCard).join("")}</div>
+      <p class="dashboard-section-note">Você possui ${unlockedSlots} de ${totalSlots} slots desbloqueados. Acompanhe os retornos e resgate cada recompensa assim que estiver disponível.</p>
+      <div class="missions-active-list grid grid-cols-1 gap-3">${slotCards}</div>
     </section>
   `;
 
@@ -159,7 +184,7 @@ function renderActiveMissionCard(m) {
     <article class="missions-active-card ${done ? "missions-active-card-ready" : ""}" data-mp-instance="${m.missionInstanceId}" data-mp-ends-at="${m.endsAt}">
       <div class="missions-active-icon" aria-hidden="true">✦</div>
       <div class="missions-active-main">
-        <p class="missions-active-label">Objetivo em campo</p>
+        <p class="missions-active-label">Objetivo em campo${m.slotNumber ? ` · Slot ${m.slotNumber}` : ""}</p>
         <p class="missions-active-name">${escapeHtml(formatMissionName(m))}</p>
         <p class="missions-active-team">${escapeHtml(m.teamName || (m.teamId ? "Time de missão" : "Missão legada"))}${m.teamId ? " · 3 Digimons" : ""}</p>
         <div class="missions-active-state"><span class="missions-active-dot ${done ? "missions-active-dot-ready" : ""}"></span><span class="mp-timer">${done ? "Concluída!" : `Retorno em ${formatTime(remaining)}`}</span></div>
