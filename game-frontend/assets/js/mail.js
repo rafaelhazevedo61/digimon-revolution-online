@@ -177,6 +177,8 @@ function mailRenderSummary(message) {
   const otherPlayer = mailFolder === "inbox" ? message.senderUsername : message.recipientUsername;
   const messageTypeLabels = { PLAYER: "Jogador", SYSTEM: "Sistema", AUCTION: "Leilão", CLAN: "Clã", EVENT: "Evento", ADMIN: "Administração" };
   const originLabel = messageTypeLabels[message.messageType] || "Mensagem";
+  const isSystem = message.messageType === "SYSTEM";
+  const systemClass = isSystem ? "is-system" : "";
   const actionLabel = message.actionType === "CLAN_INVITE" || message.actionType === "EVENT_REWARD_CLAIM"
     ? `<span class="mail-message-action">Ação pendente</span>`
     : "";
@@ -184,8 +186,8 @@ function mailRenderSummary(message) {
   const subject = message.subject || "(Sem assunto)";
 
   return `
-    <button class="mail-message-card ${isUnread ? "is-unread" : ""}" type="button" onclick="mailOpen('${message.id}')" aria-label="Abrir mensagem: ${escapeHtml(subject)}">
-      <span class="mail-message-icon ${isUnread ? "is-unread" : ""}" aria-hidden="true">${icon}</span>
+    <button class="mail-message-card ${isUnread ? "is-unread" : ""} ${systemClass}" type="button" onclick="mailOpen('${message.id}')" aria-label="Abrir mensagem: ${escapeHtml(subject)}">
+      <span class="mail-message-icon ${isUnread ? "is-unread" : ""} ${systemClass}" aria-hidden="true">${icon}</span>
       <span class="mail-message-content">
         <span class="mail-message-topline"><span class="mail-message-origin">${originLabel}</span><time>${mailFormatDate(message.createdAt)}</time></span>
         <span class="mail-message-title-row"><strong class="mail-message-subject">${escapeHtml(subject)}</strong>${isUnread ? `<span class="mail-message-unread">Nova</span>` : ""}</span>
@@ -256,6 +258,8 @@ function mailAuctionBodyMarkup(message) {
 function mailShowMessageModal(message) {
   const root = document.getElementById("mail-modal-root");
   if (!root) return;
+  const isSystem = message.messageType === "SYSTEM";
+  const modalClass = isSystem ? "mail-system-message-modal" : "";
   const actionMarkup = message.actionType === "CLAN_INVITE" ? `
     <div class="card-sm mt-4 border-cyan-800 bg-cyan-950/20">
       <p class="text-xs text-slate-400 mb-2">Este convite ainda precisa de uma decisão.</p>
@@ -272,11 +276,11 @@ function mailShowMessageModal(message) {
   ` : "";
   root.innerHTML = `
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70" id="mail-message-modal">
-      <div class="card w-full max-w-lg max-h-[85vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="mail-message-title">
+      <div class="card w-full max-w-lg max-h-[85vh] overflow-y-auto ${modalClass}" role="dialog" aria-modal="true" aria-labelledby="mail-message-title">
         <div class="flex items-start justify-between gap-3 mb-4">
           <div>
-            <p class="text-xs uppercase tracking-wider text-cyan-300">Correio</p>
-            <h3 class="text-lg font-bold" id="mail-message-title">${escapeHtml(message.subject)}</h3>
+            <p class="text-xs uppercase tracking-wider ${isSystem ? "text-violet-300" : "text-cyan-300"}">${isSystem ? "✦ Mensagem do sistema" : "Correio"}</p>
+            <h3 class="text-lg font-bold ${isSystem ? "text-violet-100" : ""}" id="mail-message-title">${escapeHtml(message.subject)}</h3>
           </div>
           <button class="text-slate-400 text-xl" aria-label="Fechar" onclick="mailCloseModal()">×</button>
         </div>
@@ -285,7 +289,7 @@ function mailShowMessageModal(message) {
           <p>Para: <strong class="text-slate-200">${escapeHtml(message.recipientUsername || "Você")}</strong></p>
           <p class="col-span-2">${mailFormatDate(message.createdAt)}</p>
         </div>
-        <div class="rounded-lg bg-slate-900/70 border border-slate-700 p-4 text-sm text-slate-200 break-words space-y-1">${mailAuctionBodyMarkup(message)}</div>
+        <div class="rounded-lg ${isSystem ? "mail-system-message-body" : "bg-slate-900/70 border border-slate-700"} p-4 text-sm text-slate-200 break-words space-y-1">${mailAuctionBodyMarkup(message)}</div>
         <p class="text-xs text-slate-500 mt-3">O MVP ainda não possui respostas diretas. Para escrever novamente, use “Nova mensagem”.</p>
         ${actionMarkup}
         <div class="grid grid-cols-2 gap-2 mt-4">
