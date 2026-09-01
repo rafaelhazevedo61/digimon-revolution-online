@@ -460,12 +460,21 @@ async function missionOpenRewardChest(chestCode, quantity = 1, button) {
   }
 }
 
-async function repeatMissionFromReward(missionId) {
+async function repeatMissionFromReward(missionId, teamId = null) {
   const button = document.getElementById("mission-repeat-button");
   if (!missionId || !button) return;
   button.disabled = true;
-  button.textContent = "Preparando...";
+  button.textContent = "Enviando...";
   try {
+    if (teamId) {
+      await apiPost("/missions/start", { missionId, teamId });
+      document.getElementById("mission-claim-modal")?.remove();
+      missionTeamContextPromise = null;
+      showToast("Time reenviado para a missão!");
+      navigateTo("missions");
+      return;
+    }
+
     if (!window._missionDefinitions || !window._missionDefinitions[missionId]) {
       const missions = await apiGet("/missions");
       window._missionDefinitions = Object.fromEntries((missions || []).map(mission => [missionIdentity(mission), mission]));
@@ -608,7 +617,7 @@ function showMissionClaimModal(result) {
 
       ${result && result.missionId ? `
         <div class="flex flex-col sm:flex-row gap-2 mt-5">
-          <button id="mission-repeat-button" class="btn-primary flex-1" onclick="repeatMissionFromReward('${escapeAttr(result.missionId)}')">Repetir missão</button>
+          <button id="mission-repeat-button" class="btn-primary flex-1" onclick="repeatMissionFromReward('${escapeAttr(result.missionId)}', '${escapeAttr(result.teamId || "")}')">Repetir missão</button>
           <button id="mission-claim-continue" class="btn-secondary flex-1">Continuar</button>
         </div>
       ` : `

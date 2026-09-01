@@ -253,6 +253,7 @@ public class ClaimMissionUseCase {
 
         return new MissionResultResponse(
                 mission.getId(),
+                instance.getTeamId(),
                 xpGained,
                 bitsGained,
                 levelUp,

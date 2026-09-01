@@ -95,12 +95,14 @@ class ClaimMissionUseCaseTest {
     void executeDeliversAreaChestInsteadOfLegacyRandomItemAndIgnoresLegacyFixedRewards() {
         UUID playerId = UUID.randomUUID();
         UUID digimonId = UUID.randomUUID();
+        UUID teamId = UUID.randomUUID();
         String missionId = "MISSION_1";
         String chestCode = "CHEST_MISSION_MISSION_1";
 
         MissionInstance instance = new MissionInstance(
                 playerId,
-                digimonId,
+                teamId,
+                List.of(digimonId),
                 missionId,
                 Duration.ZERO
         );
@@ -138,6 +140,8 @@ class ClaimMissionUseCaseTest {
             WeekendDoubleRewardRules.setManualOverride(null, Instant.now());
         }
 
+        assertThat(response.missionId()).isEqualTo(missionId);
+        assertThat(response.teamId()).isEqualTo(teamId);
         assertThat(response.xpGained()).isEqualTo(60);
         assertThat(response.bitsGained()).isEqualTo(0);
         assertThat(response.experienceBreakdown().baseAmount()).isEqualTo(30);
