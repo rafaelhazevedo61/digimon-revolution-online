@@ -4541,3 +4541,10 @@ body {
   .activity-calendar-section-caption { max-width: 7rem; }
   .activity-calendar-legend { gap: 0.45rem 0.65rem; }
 }
+
+/* Activity calendar: missed days */
+.activity-calendar-legend-dot.is-perdido { background: #f87171; }
+.activity-day-perdido { border-color: rgba(248, 113, 113, 0.38); background: linear-gradient(180deg, rgba(127, 29, 29, 0.18), rgba(15, 23, 42, 0.62)); }
+.activity-day-perdido .activity-day-state { color: #fca5a5; }
+.activity-day-perdido .activity-day-dot { background: #f87171; }
+.activity-day-perdido .activity-day-points strong { color: #fecaca; }

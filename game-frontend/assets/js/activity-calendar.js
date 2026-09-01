@@ -23,9 +23,13 @@ function renderActivityCalendar(data) {
     resgatado: "Resgatado",
     disponivel: "Disponível",
     progresso: "Em progresso",
-    bloqueado: "Sem atividade"
+    bloqueado: "Sem atividade",
+    perdido: "Perdido"
   };
-  const getStatus = (day) => day.rewardClaimed ? "resgatado" : day.goalReached ? "disponivel" : day.points > 0 ? "progresso" : "bloqueado";
+  const getStatus = (day) => {
+    const isPast = Boolean(day.date && data.currentDate && day.date < data.currentDate);
+    return day.rewardClaimed ? "resgatado" : isPast ? "perdido" : day.goalReached ? "disponivel" : day.points > 0 ? "progresso" : "bloqueado";
+  };
   const currentStatus = currentDay ? getStatus(currentDay) : "bloqueado";
   const currentStatusLabel = currentDay ? statusLabels[currentStatus] : "Aguardando atividade";
   const monthlyMessage = data.monthlyRewardClaimed
@@ -39,7 +43,8 @@ function renderActivityCalendar(data) {
 
   const days = dayEntries.map(day => {
     const status = getStatus(day);
-    const action = day.goalReached && !day.rewardClaimed
+    const isPast = Boolean(day.date && data.currentDate && day.date < data.currentDate);
+    const action = day.goalReached && !day.rewardClaimed && !isPast
       ? `<button type="button" class="btn-sm btn-primary activity-day-action" onclick="claimActivityDay('${day.date}')">Resgatar</button>`
       : "";
     const isToday = day.date === data.currentDate;
@@ -88,6 +93,7 @@ function renderActivityCalendar(data) {
             <span><i class="activity-calendar-legend-dot is-disponivel"></i>Disponível</span>
             <span><i class="activity-calendar-legend-dot is-progresso"></i>Em progresso</span>
             <span><i class="activity-calendar-legend-dot is-bloqueado"></i>Sem atividade</span>
+            <span><i class="activity-calendar-legend-dot is-perdido"></i>Perdido</span>
           </div>
           <div class="activity-calendar-grid">${days}</div>
         </section>
