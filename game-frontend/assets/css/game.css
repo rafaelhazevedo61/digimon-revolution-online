@@ -4715,23 +4715,44 @@ body {
 .arena-shop-balance strong small { color: #a8a29e; font-size: 0.55rem; font-weight: 600; }
 .arena-shop-balance p { margin: 0; color: #94a3b8; font-size: 0.6rem; }
 .arena-shop-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; }
-.arena-shop-card { display: flex; min-width: 0; flex-direction: column; padding: 0.9rem; border: 1px solid rgba(51, 65, 85, 0.82); border-radius: 0.7rem; background: rgba(15, 23, 42, 0.54); }
-.arena-shop-icon { display: grid; width: 2.2rem; height: 2.2rem; place-items: center; border-radius: 0.65rem; background: rgba(251, 191, 36, 0.12); color: #fcd34d; font-size: 1.05rem; }
-.arena-shop-copy { flex: 1; margin-top: 0.8rem; }
+.arena-shop-card { display: flex; min-width: 0; align-items: center; gap: 0.7rem; padding: 0.65rem 0.75rem; border: 1px solid rgba(51, 65, 85, 0.82); border-radius: 0.7rem; background: rgba(15, 23, 42, 0.54); }
+.arena-shop-icon { display: grid; width: 1.9rem; height: 1.9rem; flex: 0 0 auto; place-items: center; border-radius: 0.55rem; background: rgba(251, 191, 36, 0.12); color: #fcd34d; font-size: 0.9rem; }
+.arena-shop-copy { flex: 1; min-width: 0; }
 .arena-shop-copy h3 { margin: 0; color: #e2e8f0; font-size: 0.78rem; font-weight: 850; }
 .arena-shop-copy h3 small { margin-left: 0.35rem; color: #94a3b8; font-size: 0.58rem; font-weight: 600; }
 .arena-shop-copy p { margin: 0.3rem 0 0; color: #64748b; font-size: 0.57rem; }
+.arena-shop-purchase { display: flex; flex: 0 0 auto; align-items: flex-end; flex-direction: column; gap: 0.35rem; }
+.arena-shop-purchase > strong { margin: 0; color: #fcd34d; font-size: 0.62rem; }
 .arena-shop-copy strong { display: block; margin-top: 0.75rem; color: #fcd34d; font-size: 0.67rem; }
-.arena-shop-button { width: 100%; margin-top: 0.8rem; padding: 0.55rem 0.65rem; border: 0; border-radius: 0.55rem; background: linear-gradient(135deg, #0891b2, #2563eb); color: #f8fafc; cursor: pointer; font-size: 0.58rem; font-weight: 850; }
+.arena-shop-button { width: auto; margin-top: 0; padding: 0.45rem 0.6rem; border: 0; border-radius: 0.55rem; background: linear-gradient(135deg, #0891b2, #2563eb); color: #f8fafc; cursor: pointer; font-size: 0.58rem; font-weight: 850; }
 .arena-shop-button:hover { filter: brightness(1.1); }
 .arena-shop-button.is-disabled { background: rgba(51, 65, 85, 0.85); color: #94a3b8; cursor: not-allowed; }
 .arena-shop-loading { min-height: 4.5rem; padding: 1rem; border: 1px solid rgba(51, 65, 85, 0.7); border-radius: 0.7rem; background: rgba(15, 23, 42, 0.55); }
+.arena-shop-confirm-modal { max-width: 21rem; padding: 1rem; }
+.arena-shop-confirm-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+.arena-shop-confirm-heading h3 { margin: 0.3rem 0 0; color: #f8fafc; font-size: 0.95rem; font-weight: 850; }
+.arena-shop-modal-close { border: 0; background: transparent; color: #64748b; cursor: pointer; font-size: 1.35rem; line-height: 1; }
+.arena-shop-modal-close:hover { color: #e2e8f0; }
+.arena-shop-quantity-row { display: flex; align-items: center; gap: 0.4rem; margin-top: 1rem; }
+.arena-shop-quantity-button, .arena-shop-max-button { height: 2rem; border: 1px solid rgba(71, 85, 105, 0.8); border-radius: 0.45rem; background: rgba(30, 41, 59, 0.8); color: #cbd5e1; cursor: pointer; font-size: 0.75rem; font-weight: 850; }
+.arena-shop-quantity-button { width: 2rem; }
+.arena-shop-max-button { padding: 0 0.55rem; color: #67e8f9; font-size: 0.58rem; }
+.arena-shop-quantity-input { width: 3.5rem; height: 2rem; padding: 0.2rem; border: 1px solid rgba(34, 211, 238, 0.35); border-radius: 0.45rem; background: #020617; color: #f8fafc; text-align: center; font-size: 0.75rem; }
+.arena-shop-total-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; margin-top: 0.8rem; }
+.arena-shop-total-row span { min-width: 0; padding: 0.5rem; border-radius: 0.45rem; background: rgba(30, 41, 59, 0.55); }
+.arena-shop-total-row small, .arena-shop-total-row strong { display: block; }
+.arena-shop-total-row small { color: #64748b; font-size: 0.48rem; }
+.arena-shop-total-row strong { margin-top: 0.2rem; overflow: hidden; color: #fcd34d; font-size: 0.58rem; text-overflow: ellipsis; white-space: nowrap; }
+.arena-shop-modal-actions { display: flex; gap: 0.45rem; margin-top: 0.85rem; }
+.arena-shop-modal-buy, .arena-shop-modal-cancel { flex: 1; padding: 0.55rem; border: 0; border-radius: 0.5rem; cursor: pointer; font-size: 0.6rem; font-weight: 850; }
+.arena-shop-modal-buy { background: linear-gradient(135deg, #0891b2, #2563eb); color: #f8fafc; }
+.arena-shop-modal-cancel { background: #334155; color: #cbd5e1; }
 
 @media (min-width: 46rem) {
   .arena-subpage-panel { padding: 1.2rem; }
   .arena-ranking-row { grid-template-columns: 3.2rem minmax(0, 1fr) 7rem; min-height: 4.6rem; padding: 0.85rem 1rem; }
   .arena-history-row { padding: 0.85rem 1rem; }
-  .arena-shop-card { min-height: 12rem; }
+  .arena-shop-card { min-height: 4.8rem; }
 }
 
 @media (max-width: 45.99rem) {
@@ -4745,6 +4766,9 @@ body {
   .arena-history-row time { grid-column: 2 / span 2; }
   .arena-shop-balance { align-items: flex-start; flex-direction: column; gap: 0.5rem; }
   .arena-shop-grid { grid-template-columns: 1fr; }
+  .arena-shop-card { padding: 0.6rem; }
+  .arena-shop-purchase { gap: 0.3rem; }
+  .arena-shop-total-row strong { font-size: 0.53rem; }
   .arena-opponent-card { padding: 0.62rem; }
   .arena-opponent-footer { flex-wrap: nowrap; gap: 0.35rem; margin-top: 0.55rem; }
   .arena-opponent-reward { flex: 1 1 auto; }

@@ -2,6 +2,9 @@ const ARENA_STAGE_LABELS = {
   BABY: "Baby", BABY_II: "Baby II", ROOKIE: "Rookie", CHAMPION: "Champion", ULTIMATE: "Ultimate", MEGA: "Mega"
 };
 
+let arenaShopModalUnitPrice = 0;
+let arenaShopModalBalance = 0;
+
 function arenaWinChanceColor(chance) {
   return chance >= 60 ? "text-green-400" : chance >= 40 ? "text-yellow-400" : "text-red-400";
 }
@@ -327,29 +330,69 @@ function renderArenaShop(shop) {
 
   const productsHtml = shop.products.map(p => {
     const canBuy = coins >= p.priceCoins;
-    return `<article class="arena-shop-card"><div class="arena-shop-icon">✦</div><div class="arena-shop-copy"><h3>${escapeHtml(p.name)}${p.quantity > 1 ? `<small>×${p.quantity}</small>` : ""}</h3><p>Recompensa especial da Arena</p><strong>🪙 ${Number(p.priceCoins).toLocaleString("pt-BR")}</strong></div><button type="button" class="arena-shop-button ${canBuy ? "" : "is-disabled"}" ${canBuy ? `data-arena-shop-code="${escapeAttr(p.code)}" data-arena-shop-name="${escapeAttr(p.name)}" data-arena-shop-price="${p.priceCoins}"` : "disabled"}>${canBuy ? "Comprar" : "Saldo insuficiente"}</button></article>`;
+    return `<article class="arena-shop-card"><div class="arena-shop-icon">✦</div><div class="arena-shop-copy"><h3>${escapeHtml(p.name)}${p.quantity > 1 ? `<small>×${p.quantity}</small>` : ""}</h3></div><div class="arena-shop-purchase"><strong>🪙 ${Number(p.priceCoins).toLocaleString("pt-BR")}</strong><button type="button" class="arena-shop-button ${canBuy ? "" : "is-disabled"}" ${canBuy ? `data-arena-shop-code="${escapeAttr(p.code)}" data-arena-shop-name="${escapeAttr(p.name)}" data-arena-shop-price="${p.priceCoins}"` : "disabled"}>${canBuy ? "Comprar" : "Sem saldo"}</button></div></article>`;
   }).join("");
 
   container.innerHTML = `<div class="arena-shop-balance"><span><span class="arena-eyebrow">Seu saldo</span><strong>🪙 ${Number(coins).toLocaleString("pt-BR")} <small>Moedas de Arena</small></strong></span><p>As moedas são obtidas em vitórias e derrotas na Arena.</p></div><div class="arena-shop-grid">${productsHtml}</div>`;
   container.querySelectorAll("[data-arena-shop-code]").forEach(button => {
     button.addEventListener("click", () => {
-      confirmArenaShopPurchase(button.dataset.arenaShopCode, button.dataset.arenaShopName, Number(button.dataset.arenaShopPrice || 0));
+      openArenaShopPurchase(button.dataset.arenaShopCode, button.dataset.arenaShopName, Number(button.dataset.arenaShopPrice || 0), coins);
     });
   });
 }
 
-async function confirmArenaShopPurchase(productCode, productName, priceCoins) {
-  const confirmed = await showConfirm(`Comprar por 🪙 ${Number(priceCoins || 0).toLocaleString("pt-BR")}?`, {
-    title: productName,
-    confirmText: "Comprar",
-    cancelText: "Cancelar"
-  });
-  if (confirmed) buyArenaShopItem(productCode, productName);
+function openArenaShopPurchase(productCode, productName, priceCoins, balance) {
+  arenaShopModalUnitPrice = Number(priceCoins || 0);
+  arenaShopModalBalance = Number(balance || 0);
+  const maxQty = priceCoins > 0 ? Math.min(99, Math.floor(balance / priceCoins)) : 99;
+  if (maxQty < 1) return;
+  const overlay = document.createElement("div");
+  overlay.id = "arena-shop-modal";
+  overlay.className = "shop-modal-overlay";
+  overlay.innerHTML = `<div class="shop-modal arena-shop-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="arena-shop-modal-title" onclick="event.stopPropagation()"><div class="arena-shop-confirm-heading"><div><p class="arena-eyebrow arena-eyebrow-amber">Comprar item</p><h3 id="arena-shop-modal-title">${escapeHtml(productName)}</h3></div><button type="button" class="arena-shop-modal-close" aria-label="Fechar" onclick="closeArenaShopPurchase()">×</button></div><div class="arena-shop-quantity-row"><button type="button" class="arena-shop-quantity-button" onclick="arenaShopQtyChange(-1)" aria-label="Diminuir quantidade">−</button><input id="arena-shop-qty" class="arena-shop-quantity-input" type="number" value="1" min="1" max="${maxQty}" inputmode="numeric" oninput="arenaShopQtyUpdate()"><button type="button" class="arena-shop-quantity-button" onclick="arenaShopQtyChange(1)" aria-label="Aumentar quantidade">+</button><button type="button" class="arena-shop-max-button" onclick="arenaShopQtyMax()">MAX</button></div><div class="arena-shop-total-row"><span><small>Preço unitário</small><strong>🪙 ${Number(priceCoins).toLocaleString("pt-BR")}</strong></span><span><small>Total</small><strong id="arena-shop-total">🪙 ${Number(priceCoins).toLocaleString("pt-BR")}</strong></span><span><small>Saldo após</small><strong id="arena-shop-remaining">🪙 ${Number(balance - priceCoins).toLocaleString("pt-BR")}</strong></span></div><div class="arena-shop-modal-actions"><button type="button" class="arena-shop-modal-buy" onclick="confirmArenaShopQuantity('${escapeAttr(productCode)}','${escapeAttr(productName)}',${Number(priceCoins)})">Comprar</button><button type="button" class="arena-shop-modal-cancel" onclick="closeArenaShopPurchase()">Cancelar</button></div></div>`;
+  overlay.addEventListener("click", event => { if (event.target === overlay) closeArenaShopPurchase(); });
+  document.body.appendChild(overlay);
 }
 
-async function buyArenaShopItem(productCode, productName) {
+function arenaShopQtyChange(delta) {
+  const input = document.getElementById("arena-shop-qty");
+  if (!input) return;
+  input.value = Math.max(1, Math.min(Number(input.max) || 99, (Number(input.value) || 1) + delta));
+  arenaShopQtyUpdate();
+}
+
+function arenaShopQtyMax() {
+  const input = document.getElementById("arena-shop-qty");
+  if (!input) return;
+  input.value = input.max;
+  arenaShopQtyUpdate();
+}
+
+function arenaShopQtyUpdate() {
+  const input = document.getElementById("arena-shop-qty");
+  if (!input) return;
+  const qty = Math.max(1, Math.min(Number(input.max) || 99, Number(input.value) || 1));
+  input.value = qty;
+  const total = qty * arenaShopModalUnitPrice;
+  const totalEl = document.getElementById("arena-shop-total");
+  const remainingEl = document.getElementById("arena-shop-remaining");
+  if (totalEl) totalEl.textContent = `🪙 ${total.toLocaleString("pt-BR")}`;
+  if (remainingEl) remainingEl.textContent = `🪙 ${Math.max(0, arenaShopModalBalance - total).toLocaleString("pt-BR")}`;
+}
+
+async function confirmArenaShopQuantity(productCode, productName, priceCoins) {
+  const quantity = Math.max(1, Number(document.getElementById("arena-shop-qty")?.value) || 1);
+  closeArenaShopPurchase();
+  await buyArenaShopItem(productCode, productName, quantity);
+}
+
+function closeArenaShopPurchase() {
+  document.getElementById("arena-shop-modal")?.remove();
+}
+
+async function buyArenaShopItem(productCode, productName, quantity = 1) {
   try {
-    const result = await apiPost("/arena/shop/buy", { productCode, quantity: 1 });
+    const result = await apiPost("/arena/shop/buy", { productCode, quantity });
     showToast(`Comprou ${result.quantity}x ${productName} (🪙 ${result.arenaCoinsBalance} restantes)`);
     const shop = await apiGet("/arena/shop");
     renderArenaShop(shop);
