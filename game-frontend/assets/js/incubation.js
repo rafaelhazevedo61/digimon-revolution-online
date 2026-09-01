@@ -208,6 +208,10 @@ function incubRenderSlot(slot) {
       </div>
 
       <div id="incub-slot-action-${slotNumber}" class="mt-4">
+        <div class="flex flex-wrap gap-2 mb-3">
+          <button type="button" class="btn-sm ${incubation.autoClaimEnabled ? "btn-primary" : "btn-secondary"}" onclick="incubToggleAutomation('${escapeAttr(String(incubation.id))}', 'autoClaim', ${!incubation.autoClaimEnabled})">${incubation.autoClaimEnabled ? "Auto-coleta ativa" : "Ativar auto-coleta"}</button>
+          <button type="button" class="btn-sm ${incubation.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" onclick="incubToggleAutomation('${escapeAttr(String(incubation.id))}', 'autoRepeat', ${!incubation.autoRepeatEnabled})">${incubation.autoRepeatEnabled ? "Repetição ativa" : "Ativar repetição"}</button>
+        </div>
         ${done ? incubClaimButton(incubation.id) : `<p class="text-xs text-slate-500">Aguardando incubação...</p>`}
       </div>
     </article>
@@ -324,6 +328,17 @@ function incubStartTimer({ key, finishAt, remainingSeconds, timerId, barId, star
 
   if (tick()) {
     incubTimerIntervals.set(timerKey, setInterval(tick, 1000));
+  }
+}
+
+async function incubToggleAutomation(incubationId, mode, enabled) {
+  const params = new URLSearchParams({ autoClaim: String(mode === "autoClaim" ? enabled : true) });
+  if (mode === "autoRepeat") params.set("autoRepeat", String(enabled));
+  try {
+    await apiPatch(`/incubation/${encodeURIComponent(incubationId)}/automation?${params.toString()}`, null);
+    await renderIncubationPage();
+  } catch (err) {
+    showToast(err.message, "error");
   }
 }
 
