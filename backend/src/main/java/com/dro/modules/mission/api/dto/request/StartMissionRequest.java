@@ -2,10 +2,13 @@ package com.dro.modules.mission.api.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 
+import java.util.UUID;
+
 /**
  * Contrato de dados do módulo de Missões.
  */
 public record StartMissionRequest(
         @NotBlank
-        String missionId
+        String missionId,
+        UUID teamId
 ) {}

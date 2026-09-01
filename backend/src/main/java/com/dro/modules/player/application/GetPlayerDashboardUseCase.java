@@ -27,6 +27,7 @@ import com.dro.modules.mission.domain.MissionInstance;
 import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
+import com.dro.modules.mission.infra.MissionTeamRepository;
 import com.dro.modules.player.api.dto.response.ActiveMissionResponse;
 import com.dro.modules.player.api.dto.response.InventorySummaryResponse;
 import com.dro.modules.player.api.dto.response.PlayerDashboardResponse;
@@ -60,9 +61,10 @@ public class GetPlayerDashboardUseCase {
     private final MissionInstanceRepository missionInstanceRepository;
     private final IncubationRepository incubationRepository;
     private final MissionDefinitionRepository missionDefinitionRepository;
+    private final MissionTeamRepository missionTeamRepository;
     private final ClanBonusService clanBonusService;
 
-    public GetPlayerDashboardUseCase (PlayerRepository playerRepository, DigimonRepository digimonRepository, DigimonInfosRepository digimonInfosRepository, EquipmentRepository equipmentRepository, InventoryRepository inventoryRepository, MissionInstanceRepository missionInstanceRepository, IncubationRepository incubationRepository, MissionDefinitionRepository missionDefinitionRepository, ClanBonusService clanBonusService) {
+    public GetPlayerDashboardUseCase (PlayerRepository playerRepository, DigimonRepository digimonRepository, DigimonInfosRepository digimonInfosRepository, EquipmentRepository equipmentRepository, InventoryRepository inventoryRepository, MissionInstanceRepository missionInstanceRepository, IncubationRepository incubationRepository, MissionDefinitionRepository missionDefinitionRepository, MissionTeamRepository missionTeamRepository, ClanBonusService clanBonusService) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.digimonInfosRepository = digimonInfosRepository;
@@ -71,6 +73,7 @@ public class GetPlayerDashboardUseCase {
         this.missionInstanceRepository = missionInstanceRepository;
         this.incubationRepository = incubationRepository;
         this.missionDefinitionRepository = missionDefinitionRepository;
+        this.missionTeamRepository = missionTeamRepository;
         this.clanBonusService = clanBonusService;
     }
 
@@ -260,7 +263,14 @@ public class GetPlayerDashboardUseCase {
                             instance.getStatus(),
                             instance.getStartedAt(),
                             instance.getEndsAt(),
-                            remaining
+                            remaining,
+                            instance.getTeamId(),
+                            instance.getTeamId() == null
+                                    ? null
+                                    : missionTeamRepository.findById(instance.getTeamId())
+                                            .map(team -> team.getName())
+                                            .orElse("Time de missão"),
+                            instance.getDigimonIds()
                     );
                 })
                 .toList();

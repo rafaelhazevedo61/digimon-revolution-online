@@ -413,6 +413,7 @@ function renderActiveMission(m) {
       <div class="dashboard-mission-main">
         <p class="dashboard-mission-label">Objetivo em campo</p>
         <p class="dashboard-mission-name">${escapeHtml(m.missionName)}</p>
+        <p class="dashboard-mission-team">${escapeHtml(m.teamName || (m.teamId ? "Time de missão" : "Missão legada"))}${m.teamId ? " · 3 Digimons" : ""}</p>
         <div class="dashboard-mission-state"><span class="dashboard-mission-dot ${done ? "dashboard-mission-dot-ready" : ""}"></span><span class="mission-timer">${done ? "Concluída!" : `Retorno em ${formatTime(remaining)}`}</span></div>
       </div>
       <div class="dashboard-mission-action">${done ? `<button class="btn-sm btn-primary" onclick="claimMission('${m.instanceId}')">Resgatar</button>` : `<span class="dashboard-mission-badge">Em andamento</span>`}</div>

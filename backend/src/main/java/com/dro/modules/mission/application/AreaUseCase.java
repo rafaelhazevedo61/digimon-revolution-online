@@ -10,6 +10,7 @@ import com.dro.modules.mission.domain.AreaRules;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,15 +23,19 @@ public class AreaUseCase {
 
     public List<AreaResponse> execute(String token) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        Stage activeStage = digimonRepository.findByPlayerIdAndStatus(playerId, DigimonStatus.ACTIVE).stream()
-                .findFirst()
+        Stage highestOwnedStage = digimonRepository.findByPlayerId(playerId).stream()
+                .filter(digimon -> digimon.getStatus() != DigimonStatus.REBORN
+                        && digimon.getStatus() != DigimonStatus.SACRIFICED
+                        && digimon.getStatus() != DigimonStatus.COLLECTION_CONSUMED)
                 .map(Digimon::getStage)
+                .filter(java.util.Objects::nonNull)
+                .max(Comparator.comparingInt(Stage::ordinal))
                 .orElse(Stage.BABY);
         return Arrays.stream(Area.values())
                 .map(area -> new AreaResponse(
                         area,
                         AreaRules.requiredStage(area),
-                        AreaRules.isUnlocked(activeStage, area)
+                        AreaRules.isUnlocked(highestOwnedStage, area)
                 ))
                 .toList();
     }

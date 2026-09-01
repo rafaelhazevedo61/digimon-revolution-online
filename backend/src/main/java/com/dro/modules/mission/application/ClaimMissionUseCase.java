@@ -146,8 +146,24 @@ public class ClaimMissionUseCase {
             throw new BadRequestException("Missão ainda não foi concluída");
         }
 
-        Digimon digimon = digimonRepository.findById(instance.getDigimonId())
-                .orElseThrow(() -> new NotFoundException("Digimon não encontrado"));
+        List<UUID> digimonIds = instance.getDigimonIds();
+        List<Digimon> digimons;
+        if (digimonIds.size() == 1) {
+            digimons = List.of(digimonRepository.findById(digimonIds.get(0))
+                    .orElseThrow(() -> new NotFoundException("Digimon não encontrado")));
+        } else {
+            List<Digimon> loadedDigimons = digimonRepository.findAllByIdForUpdate(playerId, digimonIds);
+            if (loadedDigimons.size() != digimonIds.size()) {
+                throw new NotFoundException("Um ou mais Digimons da missão não foram encontrados");
+            }
+            digimons = digimonIds.stream()
+                    .map(id -> loadedDigimons.stream()
+                            .filter(candidate -> candidate.getId().equals(id))
+                            .findFirst()
+                            .orElseThrow(() -> new NotFoundException("Digimon não encontrado")))
+                    .toList();
+        }
+        Digimon digimon = digimons.get(0);
 
         MissionDefinition mission = MissionDefinitionMapper.toDefinition(
                 missionDefinitionRepository.findById(instance.getMissionId())
@@ -181,9 +197,13 @@ public class ClaimMissionUseCase {
         double digimonXpMultiplier = RarityRules.getXpMultiplier(digimon.getRarity())
                 * PersonalityRules.getXpMultiplier(digimon.getPersonality())
                 * TraitRules.getXpMultiplier(digimon.getTrait());
-        int xpGained = digimon.gainExperience(xpBeforeDigimonMultiplier);
-
-        boolean levelUp = digimon.getLevel() > previousLevel;
+        int xpGained = 0;
+        boolean levelUp = false;
+        for (Digimon member : digimons) {
+            int memberPreviousLevel = member.getLevel();
+            xpGained += member.gainExperience(xpBeforeDigimonMultiplier);
+            levelUp = levelUp || member.getLevel() > memberPreviousLevel;
+        }
 
         int bitsBeforeEventMultiplier = (int) Math.floor(
                 calculateScaledBits(mission.getBaseBits(), completionCount) * bitsMultiplier
@@ -211,7 +231,7 @@ public class ClaimMissionUseCase {
         instance.markClaimed();
 
         missionInstanceRepository.save(instance);
-        digimonRepository.save(digimon);
+        digimons.forEach(digimonRepository::save);
         if (activityCalendarService != null) activityCalendarService.recordActivity(playerId, ActivitySource.MISSION_COMPLETED, missionInstanceId.toString());
         NewlyUnlockedContentResponse newlyUnlockedContent = newlyUnlockedContentService == null
                 ? NewlyUnlockedContentResponse.empty()

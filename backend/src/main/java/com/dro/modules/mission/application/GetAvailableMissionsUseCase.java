@@ -5,8 +5,6 @@ import com.dro.modules.mission.api.dto.response.MissionResponse;
 import com.dro.modules.mission.domain.MissionDefinitionEntity;
 import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.modules.player.infra.PlayerRepository;
-import com.dro.shared.exception.BadRequestException;
-import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import java.util.Comparator;
@@ -23,17 +21,8 @@ public class GetAvailableMissionsUseCase {
     private final MissionDefinitionRepository missionDefinitionRepository;
 
     public List<MissionResponse> execute(String token) {
-        UUID playerId = TokenExtractor.extractPlayerId(token);
-        var player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
-        if (player.getActiveDigimonId() == null) {
-            throw new BadRequestException("No active digimon selected");
-        }
-        var digimon = digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Active digimon not found"));
-        int level = digimon.getLevel();
-        var stage = digimon.getStage();
+        TokenExtractor.extractPlayerId(token);
         return missionDefinitionRepository.findByActiveTrue().stream()
-                .filter(m -> level >= m.getRequiredLevel())
-                .filter(m -> stage.ordinal() >= m.getRequiredStage().ordinal())
                 .sorted(Comparator
                         .comparingInt((MissionDefinitionEntity mission) -> mission.getArea().ordinal())
                         .reversed()

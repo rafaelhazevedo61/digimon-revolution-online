@@ -8,6 +8,7 @@ import com.dro.modules.clan.application.ClanBonusService;
 import com.dro.modules.mission.domain.*;
 import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
+import com.dro.modules.mission.infra.MissionTeamRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
@@ -32,42 +33,70 @@ public class StartMissionUseCase {
     private final DigimonRepository digimonRepository;
     private final MissionInstanceRepository missionInstanceRepository;
     private final MissionDefinitionRepository missionDefinitionRepository;
+    private final MissionTeamRepository missionTeamRepository;
     private final ClanBonusService clanBonusService;
     private final GameplayConfig gameplayConfig;
     private static final long COOLDOWN_SECONDS = 10;
 
     @Transactional
     public MissionStartResponse execute(String token, String missionId) {
+        return execute(token, missionId, null);
+    }
+
+    @Transactional
+    public MissionStartResponse execute(String token, String missionId, UUID teamId) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
-        Digimon digimon = getActiveDigimon(player);
+        List<Digimon> digimons = teamId == null
+                ? List.of(getActiveDigimon(player))
+                : getTeamDigimons(playerId, teamId);
         MissionDefinitionEntity entity = missionDefinitionRepository.findById(missionId).orElseThrow(() -> new NotFoundException("Mission not found"));
         MissionDefinition mission = MissionDefinitionMapper.toDefinition(entity);
-        if (!AreaRules.isUnlocked(digimon.getStage(), mission.getArea())) {
-            throw new BadRequestException("Area locked: " + mission.getArea());
-        }
-        validateRequirement(digimon, mission);
+        digimons.forEach(digimon -> {
+            if (!AreaRules.isUnlocked(digimon.getStage(), mission.getArea())) {
+                throw new BadRequestException("Area locked: " + mission.getArea());
+            }
+            validateRequirement(digimon, mission);
+        });
+
         boolean isAdmin = player.getUserType() == UserType.ADMIN;
-        // \ud83d\udd0b Energia
+        if (missionInstanceRepository.countByPlayerIdAndStatusIn(
+                playerId,
+                List.of(MissionStatus.RUNNING, MissionStatus.COMPLETED)
+        ) >= 3) {
+            throw new ConflictException("Todos os slots de missão estão ocupados");
+        }
+
         UUID clanId = player.getClanId();
         if (!isAdmin && gameplayConfig.isEnergyConsumptionEnabled()) {
             int maxEnergyBonus = clanId != null ? clanBonusService.getMaxEnergyBonus(clanId) : 0;
-            digimon.regenerateEnergy(maxEnergyBonus);
-            int energyCost = clanId != null ? applyCostReduction(mission.getEnergyCost(), clanBonusService.getEnergyCostMultiplier(clanId)) : mission.getEnergyCost();
-            if (digimon.getEnergy() < energyCost) {
-                throw new UnprocessableException("Energia insuficiente");
+            int energyCost = clanId != null
+                    ? applyCostReduction(mission.getEnergyCost(), clanBonusService.getEnergyCostMultiplier(clanId))
+                    : mission.getEnergyCost();
+            for (Digimon digimon : digimons) {
+                digimon.regenerateEnergy(maxEnergyBonus);
+                if (digimon.getEnergy() < energyCost) {
+                    throw new UnprocessableException("Energia insuficiente para todo o time");
+                }
             }
-            digimon.consumeEnergy(energyCost);
+            digimons.forEach(digimon -> digimon.consumeEnergy(energyCost));
         }
-        // \ud83d\udd12 Verificar se já está em missão
-        boolean alreadyRunning = missionInstanceRepository.existsByDigimonIdAndStatus(digimon.getId(), MissionStatus.RUNNING);
+
+        List<UUID> digimonIds = digimons.stream().map(Digimon::getId).toList();
+        boolean alreadyRunning = teamId == null
+                ? missionInstanceRepository.existsByDigimonIdAndStatus(digimonIds.get(0), MissionStatus.RUNNING)
+                : missionInstanceRepository.existsByPlayerIdAndAnyDigimonIdAndStatusIn(
+                        playerId,
+                        digimonIds,
+                        List.of(MissionStatus.RUNNING, MissionStatus.COMPLETED)
+                );
         if (alreadyRunning) {
-            throw new ConflictException("Digimon já está em missão");
+            throw new ConflictException("Um ou mais Digimons do time já estão em missão");
         }
-        digimonRepository.save(digimon);
-        // ⏱ Criar instância
+
+        digimons.forEach(digimonRepository::save);
         Duration missionDuration = isAdmin ? Duration.ZERO : Duration.ofSeconds(mission.getDurationSeconds());
-        MissionInstance instance = new MissionInstance(playerId, digimon.getId(), missionId, missionDuration);
+        MissionInstance instance = new MissionInstance(playerId, teamId, digimonIds, missionId, missionDuration);
         missionInstanceRepository.save(instance);
         return new MissionStartResponse(instance.getId(), instance.getEndsAt());
     }
@@ -92,6 +121,23 @@ public class StartMissionUseCase {
         return digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Active digimon not found"));
     }
 
+    private List<Digimon> getTeamDigimons(UUID playerId, UUID teamId) {
+        if (missionTeamRepository == null) {
+            throw new BadRequestException("Seleção de time indisponível");
+        }
+        MissionTeam team = missionTeamRepository.findByIdAndPlayerId(teamId, playerId)
+                .orElseThrow(() -> new NotFoundException("Time não encontrado"));
+        List<UUID> digimonIds = team.getDigimonIds();
+        List<Digimon> digimons = digimonRepository.findAllByIdForUpdate(playerId, digimonIds);
+        if (digimons.size() != 3) {
+            throw new ConflictException("O time não possui três Digimons disponíveis");
+        }
+        return digimonIds.stream()
+                .map(id -> digimons.stream().filter(digimon -> digimon.getId().equals(id)).findFirst()
+                        .orElseThrow(() -> new NotFoundException("Digimon do time não encontrado")))
+                .toList();
+    }
+
     private void validateRequirement(Digimon digimon, MissionDefinition mission) {
         if (digimon.getStage().ordinal() < mission.getRequiredStage().ordinal()) {
             throw new BadRequestException("Mission locked: stage too low");
@@ -102,10 +148,16 @@ public class StartMissionUseCase {
     }
 
     public StartMissionUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final MissionInstanceRepository missionInstanceRepository, final MissionDefinitionRepository missionDefinitionRepository, final ClanBonusService clanBonusService, final GameplayConfig gameplayConfig) {
+        this(playerRepository, digimonRepository, missionInstanceRepository, missionDefinitionRepository, null, clanBonusService, gameplayConfig);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public StartMissionUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final MissionInstanceRepository missionInstanceRepository, final MissionDefinitionRepository missionDefinitionRepository, final MissionTeamRepository missionTeamRepository, final ClanBonusService clanBonusService, final GameplayConfig gameplayConfig) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.missionInstanceRepository = missionInstanceRepository;
         this.missionDefinitionRepository = missionDefinitionRepository;
+        this.missionTeamRepository = missionTeamRepository;
         this.clanBonusService = clanBonusService;
         this.gameplayConfig = gameplayConfig;
     }

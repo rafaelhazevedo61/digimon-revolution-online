@@ -62,9 +62,9 @@ async function renderMissionsPage() {
         <div>
           <p class="progression-eyebrow progression-eyebrow-cyan">Central de operações</p>
           <h2 class="progression-page-title">Mapa de missões</h2>
-          <p class="progression-page-subtitle">Envie seu Digimon para explorar novas áreas e conquistar recompensas.</p>
+          <p class="progression-page-subtitle">Envie formações completas para explorar áreas e conquistar recompensas.</p>
         </div>
-        <div class="missions-hero-emblem" aria-hidden="true">✦</div>
+        <div class="flex items-center gap-2"><button type="button" class="btn-secondary text-xs" onclick="navigateTo('mission-teams')">Meus times</button><div class="missions-hero-emblem" aria-hidden="true">✦</div></div>
       </header>
       <div class="missions-page-layout">
         <div id="active-missions" class="missions-page-active-column"></div>
@@ -73,7 +73,7 @@ async function renderMissionsPage() {
             <div><p class="progression-eyebrow progression-eyebrow-cyan">Exploração</p><h3 class="progression-panel-title">Áreas disponíveis</h3></div>
             <span class="missions-map-key"><span class="missions-map-key-dot"></span> acessível</span>
           </div>
-          <p class="dashboard-section-note">Avance pelas áreas para desbloquear missões mais desafiadoras.</p>
+          <p class="dashboard-section-note">Avance pelas áreas para desbloquear missões mais desafiadoras e envie seus times completos.</p>
           <div id="areas-list">
             <div class="mission-area-skeleton"></div>
             <div class="mission-area-skeleton"></div>
@@ -161,6 +161,7 @@ function renderActiveMissionCard(m) {
       <div class="missions-active-main">
         <p class="missions-active-label">Objetivo em campo</p>
         <p class="missions-active-name">${escapeHtml(formatMissionName(m))}</p>
+        <p class="missions-active-team">${escapeHtml(m.teamName || (m.teamId ? "Time de missão" : "Missão legada"))}${m.teamId ? " · 3 Digimons" : ""}</p>
         <div class="missions-active-state"><span class="missions-active-dot ${done ? "missions-active-dot-ready" : ""}"></span><span class="mp-timer">${done ? "Concluída!" : `Retorno em ${formatTime(remaining)}`}</span></div>
       </div>
       <div class="missions-active-action">${done ? `<button class="btn-sm btn-primary" onclick="claimMissionFromList('${m.missionInstanceId}')">Resgatar</button>` : `<span class="missions-active-badge">Em andamento</span>`}</div>
@@ -462,15 +463,15 @@ async function missionOpenRewardChest(chestCode, quantity = 1, button) {
 async function repeatMissionFromReward(missionId) {
   const button = document.getElementById("mission-repeat-button");
   if (!missionId || !button) return;
-
   button.disabled = true;
-  button.textContent = "Iniciando...";
-
+  button.textContent = "Preparando...";
   try {
-    await apiPost("/missions/start", { missionId });
+    if (!window._missionDefinitions || !window._missionDefinitions[missionId]) {
+      const missions = await apiGet("/missions");
+      window._missionDefinitions = Object.fromEntries((missions || []).map(mission => [missionIdentity(mission), mission]));
+    }
     document.getElementById("mission-claim-modal")?.remove();
-    showToast("Missão repetida!");
-    await refreshCurrentPage();
+    openMissionTeamSelectionModal(missionId);
   } catch (err) {
     showToast(err.message, "error");
     button.disabled = false;
@@ -716,7 +717,7 @@ function renderAreaCards(areas) {
     renderMissionAreaGroup({
       id: "mission-areas-available",
       title: "Áreas disponíveis",
-      description: "Acessíveis para o Digimon ativo",
+      description: "Acessíveis pelas formações do jogador",
       areas: available,
       expanded: true
     }),
@@ -750,7 +751,7 @@ async function renderMissionAreaPage(params) {
             <div>
               <p class="progression-eyebrow progression-eyebrow-cyan">Área de exploração</p>
               <h2 class="progression-page-title">${info.name}</h2>
-              <p class="progression-page-subtitle">Selecione uma missão para enviar seu Digimon.</p>
+              <p class="progression-page-subtitle">Selecione uma missão para escolher o time que será enviado.</p>
             </div>
           </div>
           <div class="mission-area-terminal-mark" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -788,6 +789,7 @@ function getMissionArea(mission) {
 
 function renderMissionCards(missions, area) {
   const container = document.getElementById("mission-list");
+  window._missionDefinitions = Object.fromEntries(missions.map(mission => [missionIdentity(mission), mission]));
 
   const countElement = document.getElementById("mission-area-count");
   if (countElement) countElement.textContent = String(missions.length);
@@ -797,7 +799,7 @@ function renderMissionCards(missions, area) {
       <div class="mission-area-empty-state">
         <div class="mission-area-empty-icon" aria-hidden="true">⌁</div>
         <p class="mission-area-empty-title">Nenhuma missão disponível</p>
-        <p class="mission-area-empty-note">Seu Digimon pode não atender aos requisitos desta área.</p>
+        <p class="mission-area-empty-note">Nenhuma missão foi configurada para esta área.</p>
       </div>
     `;
     return;
@@ -829,11 +831,5 @@ function renderMissionCards(missions, area) {
 }
 
 async function startMission(missionId, area) {
-  try {
-    await apiPost("/missions/start", { missionId: missionId });
-    showToast("Missão iniciada!");
-    navigateTo("missions");
-  } catch (err) {
-    showToast(err.message, "error");
-  }
+  openMissionTeamSelectionModal(missionId);
 }

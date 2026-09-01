@@ -30,7 +30,7 @@ public class MissionController {
 
     @PostMapping("/start")
     public ResponseEntity<MissionStartResponse> start(@RequestHeader("Authorization") String authorization, @RequestBody StartMissionRequest request) {
-        return ResponseEntity.ok(startMissionUseCase.execute(authorization, request.missionId()));
+        return ResponseEntity.ok(startMissionUseCase.execute(authorization, request.missionId(), request.teamId()));
     }
 
     @PostMapping("/{missionInstanceId}/claim")

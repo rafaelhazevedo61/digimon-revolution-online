@@ -6,6 +6,7 @@ import com.dro.modules.mission.domain.MissionInstance;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
+import com.dro.modules.mission.infra.MissionTeamRepository;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 
@@ -21,13 +22,16 @@ public class GetActiveMissionsUseCase {
 
     private final MissionInstanceRepository missionInstanceRepository;
     private final MissionDefinitionRepository missionDefinitionRepository;
+    private final MissionTeamRepository missionTeamRepository;
 
     public GetActiveMissionsUseCase(
             MissionInstanceRepository missionInstanceRepository,
-            MissionDefinitionRepository missionDefinitionRepository
+            MissionDefinitionRepository missionDefinitionRepository,
+            MissionTeamRepository missionTeamRepository
     ) {
         this.missionInstanceRepository = missionInstanceRepository;
         this.missionDefinitionRepository = missionDefinitionRepository;
+        this.missionTeamRepository = missionTeamRepository;
     }
 
     public List<MissionInstanceResponse> execute(String token) {
@@ -60,7 +64,14 @@ public class GetActiveMissionsUseCase {
                     missionName,
                     mission.getStatus(),
                     mission.getStartedAt(),
-                    mission.getEndsAt()
+                    mission.getEndsAt(),
+                    mission.getTeamId(),
+                    mission.getTeamId() == null
+                            ? null
+                            : missionTeamRepository.findById(mission.getTeamId())
+                                    .map(team -> team.getName())
+                                    .orElse("Time de missão"),
+                    mission.getDigimonIds()
             ));
         }
 

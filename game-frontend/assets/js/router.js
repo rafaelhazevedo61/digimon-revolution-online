@@ -5,6 +5,7 @@ const routes = {
   "activity-calendar": renderActivityCalendarPage,
   missions: renderMissionsPage,
   "mission-area": renderMissionAreaPage,
+  "mission-teams": renderMissionTeamsPage,
   "digimon-select": renderDigimonSelectPage,
   shop: renderShopPage,
   forge: renderForgePage,

@@ -3,6 +3,7 @@ package com.dro.modules.mission.api.dto.response;
 import com.dro.modules.mission.domain.MissionStatus;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -14,5 +15,8 @@ public record MissionInstanceResponse(
         String missionName,
         MissionStatus status,
         Instant startedAt,
-        Instant endsAt
+        Instant endsAt,
+        UUID teamId,
+        String teamName,
+        List<UUID> digimonIds
 ) {}
