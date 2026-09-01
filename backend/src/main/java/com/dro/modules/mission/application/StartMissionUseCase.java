@@ -55,7 +55,11 @@ public class StartMissionUseCase {
 
     @Transactional
     public MissionStartResponse execute(String token, String missionId, UUID teamId, boolean autoRepeat, boolean autoClaim) {
-        UUID playerId = TokenExtractor.extractPlayerId(token);
+        return executeForPlayer(TokenExtractor.extractPlayerId(token), missionId, teamId, autoRepeat, autoClaim);
+    }
+
+    @Transactional
+    public MissionStartResponse executeForPlayer(UUID playerId, String missionId, UUID teamId, boolean autoRepeat, boolean autoClaim) {
         Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         List<Digimon> digimons = teamId == null
                 ? List.of(getActiveDigimon(player))

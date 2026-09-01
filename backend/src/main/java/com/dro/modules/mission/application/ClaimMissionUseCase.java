@@ -136,9 +136,11 @@ public class ClaimMissionUseCase {
 
     @Transactional
     public MissionResultResponse execute(String token, UUID missionInstanceId) {
+        return executeForPlayer(TokenExtractor.extractPlayerId(token), missionInstanceId);
+    }
 
-        UUID playerId = TokenExtractor.extractPlayerId(token);
-
+    @Transactional
+    public MissionResultResponse executeForPlayer(UUID playerId, UUID missionInstanceId) {
         MissionInstance instance = missionInstanceRepository
                 .findByIdAndPlayerId(missionInstanceId, playerId)
                 .orElseThrow(() -> new NotFoundException("Missão não encontrada"));
