@@ -262,8 +262,13 @@ function mailSystemBodyMarkup(message) {
   const isIncubation = actionType === "INCUBATION_AUTOMATION_RESUME" || subject.includes("incubação");
   if (!isMission && !isIncubation) return escapeHtml(message.body || "").replace(/\n/g, "<br>");
   const title = isMission ? "Automação de missão interrompida" : "Automação de incubação interrompida";
+  const rawBody = String(message.body || "");
+  const itemMatch = rawBody.match(/item [\"'](.+?)[\"'] atingiu/i);
+  const itemName = itemMatch ? itemMatch[1] : null;
   const reason = isMission
-    ? "Um item recebido atingiu o limite máximo permitido no inventário."
+    ? (itemName
+      ? `O item <strong class="mail-system-highlight-item">${escapeHtml(itemName)}</strong> atingiu o limite máximo permitido no inventário.`
+      : "Um item recebido atingiu o limite máximo permitido no inventário.")
     : "O armazém de Digimons atingiu a capacidade máxima.";
   const impact = isMission
     ? "O resgate automático e a repetição da missão foram pausados para evitar novos itens excedentes."

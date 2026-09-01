@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Executa a automação de missões no servidor, sem depender da tela aberta. */
 @Service
@@ -20,6 +22,7 @@ public class MissionAutomationJob {
     private static final int BATCH_SIZE = 100;
     private static final long RUN_INTERVAL_MILLIS = 5000L;
     private static final Logger log = LoggerFactory.getLogger(MissionAutomationJob.class);
+    private static final Pattern STACK_ITEM_PATTERN = Pattern.compile("item ['\\\"](.+?)['\\\"]", Pattern.CASE_INSENSITIVE);
 
     private final MissionInstanceRepository missionInstanceRepository;
     private final MissionAutomationProcessor processor;
@@ -58,7 +61,7 @@ public class MissionAutomationJob {
                                 id,
                                 "MISSION_AUTOMATION_RESUME",
                                 "Automação de missão pausada",
-                                "A automação desta missão foi pausada porque um item atingiu o limite máximo do inventário. Libere espaço ou reduza a quantidade do item para continuar.",
+                                buildStackLimitMailBody(exception),
                                 "mission-automation:inventory-full:" + id
                         );
                     } else {
@@ -76,6 +79,28 @@ public class MissionAutomationJob {
         return missionInstanceRepository.findById(missionInstanceId)
                 .map(instance -> instance.getPlayerId())
                 .orElse(null);
+    }
+
+    private String buildStackLimitMailBody(Throwable exception) {
+        String itemName = extractStackLimitItemName(exception);
+        if (itemName == null) {
+            return "A automação desta missão foi pausada porque um item atingiu o limite máximo do inventário. Libere espaço ou reduza a quantidade do item para continuar.";
+        }
+        return "A automação desta missão foi pausada porque o item \"" + itemName
+                + "\" atingiu o limite máximo do inventário. Libere espaço ou reduza a quantidade desse item para continuar.";
+    }
+
+    private String extractStackLimitItemName(Throwable exception) {
+        Throwable current = exception;
+        while (current != null) {
+            String message = current.getMessage();
+            if (message != null) {
+                Matcher matcher = STACK_ITEM_PATTERN.matcher(message);
+                if (matcher.find()) return matcher.group(1);
+            }
+            current = current.getCause();
+        }
+        return null;
     }
 
     private boolean isStackLimitError(Throwable exception) {

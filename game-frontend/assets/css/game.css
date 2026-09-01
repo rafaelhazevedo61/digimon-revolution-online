@@ -4995,6 +4995,7 @@ body {
 .mail-system-section-label { display: block; font-size: 0.62rem; font-weight: 850; letter-spacing: 0.08em; text-transform: uppercase; }
 .mail-system-message-reason { border-color: #f59e0b; background: rgba(120, 53, 15, 0.3); }
 .mail-system-message-reason .mail-system-section-label { color: #fcd34d; }
+.mail-system-highlight-item { color: #fef08a !important; font-weight: 850; text-decoration: underline; text-decoration-color: rgba(250, 204, 21, 0.55); text-underline-offset: 0.15em; }
 .mail-system-message-impact { border-color: #38bdf8; background: rgba(7, 89, 133, 0.25); }
 .mail-system-message-impact .mail-system-section-label { color: #7dd3fc; }
 .mail-system-message-action { border-color: #34d399; background: rgba(6, 78, 59, 0.28); }
