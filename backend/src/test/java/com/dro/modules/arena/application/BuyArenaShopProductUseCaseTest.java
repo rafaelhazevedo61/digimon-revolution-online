@@ -12,7 +12,9 @@ import com.dro.modules.digimon.domain.enums.Rarity;
 import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
@@ -47,6 +49,7 @@ class BuyArenaShopProductUseCaseTest {
     @Mock private PlayerRepository playerRepository;
     @Mock private DigimonRepository digimonRepository;
     @Mock private ArenaShopProductRepository arenaShopProductRepository;
+    @Mock private InventoryRepository inventoryRepository;
     @Mock private AddItemUseCase addItemUseCase;
 
     @InjectMocks private BuyArenaShopProductUseCase useCase;
@@ -130,11 +133,53 @@ class BuyArenaShopProductUseCaseTest {
     }
 
     @Test
+    void buyAllowsOnlyRemainingStackQuantity() {
+        InventoryItem existing = InventoryItem.builder()
+                .id(UUID.randomUUID())
+                .playerId(playerId)
+                .itemType(ItemType.POTION_SMALL)
+                .quantity(998)
+                .build();
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
+        when(arenaShopProductRepository.findById("ARENA_POTION_SMALL")).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByPlayerIdAndItemTypeForUpdate(playerId, ItemType.POTION_SMALL))
+                .thenReturn(Optional.of(existing));
+
+        BuyArenaShopResponse response = useCase.execute(token, new BuyArenaShopRequest("ARENA_POTION_SMALL", 1));
+
+        assertEquals(1, response.quantity());
+        verify(addItemUseCase).execute(digimonId, ItemType.POTION_SMALL, 1);
+    }
+
+    @Test
+    void buyFailsWhenQuantityExceedsRemainingStack() {
+        InventoryItem existing = InventoryItem.builder()
+                .id(UUID.randomUUID())
+                .playerId(playerId)
+                .itemType(ItemType.POTION_SMALL)
+                .quantity(998)
+                .build();
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
+        when(arenaShopProductRepository.findById("ARENA_POTION_SMALL")).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByPlayerIdAndItemTypeForUpdate(playerId, ItemType.POTION_SMALL))
+                .thenReturn(Optional.of(existing));
+
+        assertThrows(com.dro.shared.exception.BadRequestException.class,
+                () -> useCase.execute(token, new BuyArenaShopRequest("ARENA_POTION_SMALL", 2)));
+        verify(addItemUseCase, never()).execute(any(), any(), anyInt());
+        verify(playerRepository, never()).save(any());
+    }
+
+    @Test
     void buyFailsWhenNotEnoughCoins() {
         player.setArenaCoins(10);
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
         when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
         when(arenaShopProductRepository.findById("ARENA_POTION_SMALL")).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByPlayerIdAndItemTypeForUpdate(playerId, ItemType.POTION_SMALL))
+                .thenReturn(Optional.empty());
 
         assertThrows(UnprocessableException.class,
                 () -> useCase.execute(token, new BuyArenaShopRequest("ARENA_POTION_SMALL", 1)));

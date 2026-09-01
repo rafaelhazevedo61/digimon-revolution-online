@@ -84,7 +84,7 @@ class AddItemUseCaseTest {
     }
 
     @Test
-    void execute_discardsAmountAboveMaxStack() {
+    void execute_rejectsAmountAboveMaxStack() {
         UUID playerId = UUID.randomUUID();
         ItemDefinition definition = ItemDefinition.builder()
                 .id(203L).code("TRAINING_STONE").category("MATERIAL").maxStack(10).build();
@@ -94,10 +94,11 @@ class AddItemUseCaseTest {
         when(itemDefinitionRepository.findByCode("TRAINING_STONE")).thenReturn(Optional.of(definition));
         when(repository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, 203L)).thenReturn(Optional.of(existing));
 
-        addItemUseCase.execute(playerId, ItemType.TRAINING_STONE, 5);
+        assertThrows(com.dro.shared.exception.UnprocessableException.class,
+                () -> addItemUseCase.execute(playerId, ItemType.TRAINING_STONE, 5));
 
-        assertEquals(10, existing.getQuantity());
-        verify(repository).save(existing);
+        assertEquals(8, existing.getQuantity());
+        verify(repository, never()).save(any());
     }
 
     @Test

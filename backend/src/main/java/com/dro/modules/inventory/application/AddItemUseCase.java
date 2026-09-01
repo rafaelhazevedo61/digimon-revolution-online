@@ -9,6 +9,7 @@ import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.dro.shared.exception.UnprocessableException;
 import java.util.UUID;
 
 /** Concede itens ao inventário global do jogador. */
@@ -46,7 +47,11 @@ public class AddItemUseCase {
         var existing = repository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, itemDefinition.getId());
         int currentQuantity = existing.map(InventoryItem::getQuantity).orElse(0);
         int requestedQuantity = currentQuantity + quantity;
-        int newQuantity = itemDefinition.getMaxStack() == null ? requestedQuantity : Math.min(requestedQuantity, itemDefinition.getMaxStack());
+        Integer maxStack = itemDefinition.getMaxStack();
+        if (maxStack != null && requestedQuantity > maxStack) {
+            throw new UnprocessableException("Item stack limit exceeded. Maximum stack: " + maxStack);
+        }
+        int newQuantity = requestedQuantity;
         if (existing.isPresent()) {
             InventoryItem item = existing.get();
             item.setQuantity(newQuantity);

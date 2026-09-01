@@ -7,6 +7,8 @@ import com.dro.modules.arena.infra.ArenaShopProductRepository;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.inventory.domain.InventoryItem;
+import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
@@ -22,9 +24,12 @@ import java.util.UUID;
  */
 @Service
 public class BuyArenaShopProductUseCase {
+    private static final int MAX_STACK_QUANTITY = 999;
+
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final ArenaShopProductRepository arenaShopProductRepository;
+    private final InventoryRepository inventoryRepository;
     private final AddItemUseCase addItemUseCase;
 
     @Transactional
@@ -39,6 +44,7 @@ public class BuyArenaShopProductUseCase {
             throw new BadRequestException("Active digimon does not belong to this player");
         }
         ArenaShopProduct product = arenaShopProductRepository.findById(request.productCode()).filter(ArenaShopProduct::isActive).orElseThrow(() -> new NotFoundException("Arena shop product not found: " + request.productCode()));
+        validateItemStack(playerId, product, request.quantity());
         int totalPrice = product.getPriceCoins() * request.quantity();
         if (player.getArenaCoins() < totalPrice) {
             throw new UnprocessableException("Not enough arena coins");
@@ -49,10 +55,23 @@ public class BuyArenaShopProductUseCase {
         return new BuyArenaShopResponse(product.getCode(), product.getName(), product.getItemType(), product.getQuantity() * request.quantity(), totalPrice, player.getArenaCoins(), "Purchase successful");
     }
 
-    public BuyArenaShopProductUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ArenaShopProductRepository arenaShopProductRepository, final AddItemUseCase addItemUseCase) {
+    private void validateItemStack(UUID playerId, ArenaShopProduct product, int purchaseQuantity) {
+        InventoryItem inventoryItem = inventoryRepository
+                .findByPlayerIdAndItemTypeForUpdate(playerId, product.getItemType())
+                .orElse(null);
+        int currentQuantity = inventoryItem == null ? 0 : Math.max(0, inventoryItem.getQuantity());
+        int remainingStackQuantity = Math.max(0, MAX_STACK_QUANTITY - currentQuantity);
+        long requestedItemQuantity = (long) product.getQuantity() * purchaseQuantity;
+        if (requestedItemQuantity > remainingStackQuantity) {
+            throw new BadRequestException("A quantidade ultrapassa o limite de stack. Espaço restante: " + remainingStackQuantity);
+        }
+    }
+
+    public BuyArenaShopProductUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ArenaShopProductRepository arenaShopProductRepository, final InventoryRepository inventoryRepository, final AddItemUseCase addItemUseCase) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.arenaShopProductRepository = arenaShopProductRepository;
+        this.inventoryRepository = inventoryRepository;
         this.addItemUseCase = addItemUseCase;
     }
 }
