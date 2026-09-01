@@ -1,12 +1,14 @@
 let incubTimerIntervals = new Map();
 let incubRefreshInterval = null;
 let incubRefreshInFlight = false;
+let incubAutomationStateBySlot = new Map();
 
 async function renderIncubationPage() {
   const app = document.getElementById("app");
   showBottomNav("more");
   incubStopTimer();
   incubStopAutoRefresh();
+  incubAutomationStateBySlot = new Map();
 
   app.innerHTML = `
     <div class="page-container incubation-page">
@@ -38,6 +40,7 @@ async function renderIncubationPage() {
     const inventory = invAggregateItems(await apiGet("/inventory") || []);
     window._incubSlotInfo = dashboard?.slotInfo;
     window._incubSlotsResponse = slotsResponse;
+    incubNotifyAutomationPause(slotsResponse);
     incubRenderSlots(slotsResponse, inventory);
     incubStartAutoRefresh();
   } catch (err) {
@@ -280,6 +283,50 @@ function incubAutomaticClaimStatus() {
   return `<div class="rounded-lg border border-cyan-800/70 bg-cyan-950/30 px-3 py-3 text-center text-xs text-cyan-200" role="status">Auto-coleta ativa. O Digimon será armazenado automaticamente.</div>`;
 }
 
+function incubNotifyAutomationPause(response) {
+  const slots = Array.isArray(response?.slots) ? response.slots : [];
+  slots.forEach(slot => {
+    const incubation = slot?.incubation;
+    if (!incubation) return;
+
+    const key = String(slot.slotNumber);
+    const previous = incubAutomationStateBySlot.get(key);
+    const wasAutomatic = Boolean(previous?.autoClaimEnabled || previous?.autoRepeatEnabled);
+    const isPaused = !incubation.autoClaimEnabled && !incubation.autoRepeatEnabled;
+    incubAutomationStateBySlot.set(key, {
+      autoClaimEnabled: Boolean(incubation.autoClaimEnabled),
+      autoRepeatEnabled: Boolean(incubation.autoRepeatEnabled)
+    });
+
+    if (wasAutomatic && isPaused) incubShowStorageFullModal(slot.slotNumber);
+  });
+}
+
+function incubShowStorageFullModal(slotNumber) {
+  if (document.getElementById("incub-storage-full-modal")) return;
+  const overlay = document.createElement("div");
+  overlay.id = "incub-storage-full-modal";
+  overlay.className = "fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-950/85";
+  overlay.setAttribute("role", "alertdialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-labelledby", "incub-storage-full-title");
+  overlay.innerHTML = `
+    <div class="card w-full max-w-md border-amber-700 bg-slate-950 shadow-2xl">
+      <div class="flex items-start gap-3">
+        <span class="text-3xl" aria-hidden="true">⚠️</span>
+        <div>
+          <p class="text-xs uppercase tracking-wider text-amber-400 font-bold">Incubação pausada</p>
+          <h3 id="incub-storage-full-title" class="text-xl font-bold mt-1">Armazém de Digimons lotado</h3>
+        </div>
+      </div>
+      <p class="text-sm text-slate-300 mt-4">A coleta automática não pôde continuar porque não há espaço no armazém de Digimons. O slot ${Number(slotNumber)} foi pausado e nenhum novo item será consumido.</p>
+      <p class="text-xs text-slate-500 mt-3">Libere um espaço no armazém e reative a automação quando estiver pronto.</p>
+      <button type="button" class="btn-primary w-full mt-6" onclick="document.getElementById('incub-storage-full-modal')?.remove()">Entendi</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
 function incubProgress(inc) {
   const total = (new Date(inc.finishAt) - new Date(inc.startedAt)) / 1000;
   if (!Number.isFinite(total) || total <= 0) return 0;
@@ -308,6 +355,7 @@ function incubStartAutoRefresh() {
         const inventory = invAggregateItems(inventoryResponse || []);
         window._incubSlotsResponse = slotsResponse;
         window._incubInventory = inventory;
+        incubNotifyAutomationPause(slotsResponse);
         incubRenderSlots(slotsResponse, inventory);
       })
       .catch(() => {})

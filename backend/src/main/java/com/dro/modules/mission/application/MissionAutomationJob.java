@@ -1,5 +1,7 @@
 package com.dro.modules.mission.application;
 
+import com.dro.modules.mail.application.CreateSystemMailMessageUseCase;
+import com.dro.modules.mail.domain.MailMessageType;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import org.slf4j.Logger;
@@ -21,13 +23,16 @@ public class MissionAutomationJob {
 
     private final MissionInstanceRepository missionInstanceRepository;
     private final MissionAutomationProcessor processor;
+    private final CreateSystemMailMessageUseCase createSystemMailMessageUseCase;
 
     public MissionAutomationJob(
             MissionInstanceRepository missionInstanceRepository,
-            MissionAutomationProcessor processor
+            MissionAutomationProcessor processor,
+            CreateSystemMailMessageUseCase createSystemMailMessageUseCase
     ) {
         this.missionInstanceRepository = missionInstanceRepository;
         this.processor = processor;
+        this.createSystemMailMessageUseCase = createSystemMailMessageUseCase;
     }
 
     @Scheduled(fixedDelay = RUN_INTERVAL_MILLIS)
@@ -44,12 +49,28 @@ public class MissionAutomationJob {
             } catch (RuntimeException exception) {
                 if (isStackLimitError(exception)) {
                     processor.pauseAutomation(id);
+                    createSystemMailMessageUseCase.create(
+                            MailMessageType.SYSTEM,
+                            "MISSION_AUTOMATION",
+                            findPlayerId(id),
+                            id,
+                            "MISSION_AUTOMATION_RESUME",
+                            "Automação de missão pausada",
+                            "A automação desta missão foi pausada porque um item atingiu o limite máximo do inventário. Libere espaço ou reduza a quantidade do item para continuar.",
+                            "mission-automation:inventory-full:" + id
+                    );
                     log.warn("Paused mission automation for {} because the inventory stack is full", id);
                 } else {
                     log.error("Could not process automatic mission {}", id, exception);
                 }
             }
         });
+    }
+
+    private UUID findPlayerId(UUID missionInstanceId) {
+        return missionInstanceRepository.findById(missionInstanceId)
+                .map(instance -> instance.getPlayerId())
+                .orElse(null);
     }
 
     private boolean isStackLimitError(Throwable exception) {
