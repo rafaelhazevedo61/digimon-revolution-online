@@ -1,5 +1,9 @@
 let missionTeamContextPromise = null;
 let missionTeamEditingId = null;
+let missionTeamEditorSelectedIds = [];
+let missionTeamEditorCaptainId = null;
+let missionTeamPickerDigimons = [];
+let missionTeamPickerQuery = "";
 
 async function loadMissionTeamContext(force = false) {
   if (!force && missionTeamContextPromise) return missionTeamContextPromise;
@@ -123,22 +127,124 @@ async function renderMissionTeamsPage() {
   }
 }
 
-function missionTeamSelectOptions(digimons, selectedId) {
-  return missionTeamUsableDigimons(digimons).map(digimon => `
-    <option value="${escapeAttr(digimon.id)}" ${String(digimon.id) === String(selectedId) ? "selected" : ""}>
-      ${escapeHtml(missionTeamDigimonName(digimon))} · ${escapeHtml(missionTeamStatusLabel(digimon))}
-    </option>
-  `).join("");
+function missionTeamPickerFilteredDigimons() {
+  const query = missionTeamPickerQuery.trim().toLowerCase();
+  const stage = document.getElementById("mission-team-picker-stage")?.value || "";
+  return missionTeamPickerDigimons.filter(digimon => {
+    const searchable = [digimon.name, digimon.stage, digimon.type, digimon.rarity, digimon.personality]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return (!query || searchable.includes(query)) && (!stage || String(digimon.stage) === stage);
+  });
+}
+
+function renderMissionTeamPickerList() {
+  const container = document.getElementById("mission-team-picker-results");
+  const count = document.getElementById("mission-team-picker-count");
+  if (!container) return;
+  const filtered = missionTeamPickerFilteredDigimons();
+  const visible = missionTeamPickerQuery.trim() || document.getElementById("mission-team-picker-stage")?.value
+    ? filtered.slice(0, 60)
+    : filtered.slice(0, 30);
+  if (count) count.textContent = `${filtered.length} encontrado${filtered.length === 1 ? "" : "s"}`;
+  if (!visible.length) {
+    container.innerHTML = `<div class="rounded-xl border border-dashed border-slate-700 p-5 text-center text-sm text-slate-400">Nenhum Digimon corresponde à busca.</div>`;
+    return;
+  }
+  container.innerHTML = visible.map(digimon => {
+    const id = String(digimon.id);
+    const selected = missionTeamEditorSelectedIds.includes(id);
+    const blocked = !selected && missionTeamEditorSelectedIds.length >= 3;
+    return `
+      <button type="button" class="flex items-center gap-3 rounded-xl border ${selected ? "border-cyan-500 bg-cyan-950/40" : "border-slate-700 bg-slate-900/60 hover:border-slate-500"} ${blocked ? "cursor-not-allowed opacity-45" : ""} p-2 text-left transition" ${blocked ? "disabled" : ""} onclick="toggleMissionTeamDigimon('${escapeAttr(id)}')">
+        ${renderDigimonVisual(digimon.imageUrl, digimon.stage, "h-12 w-12", "text-3xl")}
+        <span class="min-w-0 flex-1"><span class="block truncate text-xs font-bold text-slate-100">${escapeHtml(digimon.name || "Digimon")}</span><span class="mt-1 block truncate text-[0.62rem] text-slate-400">Nível ${Number(digimon.level) || 0} · ${escapeHtml(formatStage(digimon.stage))}</span><span class="mt-1 block truncate text-[0.58rem] text-slate-500">${escapeHtml(missionTeamStatusLabel(digimon))}</span></span>
+        <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${selected ? "border-cyan-400 bg-cyan-500 text-slate-950" : "border-slate-600 text-slate-500"} text-xs font-bold">${selected ? "✓" : "+"}</span>
+      </button>
+    `;
+  }).join("");
+  if (filtered.length > visible.length) {
+    container.insertAdjacentHTML("beforeend", `<p class="px-2 pt-1 text-center text-[0.65rem] text-slate-500">Mostrando ${visible.length} de ${filtered.length}. Refine a busca para encontrar outros Digimons.</p>`);
+  }
+}
+
+function renderMissionTeamEditorSelection() {
+  const container = document.getElementById("mission-team-selected-list");
+  const count = document.getElementById("mission-team-selected-count");
+  if (count) count.textContent = `${missionTeamEditorSelectedIds.length}/3 selecionados`;
+  if (container) {
+    const byId = missionTeamDigimonMap(missionTeamPickerDigimons);
+    container.innerHTML = [0, 1, 2].map(index => {
+      const digimon = byId.get(String(missionTeamEditorSelectedIds[index]));
+      return digimon
+        ? `<div class="flex items-center gap-2 rounded-lg border border-cyan-800/70 bg-cyan-950/20 px-2 py-2"><span class="text-xs font-bold text-cyan-400">${index + 1}</span>${renderDigimonVisual(digimon.imageUrl, digimon.stage, "h-9 w-9", "text-2xl")}<span class="min-w-0 flex-1 truncate text-xs font-bold text-slate-100">${escapeHtml(digimon.name)}</span><button type="button" class="text-slate-500 hover:text-red-300" aria-label="Remover ${escapeAttr(digimon.name)}" onclick="toggleMissionTeamDigimon('${escapeAttr(digimon.id)}')">&times;</button></div>`
+        : `<div class="flex items-center gap-2 rounded-lg border border-dashed border-slate-700 px-2 py-2 text-xs text-slate-500"><span class="font-bold">${index + 1}</span> Escolha um Digimon</div>`;
+    }).join("");
+  }
+  const captain = document.getElementById("mission-team-captain");
+  if (captain) {
+    if (!missionTeamEditorSelectedIds.includes(String(missionTeamEditorCaptainId))) {
+      missionTeamEditorCaptainId = missionTeamEditorSelectedIds[0] || null;
+    }
+    const byId = missionTeamDigimonMap(missionTeamPickerDigimons);
+    captain.innerHTML = missionTeamEditorSelectedIds.map(id => {
+      const digimon = byId.get(String(id));
+      return digimon ? `<option value="${escapeAttr(id)}" ${String(id) === String(missionTeamEditorCaptainId) ? "selected" : ""}>${escapeHtml(missionTeamDigimonName(digimon))}</option>` : "";
+    }).join("");
+    captain.disabled = missionTeamEditorSelectedIds.length === 0;
+    captain.onchange = event => { missionTeamEditorCaptainId = event.target.value || null; };
+  }
+}
+
+function toggleMissionTeamDigimon(digimonId) {
+  const id = String(digimonId);
+  if (missionTeamEditorSelectedIds.includes(id)) {
+    missionTeamEditorSelectedIds = missionTeamEditorSelectedIds.filter(selectedId => selectedId !== id);
+  } else if (missionTeamEditorSelectedIds.length < 3) {
+    missionTeamEditorSelectedIds = [...missionTeamEditorSelectedIds, id];
+  } else {
+    showToast("Um time pode ter no máximo três Digimons.", "error");
+    return;
+  }
+  renderMissionTeamEditorSelection();
+  renderMissionTeamPickerList();
+}
+
+function openMissionTeamPicker() {
+  const existing = document.getElementById("mission-team-picker-modal");
+  if (existing) existing.remove();
+  missionTeamPickerQuery = "";
+  const overlay = document.createElement("div");
+  overlay.id = "mission-team-picker-modal";
+  overlay.className = "fixed inset-0 z-[80] flex items-center justify-center bg-black/75 p-4";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.innerHTML = `
+    <div class="card max-h-[92vh] w-full max-w-2xl overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="mb-4 flex items-start justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-wider text-cyan-400">Armazém de Digimons</p><h3 class="mt-1 text-xl font-bold text-slate-100">Selecionar membros</h3><p class="mt-1 text-sm text-slate-400">Busque pelo nome ou refine por estágio. Selecione até três.</p></div><button type="button" class="text-2xl leading-none text-slate-400 hover:text-white" aria-label="Fechar" onclick="document.getElementById('mission-team-picker-modal')?.remove()">&times;</button></div>
+      <div class="mb-3 flex flex-col gap-2 sm:flex-row"><input id="mission-team-picker-search" class="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-500" autocomplete="off" placeholder="Buscar por nome, atributo ou raridade..." aria-label="Buscar Digimon" /><select id="mission-team-picker-stage" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-500" aria-label="Filtrar por estágio"><option value="">Todos os estágios</option>${["BABY", "BABY_II", "ROOKIE", "CHAMPION", "ULTIMATE", "MEGA"].map(stage => `<option value="${stage}">${escapeHtml(formatStage(stage))}</option>`).join("")}</select></div>
+      <div class="mb-3 flex items-center justify-between gap-2"><span id="mission-team-picker-count" class="text-xs font-bold text-slate-400"></span><span class="rounded-full border border-cyan-800 bg-cyan-950/30 px-2 py-1 text-xs font-bold text-cyan-300">${missionTeamEditorSelectedIds.length}/3 selecionados</span></div>
+      <div id="mission-team-picker-results" class="grid max-h-[55vh] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2"></div>
+      <button type="button" class="btn-primary mt-4 w-full" onclick="document.getElementById('mission-team-picker-modal')?.remove()">Concluir seleção</button>
+    </div>
+  `;
+  overlay.addEventListener("click", event => { if (event.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  const search = document.getElementById("mission-team-picker-search");
+  search?.addEventListener("input", event => { missionTeamPickerQuery = event.target.value; renderMissionTeamPickerList(); });
+  document.getElementById("mission-team-picker-stage")?.addEventListener("change", renderMissionTeamPickerList);
+  renderMissionTeamPickerList();
+  search?.focus();
 }
 
 function openMissionTeamEditor(teamId = null) {
   loadMissionTeamContext().then(context => {
     const team = teamId ? context.teams.find(item => String(item.id) === String(teamId)) : null;
     missionTeamEditingId = team ? team.id : null;
-    const digimons = missionTeamUsableDigimons(context.digimons);
-    const selectedIds = team && Array.isArray(team.digimonIds) ? team.digimonIds : digimons.slice(0, 3).map(digimon => digimon.id);
-    const fallback = selectedIds.length === 3 ? selectedIds : [selectedIds[0], selectedIds[1], selectedIds[2]];
-    const options = index => missionTeamSelectOptions(digimons, fallback[index]);
+    missionTeamPickerDigimons = missionTeamUsableDigimons(context.digimons);
+    missionTeamEditorSelectedIds = team && Array.isArray(team.digimonIds) ? team.digimonIds.map(String) : [];
+    missionTeamEditorCaptainId = team ? String(team.captainDigimonId) : null;
     const overlay = document.createElement("div");
     overlay.id = "mission-team-editor-modal";
     overlay.className = "fixed inset-0 z-[70] flex items-center justify-center bg-black/75 p-4";
@@ -146,55 +252,38 @@ function openMissionTeamEditor(teamId = null) {
     overlay.setAttribute("aria-modal", "true");
     overlay.innerHTML = `
       <div class="card max-h-[90vh] w-full max-w-lg overflow-y-auto" onclick="event.stopPropagation()">
-        <div class="mb-5 flex items-start justify-between gap-3">
-          <div>
-            <p class="text-xs font-bold uppercase tracking-wider text-cyan-400">Configuração de formação</p>
-            <h3 class="mt-1 text-xl font-bold text-slate-100">${team ? "Editar time" : "Novo time"}</h3>
-          </div>
-          <button type="button" class="text-2xl leading-none text-slate-400 hover:text-white" aria-label="Fechar" onclick="document.getElementById('mission-team-editor-modal')?.remove()">&times;</button>
-        </div>
-        <label class="mb-4 block text-xs font-bold uppercase tracking-wider text-slate-400">Nome do time
-          <input id="mission-team-name" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-500" maxlength="40" value="${escapeAttr(team ? team.name : "Novo time")}" placeholder="Ex.: Exploradores" />
-        </label>
-        <div class="space-y-3">
-          ${[0, 1, 2].map(index => `
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Digimon ${index + 1}
-              <select id="mission-team-member-${index}" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-500">${options(index)}</select>
-            </label>
-          `).join("")}
-          <label class="block text-xs font-bold uppercase tracking-wider text-amber-300">Capitão do time
-            <select id="mission-team-captain" class="mt-2 w-full rounded-lg border border-amber-800 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500">${missionTeamSelectOptions(digimons, team ? team.captainDigimonId : fallback[0])}</select>
-          </label>
-        </div>
-        ${digimons.length < 3 ? `<p class="mt-4 rounded-lg border border-amber-800 bg-amber-950/30 px-3 py-2 text-xs text-amber-200">Você precisa ter pelo menos três Digimons disponíveis para salvar um time.</p>` : ""}
-        <div class="mt-5 flex gap-2">
-          <button type="button" class="btn-secondary flex-1" onclick="document.getElementById('mission-team-editor-modal')?.remove()">Cancelar</button>
-          <button type="button" class="btn-primary flex-1" ${digimons.length < 3 ? "disabled" : ""} onclick="saveMissionTeamFromEditor()">Salvar time</button>
-        </div>
+        <div class="mb-5 flex items-start justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-wider text-cyan-400">Configuração de formação</p><h3 class="mt-1 text-xl font-bold text-slate-100">${team ? "Editar time" : "Novo time"}</h3></div><button type="button" class="text-2xl leading-none text-slate-400 hover:text-white" aria-label="Fechar" onclick="document.getElementById('mission-team-editor-modal')?.remove()">&times;</button></div>
+        <label class="mb-4 block text-xs font-bold uppercase tracking-wider text-slate-400">Nome do time<input id="mission-team-name" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-500" maxlength="40" value="${escapeAttr(team ? team.name : "Novo time")}" placeholder="Ex.: Exploradores" /></label>
+        <div class="rounded-xl border border-slate-700 bg-slate-950/40 p-3"><div class="flex items-center justify-between gap-2"><div><p class="text-xs font-bold uppercase tracking-wider text-slate-400">Membros do time</p><p id="mission-team-selected-count" class="mt-1 text-xs text-cyan-300"></p></div><button type="button" class="btn-secondary text-xs" onclick="openMissionTeamPicker()">Buscar Digimons</button></div><div id="mission-team-selected-list" class="mt-3 space-y-2"></div></div>
+        <label class="mt-4 block text-xs font-bold uppercase tracking-wider text-amber-300">Capitão do time<select id="mission-team-captain" class="mt-2 w-full rounded-lg border border-amber-800 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"></select></label>
+        ${missionTeamPickerDigimons.length < 3 ? `<p class="mt-4 rounded-lg border border-amber-800 bg-amber-950/30 px-3 py-2 text-xs text-amber-200">Você precisa ter pelo menos três Digimons disponíveis para salvar um time.</p>` : `<p class="mt-4 text-xs text-slate-500">Você pode buscar no armazém e trocar os membros a qualquer momento antes de salvar.</p>`}
+        <div class="mt-5 flex gap-2"><button type="button" class="btn-secondary flex-1" onclick="document.getElementById('mission-team-editor-modal')?.remove()">Cancelar</button><button id="mission-team-save-button" type="button" class="btn-primary flex-1" ${missionTeamPickerDigimons.length < 3 ? "disabled" : ""} onclick="saveMissionTeamFromEditor()">Salvar time</button></div>
       </div>
     `;
     overlay.addEventListener("click", event => { if (event.target === overlay) overlay.remove(); });
     document.body.appendChild(overlay);
+    renderMissionTeamEditorSelection();
   }).catch(error => showToast(error.message, "error"));
 }
 
 async function saveMissionTeamFromEditor() {
   const name = document.getElementById("mission-team-name")?.value?.trim();
-  const digimonIds = [0, 1, 2].map(index => document.getElementById(`mission-team-member-${index}`)?.value).filter(Boolean);
+  const digimonIds = missionTeamEditorSelectedIds.map(String);
   const captainDigimonId = document.getElementById("mission-team-captain")?.value;
   if (!name || digimonIds.length !== 3 || new Set(digimonIds).size !== 3 || !captainDigimonId) {
-    showToast("Escolha três Digimons diferentes e um capitão.", "error");
+    showToast("Busque e selecione três Digimons diferentes e escolha um capitão.", "error");
     return;
   }
-  const button = document.querySelector("#mission-team-editor-modal .btn-primary");
+  const button = document.getElementById("mission-team-save-button");
   if (button) { button.disabled = true; button.textContent = "Salvando..."; }
+  const editing = Boolean(missionTeamEditingId);
   try {
     const body = { name, digimonIds, captainDigimonId };
-    if (missionTeamEditingId) await apiPut(`/mission-teams/${missionTeamEditingId}`, body);
+    if (editing) await apiPut(`/mission-teams/${missionTeamEditingId}`, body);
     else await apiPost("/mission-teams", body);
     document.getElementById("mission-team-editor-modal")?.remove();
     missionTeamContextPromise = null;
-    showToast(missionTeamEditingId ? "Time atualizado!" : "Time criado!");
+    showToast(editing ? "Time atualizado!" : "Time criado!");
     await renderMissionTeamsPage();
   } catch (error) {
     showToast(error.message, "error");
