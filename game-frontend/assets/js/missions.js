@@ -658,6 +658,15 @@ function showMissionClaimModal(result) {
 
       ${missionDigimonExperienceMarkup(result)}
 
+      ${result && result.missionId ? `
+        <div class="flex flex-col sm:flex-row gap-2 mt-5 mb-5">
+          <button id="mission-repeat-button" class="btn-primary flex-1" onclick="repeatMissionFromReward('${escapeAttr(result.missionId)}', '${escapeAttr(result.teamId || "")}')">Repetir missão</button>
+          <button id="mission-claim-continue" class="btn-secondary flex-1">Continuar</button>
+        </div>
+      ` : `
+        <button id="mission-claim-continue" class="btn-primary w-full mt-5 mb-5">Continuar</button>
+      `}
+
       <div class="mb-4">
         <h4 class="text-sm font-bold text-slate-300 mb-2">Itens recebidos</h4>
         <div class="space-y-2">${rewardMarkup}</div>
@@ -666,14 +675,6 @@ function showMissionClaimModal(result) {
       ${missionRewardBreakdownMarkup("Experiência", result && result.experienceBreakdown, "XP", "Multiplicadores do Digimon")}
       ${missionRewardBreakdownMarkup("Bits", result && result.bitsBreakdown, "bits", "Multiplicador do Digimon")}
 
-      ${result && result.missionId ? `
-        <div class="flex flex-col sm:flex-row gap-2 mt-5">
-          <button id="mission-repeat-button" class="btn-primary flex-1" onclick="repeatMissionFromReward('${escapeAttr(result.missionId)}', '${escapeAttr(result.teamId || "")}')">Repetir missão</button>
-          <button id="mission-claim-continue" class="btn-secondary flex-1">Continuar</button>
-        </div>
-      ` : `
-        <button id="mission-claim-continue" class="btn-primary w-full mt-5">Continuar</button>
-      `}
     </div>
   `;
   overlay.addEventListener("click", event => {
