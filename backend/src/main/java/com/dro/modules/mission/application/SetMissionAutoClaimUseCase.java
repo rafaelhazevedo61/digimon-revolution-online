@@ -37,7 +37,10 @@ public class SetMissionAutoClaimUseCase {
         }
 
         instance.setAutoClaimEnabled(enabled);
-        if (enabled) instance.setAutoRepeatEnabled(true);
+        if (enabled) {
+            instance.setAutoRepeatEnabled(true);
+            instance.clearAutomationPause();
+        }
         missionInstanceRepository.save(instance);
         return new MissionAutoRepeatResponse(instance.getId(), instance.getSlotNumber(), enabled);
     }

@@ -80,7 +80,10 @@ public class GetIncubationUseCase {
                 incubation.getFinishAt(),
                 remaining,
                 incubation.isAutoRepeatEnabled(),
-                incubation.isAutoClaimEnabled()
+                incubation.isAutoClaimEnabled(),
+                incubation.getAutomationPauseReason(),
+                incubation.getAutomationPausedAt(),
+                incubation.getAutomationLastErrorCode()
         );
     }
 

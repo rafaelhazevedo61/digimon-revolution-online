@@ -27,6 +27,7 @@ public class SetIncubationAutomationUseCase {
         if (incubation.getStatus() == IncubationStatus.CLAIMED) throw new BadRequestException("Incubation already claimed");
         incubation.setAutoClaimEnabled(autoClaim);
         if (autoRepeat != null) incubation.setAutoRepeatEnabled(autoRepeat);
+        if (autoClaim || (autoRepeat != null && autoRepeat)) incubation.clearAutomationPause();
         if (!autoClaim) incubation.setAutoRepeatEnabled(false);
         if (incubation.isAutoRepeatEnabled()) incubation.setAutoClaimEnabled(true);
         player.setIncubationAutoClaimEnabled(autoClaim);
@@ -34,6 +35,7 @@ public class SetIncubationAutomationUseCase {
         repository.findByPlayerIdAndStatusNotOrderBySlotNumberAsc(playerId, IncubationStatus.CLAIMED).forEach(active -> {
             active.setAutoClaimEnabled(player.isIncubationAutoClaimEnabled());
             active.setAutoRepeatEnabled(player.isIncubationAutoRepeatEnabled());
+            if (player.isIncubationAutoClaimEnabled() || player.isIncubationAutoRepeatEnabled()) active.clearAutomationPause();
             repository.save(active);
         });
         playerRepository.save(player);

@@ -48,10 +48,14 @@ public class MissionAutomationProcessor {
 
     @Transactional
     public void pauseAutomation(UUID missionInstanceId) {
+        pauseAutomation(missionInstanceId, "MANUAL", "MANUAL");
+    }
+
+    @Transactional
+    public void pauseAutomation(UUID missionInstanceId, String reason, String errorCode) {
         MissionInstance instance = missionInstanceRepository.findByIdForUpdate(missionInstanceId).orElse(null);
         if (instance == null || instance.isAlreadyClaimed()) return;
-        instance.setAutoClaimEnabled(false);
-        instance.setAutoRepeatEnabled(false);
+        instance.pauseAutomation(reason, errorCode);
         missionInstanceRepository.save(instance);
     }
 }

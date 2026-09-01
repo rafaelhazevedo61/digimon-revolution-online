@@ -1,6 +1,8 @@
 package com.dro.modules.incubation.application;
 
 import com.dro.modules.incubation.domain.Incubation;
+import com.dro.shared.automation.AutomationFailureCode;
+import com.dro.shared.automation.AutomationFailureException;
 import com.dro.modules.incubation.domain.IncubationStatus;
 import com.dro.modules.incubation.infra.IncubationRepository;
 import com.dro.modules.mail.application.CreateSystemMailMessageUseCase;
@@ -42,8 +44,10 @@ public class IncubationAutomationJob {
             try {
                 processor.process(id);
             } catch (RuntimeException error) {
-                processor.pause(id);
-                if (isStorageFullError(error)) {
+                AutomationFailureCode failureCode = findFailureCode(error);
+                processor.pause(id, failureCode != null ? failureCode.name() : "AUTOMATION_ERROR",
+                        failureCode != null ? failureCode.name() : AutomationFailureCode.TRANSIENT_DATABASE_ERROR.name());
+                if (failureCode == AutomationFailureCode.DIGIMON_STORAGE_FULL || isStorageFullError(error)) {
                     repository.findById(id).ifPresent(incubation ->
                             createSystemMailMessageUseCase.create(
                                     MailMessageType.SYSTEM,
@@ -61,11 +65,28 @@ public class IncubationAutomationJob {
         });
     }
 
+    private AutomationFailureCode findFailureCode(Throwable error) {
+        Throwable current = error;
+        while (current != null) {
+            if (current instanceof AutomationFailureException typed) return typed.getFailureCode();
+            current = current.getCause();
+        }
+        return null;
+    }
+
     private boolean isStorageFullError(Throwable error) {
-        String message = error.getMessage();
-        return message != null && (message.toLowerCase().contains("storage cheio")
-                || message.toLowerCase().contains("armazém cheio")
-                || message.toLowerCase().contains("storage full"));
+        Throwable current = error;
+        while (current != null) {
+            String message = current.getMessage();
+            if (message != null) {
+                String normalized = message.toLowerCase();
+                if (normalized.contains("storage cheio")
+                        || normalized.contains("armazém cheio")
+                        || normalized.contains("storage full")) return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     /* processing is delegated to IncubationAutomationProcessor */

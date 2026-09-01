@@ -19,6 +19,9 @@ public record IncubationResponse(
         LocalDateTime finishAt,
         long remainingSeconds,
         boolean autoRepeatEnabled,
-        boolean autoClaimEnabled
+        boolean autoClaimEnabled,
+        String automationPauseReason,
+        LocalDateTime automationPausedAt,
+        String automationLastErrorCode
 ) {
 }

@@ -327,7 +327,10 @@ public class GetPlayerDashboardUseCase {
                 incubation.getFinishAt(),
                 remaining,
                 incubation.isAutoRepeatEnabled(),
-                incubation.isAutoClaimEnabled()
+                incubation.isAutoClaimEnabled(),
+                incubation.getAutomationPauseReason(),
+                incubation.getAutomationPausedAt(),
+                incubation.getAutomationLastErrorCode()
         );
     }
 

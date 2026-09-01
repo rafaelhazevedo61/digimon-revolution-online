@@ -35,6 +35,12 @@ public class Incubation {
     private boolean autoRepeatEnabled;
     @Column(name = "auto_claim_enabled", nullable = false)
     private boolean autoClaimEnabled;
+    @Column(name = "automation_pause_reason")
+    private String automationPauseReason;
+    @Column(name = "automation_paused_at")
+    private LocalDateTime automationPausedAt;
+    @Column(name = "automation_last_error_code")
+    private String automationLastErrorCode;
 
     public void markReadyIfFinished() {
         if (this.status != IncubationStatus.IN_PROGRESS) {
@@ -128,6 +134,24 @@ public class Incubation {
 
     public void setAutoClaimEnabled(boolean autoClaimEnabled) {
         this.autoClaimEnabled = autoClaimEnabled;
+    }
+
+    public String getAutomationPauseReason() { return automationPauseReason; }
+    public LocalDateTime getAutomationPausedAt() { return automationPausedAt; }
+    public String getAutomationLastErrorCode() { return automationLastErrorCode; }
+
+    public void pauseAutomation(String reason, String errorCode) {
+        this.autoClaimEnabled = false;
+        this.autoRepeatEnabled = false;
+        this.automationPauseReason = reason;
+        this.automationLastErrorCode = errorCode;
+        this.automationPausedAt = LocalDateTime.now();
+    }
+
+    public void clearAutomationPause() {
+        this.automationPauseReason = null;
+        this.automationLastErrorCode = null;
+        this.automationPausedAt = null;
     }
 
 

@@ -20,8 +20,11 @@ import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.tutorial.domain.TutorialStep;
 import com.dro.modules.tutorial.application.TutorialService;
+import com.dro.shared.automation.AutomationFailureCode;
+import com.dro.shared.automation.AutomationFailureException;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
+import org.springframework.http.HttpStatus;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -92,7 +95,11 @@ public class ClaimIncubationUseCase {
     private void ensureStorageHasSpace(Player player) {
         long storedCount = digimonRepository.countByPlayerIdAndStatus(player.getId(), DigimonStatus.STORED);
         if (storedCount >= player.getMaxStorageSlots()) {
-            throw new BadRequestException("Storage cheio (" + storedCount + "/" + player.getMaxStorageSlots() + "). Libere um espaço no armazém antes de chocar a Digitama.");
+            throw new AutomationFailureException(
+                    "Storage cheio (" + storedCount + "/" + player.getMaxStorageSlots() + "). Libere um espaço no armazém antes de chocar a Digitama.",
+                    HttpStatus.BAD_REQUEST,
+                    AutomationFailureCode.DIGIMON_STORAGE_FULL
+            );
         }
     }
 

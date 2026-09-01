@@ -1,6 +1,8 @@
 package com.dro.modules.mission.application;
 
 import com.dro.modules.mail.application.CreateSystemMailMessageUseCase;
+import com.dro.shared.automation.AutomationFailureCode;
+import com.dro.shared.automation.AutomationFailureException;
 import com.dro.modules.mail.domain.MailMessageType;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
@@ -50,9 +52,10 @@ public class MissionAutomationJob {
             try {
                 processor.process(id);
             } catch (RuntimeException exception) {
-                if (isStackLimitError(exception)) {
+                AutomationFailureCode failureCode = findFailureCode(exception);
+                if (failureCode == AutomationFailureCode.INVENTORY_STACK_FULL || isStackLimitError(exception)) {
                     UUID playerId = findPlayerId(id);
-                    processor.pauseAutomation(id);
+                    processor.pauseAutomation(id, "INVENTORY_STACK_FULL", AutomationFailureCode.INVENTORY_STACK_FULL.name());
                     if (playerId != null) {
                         createSystemMailMessageUseCase.create(
                                 MailMessageType.SYSTEM,
@@ -69,7 +72,8 @@ public class MissionAutomationJob {
                     }
                     log.warn("Paused mission automation for {} because the inventory stack is full", id);
                 } else {
-                    log.error("Could not process automatic mission {}", id, exception);
+                    processor.pauseAutomation(id, "AUTOMATION_ERROR", AutomationFailureCode.TRANSIENT_DATABASE_ERROR.name());
+                    log.error("Could not process automatic mission {}; automation paused", id, exception);
                 }
             }
         });
@@ -98,6 +102,15 @@ public class MissionAutomationJob {
                 Matcher matcher = STACK_ITEM_PATTERN.matcher(message);
                 if (matcher.find()) return matcher.group(1);
             }
+            current = current.getCause();
+        }
+        return null;
+    }
+
+    private AutomationFailureCode findFailureCode(Throwable exception) {
+        Throwable current = exception;
+        while (current != null) {
+            if (current instanceof AutomationFailureException typed) return typed.getFailureCode();
             current = current.getCause();
         }
         return null;

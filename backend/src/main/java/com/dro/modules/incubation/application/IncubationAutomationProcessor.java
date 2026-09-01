@@ -63,9 +63,13 @@ public class IncubationAutomationProcessor {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void pause(UUID id) {
+        pause(id, "MANUAL", "MANUAL");
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void pause(UUID id, String reason, String errorCode) {
         repository.findByIdForUpdate(id).ifPresent(i -> {
-            i.setAutoClaimEnabled(false);
-            i.setAutoRepeatEnabled(false);
+            i.pauseAutomation(reason, errorCode);
             repository.save(i);
         });
     }
