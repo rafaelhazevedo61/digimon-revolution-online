@@ -123,7 +123,7 @@ function incubRenderSlots(response, inventory = [], slotInfo = window._incubSlot
         <span class="text-xs text-slate-500">${renderSlots.filter(slot => slot.unlocked && slot.incubation).length}/${unlockedSlots}</span>
       </div>
       <div class="active-incubation-list grid grid-cols-1 gap-3" id="incub-slots">
-        ${renderSlots.map(incubRenderSlot).join("")}
+        ${renderSlots.map(slot => incubRenderSlot(slot, storageFull, storedDigimons, maxStorageSlots)).join("")}
       </div>
     </section>
   `;
@@ -158,7 +158,7 @@ function incubRenderIncubatorCard(item, hasAvailableSlot) {
   `;
 }
 
-function incubRenderSlot(slot) {
+function incubRenderSlot(slot, storageFull = false, storedDigimons = null, maxStorageSlots = null) {
   const slotNumber = Number(slot.slotNumber);
   const slotLabel = `Slot ${slotNumber}`;
 
