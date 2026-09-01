@@ -663,13 +663,6 @@ function showMissionClaimModal(result) {
         <div class="space-y-2">${rewardMarkup}</div>
       </div>
 
-      ${result && result.levelUp ? `
-        <div class="rounded-lg border border-emerald-700 bg-emerald-950/40 px-3 py-3 mb-5 text-center">
-          <p class="font-bold text-emerald-300">Level Up!</p>
-          <p class="text-xs text-emerald-200 mt-1">Seu Digimon subiu de nível.</p>
-        </div>
-      ` : ""}
-
       ${missionRewardBreakdownMarkup("Experiência", result && result.experienceBreakdown, "XP", "Multiplicadores do Digimon")}
       ${missionRewardBreakdownMarkup("Bits", result && result.bitsBreakdown, "bits", "Multiplicador do Digimon")}
 
