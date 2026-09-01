@@ -233,7 +233,7 @@ async function toggleMissionAutoRepeat(instanceId, enabled) {
 async function startMissionAutoRepeat(result, autoClaim = false) {
   if (!result || !result.autoRepeatEnabled || !result.missionId || !result.teamId) return false;
   try {
-    await apiPost("/missions/start-auto", {
+    const nextMission = await apiPost("/missions/start-auto", {
       missionId: result.missionId,
       teamId: result.teamId,
       autoClaim
@@ -245,7 +245,7 @@ async function startMissionAutoRepeat(result, autoClaim = false) {
       repeatButton.classList.add("opacity-70", "cursor-not-allowed");
     }
     showToast("Auto-missão: o mesmo time foi reenviado.", "success");
-    return true;
+    return nextMission;
   } catch (err) {
     showToast(`Auto-missão pausada: ${err.message}`, "error");
     return false;
@@ -328,8 +328,8 @@ async function claimMissionAutomatically(instanceId) {
   // O retry cobre somente o claim. Se o claim funcionar e o reenvio falhar,
   // não tentamos reivindicar a mesma missão novamente.
   const result = await claimMissionWithRetry(instanceId);
-  await startMissionAutoRepeat(result, true);
-  return result;
+  const nextMission = await startMissionAutoRepeat(result, true);
+  return { result, nextMission };
 }
 
 async function claimMissionFromList(instanceId) {

@@ -414,7 +414,7 @@ function renderActiveMission(m) {
   const done = remaining <= 0;
 
   return `
-    <article class="dashboard-mission-card ${done ? "dashboard-mission-card-ready" : ""}" data-mission-instance="${m.instanceId}" data-ends-at="${m.endsAt}" data-auto-claim="${m.autoClaimEnabled ? "true" : "false"}">
+    <article class="dashboard-mission-card ${done ? "dashboard-mission-card-ready" : ""}" data-mission-instance="${m.instanceId}" data-ends-at="${m.endsAt}" data-auto-claim="${m.autoClaimEnabled ? "true" : "false"}" data-auto-repeat="${m.autoRepeatEnabled ? "true" : "false"}">
       <div class="dashboard-mission-icon" aria-hidden="true">✦</div>
       <div class="dashboard-mission-main">
         <p class="dashboard-mission-label">Objetivo em campo</p>
@@ -429,6 +429,24 @@ function renderActiveMission(m) {
       </div>
     </article>
   `;
+}
+
+async function refreshDashboardMissionSection() {
+  const section = document.querySelector(".dashboard-missions-section");
+  if (!section) return renderDashboardPage();
+
+  const data = await apiGet("/player/dashboard");
+  const missions = Array.isArray(data && data.activeMissions) ? data.activeMissions : [];
+  if (missions.length === 0) {
+    section.remove();
+    return;
+  }
+
+  const list = section.querySelector(".dashboard-missions-list");
+  const count = section.querySelector(".dashboard-section-count");
+  if (count) count.textContent = String(missions.length);
+  if (list) list.innerHTML = missions.map(renderActiveMission).join("");
+  startMissionTimers();
 }
 
 function renderIncubation(inc) {
@@ -585,8 +603,27 @@ function startMissionTimers() {
         if (el.dataset.autoClaim === "true" && el.dataset.autoClaiming !== "true" && typeof claimMissionAutomatically === "function") {
           el.dataset.autoClaiming = "true";
           timerEl.textContent = "Resgatando...";
+          const refreshAfterAutomaticClaim = el.dataset.autoRepeat === "true"
+            ? refreshDashboardMissionSection
+            : renderDashboardPage;
           claimMissionAutomatically(el.dataset.missionInstance)
-            .then(() => renderDashboardPage())
+            .then(({ nextMission } = {}) => {
+              if (el.dataset.autoRepeat === "true" && nextMission && nextMission.endsAt) {
+                el.dataset.endsAt = nextMission.endsAt;
+                el.dataset.autoClaim = nextMission.autoClaimEnabled ? "true" : "false";
+                el.dataset.autoRepeat = nextMission.autoRepeatEnabled ? "true" : "false";
+                el.classList.remove("dashboard-mission-card-ready");
+                const dot = el.querySelector(".dashboard-mission-dot");
+                if (dot) dot.classList.remove("dashboard-mission-dot-ready");
+                const nextTimer = el.querySelector(".mission-timer");
+                if (nextTimer) {
+                  const nextRemaining = Math.max(0, Math.floor((new Date(nextMission.endsAt).getTime() - Date.now()) / 1000));
+                  nextTimer.textContent = `Retorno em ${formatTime(nextRemaining)}`;
+                }
+                return;
+              }
+              return refreshAfterAutomaticClaim();
+            })
             .catch(async err => {
               el.dataset.autoClaiming = "false";
               if (isInventoryStackLimitError(err)) {
