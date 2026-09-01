@@ -9,6 +9,8 @@ import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.domain.MissionTeam;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.mission.infra.MissionTeamRepository;
+import com.dro.modules.player.domain.Player;
+import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.security.JwtSettings;
@@ -38,6 +40,8 @@ class MissionTeamUseCaseTest {
     @Mock private MissionTeamRepository missionTeamRepository;
     @Mock private MissionInstanceRepository missionInstanceRepository;
     @Mock private DigimonRepository digimonRepository;
+    @Mock private PlayerRepository playerRepository;
+    @Mock private Player player;
 
     private UUID playerId;
     private List<UUID> digimonIds;
@@ -56,7 +60,8 @@ class MissionTeamUseCaseTest {
                 ),
                 JwtSettings.getSecret()
         );
-        useCase = new MissionTeamUseCase(missionTeamRepository, missionInstanceRepository, digimonRepository);
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        useCase = new MissionTeamUseCase(playerRepository, missionTeamRepository, missionInstanceRepository, digimonRepository);
     }
 
     @Test
@@ -88,6 +93,20 @@ class MissionTeamUseCaseTest {
 
         assertEquals(partialIds, response.digimonIds());
         assertEquals(partialIds.get(1), response.captainDigimonId());
+    }
+
+    @Test
+    void rejectsDigimonAlreadyAssignedToAnotherTeam() {
+        MissionTeam otherTeam = new MissionTeam(playerId, "Exploradores", digimonIds, digimonIds.get(0));
+        when(digimonRepository.findAllByIdForUpdate(playerId, digimonIds))
+                .thenReturn(List.of(digimon(digimonIds.get(0)), digimon(digimonIds.get(1)), digimon(digimonIds.get(2))));
+        when(missionTeamRepository.findByPlayerIdAndDigimonIds(playerId, digimonIds))
+                .thenReturn(List.of(otherTeam));
+
+        assertThrows(
+                ConflictException.class,
+                () -> useCase.create(token, new SaveMissionTeamRequest("Outro time", digimonIds, digimonIds.get(0)))
+        );
     }
 
     @Test

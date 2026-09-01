@@ -8,6 +8,7 @@ import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.domain.MissionTeam;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.mission.infra.MissionTeamRepository;
+import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
@@ -32,6 +33,7 @@ public class MissionTeamUseCase {
     private final MissionTeamRepository missionTeamRepository;
     private final MissionInstanceRepository missionInstanceRepository;
     private final DigimonRepository digimonRepository;
+    private final PlayerRepository playerRepository;
 
     public List<MissionTeamResponse> list(String token) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
@@ -44,7 +46,8 @@ public class MissionTeamUseCase {
     @Transactional
     public MissionTeamResponse create(String token, SaveMissionTeamRequest request) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        List<UUID> digimonIds = validateRequest(playerId, request);
+        lockPlayer(playerId);
+        List<UUID> digimonIds = validateRequest(playerId, null, request);
         MissionTeam team = new MissionTeam(playerId, normalizeName(request.name()), digimonIds, request.captainDigimonId());
         return MissionTeamResponse.from(missionTeamRepository.save(team));
     }
@@ -52,6 +55,7 @@ public class MissionTeamUseCase {
     @Transactional
     public MissionTeamResponse update(String token, UUID teamId, SaveMissionTeamRequest request) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
+        lockPlayer(playerId);
         MissionTeam team = missionTeamRepository.findByIdAndPlayerIdForUpdate(teamId, playerId)
                 .orElseThrow(() -> new NotFoundException("Time não encontrado"));
         if (missionInstanceRepository.existsByTeamIdAndStatusIn(
@@ -60,7 +64,7 @@ public class MissionTeamUseCase {
         )) {
             throw new ConflictException("O time está vinculado a uma missão em andamento");
         }
-        List<UUID> digimonIds = validateRequest(playerId, request);
+        List<UUID> digimonIds = validateRequest(playerId, teamId, request);
         team.update(normalizeName(request.name()), digimonIds, request.captainDigimonId());
         return MissionTeamResponse.from(missionTeamRepository.save(team));
     }
@@ -68,6 +72,7 @@ public class MissionTeamUseCase {
     @Transactional
     public void delete(String token, UUID teamId) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
+        lockPlayer(playerId);
         MissionTeam team = missionTeamRepository.findByIdAndPlayerIdForUpdate(teamId, playerId)
                 .orElseThrow(() -> new NotFoundException("Time não encontrado"));
         if (missionInstanceRepository.existsByTeamIdAndStatusIn(
@@ -84,7 +89,7 @@ public class MissionTeamUseCase {
                 .orElseThrow(() -> new NotFoundException("Time não encontrado"));
     }
 
-    private List<UUID> validateRequest(UUID playerId, SaveMissionTeamRequest request) {
+    private List<UUID> validateRequest(UUID playerId, UUID teamId, SaveMissionTeamRequest request) {
         if (request == null || request.digimonIds() == null || request.digimonIds().isEmpty() || request.digimonIds().size() > 3) {
             throw new BadRequestException("Um time precisa ter entre 1 e 3 Digimons");
         }
@@ -103,7 +108,22 @@ public class MissionTeamUseCase {
         if (digimons.stream().anyMatch(digimon -> !USABLE_STATUSES.contains(digimon.getStatus()))) {
             throw new ConflictException("Um ou mais Digimons não estão disponíveis para formar um time");
         }
+
+        List<MissionTeam> conflictingTeams = teamId == null
+                ? missionTeamRepository.findByPlayerIdAndDigimonIds(playerId, digimonIds)
+                : missionTeamRepository.findOtherByPlayerIdAndDigimonIds(playerId, teamId, digimonIds);
+        if (!conflictingTeams.isEmpty()) {
+            String teamName = conflictingTeams.get(0).getName();
+            throw new ConflictException("Um ou mais Digimons já pertencem ao time " + teamName);
+        }
         return digimonIds;
+    }
+
+    private void lockPlayer(UUID playerId) {
+        if (playerRepository != null) {
+            playerRepository.findByIdForUpdate(playerId)
+                    .orElseThrow(() -> new NotFoundException("Jogador não encontrado"));
+        }
     }
 
     private String normalizeName(String name) {
@@ -119,6 +139,17 @@ public class MissionTeamUseCase {
             MissionInstanceRepository missionInstanceRepository,
             DigimonRepository digimonRepository
     ) {
+        this(null, missionTeamRepository, missionInstanceRepository, digimonRepository);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public MissionTeamUseCase(
+            PlayerRepository playerRepository,
+            MissionTeamRepository missionTeamRepository,
+            MissionInstanceRepository missionInstanceRepository,
+            DigimonRepository digimonRepository
+    ) {
+        this.playerRepository = playerRepository;
         this.missionTeamRepository = missionTeamRepository;
         this.missionInstanceRepository = missionInstanceRepository;
         this.digimonRepository = digimonRepository;

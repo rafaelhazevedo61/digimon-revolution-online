@@ -16,6 +16,12 @@ public interface MissionTeamRepository extends JpaRepository<MissionTeam, UUID> 
 
     Optional<MissionTeam> findByIdAndPlayerId(UUID id, UUID playerId);
 
+    @Query("SELECT t FROM MissionTeam t WHERE t.playerId = :playerId AND (t.digimon1Id IN :digimonIds OR t.digimon2Id IN :digimonIds OR t.digimon3Id IN :digimonIds)")
+    List<MissionTeam> findByPlayerIdAndDigimonIds(@Param("playerId") UUID playerId, @Param("digimonIds") List<UUID> digimonIds);
+
+    @Query("SELECT t FROM MissionTeam t WHERE t.playerId = :playerId AND t.id <> :teamId AND (t.digimon1Id IN :digimonIds OR t.digimon2Id IN :digimonIds OR t.digimon3Id IN :digimonIds)")
+    List<MissionTeam> findOtherByPlayerIdAndDigimonIds(@Param("playerId") UUID playerId, @Param("teamId") UUID teamId, @Param("digimonIds") List<UUID> digimonIds);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT t FROM MissionTeam t WHERE t.id = :id AND t.playerId = :playerId")
     Optional<MissionTeam> findByIdAndPlayerIdForUpdate(@Param("id") UUID id, @Param("playerId") UUID playerId);

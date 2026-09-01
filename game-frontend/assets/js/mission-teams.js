@@ -4,6 +4,8 @@ let missionTeamEditorSelectedIds = [];
 let missionTeamEditorCaptainId = null;
 let missionTeamPickerDigimons = [];
 let missionTeamPickerQuery = "";
+let missionTeamPickerAssignedTeams = new Map();
+let missionTeamPickerCurrentTeamId = null;
 
 async function loadMissionTeamContext(force = false) {
   if (!force && missionTeamContextPromise) return missionTeamContextPromise;
@@ -155,12 +157,18 @@ function renderMissionTeamPickerList() {
   container.innerHTML = visible.map(digimon => {
     const id = String(digimon.id);
     const selected = missionTeamEditorSelectedIds.includes(id);
-    const blocked = !selected && missionTeamEditorSelectedIds.length >= 3;
+    const assignedTeam = missionTeamPickerAssignedTeams.get(id);
+    const assignedElsewhere = Boolean(assignedTeam);
+    const blocked = !selected && (assignedElsewhere || missionTeamEditorSelectedIds.length >= 3);
+    const assignmentLabel = assignedElsewhere
+      ? `Já pertence ao time ${assignedTeam.name}`
+      : missionTeamStatusLabel(digimon);
+    const statusLabel = selected && assignedElsewhere ? `${assignmentLabel} · remova para liberar` : assignmentLabel;
     return `
-      <button type="button" class="flex items-center gap-3 rounded-xl border ${selected ? "border-cyan-500 bg-cyan-950/40" : "border-slate-700 bg-slate-900/60 hover:border-slate-500"} ${blocked ? "cursor-not-allowed opacity-45" : ""} p-2 text-left transition" ${blocked ? "disabled" : ""} onclick="toggleMissionTeamDigimon('${escapeAttr(id)}')">
+      <button type="button" class="flex items-center gap-3 rounded-xl border ${selected ? "border-cyan-500 bg-cyan-950/40" : assignedElsewhere ? "border-amber-800/70 bg-amber-950/20" : "border-slate-700 bg-slate-900/60 hover:border-slate-500"} ${blocked ? "cursor-not-allowed opacity-55" : ""} p-2 text-left transition" ${blocked ? "disabled" : ""} onclick="toggleMissionTeamDigimon('${escapeAttr(id)}')">
         ${renderDigimonVisual(digimon.imageUrl, digimon.stage, "h-12 w-12", "text-3xl")}
-        <span class="min-w-0 flex-1"><span class="block truncate text-xs font-bold text-slate-100">${escapeHtml(digimon.name || "Digimon")}</span><span class="mt-1 block truncate text-[0.62rem] text-slate-400">Nível ${Number(digimon.level) || 0} · ${escapeHtml(formatStage(digimon.stage))}</span><span class="mt-1 block truncate text-[0.58rem] text-slate-500">${escapeHtml(missionTeamStatusLabel(digimon))}</span></span>
-        <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${selected ? "border-cyan-400 bg-cyan-500 text-slate-950" : "border-slate-600 text-slate-500"} text-xs font-bold">${selected ? "✓" : "+"}</span>
+        <span class="min-w-0 flex-1"><span class="block truncate text-xs font-bold text-slate-100">${escapeHtml(digimon.name || "Digimon")}</span><span class="mt-1 block truncate text-[0.62rem] text-slate-400">Nível ${Number(digimon.level) || 0} · ${escapeHtml(formatStage(digimon.stage))}</span><span class="mt-1 block truncate text-[0.58rem] ${assignedElsewhere ? "text-amber-300" : "text-slate-500"}">${escapeHtml(statusLabel)}</span></span>
+        <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${selected ? "border-cyan-400 bg-cyan-500 text-slate-950" : assignedElsewhere ? "border-amber-700 text-amber-300" : "border-slate-600 text-slate-500"} text-xs font-bold">${selected ? "✓" : assignedElsewhere ? "×" : "+"}</span>
       </button>
     `;
   }).join("");
@@ -222,7 +230,7 @@ function openMissionTeamPicker() {
   overlay.setAttribute("aria-modal", "true");
   overlay.innerHTML = `
     <div class="card max-h-[92vh] w-full max-w-2xl overflow-y-auto" onclick="event.stopPropagation()">
-      <div class="mb-4 flex items-start justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-wider text-cyan-400">Armazém de Digimons</p><h3 class="mt-1 text-xl font-bold text-slate-100">Selecionar membros</h3><p class="mt-1 text-sm text-slate-400">Busque pelo nome ou refine por estágio. Selecione até três.</p></div><button type="button" class="text-2xl leading-none text-slate-400 hover:text-white" aria-label="Fechar" onclick="document.getElementById('mission-team-picker-modal')?.remove()">&times;</button></div>
+      <div class="mb-4 flex items-start justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-wider text-cyan-400">Armazém de Digimons</p><h3 class="mt-1 text-xl font-bold text-slate-100">Selecionar membros</h3><p class="mt-1 text-sm text-slate-400">Busque pelo nome ou refine por estágio. Selecione até três.</p><p class="mt-2 text-xs text-amber-300/90">Digimons marcados como “já pertence” estão vinculados a outra formação.</p></div><button type="button" class="text-2xl leading-none text-slate-400 hover:text-white" aria-label="Fechar" onclick="document.getElementById('mission-team-picker-modal')?.remove()">&times;</button></div>
       <div class="mb-3 flex flex-col gap-2 sm:flex-row"><input id="mission-team-picker-search" class="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-500" autocomplete="off" placeholder="Buscar por nome, atributo ou raridade..." aria-label="Buscar Digimon" /><select id="mission-team-picker-stage" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-500" aria-label="Filtrar por estágio"><option value="">Todos os estágios</option>${["BABY", "BABY_II", "ROOKIE", "CHAMPION", "ULTIMATE", "MEGA"].map(stage => `<option value="${stage}">${escapeHtml(formatStage(stage))}</option>`).join("")}</select></div>
       <div class="mb-3 flex items-center justify-between gap-2"><span id="mission-team-picker-count" class="text-xs font-bold text-slate-400"></span><span class="rounded-full border border-cyan-800 bg-cyan-950/30 px-2 py-1 text-xs font-bold text-cyan-300">${missionTeamEditorSelectedIds.length}/3 selecionados</span></div>
       <div id="mission-team-picker-results" class="grid max-h-[55vh] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2"></div>
@@ -243,6 +251,12 @@ function openMissionTeamEditor(teamId = null) {
     const team = teamId ? context.teams.find(item => String(item.id) === String(teamId)) : null;
     missionTeamEditingId = team ? team.id : null;
     missionTeamPickerDigimons = missionTeamUsableDigimons(context.digimons);
+    missionTeamPickerCurrentTeamId = team ? String(team.id) : null;
+    missionTeamPickerAssignedTeams = new Map();
+    context.teams.forEach(existingTeam => {
+      if (String(existingTeam.id) === String(missionTeamPickerCurrentTeamId)) return;
+      (existingTeam.digimonIds || []).forEach(id => missionTeamPickerAssignedTeams.set(String(id), existingTeam));
+    });
     missionTeamEditorSelectedIds = team && Array.isArray(team.digimonIds) ? team.digimonIds.map(String) : [];
     missionTeamEditorCaptainId = team ? String(team.captainDigimonId) : null;
     const overlay = document.createElement("div");
