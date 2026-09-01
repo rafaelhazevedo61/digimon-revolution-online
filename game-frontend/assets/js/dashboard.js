@@ -403,6 +403,12 @@ function renderSetBonus(sb) {
 
 function renderActiveMission(m) {
   const now = Date.now();
+  const autoRepeatControls = m.teamId
+    ? `<div class="dashboard-mission-auto-actions">
+        <button type="button" class="btn-sm ${m.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoRepeat('${m.instanceId}', ${!m.autoRepeatEnabled})">${m.autoRepeatEnabled ? "Repetição ativa" : "Repetir após resgate"}</button>
+        <button type="button" class="btn-sm ${m.autoClaimEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoClaim('${m.instanceId}', ${!m.autoClaimEnabled})">${m.autoClaimEnabled ? "Automático ativo" : "Automático completo"}</button>
+      </div>`
+    : "";
   const endsAt = new Date(m.endsAt).getTime();
   const remaining = Math.max(0, Math.floor((endsAt - now) / 1000));
   const done = remaining <= 0;
@@ -416,7 +422,10 @@ function renderActiveMission(m) {
         <p class="dashboard-mission-team">${escapeHtml(m.teamName || (m.teamId ? "Time de missão" : "Missão legada"))}${m.teamId ? " · 3 Digimons" : ""}</p>
         <div class="dashboard-mission-state"><span class="dashboard-mission-dot ${done ? "dashboard-mission-dot-ready" : ""}"></span><span class="mission-timer">${done ? "Concluída!" : `Retorno em ${formatTime(remaining)}`}</span></div>
       </div>
-      <div class="dashboard-mission-action">${done ? `<button class="btn-sm btn-primary" onclick="claimMission('${m.instanceId}')">Resgatar</button>` : `<span class="dashboard-mission-badge">Em andamento</span>`}</div>
+      <div class="dashboard-mission-action">
+        ${autoRepeatControls}
+        ${done ? `<button class="btn-sm btn-primary" onclick="claimMission('${m.instanceId}')">Resgatar</button>` : `<span class="dashboard-mission-badge">Em andamento</span>`}
+      </div>
     </article>
   `;
 }

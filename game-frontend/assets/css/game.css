@@ -1394,7 +1394,57 @@ body {
 .dashboard-mission-action { display: flex; min-width: 5.5rem; justify-content: flex-end; }
 .dashboard-mission-action .btn-sm { padding: 0.38rem 0.58rem; font-size: 0.62rem; }
 .dashboard-mission-badge { padding: 0.3rem 0.45rem; border: 1px solid rgba(96, 165, 250, 0.2); border-radius: 9999px; background: rgba(37, 99, 235, 0.12); color: #93c5fd; font-size: 0.58rem; font-weight: 800; white-space: nowrap; }
-
+.dashboard-mission-auto-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.dashboard-mission-action .btn-sm { white-space: nowrap; }
+@media (min-width: 41rem) {
+  .dashboard-mission-action {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .dashboard-mission-auto-actions { display: contents; }
+  .dashboard-mission-action > .btn-sm,
+  .dashboard-mission-action > .dashboard-mission-badge {
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+  }
+}
+@media (max-width: 40rem) {
+  .dashboard-mission-card {
+    grid-template-columns: 2.35rem minmax(0, 1fr);
+    align-items: start;
+  }
+  .dashboard-mission-action {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-column: 2;
+    width: 100%;
+    min-width: 0;
+    gap: 0.4rem;
+  }
+  .dashboard-mission-auto-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 0.35rem;
+  }
+  .dashboard-mission-auto-actions .btn-sm,
+  .dashboard-mission-action > .btn-sm {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .dashboard-mission-action > .dashboard-mission-badge,
+  .dashboard-mission-action > .btn-sm {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
 @media (max-width: 23rem) {
   .dashboard-mission-card { grid-template-columns: 2.35rem minmax(0, 1fr); }
   .dashboard-mission-action { grid-column: 2; justify-content: flex-start; min-width: 0; }

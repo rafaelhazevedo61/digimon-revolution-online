@@ -205,26 +205,31 @@ function renderActiveMissionCard(m) {
   `;
 }
 
+async function refreshMissionAutomationView() {
+  if (document.getElementById("active-missions")) await loadActiveMissions();
+  if (document.querySelector(".dashboard-missions-list") && typeof renderDashboardPage === "function") {
+    await renderDashboardPage();
+  }
+}
+
 async function toggleMissionAutoClaim(instanceId, enabled) {
   try {
     await apiPatch(`/missions/${instanceId}/auto-claim`, { enabled });
     showToast(enabled ? "Modo automático completo ativado." : "Modo automático completo pausado.", "success");
-    await loadActiveMissions();
+        await refreshMissionAutomationView();
   } catch (err) {
     showToast(err.message, "error");
   }
 }
-
 async function toggleMissionAutoRepeat(instanceId, enabled) {
   try {
     await apiPatch(`/missions/${instanceId}/auto-repeat`, { enabled });
     showToast(enabled ? "Auto-missão ativada para este slot." : "Auto-missão pausada.", "success");
-    await loadActiveMissions();
+        await refreshMissionAutomationView();
   } catch (err) {
     showToast(err.message, "error");
   }
 }
-
 async function startMissionAutoRepeat(result, autoClaim = false) {
   if (!result || !result.autoRepeatEnabled || !result.missionId || !result.teamId) return false;
   try {
