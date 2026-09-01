@@ -219,24 +219,37 @@ async function clanOpenDetail(id) {
 async function clanShowPreview(id) {
   try {
     const clan = await apiGet(`/clans/${id}`);
+    const previewClan = { ...clan, members: Array.isArray(clan.members) ? clan.members : [] };
+    const previousClan = currentClan;
+    const previousTab = currentClanTab;
     const overlay = document.createElement("div");
     overlay.id = "clan-preview-overlay";
     overlay.className = "clan-preview-overlay fixed inset-0 z-50 flex items-end justify-center";
     overlay.style.background = "rgba(0,0,0,0.6)";
-    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+    const closePreview = () => {
+      overlay.remove();
+      currentClan = previousClan;
+      currentClanTab = previousTab;
+    };
+    overlay.onclick = (e) => { if (e.target === overlay) closePreview(); };
 
     overlay.innerHTML = `
       <div class="clan-preview-modal w-full max-w-md rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:85vh;overflow-y:auto">
         <div class="flex justify-between items-center mb-3">
           <h3 class="font-bold text-lg">Pré-visualização do Clã</h3>
-          <button class="text-slate-400 text-xl" onclick="document.getElementById('clan-preview-overlay').remove()">&times;</button>
+          <button type="button" class="text-slate-400 text-xl" data-clan-preview-close aria-label="Fechar pré-visualização">&times;</button>
         </div>
         <div id="clan-preview-body"></div>
       </div>
     `;
 
     document.body.appendChild(overlay);
-    setHtml("clan-preview-body", renderClanDetailHtml(clan, { preview: true }));
+    overlay.querySelector("[data-clan-preview-close]")?.addEventListener("click", closePreview);
+    currentClan = previewClan;
+    currentClanTab = "members";
+    setHtml("clan-preview-body", renderClanDetailHtml(previewClan, { preview: true }));
+    clanShowTab("members", "clan-preview-");
   } catch (err) {
     showToast(err.message, "error");
   }
@@ -249,25 +262,26 @@ function renderClanDetail(clan) {
   clanShowTab("members");
 }
 
-function clanShowTab(tab) {
+function clanShowTab(tab, idPrefix = "") {
   currentClanTab = tab;
-  const container = safeContent("clan-tab-content");
+  const container = safeContent(`${idPrefix}clan-tab-content`);
   if (!container) return;
 
-  document.querySelectorAll(".clan-tab-btn").forEach(b => {
+  const activeBtn = safeContent(`${idPrefix}clan-tab-${tab}`);
+  const tabNav = activeBtn?.parentElement;
+  (tabNav ? tabNav.querySelectorAll(".clan-tab-btn") : document.querySelectorAll(".clan-tab-btn")).forEach(b => {
     b.classList.remove("bg-cyan-600", "text-white", "is-active");
     b.classList.add("bg-slate-800", "text-slate-300");
   });
-  const activeBtn = safeContent(`clan-tab-${tab}`);
   if (activeBtn) {
     activeBtn.classList.remove("bg-slate-800", "text-slate-300");
     activeBtn.classList.add("bg-cyan-600", "text-white", "is-active");
   }
 
   if (tab === "members") {
-    clanRenderMembersTab();
+    clanRenderMembersTab(idPrefix);
   } else if (tab === "upgrades") {
-    clanLoadUpgrades();
+    clanLoadUpgrades(idPrefix);
   } else if (tab === "storage") {
     clanLoadStorage();
   } else if (tab === "missions") {
@@ -336,15 +350,15 @@ function renderClanDetailHtml(clan, opts = {}) {
     </section>
 
     <nav class="clan-tabs ${showMemberTabs ? "clan-tabs--full" : "clan-tabs--compact"}" aria-label="Seções do clã">
-      <button id="clan-tab-members" class="clan-tab-btn font-bold bg-cyan-600 text-white is-active" onclick="clanShowTab('members')"><span aria-hidden="true">◉</span> Membros</button>
-      <button id="clan-tab-upgrades" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('upgrades')"><span aria-hidden="true">◇</span> Melhorias</button>
-      ${showMemberTabs ? `<button id="clan-tab-storage" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('storage')"><span aria-hidden="true">▣</span> Armazém</button>` : ""}
-      ${showMemberTabs ? `<button id="clan-tab-missions" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('missions')"><span aria-hidden="true">✦</span> Missões</button>` : ""}
-      ${showMemberTabs ? `<button id="clan-tab-raid" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('raid')"><span aria-hidden="true">ϟ</span> Incursão</button>` : ""}
+      <button id="${preview ? "clan-preview-" : ""}clan-tab-members" class="clan-tab-btn font-bold bg-cyan-600 text-white is-active" onclick="clanShowTab('members', '${preview ? "clan-preview-" : ""}')"><span aria-hidden="true">◉</span> Membros</button>
+      <button id="${preview ? "clan-preview-" : ""}clan-tab-upgrades" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('upgrades', '${preview ? "clan-preview-" : ""}')"><span aria-hidden="true">◇</span> Melhorias</button>
+      ${showMemberTabs ? `<button id="${preview ? "clan-preview-" : ""}clan-tab-storage" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('storage', '${preview ? "clan-preview-" : ""}')"><span aria-hidden="true">▣</span> Armazém</button>` : ""}
+      ${showMemberTabs ? `<button id="${preview ? "clan-preview-" : ""}clan-tab-missions" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('missions', '${preview ? "clan-preview-" : ""}')"><span aria-hidden="true">✦</span> Missões</button>` : ""}
+      ${showMemberTabs ? `<button id="${preview ? "clan-preview-" : ""}clan-tab-raid" class="clan-tab-btn font-bold bg-slate-800 text-slate-300" onclick="clanShowTab('raid', '${preview ? "clan-preview-" : ""}')"><span aria-hidden="true">ϟ</span> Incursão</button>` : ""}
     </nav>
 
     <div class="clan-detail-layout ${preview ? "clan-detail-layout--preview" : ""}">
-      <main id="clan-tab-content" class="clan-tab-content"></main>
+      <main id="${preview ? "clan-preview-" : ""}clan-tab-content" class="clan-tab-content"></main>
       ${!preview ? `
         <aside class="clan-detail-rail">
           ${managementButtons}
@@ -360,10 +374,10 @@ function renderClanDetailHtml(clan, opts = {}) {
   `;
 }
 
-function clanRenderMembersTab() {
+function clanRenderMembersTab(idPrefix = "") {
   const clan = currentClan;
   if (!clan) return;
-  const container = safeContent("clan-tab-content");
+  const container = safeContent(`${idPrefix}clan-tab-content`);
   if (!container) return;
 
   const isLeader = clan.myRole && clan.myRole.role === "LEADER";
@@ -431,9 +445,9 @@ function clanRenderMembersTab() {
   });
 }
 
-async function clanLoadUpgrades() {
+async function clanLoadUpgrades(idPrefix = "") {
   const clan = currentClan;
-  const container = safeContent("clan-tab-content");
+  const container = safeContent(`${idPrefix}clan-tab-content`);
   if (!container || !clan) return;
   container.innerHTML = `<div class="card animate-pulse"><div class="h-24"></div></div>`;
 
