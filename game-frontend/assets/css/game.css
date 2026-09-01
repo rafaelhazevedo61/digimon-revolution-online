@@ -4914,3 +4914,37 @@ body {
   .mail-side-note { grid-column: auto; }
   .mail-pagination { padding-inline: 0.1rem; }
 }
+
+/* Mail desktop composition */
+@media (min-width: 46rem) {
+  .mail-page-container { max-width: 72rem; padding: 1.5rem 1.5rem 5rem; }
+  .mail-page-header { margin-bottom: 1.5rem; padding: 0.2rem 0.2rem 1.4rem; }
+  .mail-page-title { font-size: clamp(1.8rem, 3vw, 2.45rem); }
+  .mail-page-subtitle { max-width: 42rem; font-size: 0.78rem; }
+  .mail-header-actions { gap: 0.8rem; }
+  .mail-unread-card { min-width: 11rem; padding: 0.65rem 0.8rem; }
+  .mail-compose-button { min-height: 2.55rem; padding-inline: 1rem; font-size: 0.7rem; }
+  .mail-layout { grid-template-columns: minmax(0, 1fr) 18rem; gap: 1.25rem; }
+  .mail-toolbar { padding: 0.8rem 1rem; }
+  .mail-list-heading { padding: 1.25rem 1.15rem 0.9rem; }
+  .mail-list-heading h2 { font-size: 1rem; }
+  .mail-list { gap: 0.55rem; padding: 0 1rem 1rem; }
+  .mail-message-card { grid-template-columns: 2.65rem minmax(0, 1fr); gap: 0.85rem; padding: 0.85rem 0.95rem; }
+  .mail-message-icon { width: 2.65rem; height: 2.65rem; font-size: 0.95rem; }
+  .mail-message-subject { font-size: 0.8rem; }
+  .mail-message-participant { font-size: 0.64rem; }
+  .mail-message-footer { margin-top: 0.65rem; }
+  .mail-sidebar { gap: 1rem; }
+  .mail-side-card { padding: 1rem; }
+  .mail-side-stat strong { font-size: 1.8rem; }
+  .mail-pagination { padding-top: 0.9rem; }
+}
+@media (min-width: 75rem) {
+  .mail-page-container { max-width: 80rem; padding-inline: 2rem; }
+  .mail-layout { grid-template-columns: minmax(0, 1fr) 20rem; gap: 1.5rem; }
+  .mail-message-card { padding: 0.95rem 1.05rem; }
+  .mail-message-topline time { font-size: 0.56rem; }
+  .mail-message-origin { font-size: 0.56rem; }
+  .mail-message-subject { font-size: 0.84rem; }
+  .mail-side-card { padding: 1.15rem; }
+}
