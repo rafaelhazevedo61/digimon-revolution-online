@@ -6,8 +6,6 @@ import com.dro.modules.incubation.infra.IncubationRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -17,37 +15,28 @@ public class IncubationAutomationJob {
     private static final int BATCH_SIZE = 100;
     private static final long INTERVAL_MS = 5000L;
     private final IncubationRepository repository;
-    private final ClaimIncubationUseCase claimUseCase;
-    private final StartIncubationUseCase startUseCase;
+    private final IncubationAutomationProcessor processor;
 
-    public IncubationAutomationJob(IncubationRepository repository, ClaimIncubationUseCase claimUseCase, StartIncubationUseCase startUseCase) {
+    public IncubationAutomationJob(IncubationRepository repository, IncubationAutomationProcessor processor) {
         this.repository = repository;
-        this.claimUseCase = claimUseCase;
-        this.startUseCase = startUseCase;
+        this.processor = processor;
     }
 
     @Scheduled(fixedDelay = INTERVAL_MS)
-    @Transactional
     public void processReadyIncubations() {
         List<UUID> ids = repository.findIdsReadyForAutomation(List.of(IncubationStatus.IN_PROGRESS, IncubationStatus.READY), LocalDateTime.now(), PageRequest.of(0, BATCH_SIZE));
         ids.forEach(id -> {
-            try { process(id); }
-            catch (RuntimeException error) { pause(id); }
+            try { processor.process(id); }
+            catch (RuntimeException error) { processor.pause(id); }
         });
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    /* processing is delegated to IncubationAutomationProcessor */
     void process(UUID id) {
-        Incubation incubation = repository.findByIdForUpdate(id).orElse(null);
-        if (incubation == null || !incubation.isAutoClaimEnabled() || incubation.getStatus() != IncubationStatus.IN_PROGRESS && incubation.getStatus() != IncubationStatus.READY || incubation.getFinishAt().isAfter(LocalDateTime.now())) return;
-        claimUseCase.executeForPlayer(incubation.getPlayerId(), id);
-        if (incubation.isAutoRepeatEnabled()) {
-            startUseCase.executeForPlayer(incubation.getPlayerId(), incubation.getSlotNumber(), incubation.getDigitamaType(), incubation.getIncubatorType(), true, true);
-        }
+        processor.process(id);
     }
 
-    @Transactional
     void pause(UUID id) {
-        repository.findByIdForUpdate(id).ifPresent(i -> { i.setAutoClaimEnabled(false); i.setAutoRepeatEnabled(false); repository.save(i); });
+        processor.pause(id);
     }
 }
