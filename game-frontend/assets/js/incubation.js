@@ -1,9 +1,12 @@
 let incubTimerIntervals = new Map();
+let incubRefreshInterval = null;
+let incubRefreshInFlight = false;
 
 async function renderIncubationPage() {
   const app = document.getElementById("app");
   showBottomNav("more");
   incubStopTimer();
+  incubStopAutoRefresh();
 
   app.innerHTML = `
     <div class="page-container incubation-page">
@@ -36,6 +39,7 @@ async function renderIncubationPage() {
     window._incubSlotInfo = dashboard?.slotInfo;
     window._incubSlotsResponse = slotsResponse;
     incubRenderSlots(slotsResponse, inventory);
+    incubStartAutoRefresh();
   } catch (err) {
     const content = document.getElementById("incub-content");
     if (content) {
@@ -190,13 +194,14 @@ function incubRenderSlot(slot) {
   const incubation = slot.incubation;
   const remaining = Math.max(0, Number(incubation.remainingSeconds) || 0);
   const done = incubation.status === "READY" || remaining <= 0;
+  const autoClaimEnabled = Boolean(incubation.autoClaimEnabled);
   const digitamaName = incubItemName(incubation.digitamaType);
   const digitamaEmoji = incubDigitamaEmoji(incubation.digitamaType);
   const incubatorName = incubItemName(incubation.incubatorType);
   const incubatorEmoji = incubIncubatorEmoji(incubation.incubatorType);
 
   return `
-    <article class="card active-incubation-card ${done ? "is-ready" : "is-minimal"}" data-incub-slot="${slotNumber}" data-incubation-id="${escapeAttr(String(incubation.id))}">
+    <article class="card active-incubation-card ${done ? "is-ready" : "is-minimal"}" data-incub-slot="${slotNumber}" data-incubation-id="${escapeAttr(String(incubation.id))}" data-incub-auto-claim="${autoClaimEnabled ? "true" : "false"}">
       <div class="active-incubation-header flex items-start justify-between gap-3">
         <div class="active-incubation-main flex items-center gap-3 min-w-0">
           <span class="active-incubation-icon text-3xl shrink-0">${incubatorEmoji}</span>
@@ -217,13 +222,15 @@ function incubRenderSlot(slot) {
 
       <div class="mt-4">
         <p class="text-2xl font-bold text-center w-full ${done ? "text-green-400" : "text-amber-400"}" id="incub-timer-${slotNumber}">
-          ${done ? "Pronta para chocar!" : incubFormatTime(remaining)}
+          ${done ? (autoClaimEnabled ? "Coleta automática em andamento..." : "Pronta para chocar!") : incubFormatTime(remaining)}
         </p>
         ${done ? "" : `<div class="w-full bg-slate-800 rounded-full h-2 mt-3"><div class="h-2 rounded-full" style="background:#f59e0b;width:${incubProgress(incubation)}%" id="incub-bar-${slotNumber}"></div></div>`}
       </div>
 
       <div id="incub-slot-action-${slotNumber}" class="mt-4">
-        ${done ? incubClaimButton(incubation.id) : `<p class="text-xs text-slate-500">Aguardando incubação...</p>`}
+        ${done
+          ? (autoClaimEnabled ? incubAutomaticClaimStatus() : incubClaimButton(incubation.id))
+          : `<p class="text-xs text-slate-500">Aguardando incubação...</p>`}
       </div>
     </article>
   `;
@@ -235,7 +242,7 @@ function incubRenderTimer(slot) {
 
   const remaining = Math.max(0, Number(incubation.remainingSeconds) || 0);
   if (remaining <= 0) {
-    incubMarkReady(slot.slotNumber, incubation.id);
+    incubMarkReady(slot.slotNumber, incubation.id, incubation.autoClaimEnabled);
     return;
   }
 
@@ -247,26 +254,30 @@ function incubRenderTimer(slot) {
     barId: `incub-bar-${slot.slotNumber}`,
     startedAt: incubation.startedAt,
     formatter: incubFormatTime,
-    onComplete: () => incubMarkReady(slot.slotNumber, incubation.id)
+    onComplete: () => incubMarkReady(slot.slotNumber, incubation.id, incubation.autoClaimEnabled)
   });
 }
 
-function incubMarkReady(slotNumber, incubationId) {
+function incubMarkReady(slotNumber, incubationId, autoClaimEnabled = false) {
   const timerEl = document.getElementById(`incub-timer-${slotNumber}`);
   const actionEl = document.getElementById(`incub-slot-action-${slotNumber}`);
   const slotEl = document.querySelector(`[data-incub-slot="${slotNumber}"]`);
   if (!timerEl || !actionEl || !slotEl) return;
 
-  timerEl.textContent = "Pronta para chocar!";
+  timerEl.textContent = autoClaimEnabled ? "Coleta automática em andamento..." : "Pronta para chocar!";
   timerEl.className = "text-2xl font-bold text-center w-full text-green-400";
   slotEl.classList.remove("border-amber-800", "bg-amber-950/10");
   slotEl.classList.add("border-green-800", "bg-green-950/10");
-  actionEl.innerHTML = incubClaimButton(incubationId);
+  actionEl.innerHTML = autoClaimEnabled ? incubAutomaticClaimStatus() : incubClaimButton(incubationId);
   const badge = slotEl.querySelector(".badge");
   if (badge) {
-    badge.textContent = "PRONTO";
-    badge.className = "badge text-green-300";
+    badge.textContent = autoClaimEnabled ? "COLETANDO" : "PRONTO";
+    badge.className = autoClaimEnabled ? "badge text-cyan-300" : "badge text-green-300";
   }
+}
+
+function incubAutomaticClaimStatus() {
+  return `<div class="rounded-lg border border-cyan-800/70 bg-cyan-950/30 px-3 py-3 text-center text-xs text-cyan-200" role="status">Auto-coleta ativa. O Digimon será armazenado automaticamente.</div>`;
 }
 
 function incubProgress(inc) {
@@ -276,6 +287,34 @@ function incubProgress(inc) {
   const remaining = Math.max(0, Number(inc.remainingSeconds) || 0);
   const elapsed = Math.max(0, total - remaining);
   return Math.min(100, Math.round((elapsed / total) * 100));
+}
+
+function incubStopAutoRefresh() {
+  if (incubRefreshInterval) clearInterval(incubRefreshInterval);
+  incubRefreshInterval = null;
+}
+
+function incubStartAutoRefresh() {
+  incubStopAutoRefresh();
+  incubRefreshInterval = setInterval(() => {
+    if (!document.getElementById("incub-content")) {
+      incubStopAutoRefresh();
+      return;
+    }
+    if (incubRefreshInFlight) return;
+    incubRefreshInFlight = true;
+    Promise.all([incubFetchSlots(), apiGet("/inventory")])
+      .then(([slotsResponse, inventoryResponse]) => {
+        const inventory = invAggregateItems(inventoryResponse || []);
+        window._incubSlotsResponse = slotsResponse;
+        window._incubInventory = inventory;
+        incubRenderSlots(slotsResponse, inventory);
+      })
+      .catch(() => {})
+      .finally(() => {
+        incubRefreshInFlight = false;
+      });
+  }, 5000);
 }
 
 function incubStopTimer(key = null) {
