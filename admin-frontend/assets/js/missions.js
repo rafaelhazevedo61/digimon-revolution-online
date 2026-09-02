@@ -195,12 +195,12 @@ function renderMissionRow(m) {
           <button class="btn-sm btn-secondary" onclick="missionShowEditModal('${escapeAttr(m.id)}')">
             Editar
           </button>
-          <button class="btn-sm ${m.active ? 'btn-warning' : 'btn-success-outline'}"
-            onclick="missionToggleActive('${m.id}')">
-            ${m.active ? "Desativar" : "Ativar"}
-          </button>
           <button class="btn-sm btn-primary" onclick="missionShowLootModal('${escapeAttr(m.id)}')">
             Ver loot
+          </button>
+          <button class="btn-sm ${m.active ? 'btn-warning' : 'btn-success-outline'}"
+            onclick="missionToggleActive('${escapeAttr(m.id)}')">
+            ${m.active ? "Desativar" : "Ativar"}
           </button>
         </div>
       </td>
