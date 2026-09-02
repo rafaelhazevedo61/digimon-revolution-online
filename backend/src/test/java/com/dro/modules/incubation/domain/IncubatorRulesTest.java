@@ -25,8 +25,8 @@ class IncubatorRulesTest {
     }
 
     @Test
-    void getIncubationTime_legendary_returnsZeroSeconds() {
-        assertEquals(Duration.ZERO, IncubatorRules.getIncubationTime(ItemType.INCUBATOR_LEGENDARY));
+    void getIncubationTime_legendary_returns10Seconds() {
+        assertEquals(Duration.ofSeconds(10), IncubatorRules.getIncubationTime(ItemType.INCUBATOR_LEGENDARY));
     }
 
     @Test

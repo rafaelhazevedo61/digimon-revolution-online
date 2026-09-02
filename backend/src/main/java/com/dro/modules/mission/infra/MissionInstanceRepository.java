@@ -2,10 +2,14 @@ package com.dro.modules.mission.infra;
 
 import com.dro.modules.mission.domain.MissionInstance;
 import com.dro.modules.mission.domain.MissionStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Pageable;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,8 +39,20 @@ public interface MissionInstanceRepository
 
     Optional<MissionInstance> findByIdAndPlayerId(UUID id, UUID playerId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT m FROM MissionInstance m WHERE m.id = :id")
+    Optional<MissionInstance> findByIdForUpdate(@Param("id") UUID id);
+
     List<MissionInstance> findByPlayerIdAndStatusIn(
             UUID playerId,
             List<MissionStatus> statuses
+    );
+
+    @Query("SELECT m.id FROM MissionInstance m WHERE m.autoClaimEnabled = true "
+            + "AND m.status IN :statuses AND m.endsAt <= :now ORDER BY m.endsAt ASC")
+    List<UUID> findIdsReadyForAutomaticClaim(
+            @Param("statuses") List<MissionStatus> statuses,
+            @Param("now") Instant now,
+            Pageable pageable
     );
 }
