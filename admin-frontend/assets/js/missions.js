@@ -145,12 +145,7 @@ function renderMissionsTable(missions) {
             <th>ID</th>
             <th>Nome</th>
             <th>Área</th>
-            <th>Stage</th>
-            <th>Nível</th>
-            <th>XP</th>
-            <th>Bits</th>
-            <th>Energia</th>
-            <th>Duração</th>
+
             <th>Baú da Área</th>
             <th>Loot Table</th>
             <th>Status</th>
@@ -179,12 +174,6 @@ function renderMissionRow(m) {
       <td class="text-xs font-mono text-slate-400">${m.id}</td>
       <td class="font-semibold">${escapeHtml(m.name)}</td>
       <td><span class="badge badge-area">${escapeHtml(areaLabel)}</span></td>
-      <td><span class="badge">${escapeHtml(m.requiredStage)}</span></td>
-      <td>${m.requiredLevel}</td>
-      <td>${m.baseXp}</td>
-      <td>${m.baseBits ?? 0}</td>
-      <td>${m.energyCost}</td>
-      <td>${m.durationSeconds}s</td>
       <td>
         <div class="font-semibold">${escapeHtml(chestLabel)}</div>
         <div class="text-xs text-slate-500 font-mono">${escapeHtml(m.chestCode || "-")}</div>
@@ -200,7 +189,10 @@ function renderMissionRow(m) {
       </td>
       <td>
         <div class="flex gap-2">
-          <button class="btn-sm btn-secondary" onclick="missionShowEditModal('${m.id}')">
+          <button class="btn-sm btn-secondary" onclick="missionShowDetailsModal('${escapeAttr(m.id)}')">
+            Detalhes
+          </button>
+          <button class="btn-sm btn-secondary" onclick="missionShowEditModal('${escapeAttr(m.id)}')">
             Editar
           </button>
           <button class="btn-sm ${m.active ? 'btn-warning' : 'btn-success-outline'}"
@@ -214,6 +206,42 @@ function renderMissionRow(m) {
       </td>
     </tr>
   `;
+}
+
+function missionShowDetailsModal(missionId) {
+  const mission = missionState.missions.find(item => String(item.id) === String(missionId));
+  if (!mission) return;
+  const areaLabel = AREA_LABELS[mission.area] || mission.area || "Área não informada";
+  const statusClass = mission.active ? "badge-success" : "badge-danger";
+  const statusText = mission.active ? "Ativa" : "Inativa";
+  const detailRows = [
+    ["ID", mission.id],
+    ["Área", areaLabel],
+    ["Estágio mínimo", mission.requiredStage || "Não informado"],
+    ["Nível mínimo", mission.requiredLevel ?? 0],
+    ["Experiência base", mission.baseXp ?? 0],
+    ["Bits base", mission.baseBits ?? 0],
+    ["Custo de energia", mission.energyCost ?? 0],
+    ["Duração", `${mission.durationSeconds ?? 0}s`],
+    ["Última atualização", missionFormatDate(mission.updatedAt)],
+    ["Atualizado por", mission.updatedBy || "-"]
+  ];
+  const overlay = document.createElement("div");
+  overlay.id = "mission-details-modal";
+  overlay.className = "fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6";
+  overlay.onclick = event => { if (event.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `<div class="card w-full max-w-3xl max-h-[92vh] overflow-y-auto" onclick="event.stopPropagation()">
+    <div class="flex items-start justify-between gap-4 border-b border-slate-800 pb-4 mb-5">
+      <div><p class="text-xs uppercase tracking-wider text-cyan-400 font-bold">Configuração da missão</p><h2 class="text-2xl font-bold text-slate-100 mt-1">${escapeHtml(mission.name)}</h2><p class="text-sm text-slate-400 mt-1">${escapeHtml(areaLabel)}</p></div>
+      <button class="text-slate-400 hover:text-white text-2xl" aria-label="Fechar" onclick="document.getElementById('mission-details-modal')?.remove()">&times;</button>
+    </div>
+    <div class="flex items-center justify-between gap-3 rounded-lg border border-slate-700 bg-slate-950/40 p-4 mb-5"><span class="text-sm font-semibold text-slate-300">Status de publicação</span><span class="badge ${statusClass}">${statusText}</span></div>
+    <section class="mb-6"><h3 class="text-lg font-bold text-cyan-300 mb-3">Descrição</h3><p class="rounded-lg border border-slate-700 bg-slate-950/30 p-4 text-sm leading-relaxed text-slate-300">${escapeHtml(mission.description || "Nenhuma descrição cadastrada.")}</p></section>
+    <section class="mb-6"><h3 class="text-lg font-bold text-violet-300 mb-3">Parâmetros e recompensas base</h3><div class="grid gap-3 sm:grid-cols-2">${detailRows.map(([label, value]) => `<div class="rounded-lg border border-slate-800 bg-slate-950/30 p-3"><p class="text-xs uppercase tracking-wide text-slate-500">${escapeHtml(label)}</p><p class="mt-1 font-semibold text-slate-100">${escapeHtml(String(value))}</p></div>`).join("")}</div></section>
+    <section><h3 class="text-lg font-bold text-emerald-300 mb-3">Vínculos de loot</h3><div class="grid gap-3 sm:grid-cols-2"><div class="rounded-lg border border-slate-800 bg-slate-950/30 p-3"><p class="text-xs uppercase tracking-wide text-slate-500">Baú da Área</p><p class="mt-1 font-semibold text-slate-100">${escapeHtml(mission.chestName || "Não configurado")}</p><p class="text-xs font-mono text-cyan-300 mt-1">${escapeHtml(mission.chestCode || "-")}</p></div><div class="rounded-lg border border-slate-800 bg-slate-950/30 p-3"><p class="text-xs uppercase tracking-wide text-slate-500">Loot Table</p><p class="mt-1 font-semibold text-slate-100">${escapeHtml(mission.chestLootTableName || "Não configurada")}</p><p class="text-xs font-mono text-cyan-300 mt-1">${escapeHtml(mission.chestLootTableCode || "-")}</p></div></div><button type="button" class="btn-primary w-full mt-4" onclick="document.getElementById('mission-details-modal')?.remove(); missionShowLootModal('${escapeAttr(mission.id)}')">Abrir loot completo</button></section>
+    <button class="btn-secondary w-full mt-6" onclick="document.getElementById('mission-details-modal')?.remove()">Fechar</button>
+  </div>`;
+  document.body.appendChild(overlay);
 }
 
 function missionShowLootModal(missionId) {
