@@ -207,10 +207,48 @@ function renderMissionRow(m) {
             onclick="missionToggleActive('${m.id}')">
             ${m.active ? "Desativar" : "Ativar"}
           </button>
+          <button class="btn-sm btn-primary" onclick="missionShowLootModal('${escapeAttr(m.id)}')">
+            Ver loot
+          </button>
         </div>
       </td>
     </tr>
   `;
+}
+
+function missionShowLootModal(missionId) {
+  const mission = missionState.missions.find(item => String(item.id) === String(missionId));
+  if (!mission) return;
+  const rewards = Array.isArray(mission.rewards) ? mission.rewards : [];
+  const chances = Array.isArray(mission.lootChances) ? mission.lootChances : [];
+  const items = Array.isArray(mission.lootItems) ? mission.lootItems : [];
+  const issues = [];
+  if (!mission.chestCode) issues.push("A missão não possui Baú da Área associado.");
+  if (mission.chestCode && !mission.chestLootTableCode) issues.push("O baú associado não possui Loot Table.");
+  if (mission.chestLootTableCode && !mission.chestLootTableName) issues.push("A Loot Table associada não foi encontrada ou está sem nome.");
+  if (mission.chestLootTableCode && chances.length === 0 && items.length === 0) issues.push("A missão possui uma Loot Table, mas não há loot configurado no retorno da missão.");
+
+  const rows = (values, columns, empty) => values.length
+    ? `<div class="table-wrapper"><table class="table"><thead><tr>${columns.map(column => `<th>${column.label}</th>`).join("")}</tr></thead><tbody>${values.map(value => `<tr>${columns.map(column => `<td>${column.render(value)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`
+    : `<div class="rounded-lg border border-dashed border-slate-700 p-4 text-sm text-slate-500">${empty}</div>`;
+
+  const overlay = document.createElement("div");
+  overlay.id = "mission-loot-modal";
+  overlay.className = "fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6";
+  overlay.onclick = event => { if (event.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `<div class="card w-full max-w-6xl max-h-[92vh] overflow-y-auto" onclick="event.stopPropagation()">
+    <div class="flex items-start justify-between gap-4 border-b border-slate-800 pb-4 mb-5">
+      <div><p class="text-xs uppercase tracking-wider text-cyan-400 font-bold">Diagnóstico administrativo</p><h2 class="text-2xl font-bold text-slate-100 mt-1">Loot de ${escapeHtml(mission.name)}</h2><p class="text-sm text-slate-400 mt-1">${escapeHtml(mission.id)} · ${escapeHtml(AREA_LABELS[mission.area] || mission.area || "Área não informada")}</p></div>
+      <button class="text-slate-400 hover:text-white text-2xl" aria-label="Fechar" onclick="document.getElementById('mission-loot-modal')?.remove()">&times;</button>
+    </div>
+    ${issues.length ? `<div class="rounded-lg border border-amber-700 bg-amber-950/30 p-4 mb-5"><h3 class="font-bold text-amber-300">Atenção na configuração</h3><ul class="mt-2 space-y-1 text-sm text-amber-100">${issues.map(issue => `<li>• ${escapeHtml(issue)}</li>`).join("")}</ul></div>` : `<div class="rounded-lg border border-emerald-700 bg-emerald-950/30 p-4 mb-5 text-sm text-emerald-200">Configuração vinculada e pronta para consulta.</div>`}
+    <div class="grid gap-4 md:grid-cols-3 mb-6"><div class="card-sm"><p class="text-xs text-slate-500">Baú da Área</p><p class="font-semibold text-slate-100 mt-1">${escapeHtml(mission.chestName || "Não configurado")}</p><p class="text-xs text-cyan-300 font-mono mt-1">${escapeHtml(mission.chestCode || "-")}</p></div><div class="card-sm"><p class="text-xs text-slate-500">Loot Table</p><p class="font-semibold text-slate-100 mt-1">${escapeHtml(mission.chestLootTableName || "Não configurada")}</p><p class="text-xs text-cyan-300 font-mono mt-1">${escapeHtml(mission.chestLootTableCode || "-")}</p></div><div class="card-sm"><p class="text-xs text-slate-500">Resumo</p><p class="font-semibold text-slate-100 mt-1">${rewards.length} fixa(s) · ${chances.length} chance(s) · ${items.length} item(ns)</p></div></div>
+    <h3 class="text-lg font-bold text-emerald-300 mb-2">Recompensas fixas</h3>${rows(rewards, [{label:"Tipo",render:v=>`<span class="font-mono text-cyan-300">${escapeHtml(v.itemType || "-")}</span>`},{label:"Quantidade",render:v=>`<span class="text-amber-300 font-semibold">${v.baseQuantity ?? 0}</span>`}], "Nenhuma recompensa fixa configurada.")}
+    <h3 class="text-lg font-bold text-violet-300 mt-6 mb-2">Chances de loot</h3>${rows(chances, [{label:"Raridade",render:v=>`<span class="badge">${escapeHtml(v.rarity || "-")}</span>`},{label:"Chance/Peso",render:v=>`<span class="text-amber-300 font-semibold">${v.chance ?? 0}</span>`}], "Nenhuma chance configurada.")}
+    <h3 class="text-lg font-bold text-cyan-300 mt-6 mb-2">Itens possíveis</h3>${rows(items, [{label:"Item",render:v=>`<span class="font-semibold text-slate-100">${escapeHtml(v.itemType || "-")}</span>`},{label:"Raridade",render:v=>escapeHtml(v.rarity || "-")},{label:"Quantidade",render:v=>`<span class="text-amber-300 font-semibold">${v.quantity ?? 0}</span>`}], "Nenhum item configurado.")}
+    <button class="btn-secondary w-full mt-6" onclick="document.getElementById('mission-loot-modal')?.remove()">Fechar</button>
+  </div>`;
+  document.body.appendChild(overlay);
 }
 
 function missionApplyFilters() {
