@@ -66,6 +66,7 @@ public enum ItemType {
 
     // Material de refinamento
     REFINEMENT_STONE,
+    REFINEMENT_SUCCESS_BOOST,
 
     // Material de Ascensão de equipamentos
     ASCENSION_CORE,
