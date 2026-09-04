@@ -65,8 +65,9 @@ public enum ItemType {
     LOOT_CHEST,
 
     // Material de refinamento
-    REFINEMENT_STONE,
     REFINEMENT_SUCCESS_BOOST,
+    REFINEMENT_PROTECTION,
+    REFINEMENT_STONE,
 
     // Material de Ascensão de equipamentos
     ASCENSION_CORE,
