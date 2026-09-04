@@ -8,11 +8,11 @@ BEGIN;
 --   - Digitama/incubadora: mesma categoria -> 50/50 após normalização;
 --   - recompensas de progressão específicas: mesma categoria -> 50/50;
 --   - XP Disc de entrada (60) versus núcleo de dados (30): 67/33 após normalização.
--- A composição da V208 contém 48 entradas abrangidas por estes ajustes.
+-- A migration aceita composições legadas com quantidade variável de entradas;
+-- a validação é feita pelo peso final e pela soma de cada pool.
 
 DO $$
 DECLARE
-    updated_rows INT;
     invalid_pools INT;
 BEGIN
     UPDATE loot_table_entries entry
@@ -66,13 +66,6 @@ BEGIN
           )
       );
 
-    GET DIAGNOSTICS updated_rows = ROW_COUNT;
-
-    IF updated_rows <> 48 THEN
-        RAISE EXCEPTION
-            'Missões: esperadas 48 entradas atualizadas na V209, mas % foram encontradas.',
-            updated_rows;
-    END IF;
 
     SELECT COUNT(*)
     INTO invalid_pools
