@@ -296,8 +296,7 @@ BEGIN
         JOIN mission_expected_rarity_weights expected
           ON expected.table_code = lt.code
          AND expected.rarity = rarity_weight.rarity
-        GROUP BY lt.code, rarity_weight.rarity
-        HAVING rarity_weight.weight <> expected.weight
+        WHERE rarity_weight.weight <> expected.weight
     ) invalid_rarity;
 
     SELECT COUNT(*)
