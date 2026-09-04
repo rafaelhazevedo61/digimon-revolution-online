@@ -2,10 +2,16 @@ BEGIN;
 
 -- Rebalanceamento dos pesos internos por item conforme a proposta revisada.
 -- Os pesos de raridade, quantidades e vínculos dos baús não são alterados.
-UPDATE loot_table_entries entry
-SET weight = seed.weight
-FROM loot_tables lt
-JOIN (VALUES
+CREATE TEMP TABLE arena_expected_weights (
+    table_code VARCHAR(80),
+    rarity VARCHAR(20),
+    item_type VARCHAR(50),
+    material_code VARCHAR(80),
+    weight INT
+) ON COMMIT DROP;
+
+INSERT INTO arena_expected_weights (table_code, rarity, item_type, material_code, weight)
+VALUES
     -- Bronze
     ('LOOT_TABLE_CHEST_ARENA_BRONZE', 'COMMON',    'XP_DISC_1',    NULL,                    55),
     ('LOOT_TABLE_CHEST_ARENA_BRONZE', 'COMMON',    'INCUBATOR_COMMON', NULL,                30),
@@ -69,12 +75,33 @@ JOIN (VALUES
     ('LOOT_TABLE_CHEST_ARENA_DIAMANTE', 'LEGENDARY', 'STORAGE_SLOT_10', NULL,                25),
     ('LOOT_TABLE_CHEST_ARENA_DIAMANTE', 'LEGENDARY', 'INCUBATOR_LEGENDARY', NULL,             25),
     ('LOOT_TABLE_CHEST_ARENA_DIAMANTE', 'LEGENDARY', 'LOOT_CHEST',   'CHEST_FRAGMENT_MEGA',     25)
-) AS seed(table_code, rarity, item_type, material_code, weight)
-    ON seed.table_code = lt.code
+;
+
+UPDATE loot_table_entries entry
+SET weight = seed.weight,
+    active = TRUE
+FROM loot_tables lt
+JOIN arena_expected_weights seed ON seed.table_code = lt.code
 WHERE entry.loot_table_id = lt.id
   AND entry.rarity = seed.rarity
   AND entry.item_type = seed.item_type
   AND entry.material_code IS NOT DISTINCT FROM seed.material_code;
+
+-- A seed consolidada pode conter entradas antigas que não fazem parte da
+-- composição aprovada. Elas permanecem no histórico, mas deixam de ser elegíveis.
+UPDATE loot_table_entries entry
+SET active = FALSE
+FROM loot_tables lt
+WHERE entry.loot_table_id = lt.id
+  AND lt.code LIKE 'LOOT_TABLE_CHEST_ARENA_%'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM arena_expected_weights seed
+      WHERE seed.table_code = lt.code
+        AND seed.rarity = entry.rarity
+        AND seed.item_type = entry.item_type
+        AND seed.material_code IS NOT DISTINCT FROM entry.material_code
+  );
 
 -- Confirma que os pesos internos de cada raridade fecham em 100.
 DO $$
