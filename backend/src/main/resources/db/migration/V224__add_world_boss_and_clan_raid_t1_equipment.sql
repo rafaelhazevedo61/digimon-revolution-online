@@ -1,27 +1,21 @@
 BEGIN;
 
--- V224: normaliza os equipamentos das recompensas especiais.
--- Chefe Mundial usa Overlord T1; Incursão de Clã usa Kernel T1.
--- A raridade da entrada continua sendo a raridade da pool. A raridade efetiva
--- do equipamento é sorteada na abertura porque equipment_rarity fica NULL.
+-- V224: adiciona uma peça T1 específica às pools lendárias do Chefe Mundial
+-- e da Incursão, dividindo 100 pontos entre os drops que já existem e o novo
+-- equipamento. A quantidade de entradas é contada no próprio banco.
 CREATE TEMP TABLE special_boss_equipment_drops (
     table_code VARCHAR(100) NOT NULL,
-    equipment_template_name VARCHAR(120) NOT NULL,
-    equipment_entry_weight INT NOT NULL,
-    legacy_item_type VARCHAR(50),
-    legacy_item_weight INT
+    equipment_template_name VARCHAR(120) NOT NULL
 ) ON COMMIT DROP;
 
-INSERT INTO special_boss_equipment_drops (
-    table_code, equipment_template_name, equipment_entry_weight, legacy_item_type, legacy_item_weight
-)
+INSERT INTO special_boss_equipment_drops (table_code, equipment_template_name)
 VALUES
-    ('LOOT_TABLE_BOSS_WORLD_APOCALYMON_ATTEMPT',    'Lâmina do Overlord T1', 50, 'INCUBATOR_RARE', 50),
-    ('LOOT_TABLE_BOSS_WORLD_APOCALYMON_TOP_DAMAGE', 'Couraça do Overlord T1', 50, 'INCUBATOR_EPIC', 50),
-    ('LOOT_TABLE_BOSS_WORLD_APOCALYMON_FINAL_BLOW', 'Coroa do Overlord T1',    50, 'INCUBATOR_EPIC', 50),
-    ('LOOT_TABLE_CLAN_RAID_OMEGAMON_ATTEMPT',       'Martelo Kernel T1',       50, 'REFINEMENT_PROTECTION', 50),
-    ('LOOT_TABLE_CLAN_RAID_OMEGAMON_TOP_DAMAGE',    'Kernel Shell T1',         50, 'XP_DISC_10', 50),
-    ('LOOT_TABLE_CLAN_RAID_OMEGAMON_FINAL_BLOW',    'Kernel Core T1',          100, NULL, NULL);
+    ('LOOT_TABLE_BOSS_WORLD_APOCALYMON_ATTEMPT',    'Lâmina do Overlord T1'),
+    ('LOOT_TABLE_BOSS_WORLD_APOCALYMON_TOP_DAMAGE', 'Couraça do Overlord T1'),
+    ('LOOT_TABLE_BOSS_WORLD_APOCALYMON_FINAL_BLOW', 'Coroa do Overlord T1'),
+    ('LOOT_TABLE_CLAN_RAID_OMEGAMON_ATTEMPT',       'Martelo Kernel T1'),
+    ('LOOT_TABLE_CLAN_RAID_OMEGAMON_TOP_DAMAGE',    'Kernel Shell T1'),
+    ('LOOT_TABLE_CLAN_RAID_OMEGAMON_FINAL_BLOW',    'Kernel Core T1');
 
 DO $$
 DECLARE
@@ -49,75 +43,56 @@ BEGIN
     END IF;
 END $$;
 
--- Se algum ambiente já tiver recebido uma entrada de equipamento diferente,
--- ela deixa de participar do sorteio; a peça abaixo passa a ser a referência
--- única e explícita de cada recompensa especial.
+-- Remove da participação qualquer equipamento especial que tenha sido criado
+-- por uma tentativa anterior. Os drops não-equipmento existentes são a base
+-- real da contagem abaixo.
 UPDATE loot_table_entries entry
 SET active = FALSE
 FROM loot_tables table_row
 WHERE entry.loot_table_id = table_row.id
+  AND entry.rarity = 'LEGENDARY'
   AND entry.item_type = 'EQUIPMENT'
-  AND (table_row.code LIKE 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_%'
-       OR table_row.code LIKE 'LOOT_TABLE_CLAN_RAID_OMEGAMON_%')
-  AND NOT EXISTS (
+  AND EXISTS (
       SELECT 1
       FROM special_boss_equipment_drops expected
       WHERE expected.table_code = table_row.code
-        AND expected.equipment_template_name = entry.equipment_template_name
   );
 
--- Mantém os drops existentes, mas reserva 50 pontos da pool lendária para a
--- peça T1. A normalização considera todas as entradas legadas, pois algumas
--- versões anteriores tinham mais de um drop lendário na mesma tabela.
-WITH legacy_entries AS (
+-- Conta as entradas lendárias ativas de cada tabela e divide a pool entre elas
+-- e o novo equipamento. Como weight é inteiro, a primeira entrada recebe o
+-- eventual resto do arredondamento para a soma permanecer exatamente 100.
+WITH existing_entries AS (
     SELECT
         entry.id,
         table_row.code AS table_code,
-        entry.weight,
-        SUM(entry.weight) OVER (PARTITION BY table_row.code) AS legacy_total,
+        COUNT(*) OVER (PARTITION BY table_row.code) AS existing_count,
         ROW_NUMBER() OVER (PARTITION BY table_row.code ORDER BY entry.id) AS row_number
     FROM loot_table_entries entry
     JOIN loot_tables table_row ON table_row.id = entry.loot_table_id
     JOIN special_boss_equipment_drops expected ON expected.table_code = table_row.code
-    WHERE expected.legacy_item_type IS NOT NULL
-      AND entry.rarity = 'LEGENDARY'
+    WHERE entry.rarity = 'LEGENDARY'
       AND entry.item_type <> 'EQUIPMENT'
       AND entry.active = TRUE
-), scaled_entries AS (
+), calculated_weights AS (
     SELECT
         id,
         row_number,
-        FLOOR(weight * 50.0 / NULLIF(legacy_total, 0))::INT AS scaled_weight,
-        SUM(FLOOR(weight * 50.0 / NULLIF(legacy_total, 0))::INT) OVER (PARTITION BY table_code) AS scaled_total
-    FROM legacy_entries
+        existing_count,
+        FLOOR(100.0 / (existing_count + 1))::INT AS base_weight
+    FROM existing_entries
 )
 UPDATE loot_table_entries entry
-SET weight = scaled_entries.scaled_weight
-              + CASE WHEN scaled_entries.row_number = 1
-                     THEN 50 - scaled_entries.scaled_total
-                     ELSE 0
-                END,
-    active = TRUE
-FROM scaled_entries
-WHERE entry.id = scaled_entries.id;
+SET weight = calculated_weights.base_weight
+              + CASE
+                    WHEN calculated_weights.row_number = 1
+                    THEN 100 - calculated_weights.base_weight * calculated_weights.existing_count
+                    ELSE 0
+                END
+FROM calculated_weights
+WHERE entry.id = calculated_weights.id;
 
--- Reaplica uma entrada de equipamento já existente sem criar duplicatas.
-UPDATE loot_table_entries entry
-SET rarity = 'LEGENDARY',
-    item_type = 'EQUIPMENT',
-    material_code = NULL,
-    equipment_template_name = expected.equipment_template_name,
-    equipment_rarity = NULL,
-    weight = expected.equipment_entry_weight,
-    min_quantity = 1,
-    max_quantity = 1,
-    active = TRUE
-FROM loot_tables table_row
-JOIN special_boss_equipment_drops expected ON expected.table_code = table_row.code
-WHERE entry.loot_table_id = table_row.id
-  AND entry.item_type = 'EQUIPMENT'
-  AND entry.equipment_template_name = expected.equipment_template_name;
-
+-- Insere uma única peça T1 por tabela com o mesmo peso-base calculado a partir
+-- da contagem real dos drops existentes. Se não houver drop legado, recebe 100.
 INSERT INTO loot_table_entries (
     loot_table_id,
     rarity,
@@ -137,209 +112,65 @@ SELECT
     NULL,
     expected.equipment_template_name,
     NULL,
-    expected.equipment_entry_weight,
+    FLOOR(100.0 / (COUNT(existing.id) + 1))::INT,
     1,
     1,
     TRUE
 FROM special_boss_equipment_drops expected
 JOIN loot_tables table_row ON table_row.code = expected.table_code
-WHERE NOT EXISTS (
+LEFT JOIN loot_table_entries existing
+  ON existing.loot_table_id = table_row.id
+ AND existing.rarity = 'LEGENDARY'
+ AND existing.item_type <> 'EQUIPMENT'
+ AND existing.active = TRUE
+GROUP BY table_row.id, expected.equipment_template_name
+HAVING NOT EXISTS (
     SELECT 1
-    FROM loot_table_entries existing
-    WHERE existing.loot_table_id = table_row.id
-      AND existing.item_type = 'EQUIPMENT'
-      AND existing.equipment_template_name = expected.equipment_template_name
+    FROM loot_table_entries duplicate
+    WHERE duplicate.loot_table_id = table_row.id
+      AND duplicate.rarity = 'LEGENDARY'
+      AND duplicate.item_type = 'EQUIPMENT'
+      AND duplicate.equipment_template_name = expected.equipment_template_name
+      AND duplicate.active = TRUE
 );
 
--- Normalização final defensiva: ambientes antigos podem conter uma composição
--- diferente da esperada. Neste ponto, a peça T1 recebe a parte reservada e
--- todas as entradas não-equipmento são reescaladas para o restante da pool.
-UPDATE loot_table_entries entry
-SET weight = CASE WHEN expected.legacy_item_type IS NULL THEN 100 ELSE 50 END,
-    active = TRUE
-FROM loot_tables table_row
-JOIN special_boss_equipment_drops expected ON expected.table_code = table_row.code
-WHERE entry.loot_table_id = table_row.id
-  AND entry.item_type = 'EQUIPMENT'
-  AND entry.equipment_template_name = expected.equipment_template_name
-  AND entry.rarity = 'LEGENDARY';
+DO $$
+DECLARE
+    invalid_pools INT;
+    equipment_count INT;
+BEGIN
+    SELECT COUNT(*) INTO invalid_pools
+    FROM (
+        SELECT table_row.code
+        FROM loot_table_entries entry
+        JOIN loot_tables table_row ON table_row.id = entry.loot_table_id
+        WHERE entry.active = TRUE
+          AND entry.rarity = 'LEGENDARY'
+          AND EXISTS (
+              SELECT 1
+              FROM special_boss_equipment_drops expected
+              WHERE expected.table_code = table_row.code
+          )
+        GROUP BY table_row.code
+        HAVING SUM(entry.weight) <> 100
+    ) invalid;
 
--- Um ambiente pode ter duplicatas históricas da mesma entrada. Apenas a
--- primeira linha permanece ativa para que ela não conte duas vezes na pool.
-WITH ranked_equipment AS (
-    SELECT
-        entry.id,
-        ROW_NUMBER() OVER (PARTITION BY table_row.code ORDER BY entry.id) AS row_number
+    SELECT COUNT(*) INTO equipment_count
     FROM loot_table_entries entry
     JOIN loot_tables table_row ON table_row.id = entry.loot_table_id
     JOIN special_boss_equipment_drops expected
       ON expected.table_code = table_row.code
      AND expected.equipment_template_name = entry.equipment_template_name
-    WHERE entry.rarity = 'LEGENDARY'
-      AND entry.item_type = 'EQUIPMENT'
-      AND entry.active = TRUE
-)
-UPDATE loot_table_entries entry
-SET active = ranked_equipment.row_number = 1
-FROM ranked_equipment
-WHERE entry.id = ranked_equipment.id;
-
-UPDATE loot_table_entries entry
-SET active = FALSE
-FROM loot_tables table_row
-JOIN special_boss_equipment_drops expected
-  ON expected.table_code = table_row.code
- AND expected.legacy_item_type IS NULL
-WHERE entry.loot_table_id = table_row.id
-  AND entry.rarity = 'LEGENDARY'
-  AND entry.item_type <> 'EQUIPMENT';
-
-WITH legacy_entries AS (
-    SELECT
-        entry.id,
-        table_row.code AS table_code,
-        entry.weight,
-        SUM(entry.weight) OVER (PARTITION BY table_row.code) AS legacy_total,
-        ROW_NUMBER() OVER (PARTITION BY table_row.code ORDER BY entry.id) AS row_number
-    FROM loot_table_entries entry
-    JOIN loot_tables table_row ON table_row.id = entry.loot_table_id
-    JOIN special_boss_equipment_drops expected ON expected.table_code = table_row.code
-    WHERE entry.rarity = 'LEGENDARY'
-      AND entry.item_type <> 'EQUIPMENT'
-      AND entry.active = TRUE
-      AND expected.legacy_item_type IS NOT NULL
-), scaled_entries AS (
-    SELECT
-        legacy_entries.id,
-        legacy_entries.row_number,
-        FLOOR(legacy_entries.weight * 50.0 / NULLIF(legacy_entries.legacy_total, 0))::INT AS scaled_weight,
-        SUM(
-            FLOOR(legacy_entries.weight * 50.0 / NULLIF(legacy_entries.legacy_total, 0))::INT
-        ) OVER (PARTITION BY legacy_entries.table_code) AS scaled_total
-    FROM legacy_entries
-    JOIN special_boss_equipment_drops expected
-      ON expected.table_code = legacy_entries.table_code
-)
-UPDATE loot_table_entries entry
-SET weight = scaled_entries.scaled_weight
-              + CASE WHEN scaled_entries.row_number = 1
-                     THEN 50 - scaled_entries.scaled_total
-                     ELSE 0
-                END
-FROM scaled_entries
-WHERE entry.id = scaled_entries.id;
-
-DO $$
-DECLARE
-    equipment_count INT;
-    invalid_rarity_weights INT;
-    invalid_entry_pools INT;
-    invalid_probabilities INT;
-    invalid_details TEXT;
-BEGIN
-    SELECT COUNT(*) INTO equipment_count
-    FROM loot_table_entries entry
-    JOIN loot_tables table_row ON table_row.id = entry.loot_table_id
     WHERE entry.active = TRUE
       AND entry.rarity = 'LEGENDARY'
       AND entry.item_type = 'EQUIPMENT'
-      AND (table_row.code LIKE 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_%'
-           OR table_row.code LIKE 'LOOT_TABLE_CLAN_RAID_OMEGAMON_%');
+      AND entry.min_quantity = 1
+      AND entry.max_quantity = 1;
 
-    IF equipment_count <> 6 THEN
-        RAISE EXCEPTION 'Recompensas especiais: esperadas 6 entradas de equipamento T1, encontradas %.', equipment_count;
-    END IF;
-
-    -- Cada tabela precisa ter 100 pontos de probabilidade entre as raridades.
-    SELECT COUNT(*) INTO invalid_rarity_weights
-    FROM (
-        SELECT table_row.code
-        FROM loot_table_rarity_weights rarity_weight
-        JOIN loot_tables table_row ON table_row.id = rarity_weight.loot_table_id
-        WHERE table_row.code LIKE 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_%'
-           OR table_row.code LIKE 'LOOT_TABLE_CLAN_RAID_OMEGAMON_%'
-        GROUP BY table_row.code
-        HAVING SUM(rarity_weight.weight) <> 100
-    ) invalid_rarity;
-
-    -- Cada pool interna de uma raridade também precisa somar 100 pontos.
-    SELECT COUNT(*) INTO invalid_entry_pools
-    FROM (
-        SELECT
-            table_row.code,
-            rarity_weight.rarity,
-            rarity_weight.weight AS rarity_probability,
-            COALESCE(SUM(entry.weight), 0) AS entry_probability
-        FROM loot_table_rarity_weights rarity_weight
-        JOIN loot_tables table_row ON table_row.id = rarity_weight.loot_table_id
-        LEFT JOIN loot_table_entries entry
-          ON entry.loot_table_id = table_row.id
-         AND entry.rarity = rarity_weight.rarity
-         AND entry.active = TRUE
-        WHERE table_row.code LIKE 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_%'
-           OR table_row.code LIKE 'LOOT_TABLE_CLAN_RAID_OMEGAMON_%'
-        GROUP BY table_row.code, rarity_weight.rarity, rarity_weight.weight
-        HAVING COALESCE(SUM(entry.weight), 0) <> 100
-    ) invalid_entries;
-
-    -- Valida a probabilidade efetiva de cada tabela:
-    -- (peso da raridade × peso da entrada) / 100.
-    SELECT COUNT(*) INTO invalid_probabilities
-    FROM (
-        SELECT
-            table_row.code,
-            SUM(rarity_weight.weight::NUMERIC * entry.weight::NUMERIC) / 100 AS total_probability
-        FROM loot_table_rarity_weights rarity_weight
-        JOIN loot_tables table_row ON table_row.id = rarity_weight.loot_table_id
-        JOIN loot_table_entries entry
-          ON entry.loot_table_id = table_row.id
-         AND entry.rarity = rarity_weight.rarity
-         AND entry.active = TRUE
-        WHERE table_row.code LIKE 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_%'
-           OR table_row.code LIKE 'LOOT_TABLE_CLAN_RAID_OMEGAMON_%'
-        GROUP BY table_row.code
-        HAVING SUM(rarity_weight.weight::NUMERIC * entry.weight::NUMERIC) / 100 <> 100
-    ) invalid_probability;
-
-    IF invalid_rarity_weights > 0 OR invalid_entry_pools > 0 OR invalid_probabilities > 0 THEN
-        SELECT string_agg(details, '; ')
-        INTO invalid_details
-        FROM (
-            SELECT format('rarity_weights=%s', string_agg(table_row.code, ', ')) AS details
-            FROM loot_table_rarity_weights rarity_weight
-            JOIN loot_tables table_row ON table_row.id = rarity_weight.loot_table_id
-            WHERE table_row.code LIKE 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_%'
-               OR table_row.code LIKE 'LOOT_TABLE_CLAN_RAID_OMEGAMON_%'
-            GROUP BY table_row.code
-            HAVING SUM(rarity_weight.weight) <> 100
-            UNION ALL
-            SELECT format('entry_pool=%s/%s (%s)', table_row.code, rarity_weight.rarity, COALESCE(SUM(entry.weight), 0))
-            FROM loot_table_rarity_weights rarity_weight
-            JOIN loot_tables table_row ON table_row.id = rarity_weight.loot_table_id
-            LEFT JOIN loot_table_entries entry
-              ON entry.loot_table_id = table_row.id
-             AND entry.rarity = rarity_weight.rarity
-             AND entry.active = TRUE
-            WHERE table_row.code LIKE 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_%'
-               OR table_row.code LIKE 'LOOT_TABLE_CLAN_RAID_OMEGAMON_%'
-            GROUP BY table_row.code, rarity_weight.rarity
-            HAVING COALESCE(SUM(entry.weight), 0) <> 100
-            UNION ALL
-            SELECT format('probability=%s (%s)', table_row.code, SUM(rarity_weight.weight::NUMERIC * entry.weight::NUMERIC) / 100)
-            FROM loot_table_rarity_weights rarity_weight
-            JOIN loot_tables table_row ON table_row.id = rarity_weight.loot_table_id
-            JOIN loot_table_entries entry
-              ON entry.loot_table_id = table_row.id
-             AND entry.rarity = rarity_weight.rarity
-             AND entry.active = TRUE
-            WHERE table_row.code LIKE 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_%'
-               OR table_row.code LIKE 'LOOT_TABLE_CLAN_RAID_OMEGAMON_%'
-            GROUP BY table_row.code
-            HAVING SUM(rarity_weight.weight::NUMERIC * entry.weight::NUMERIC) / 100 <> 100
-        ) diagnostics;
-
-        RAISE EXCEPTION 'Recompensas especiais: probabilidades inválidas (%). Rarity weights=%; pools internas=%; probabilidade efetiva=%',
-            COALESCE(invalid_details, 'sem detalhes'), invalid_rarity_weights, invalid_entry_pools, invalid_probabilities;
+    IF invalid_pools > 0 OR equipment_count <> 6 THEN
+        RAISE EXCEPTION
+            'Recompensas especiais: % pool(s) lendária(s) não somam 100; equipamentos T1 válidos=%',
+            invalid_pools, equipment_count;
     END IF;
 END $$;
 
