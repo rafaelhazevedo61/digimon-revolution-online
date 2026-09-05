@@ -1,21 +1,65 @@
 BEGIN;
 
--- V224: adiciona uma peça T1 específica às pools lendárias do Chefe Mundial
--- e da Incursão, dividindo 100 pontos entre os drops que já existem e o novo
--- equipamento. A quantidade de entradas é contada no próprio banco.
-CREATE TEMP TABLE special_boss_equipment_drops (
+-- V224: define explicitamente as pools LEGENDARY das recompensas especiais.
+-- As demais raridades e entradas das Loot Tables permanecem inalteradas.
+-- A raridade efetiva do equipamento é sorteada na abertura porque
+-- equipment_rarity permanece NULL.
+
+CREATE TEMP TABLE special_boss_legendary_entries (
     table_code VARCHAR(100) NOT NULL,
-    equipment_template_name VARCHAR(120) NOT NULL
+    item_type VARCHAR(50) NOT NULL,
+    material_code VARCHAR(80),
+    equipment_template_name VARCHAR(120),
+    equipment_rarity VARCHAR(20),
+    weight INT NOT NULL,
+    min_quantity INT NOT NULL,
+    max_quantity INT NOT NULL
 ) ON COMMIT DROP;
 
-INSERT INTO special_boss_equipment_drops (table_code, equipment_template_name)
+INSERT INTO special_boss_legendary_entries (
+    table_code,
+    item_type,
+    material_code,
+    equipment_template_name,
+    equipment_rarity,
+    weight,
+    min_quantity,
+    max_quantity
+)
 VALUES
-    ('LOOT_TABLE_BOSS_WORLD_APOCALYMON_ATTEMPT',    'Lâmina do Overlord T1'),
-    ('LOOT_TABLE_BOSS_WORLD_APOCALYMON_TOP_DAMAGE', 'Couraça do Overlord T1'),
-    ('LOOT_TABLE_BOSS_WORLD_APOCALYMON_FINAL_BLOW', 'Coroa do Overlord T1'),
-    ('LOOT_TABLE_CLAN_RAID_OMEGAMON_ATTEMPT',       'Martelo Kernel T1'),
-    ('LOOT_TABLE_CLAN_RAID_OMEGAMON_TOP_DAMAGE',    'Kernel Shell T1'),
-    ('LOOT_TABLE_CLAN_RAID_OMEGAMON_FINAL_BLOW',    'Kernel Core T1');
+    -- Incursão: tentativa — Cristal de Proteção / Martelo Kernel T1.
+    ('LOOT_TABLE_CLAN_RAID_OMEGAMON_ATTEMPT',
+     'REFINEMENT_PROTECTION', NULL, NULL, NULL, 50, 1, 1),
+    ('LOOT_TABLE_CLAN_RAID_OMEGAMON_ATTEMPT',
+     'EQUIPMENT', NULL, 'Martelo Kernel T1', NULL, 50, 1, 1),
+
+    -- Incursão: maior dano — Núcleo de Ascensão 2–3 / Kernel Shell T1.
+    ('LOOT_TABLE_CLAN_RAID_OMEGAMON_TOP_DAMAGE',
+     'ASCENSION_CORE', NULL, NULL, NULL, 50, 2, 3),
+    ('LOOT_TABLE_CLAN_RAID_OMEGAMON_TOP_DAMAGE',
+     'EQUIPMENT', NULL, 'Kernel Shell T1', NULL, 50, 1, 1),
+
+    -- Incursão: golpe final — Núcleo de Ascensão 1 / Kernel Core T1.
+    ('LOOT_TABLE_CLAN_RAID_OMEGAMON_FINAL_BLOW',
+     'ASCENSION_CORE', NULL, NULL, NULL, 50, 1, 1),
+    ('LOOT_TABLE_CLAN_RAID_OMEGAMON_FINAL_BLOW',
+     'EQUIPMENT', NULL, 'Kernel Core T1', NULL, 50, 1, 1),
+
+    -- Chefe Mundial: tentativa — Cristal de Proteção / Lâmina do Overlord T1.
+    ('LOOT_TABLE_BOSS_WORLD_APOCALYMON_ATTEMPT',
+     'REFINEMENT_PROTECTION', NULL, NULL, NULL, 50, 1, 1),
+    ('LOOT_TABLE_BOSS_WORLD_APOCALYMON_ATTEMPT',
+     'EQUIPMENT', NULL, 'Lâmina do Overlord T1', NULL, 50, 1, 1),
+
+    -- Chefe Mundial: maior dano — Disco de Experiência 10% / Couraça do Overlord T1.
+    ('LOOT_TABLE_BOSS_WORLD_APOCALYMON_TOP_DAMAGE',
+     'XP_DISC_10', NULL, NULL, NULL, 50, 1, 1),
+    ('LOOT_TABLE_BOSS_WORLD_APOCALYMON_TOP_DAMAGE',
+     'EQUIPMENT', NULL, 'Couraça do Overlord T1', NULL, 50, 1, 1),
+
+    -- Chefe Mundial: golpe final — somente Coroa do Overlord T1.
+    ('LOOT_TABLE_BOSS_WORLD_APOCALYMON_FINAL_BLOW',
+     'EQUIPMENT', NULL, 'Coroa do Overlord T1', NULL, 100, 1, 1);
 
 DO $$
 DECLARE
@@ -23,7 +67,7 @@ DECLARE
     missing_templates INT;
 BEGIN
     SELECT COUNT(*) INTO missing_tables
-    FROM special_boss_equipment_drops expected
+    FROM special_boss_legendary_entries expected
     LEFT JOIN loot_tables table_row ON table_row.code = expected.table_code
     WHERE table_row.id IS NULL;
 
@@ -32,67 +76,30 @@ BEGIN
     END IF;
 
     SELECT COUNT(*) INTO missing_templates
-    FROM special_boss_equipment_drops expected
+    FROM special_boss_legendary_entries expected
     LEFT JOIN equipment_templates template
       ON template.name = expected.equipment_template_name
      AND template.active = TRUE
-    WHERE template.name IS NULL;
+    WHERE expected.item_type = 'EQUIPMENT'
+      AND template.name IS NULL;
 
     IF missing_templates > 0 THEN
-        RAISE EXCEPTION 'Recompensas especiais: % template(s) Kernel/Overlord T1 não encontrado(s) ou inativo(s).', missing_templates;
+        RAISE EXCEPTION 'Recompensas especiais: % template(s) de equipamento não encontrado(s) ou inativo(s).', missing_templates;
     END IF;
 END $$;
 
--- Remove da participação qualquer equipamento especial que tenha sido criado
--- por uma tentativa anterior. Os drops não-equipmento existentes são a base
--- real da contagem abaixo.
-UPDATE loot_table_entries entry
-SET active = FALSE
-FROM loot_tables table_row
+-- Limpa somente a pool LEGENDARY das seis Loot Tables especiais.
+DELETE FROM loot_table_entries entry
+USING loot_tables table_row
 WHERE entry.loot_table_id = table_row.id
   AND entry.rarity = 'LEGENDARY'
-  AND entry.item_type = 'EQUIPMENT'
   AND EXISTS (
       SELECT 1
-      FROM special_boss_equipment_drops expected
+      FROM special_boss_legendary_entries expected
       WHERE expected.table_code = table_row.code
   );
 
--- Conta as entradas lendárias ativas de cada tabela e divide a pool entre elas
--- e o novo equipamento. Como weight é inteiro, a primeira entrada recebe o
--- eventual resto do arredondamento para a soma permanecer exatamente 100.
-WITH existing_entries AS (
-    SELECT
-        entry.id,
-        table_row.code AS table_code,
-        COUNT(*) OVER (PARTITION BY table_row.code) AS existing_count,
-        ROW_NUMBER() OVER (PARTITION BY table_row.code ORDER BY entry.id) AS row_number
-    FROM loot_table_entries entry
-    JOIN loot_tables table_row ON table_row.id = entry.loot_table_id
-    JOIN special_boss_equipment_drops expected ON expected.table_code = table_row.code
-    WHERE entry.rarity = 'LEGENDARY'
-      AND entry.item_type <> 'EQUIPMENT'
-      AND entry.active = TRUE
-), calculated_weights AS (
-    SELECT
-        id,
-        row_number,
-        existing_count,
-        FLOOR(100.0 / (existing_count + 1))::INT AS base_weight
-    FROM existing_entries
-)
-UPDATE loot_table_entries entry
-SET weight = calculated_weights.base_weight
-              + CASE
-                    WHEN calculated_weights.row_number = 1
-                    THEN 100 - calculated_weights.base_weight * calculated_weights.existing_count
-                    ELSE 0
-                END
-FROM calculated_weights
-WHERE entry.id = calculated_weights.id;
-
--- Insere uma única peça T1 por tabela com o mesmo peso-base calculado a partir
--- da contagem real dos drops existentes. Se não houver drop legado, recebe 100.
+-- Recria a composição definida acima, com pesos explícitos.
 INSERT INTO loot_table_entries (
     loot_table_id,
     rarity,
@@ -108,36 +115,21 @@ INSERT INTO loot_table_entries (
 SELECT
     table_row.id,
     'LEGENDARY',
-    'EQUIPMENT',
-    NULL,
+    expected.item_type::VARCHAR,
+    expected.material_code,
     expected.equipment_template_name,
-    NULL,
-    FLOOR(100.0 / (COUNT(existing.id) + 1))::INT,
-    1,
-    1,
+    expected.equipment_rarity::VARCHAR,
+    expected.weight,
+    expected.min_quantity,
+    expected.max_quantity,
     TRUE
-FROM special_boss_equipment_drops expected
-JOIN loot_tables table_row ON table_row.code = expected.table_code
-LEFT JOIN loot_table_entries existing
-  ON existing.loot_table_id = table_row.id
- AND existing.rarity = 'LEGENDARY'
- AND existing.item_type <> 'EQUIPMENT'
- AND existing.active = TRUE
-GROUP BY table_row.id, expected.equipment_template_name
-HAVING NOT EXISTS (
-    SELECT 1
-    FROM loot_table_entries duplicate
-    WHERE duplicate.loot_table_id = table_row.id
-      AND duplicate.rarity = 'LEGENDARY'
-      AND duplicate.item_type = 'EQUIPMENT'
-      AND duplicate.equipment_template_name = expected.equipment_template_name
-      AND duplicate.active = TRUE
-);
+FROM special_boss_legendary_entries expected
+JOIN loot_tables table_row ON table_row.code = expected.table_code;
 
 DO $$
 DECLARE
     invalid_pools INT;
-    equipment_count INT;
+    invalid_entries INT;
 BEGIN
     SELECT COUNT(*) INTO invalid_pools
     FROM (
@@ -148,29 +140,37 @@ BEGIN
           AND entry.rarity = 'LEGENDARY'
           AND EXISTS (
               SELECT 1
-              FROM special_boss_equipment_drops expected
+              FROM special_boss_legendary_entries expected
               WHERE expected.table_code = table_row.code
           )
         GROUP BY table_row.code
         HAVING SUM(entry.weight) <> 100
     ) invalid;
 
-    SELECT COUNT(*) INTO equipment_count
-    FROM loot_table_entries entry
-    JOIN loot_tables table_row ON table_row.id = entry.loot_table_id
-    JOIN special_boss_equipment_drops expected
-      ON expected.table_code = table_row.code
-     AND expected.equipment_template_name = entry.equipment_template_name
-    WHERE entry.active = TRUE
-      AND entry.rarity = 'LEGENDARY'
-      AND entry.item_type = 'EQUIPMENT'
-      AND entry.min_quantity = 1
-      AND entry.max_quantity = 1;
+    SELECT COUNT(*) INTO invalid_entries
+    FROM (
+        SELECT table_row.code
+        FROM loot_table_entries entry
+        JOIN loot_tables table_row ON table_row.id = entry.loot_table_id
+        WHERE entry.active = TRUE
+          AND entry.rarity = 'LEGENDARY'
+          AND EXISTS (
+              SELECT 1
+              FROM special_boss_legendary_entries expected
+              WHERE expected.table_code = table_row.code
+          )
+        GROUP BY table_row.code
+        HAVING COUNT(*) <> (
+            SELECT COUNT(*)
+            FROM special_boss_legendary_entries expected
+            WHERE expected.table_code = table_row.code
+        )
+    ) invalid;
 
-    IF invalid_pools > 0 OR equipment_count <> 6 THEN
+    IF invalid_pools > 0 OR invalid_entries > 0 THEN
         RAISE EXCEPTION
-            'Recompensas especiais: % pool(s) lendária(s) não somam 100; equipamentos T1 válidos=%',
-            invalid_pools, equipment_count;
+            'Recompensas especiais: % pool(s) não somam 100 e % pool(s) têm quantidade de entradas diferente da configuração.',
+            invalid_pools, invalid_entries;
     END IF;
 END $$;
 
