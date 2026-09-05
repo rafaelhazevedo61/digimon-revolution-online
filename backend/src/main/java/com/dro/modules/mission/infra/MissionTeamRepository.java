@@ -14,6 +14,8 @@ import java.util.UUID;
 public interface MissionTeamRepository extends JpaRepository<MissionTeam, UUID> {
     List<MissionTeam> findByPlayerIdOrderByCreatedAtAsc(UUID playerId);
 
+    long countByPlayerId(UUID playerId);
+
     Optional<MissionTeam> findByIdAndPlayerId(UUID id, UUID playerId);
 
     @Query("SELECT t FROM MissionTeam t WHERE t.playerId = :playerId AND (t.digimon1Id IN :digimonIds OR t.digimon2Id IN :digimonIds OR t.digimon3Id IN :digimonIds)")

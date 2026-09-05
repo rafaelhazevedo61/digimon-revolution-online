@@ -6,6 +6,8 @@ import com.dro.modules.mission.api.dto.request.SaveMissionTeamRequest;
 import com.dro.modules.mission.api.dto.response.MissionTeamResponse;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.domain.MissionTeam;
+import com.dro.modules.mission.domain.TeamSlotRules;
+import com.dro.modules.player.domain.Player;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.mission.infra.MissionTeamRepository;
 import com.dro.modules.player.infra.PlayerRepository;
@@ -46,7 +48,11 @@ public class MissionTeamUseCase {
     @Transactional
     public MissionTeamResponse create(String token, SaveMissionTeamRequest request) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        lockPlayer(playerId);
+        Player player = lockPlayer(playerId);
+        int currentTeamCount = Math.toIntExact(missionTeamRepository.countByPlayerId(playerId));
+        if (!TeamSlotRules.canCreate(currentTeamCount, player.getMaxTeamSlots())) {
+            throw new BadRequestException("Limite de times atingido. Adquira o item TEAM_SLOT_UNLOCK na loja comum para aumentar sua capacidade até o máximo de " + TeamSlotRules.MAX_SLOTS + " times.");
+        }
         List<UUID> digimonIds = validateRequest(playerId, null, request);
         MissionTeam team = new MissionTeam(playerId, normalizeName(request.name()), digimonIds, request.captainDigimonId());
         return MissionTeamResponse.from(missionTeamRepository.save(team));
@@ -119,11 +125,15 @@ public class MissionTeamUseCase {
         return digimonIds;
     }
 
-    private void lockPlayer(UUID playerId) {
-        if (playerRepository != null) {
-            playerRepository.findByIdForUpdate(playerId)
-                    .orElseThrow(() -> new NotFoundException("Jogador não encontrado"));
+    private Player lockPlayer(UUID playerId) {
+        if (playerRepository == null) {
+            return Player.builder()
+                    .id(playerId)
+                    .maxTeamSlots(TeamSlotRules.DEFAULT_SLOTS)
+                    .build();
         }
+        return playerRepository.findByIdForUpdate(playerId)
+                .orElseThrow(() -> new NotFoundException("Jogador não encontrado"));
     }
 
     private String normalizeName(String name) {

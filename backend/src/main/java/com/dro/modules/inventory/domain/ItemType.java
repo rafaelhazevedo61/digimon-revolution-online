@@ -39,6 +39,9 @@ public enum ItemType {
     // Expansão dos slots de missão
     MISSION_SLOT_UNLOCK,
 
+    // Expansão dos slots de times
+    TEAM_SLOT_UNLOCK,
+
     // Expansão permanente do Storage
     STORAGE_SLOT_1,
     STORAGE_SLOT_5,
