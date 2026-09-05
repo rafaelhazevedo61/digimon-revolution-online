@@ -5,9 +5,9 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.UUID;
 
-/** Equipamento alvo e as duas cópias consumidas no aprimoramento. */
+/** Equipamento alvo e as cópias consumidas no aprimoramento. */
 public record EnhanceEquipmentRequest(
         @NotNull UUID equipmentId,
-        @NotNull @Size(min = 2, max = 2) List<UUID> materialEquipmentIds
+        @NotNull @Size(min = 2, max = 4) List<UUID> materialEquipmentIds
 ) {
 }

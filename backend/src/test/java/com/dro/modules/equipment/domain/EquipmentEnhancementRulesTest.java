@@ -10,6 +10,12 @@ class EquipmentEnhancementRulesTest {
     void advancesUntilTierTen() {
         assertEquals(2, EquipmentEnhancementRules.nextTier(1));
         assertEquals(10, EquipmentEnhancementRules.nextTier(9));
+        assertEquals(3, EquipmentEnhancementRules.requiredCopiesForTargetTier(2));
+        assertEquals(3, EquipmentEnhancementRules.requiredCopiesForTargetTier(5));
+        assertEquals(4, EquipmentEnhancementRules.requiredCopiesForTargetTier(6));
+        assertEquals(4, EquipmentEnhancementRules.requiredCopiesForTargetTier(8));
+        assertEquals(5, EquipmentEnhancementRules.requiredCopiesForTargetTier(9));
+        assertEquals(5, EquipmentEnhancementRules.requiredCopiesForTargetTier(10));
         assertEquals(EquipmentEnhancementRules.BASIC_CORE, EquipmentEnhancementRules.requiredCoreCode(2));
         assertEquals(EquipmentEnhancementRules.BASIC_CORE, EquipmentEnhancementRules.requiredCoreCode(4));
         assertEquals(EquipmentEnhancementRules.ADVANCED_CORE, EquipmentEnhancementRules.requiredCoreCode(5));
