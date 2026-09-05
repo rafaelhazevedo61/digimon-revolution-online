@@ -36,6 +36,12 @@ logging:
     org.springframework.jdbc: INFO
 
 dro:
+  maintenance:
+    cleanup:
+      retention-hours: ${DRO_MAINTENANCE_CLEANUP_RETENTION_HOURS:24}
+      batch-size: ${DRO_MAINTENANCE_CLEANUP_BATCH_SIZE:500}
+      cron: ${DRO_MAINTENANCE_CLEANUP_CRON:0 0 3 * * *}
+      zone: ${DRO_MAINTENANCE_CLEANUP_ZONE:UTC}
   digitama:
     # Controle temporário dos Digimons BABY elegíveis nos pools de Digitama.
     # A origem será migrada futuramente para available_contents.
