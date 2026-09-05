@@ -151,6 +151,64 @@ WHERE NOT EXISTS (
       AND existing.equipment_template_name = expected.equipment_template_name
 );
 
+-- Normalização final defensiva: ambientes antigos podem conter uma composição
+-- diferente da esperada. Neste ponto, a peça T1 recebe a parte reservada e
+-- todas as entradas não-equipmento são reescaladas para o restante da pool.
+UPDATE loot_table_entries entry
+SET weight = CASE WHEN expected.legacy_item_type IS NULL THEN 100 ELSE 50 END,
+    active = TRUE
+FROM loot_tables table_row
+JOIN special_boss_equipment_drops expected ON expected.table_code = table_row.code
+WHERE entry.loot_table_id = table_row.id
+  AND entry.item_type = 'EQUIPMENT'
+  AND entry.equipment_template_name = expected.equipment_template_name
+  AND entry.rarity = 'LEGENDARY';
+
+UPDATE loot_table_entries entry
+SET active = FALSE
+FROM loot_tables table_row
+JOIN special_boss_equipment_drops expected
+  ON expected.table_code = table_row.code
+ AND expected.legacy_item_type IS NULL
+WHERE entry.loot_table_id = table_row.id
+  AND entry.rarity = 'LEGENDARY'
+  AND entry.item_type <> 'EQUIPMENT';
+
+WITH legacy_entries AS (
+    SELECT
+        entry.id,
+        table_row.code AS table_code,
+        entry.weight,
+        SUM(entry.weight) OVER (PARTITION BY table_row.code) AS legacy_total,
+        ROW_NUMBER() OVER (PARTITION BY table_row.code ORDER BY entry.id) AS row_number
+    FROM loot_table_entries entry
+    JOIN loot_tables table_row ON table_row.id = entry.loot_table_id
+    JOIN special_boss_equipment_drops expected ON expected.table_code = table_row.code
+    WHERE entry.rarity = 'LEGENDARY'
+      AND entry.item_type <> 'EQUIPMENT'
+      AND entry.active = TRUE
+      AND expected.legacy_item_type IS NOT NULL
+), scaled_entries AS (
+    SELECT
+        legacy_entries.id,
+        legacy_entries.row_number,
+        FLOOR(legacy_entries.weight * 50.0 / NULLIF(legacy_entries.legacy_total, 0))::INT AS scaled_weight,
+        SUM(
+            FLOOR(legacy_entries.weight * 50.0 / NULLIF(legacy_entries.legacy_total, 0))::INT
+        ) OVER (PARTITION BY legacy_entries.table_code) AS scaled_total
+    FROM legacy_entries
+    JOIN special_boss_equipment_drops expected
+      ON expected.table_code = legacy_entries.table_code
+)
+UPDATE loot_table_entries entry
+SET weight = scaled_entries.scaled_weight
+              + CASE WHEN scaled_entries.row_number = 1
+                     THEN 50 - scaled_entries.scaled_total
+                     ELSE 0
+                END
+FROM scaled_entries
+WHERE entry.id = scaled_entries.id;
+
 DO $$
 DECLARE
     equipment_count INT;
