@@ -93,7 +93,7 @@ public class CancelAuctionListingUseCase {
             inventoryRepository.save(item);
             return;
         }
-        inventoryRepository.save(InventoryItem.builder().id(UUID.randomUUID()).digimonId(digimon.getId()).itemType(resolveItemType(definition.getCode())).itemDefinition(definition).quantity(quantity).build());
+        inventoryRepository.save(InventoryItem.builder().id(UUID.randomUUID()).playerId(digimon.getPlayerId()).itemType(resolveItemType(definition.getCode())).itemDefinition(definition).quantity(quantity).build());
     }
 
     private ItemType resolveItemType(String code) {
