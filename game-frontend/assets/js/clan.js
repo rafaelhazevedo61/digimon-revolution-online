@@ -1155,6 +1155,13 @@ async function clanLoadRaid() {
     const cooldownCopy = cooldownEnabled
       ? `Intervalo de ${cooldownMinutes} minuto(s) entre ataques.`
       : "Intervalo desativado pelo administrador.";
+    const rewardLabel = (type) => ({ ATTEMPT: "Tentativa", TOP_DAMAGE: "Maior dano acumulado", FINAL_BLOW: "Golpe final" }[type] || type || "Recompensa");
+    const myRewards = Array.isArray(raid.myRewards) ? raid.myRewards : [];
+    const myRewardsHtml = myRewards.length > 0 ? `
+      <div class="mt-4 rounded-lg border border-amber-800/60 bg-amber-950/20 p-3 text-xs">
+        <p class="font-bold text-amber-300 mb-2">Baús conquistados nesta incursão</p>
+        <div class="space-y-1">${myRewards.map(reward => `<div class="flex justify-between gap-3"><span class="text-slate-300">${escapeHtml(rewardLabel(reward.rewardType))}</span><strong class="text-amber-200">${escapeHtml(reward.chestName || reward.chestCode || "Baú")}</strong></div>`).join("")}</div>
+      </div>` : "";
 
     let rankingHtml = "";
     if (raid.ranking && raid.ranking.length > 0) {
@@ -1227,6 +1234,7 @@ async function clanLoadRaid() {
             <div class="clan-raid-command-heading"><div><p class="clan-eyebrow clan-eyebrow-cyan">Centro de comando</p><h3>${defeated ? "Incursão finalizada" : "Pronto para atacar?"}</h3></div><span class="clan-raid-command-icon">ϟ</span></div>
             <p class="clan-raid-command-copy">${defeated ? "A equipe venceu este confronto. Reúna seus aliados para o próximo ciclo." : "Cada ataque reduz a vitalidade do chefe e registra sua contribuição no ranking."}</p>
             ${!defeated ? `<div class="clan-raid-cooldown-block"><div><span class="clan-raid-cooldown-label">Janela de ataque</span><p>${cooldownCopy}</p></div><strong class="${cooldownActive ? "is-waiting" : "is-ready"}">${cooldownActive ? `Aguardar <span id="clan-raid-countdown">--:--</span>` : "Disponível agora"}</strong></div><button id="clan-raid-attack-button" class="btn-primary clan-raid-attack-btn" onclick="clanAttackRaid()"${cooldownActive ? " disabled" : ""}>${cooldownActive ? "Aguardar janela" : "Atacar chefe"}</button>` : `<div class="clan-raid-complete-block"><span class="clan-raid-complete-icon">✓</span><p>Incursão derrotada.<br><small>O próximo renascimento ocorrerá uma hora após a derrota.</small></p></div>${defeatSummaryHtml}`}
+            ${myRewardsHtml}
           </section>
         </div>
 
@@ -1306,6 +1314,9 @@ function showRaidAttackModal(result) {
   const rewardRow = result.defeated
     ? `<p class="text-green-400 text-sm font-bold mb-1">Clã ganhou ${result.clanHonorMarksGained.toLocaleString()} Marcas de Honra e ${result.clanXpGained.toLocaleString()} Experiência do Clã!</p>`
     : "";
+  const rewardLabel = (type) => ({ ATTEMPT: "Tentativa", TOP_DAMAGE: "Maior dano acumulado", FINAL_BLOW: "Golpe final" }[type] || type || "Recompensa");
+  const chestRewards = Array.isArray(result.rewards) ? result.rewards : [];
+  const chestRewardsHtml = chestRewards.length > 0 ? `<div class="mt-3 rounded-lg border border-amber-800/60 bg-amber-950/20 p-3 text-xs"><p class="font-bold text-amber-300 mb-2">Baús recebidos</p><div class="space-y-1">${chestRewards.map(reward => `<div class="flex justify-between gap-3"><span class="text-slate-300">${escapeHtml(rewardLabel(reward.rewardType))}</span><strong class="text-amber-200">${escapeHtml(reward.chestName || reward.chestCode || "Baú")}</strong></div>`).join("")}</div></div>` : "";
 
   const overlay = document.createElement("div");
   overlay.id = "raid-attack-modal";
@@ -1331,6 +1342,7 @@ function showRaidAttackModal(result) {
         </div>
       </div>
       ${rewardRow}
+      ${chestRewardsHtml}
       ${defeatSummaryHtml}
       <button class="btn-primary w-full" onclick="document.getElementById('raid-attack-modal').remove()">Fechar</button>
     </div>
