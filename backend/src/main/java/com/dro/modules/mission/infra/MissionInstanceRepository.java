@@ -5,6 +5,7 @@ import com.dro.modules.mission.domain.MissionStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.domain.Pageable;
@@ -55,4 +56,11 @@ public interface MissionInstanceRepository
             @Param("now") Instant now,
             Pageable pageable
     );
+
+    @Query("SELECT COUNT(m) FROM MissionInstance m WHERE m.status = com.dro.modules.mission.domain.MissionStatus.CLAIMED AND m.claimedAt < :cutoff")
+    long countClaimedBefore(@Param("cutoff") Instant cutoff);
+
+    @Modifying
+    @Query(value = "DELETE FROM mission_instances WHERE id IN (SELECT id FROM mission_instances WHERE status = 'CLAIMED' AND claimed_at < :cutoff ORDER BY claimed_at ASC LIMIT :batchSize)", nativeQuery = true)
+    int deleteClaimedBefore(@Param("cutoff") Instant cutoff, @Param("batchSize") int batchSize);
 }
