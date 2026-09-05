@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -60,7 +61,8 @@ class MissionTeamUseCaseTest {
                 ),
                 JwtSettings.getSecret()
         );
-        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        lenient().when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        lenient().when(player.getMaxTeamSlots()).thenReturn(3);
         useCase = new MissionTeamUseCase(playerRepository, missionTeamRepository, missionInstanceRepository, digimonRepository);
     }
 
@@ -93,6 +95,31 @@ class MissionTeamUseCaseTest {
 
         assertEquals(partialIds, response.digimonIds());
         assertEquals(partialIds.get(1), response.captainDigimonId());
+    }
+
+    @Test
+    void rejectsCreatingFourthTeamWithoutUnlockItem() {
+        when(missionTeamRepository.countByPlayerId(playerId)).thenReturn(3L);
+
+        BadRequestException exception = assertThrows(
+                BadRequestException.class,
+                () -> useCase.create(token, new SaveMissionTeamRequest("Quarto time", digimonIds, digimonIds.get(0)))
+        );
+
+        org.junit.jupiter.api.Assertions.assertTrue(exception.getMessage().contains("TEAM_SLOT_UNLOCK"));
+        verify(missionTeamRepository, org.mockito.Mockito.never()).save(any(MissionTeam.class));
+    }
+
+    @Test
+    void keepsExistingPlayersWithMoreThanThreeTeamsCompatibleForReadOperations() {
+        when(missionTeamRepository.findByPlayerIdOrderByCreatedAtAsc(playerId)).thenReturn(List.of(
+                new MissionTeam(playerId, "Time 1", digimonIds, digimonIds.get(0)),
+                new MissionTeam(playerId, "Time 2", digimonIds, digimonIds.get(0)),
+                new MissionTeam(playerId, "Time 3", digimonIds, digimonIds.get(0)),
+                new MissionTeam(playerId, "Time 4", digimonIds, digimonIds.get(0))
+        ));
+
+        assertEquals(4, useCase.list(token).size());
     }
 
     @Test

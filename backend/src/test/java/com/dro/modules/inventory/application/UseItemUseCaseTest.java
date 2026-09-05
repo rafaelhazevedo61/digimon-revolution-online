@@ -128,6 +128,47 @@ class UseItemUseCaseTest {
     }
 
     @Test
+    void consumesTeamSlotUnlockItemAndIncrementsTeamCapacity() {
+        UUID playerId = UUID.randomUUID();
+        Player player = createPlayer(playerId, UUID.randomUUID(), 1);
+        player.setMaxTeamSlots(3);
+        InventoryItem item = InventoryItem.builder()
+                .id(UUID.randomUUID())
+                .playerId(playerId)
+                .itemType(ItemType.TEAM_SLOT_UNLOCK)
+                .quantity(1)
+                .build();
+
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(inventoryRepository.findByPlayerIdAndItemTypeForUpdate(playerId, ItemType.TEAM_SLOT_UNLOCK))
+                .thenReturn(Optional.of(item));
+
+        UseItemResponse response = useItemUseCase.execute(tokenFor(playerId), ItemType.TEAM_SLOT_UNLOCK);
+
+        assertThat(response.itemType()).isEqualTo(ItemType.TEAM_SLOT_UNLOCK);
+        assertThat(response.message()).isEqualTo("Slot de time desbloqueado!");
+        assertThat(player.getMaxTeamSlots()).isEqualTo(4);
+        assertThat(item.getQuantity()).isZero();
+        verify(inventoryRepository).delete(item);
+        verify(playerRepository).save(player);
+        verifyNoInteractions(digimonRepository);
+    }
+
+    @Test
+    void rejectsTeamSlotUnlockWhenMaximumCapacityIsReached() {
+        UUID playerId = UUID.randomUUID();
+        Player player = createPlayer(playerId, UUID.randomUUID(), 1);
+        player.setMaxTeamSlots(10);
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+
+        assertThatThrownBy(() -> useItemUseCase.execute(tokenFor(playerId), ItemType.TEAM_SLOT_UNLOCK))
+                .isInstanceOf(com.dro.shared.exception.BadRequestException.class)
+                .hasMessageContaining("Todos os slots de times");
+
+        verifyNoInteractions(inventoryRepository, digimonRepository);
+    }
+
+    @Test
     void rejectsMissionSlotUnlockWhenAllMissionSlotsAreAlreadyUnlocked() {
         UUID playerId = UUID.randomUUID();
         Player player = createPlayer(playerId, UUID.randomUUID(), 1);
