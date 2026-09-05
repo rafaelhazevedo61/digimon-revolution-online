@@ -1,6 +1,7 @@
 package com.dro.modules.loot.domain;
 
 import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.equipment.domain.EquipmentRarity;
 import jakarta.persistence.*;
 
 /**
@@ -25,6 +26,11 @@ public class ChestOpeningItemEntity {
     private ItemType itemType;
     @Column(name = "material_code", length = 80)
     private String materialCode;
+    @Column(name = "equipment_template_name", length = 120)
+    private String equipmentTemplateName;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "equipment_rarity", length = 20)
+    private EquipmentRarity equipmentRarity;
     @Column(nullable = false)
     private int quantity;
 
@@ -35,6 +41,8 @@ public class ChestOpeningItemEntity {
         private LootRarity rarity;
         private ItemType itemType;
         private String materialCode;
+        private String equipmentTemplateName;
+        private EquipmentRarity equipmentRarity;
         private int quantity;
 
         ChestOpeningItemEntityBuilder() {
@@ -80,6 +88,16 @@ public class ChestOpeningItemEntity {
             return this;
         }
 
+        public ChestOpeningItemEntity.ChestOpeningItemEntityBuilder equipmentTemplateName(final String equipmentTemplateName) {
+            this.equipmentTemplateName = equipmentTemplateName;
+            return this;
+        }
+
+        public ChestOpeningItemEntity.ChestOpeningItemEntityBuilder equipmentRarity(final EquipmentRarity equipmentRarity) {
+            this.equipmentRarity = equipmentRarity;
+            return this;
+        }
+
         /**
          * @return {@code this}.
          */
@@ -89,12 +107,12 @@ public class ChestOpeningItemEntity {
         }
 
         public ChestOpeningItemEntity build() {
-            return new ChestOpeningItemEntity(this.id, this.chestOpening, this.rarity, this.itemType, this.materialCode, this.quantity);
+            return new ChestOpeningItemEntity(this.id, this.chestOpening, this.rarity, this.itemType, this.materialCode, this.equipmentTemplateName, this.equipmentRarity, this.quantity);
         }
 
         @Override
         public String toString() {
-            return "ChestOpeningItemEntity.ChestOpeningItemEntityBuilder(id=" + this.id + ", chestOpening=" + this.chestOpening + ", rarity=" + this.rarity + ", itemType=" + this.itemType + ", materialCode=" + this.materialCode + ", quantity=" + this.quantity + ")";
+            return "ChestOpeningItemEntity.ChestOpeningItemEntityBuilder(id=" + this.id + ", chestOpening=" + this.chestOpening + ", rarity=" + this.rarity + ", itemType=" + this.itemType + ", materialCode=" + this.materialCode + ", equipmentTemplateName=" + this.equipmentTemplateName + ", equipmentRarity=" + this.equipmentRarity + ", quantity=" + this.quantity + ")";
         }
     }
 
@@ -122,6 +140,14 @@ public class ChestOpeningItemEntity {
         return this.materialCode;
     }
 
+    public String getEquipmentTemplateName() {
+        return this.equipmentTemplateName;
+    }
+
+    public EquipmentRarity getEquipmentRarity() {
+        return this.equipmentRarity;
+    }
+
     public int getQuantity() {
         return this.quantity;
     }
@@ -146,6 +172,14 @@ public class ChestOpeningItemEntity {
         this.materialCode = materialCode;
     }
 
+    public void setEquipmentTemplateName(final String equipmentTemplateName) {
+        this.equipmentTemplateName = equipmentTemplateName;
+    }
+
+    public void setEquipmentRarity(final EquipmentRarity equipmentRarity) {
+        this.equipmentRarity = equipmentRarity;
+    }
+
     public void setQuantity(final int quantity) {
         this.quantity = quantity;
     }
@@ -153,12 +187,14 @@ public class ChestOpeningItemEntity {
     public ChestOpeningItemEntity() {
     }
 
-    public ChestOpeningItemEntity(final Long id, final ChestOpeningEntity chestOpening, final LootRarity rarity, final ItemType itemType, final String materialCode, final int quantity) {
+    public ChestOpeningItemEntity(final Long id, final ChestOpeningEntity chestOpening, final LootRarity rarity, final ItemType itemType, final String materialCode, final String equipmentTemplateName, final EquipmentRarity equipmentRarity, final int quantity) {
         this.id = id;
         this.chestOpening = chestOpening;
         this.rarity = rarity;
         this.itemType = itemType;
         this.materialCode = materialCode;
+        this.equipmentTemplateName = equipmentTemplateName;
+        this.equipmentRarity = equipmentRarity;
         this.quantity = quantity;
     }
 }

@@ -171,6 +171,7 @@ public final class EventRewardMessageText {
                 case FRAGMENT_MEGA -> "Fragmento Mega";
                 case EVOLUTION_MATERIAL -> "Material de evolução";
                 case LOOT_CHEST -> "Baú temático";
+                case EQUIPMENT -> "Equipamento";
                 case REFINEMENT_STONE -> "Pedra de refinamento";
                 case REFINEMENT_SUCCESS_BOOST -> "Pergaminho de Refinamento";
                 case REFINEMENT_PROTECTION -> "Cristal de Proteção";

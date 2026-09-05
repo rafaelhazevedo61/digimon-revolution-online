@@ -129,7 +129,21 @@ function lootTableToggleActiveFilter() {
 
 async function lootTableLoadCatalog() {
   if (lootTableState.catalog.length > 0) return;
-  lootTableState.catalog = await apiGet("/admin/loot-tables/catalog/items");
+  const [items, equipmentTemplates] = await Promise.all([
+    apiGet("/admin/loot-tables/catalog/items"),
+    apiGet("/admin/equipment-templates", { activeOnly: "true" })
+  ]);
+  lootTableState.catalog = [
+    ...(items || []),
+    ...(equipmentTemplates || []).map(template => ({
+      code: template.name,
+      name: template.name,
+      category: "EQUIPMENT",
+      rarity: template.rarity,
+      maxStack: 1,
+      equipmentTemplate: true
+    }))
+  ];
 }
 
 async function lootTableShowCreateModal() {
@@ -179,7 +193,7 @@ function lootTableRenderModal(title, data, isEdit) {
         <div class="flex items-center justify-between gap-4 mb-6">
           <div>
             <h3 class="text-xl font-bold">${escapeHtml(title)}</h3>
-            <p class="text-sm text-slate-400 mt-1">Os itens são selecionados exclusivamente do catálogo oficial.</p>
+            <p class="text-sm text-slate-400 mt-1">Itens e templates de equipamento são selecionados do catálogo oficial.</p>
           </div>
           <button class="text-slate-400 hover:text-white text-2xl" onclick="lootTableCloseModal()" aria-label="Fechar">&times;</button>
         </div>
@@ -255,10 +269,13 @@ function lootTableRenderModal(title, data, isEdit) {
 }
 
 function lootTableRenderEntryRow(entry) {
-  const selectedCode = entry.itemCode || entry.materialCode || entry.itemType || "";
+  const selectedCode = entry.itemType === "EQUIPMENT"
+    ? (entry.equipmentTemplateName || entry.itemCode || "")
+    : (entry.itemCode || entry.materialCode || entry.itemType || "");
   const selectedItem = lootTableState.catalog.find(item => item.code === selectedCode);
   const selectedLabel = selectedItem ? `${selectedItem.name} — ${selectedItem.code}` : "Nenhum item selecionado";
   const entryId = entry._uiId || entry.id || "new";
+  const isEquipment = selectedItem?.category === "EQUIPMENT" || entry.itemType === "EQUIPMENT";
   return `
     <div class="card-sm loot-entry-row" data-entry-id="${escapeAttr(entryId)}">
       <div class="loot-entry-layout">
@@ -276,6 +293,13 @@ function lootTableRenderEntryRow(entry) {
             ${lootTableRarityOptions(entry.rarity)}
           </select>
         </div>
+        <div class="loot-entry-equipment-rarity-field ${isEquipment ? "" : "hidden"}">
+          <label class="text-xs text-slate-500">Raridade do equipamento</label>
+          <select class="input mt-1 loot-entry-equipment-rarity" ${isEquipment ? "" : "disabled"}>
+            ${lootTableEquipmentRarityOptions(entry.equipmentRarity)}
+          </select>
+          <p class="text-[11px] text-slate-500 mt-1">Aleatória rola a raridade na abertura.</p>
+        </div>
         <label class="loot-entry-active-field flex items-center gap-2 text-xs text-slate-400">
           <input class="loot-entry-active accent-cyan-500" type="checkbox" ${entry.active !== false ? "checked" : ""} />
           <span>Ativo</span>
@@ -288,11 +312,11 @@ function lootTableRenderEntryRow(entry) {
           </label>
           <label>
             <span class="text-xs text-slate-500">Quantidade mínima</span>
-            <input class="input mt-1 loot-entry-min" type="number" min="1" value="${Number(entry.minQuantity || 1)}" required />
+            <input class="input mt-1 loot-entry-min" type="number" min="1" value="${Number(isEquipment ? 1 : entry.minQuantity || 1)}" ${isEquipment ? "disabled" : ""} required />
           </label>
           <label>
             <span class="text-xs text-slate-500">Quantidade máxima</span>
-            <input class="input mt-1 loot-entry-max" type="number" min="1" value="${Number(entry.maxQuantity || 1)}" required />
+            <input class="input mt-1 loot-entry-max" type="number" min="1" value="${Number(isEquipment ? 1 : entry.maxQuantity || 1)}" ${isEquipment ? "disabled" : ""} required />
           </label>
         </div>
       </div>
@@ -339,7 +363,7 @@ function lootTableOpenItemPicker(entryId) {
       <div class="flex items-start justify-between gap-4 mb-5">
         <div>
           <h3 class="text-xl font-bold">Selecionar item</h3>
-          <p class="text-sm text-slate-400 mt-1">Pesquise pelo nome, código ou categoria do item catalogado.</p>
+          <p class="text-sm text-slate-400 mt-1">Pesquise por item ou template de equipamento.</p>
         </div>
         <button type="button" class="text-slate-400 hover:text-white text-2xl" aria-label="Fechar" data-loot-picker-close>&times;</button>
       </div>
@@ -408,7 +432,26 @@ function lootTableSelectItem(code) {
     label.textContent = `${item.name} — ${item.code}`;
     label.title = `${item.name} — ${item.code}`;
   }
+  lootTableUpdateEntryType(row, item);
   lootTableCloseItemPicker();
+}
+
+function lootTableUpdateEntryType(row, item) {
+  const equipment = item?.category === "EQUIPMENT";
+  const rarityField = row.querySelector(".loot-entry-equipment-rarity-field");
+  const raritySelect = row.querySelector(".loot-entry-equipment-rarity");
+  const minInput = row.querySelector(".loot-entry-min");
+  const maxInput = row.querySelector(".loot-entry-max");
+  if (rarityField) rarityField.classList.toggle("hidden", !equipment);
+  if (raritySelect) raritySelect.disabled = !equipment;
+  if (minInput) {
+    minInput.disabled = equipment;
+    if (equipment) minInput.value = "1";
+  }
+  if (maxInput) {
+    maxInput.disabled = equipment;
+    if (equipment) maxInput.value = "1";
+  }
 }
 
 function lootTableRemoveEntryRow(button) {
@@ -462,9 +505,10 @@ function lootTableCollectRequest() {
     const itemCode = row.querySelector(".loot-entry-item").value;
     const catalogItem = lootTableState.catalog.find(item => item.code === itemCode);
     const itemType = lootTableItemType(catalogItem);
+    const equipment = itemType === "EQUIPMENT";
     const materialCode = itemType === "EVOLUTION_MATERIAL" || itemType === "LOOT_CHEST" ? itemCode : null;
-    const minQuantity = Number(row.querySelector(".loot-entry-min").value);
-    const maxQuantity = Number(row.querySelector(".loot-entry-max").value);
+    const minQuantity = equipment ? 1 : Number(row.querySelector(".loot-entry-min").value);
+    const maxQuantity = equipment ? 1 : Number(row.querySelector(".loot-entry-max").value);
     if (!catalogItem) throw new Error("Selecione um item catalogado em todas as entradas.");
     if (!Number.isInteger(minQuantity) || !Number.isInteger(maxQuantity) || minQuantity < 1 || maxQuantity < minQuantity) {
       throw new Error(`Faixa de quantidade inválida para ${catalogItem.name}.`);
@@ -476,6 +520,8 @@ function lootTableCollectRequest() {
       rarity: row.querySelector(".loot-entry-rarity").value,
       itemType,
       materialCode,
+      equipmentTemplateName: equipment ? itemCode : null,
+      equipmentRarity: equipment ? (row.querySelector(".loot-entry-equipment-rarity")?.value || null) : null,
       weight: Number(row.querySelector(".loot-entry-weight").value),
       minQuantity,
       maxQuantity,
@@ -500,6 +546,7 @@ function lootTableCollectRequest() {
 
 function lootTableItemType(item) {
   if (!item) return "";
+  if (item.category === "EQUIPMENT") return "EQUIPMENT";
   if (item.category === "EVOLUTION_MATERIAL") return "EVOLUTION_MATERIAL";
   if (item.category === "CHEST") return "LOOT_CHEST";
   return item.code;
@@ -509,6 +556,12 @@ function lootTableRarityOptions(selected) {
   return LOOT_TABLE_RARITIES.map(rarity => `
     <option value="${rarity.value}" ${selected === rarity.value ? "selected" : ""}>${rarity.label}</option>
   `).join("");
+}
+
+function lootTableEquipmentRarityOptions(selected) {
+  return `<option value="" ${!selected ? "selected" : ""}>Aleatória</option>${LOOT_TABLE_RARITIES.map(rarity => `
+    <option value="${rarity.value}" ${selected === rarity.value ? "selected" : ""}>${rarity.label}</option>
+  `).join("")}`;
 }
 
 async function lootTableToggleActive(code) {

@@ -2,6 +2,8 @@ package com.dro.modules.loot.application;
 
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.equipment.application.GrantEquipmentUseCase;
+import com.dro.modules.equipment.domain.EquipmentRarity;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.ItemType;
@@ -72,6 +74,9 @@ class OpenChestUseCaseTest {
     @Mock
     private ChestLootRoller chestLootRoller;
 
+    @Mock
+    private GrantEquipmentUseCase grantEquipmentUseCase;
+
     @InjectMocks
     private OpenChestUseCase openChestUseCase;
 
@@ -121,6 +126,52 @@ class OpenChestUseCaseTest {
                 eq("10"),
                 any()
         );
+    }
+
+    @Test
+    void executeGrantsEquipmentWithConfiguredRarityInsteadOfInventoryItem() {
+        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
+        String chestCode = "CHEST_MISSION_NATIVE_FOREST";
+        ItemDefinition chestDefinition = itemDefinition(1L, chestCode, "Baú Floresta Nativa", "CHEST", 99);
+        ItemDefinition rewardDefinition = itemDefinition(2L, "FRAGMENT_AGUMON", "Fragmento do Agumon", "EVOLUTION_MATERIAL", 999);
+        ChestDefinitionEntity chest = chest(chestCode, chestDefinition, rewardDefinition);
+        Player player = Player.builder().id(playerId).activeDigimonId(digimonId).build();
+        Digimon digimon = Digimon.builder().id(digimonId).playerId(playerId).build();
+        InventoryItem chestInventory = inventory(digimonId, ItemType.LOOT_CHEST, chestDefinition, 1);
+
+        stubCommon(playerId, digimonId, player, digimon, chest, chestInventory, rewardDefinition);
+        lenient().when(itemDefinitionRepository.findByCode("Garra Berserker T1")).thenReturn(Optional.empty());
+        when(chestLootRoller.roll(chest.getLootTable())).thenReturn(new ChestLootRoller.ChestLootRoll(
+                LootRarity.EPIC,
+                List.of(new ChestLootRoller.ChestLootItem(
+                        LootRarity.EPIC,
+                        ItemType.EQUIPMENT,
+                        null,
+                        "Garra Berserker T1",
+                        EquipmentRarity.LEGENDARY,
+                        1
+                ))
+        ));
+        when(chestOpeningRepository.saveAndFlush(any(ChestOpeningEntity.class))).thenAnswer(invocation -> {
+            ChestOpeningEntity opening = invocation.getArgument(0);
+            opening.setId(11L);
+            return opening;
+        });
+
+        ChestOpeningResponse response = openChestUseCase.execute(
+                token(playerId),
+                new OpenChestRequest(chestCode, "equipment-request-1")
+        );
+
+        verify(grantEquipmentUseCase).execute(digimonId, "Garra Berserker T1", EquipmentRarity.LEGENDARY);
+        verify(inventoryRepository).delete(chestInventory);
+        assertThat(response.items()).singleElement().satisfies(item -> {
+            assertThat(item.itemType()).isEqualTo(ItemType.EQUIPMENT);
+            assertThat(item.itemCode()).isEqualTo("Garra Berserker T1");
+            assertThat(item.equipmentTemplateName()).isEqualTo("Garra Berserker T1");
+            assertThat(item.equipmentRarity()).isEqualTo(EquipmentRarity.LEGENDARY);
+        });
     }
 
     @Test
@@ -301,9 +352,9 @@ class OpenChestUseCaseTest {
         when(chestDefinitionRepository.findWithCatalogByCode(chest.getCode())).thenReturn(Optional.of(chest));
         when(inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, 1L))
                 .thenReturn(Optional.of(chestInventory));
-        when(inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, 2L))
+        lenient().when(inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, 2L))
                 .thenReturn(Optional.empty());
-        when(itemDefinitionRepository.findByCode("FRAGMENT_AGUMON"))
+        lenient().when(itemDefinitionRepository.findByCode("FRAGMENT_AGUMON"))
                 .thenReturn(Optional.of(rewardDefinition));
         when(chestLootRoller.roll(chest.getLootTable())).thenReturn(
                 new ChestLootRoller.ChestLootRoll(

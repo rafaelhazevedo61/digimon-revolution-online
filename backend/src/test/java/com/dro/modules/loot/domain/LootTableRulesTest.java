@@ -1,5 +1,6 @@
 package com.dro.modules.loot.domain;
 
+import com.dro.modules.equipment.domain.EquipmentRarity;
 import com.dro.modules.inventory.domain.ItemType;
 import org.junit.jupiter.api.Test;
 
@@ -84,5 +85,27 @@ class LootTableRulesTest {
         assertThatCode(() -> LootTableRules.validateEntry(
                 ItemType.EVOLUTION_MATERIAL, "FRAGMENT_AGUMON", 35, 1, 5
         )).doesNotThrowAnyException();
+    }
+
+    @Test
+    void acceptsEquipmentWithFixedRarity() {
+        assertThatCode(() -> LootTableRules.validateEntry(
+                ItemType.EQUIPMENT, null, "Garra Berserker T1", EquipmentRarity.RARE, 10, 1, 1
+        )).doesNotThrowAnyException();
+    }
+
+    @Test
+    void acceptsEquipmentWithRandomRarityWhenRarityIsNull() {
+        assertThatCode(() -> LootTableRules.validateEntry(
+                ItemType.EQUIPMENT, null, "Garra Berserker T1", null, 10, 1, 1
+        )).doesNotThrowAnyException();
+    }
+
+    @Test
+    void rejectsEquipmentWithQuantityGreaterThanOne() {
+        assertThatThrownBy(() -> LootTableRules.validateEntry(
+                ItemType.EQUIPMENT, null, "Garra Berserker T1", null, 10, 1, 2
+        )).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("exactly 1");
     }
 }

@@ -1,5 +1,6 @@
 package com.dro.modules.loot.domain;
 
+import com.dro.modules.equipment.domain.EquipmentRarity;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.shared.exception.UnprocessableException;
 import org.springframework.stereotype.Component;
@@ -68,6 +69,8 @@ public class ChestLootRoller {
                     rarity,
                     entry.getItemType(),
                     entry.getMaterialCode(),
+                    entry.getEquipmentTemplateName(),
+                    entry.getEquipmentRarity(),
                     quantity
             ));
         }
@@ -156,6 +159,16 @@ public class ChestLootRoller {
     }
 
     /** Item sorteado com raridade, tipo, código opcional e quantidade. */
-    public record ChestLootItem(LootRarity rarity, ItemType itemType, String materialCode, int quantity) {
+    public record ChestLootItem(
+            LootRarity rarity,
+            ItemType itemType,
+            String materialCode,
+            String equipmentTemplateName,
+            EquipmentRarity equipmentRarity,
+            int quantity
+    ) {
+        public ChestLootItem(LootRarity rarity, ItemType itemType, String materialCode, int quantity) {
+            this(rarity, itemType, materialCode, null, null, quantity);
+        }
     }
 }
