@@ -72,6 +72,9 @@ public enum ItemType {
     // Material de Ascensão de equipamentos
     ASCENSION_CORE,
 
+    // Equipamentos instanciados a partir de um template
+    EQUIPMENT,
+
     // Reroll de raridade do Digimon
     RARITY_REROLL,
 

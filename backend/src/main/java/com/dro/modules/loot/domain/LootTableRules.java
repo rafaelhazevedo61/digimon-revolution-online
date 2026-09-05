@@ -1,5 +1,6 @@
 package com.dro.modules.loot.domain;
 
+import com.dro.modules.equipment.domain.EquipmentRarity;
 import com.dro.modules.inventory.domain.ItemType;
 
 import java.util.EnumSet;
@@ -71,6 +72,23 @@ public final class LootTableRules {
             int minQuantity,
             int maxQuantity
     ) {
+        validateEntry(itemType, materialCode, null, null, weight, minQuantity, maxQuantity);
+    }
+
+    /**
+     * Valida uma entrada incluindo a configuração opcional de equipamento.
+     * Uma raridade nula em uma entrada EQUIPMENT significa que a raridade será
+     * sorteada no momento da abertura do baú.
+     */
+    public static void validateEntry(
+            ItemType itemType,
+            String materialCode,
+            String equipmentTemplateName,
+            EquipmentRarity equipmentRarity,
+            int weight,
+            int minQuantity,
+            int maxQuantity
+    ) {
         Objects.requireNonNull(itemType, "Item type cannot be null");
 
         if (weight <= 0) {
@@ -84,6 +102,19 @@ public final class LootTableRules {
                 || itemType == ItemType.LOOT_CHEST;
         if (requiresCode && (materialCode == null || materialCode.isBlank())) {
             throw new IllegalArgumentException("Material code is required for " + itemType);
+        }
+        if (itemType == ItemType.EQUIPMENT) {
+            if (equipmentTemplateName == null || equipmentTemplateName.isBlank()) {
+                throw new IllegalArgumentException("Equipment template name is required for EQUIPMENT");
+            }
+            if (materialCode != null && !materialCode.isBlank()) {
+                throw new IllegalArgumentException("Equipment entries cannot use material code");
+            }
+            if (minQuantity != 1 || maxQuantity != 1) {
+                throw new IllegalArgumentException("Equipment quantity must be exactly 1");
+            }
+        } else if ((equipmentTemplateName != null && !equipmentTemplateName.isBlank()) || equipmentRarity != null) {
+            throw new IllegalArgumentException("Only EQUIPMENT entries can configure an equipment template or rarity");
         }
     }
 }

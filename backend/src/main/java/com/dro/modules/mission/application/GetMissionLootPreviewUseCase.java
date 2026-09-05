@@ -115,7 +115,9 @@ public class GetMissionLootPreviewUseCase {
                 .filter(entry -> entry.isActive())
                 .map(entry -> {
                     String itemType = entry.getItemType().name();
-                    String itemCode = entry.getMaterialCode() == null || entry.getMaterialCode().isBlank()
+                    String itemCode = entry.getEquipmentTemplateName() != null
+                            ? entry.getEquipmentTemplateName()
+                            : entry.getMaterialCode() == null || entry.getMaterialCode().isBlank()
                             ? itemType
                             : entry.getMaterialCode();
                     return new MissionLootPreviewResponse.ChestLootItem(
@@ -125,7 +127,9 @@ public class GetMissionLootPreviewUseCase {
                             resolveItemName(itemCode, itemType, itemDefinitions),
                             entry.getWeight(),
                             entry.getMinQuantity(),
-                            entry.getMaxQuantity()
+                            entry.getMaxQuantity(),
+                            entry.getEquipmentTemplateName(),
+                            entry.getEquipmentRarity() == null ? null : entry.getEquipmentRarity().name()
                     );
                 })
                 .toList();

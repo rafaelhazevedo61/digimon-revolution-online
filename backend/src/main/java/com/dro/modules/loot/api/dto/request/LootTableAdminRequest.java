@@ -1,6 +1,7 @@
 package com.dro.modules.loot.api.dto.request;
 
 import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.equipment.domain.EquipmentRarity;
 import com.dro.modules.loot.domain.LootRarity;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -62,10 +63,23 @@ public record LootTableAdminRequest(
             @NotNull LootRarity rarity,
             @NotNull ItemType itemType,
             @Size(max = 80) String materialCode,
+            @Size(max = 120) String equipmentTemplateName,
+            EquipmentRarity equipmentRarity,
             @NotNull @Min(1) Integer weight,
             @NotNull @Min(1) Integer minQuantity,
             @NotNull @Min(1) Integer maxQuantity,
             Boolean active
     ) {
+        public LootTableEntryRequest(
+                LootRarity rarity,
+                ItemType itemType,
+                String materialCode,
+                Integer weight,
+                Integer minQuantity,
+                Integer maxQuantity,
+                Boolean active
+        ) {
+            this(rarity, itemType, materialCode, null, null, weight, minQuantity, maxQuantity, active);
+        }
     }
 }

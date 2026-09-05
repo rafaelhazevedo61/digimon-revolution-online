@@ -2,6 +2,9 @@ package com.dro.modules.loot.application;
 
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.equipment.application.GrantEquipmentUseCase;
+import com.dro.modules.equipment.domain.EquipmentRarity;
+import com.dro.modules.equipment.domain.EquipmentRarityRules;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.ItemType;
@@ -55,6 +58,7 @@ public class OpenChestUseCase {
     private final ChestOpeningRepository chestOpeningRepository;
     private final ChestLootRoller chestLootRoller;
     private final TransactionAuditPublisher transactionAuditPublisher;
+    private final GrantEquipmentUseCase grantEquipmentUseCase;
 
     /**
      * Abre um ou mais baús do inventário do Digimon ativo do jogador.
@@ -91,8 +95,9 @@ public class OpenChestUseCase {
                 primaryRarity = roll.rarity();
             }
             for (ChestLootRoller.ChestLootItem reward : roll.items()) {
-                creditReward(playerId, reward);
-                mergeOpeningItem(openingItems, reward);
+                ChestLootRoller.ChestLootItem resolvedReward = resolveEquipmentRarity(reward);
+                creditReward(playerId, activeDigimon, resolvedReward);
+                mergeOpeningItem(openingItems, resolvedReward);
             }
         }
         consumeChest(chestInventory, quantity);
@@ -138,7 +143,21 @@ public class OpenChestUseCase {
         return digimon;
     }
 
-    private void creditReward(UUID playerId, ChestLootRoller.ChestLootItem reward) {
+    private ChestLootRoller.ChestLootItem resolveEquipmentRarity(ChestLootRoller.ChestLootItem reward) {
+        if (reward.itemType() != ItemType.EQUIPMENT || reward.equipmentRarity() != null) {
+            return reward;
+        }
+        return new ChestLootRoller.ChestLootItem(reward.rarity(), reward.itemType(), reward.materialCode(), reward.equipmentTemplateName(), EquipmentRarityRules.rollRarity(), reward.quantity());
+    }
+
+    private void creditReward(UUID playerId, Digimon activeDigimon, ChestLootRoller.ChestLootItem reward) {
+        if (reward.itemType() == ItemType.EQUIPMENT) {
+            if (grantEquipmentUseCase == null) {
+                throw new UnprocessableException("O suporte a recompensas de equipamento não está configurado.");
+            }
+            grantEquipmentUseCase.execute(activeDigimon.getId(), reward.equipmentTemplateName(), reward.equipmentRarity());
+            return;
+        }
         String itemCode = reward.materialCode() == null ? reward.itemType().name() : reward.materialCode();
         ItemDefinition itemDefinition = itemDefinitionRepository.findByCode(itemCode).orElseThrow(() -> new UnprocessableException("Reward item is not defined: " + itemCode));
         InventoryItem inventoryItem = inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, itemDefinition.getId()).orElse(null);
@@ -159,7 +178,9 @@ public class OpenChestUseCase {
         ChestOpeningItemEntity existing = openingItems.stream()
                 .filter(item -> item.getRarity() == reward.rarity()
                         && item.getItemType() == reward.itemType()
-                        && Objects.equals(item.getMaterialCode(), reward.materialCode()))
+                        && Objects.equals(item.getMaterialCode(), reward.materialCode())
+                        && Objects.equals(item.getEquipmentTemplateName(), reward.equipmentTemplateName())
+                        && item.getEquipmentRarity() == reward.equipmentRarity())
                 .findFirst()
                 .orElse(null);
         if (existing == null) {
@@ -167,6 +188,8 @@ public class OpenChestUseCase {
                     .rarity(reward.rarity())
                     .itemType(reward.itemType())
                     .materialCode(reward.materialCode())
+                    .equipmentTemplateName(reward.equipmentTemplateName())
+                    .equipmentRarity(reward.equipmentRarity())
                     .quantity(reward.quantity())
                     .build());
         } else {
@@ -193,6 +216,10 @@ public class OpenChestUseCase {
                 reward.put("materialCode", item.getMaterialCode());
             }
             reward.put("quantity", item.getQuantity());
+            if (item.getEquipmentTemplateName() != null) {
+                reward.put("equipmentTemplateName", item.getEquipmentTemplateName());
+                reward.put("equipmentRarity", item.getEquipmentRarity().name());
+            }
             return reward;
         }).toList();
         return Map.of("module", "loot", "operation", "openChest", "playerId", opening.getPlayerId().toString(), "digimonId", digimon.getId().toString(), "requestId", opening.getRequestId(), "chestCode", opening.getChestDefinition().getCode(), "chestQuantity", opening.getQuantity(), "rarity", opening.getRarity().name(), "items", items, "summary", "Chest opened successfully");
@@ -206,12 +233,14 @@ public class OpenChestUseCase {
     }
 
     private ChestOpeningItemResponse toItemResponse(ChestOpeningItemEntity item) {
-        String itemCode = item.getMaterialCode() == null ? item.getItemType().name() : item.getMaterialCode();
+        String itemCode = item.getItemType() == ItemType.EQUIPMENT
+                ? item.getEquipmentTemplateName()
+                : item.getMaterialCode() == null ? item.getItemType().name() : item.getMaterialCode();
         String itemName = itemDefinitionRepository.findByCode(itemCode).map(ItemDefinition::getName).orElse(itemCode);
-        return new ChestOpeningItemResponse(itemCode, itemName, item.getRarity(), item.getItemType(), item.getMaterialCode(), item.getQuantity());
+        return new ChestOpeningItemResponse(itemCode, itemName, item.getRarity(), item.getItemType(), item.getMaterialCode(), item.getQuantity(), item.getEquipmentTemplateName(), item.getEquipmentRarity());
     }
 
-    public OpenChestUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final InventoryRepository inventoryRepository, final ItemDefinitionRepository itemDefinitionRepository, final ChestDefinitionRepository chestDefinitionRepository, final ChestOpeningRepository chestOpeningRepository, final ChestLootRoller chestLootRoller, final TransactionAuditPublisher transactionAuditPublisher) {
+    public OpenChestUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final InventoryRepository inventoryRepository, final ItemDefinitionRepository itemDefinitionRepository, final ChestDefinitionRepository chestDefinitionRepository, final ChestOpeningRepository chestOpeningRepository, final ChestLootRoller chestLootRoller, final TransactionAuditPublisher transactionAuditPublisher, final GrantEquipmentUseCase grantEquipmentUseCase) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.inventoryRepository = inventoryRepository;
@@ -220,5 +249,6 @@ public class OpenChestUseCase {
         this.chestOpeningRepository = chestOpeningRepository;
         this.chestLootRoller = chestLootRoller;
         this.transactionAuditPublisher = transactionAuditPublisher;
+        this.grantEquipmentUseCase = grantEquipmentUseCase;
     }
 }
