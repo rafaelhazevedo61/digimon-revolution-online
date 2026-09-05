@@ -39,16 +39,16 @@ WHERE table_row.code = 'LOOT_TABLE_MISSION_MISSION_6'
   );
 
 -- ARENA: Prata fornece básico, Platina fornece avançado e Diamante fornece supremo.
--- Prata / EPIC: XP 54 / baú Ultimate 36 / BASIC 10; baseline 60 / 40.
+-- Prata / EPIC: XP 45 / baú Ultimate 45 / BASIC 10.
 UPDATE loot_table_entries entry
 SET weight = CASE
-    WHEN entry.item_type = 'XP_DISC_5' THEN 54
-    WHEN entry.item_type = 'LOOT_CHEST' AND entry.material_code = 'CHEST_FRAGMENT_ULTIMATE' THEN 36
+    WHEN entry.item_type = 'XP_DISC_5' THEN 45
+    WHEN entry.item_type = 'LOOT_CHEST' AND entry.material_code = 'CHEST_FRAGMENT_ULTIMATE' THEN 45
     ELSE entry.weight
 END
 FROM loot_tables table_row
 WHERE entry.loot_table_id = table_row.id
-  AND table_row.code = 'LOOT_TABLE_CHEST_ARENA_PRATA'
+  AND table_row.code = 'LOOT_TABLE_ARENA_PRATA'
   AND entry.rarity = 'EPIC';
 
 INSERT INTO loot_table_entries (
@@ -59,7 +59,7 @@ INSERT INTO loot_table_entries (
 SELECT table_row.id, 'EPIC', 'EVOLUTION_MATERIAL', 'BASIC_ENHANCEMENT_CORE',
        NULL, NULL, 10, 1, 1, TRUE
 FROM loot_tables table_row
-WHERE table_row.code = 'LOOT_TABLE_CHEST_ARENA_PRATA'
+WHERE table_row.code = 'LOOT_TABLE_ARENA_PRATA'
   AND NOT EXISTS (
       SELECT 1 FROM loot_table_entries entry
       WHERE entry.loot_table_id = table_row.id
@@ -68,17 +68,17 @@ WHERE table_row.code = 'LOOT_TABLE_CHEST_ARENA_PRATA'
         AND entry.material_code = 'BASIC_ENHANCEMENT_CORE'
   );
 
--- Platina / EPIC: XP 38 / incubadora 30 / baú Ultimate 17 / ADVANCED 15; baseline 45 / 35 / 20.
+-- Platina / EPIC: XP 30 / incubadora 30 / baú Ultimate 25 / ADVANCED 15.
 UPDATE loot_table_entries entry
 SET weight = CASE
-    WHEN entry.item_type = 'XP_DISC_5' THEN 38
+    WHEN entry.item_type = 'XP_DISC_5' THEN 30
     WHEN entry.item_type = 'INCUBATOR_EPIC' THEN 30
-    WHEN entry.item_type = 'LOOT_CHEST' AND entry.material_code = 'CHEST_FRAGMENT_ULTIMATE' THEN 17
+    WHEN entry.item_type = 'LOOT_CHEST' AND entry.material_code = 'CHEST_FRAGMENT_ULTIMATE' THEN 25
     ELSE entry.weight
 END
 FROM loot_tables table_row
 WHERE entry.loot_table_id = table_row.id
-  AND table_row.code = 'LOOT_TABLE_CHEST_ARENA_PLATINA'
+  AND table_row.code = 'LOOT_TABLE_ARENA_PLATINA'
   AND entry.rarity = 'EPIC';
 
 INSERT INTO loot_table_entries (
@@ -89,7 +89,7 @@ INSERT INTO loot_table_entries (
 SELECT table_row.id, 'EPIC', 'EVOLUTION_MATERIAL', 'ADVANCED_ENHANCEMENT_CORE',
        NULL, NULL, 15, 1, 1, TRUE
 FROM loot_tables table_row
-WHERE table_row.code = 'LOOT_TABLE_CHEST_ARENA_PLATINA'
+WHERE table_row.code = 'LOOT_TABLE_ARENA_PLATINA'
   AND NOT EXISTS (
       SELECT 1 FROM loot_table_entries entry
       WHERE entry.loot_table_id = table_row.id
@@ -103,7 +103,7 @@ UPDATE loot_table_entries entry
 SET weight = 20
 FROM loot_tables table_row
 WHERE entry.loot_table_id = table_row.id
-  AND table_row.code = 'LOOT_TABLE_CHEST_ARENA_DIAMANTE'
+  AND table_row.code = 'LOOT_TABLE_ARENA_DIAMANTE'
   AND entry.rarity = 'LEGENDARY';
 
 INSERT INTO loot_table_entries (
@@ -114,7 +114,7 @@ INSERT INTO loot_table_entries (
 SELECT table_row.id, 'LEGENDARY', 'EVOLUTION_MATERIAL', 'SUPREME_ENHANCEMENT_CORE',
        NULL, NULL, 20, 1, 1, TRUE
 FROM loot_tables table_row
-WHERE table_row.code = 'LOOT_TABLE_CHEST_ARENA_DIAMANTE'
+WHERE table_row.code = 'LOOT_TABLE_ARENA_DIAMANTE'
   AND NOT EXISTS (
       SELECT 1 FROM loot_table_entries entry
       WHERE entry.loot_table_id = table_row.id
@@ -317,9 +317,9 @@ BEGIN
         WHERE entry.active = TRUE
           AND (
               (table_row.code = 'LOOT_TABLE_MISSION_MISSION_6' AND entry.rarity = 'LEGENDARY')
-              OR (table_row.code = 'LOOT_TABLE_CHEST_ARENA_PRATA' AND entry.rarity = 'EPIC')
-              OR (table_row.code = 'LOOT_TABLE_CHEST_ARENA_PLATINA' AND entry.rarity = 'EPIC')
-              OR (table_row.code = 'LOOT_TABLE_CHEST_ARENA_DIAMANTE' AND entry.rarity = 'LEGENDARY')
+              OR (table_row.code = 'LOOT_TABLE_ARENA_PRATA' AND entry.rarity = 'EPIC')
+              OR (table_row.code = 'LOOT_TABLE_ARENA_PLATINA' AND entry.rarity = 'EPIC')
+              OR (table_row.code = 'LOOT_TABLE_ARENA_DIAMANTE' AND entry.rarity = 'LEGENDARY')
               OR (table_row.code = 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_ATTEMPT' AND entry.rarity = 'COMMON')
               OR (table_row.code = 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_TOP_DAMAGE' AND entry.rarity = 'EPIC')
               OR (table_row.code = 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_FINAL_BLOW' AND entry.rarity = 'LEGENDARY')
