@@ -3,6 +3,92 @@ BEGIN;
 -- A seed consolidada da Arena usa a família LOOT_TABLE_CHEST_ARENA_*.
 -- Os baús oficiais passam a apontar para essa família; a configuração antiga
 -- da V109 permanece preservada, mas desativada.
+--
+-- A V109/V205 criava e atualizava somente LOOT_TABLE_ARENA_*. Em ambientes
+-- aplicados até a V205, as tabelas consolidadas ainda não existem. Criamos a
+-- nova família e copiamos a configuração vigente antes de ativá-la.
+INSERT INTO loot_tables (
+    code, name, description, active, min_items, max_items, created_by, updated_by
+)
+SELECT
+    REPLACE(source.code, 'LOOT_TABLE_ARENA_', 'LOOT_TABLE_CHEST_ARENA_'),
+    source.name,
+    source.description,
+    TRUE,
+    source.min_items,
+    source.max_items,
+    'SYSTEM',
+    'SYSTEM'
+FROM loot_tables source
+WHERE source.code IN (
+    'LOOT_TABLE_ARENA_BRONZE',
+    'LOOT_TABLE_ARENA_PRATA',
+    'LOOT_TABLE_ARENA_OURO',
+    'LOOT_TABLE_ARENA_PLATINA',
+    'LOOT_TABLE_ARENA_DIAMANTE'
+)
+ON CONFLICT (code) DO UPDATE SET
+    name = EXCLUDED.name,
+    description = EXCLUDED.description,
+    min_items = EXCLUDED.min_items,
+    max_items = EXCLUDED.max_items,
+    updated_at = CURRENT_TIMESTAMP,
+    updated_by = 'SYSTEM';
+
+INSERT INTO loot_table_rarity_weights (loot_table_id, rarity, weight)
+SELECT consolidated.id, source_weight.rarity, source_weight.weight
+FROM loot_table_rarity_weights source_weight
+JOIN loot_tables source_table
+  ON source_table.id = source_weight.loot_table_id
+JOIN loot_tables consolidated
+  ON consolidated.code = REPLACE(source_table.code, 'LOOT_TABLE_ARENA_', 'LOOT_TABLE_CHEST_ARENA_')
+WHERE source_table.code IN (
+    'LOOT_TABLE_ARENA_BRONZE',
+    'LOOT_TABLE_ARENA_PRATA',
+    'LOOT_TABLE_ARENA_OURO',
+    'LOOT_TABLE_ARENA_PLATINA',
+    'LOOT_TABLE_ARENA_DIAMANTE'
+)
+ON CONFLICT (loot_table_id, rarity) DO UPDATE SET
+    weight = EXCLUDED.weight;
+
+INSERT INTO loot_table_entries (
+    loot_table_id, rarity, item_type, material_code,
+    weight, min_quantity, max_quantity, active
+)
+SELECT
+    consolidated.id,
+    source_entry.rarity,
+    source_entry.item_type,
+    source_entry.material_code,
+    source_entry.weight,
+    source_entry.min_quantity,
+    source_entry.max_quantity,
+    source_entry.active
+FROM loot_table_entries source_entry
+JOIN loot_tables source_table
+  ON source_table.id = source_entry.loot_table_id
+JOIN loot_tables consolidated
+  ON consolidated.code = REPLACE(source_table.code, 'LOOT_TABLE_ARENA_', 'LOOT_TABLE_CHEST_ARENA_')
+WHERE source_table.code IN (
+    'LOOT_TABLE_ARENA_BRONZE',
+    'LOOT_TABLE_ARENA_PRATA',
+    'LOOT_TABLE_ARENA_OURO',
+    'LOOT_TABLE_ARENA_PLATINA',
+    'LOOT_TABLE_ARENA_DIAMANTE'
+)
+  AND NOT EXISTS (
+      SELECT 1
+      FROM loot_table_entries existing
+      WHERE existing.loot_table_id = consolidated.id
+        AND existing.rarity = source_entry.rarity
+        AND existing.item_type = source_entry.item_type
+        AND existing.material_code IS NOT DISTINCT FROM source_entry.material_code
+        AND existing.weight = source_entry.weight
+        AND existing.min_quantity = source_entry.min_quantity
+        AND existing.max_quantity = source_entry.max_quantity
+  );
+
 UPDATE loot_tables
 SET active = TRUE,
     updated_at = CURRENT_TIMESTAMP,
