@@ -25,4 +25,15 @@ class EquipmentEnhancementRulesTest {
         assertThrows(RuntimeException.class, () -> EquipmentEnhancementRules.requiredCoreCode(1));
         assertThrows(RuntimeException.class, () -> EquipmentEnhancementRules.requiredCoreCode(11));
     }
+
+    @Test
+    void dismantlingUsesFixedCoreQuantitiesByTierRange() {
+        assertEquals(new EquipmentEnhancementRules.DismantleReward(EquipmentEnhancementRules.BASIC_CORE, 1), EquipmentEnhancementRules.dismantleReward(1));
+        assertEquals(new EquipmentEnhancementRules.DismantleReward(EquipmentEnhancementRules.BASIC_CORE, 2), EquipmentEnhancementRules.dismantleReward(3));
+        assertEquals(new EquipmentEnhancementRules.DismantleReward(EquipmentEnhancementRules.ADVANCED_CORE, 1), EquipmentEnhancementRules.dismantleReward(4));
+        assertEquals(new EquipmentEnhancementRules.DismantleReward(EquipmentEnhancementRules.ADVANCED_CORE, 2), EquipmentEnhancementRules.dismantleReward(6));
+        assertEquals(new EquipmentEnhancementRules.DismantleReward(EquipmentEnhancementRules.SUPREME_CORE, 1), EquipmentEnhancementRules.dismantleReward(7));
+        assertEquals(new EquipmentEnhancementRules.DismantleReward(EquipmentEnhancementRules.SUPREME_CORE, 2), EquipmentEnhancementRules.dismantleReward(9));
+        assertThrows(RuntimeException.class, () -> EquipmentEnhancementRules.dismantleReward(10));
+    }
 }
