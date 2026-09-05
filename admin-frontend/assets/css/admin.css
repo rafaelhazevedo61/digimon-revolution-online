@@ -261,7 +261,8 @@
   }
 
   .loot-entry-item-field,
-  .loot-entry-rarity-field {
+  .loot-entry-rarity-field,
+  .loot-entry-equipment-rarity-field {
     min-width: 0;
   }
 
