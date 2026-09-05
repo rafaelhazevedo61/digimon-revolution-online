@@ -7,6 +7,9 @@ import com.dro.modules.arena.infra.ArenaShopProductRepository;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.equipment.application.GrantEquipmentUseCase;
+import com.dro.modules.equipment.domain.EquipmentRarityRules;
+import com.dro.modules.shop.domain.ShopProductType;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.player.domain.Player;
@@ -31,6 +34,7 @@ public class BuyArenaShopProductUseCase {
     private final ArenaShopProductRepository arenaShopProductRepository;
     private final InventoryRepository inventoryRepository;
     private final AddItemUseCase addItemUseCase;
+    private final GrantEquipmentUseCase grantEquipmentUseCase;
 
     @Transactional
     public BuyArenaShopResponse execute(String token, BuyArenaShopRequest request) {
@@ -44,12 +48,21 @@ public class BuyArenaShopProductUseCase {
             throw new BadRequestException("Active digimon does not belong to this player");
         }
         ArenaShopProduct product = arenaShopProductRepository.findById(request.productCode()).filter(ArenaShopProduct::isActive).orElseThrow(() -> new NotFoundException("Arena shop product not found: " + request.productCode()));
-        validateItemStack(playerId, product, request.quantity());
+        if (product.getProductType() == ShopProductType.EQUIPMENT && request.quantity() != 1) {
+            throw new BadRequestException("Equipamentos devem ser comprados um por vez");
+        }
+        if (product.getProductType() == ShopProductType.ITEM) {
+            validateItemStack(playerId, product, request.quantity());
+        }
         int totalPrice = product.getPriceCoins() * request.quantity();
         if (player.getArenaCoins() < totalPrice) {
             throw new UnprocessableException("Not enough arena coins");
         }
-        addItemUseCase.execute(digimon.getId(), product.getItemType(), product.getQuantity() * request.quantity());
+        if (product.getProductType() == ShopProductType.EQUIPMENT) {
+            grantEquipmentUseCase.execute(digimon.getId(), product.getEquipmentTemplateName(), EquipmentRarityRules.rollRarity("ARENA_SHOP"));
+        } else {
+            addItemUseCase.execute(digimon.getId(), product.getItemType(), product.getQuantity() * request.quantity());
+        }
         player.setArenaCoins(player.getArenaCoins() - totalPrice);
         playerRepository.save(player);
         return new BuyArenaShopResponse(product.getCode(), product.getName(), product.getItemType(), product.getQuantity() * request.quantity(), totalPrice, player.getArenaCoins(), "Purchase successful");
@@ -67,11 +80,12 @@ public class BuyArenaShopProductUseCase {
         }
     }
 
-    public BuyArenaShopProductUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ArenaShopProductRepository arenaShopProductRepository, final InventoryRepository inventoryRepository, final AddItemUseCase addItemUseCase) {
+    public BuyArenaShopProductUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ArenaShopProductRepository arenaShopProductRepository, final InventoryRepository inventoryRepository, final AddItemUseCase addItemUseCase, final GrantEquipmentUseCase grantEquipmentUseCase) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.arenaShopProductRepository = arenaShopProductRepository;
         this.inventoryRepository = inventoryRepository;
         this.addItemUseCase = addItemUseCase;
+        this.grantEquipmentUseCase = grantEquipmentUseCase;
     }
 }
