@@ -66,19 +66,40 @@ WHERE entry.loot_table_id = table_row.id
         AND expected.equipment_template_name = entry.equipment_template_name
   );
 
--- Mantém os drops existentes, mas divide a recompensa lendária entre o drop
--- legado e a peça T1 específica quando há um drop legado definido.
+-- Mantém os drops existentes, mas reserva 50 pontos da pool lendária para a
+-- peça T1. A normalização considera todas as entradas legadas, pois algumas
+-- versões anteriores tinham mais de um drop lendário na mesma tabela.
+WITH legacy_entries AS (
+    SELECT
+        entry.id,
+        table_row.code AS table_code,
+        entry.weight,
+        SUM(entry.weight) OVER (PARTITION BY table_row.code) AS legacy_total,
+        ROW_NUMBER() OVER (PARTITION BY table_row.code ORDER BY entry.id) AS row_number
+    FROM loot_table_entries entry
+    JOIN loot_tables table_row ON table_row.id = entry.loot_table_id
+    JOIN special_boss_equipment_drops expected ON expected.table_code = table_row.code
+    WHERE expected.legacy_item_type IS NOT NULL
+      AND entry.rarity = 'LEGENDARY'
+      AND entry.item_type <> 'EQUIPMENT'
+      AND entry.active = TRUE
+), scaled_entries AS (
+    SELECT
+        id,
+        row_number,
+        FLOOR(weight * 50.0 / NULLIF(legacy_total, 0))::INT AS scaled_weight,
+        SUM(FLOOR(weight * 50.0 / NULLIF(legacy_total, 0))::INT) OVER (PARTITION BY table_code) AS scaled_total
+    FROM legacy_entries
+)
 UPDATE loot_table_entries entry
-SET weight = expected.legacy_item_weight,
+SET weight = scaled_entries.scaled_weight
+              + CASE WHEN scaled_entries.row_number = 1
+                     THEN 50 - scaled_entries.scaled_total
+                     ELSE 0
+                END,
     active = TRUE
-FROM loot_tables table_row
-JOIN special_boss_equipment_drops expected
-  ON expected.table_code = table_row.code
- AND expected.legacy_item_type IS NOT NULL
-WHERE entry.loot_table_id = table_row.id
-  AND entry.rarity = 'LEGENDARY'
-  AND entry.item_type = expected.legacy_item_type
-  AND entry.item_type <> 'EQUIPMENT';
+FROM scaled_entries
+WHERE entry.id = scaled_entries.id;
 
 -- Reaplica uma entrada de equipamento já existente sem criar duplicatas.
 UPDATE loot_table_entries entry
