@@ -412,7 +412,7 @@ function missionFriendlyCode(code) {
 
 function missionLootItemLabel(item) {
   const itemType = String(item && item.itemType || "");
-  const itemCode = String(item && (item.itemCode || item.materialCode) || itemType);
+  const itemCode = String(item && (item.equipmentTemplateName || item.itemCode || item.materialCode) || itemType);
   if (item && item.itemName && ![itemType, itemCode].includes(String(item.itemName))) return item.itemName;
   if (typeof invItemName === "function" && itemType) {
     const inventoryName = invItemName(itemType);
@@ -454,16 +454,21 @@ function missionLootQuantityLabel(item) {
 }
 
 function missionLootItemMarkup(item, includeWeight = false) {
+  const isEquipment = String(item && item.itemType || "") === "EQUIPMENT";
+  const displayRarity = isEquipment ? item.equipmentRarity : item && item.rarity;
   const weightMarkup = includeWeight && Number(item && item.weight) > 0
     ? `<span class="text-xs text-slate-500">Peso ${Number(item.weight)}</span>`
     : "";
+  const rarityMarkup = isEquipment
+    ? `<span class="badge ${displayRarity ? missionLootRarityClass(displayRarity) : "badge-common"}">${displayRarity ? escapeHtml(missionLootRarityLabel(displayRarity)) : "Aleatória"}</span><span class="text-xs text-slate-500">Raridade do equipamento</span>`
+    : `<span class="badge ${missionLootRarityClass(displayRarity)}">${escapeHtml(missionLootRarityLabel(displayRarity))}</span>`;
   return `
     <div class="flex items-center gap-3 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-3">
       <span class="text-2xl" aria-hidden="true">${missionLootItemIcon(item)}</span>
       <div class="min-w-0 flex-1">
         <p class="font-semibold text-slate-100 truncate">${escapeHtml(missionLootItemLabel(item))}</p>
         <div class="flex items-center gap-2 mt-1 flex-wrap">
-          <span class="badge ${missionLootRarityClass(item && item.rarity)}">${escapeHtml(missionLootRarityLabel(item && item.rarity))}</span>
+          ${rarityMarkup}
           ${weightMarkup}
         </div>
       </div>

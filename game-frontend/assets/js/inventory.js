@@ -867,18 +867,24 @@ function invShowChestOpeningResult(result) {
       <div class="card-sm mb-4 flex min-h-0 max-h-[52vh] flex-col overflow-hidden shrink-0">
         <p class="text-xs text-slate-400 mb-2 shrink-0">Recompensas</p>
         <div class="min-h-0 overflow-y-auto overscroll-contain pr-3">
-        ${items.length > 0 ? items.map(item => `
-          <div class="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
+        ${items.length > 0 ? items.map(item => {
+          const isEquipment = String(item.itemType || "") === "EQUIPMENT";
+          const effectiveRarity = isEquipment ? item.equipmentRarity : item.rarity;
+          const rarityLabel = effectiveRarity ? formatRarity(effectiveRarity) : "Indefinida";
+          const itemName = item.itemName || item.equipmentTemplateName || item.materialCode || invItemName(item.itemType);
+          return `
+          <div class="flex items-center justify-between py-3 border-b border-slate-800 last:border-0">
             <div class="min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
-                <p class="font-semibold text-sm truncate">${escapeHtml(item.itemName || item.materialCode || invItemName(item.itemType))}</p>
-                ${item.rarity ? `<span class="badge badge-${String(item.rarity).toLowerCase()}">${escapeHtml(formatRarity(item.rarity))}</span>` : ""}
+                <p class="font-semibold text-sm truncate">${escapeHtml(itemName)}</p>
+                ${effectiveRarity ? `<span class="badge badge-${String(effectiveRarity).toLowerCase()}">${escapeHtml(rarityLabel)}</span>` : ""}
               </div>
-              ${item.materialCode ? `<p class="text-xs text-slate-500">Material de evolução</p>` : ""}
+              ${isEquipment ? `<p class="text-xs font-semibold text-slate-300 mt-1">Raridade do equipamento: ${escapeHtml(rarityLabel)}</p><p class="text-xs text-slate-500 mt-1">Template: ${escapeHtml(item.equipmentTemplateName || item.itemCode || itemName)}</p>` : item.materialCode ? `<p class="text-xs text-slate-500">Material de evolução</p>` : ""}
             </div>
             <span class="font-bold text-cyan-300 ml-3">x${item.quantity}</span>
           </div>
-        `).join("") : `<p class="text-sm text-slate-400">Nenhum item foi informado.</p>`}
+        `;
+        }).join("") : `<p class="text-sm text-slate-400">Nenhum item foi informado.</p>`}
         </div>
       </div>
       <p class="text-xs text-slate-400 text-center mb-4 shrink-0">${escapeHtml(message)}</p>
