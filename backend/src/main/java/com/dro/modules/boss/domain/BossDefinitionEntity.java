@@ -5,6 +5,7 @@ import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.loot.domain.ChestDefinitionEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.dro.modules.clan.raid.domain.ClanRaidRewardType;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -81,6 +82,27 @@ public class BossDefinitionEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "world_final_blow_chest_definition_id")
     private ChestDefinitionEntity worldFinalBlowChestDefinition;
+    /**
+     * Baú concedido por cada tentativa válida de uma Incursão de Clã.
+     */
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "clan_raid_attempt_chest_definition_id")
+    private ChestDefinitionEntity clanRaidAttemptChestDefinition;
+    /**
+     * Baú concedido ao participante com maior dano acumulado na Incursão de Clã.
+     */
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "clan_raid_top_damage_chest_definition_id")
+    private ChestDefinitionEntity clanRaidTopDamageChestDefinition;
+    /**
+     * Baú concedido ao jogador que desfere o golpe final na Incursão de Clã.
+     */
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "clan_raid_final_blow_chest_definition_id")
+    private ChestDefinitionEntity clanRaidFinalBlowChestDefinition;
 
     @JsonProperty("chestCode")
     @Transient
@@ -129,12 +151,50 @@ public class BossDefinitionEntity {
     public String getWorldFinalBlowChestName() {
         return worldFinalBlowChestDefinition == null ? null : worldFinalBlowChestDefinition.getName();
     }
+    @JsonProperty("clanRaidAttemptChestCode")
+    @Transient
+    public String getClanRaidAttemptChestCode() {
+        return clanRaidAttemptChestDefinition == null ? null : clanRaidAttemptChestDefinition.getCode();
+    }
+    @JsonProperty("clanRaidAttemptChestName")
+    @Transient
+    public String getClanRaidAttemptChestName() {
+        return clanRaidAttemptChestDefinition == null ? null : clanRaidAttemptChestDefinition.getName();
+    }
+    @JsonProperty("clanRaidTopDamageChestCode")
+    @Transient
+    public String getClanRaidTopDamageChestCode() {
+        return clanRaidTopDamageChestDefinition == null ? null : clanRaidTopDamageChestDefinition.getCode();
+    }
+    @JsonProperty("clanRaidTopDamageChestName")
+    @Transient
+    public String getClanRaidTopDamageChestName() {
+        return clanRaidTopDamageChestDefinition == null ? null : clanRaidTopDamageChestDefinition.getName();
+    }
+    @JsonProperty("clanRaidFinalBlowChestCode")
+    @Transient
+    public String getClanRaidFinalBlowChestCode() {
+        return clanRaidFinalBlowChestDefinition == null ? null : clanRaidFinalBlowChestDefinition.getCode();
+    }
+    @JsonProperty("clanRaidFinalBlowChestName")
+    @Transient
+    public String getClanRaidFinalBlowChestName() {
+        return clanRaidFinalBlowChestDefinition == null ? null : clanRaidFinalBlowChestDefinition.getName();
+    }
 
     public ChestDefinitionEntity chestForWorldReward(WorldBossRewardType rewardType) {
         return switch (rewardType) {
             case ATTEMPT -> worldAttemptChestDefinition;
             case TOP_DAMAGE -> worldTopDamageChestDefinition;
             case FINAL_BLOW -> worldFinalBlowChestDefinition;
+        };
+    }
+
+    public ChestDefinitionEntity chestForClanRaidReward(ClanRaidRewardType rewardType) {
+        return switch (rewardType) {
+            case ATTEMPT -> clanRaidAttemptChestDefinition;
+            case TOP_DAMAGE -> clanRaidTopDamageChestDefinition;
+            case FINAL_BLOW -> clanRaidFinalBlowChestDefinition;
         };
     }
 
@@ -164,6 +224,9 @@ public class BossDefinitionEntity {
         private ChestDefinitionEntity worldAttemptChestDefinition;
         private ChestDefinitionEntity worldTopDamageChestDefinition;
         private ChestDefinitionEntity worldFinalBlowChestDefinition;
+        private ChestDefinitionEntity clanRaidAttemptChestDefinition;
+        private ChestDefinitionEntity clanRaidTopDamageChestDefinition;
+        private ChestDefinitionEntity clanRaidFinalBlowChestDefinition;
         private List<BossDropEntity> drops;
 
         BossDefinitionEntityBuilder() {
@@ -350,6 +413,24 @@ public class BossDefinitionEntity {
             return this;
         }
 
+        @JsonIgnore
+        public BossDefinitionEntity.BossDefinitionEntityBuilder clanRaidAttemptChestDefinition(final ChestDefinitionEntity chest) {
+            this.clanRaidAttemptChestDefinition = chest;
+            return this;
+        }
+
+        @JsonIgnore
+        public BossDefinitionEntity.BossDefinitionEntityBuilder clanRaidTopDamageChestDefinition(final ChestDefinitionEntity chest) {
+            this.clanRaidTopDamageChestDefinition = chest;
+            return this;
+        }
+
+        @JsonIgnore
+        public BossDefinitionEntity.BossDefinitionEntityBuilder clanRaidFinalBlowChestDefinition(final ChestDefinitionEntity chest) {
+            this.clanRaidFinalBlowChestDefinition = chest;
+            return this;
+        }
+
         /**
          * @return {@code this}.
          */
@@ -359,12 +440,12 @@ public class BossDefinitionEntity {
         }
 
         public BossDefinitionEntity build() {
-            return new BossDefinitionEntity(this.id, this.code, this.name, this.bossType, this.requiredStage, this.requiredLevel, this.requiredRebirths, this.hp, this.atk, this.def, this.energyCost, this.cooldownMinutes, this.baseXpReward, this.baseBitsReward, this.clanHonorMarksReward, this.defeatXpPercent, this.imageUrl, this.active, this.chestDefinition, this.worldAttemptChestDefinition, this.worldTopDamageChestDefinition, this.worldFinalBlowChestDefinition, this.drops);
+            return new BossDefinitionEntity(this.id, this.code, this.name, this.bossType, this.requiredStage, this.requiredLevel, this.requiredRebirths, this.hp, this.atk, this.def, this.energyCost, this.cooldownMinutes, this.baseXpReward, this.baseBitsReward, this.clanHonorMarksReward, this.defeatXpPercent, this.imageUrl, this.active, this.chestDefinition, this.worldAttemptChestDefinition, this.worldTopDamageChestDefinition, this.worldFinalBlowChestDefinition, this.clanRaidAttemptChestDefinition, this.clanRaidTopDamageChestDefinition, this.clanRaidFinalBlowChestDefinition, this.drops);
         }
 
         @Override
         public String toString() {
-            return "BossDefinitionEntity.BossDefinitionEntityBuilder(id=" + this.id + ", code=" + this.code + ", name=" + this.name + ", bossType=" + this.bossType + ", requiredStage=" + this.requiredStage + ", requiredLevel=" + this.requiredLevel + ", requiredRebirths=" + this.requiredRebirths + ", hp=" + this.hp + ", atk=" + this.atk + ", def=" + this.def + ", energyCost=" + this.energyCost + ", cooldownMinutes=" + this.cooldownMinutes + ", baseXpReward=" + this.baseXpReward + ", baseBitsReward=" + this.baseBitsReward + ", defeatXpPercent=" + this.defeatXpPercent + ", imageUrl=" + this.imageUrl + ", active=" + this.active + ", chestDefinition=" + this.chestDefinition + ", worldAttemptChestDefinition=" + this.worldAttemptChestDefinition + ", worldTopDamageChestDefinition=" + this.worldTopDamageChestDefinition + ", worldFinalBlowChestDefinition=" + this.worldFinalBlowChestDefinition + ", drops=" + this.drops + ")";
+            return "BossDefinitionEntity.BossDefinitionEntityBuilder(id=" + this.id + ", code=" + this.code + ", name=" + this.name + ", bossType=" + this.bossType + ", requiredStage=" + this.requiredStage + ", requiredLevel=" + this.requiredLevel + ", requiredRebirths=" + this.requiredRebirths + ", hp=" + this.hp + ", atk=" + this.atk + ", def=" + this.def + ", energyCost=" + this.energyCost + ", cooldownMinutes=" + this.cooldownMinutes + ", baseXpReward=" + this.baseXpReward + ", baseBitsReward=" + this.baseBitsReward + ", defeatXpPercent=" + this.defeatXpPercent + ", imageUrl=" + this.imageUrl + ", active=" + this.active + ", chestDefinition=" + this.chestDefinition + ", worldAttemptChestDefinition=" + this.worldAttemptChestDefinition + ", worldTopDamageChestDefinition=" + this.worldTopDamageChestDefinition + ", worldFinalBlowChestDefinition=" + this.worldFinalBlowChestDefinition + ", clanRaidAttemptChestDefinition=" + this.clanRaidAttemptChestDefinition + ", clanRaidTopDamageChestDefinition=" + this.clanRaidTopDamageChestDefinition + ", clanRaidFinalBlowChestDefinition=" + this.clanRaidFinalBlowChestDefinition + ", drops=" + this.drops + ")";
         }
     }
 
@@ -472,6 +553,18 @@ public class BossDefinitionEntity {
         return this.worldFinalBlowChestDefinition;
     }
 
+    public ChestDefinitionEntity getClanRaidAttemptChestDefinition() {
+        return this.clanRaidAttemptChestDefinition;
+    }
+
+    public ChestDefinitionEntity getClanRaidTopDamageChestDefinition() {
+        return this.clanRaidTopDamageChestDefinition;
+    }
+
+    public ChestDefinitionEntity getClanRaidFinalBlowChestDefinition() {
+        return this.clanRaidFinalBlowChestDefinition;
+    }
+
     public List<BossDropEntity> getDrops() {
         return this.drops;
     }
@@ -576,6 +669,18 @@ public class BossDefinitionEntity {
         this.worldFinalBlowChestDefinition = worldFinalBlowChestDefinition;
     }
 
+    public void setClanRaidAttemptChestDefinition(final ChestDefinitionEntity chest) {
+        this.clanRaidAttemptChestDefinition = chest;
+    }
+
+    public void setClanRaidTopDamageChestDefinition(final ChestDefinitionEntity chest) {
+        this.clanRaidTopDamageChestDefinition = chest;
+    }
+
+    public void setClanRaidFinalBlowChestDefinition(final ChestDefinitionEntity chest) {
+        this.clanRaidFinalBlowChestDefinition = chest;
+    }
+
     public void setDrops(final List<BossDropEntity> drops) {
         this.drops = drops;
     }
@@ -610,7 +715,7 @@ public class BossDefinitionEntity {
      * @param worldFinalBlowChestDefinition Baú concedido ao jogador que desferiu o golpe final.
      * @param drops
      */
-    public BossDefinitionEntity(final Long id, final String code, final String name, final BossType bossType, final Stage requiredStage, final int requiredLevel, final int requiredRebirths, final int hp, final int atk, final int def, final int energyCost, final int cooldownMinutes, final int baseXpReward, final int baseBitsReward, final int clanHonorMarksReward, final int defeatXpPercent, final String imageUrl, final boolean active, final ChestDefinitionEntity chestDefinition, final ChestDefinitionEntity worldAttemptChestDefinition, final ChestDefinitionEntity worldTopDamageChestDefinition, final ChestDefinitionEntity worldFinalBlowChestDefinition, final List<BossDropEntity> drops) {
+    public BossDefinitionEntity(final Long id, final String code, final String name, final BossType bossType, final Stage requiredStage, final int requiredLevel, final int requiredRebirths, final int hp, final int atk, final int def, final int energyCost, final int cooldownMinutes, final int baseXpReward, final int baseBitsReward, final int clanHonorMarksReward, final int defeatXpPercent, final String imageUrl, final boolean active, final ChestDefinitionEntity chestDefinition, final ChestDefinitionEntity worldAttemptChestDefinition, final ChestDefinitionEntity worldTopDamageChestDefinition, final ChestDefinitionEntity worldFinalBlowChestDefinition, final ChestDefinitionEntity clanRaidAttemptChestDefinition, final ChestDefinitionEntity clanRaidTopDamageChestDefinition, final ChestDefinitionEntity clanRaidFinalBlowChestDefinition, final List<BossDropEntity> drops) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -633,6 +738,9 @@ public class BossDefinitionEntity {
         this.worldAttemptChestDefinition = worldAttemptChestDefinition;
         this.worldTopDamageChestDefinition = worldTopDamageChestDefinition;
         this.worldFinalBlowChestDefinition = worldFinalBlowChestDefinition;
+        this.clanRaidAttemptChestDefinition = clanRaidAttemptChestDefinition;
+        this.clanRaidTopDamageChestDefinition = clanRaidTopDamageChestDefinition;
+        this.clanRaidFinalBlowChestDefinition = clanRaidFinalBlowChestDefinition;
         this.drops = drops;
     }
 }

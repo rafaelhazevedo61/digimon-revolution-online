@@ -11,6 +11,7 @@ import com.dro.modules.clan.domain.Clan;
 import com.dro.modules.clan.domain.ClanRules;
 import com.dro.modules.clan.infra.ClanRepository;
 import com.dro.modules.clan.raid.api.dto.response.AttackClanRaidResponse;
+import com.dro.modules.clan.raid.api.dto.response.ClanRaidRewardResponse;
 import com.dro.modules.boss.api.dto.response.BossDefeatSummaryResponse;
 import com.dro.modules.clan.raid.domain.ClanRaid;
 import com.dro.modules.clan.raid.domain.ClanRaidAttack;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -46,6 +48,7 @@ public class AttackClanRaidUseCase {
     private final ClanRaidRepository clanRaidRepository;
     private final ClanRaidAttackRepository clanRaidAttackRepository;
     private final ClanRaidService clanRaidService;
+    private final ClanRaidRewardService clanRaidRewardService;
     private final DigimonPowerService digimonPowerService;
     private final ClanBonusService clanBonusService;
     private final GlobalDamageBuffService globalDamageBuffService;
@@ -128,7 +131,10 @@ public class AttackClanRaidUseCase {
         clanRaidRepository.save(raid);
         clanRaidAttackRepository.save(attack);
         if (activityCalendarService != null) activityCalendarService.recordActivity(playerId, ActivitySource.CLAN_RAID_ATTACK, attack.getId().toString());
-        return new AttackClanRaidResponse(raid.getId(), boss.getCode(), boss.getName(), actualDamage, raid.getRemainingHp(), raid.getMaxHp(), defeated, winChance, xpGained, bitsGained, clanHonorMarksGained, clanXpGained, buildDefeatSummary(raid, attack));
+        List<ClanRaidRewardResponse> rewards = clanRaidRewardService == null
+                ? List.of()
+                : clanRaidRewardService.grant(boss, raid, attack, defeated);
+        return new AttackClanRaidResponse(raid.getId(), boss.getCode(), boss.getName(), actualDamage, raid.getRemainingHp(), raid.getMaxHp(), defeated, winChance, xpGained, bitsGained, clanHonorMarksGained, clanXpGained, rewards, buildDefeatSummary(raid, attack));
     }
 
     private BossDefeatSummaryResponse buildDefeatSummary(ClanRaid raid, ClanRaidAttack finalBlow) {
@@ -159,7 +165,7 @@ public class AttackClanRaidUseCase {
         return Math.max(1, (int) Math.floor(baseCost * multiplier));
     }
 
-    public AttackClanRaidUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ClanRepository clanRepository, final BossDefinitionRepository bossDefinitionRepository, final ClanRaidRepository clanRaidRepository, final ClanRaidAttackRepository clanRaidAttackRepository, final ClanRaidService clanRaidService, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final GlobalDamageBuffService globalDamageBuffService, final GameplayConfig gameplayConfig, final ActivityCalendarService activityCalendarService) {
+    public AttackClanRaidUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ClanRepository clanRepository, final BossDefinitionRepository bossDefinitionRepository, final ClanRaidRepository clanRaidRepository, final ClanRaidAttackRepository clanRaidAttackRepository, final ClanRaidService clanRaidService, final ClanRaidRewardService clanRaidRewardService, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final GlobalDamageBuffService globalDamageBuffService, final GameplayConfig gameplayConfig, final ActivityCalendarService activityCalendarService) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.clanRepository = clanRepository;
@@ -167,6 +173,7 @@ public class AttackClanRaidUseCase {
         this.clanRaidRepository = clanRaidRepository;
         this.clanRaidAttackRepository = clanRaidAttackRepository;
         this.clanRaidService = clanRaidService;
+        this.clanRaidRewardService = clanRaidRewardService;
         this.digimonPowerService = digimonPowerService;
         this.clanBonusService = clanBonusService;
         this.globalDamageBuffService = globalDamageBuffService;
