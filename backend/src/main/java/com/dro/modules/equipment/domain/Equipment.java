@@ -46,6 +46,8 @@ public class Equipment {
     private LocalDateTime createdAt;
     @Column(nullable = false)
     private boolean equipped;
+    @Column(nullable = false)
+    private boolean locked;
 
     /**
      * Marca a peça como ocupando seu slot no Digimon.
@@ -314,6 +316,10 @@ public class Equipment {
         return this.equipped;
     }
 
+    public boolean isLocked() {
+        return this.locked;
+    }
+
     public void setId(final UUID id) {
         this.id = id;
     }
@@ -372,6 +378,10 @@ public class Equipment {
 
     public void setEquipped(final boolean equipped) {
         this.equipped = equipped;
+    }
+
+    public void setLocked(final boolean locked) {
+        this.locked = locked;
     }
 
     public Equipment() {

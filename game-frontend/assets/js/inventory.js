@@ -1,5 +1,6 @@
 let invItems = [];
 let invEquipments = [];
+let invSelectedDismantleIds = new Set();
 let invDigimonId = null;
 let invTab = "items"; // "items" or "equipment"
 let invChestOpeningInProgress = false;
@@ -1160,7 +1161,8 @@ async function invOpenEnhancementModal(equipmentId) {
   const freshTarget = equipments.find(equipment => equipment.id === equipmentId) || target;
   const targetTier = Number(freshTarget.tier) || 1;
   if (targetTier >= 10) { showToast("Este equipamento já está no tier máximo.", "error"); return; }
-  const candidates = equipments.filter(equipment => equipment.id !== equipmentId && !equipment.equipped && invExactEquipmentKey(equipment) === invExactEquipmentKey(freshTarget));
+  if (freshTarget.locked) { showToast("Destranque o equipamento antes de aprimorar.", "error"); return; }
+  const candidates = equipments.filter(equipment => equipment.id !== equipmentId && !equipment.equipped && !equipment.locked && invExactEquipmentKey(equipment) === invExactEquipmentKey(freshTarget));
   const nextTier = targetTier + 1;
   const requiredCopies = nextTier <= 5 ? 3 : nextTier <= 8 ? 4 : 5;
   const requiredMaterials = requiredCopies - 1;
@@ -1196,6 +1198,7 @@ function invCloseEnhancementModal() { document.getElementById("inventory-enhance
 function invOpenDismantleModal(equipmentId) {
   const equipment = invEquipments.find(item => item.id === equipmentId);
   if (!equipment) return;
+  if (equipment.locked) { showToast("Destranque o equipamento antes de desmontar.", "error"); return; }
   const tier = Number(equipment.tier) || 1;
   if (tier >= 10) { showToast("Equipamentos T10 não podem ser desmontados.", "error"); return; }
   const reward = invDismantleReward(tier);
@@ -1217,6 +1220,44 @@ function invOpenDismantleModal(equipmentId) {
   });
 }
 function invCloseDismantleModal() { document.getElementById("inventory-dismantle-modal")?.remove(); }
+async function invToggleEquipmentLock(equipmentId, locked) {
+  try {
+    await apiPost("/equipment/lock", { equipmentId, locked });
+    showToast(locked ? "Equipamento trancado." : "Equipamento destrancado.");
+    await invReloadEquipment();
+  } catch (err) { showToast(err.message, "error"); }
+}
+async function invSelectAllDismantlable() {
+  try {
+    const equipments = await apiGet("/equipment/inventory");
+    const eligibleIds = equipments.filter(equipment => !equipment.equipped && !equipment.locked && Number(equipment.tier) < 10).map(equipment => equipment.id);
+    const allSelected = eligibleIds.length > 0 && eligibleIds.every(id => invSelectedDismantleIds.has(id));
+    if (allSelected) eligibleIds.forEach(id => invSelectedDismantleIds.delete(id));
+    else eligibleIds.forEach(id => invSelectedDismantleIds.add(id));
+    invRenderEquipment();
+  } catch (err) { showToast(err.message, "error"); }
+}
+function invToggleDismantleSelection(equipmentId, selected) {
+  if (selected) invSelectedDismantleIds.add(equipmentId); else invSelectedDismantleIds.delete(equipmentId);
+  const count = document.getElementById("inventory-dismantle-selected-count");
+  const button = document.getElementById("inventory-dismantle-batch-button");
+  if (count) count.textContent = String(invSelectedDismantleIds.size);
+  if (button) button.disabled = invSelectedDismantleIds.size === 0;
+}
+async function invDismantleSelected() {
+  const equipmentIds = [...invSelectedDismantleIds];
+  if (!equipmentIds.length) return;
+  if (!window.confirm(`Desmontar ${equipmentIds.length} equipamento(s) selecionado(s)? Esta ação não pode ser desfeita.`)) return;
+  const button = document.getElementById("inventory-dismantle-batch-button");
+  if (button) { button.disabled = true; button.textContent = "Desmontando..."; }
+  try {
+    const result = await apiPost("/equipment/dismantle/batch", { equipmentIds });
+    invSelectedDismantleIds.clear();
+    const summary = Object.entries(result.coresGranted || {}).map(([code, quantity]) => `${quantity}x ${code}`).join(", ");
+    showToast(`Desmontagem concluída: ${summary || `${result.dismantledCount} equipamento(s)`}.`);
+    await Promise.all([invReloadEquipment(), invReloadItems()]);
+  } catch (err) { showToast(err.message, "error"); if (button) { button.disabled = false; button.textContent = "Desmontar selecionados"; } }
+}
 function invRenderEquipment() {
   const content = document.getElementById("inv-content");
   const page = invPageData.equipment;
@@ -1234,13 +1275,17 @@ function invRenderEquipment() {
     return;
   }
 
-  content.innerHTML = equipments.map(eq => {
+  const eligibleOnPage = equipments.filter(eq => !eq.equipped && !eq.locked && Number(eq.tier) < 10);
+  const allPageSelected = eligibleOnPage.length > 0 && eligibleOnPage.every(eq => invSelectedDismantleIds.has(eq.id));
+  const dismantleToolbar = `<div class="inventory-bulk-toolbar"><div><p class="text-xs uppercase tracking-wider text-orange-300 font-bold">Desmontagem em lote</p><p class="text-xs text-slate-500 mt-1">Selecione equipamentos destrancados para converter vários de uma vez.</p></div><div class="flex gap-2"><button class="btn-sm inventory-action-enhance" onclick="invSelectAllDismantlable()">${allPageSelected ? "Limpar seleção" : "Selecionar todos"}</button><button id="inventory-dismantle-batch-button" class="btn-sm inventory-action-dismantle" onclick="invDismantleSelected()" ${invSelectedDismantleIds.size === 0 ? "disabled" : ""}>Desmontar selecionados (<span id="inventory-dismantle-selected-count">${invSelectedDismantleIds.size}</span>)</button></div></div>`;
+  content.innerHTML = dismantleToolbar + equipments.map(eq => {
     const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
     const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
     const emoji = slotEmoji[eq.slot] || "⚔️";
     const refLabel = eq.refinementLevel > 0 ? ` +${eq.refinementLevel}` : "";
     const ascensionLevel = Number(eq.ascensionLevel) || 0;
     const ascensionLabel = ascensionLevel > 0 ? `<span class="badge badge-legendary">Ascensão ${ascensionLevel}</span>` : "";
+    const lockLabel = eq.locked ? '<span class="badge badge-rare">Trancado</span>' : '';
     const canAscend = !eq.equipped && ascensionLevel < 3 && Number(eq.refinementLevel) >= 11;
 
     const stats = [];
@@ -1254,7 +1299,7 @@ function invRenderEquipment() {
         <div class="inventory-equipment-body">
           <div class="inventory-equipment-heading">
             <p class="inventory-item-name" title="${escapeAttr(`${eq.name}${refLabel}`)}" aria-label="${escapeAttr(`${eq.name}${refLabel}`)}">${escapeHtml(eq.name)}${refLabel}</p>
-            ${eq.equipped ? '<span class="badge badge-success">Equipado</span>' : '<span class="inventory-equipment-state">Disponível</span>'}
+            ${eq.equipped ? '<span class="badge badge-success">Equipado</span>' : `<span class="inventory-equipment-state">Disponível</span>${lockLabel}`}
           </div>
           <div class="inventory-equipment-meta">
             ${eq.setCode ? `<span class="badge badge-${invSetBadge(eq.setCode)}">${escapeHtml(invSetLabel(eq.setCode))}</span>` : ''}
@@ -1270,7 +1315,9 @@ function invRenderEquipment() {
           ` : `
             <button class="btn-sm btn-primary" onclick="invEquip('${eq.id}')">Equipar</button>
             ${canAscend ? `<button class="btn-sm inventory-action-ascend" onclick="invOpenAscensionPreview('${eq.id}')">Ascender</button>` : ''}
-            ${Number(eq.tier) < 10 ? `<button class="btn-sm inventory-action-enhance" onclick="invOpenEnhancementModal('${eq.id}')">Aprimorar</button><button class="btn-sm inventory-action-dismantle" onclick="invOpenDismantleModal('${eq.id}')">Desmontar</button>` : ''}
+            ${!eq.locked && Number(eq.tier) < 10 ? `<button class="btn-sm inventory-action-enhance" onclick="invOpenEnhancementModal('${eq.id}')">Aprimorar</button><button class="btn-sm inventory-action-dismantle" onclick="invOpenDismantleModal('${eq.id}')">Desmontar</button>` : ''}
+            <button class="btn-sm inventory-action-lock" onclick="invToggleEquipmentLock('${eq.id}', ${!eq.locked})">${eq.locked ? "Destrancar" : "Trancar"}</button>
+            ${!eq.locked && Number(eq.tier) < 10 ? `<label class="inventory-dismantle-check" title="Selecionar para desmontagem"><input type="checkbox" ${invSelectedDismantleIds.has(eq.id) ? "checked" : ""} onchange="invToggleDismantleSelection('${eq.id}', this.checked)"> Lote</label>` : ''}
           `}
         </div>
       </article>
