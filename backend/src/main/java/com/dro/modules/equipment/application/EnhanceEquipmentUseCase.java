@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,8 +37,8 @@ public class EnhanceEquipmentUseCase {
     public EnhanceEquipmentResponse execute(String authorization, EnhanceEquipmentRequest request) {
         UUID playerId = TokenExtractor.extractPlayerId(authorization);
         if (request.materialEquipmentIds().contains(request.equipmentId())
-                || request.materialEquipmentIds().get(0).equals(request.materialEquipmentIds().get(1))) {
-            throw new ConflictException("Enhancement requires three distinct equipment copies");
+                || new HashSet<>(request.materialEquipmentIds()).size() != request.materialEquipmentIds().size()) {
+            throw new ConflictException("Enhancement requires distinct equipment copies");
         }
 
         List<UUID> ids = new ArrayList<>();
@@ -49,10 +50,13 @@ public class EnhanceEquipmentUseCase {
                         .orElseThrow(() -> new NotFoundException("Equipment not found: " + id)))
                 .toList();
         Equipment target = locked.stream().filter(e -> e.getId().equals(request.equipmentId())).findFirst().orElseThrow();
-        validateCopies(playerId, target, locked);
-
         int previousTier = target.getTier();
         int nextTier = EquipmentEnhancementRules.nextTier(previousTier);
+        int requiredCopies = EquipmentEnhancementRules.requiredCopiesForTargetTier(nextTier);
+        if (request.materialEquipmentIds().size() != requiredCopies - 1) {
+            throw new ConflictException("This enhancement requires " + requiredCopies + " total equipment copies");
+        }
+        validateCopies(playerId, target, locked);
         String coreCode = EquipmentEnhancementRules.requiredCoreCode(nextTier);
         InventoryItem core = itemDefinitionRepository.findByCode(coreCode)
                 .flatMap(definition -> inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, definition.getId()))
@@ -79,12 +83,13 @@ public class EnhanceEquipmentUseCase {
         for (Equipment equipment : copies) {
             if (!playerId.equals(equipment.getPlayerId())) throw new ConflictException("All equipment must belong to the same player");
             if (equipment.isEquipped() || equipment.getDigimonId() != null) throw new ConflictException("Equipped equipment cannot be used as enhancement material");
+            if (equipment.isLocked()) throw new ConflictException("Locked equipment cannot be used as enhancement material");
             if (!target.getName().equals(equipment.getName())
                     || target.getSetCode() == null || !target.getSetCode().equals(equipment.getSetCode())
                     || target.getSlot() != equipment.getSlot()
                     || target.getTier() != equipment.getTier()
                     || target.getRarity() != equipment.getRarity()) {
-                throw new ConflictException("Enhancement requires three exact copies of the same equipment");
+                throw new ConflictException("Enhancement requires exact copies of the same equipment");
             }
         }
     }

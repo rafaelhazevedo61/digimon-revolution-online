@@ -20,6 +20,16 @@ public final class EquipmentEnhancementRules {
         return currentTier + 1;
     }
 
+    /** Quantidade total de equipamentos, incluindo o equipamento principal, para atingir o tier. */
+    public static int requiredCopiesForTargetTier(int targetTier) {
+        if (targetTier < 2 || targetTier > MAX_TIER) {
+            throw new BadRequestException("Invalid enhancement target tier");
+        }
+        if (targetTier <= 5) return 3;
+        if (targetTier <= 8) return 4;
+        return 5;
+    }
+
     public static String requiredCoreCode(int targetTier) {
         if (targetTier < 2 || targetTier > MAX_TIER) {
             throw new BadRequestException("Invalid enhancement target tier");
