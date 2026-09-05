@@ -164,6 +164,26 @@ WHERE entry.loot_table_id = table_row.id
   AND entry.equipment_template_name = expected.equipment_template_name
   AND entry.rarity = 'LEGENDARY';
 
+-- Um ambiente pode ter duplicatas históricas da mesma entrada. Apenas a
+-- primeira linha permanece ativa para que ela não conte duas vezes na pool.
+WITH ranked_equipment AS (
+    SELECT
+        entry.id,
+        ROW_NUMBER() OVER (PARTITION BY table_row.code ORDER BY entry.id) AS row_number
+    FROM loot_table_entries entry
+    JOIN loot_tables table_row ON table_row.id = entry.loot_table_id
+    JOIN special_boss_equipment_drops expected
+      ON expected.table_code = table_row.code
+     AND expected.equipment_template_name = entry.equipment_template_name
+    WHERE entry.rarity = 'LEGENDARY'
+      AND entry.item_type = 'EQUIPMENT'
+      AND entry.active = TRUE
+)
+UPDATE loot_table_entries entry
+SET active = ranked_equipment.row_number = 1
+FROM ranked_equipment
+WHERE entry.id = ranked_equipment.id;
+
 UPDATE loot_table_entries entry
 SET active = FALSE
 FROM loot_tables table_row
