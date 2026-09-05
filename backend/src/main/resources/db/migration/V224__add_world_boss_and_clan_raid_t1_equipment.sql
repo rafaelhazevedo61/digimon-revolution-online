@@ -232,7 +232,10 @@ WHERE entry.id = scaled_entries.id;
 DO $$
 DECLARE
     equipment_count INT;
-    invalid_pools INT;
+    invalid_rarity_weights INT;
+    invalid_entry_pools INT;
+    invalid_probabilities INT;
+    invalid_details TEXT;
 BEGIN
     SELECT COUNT(*) INTO equipment_count
     FROM loot_table_entries entry
@@ -247,21 +250,96 @@ BEGIN
         RAISE EXCEPTION 'Recompensas especiais: esperadas 6 entradas de equipamento T1, encontradas %.', equipment_count;
     END IF;
 
-    SELECT COUNT(*) INTO invalid_pools
+    -- Cada tabela precisa ter 100 pontos de probabilidade entre as raridades.
+    SELECT COUNT(*) INTO invalid_rarity_weights
     FROM (
         SELECT table_row.code
-        FROM loot_table_entries entry
-        JOIN loot_tables table_row ON table_row.id = entry.loot_table_id
-        WHERE entry.active = TRUE
-          AND entry.rarity = 'LEGENDARY'
-          AND (table_row.code LIKE 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_%'
-               OR table_row.code LIKE 'LOOT_TABLE_CLAN_RAID_OMEGAMON_%')
+        FROM loot_table_rarity_weights rarity_weight
+        JOIN loot_tables table_row ON table_row.id = rarity_weight.loot_table_id
+        WHERE table_row.code LIKE 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_%'
+           OR table_row.code LIKE 'LOOT_TABLE_CLAN_RAID_OMEGAMON_%'
         GROUP BY table_row.code
-        HAVING SUM(entry.weight) <> 100
-    ) invalid;
+        HAVING SUM(rarity_weight.weight) <> 100
+    ) invalid_rarity;
 
-    IF invalid_pools > 0 THEN
-        RAISE EXCEPTION 'Recompensas especiais: % pool(s) lendária(s) não somam 100.', invalid_pools;
+    -- Cada pool interna de uma raridade também precisa somar 100 pontos.
+    SELECT COUNT(*) INTO invalid_entry_pools
+    FROM (
+        SELECT
+            table_row.code,
+            rarity_weight.rarity,
+            rarity_weight.weight AS rarity_probability,
+            COALESCE(SUM(entry.weight), 0) AS entry_probability
+        FROM loot_table_rarity_weights rarity_weight
+        JOIN loot_tables table_row ON table_row.id = rarity_weight.loot_table_id
+        LEFT JOIN loot_table_entries entry
+          ON entry.loot_table_id = table_row.id
+         AND entry.rarity = rarity_weight.rarity
+         AND entry.active = TRUE
+        WHERE table_row.code LIKE 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_%'
+           OR table_row.code LIKE 'LOOT_TABLE_CLAN_RAID_OMEGAMON_%'
+        GROUP BY table_row.code, rarity_weight.rarity, rarity_weight.weight
+        HAVING COALESCE(SUM(entry.weight), 0) <> 100
+    ) invalid_entries;
+
+    -- Valida a probabilidade efetiva de cada tabela:
+    -- (peso da raridade × peso da entrada) / 100.
+    SELECT COUNT(*) INTO invalid_probabilities
+    FROM (
+        SELECT
+            table_row.code,
+            SUM(rarity_weight.weight::NUMERIC * entry.weight::NUMERIC) / 100 AS total_probability
+        FROM loot_table_rarity_weights rarity_weight
+        JOIN loot_tables table_row ON table_row.id = rarity_weight.loot_table_id
+        JOIN loot_table_entries entry
+          ON entry.loot_table_id = table_row.id
+         AND entry.rarity = rarity_weight.rarity
+         AND entry.active = TRUE
+        WHERE table_row.code LIKE 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_%'
+           OR table_row.code LIKE 'LOOT_TABLE_CLAN_RAID_OMEGAMON_%'
+        GROUP BY table_row.code
+        HAVING SUM(rarity_weight.weight::NUMERIC * entry.weight::NUMERIC) / 100 <> 100
+    ) invalid_probability;
+
+    IF invalid_rarity_weights > 0 OR invalid_entry_pools > 0 OR invalid_probabilities > 0 THEN
+        SELECT string_agg(details, '; ')
+        INTO invalid_details
+        FROM (
+            SELECT format('rarity_weights=%s', string_agg(table_row.code, ', ')) AS details
+            FROM loot_table_rarity_weights rarity_weight
+            JOIN loot_tables table_row ON table_row.id = rarity_weight.loot_table_id
+            WHERE table_row.code LIKE 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_%'
+               OR table_row.code LIKE 'LOOT_TABLE_CLAN_RAID_OMEGAMON_%'
+            GROUP BY table_row.code
+            HAVING SUM(rarity_weight.weight) <> 100
+            UNION ALL
+            SELECT format('entry_pool=%s/%s (%s)', table_row.code, rarity_weight.rarity, COALESCE(SUM(entry.weight), 0))
+            FROM loot_table_rarity_weights rarity_weight
+            JOIN loot_tables table_row ON table_row.id = rarity_weight.loot_table_id
+            LEFT JOIN loot_table_entries entry
+              ON entry.loot_table_id = table_row.id
+             AND entry.rarity = rarity_weight.rarity
+             AND entry.active = TRUE
+            WHERE table_row.code LIKE 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_%'
+               OR table_row.code LIKE 'LOOT_TABLE_CLAN_RAID_OMEGAMON_%'
+            GROUP BY table_row.code, rarity_weight.rarity
+            HAVING COALESCE(SUM(entry.weight), 0) <> 100
+            UNION ALL
+            SELECT format('probability=%s (%s)', table_row.code, SUM(rarity_weight.weight::NUMERIC * entry.weight::NUMERIC) / 100)
+            FROM loot_table_rarity_weights rarity_weight
+            JOIN loot_tables table_row ON table_row.id = rarity_weight.loot_table_id
+            JOIN loot_table_entries entry
+              ON entry.loot_table_id = table_row.id
+             AND entry.rarity = rarity_weight.rarity
+             AND entry.active = TRUE
+            WHERE table_row.code LIKE 'LOOT_TABLE_BOSS_WORLD_APOCALYMON_%'
+               OR table_row.code LIKE 'LOOT_TABLE_CLAN_RAID_OMEGAMON_%'
+            GROUP BY table_row.code
+            HAVING SUM(rarity_weight.weight::NUMERIC * entry.weight::NUMERIC) / 100 <> 100
+        ) diagnostics;
+
+        RAISE EXCEPTION 'Recompensas especiais: probabilidades inválidas (%). Rarity weights=%; pools internas=%; probabilidade efetiva=%',
+            COALESCE(invalid_details, 'sem detalhes'), invalid_rarity_weights, invalid_entry_pools, invalid_probabilities;
     END IF;
 END $$;
 
