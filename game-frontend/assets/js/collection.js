@@ -1,16 +1,18 @@
 let collectionSummary = null;
 let collectionDigimons = [];
 let collectionInventory = [];
+let collectionEvolutionLines = [];
 
 async function renderCollectionPage() {
   const app = document.getElementById("app");
   showBottomNav("more");
   app.innerHTML = `<div class="page-container"><div class="flex items-center justify-between mb-4"><div><h2 class="text-lg font-bold">Coleção</h2><p class="text-xs text-slate-400">Registre Digimons usando um Digivice.</p></div><div class="flex items-center gap-2"><button class="btn-sm btn-primary" onclick="collectionOpenAlbum()">Álbum completo</button><button class="btn-sm" onclick="navigateTo('more')">Voltar</button></div></div><div class="card grid grid-cols-2 divide-x divide-slate-700 p-0 overflow-hidden"><div class="flex min-h-24 flex-col items-center justify-center px-4 py-4 text-center"><p class="text-3xl font-black leading-none text-cyan-400" id="collection-points">—</p><p class="mt-2 text-xs text-slate-400">Pontos de coleção</p></div><div class="flex min-h-24 flex-col items-center justify-center px-4 py-4 text-center"><p class="text-3xl font-black leading-none text-fuchsia-300" id="collection-digivices">—</p><p class="mt-2 text-xs text-slate-400">Digivices de Registro</p></div></div><div class="card mt-3 grid grid-cols-2 divide-x divide-slate-700 p-0 overflow-hidden"><div class="flex flex-col items-center justify-center px-4 py-3 text-center"><p class="text-xl font-black text-cyan-300" id="collection-added">— / —</p><p class="text-xs text-slate-400">Digimons adicionados</p></div><div class="flex flex-col items-center justify-center px-4 py-3 text-center"><p class="text-xl font-black text-amber-300" id="collection-completed">—</p><p class="text-xs text-slate-400">Digimons completos</p><p class="text-[10px] text-slate-500">4 raridades registradas</p></div></div><div id="collection-milestones" class="card mt-3"></div><div class="card mt-3"><h3 class="font-bold mb-2">Digimons disponíveis para registro</h3><p class="text-xs text-slate-400 mb-3">Somente Digimons que estão no seu Armazém Digimon aparecem nesta lista.</p><div class="flex w-full items-center gap-2 mb-3"><input id="collection-search" class="input flex-1 min-w-0" type="search" placeholder="Buscar por nome" autocomplete="off" onkeydown="if (event.key === 'Enter') collectionApplySearch()" /><button type="button" class="btn-primary shrink-0" onclick="collectionApplySearch()">Buscar</button></div><select id="collection-filter" class="input w-full mb-3" onchange="collectionApplySearch()"><option value="ALL">Todos os Digimons do Storage</option><option value="ELIGIBLE">Apenas elegíveis para registro</option><option value="REGISTERED">Já registrados</option><option value="LOCKED">Trancados</option></select><p class="text-xs text-amber-200 mb-3">O Digivice e o Digimon serão consumidos permanentemente. Duplicatas não geram pontos.</p><div id="collection-digimons"><p class="text-sm text-slate-400">Carregando o Storage...</p></div></div><div id="collection-entries" class="card mt-3"></div></div>`;
   try {
-    const [summary, digimons, inventory] = await Promise.all([apiGet("/collection"), apiGet("/digimon/storage"), apiGet("/inventory")]);
+    const [summary, digimons, inventory, evolutionLines] = await Promise.all([apiGet("/collection"), apiGet("/digimon/storage"), apiGet("/inventory"), apiGet("/evolution-lines/available")]);
     collectionSummary = summary;
     collectionDigimons = digimons || [];
     collectionInventory = inventory || [];
+    collectionEvolutionLines = evolutionLines || [];
     collectionRenderSummary(summary);
     collectionRenderDigimons();
   } catch (err) {
@@ -88,6 +90,16 @@ async function collectionOpenAlbum() {
   }
 }
 
+function collectionEvolutionLinesForDigimon(digimonInfoId) {
+  return collectionEvolutionLines.filter(line => (line.steps || []).some(step => Number(step.digimonInfoId) === Number(digimonInfoId)));
+}
+
+function collectionRenderEvolutionLines(digimonInfoId) {
+  const lines = collectionEvolutionLinesForDigimon(digimonInfoId);
+  if (!lines.length) return '<p class="text-[10px] text-slate-500 mt-2">Nenhuma linha evolutiva cadastrada.</p>';
+  return `<div class="mt-3 border-t border-slate-700/70 pt-3"><p class="text-[10px] uppercase tracking-wider text-cyan-300 font-bold mb-2">Linhas evolutivas possíveis</p><div class="space-y-2">${lines.map(line => `<div class="rounded-lg border border-cyan-900/60 bg-cyan-950/20 p-2"><p class="text-xs font-semibold text-slate-200">${escapeHtml(line.name || line.code || "Linha evolutiva")}</p><div class="mt-2 flex items-center gap-1 overflow-x-auto pb-1">${(line.steps || []).map((step, index) => `<div class="flex items-center gap-1 shrink-0"><div class="flex items-center gap-1 rounded-md bg-slate-900/70 px-1.5 py-1" title="${escapeAttr(step.digimon || "Digimon")}">${renderDigimonVisual(step.imageUrl, step.stage, "w-7 h-7", "text-lg")}<span class="text-[10px] max-w-16 truncate">${escapeHtml(step.digimon || "Digimon")}</span></div>${index < line.steps.length - 1 ? '<span class="text-cyan-400 text-xs" aria-hidden="true">→</span>' : ""}</div>`).join("")}</div></div>`).join("")}</div></div>`;
+}
+
 function collectionRenderAlbum() {
   const target = document.getElementById("collection-album-content");
   if (!target) return;
@@ -97,7 +109,7 @@ function collectionRenderAlbum() {
   const count = document.getElementById("collection-album-count");
   if (count) count.textContent = `${items.length} Digimon(s)`;
   const rarities = [["COMMON", "Comum", "rarity-box-common"], ["RARE", "Rara", "rarity-box-rare"], ["EPIC", "Épica", "rarity-box-epic"], ["LEGENDARY", "Lendária", "rarity-box-legendary"]];
-  target.innerHTML = items.length ? `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${items.map(item => { const masteryComplete = rarities.every(([code]) => entries.has(`${item.id}:${code}`)); return `<div class="rounded-xl border ${masteryComplete ? "border-amber-500/70 bg-amber-950/20" : "border-slate-700 bg-slate-900/60"} p-3"><div class="flex items-center gap-2 mb-3"><div class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">${renderDigimonVisual(item.imageUrl, item.stage, "w-full h-full", "text-2xl")}</div><div class="min-w-0 flex-1"><div class="flex items-center justify-between gap-2"><p class="font-bold truncate">${escapeHtml(item.name)}</p>${masteryComplete ? '<span class="badge badge-legendary whitespace-nowrap">Maestria adquirida</span>' : ""}</div><p class="text-xs text-slate-500">${escapeHtml(item.stage)}</p></div></div><div class="grid grid-cols-4 gap-1.5">${rarities.map(([code, label, rarityClass]) => { const registered = entries.has(`${item.id}:${code}`); return `<div class="${rarityClass} rounded-lg border p-1.5 text-center ${registered ? "opacity-100" : "opacity-50 grayscale"}" title="${registered ? "Registrado" : "Ainda não registrado"}"><div class="aspect-square rounded bg-slate-950/60 flex items-center justify-center overflow-hidden">${renderDigimonVisual(item.imageUrl, item.stage, "w-full h-full", "text-2xl")}</div><p class="text-[9px] font-semibold mt-1 truncate">${label}</p><p class="text-[10px]">${registered ? "✓" : "—"}</p></div>`; }).join("")}</div></div>`; }).join("")}</div>` : '<p class="text-sm text-slate-400 text-center py-8">Nenhum Digimon corresponde à busca.</p>';
+  target.innerHTML = items.length ? `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${items.map(item => { const masteryComplete = rarities.every(([code]) => entries.has(`${item.id}:${code}`)); return `<div class="rounded-xl border ${masteryComplete ? "border-amber-500/70 bg-amber-950/20" : "border-slate-700 bg-slate-900/60"} p-3"><div class="flex items-center gap-2 mb-3"><div class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">${renderDigimonVisual(item.imageUrl, item.stage, "w-full h-full", "text-2xl")}</div><div class="min-w-0 flex-1"><div class="flex items-center justify-between gap-2"><p class="font-bold truncate">${escapeHtml(item.name)}</p>${masteryComplete ? '<span class="badge badge-legendary whitespace-nowrap">Maestria adquirida</span>' : ""}</div><p class="text-xs text-slate-500">${escapeHtml(item.stage)}</p></div></div><div class="grid grid-cols-4 gap-1.5">${rarities.map(([code, label, rarityClass]) => { const registered = entries.has(`${item.id}:${code}`); return `<div class="${rarityClass} rounded-lg border p-1.5 text-center ${registered ? "opacity-100" : "opacity-50 grayscale"}" title="${registered ? "Registrado" : "Ainda não registrado"}"><div class="aspect-square rounded bg-slate-950/60 flex items-center justify-center overflow-hidden">${renderDigimonVisual(item.imageUrl, item.stage, "w-full h-full", "text-2xl")}</div><p class="text-[9px] font-semibold mt-1 truncate">${label}</p><p class="text-[10px]">${registered ? "✓" : "—"}</p></div>`; }).join("")}</div>${collectionRenderEvolutionLines(item.id)}</div>`; }).join("")}</div>` : '<p class="text-sm text-slate-400 text-center py-8">Nenhum Digimon corresponde à busca.</p>';
 }
 
 function collectionCloseAlbum() {
