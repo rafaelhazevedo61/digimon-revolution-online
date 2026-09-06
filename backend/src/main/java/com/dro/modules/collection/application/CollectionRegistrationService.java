@@ -3,6 +3,7 @@ package com.dro.modules.collection.application;
 import com.dro.modules.collection.domain.CollectionEntry;
 import com.dro.modules.collection.infra.CollectionEntryRepository;
 import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.domain.ItemType;
@@ -10,11 +11,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class CollectionRegistrationService {
     private static final int[] MILESTONES = {10, 50, 100, 150, 200, 250, 300};
+    private static final Set<DigimonStatus> OWNED_STATUSES = EnumSet.of(
+            DigimonStatus.ACTIVE,
+            DigimonStatus.STORED,
+            DigimonStatus.HATCHED
+    );
 
     private final CollectionEntryRepository collectionRepository;
     private final DigimonRepository digimonRepository;
@@ -69,6 +77,9 @@ public class CollectionRegistrationService {
     public int syncOwnedDigimons(UUID playerId) {
         int registered = 0;
         for (Digimon digimon : digimonRepository.findByPlayerId(playerId)) {
+            if (!OWNED_STATUSES.contains(digimon.getStatus())) {
+                continue;
+            }
             if (registerIfMissing(digimon, "OWNED_DIGIMON_SYNC")) {
                 registered++;
             }
