@@ -60,7 +60,7 @@ function renderMissionTeamCard(team, digimonById, activeMissionDigimonIds = new 
   const members = (team.digimonIds || []).map(id => digimonById.get(String(id))).filter(Boolean);
   const unavailable = members.some(digimon => activeMissionDigimonIds.has(String(digimon.id)));
   return `
-    <article class="card border-slate-700 bg-slate-900/40">
+    <article class="card flex h-full flex-col border-slate-700 bg-slate-900/40">
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
           <p class="text-xs font-bold uppercase tracking-wider text-cyan-400">Formação de missão</p>
@@ -69,10 +69,10 @@ function renderMissionTeamCard(team, digimonById, activeMissionDigimonIds = new 
         </div>
         <span class="rounded-full border ${unavailable ? "border-amber-800 bg-amber-950/30 text-amber-300" : "border-emerald-800 bg-emerald-950/30 text-emerald-300"} px-2 py-1 text-[0.58rem] font-bold uppercase tracking-wider">${unavailable ? "Ocupado" : "Pronto"}</span>
       </div>
-      <div class="mt-4 space-y-2">
+      <div class="mt-4 grid grid-cols-1 gap-2 xl:grid-cols-3">
         ${[0, 1, 2].map(index => renderMissionTeamMember(members[index], team.captainDigimonId)).join("")}
       </div>
-      <div class="mt-4 grid grid-cols-2 gap-2">
+      <div class="mt-auto grid grid-cols-2 gap-2 pt-5">
         <button type="button" class="btn-secondary w-full text-xs" onclick="openMissionTeamEditor('${escapeAttr(team.id)}')">Editar</button>
         <button type="button" class="btn-secondary w-full text-xs" onclick="deleteMissionTeam('${escapeAttr(team.id)}')">Excluir</button>
       </div>
@@ -84,8 +84,8 @@ async function renderMissionTeamsPage() {
   const app = document.getElementById("app");
   showBottomNav("more");
   app.innerHTML = `
-    <div class="page-container">
-      <header class="mb-4 flex items-start justify-between gap-3 border-b border-slate-800 pb-4">
+    <div class="page-container mission-teams-page">
+      <header class="mb-4 flex items-start justify-between gap-3 border-b border-slate-800 pb-4 lg:items-end">
         <div>
           <button class="progression-back-button mb-3" onclick="navigateTo('missions')"><span aria-hidden="true">←</span> Voltar às missões</button>
           <p class="progression-eyebrow progression-eyebrow-cyan">Preparação de campo</p>
@@ -94,11 +94,11 @@ async function renderMissionTeamsPage() {
         </div>
         <button type="button" class="btn-primary shrink-0 text-xs" onclick="openMissionTeamEditor()">Novo time</button>
       </header>
-      <section class="mb-4 rounded-xl border border-cyan-800/70 bg-cyan-950/20 p-3">
+      <section class="mb-5 rounded-xl border border-cyan-800/70 bg-cyan-950/20 p-3 lg:flex lg:items-center lg:justify-between lg:gap-8 lg:p-4">
         <p class="text-sm font-bold text-cyan-200">Como funciona</p>
         <p class="mt-1 text-xs leading-relaxed text-slate-400">Cada missão envia o time inteiro e ocupa um dos três slots paralelos. O Digimon ativo do dashboard é independente dos times.</p>
       </section>
-      <div id="mission-teams-list" class="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div id="mission-teams-list" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         <div class="card h-48 animate-pulse"></div>
         <div class="card h-48 animate-pulse"></div>
       </div>
@@ -113,7 +113,7 @@ async function renderMissionTeamsPage() {
     const activeMissionDigimonIds = new Set(context.activeMissions.flatMap(mission => mission.digimonIds || [] ).map(String));
     if (context.teams.length === 0) {
       container.innerHTML = `
-        <div class="card border-dashed border-cyan-800 bg-cyan-950/15 text-center md:col-span-2">
+        <div class="card border-dashed border-cyan-800 bg-cyan-950/15 text-center md:col-span-2 xl:col-span-3 2xl:col-span-4">
           <p class="text-3xl">◈</p>
           <p class="mt-2 font-bold text-slate-100">Você ainda não criou um time</p>
           <p class="mt-1 text-sm text-slate-400">Monte sua primeira formação com até três Digimons para começar a enviar missões.</p>
@@ -125,7 +125,7 @@ async function renderMissionTeamsPage() {
     container.innerHTML = context.teams.map(team => renderMissionTeamCard(team, digimonById, activeMissionDigimonIds)).join("");
   } catch (error) {
     const container = document.getElementById("mission-teams-list");
-    if (container) container.innerHTML = `<div class="card border-red-900 md:col-span-2"><p class="text-red-300">${escapeHtml(error.message)}</p></div>`;
+    if (container) container.innerHTML = `<div class="card border-red-900 md:col-span-2 xl:col-span-3 2xl:col-span-4"><p class="text-red-300">${escapeHtml(error.message)}</p></div>`;
   }
 }
 
