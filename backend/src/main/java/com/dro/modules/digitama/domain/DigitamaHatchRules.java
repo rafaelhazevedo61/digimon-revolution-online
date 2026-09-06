@@ -26,12 +26,12 @@ public class DigitamaHatchRules {
     );
 
     private static final Map<DigitamaType, List<String>> HATCH_TABLE = Map.ofEntries(
-            Map.entry(DigitamaType.STARTER, List.of("Botamon", "Pichimon", "Pabumon", "Punimon", "Poyomon", "Yuramon")),
+            Map.entry(DigitamaType.STARTER, List.of("Botamon", "Pitchmon", "Bubbmon", "Punimon", "Poyomon", "Yuramon")),
             Map.entry(DigitamaType.FIRE, List.of("Bombmon", "Bommon", "Jyarimon", "Mokumon", "Peti Meramon")),
-            Map.entry(DigitamaType.WATER, List.of("Punimon", "Pichimon", "Bubbmon", "Fukamon", "Kekomon", "Pitchmon", "Pururumon", "Puyomon")),
+            Map.entry(DigitamaType.WATER, List.of("Punimon", "Bubbmon", "Fukamon", "Kekomon", "Pitchmon", "Pururumon", "Puyomon")),
             Map.entry(DigitamaType.NATURE, List.of("Yuramon", "Leafmon", "Nyokimon", "Popomon")),
             Map.entry(DigitamaType.EARTH, List.of("Cotsucomon", "Sakumon", "Sunamon", "Tsubumon")),
-            Map.entry(DigitamaType.WIND, List.of("Pabumon", "Chibickmon", "Fusamon", "Pafumon", "Pipimon", "Pupumon", "Puwamon")),
+            Map.entry(DigitamaType.WIND, List.of("Bubbmon", "Chibickmon", "Fusamon", "Pafumon", "Pipimon", "Pupumon", "Puwamon")),
             Map.entry(DigitamaType.LIGHT, List.of("Poyomon", "Chicomon", "Fufumon", "Ketomon", "Petitmon", "Pusumon", "Puttimon", "Relemon", "Yolkmon")),
             Map.entry(DigitamaType.DARK, List.of("Algomon Baby I", "Dodomon", "Keemon", "Kuramon", "Zurumon")),
             Map.entry(DigitamaType.THUNDER, List.of("Choromon", "Dokimon")),

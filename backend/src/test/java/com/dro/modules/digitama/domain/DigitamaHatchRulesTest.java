@@ -20,8 +20,8 @@ class DigitamaHatchRulesTest {
     @Test
     void getPossibleBabies_water_returnsOnlyWaterBabies() {
         List<String> babies = DigitamaHatchRules.getPossibleBabies(DigitamaType.WATER);
-        assertEquals(8, babies.size());
-        assertTrue(babies.containsAll(List.of("Punimon", "Pichimon", "Bubbmon", "Fukamon", "Kekomon", "Pitchmon", "Pururumon", "Puyomon")));
+        assertEquals(7, babies.size());
+        assertTrue(babies.containsAll(List.of("Punimon", "Bubbmon", "Fukamon", "Kekomon", "Pitchmon", "Pururumon", "Puyomon")));
     }
 
     @Test
@@ -51,7 +51,7 @@ class DigitamaHatchRulesTest {
     void rollBabyName_water_returnsValidBaby() {
         for (int i = 0; i < 50; i++) {
             String name = DigitamaHatchRules.rollBabyName(DigitamaType.WATER);
-            assertTrue(List.of("Punimon", "Pichimon", "Bubbmon", "Fukamon", "Kekomon", "Pitchmon", "Pururumon", "Puyomon").contains(name),
+            assertTrue(List.of("Punimon", "Bubbmon", "Fukamon", "Kekomon", "Pitchmon", "Pururumon", "Puyomon").contains(name),
                     "Expected a water BABY but got: " + name);
         }
     }
