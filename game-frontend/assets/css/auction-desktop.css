@@ -58,8 +58,20 @@
   /* Publication type buttons form their own equal-width row, not the market filters. */
   .page-container:has(#auction-content) #auction-content > .card:first-child:not(:has(#auction-search)) > .grid.grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    width: min(28rem, 100%);
+    width: 100%;
+    max-width: 70rem;
+    margin-left: auto;
+    margin-right: auto;
     align-items: stretch;
+  }
+
+  .page-container:has(#auction-content) #auction-content > .card:first-child:not(:has(#auction-search)) > .grid.grid-cols-2 > button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    min-width: 0;
   }
 
   /* Listing cards gain breathing room without becoming excessively tall. */
