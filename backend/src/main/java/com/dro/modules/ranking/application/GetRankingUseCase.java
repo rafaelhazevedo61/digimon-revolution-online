@@ -75,7 +75,7 @@ public class GetRankingUseCase {
 
         digimons.sort(Comparator
                 .comparingDouble((Digimon d) -> powers.getOrDefault(d.getId(), 0.0)).reversed()
-                .thenComparingInt(Digimon::getLevel).reversed()
+                .thenComparing(Comparator.comparingInt(Digimon::getLevel).reversed())
                 .thenComparing(Digimon::getName, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)));
 
         List<RankingEntryResponse> entries = buildEntries(digimons, powers);
