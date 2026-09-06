@@ -3,7 +3,6 @@ package com.dro.modules.loot.application;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.equipment.application.GrantEquipmentUseCase;
-import com.dro.modules.equipment.domain.EquipmentRarity;
 import com.dro.modules.equipment.domain.EquipmentRarityRules;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemDefinition;
@@ -31,12 +30,13 @@ import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -72,13 +72,14 @@ public class OpenChestUseCase {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         validateRequest(request);
         int quantity = request.requestedQuantity();
+        boolean ignoreMaxStackItems = request.shouldIgnoreMaxStackItems();
         // Serialize all inventory mutations for this player before checking idempotency.
         // A retry therefore observes the opening after the first transaction commits.
         Player player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         ChestOpeningEntity previousOpening = chestOpeningRepository.findByRequestId(request.requestId()).orElse(null);
         if (previousOpening != null) {
             validateRetryOwnership(previousOpening, playerId, request.chestCode());
-            return toResponse(previousOpening, true);
+            return toResponse(previousOpening, true, List.of());
         }
         Digimon activeDigimon = findLockedActiveDigimon(player, playerId);
         ChestDefinitionEntity chest = chestDefinitionRepository.findWithCatalogByCode(request.chestCode()).filter(ChestDefinitionEntity::isActive).orElseThrow(() -> new NotFoundException("Chest not found or inactive"));
@@ -88,6 +89,9 @@ public class OpenChestUseCase {
         }
 
         List<ChestOpeningItemEntity> openingItems = new ArrayList<>();
+        // Nomes dos itens cujo excedente foi descartado por já estarem no limite máximo de estoque
+        // (preserva ordem de ocorrência e evita duplicatas quando o mesmo item estoura em rolagens diferentes).
+        Set<String> itemsAtStackLimit = new LinkedHashSet<>();
         LootRarity primaryRarity = null;
         for (int index = 0; index < quantity; index++) {
             ChestLootRoller.ChestLootRoll roll = chestLootRoller.roll(chest.getLootTable());
@@ -96,8 +100,13 @@ public class OpenChestUseCase {
             }
             for (ChestLootRoller.ChestLootItem reward : roll.items()) {
                 ChestLootRoller.ChestLootItem resolvedReward = resolveEquipmentRarity(reward);
-                creditReward(playerId, activeDigimon, resolvedReward);
-                mergeOpeningItem(openingItems, resolvedReward);
+                CreditResult creditResult = creditReward(playerId, activeDigimon, resolvedReward, ignoreMaxStackItems);
+                if (creditResult.stackLimitReached()) {
+                    itemsAtStackLimit.add(creditResult.itemName());
+                }
+                if (creditResult.quantity() > 0) {
+                    mergeOpeningItem(openingItems, resolvedReward, creditResult.quantity());
+                }
             }
         }
         consumeChest(chestInventory, quantity);
@@ -113,8 +122,22 @@ public class OpenChestUseCase {
                 .build();
         openingItems.forEach(item -> item.setChestOpening(openingToPersist));
         ChestOpeningEntity opening = chestOpeningRepository.saveAndFlush(openingToPersist);
-        transactionAuditPublisher.success("chest-opening:" + opening.getId(), "CHEST_OPENED", "ChestOpening", String.valueOf(opening.getId()), buildAuditPayload(opening, activeDigimon));
-        return toResponse(opening, false);
+        transactionAuditPublisher.success("chest-opening:" + opening.getId(), "CHEST_OPENED", "ChestOpening", String.valueOf(opening.getId()), buildAuditPayload(opening, activeDigimon, itemsAtStackLimit));
+        return toResponse(opening, false, List.copyOf(itemsAtStackLimit));
+    }
+
+    /**
+     * Resultado do crédito de uma recompensa individual ao inventário.
+     *
+     * @param quantity quantidade efetivamente creditada (pode ser menor que a sorteada
+     *                 quando {@code ignoreMaxStackItems} está ativo e o estoque estava perto do limite)
+     * @param stackLimitReached {@code true} quando parte ou todo o excedente foi descartado por limite de estoque
+     * @param itemName nome do item afetado, usado apenas quando {@code stackLimitReached} é {@code true}
+     */
+    private record CreditResult(int quantity, boolean stackLimitReached, String itemName) {
+        private static CreditResult full(int quantity) {
+            return new CreditResult(quantity, false, null);
+        }
     }
 
     private void validateRequest(OpenChestRequest request) {
@@ -150,31 +173,42 @@ public class OpenChestUseCase {
         return new ChestLootRoller.ChestLootItem(reward.rarity(), reward.itemType(), reward.materialCode(), reward.equipmentTemplateName(), EquipmentRarityRules.rollRarity(), reward.quantity());
     }
 
-    private void creditReward(UUID playerId, Digimon activeDigimon, ChestLootRoller.ChestLootItem reward) {
+    private CreditResult creditReward(UUID playerId, Digimon activeDigimon, ChestLootRoller.ChestLootItem reward, boolean ignoreMaxStackItems) {
         if (reward.itemType() == ItemType.EQUIPMENT) {
             if (grantEquipmentUseCase == null) {
                 throw new UnprocessableException("O suporte a recompensas de equipamento não está configurado.");
             }
             grantEquipmentUseCase.execute(activeDigimon.getId(), reward.equipmentTemplateName(), reward.equipmentRarity());
-            return;
+            return CreditResult.full(reward.quantity());
         }
         String itemCode = reward.materialCode() == null ? reward.itemType().name() : reward.materialCode();
         ItemDefinition itemDefinition = itemDefinitionRepository.findByCode(itemCode).orElseThrow(() -> new UnprocessableException("Reward item is not defined: " + itemCode));
         InventoryItem inventoryItem = inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, itemDefinition.getId()).orElse(null);
         int currentQuantity = inventoryItem == null ? 0 : inventoryItem.getQuantity();
         int newQuantity = currentQuantity + reward.quantity();
+        int creditedQuantity = reward.quantity();
+        boolean stackLimitReached = false;
         if (itemDefinition.getMaxStack() != null && newQuantity > itemDefinition.getMaxStack()) {
-            throw new UnprocessableException("Não é possível exceder o limite máximo de " + itemDefinition.getMaxStack() + " unidades para o item " + itemDefinition.getName() + ".");
+            if (!ignoreMaxStackItems) {
+                throw new UnprocessableException("Não é possível exceder o limite máximo de " + itemDefinition.getMaxStack() + " unidades para o item " + itemDefinition.getName() + ".");
+            }
+            // Jogador optou por ignorar o limite: credita só o que couber e descarta o excedente.
+            stackLimitReached = true;
+            creditedQuantity = Math.max(0, itemDefinition.getMaxStack() - currentQuantity);
+            newQuantity = currentQuantity + creditedQuantity;
         }
-        if (inventoryItem == null) {
-            inventoryRepository.save(InventoryItem.builder().id(UUID.randomUUID()).playerId(playerId).itemType(reward.itemType()).itemDefinition(itemDefinition).quantity(reward.quantity()).build());
-        } else {
-            inventoryItem.setQuantity(newQuantity);
-            inventoryRepository.save(inventoryItem);
+        if (creditedQuantity > 0) {
+            if (inventoryItem == null) {
+                inventoryRepository.save(InventoryItem.builder().id(UUID.randomUUID()).playerId(playerId).itemType(reward.itemType()).itemDefinition(itemDefinition).quantity(creditedQuantity).build());
+            } else {
+                inventoryItem.setQuantity(newQuantity);
+                inventoryRepository.save(inventoryItem);
+            }
         }
+        return new CreditResult(creditedQuantity, stackLimitReached, itemDefinition.getName());
     }
 
-    private void mergeOpeningItem(List<ChestOpeningItemEntity> openingItems, ChestLootRoller.ChestLootItem reward) {
+    private void mergeOpeningItem(List<ChestOpeningItemEntity> openingItems, ChestLootRoller.ChestLootItem reward, int creditedQuantity) {
         ChestOpeningItemEntity existing = openingItems.stream()
                 .filter(item -> item.getRarity() == reward.rarity()
                         && item.getItemType() == reward.itemType()
@@ -190,10 +224,10 @@ public class OpenChestUseCase {
                     .materialCode(reward.materialCode())
                     .equipmentTemplateName(reward.equipmentTemplateName())
                     .equipmentRarity(reward.equipmentRarity())
-                    .quantity(reward.quantity())
+                    .quantity(creditedQuantity)
                     .build());
         } else {
-            existing.setQuantity(existing.getQuantity() + reward.quantity());
+            existing.setQuantity(existing.getQuantity() + creditedQuantity);
         }
     }
 
@@ -207,7 +241,7 @@ public class OpenChestUseCase {
         }
     }
 
-    private Map<String, Object> buildAuditPayload(ChestOpeningEntity opening, Digimon digimon) {
+    private Map<String, Object> buildAuditPayload(ChestOpeningEntity opening, Digimon digimon, Set<String> itemsAtStackLimit) {
         List<Map<String, Object>> items = opening.getItems().stream().map(item -> {
             Map<String, Object> reward = new LinkedHashMap<>();
             reward.put("rarity", item.getRarity().name());
@@ -222,14 +256,27 @@ public class OpenChestUseCase {
             }
             return reward;
         }).toList();
-        return Map.of("module", "loot", "operation", "openChest", "playerId", opening.getPlayerId().toString(), "digimonId", digimon.getId().toString(), "requestId", opening.getRequestId(), "chestCode", opening.getChestDefinition().getCode(), "chestQuantity", opening.getQuantity(), "rarity", opening.getRarity().name(), "items", items, "summary", "Chest opened successfully");
+        Map<String, Object> payload = new LinkedHashMap<>(Map.of("module", "loot", "operation", "openChest", "playerId", opening.getPlayerId().toString(), "digimonId", digimon.getId().toString(), "requestId", opening.getRequestId(), "chestCode", opening.getChestDefinition().getCode(), "chestQuantity", opening.getQuantity(), "rarity", opening.getRarity().name()));
+        payload.put("items", items);
+        payload.put("summary", "Chest opened successfully");
+        if (!itemsAtStackLimit.isEmpty()) {
+            payload.put("itemsAtStackLimit", List.copyOf(itemsAtStackLimit));
+        }
+        return payload;
     }
 
-    private ChestOpeningResponse toResponse(ChestOpeningEntity opening, boolean replayed) {
+    private ChestOpeningResponse toResponse(ChestOpeningEntity opening, boolean replayed, List<String> itemsAtStackLimit) {
         List<ChestOpeningItemResponse> items = opening.getItems().stream().map(this::toItemResponse).toList();
         ChestDefinitionEntity chest = opening.getChestDefinition();
-        String message = replayed ? "Esta abertura já havia sido processada. O resultado original foi retornado." : "Baú aberto com sucesso!";
-        return new ChestOpeningResponse(opening.getRequestId(), chest.getCode(), chest.getName(), opening.getRarity(), items, opening.getQuantity(), replayed, message);
+        String message;
+        if (replayed) {
+            message = "Esta abertura já havia sido processada. O resultado original foi retornado.";
+        } else if (!itemsAtStackLimit.isEmpty()) {
+            message = "Baú aberto com sucesso! Alguns itens já estavam no limite máximo de estoque e o excedente foi descartado: " + String.join(", ", itemsAtStackLimit) + ".";
+        } else {
+            message = "Baú aberto com sucesso!";
+        }
+        return new ChestOpeningResponse(opening.getRequestId(), chest.getCode(), chest.getName(), opening.getRarity(), items, opening.getQuantity(), replayed, message, itemsAtStackLimit);
     }
 
     private ChestOpeningItemResponse toItemResponse(ChestOpeningItemEntity item) {

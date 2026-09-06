@@ -29,7 +29,6 @@ import com.dro.shared.security.JwtSettings;
 import com.dro.shared.security.JwtTokenCodec;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -42,7 +41,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -335,6 +333,50 @@ class OpenChestUseCaseTest {
         verify(inventoryRepository, never()).delete(chestInventory);
         verify(chestOpeningRepository, never()).saveAndFlush(any());
         verifyNoInteractions(transactionAuditPublisher);
+    }
+
+    @Test
+    void executeCapsRewardAndKeepsOpeningWhenIgnoringStackLimit() {
+        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
+        String chestCode = "CHEST_MISSION_NATIVE_FOREST";
+        ItemDefinition chestItem = itemDefinition(1L, chestCode, "Baú Floresta Nativa", "CHEST", 99);
+        ItemDefinition rewardDefinition = itemDefinition(2L, "FRAGMENT_AGUMON", "Fragmento do Agumon", "EVOLUTION_MATERIAL", 2);
+        ChestDefinitionEntity chest = chest(chestCode, chestItem, rewardDefinition);
+        Player player = Player.builder().id(playerId).activeDigimonId(digimonId).build();
+        Digimon digimon = Digimon.builder().id(digimonId).playerId(playerId).build();
+        InventoryItem chestInventory = inventory(digimonId, ItemType.LOOT_CHEST, chestItem, 2);
+        InventoryItem existingReward = inventory(digimonId, ItemType.EVOLUTION_MATERIAL, rewardDefinition, 1);
+
+        stubCommon(playerId, digimonId, player, digimon, chest, chestInventory, rewardDefinition);
+        when(inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, 2L))
+                .thenReturn(Optional.of(existingReward));
+        when(chestLootRoller.roll(chest.getLootTable())).thenReturn(
+                new ChestLootRoller.ChestLootRoll(
+                        LootRarity.COMMON,
+                        List.of(new ChestLootRoller.ChestLootItem(
+                                LootRarity.COMMON,
+                                ItemType.EVOLUTION_MATERIAL,
+                                "FRAGMENT_AGUMON",
+                                3
+                        ))
+                )
+        );
+        when(chestOpeningRepository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ChestOpeningResponse response = openChestUseCase.execute(
+                token(playerId),
+                new OpenChestRequest(chestCode, "request-1", 1, true)
+        );
+
+        assertThat(existingReward.getQuantity()).isEqualTo(2);
+        assertThat(response.itemsAtStackLimit()).containsExactly("Fragmento do Agumon");
+        assertThat(response.items()).hasSize(1);
+        assertThat(response.items().get(0).quantity()).isEqualTo(1);
+        assertThat(chestInventory.getQuantity()).isEqualTo(1);
+        verify(inventoryRepository, never()).delete(chestInventory);
+        verify(chestOpeningRepository).saveAndFlush(any());
+        verify(transactionAuditPublisher).success(anyString(), eq("CHEST_OPENED"), anyString(), anyString(), any());
     }
 
     private void stubCommon(
