@@ -87,11 +87,13 @@ function invUpdateStorageBatchPreview(itemType) {
   preview.textContent = `Expansão total: +${totalExpansion} Storage`;
 }
 
-async function invSubmitStorageBatchUse(itemType) {
+async function invSubmitStorageBatchUse(itemType, explicitQuantity = null) {
   const input = document.getElementById("inventory-storage-batch-quantity");
   const confirmButton = document.getElementById("inventory-storage-batch-confirm");
   const available = Math.max(1, Math.min(999, invStorageAvailableQuantity(itemType)));
-  const quantity = Number.parseInt(input?.value, 10);
+  const quantity = explicitQuantity == null
+    ? Number.parseInt(input?.value, 10)
+    : Number.parseInt(explicitQuantity, 10);
 
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > available) {
     showToast(`Informe uma quantidade válida entre 1 e ${available}.`, "error");
@@ -127,12 +129,7 @@ invUseItem = async function(itemType, quantity = null) {
   }
 
   if (quantity != null) {
-    const requestedQuantity = Number.parseInt(quantity, 10);
-    if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1 || requestedQuantity > 999) {
-      showToast("Informe uma quantidade válida (1 a 999).", "error");
-      return;
-    }
-    return invSubmitStorageBatchUse(itemType, requestedQuantity);
+    return invSubmitStorageBatchUse(itemType, quantity);
   }
 
   invOpenStorageBatchModal(itemType);
