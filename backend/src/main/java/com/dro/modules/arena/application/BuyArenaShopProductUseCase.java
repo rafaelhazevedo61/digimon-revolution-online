@@ -10,6 +10,7 @@ import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.equipment.application.GrantEquipmentUseCase;
 import com.dro.modules.equipment.domain.EquipmentRarityRules;
 import com.dro.modules.inventory.domain.ItemDefinition;
+import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.shop.domain.ShopProductType;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.infra.InventoryRepository;
