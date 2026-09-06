@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 class GetEvolutionOptionsContentProgressionTest {
 
     @Test
-    void queriesOnlyEvolutionLinesFromActiveContent() {
+    void queriesActiveEvolutionLinesRegardlessOfCatalogContentStatus() {
         UUID playerId = UUID.randomUUID();
         UUID digimonId = UUID.randomUUID();
         Long digimonInfoId = 1L;
@@ -48,7 +48,7 @@ class GetEvolutionOptionsContentProgressionTest {
                 .build();
 
         when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
-        when(evolutionLineRepository.findByActiveTrueAndContentActiveTrueAndSteps_DigimonInfo_Id(digimonInfoId))
+        when(evolutionLineRepository.findByActiveTrueAndSteps_DigimonInfo_Id(digimonInfoId))
                 .thenReturn(List.of());
         when(digimonInfosRepository.findById(digimonInfoId)).thenReturn(Optional.empty());
 
@@ -62,7 +62,7 @@ class GetEvolutionOptionsContentProgressionTest {
         ).execute(JwtTestToken.create(playerId), digimonId);
 
         assertTrue(response.options().isEmpty());
-        verify(evolutionLineRepository).findByActiveTrueAndContentActiveTrueAndSteps_DigimonInfo_Id(digimonInfoId);
-        verify(evolutionLineRepository, never()).findByActiveTrueAndSteps_DigimonInfo_Id(digimonInfoId);
+        verify(evolutionLineRepository).findByActiveTrueAndSteps_DigimonInfo_Id(digimonInfoId);
+        verify(evolutionLineRepository, never()).findByActiveTrueAndContentActiveTrueAndSteps_DigimonInfo_Id(digimonInfoId);
     }
 }
