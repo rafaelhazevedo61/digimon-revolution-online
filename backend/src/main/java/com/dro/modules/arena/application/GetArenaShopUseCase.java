@@ -22,7 +22,7 @@ public class GetArenaShopUseCase {
     public ArenaShopResponse execute(String token) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
-        List<ArenaShopProductResponse> products = arenaShopProductRepository.findByActiveTrueOrderByPriceCoinsAsc().stream().map(p -> new ArenaShopProductResponse(p.getCode(), p.getName(), p.getItemType(), p.getQuantity(), p.getPriceCoins())).toList();
+        List<ArenaShopProductResponse> products = arenaShopProductRepository.findByActiveTrueOrderByPriceCoinsAsc().stream().map(p -> new ArenaShopProductResponse(p.getCode(), p.getName(), p.getItemType(), p.getItemDefinitionCode(), p.getQuantity(), p.getPriceCoins())).toList();
         return new ArenaShopResponse(player.getArenaCoins(), products);
     }
 
