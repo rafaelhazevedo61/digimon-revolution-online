@@ -140,13 +140,12 @@ class ClaimMissionUseCaseTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
         when(chestDefinitionRepository.findWithCatalogByCode(chestCode))
                 .thenReturn(Optional.of(chest));
+        when(addItemUseCase.tryAddMaterial(digimonId, chest.getItemDefinition(), 1)).thenReturn(true);
+
         WeekendDoubleRewardRules.setManualOverride(true, Instant.now());
         MissionResultResponse response;
         try {
-            response = claimMissionUseCase.execute(
-                    token(playerId),
-                    UUID.randomUUID()
-            );
+            response = claimMissionUseCase.execute(token(playerId), UUID.randomUUID());
         } finally {
             WeekendDoubleRewardRules.setManualOverride(null, Instant.now());
         }
@@ -177,7 +176,7 @@ class ClaimMissionUseCaseTest {
         assertThat(response.rewards().get(0).itemName()).isEqualTo(chest.getName());
 
         verifyNoInteractions(itemDefinitionRepository);
-        verify(addItemUseCase).addMaterial(digimonId, chest.getItemDefinition(), 1);
+        verify(addItemUseCase).tryAddMaterial(digimonId, chest.getItemDefinition(), 1);
         verify(addItemUseCase, never()).execute(eq(digimonId), any(ItemType.class), anyInt());
         verify(missionInstanceRepository).save(instance);
         verify(progressRepository).save(progress);
@@ -190,6 +189,50 @@ class ClaimMissionUseCaseTest {
                 any()
         );
         assertThat(instance.getStatus()).isEqualTo(MissionStatus.CLAIMED);
+    }
+
+    @Test
+    void executeContinuesClaimWhenMissionChestStackIsFull() {
+        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
+        String missionId = "MISSION_1";
+        String chestCode = "CHEST_MISSION_MISSION_1";
+
+        MissionInstance instance = new MissionInstance(
+                playerId,
+                null,
+                List.of(digimonId),
+                missionId,
+                Duration.ZERO
+        );
+        MissionDefinitionEntity mission = missionDefinition(missionId, chestCode);
+        PlayerMissionProgress progress = PlayerMissionProgress.builder()
+                .id(UUID.randomUUID())
+                .playerId(playerId)
+                .missionId(missionId)
+                .completionCount(0)
+                .build();
+        Digimon digimon = digimon(digimonId, playerId);
+        Player player = Player.builder().id(playerId).activeDigimonId(digimonId).build();
+        ChestDefinitionEntity chest = chest(chestCode);
+
+        when(missionInstanceRepository.findByIdAndPlayerId(any(UUID.class), eq(playerId)))
+                .thenReturn(Optional.of(instance));
+        when(missionDefinitionRepository.findById(missionId)).thenReturn(Optional.of(mission));
+        when(progressRepository.findByPlayerIdAndMissionId(playerId, missionId)).thenReturn(Optional.of(progress));
+        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(chestDefinitionRepository.findWithCatalogByCode(chestCode)).thenReturn(Optional.of(chest));
+        when(addItemUseCase.tryAddMaterial(digimonId, chest.getItemDefinition(), 1)).thenReturn(false);
+
+        MissionResultResponse response = claimMissionUseCase.execute(token(playerId), UUID.randomUUID());
+
+        assertThat(response.xpGained()).isGreaterThan(0);
+        assertThat(response.rewards()).isEmpty();
+        assertThat(instance.getStatus()).isEqualTo(MissionStatus.CLAIMED);
+        verify(missionInstanceRepository).save(instance);
+        verify(digimonRepository).save(digimon);
+        verify(progressRepository).save(progress);
     }
 
     private MissionDefinitionEntity missionDefinition(String id, String chestCode) {

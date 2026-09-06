@@ -179,9 +179,7 @@ public class ClaimMissionUseCase {
                         .orElseThrow(() -> new NotFoundException("Mission not found"))
         );
 
-        PlayerMissionProgress progress =
-                getOrCreateProgress(playerId, mission.getId());
-
+        PlayerMissionProgress progress = getOrCreateProgress(playerId, mission.getId());
         int completionCount = progress.getCompletionCount();
 
         Map<UUID, Integer> previousLevels = new LinkedHashMap<>();
@@ -189,8 +187,7 @@ public class ClaimMissionUseCase {
         int previousLevel = digimon.getLevel();
         Stage previousStage = digimon.getStage();
 
-        Player player = playerRepository.findById(playerId)
-                .orElse(null);
+        Player player = playerRepository.findById(playerId).orElse(null);
         UUID clanId = player != null ? player.getClanId() : null;
 
         double xpMultiplier = clanId != null ? clanBonusService.getMissionXpMultiplier(clanId) : 1.0;
@@ -226,19 +223,14 @@ public class ClaimMissionUseCase {
         }
 
         List<RewardResponse> rewards = new ArrayList<>();
-
         UUID digimonId = instance.getDigimonId();
 
         if (!hasMissionChest(mission)) {
-            rewards.addAll(
-                    applyFixedRewards(digimonId, mission, completionCount)
-            );
+            rewards.addAll(applyFixedRewards(digimonId, mission, completionCount));
         }
 
         applyMissionChestOrLegacyLoot(digimonId, mission, rewards);
-
         incrementProgress(progress);
-
         instance.markClaimed();
 
         missionInstanceRepository.save(instance);
@@ -321,21 +313,16 @@ public class ClaimMissionUseCase {
                             .missionId(missionId)
                             .completionCount(0)
                             .build();
-
                     return progressRepository.save(progress);
                 });
     }
 
     private int calculateScaledXp(int baseXp, int completionCount) {
-        double multiplier = calculateProgressMultiplier(completionCount);
-
-        return (int) Math.floor(baseXp * multiplier);
+        return (int) Math.floor(baseXp * calculateProgressMultiplier(completionCount));
     }
 
     private int calculateScaledBits(int baseBits, int completionCount) {
-        double multiplier = calculateProgressMultiplier(completionCount);
-
-        return (int) Math.floor(baseBits * multiplier);
+        return (int) Math.floor(baseBits * calculateProgressMultiplier(completionCount));
     }
 
     private boolean hasMissionChest(MissionDefinition mission) {
@@ -348,34 +335,22 @@ public class ClaimMissionUseCase {
             int completionCount
     ) {
         double multiplier = calculateProgressMultiplier(completionCount);
-
         List<RewardResponse> rewards = new ArrayList<>();
 
         for (MissionReward reward : mission.getFixedRewards()) {
-
             int quantity = (int) Math.floor(reward.getBaseQuantity() * multiplier);
+            if (quantity <= 0) continue;
 
-            if (quantity > 0) {
-                ItemDefinition itemDefinition = itemDefinitionRepository
-                        .findByCode(reward.getItemType().name())
-                        .orElse(null);
+            ItemDefinition itemDefinition = itemDefinitionRepository
+                    .findByCode(reward.getItemType().name())
+                    .orElse(null);
 
-                if (itemDefinition != null) {
-                    addItemUseCase.addMaterial(digimonId, itemDefinition, quantity);
-                } else {
-                    addItemUseCase.execute(
-                            digimonId,
-                            reward.getItemType(),
-                            quantity
-                    );
-                }
+            boolean granted = itemDefinition != null
+                    ? addItemUseCase.tryAddMaterial(digimonId, itemDefinition, quantity)
+                    : addItemUseCase.tryExecute(digimonId, reward.getItemType(), quantity);
 
-                rewards.add(
-                        new RewardResponse(
-                                reward.getItemType(),
-                                quantity
-                        )
-                );
+            if (granted) {
+                rewards.add(new RewardResponse(reward.getItemType(), quantity));
             }
         }
 
@@ -393,13 +368,14 @@ public class ClaimMissionUseCase {
                     .orElseThrow(() -> new ConflictException(
                             "Baú da missão não encontrado ou inativo: " + mission.getChestCode()));
 
-            addItemUseCase.addMaterial(digimonId, chest.getItemDefinition(), 1);
-            rewards.add(new RewardResponse(
-                    ItemType.LOOT_CHEST,
-                    1,
-                    chest.getCode(),
-                    chest.getName()
-            ));
+            if (addItemUseCase.tryAddMaterial(digimonId, chest.getItemDefinition(), 1)) {
+                rewards.add(new RewardResponse(
+                        ItemType.LOOT_CHEST,
+                        1,
+                        chest.getCode(),
+                        chest.getName()
+                ));
+            }
             return;
         }
 
@@ -408,19 +384,12 @@ public class ClaimMissionUseCase {
         }
 
         LootItem lootItem = LootRoller.roll(mission.getLootTable());
-
-        addItemUseCase.execute(
-                digimonId,
-                lootItem.getItemType(),
-                lootItem.getQuantity()
-        );
-
-        rewards.add(
-                new RewardResponse(
-                        lootItem.getItemType(),
-                        lootItem.getQuantity()
-                )
-        );
+        if (addItemUseCase.tryExecute(digimonId, lootItem.getItemType(), lootItem.getQuantity())) {
+            rewards.add(new RewardResponse(
+                    lootItem.getItemType(),
+                    lootItem.getQuantity()
+            ));
+        }
     }
 
     private Map<String, Object> buildAuditPayload(
