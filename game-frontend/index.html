@@ -21,36 +21,18 @@
 </head>
 
 <body>
-  <!-- Main content area -->
   <div id="app"></div>
 
-  <!-- Bottom navigation (hidden on login/starter) -->
   <nav id="bottom-nav" class="bottom-nav hidden">
     <div class="bottom-nav-inner">
-      <button class="nav-btn" data-route="dashboard" onclick="navigateTo('dashboard')">
-        <span class="nav-icon">🏠</span>
-        <span>Home</span>
-      </button>
-      <button class="nav-btn" data-route="missions" onclick="navigateTo('missions')">
-        <img class="nav-icon nav-image" src="assets/img/missoes.webp" alt="" />
-        <span>Missões</span>
-      </button>
-      <button class="nav-btn" data-route="inventory" onclick="navigateTo('inventory')">
-        <img class="nav-icon nav-image nav-backpack" src="assets/img/mochila.webp" alt="" />
-        <span>Mochila</span>
-      </button>
-      <button class="nav-btn" data-route="shop" onclick="navigateTo('shop')">
-        <img class="nav-icon nav-image nav-backpack" src="assets/img/loja.webp" alt="" />
-        <span>Loja</span>
-      </button>
-      <button class="nav-btn" data-route="more" onclick="navigateTo('more')">
-        <span class="nav-icon">⋯</span>
-        <span>Mais</span>
-      </button>
+      <button class="nav-btn" data-route="dashboard" onclick="navigateTo('dashboard')"><span class="nav-icon">🏠</span><span>Home</span></button>
+      <button class="nav-btn" data-route="missions" onclick="navigateTo('missions')"><img class="nav-icon nav-image" src="assets/img/missoes.webp" alt="" /><span>Missões</span></button>
+      <button class="nav-btn" data-route="inventory" onclick="navigateTo('inventory')"><img class="nav-icon nav-image nav-backpack" src="assets/img/mochila.webp" alt="" /><span>Mochila</span></button>
+      <button class="nav-btn" data-route="shop" onclick="navigateTo('shop')"><img class="nav-icon nav-image nav-backpack" src="assets/img/loja.webp" alt="" /><span>Loja</span></button>
+      <button class="nav-btn" data-route="more" onclick="navigateTo('more')"><span class="nav-icon">⋯</span><span>Mais</span></button>
     </div>
   </nav>
 
-  <!-- Scripts (order matters) -->
   <script src="assets/js/config.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/ui.js"></script>
@@ -71,6 +53,7 @@
   <script src="assets/js/incubation.js"></script>
   <script src="assets/js/pokedex.js"></script>
   <script src="assets/js/collection.js"></script>
+  <script src="assets/js/collection-auto-ui.js"></script>
   <script src="assets/js/bosses.js"></script>
   <script src="assets/js/arena.js"></script>
   <script src="assets/js/storage.js"></script>
@@ -84,12 +67,9 @@
   <script src="assets/js/router.js"></script>
 
   <script>
-    // Register service worker for PWA
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("service-worker.js").catch(() => {});
     }
-
-    // Initialize
     document.addEventListener("DOMContentLoaded", setupRouter);
     window.addEventListener("hashchange", setupRouter);
   </script>
