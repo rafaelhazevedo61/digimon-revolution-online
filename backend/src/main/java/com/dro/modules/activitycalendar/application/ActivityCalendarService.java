@@ -41,7 +41,7 @@ public class ActivityCalendarService {
         ActivityCalendarDaily daily = dailyRepository.findByPlayerIdAndActivityDate(playerId, date).orElseGet(() -> dailyRepository.save(ActivityCalendarDaily.create(playerId, date, Instant.now())));
         int limit = limitFor(config, source);
         if (limit > 0) {
-            int already = eventRepository.findAll().stream().filter(e -> e.getPlayerId().equals(playerId) && e.getActivityDate().equals(date) && e.getSource().equals(source.name())).mapToInt(ActivityPointEvent::getPoints).sum();
+            int already = Math.toIntExact(eventRepository.sumPointsByPlayerIdAndActivityDateAndSource(playerId, date, source.name()));
             points = Math.min(points, Math.max(0, limit - already));
         }
         if (points <= 0) return;
