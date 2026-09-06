@@ -9,9 +9,11 @@ import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.equipment.application.GrantEquipmentUseCase;
 import com.dro.modules.equipment.domain.EquipmentRarityRules;
+import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.shop.domain.ShopProductType;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.infra.InventoryRepository;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
@@ -33,6 +35,7 @@ public class BuyArenaShopProductUseCase {
     private final DigimonRepository digimonRepository;
     private final ArenaShopProductRepository arenaShopProductRepository;
     private final InventoryRepository inventoryRepository;
+    private final ItemDefinitionRepository itemDefinitionRepository;
     private final AddItemUseCase addItemUseCase;
     private final GrantEquipmentUseCase grantEquipmentUseCase;
 
@@ -61,7 +64,12 @@ public class BuyArenaShopProductUseCase {
         if (product.getProductType() == ShopProductType.EQUIPMENT) {
             grantEquipmentUseCase.execute(digimon.getId(), product.getEquipmentTemplateName(), EquipmentRarityRules.rollRarity("ARENA_SHOP"));
         } else {
-            addItemUseCase.execute(digimon.getId(), product.getItemType(), product.getQuantity() * request.quantity());
+            if (product.getItemType() == ItemType.LOOT_CHEST) {
+                ItemDefinition chestDefinition = resolveChestDefinition(product);
+                addItemUseCase.addMaterial(digimon.getId(), chestDefinition, product.getQuantity() * request.quantity());
+            } else {
+                addItemUseCase.execute(digimon.getId(), product.getItemType(), product.getQuantity() * request.quantity());
+            }
         }
         player.setArenaCoins(player.getArenaCoins() - totalPrice);
         playerRepository.save(player);
@@ -69,9 +77,17 @@ public class BuyArenaShopProductUseCase {
     }
 
     private void validateItemStack(UUID playerId, ArenaShopProduct product, int purchaseQuantity) {
-        InventoryItem inventoryItem = inventoryRepository
-                .findByPlayerIdAndItemTypeForUpdate(playerId, product.getItemType())
-                .orElse(null);
+        InventoryItem inventoryItem;
+        if (product.getItemType() == ItemType.LOOT_CHEST) {
+            ItemDefinition chestDefinition = resolveChestDefinition(product);
+            inventoryItem = inventoryRepository
+                    .findByPlayerIdAndItemDefinitionIdForUpdate(playerId, chestDefinition.getId())
+                    .orElse(null);
+        } else {
+            inventoryItem = inventoryRepository
+                    .findByPlayerIdAndItemTypeForUpdate(playerId, product.getItemType())
+                    .orElse(null);
+        }
         int currentQuantity = inventoryItem == null ? 0 : Math.max(0, inventoryItem.getQuantity());
         int remainingStackQuantity = Math.max(0, MAX_STACK_QUANTITY - currentQuantity);
         long requestedItemQuantity = (long) product.getQuantity() * purchaseQuantity;
@@ -80,11 +96,21 @@ public class BuyArenaShopProductUseCase {
         }
     }
 
-    public BuyArenaShopProductUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ArenaShopProductRepository arenaShopProductRepository, final InventoryRepository inventoryRepository, final AddItemUseCase addItemUseCase, final GrantEquipmentUseCase grantEquipmentUseCase) {
+    private ItemDefinition resolveChestDefinition(ArenaShopProduct product) {
+        String definitionCode = product.getItemDefinitionCode() != null
+                ? product.getItemDefinitionCode()
+                : product.getCode();
+        return itemDefinitionRepository.findByCode(definitionCode)
+                .filter(item -> "CHEST".equalsIgnoreCase(item.getCategory()))
+                .orElseThrow(() -> new NotFoundException("Definição do item de baú não encontrada: " + definitionCode));
+    }
+
+    public BuyArenaShopProductUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ArenaShopProductRepository arenaShopProductRepository, final InventoryRepository inventoryRepository, final ItemDefinitionRepository itemDefinitionRepository, final AddItemUseCase addItemUseCase, final GrantEquipmentUseCase grantEquipmentUseCase) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.arenaShopProductRepository = arenaShopProductRepository;
         this.inventoryRepository = inventoryRepository;
+        this.itemDefinitionRepository = itemDefinitionRepository;
         this.addItemUseCase = addItemUseCase;
         this.grantEquipmentUseCase = grantEquipmentUseCase;
     }

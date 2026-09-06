@@ -12,9 +12,11 @@ import com.dro.modules.digimon.domain.enums.Rarity;
 import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
@@ -50,6 +52,7 @@ class BuyArenaShopProductUseCaseTest {
     @Mock private DigimonRepository digimonRepository;
     @Mock private ArenaShopProductRepository arenaShopProductRepository;
     @Mock private InventoryRepository inventoryRepository;
+    @Mock private ItemDefinitionRepository itemDefinitionRepository;
     @Mock private AddItemUseCase addItemUseCase;
 
     @InjectMocks private BuyArenaShopProductUseCase useCase;
@@ -150,6 +153,40 @@ class BuyArenaShopProductUseCaseTest {
 
         assertEquals(1, response.quantity());
         verify(addItemUseCase).execute(digimonId, ItemType.POTION_SMALL, 1);
+    }
+
+    @Test
+    void buyLootChestUsesChestDefinitionAndDebitsCoins() {
+        player.setArenaCoins(200);
+        ItemDefinition chestDefinition = ItemDefinition.builder()
+                .id(42L)
+                .code("CHEST_INCUBATOR_PREMIUM")
+                .name("Baú de Incubadoras Premium")
+                .category("CHEST")
+                .maxStack(999)
+                .build();
+        ArenaShopProduct chestProduct = ArenaShopProduct.builder()
+                .code("ARENA_CHEST_INCUBATOR_PREMIUM")
+                .name("Baú de Incubadoras Premium")
+                .itemType(ItemType.LOOT_CHEST)
+                .itemDefinitionCode("CHEST_INCUBATOR_PREMIUM")
+                .quantity(1)
+                .priceCoins(90)
+                .active(true)
+                .build();
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
+        when(arenaShopProductRepository.findById(chestProduct.getCode())).thenReturn(Optional.of(chestProduct));
+        when(itemDefinitionRepository.findByCode("CHEST_INCUBATOR_PREMIUM")).thenReturn(Optional.of(chestDefinition));
+        when(inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, 42L)).thenReturn(Optional.empty());
+
+        BuyArenaShopResponse response = useCase.execute(token, new BuyArenaShopRequest(chestProduct.getCode(), 2));
+
+        assertEquals(180, response.totalPrice());
+        assertEquals(20, player.getArenaCoins());
+        verify(addItemUseCase).addMaterial(digimonId, chestDefinition, 2);
+        verify(addItemUseCase, never()).execute(any(), any(), anyInt());
+        verify(playerRepository).save(player);
     }
 
     @Test

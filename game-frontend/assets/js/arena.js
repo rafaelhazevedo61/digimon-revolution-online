@@ -290,7 +290,7 @@ function renderArenaShop(shop, inventoryItems = []) {
   }
 
   const productsHtml = shop.products.map(p => {
-    const inventoryQuantity = arenaShopInventoryQuantity(p.itemType, inventoryItems);
+    const inventoryQuantity = arenaShopInventoryQuantity(p.itemDefinitionCode || p.itemType, inventoryItems);
     const maxQty = arenaShopMaxPurchaseQuantity(p, coins, inventoryQuantity);
     const canBuy = maxQty >= 1;
     const unavailableLabel = coins < p.priceCoins ? "Sem saldo" : "Limite atingido";
