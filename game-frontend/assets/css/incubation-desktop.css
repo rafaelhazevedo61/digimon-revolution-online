@@ -1,0 +1,94 @@
+/* Desktop-only layout improvements for the Incubation page.
+ * Mobile/tablet keep the existing single-column experience from game.css.
+ */
+@media (min-width: 64rem) {
+  .page-container.incubation-page {
+    max-width: 78rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .incubation-page-header {
+    margin-bottom: 1.5rem;
+  }
+
+  #incub-content {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(20rem, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  #incub-content > .incubation-section:first-child,
+  #incub-content > .incubation-automation-panel {
+    margin-bottom: 0;
+  }
+
+  #incub-content > .incubation-section:first-child {
+    grid-column: 1;
+  }
+
+  #incub-content > .incubation-automation-panel {
+    grid-column: 2;
+    height: 100%;
+    min-height: 100%;
+  }
+
+  #incub-content > .incubation-section:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .incubator-card-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.75rem !important;
+  }
+
+  .incubator-option-card {
+    min-height: 8.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .incubation-automation-panel > div:first-child {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .incubation-automation-panel .incubation-global-toggle {
+    width: 100%;
+  }
+
+  .incubation-automation-panel > div:first-child > div:last-child {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .active-incubation-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 1rem !important;
+  }
+
+  .active-incubation-card {
+    min-height: 13rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .active-incubation-card > div:last-child {
+    margin-top: auto;
+  }
+}
+
+@media (min-width: 90rem) {
+  .page-container.incubation-page {
+    max-width: 86rem;
+  }
+
+  #incub-content {
+    grid-template-columns: minmax(0, 2.2fr) minmax(22rem, 0.8fr);
+    gap: 1.5rem;
+  }
+}
