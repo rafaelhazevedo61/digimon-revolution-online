@@ -32,6 +32,11 @@ public class RankingController {
         return ResponseEntity.ok(getRankingUseCase.byRebirth(page, size));
     }
 
+    @GetMapping("/power")
+    public ResponseEntity<List<RankingEntryResponse>> byPower(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(getRankingUseCase.byPower(page, size, search));
+    }
+
     public RankingController(final GetRankingUseCase getRankingUseCase) {
         this.getRankingUseCase = getRankingUseCase;
     }
