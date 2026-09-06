@@ -40,19 +40,26 @@
   }
 
   /* Market filter card: search + category + rarity in one desktop row. */
-  .page-container:has(#auction-content) #auction-content > .card:first-child > .grid.grid-cols-2 {
+  .page-container:has(#auction-content) #auction-content > .card:first-child:has(#auction-search) > .grid.grid-cols-2 {
     grid-template-columns: minmax(18rem, 2fr) minmax(11rem, 1fr) minmax(11rem, 1fr);
     align-items: end;
   }
 
-  .page-container:has(#auction-content) #auction-content > .card:first-child > .grid.grid-cols-2 > .col-span-2 {
+  .page-container:has(#auction-content) #auction-content > .card:first-child:has(#auction-search) > .grid.grid-cols-2 > .col-span-2 {
     grid-column: auto;
   }
 
-  .page-container:has(#auction-content) #auction-content > .card:first-child > .grid.grid-cols-2.mt-3 {
+  .page-container:has(#auction-content) #auction-content > .card:first-child:has(#auction-search) > .grid.grid-cols-2.mt-3 {
     grid-template-columns: minmax(10rem, 1fr) minmax(10rem, 1fr);
     width: min(28rem, 100%);
     margin-left: auto;
+  }
+
+  /* Publication type buttons form their own equal-width row, not the market filters. */
+  .page-container:has(#auction-content) #auction-content > .card:first-child:not(:has(#auction-search)) > .grid.grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(28rem, 100%);
+    align-items: stretch;
   }
 
   /* Listing cards gain breathing room without becoming excessively tall. */
