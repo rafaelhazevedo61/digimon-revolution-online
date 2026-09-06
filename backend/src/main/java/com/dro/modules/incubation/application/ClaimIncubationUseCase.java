@@ -1,5 +1,6 @@
 package com.dro.modules.incubation.application;
 
+import com.dro.modules.collection.application.CollectionRegistrationService;
 import com.dro.modules.digitama.application.DigitamaPoolEligibilityService;
 import com.dro.modules.activitycalendar.application.ActivityCalendarService;
 import com.dro.modules.activitycalendar.domain.ActivitySource;
@@ -24,6 +25,7 @@ import com.dro.shared.automation.AutomationFailureCode;
 import com.dro.shared.automation.AutomationFailureException;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
@@ -32,9 +34,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * Componente da camada de caso de uso da aplicação do módulo de Incubação.
- */
 @Service
 public class ClaimIncubationUseCase {
     private final IncubationRepository incubationRepository;
@@ -44,6 +43,7 @@ public class ClaimIncubationUseCase {
     private final DigitamaPoolEligibilityService digitamaPoolEligibilityService;
     private final TutorialService tutorialService;
     private final ActivityCalendarService activityCalendarService;
+    private final CollectionRegistrationService collectionRegistrationService;
 
     @Transactional
     public Digimon execute(String token, UUID incubationId) {
@@ -71,6 +71,9 @@ public class ClaimIncubationUseCase {
         ensureStorageHasSpace(player);
         Digimon digimon = createDigimonFromIncubation(playerId, incubation);
         digimonRepository.save(digimon);
+        if (collectionRegistrationService != null) {
+            collectionRegistrationService.registerIfMissing(digimon, "HATCH");
+        }
         finalizeIncubation(incubation);
         tutorialService.completeStep(playerId, TutorialStep.HATCH_DIGIMON);
         if (activityCalendarService != null) {
@@ -80,15 +83,9 @@ public class ClaimIncubationUseCase {
     }
 
     private void validateIncubationFinished(Incubation incubation) {
-        if (incubation.getStatus() == IncubationStatus.READY) {
-            return;
-        }
-        if (incubation.getStatus() != IncubationStatus.IN_PROGRESS) {
-            throw new BadRequestException("Incubation is not available");
-        }
-        if (incubation.getFinishAt().isAfter(LocalDateTime.now())) {
-            throw new BadRequestException("Incubation not finished yet");
-        }
+        if (incubation.getStatus() == IncubationStatus.READY) return;
+        if (incubation.getStatus() != IncubationStatus.IN_PROGRESS) throw new BadRequestException("Incubation is not available");
+        if (incubation.getFinishAt().isAfter(LocalDateTime.now())) throw new BadRequestException("Incubation not finished yet");
         incubation.markReadyIfFinished();
     }
 
@@ -108,18 +105,12 @@ public class ClaimIncubationUseCase {
         String poolCode = digitamaType.getPoolCode();
         DigitamaPool pool = digitamaPoolRepository.findByCodeAndActiveTrueAndContentActiveTrue(poolCode)
                 .orElseThrow(() -> new NotFoundException("Digitama pool not found: " + poolCode));
-        DigitamaPoolEntry entry = DigitamaPoolRoller.roll(
-                digitamaPoolEligibilityService.getEligibleEntries(pool)
-        );
-        var infos = entry.getDigimonInfo();
-        return DigimonFactory.createBaby(playerId, digitamaType, infos, DigimonStatus.HATCHED);
+        DigitamaPoolEntry entry = DigitamaPoolRoller.roll(digitamaPoolEligibilityService.getEligibleEntries(pool));
+        return DigimonFactory.createBaby(playerId, digitamaType, entry.getDigimonInfo(), DigimonStatus.HATCHED);
     }
 
-
     private void forceReadyIfInProgress(Incubation incubation) {
-        if (incubation.getStatus() == IncubationStatus.IN_PROGRESS) {
-            incubation.setStatus(IncubationStatus.READY);
-        }
+        if (incubation.getStatus() == IncubationStatus.IN_PROGRESS) incubation.setStatus(IncubationStatus.READY);
     }
 
     private void finalizeIncubation(Incubation incubation) {
@@ -128,13 +119,28 @@ public class ClaimIncubationUseCase {
     }
 
     public ClaimIncubationUseCase(
-            final IncubationRepository incubationRepository,
-            final DigimonRepository digimonRepository,
-            final PlayerRepository playerRepository,
-            final DigitamaPoolRepository digitamaPoolRepository,
-            final DigitamaPoolEligibilityService digitamaPoolEligibilityService,
-            final TutorialService tutorialService,
-            final ActivityCalendarService activityCalendarService
+            IncubationRepository incubationRepository,
+            DigimonRepository digimonRepository,
+            PlayerRepository playerRepository,
+            DigitamaPoolRepository digitamaPoolRepository,
+            DigitamaPoolEligibilityService digitamaPoolEligibilityService,
+            TutorialService tutorialService,
+            ActivityCalendarService activityCalendarService
+    ) {
+        this(incubationRepository, digimonRepository, playerRepository, digitamaPoolRepository,
+                digitamaPoolEligibilityService, tutorialService, activityCalendarService, null);
+    }
+
+    @Autowired
+    public ClaimIncubationUseCase(
+            IncubationRepository incubationRepository,
+            DigimonRepository digimonRepository,
+            PlayerRepository playerRepository,
+            DigitamaPoolRepository digitamaPoolRepository,
+            DigitamaPoolEligibilityService digitamaPoolEligibilityService,
+            TutorialService tutorialService,
+            ActivityCalendarService activityCalendarService,
+            CollectionRegistrationService collectionRegistrationService
     ) {
         this.incubationRepository = incubationRepository;
         this.digimonRepository = digimonRepository;
@@ -143,6 +149,6 @@ public class ClaimIncubationUseCase {
         this.digitamaPoolEligibilityService = digitamaPoolEligibilityService;
         this.tutorialService = tutorialService;
         this.activityCalendarService = activityCalendarService;
+        this.collectionRegistrationService = collectionRegistrationService;
     }
-
 }
