@@ -413,6 +413,7 @@ async function shopConfirmBuy(code, unitPrice) {
     const result = await apiPost("/shop/buy", { productCode: code, quantity: qty });
     shopPlayerBits = result.remainingBits;
     document.getElementById("shop-bits").textContent = shopFormatNumber(shopPlayerBits);
+    shopCloseModal();
     showToast(`${escapeHtml(result.name)} x${result.quantity} comprado! -${shopFormatBits(result.totalPrice)}`);
     try {
       shopInventoryItems = (await apiGet("/inventory")) || [];
@@ -420,8 +421,6 @@ async function shopConfirmBuy(code, unitPrice) {
       // mantém o inventário em cache se a atualização falhar
     }
     shopSwitchTab(shopBuyCategory);
-    shopCloseModal();
-    shopOpenBuy(code);
   } catch (err) {
     showToast(err.message, "error");
     if (btn) { btn.disabled = false; btn.textContent = "Confirmar"; }
