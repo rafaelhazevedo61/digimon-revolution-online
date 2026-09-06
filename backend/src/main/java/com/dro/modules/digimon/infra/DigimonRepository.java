@@ -61,4 +61,7 @@ public interface DigimonRepository extends JpaRepository<Digimon, UUID> {
             "ORDER BY d.arenaRating DESC, d.level DESC")
     Page<Digimon> findByStatusInOrderByArenaRatingDescLevelDesc(@Param("statuses") List<DigimonStatus> statuses, Pageable pageable);
 
+    @Query("SELECT d FROM Digimon d WHERE d.status IN :statuses AND d.bot = false")
+    List<Digimon> findByStatusInAndBotFalse(@Param("statuses") List<DigimonStatus> statuses);
+
 }

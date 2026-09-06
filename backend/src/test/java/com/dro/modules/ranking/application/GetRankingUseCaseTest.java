@@ -1,5 +1,6 @@
 package com.dro.modules.ranking.application;
 
+import com.dro.modules.arena.application.DigimonPowerService;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.*;
 import com.dro.modules.digimon.infra.DigimonRepository;
@@ -38,6 +39,9 @@ class GetRankingUseCaseTest {
     @Mock
     private DigimonInfosRepository digimonInfosRepository;
 
+    @Mock
+    private DigimonPowerService digimonPowerService;
+
     @BeforeEach
     void setUp() {
         when(digimonInfosRepository.findAllById(any())).thenReturn(List.of());
@@ -74,7 +78,7 @@ class GetRankingUseCaseTest {
     @Test
     void byLevel_includesStoredDigimons() {
         UUID playerId = UUID.randomUUID();
-        Digimon active = buildDigimon("Agumon", 50, DigimonGrade.S, 3, playerId);
+        Digimon active = buildDigimon("Agumon", 50, DigimonGrade.A, 1, playerId);
         Digimon stored = buildDigimon("Gabumon", 45, DigimonGrade.A, 1, playerId);
         stored.setStatus(DigimonStatus.STORED);
         Player player = Player.builder().id(playerId).username("rafael").build();
@@ -174,6 +178,78 @@ class GetRankingUseCaseTest {
         List<RankingEntryResponse> result = getRankingUseCase.byLevel(0, 10);
 
         assertEquals("Unknown", result.get(0).playerName());
+    }
+
+    @Test
+    void byPower_returnsDigimonsOrderedByPowerDescending() {
+        UUID playerId = UUID.randomUUID();
+        Digimon strong = buildDigimon("WarGreymon", 99, DigimonGrade.SSS, 5, playerId);
+        Digimon weak = buildDigimon("Agumon", 20, DigimonGrade.C, 0, playerId);
+
+        Player player = Player.builder().id(playerId).username("rafael").build();
+
+        when(digimonRepository.findByStatusInAndBotFalse(eq(List.of(DigimonStatus.ACTIVE, DigimonStatus.STORED))))
+                .thenReturn(List.of(weak, strong));
+        when(digimonPowerService.calculatePower(strong)).thenReturn(5000.0);
+        when(digimonPowerService.calculatePower(weak)).thenReturn(100.0);
+        when(playerRepository.findAllById(any())).thenReturn(List.of(player));
+
+        List<RankingEntryResponse> result = getRankingUseCase.byPower(0, 10, null);
+
+        assertEquals(2, result.size());
+        assertEquals("WarGreymon", result.get(0).digimonName());
+        assertEquals(5000L, result.get(0).power());
+        assertEquals(1, result.get(0).position());
+        assertEquals("Agumon", result.get(1).digimonName());
+        assertEquals(100L, result.get(1).power());
+        assertEquals(2, result.get(1).position());
+    }
+
+    @Test
+    void byPower_filtersBySearchTerm() {
+        UUID playerId = UUID.randomUUID();
+        Digimon d1 = buildDigimon("WarGreymon", 99, DigimonGrade.SSS, 5, playerId);
+        Digimon d2 = buildDigimon("Agumon", 20, DigimonGrade.C, 0, playerId);
+
+        Player player = Player.builder().id(playerId).username("rafael").build();
+
+        when(digimonRepository.findByStatusInAndBotFalse(eq(List.of(DigimonStatus.ACTIVE, DigimonStatus.STORED))))
+                .thenReturn(List.of(d1, d2));
+        when(digimonPowerService.calculatePower(d1)).thenReturn(5000.0);
+        when(digimonPowerService.calculatePower(d2)).thenReturn(100.0);
+        when(playerRepository.findAllById(any())).thenReturn(List.of(player));
+
+        List<RankingEntryResponse> result = getRankingUseCase.byPower(0, 10, "agu");
+
+        assertEquals(1, result.size());
+        assertEquals("Agumon", result.get(0).digimonName());
+    }
+
+    @Test
+    void byPower_emptyResult_returnsEmptyList() {
+        when(digimonRepository.findByStatusInAndBotFalse(eq(List.of(DigimonStatus.ACTIVE, DigimonStatus.STORED))))
+                .thenReturn(List.of());
+
+        List<RankingEntryResponse> result = getRankingUseCase.byPower(0, 10, null);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void byPower_page1_positionsStartAt11() {
+        UUID playerId = UUID.randomUUID();
+        Digimon d1 = buildDigimon("Agumon", 20, DigimonGrade.C, 0, playerId);
+
+        Player player = Player.builder().id(playerId).username("rafael").build();
+
+        when(digimonRepository.findByStatusInAndBotFalse(eq(List.of(DigimonStatus.ACTIVE, DigimonStatus.STORED))))
+                .thenReturn(List.of(d1));
+        when(digimonPowerService.calculatePower(d1)).thenReturn(100.0);
+        when(playerRepository.findAllById(any())).thenReturn(List.of(player));
+
+        List<RankingEntryResponse> result = getRankingUseCase.byPower(1, 10, null);
+
+        assertTrue(result.isEmpty());
     }
 
     private Digimon buildDigimon(String name, int level, DigimonGrade grade, int rebirthCount, UUID playerId) {

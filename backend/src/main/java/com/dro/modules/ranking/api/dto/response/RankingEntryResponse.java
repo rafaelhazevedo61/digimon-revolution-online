@@ -18,5 +18,6 @@ public record RankingEntryResponse(
         int rebirthCount,
         String playerName,
         UUID digimonId,
-        UUID playerId
+        UUID playerId,
+        long power
 ) {}
