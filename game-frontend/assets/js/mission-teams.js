@@ -69,7 +69,7 @@ function renderMissionTeamCard(team, digimonById, activeMissionDigimonIds = new 
         </div>
         <span class="rounded-full border ${unavailable ? "border-amber-800 bg-amber-950/30 text-amber-300" : "border-emerald-800 bg-emerald-950/30 text-emerald-300"} px-2 py-1 text-[0.58rem] font-bold uppercase tracking-wider">${unavailable ? "Ocupado" : "Pronto"}</span>
       </div>
-      <div class="mt-4 grid grid-cols-1 gap-2 xl:grid-cols-3">
+      <div class="mt-4 space-y-2">
         ${[0, 1, 2].map(index => renderMissionTeamMember(members[index], team.captainDigimonId)).join("")}
       </div>
       <div class="mt-auto grid grid-cols-2 gap-2 pt-5">
