@@ -31,6 +31,16 @@ public class Incubation {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private IncubationStatus status;
+    @Column(name = "auto_repeat_enabled", nullable = false)
+    private boolean autoRepeatEnabled;
+    @Column(name = "auto_claim_enabled", nullable = false)
+    private boolean autoClaimEnabled;
+    @Column(name = "automation_pause_reason")
+    private String automationPauseReason;
+    @Column(name = "automation_paused_at")
+    private LocalDateTime automationPausedAt;
+    @Column(name = "automation_last_error_code")
+    private String automationLastErrorCode;
 
     public void markReadyIfFinished() {
         if (this.status != IncubationStatus.IN_PROGRESS) {
@@ -110,6 +120,40 @@ public class Incubation {
         this.status = status;
     }
 
+    public boolean isAutoRepeatEnabled() {
+        return autoRepeatEnabled;
+    }
+
+    public void setAutoRepeatEnabled(boolean autoRepeatEnabled) {
+        this.autoRepeatEnabled = autoRepeatEnabled;
+    }
+
+    public boolean isAutoClaimEnabled() {
+        return autoClaimEnabled;
+    }
+
+    public void setAutoClaimEnabled(boolean autoClaimEnabled) {
+        this.autoClaimEnabled = autoClaimEnabled;
+    }
+
+    public String getAutomationPauseReason() { return automationPauseReason; }
+    public LocalDateTime getAutomationPausedAt() { return automationPausedAt; }
+    public String getAutomationLastErrorCode() { return automationLastErrorCode; }
+
+    public void pauseAutomation(String reason, String errorCode) {
+        this.autoClaimEnabled = false;
+        this.autoRepeatEnabled = false;
+        this.automationPauseReason = reason;
+        this.automationLastErrorCode = errorCode;
+        this.automationPausedAt = LocalDateTime.now();
+    }
+
+    public void clearAutomationPause() {
+        this.automationPauseReason = null;
+        this.automationLastErrorCode = null;
+        this.automationPausedAt = null;
+    }
+
 
     private static int $default$slotNumber() {
         return 1;
@@ -125,6 +169,8 @@ public class Incubation {
         private LocalDateTime startedAt;
         private LocalDateTime finishAt;
         private IncubationStatus status;
+        private boolean autoRepeatEnabled;
+        private boolean autoClaimEnabled;
 
         IncubationBuilder() {
         }
@@ -192,14 +238,24 @@ public class Incubation {
             return this;
         }
 
+        public Incubation.IncubationBuilder autoRepeatEnabled(final boolean autoRepeatEnabled) {
+            this.autoRepeatEnabled = autoRepeatEnabled;
+            return this;
+        }
+
+        public Incubation.IncubationBuilder autoClaimEnabled(final boolean autoClaimEnabled) {
+            this.autoClaimEnabled = autoClaimEnabled;
+            return this;
+        }
+
         public Incubation build() {
             int slotNumber$value = this.slotNumber$value;
             if (!this.slotNumber$set) slotNumber$value = Incubation.$default$slotNumber();
-            return new Incubation(this.id, this.playerId, slotNumber$value, this.digitamaType, this.incubatorType, this.startedAt, this.finishAt, this.status);
+            return new Incubation(this.id, this.playerId, slotNumber$value, this.digitamaType, this.incubatorType, this.startedAt, this.finishAt, this.status, this.autoRepeatEnabled, this.autoClaimEnabled);
         }
         @Override
         public String toString() {
-            return "Incubation.IncubationBuilder(id=" + this.id + ", playerId=" + this.playerId + ", slotNumber=" + this.slotNumber$value + ", digitamaType=" + this.digitamaType + ", incubatorType=" + this.incubatorType + ", startedAt=" + this.startedAt + ", finishAt=" + this.finishAt + ", status=" + this.status + ")";
+            return "Incubation.IncubationBuilder(id=" + this.id + ", playerId=" + this.playerId + ", slotNumber=" + this.slotNumber$value + ", digitamaType=" + this.digitamaType + ", incubatorType=" + this.incubatorType + ", startedAt=" + this.startedAt + ", finishAt=" + this.finishAt + ", status=" + this.status + ", autoRepeatEnabled=" + this.autoRepeatEnabled + ", autoClaimEnabled=" + this.autoClaimEnabled + ")";
         }
     }
 
@@ -210,7 +266,7 @@ public class Incubation {
     public Incubation() {
         this.slotNumber = Incubation.$default$slotNumber();
     }
-    public Incubation(final UUID id, final UUID playerId, final int slotNumber, final ItemType digitamaType, final ItemType incubatorType, final LocalDateTime startedAt, final LocalDateTime finishAt, final IncubationStatus status) {
+    public Incubation(final UUID id, final UUID playerId, final int slotNumber, final ItemType digitamaType, final ItemType incubatorType, final LocalDateTime startedAt, final LocalDateTime finishAt, final IncubationStatus status, final boolean autoRepeatEnabled, final boolean autoClaimEnabled) {
         this.id = id;
         this.playerId = playerId;
         this.slotNumber = slotNumber;
@@ -219,5 +275,7 @@ public class Incubation {
         this.startedAt = startedAt;
         this.finishAt = finishAt;
         this.status = status;
+        this.autoRepeatEnabled = autoRepeatEnabled;
+        this.autoClaimEnabled = autoClaimEnabled;
     }
 }

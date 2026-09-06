@@ -9,6 +9,7 @@ public record ArenaShopProductResponse(
         String code,
         String name,
         ItemType itemType,
+        String itemDefinitionCode,
         int quantity,
         int priceCoins
 ) {}

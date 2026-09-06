@@ -29,6 +29,7 @@ import java.util.UUID;
  */
 @Service
 public class CancelAuctionListingUseCase {
+    private final AuctionEquipmentService auctionEquipmentService;
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final InventoryRepository inventoryRepository;
@@ -46,16 +47,20 @@ public class CancelAuctionListingUseCase {
         if (listing.getStatus() != AuctionListingStatus.ACTIVE || listing.getRemainingQuantity() <= 0) {
             throw new ConflictException("Auction listing is no longer active");
         }
-        Digimon sellerDigimon = findLockedSellerDigimon(player, listing);
-        ItemDefinition itemDefinition = listing.getItemDefinition();
-        InventoryItem inventoryItem = inventoryRepository.findByDigimonIdAndItemDefinitionIdForUpdate(sellerDigimon.getId(), itemDefinition.getId()).orElse(null);
-        int currentQuantity = inventoryItem == null ? 0 : inventoryItem.getQuantity();
         int returnedQuantity = listing.getRemainingQuantity();
-        int newQuantity = currentQuantity + returnedQuantity;
-        if (itemDefinition.getMaxStack() != null && newQuantity > itemDefinition.getMaxStack()) {
-            throw new UnprocessableException("Cannot return items because the inventory stack would exceed " + itemDefinition.getMaxStack());
+        if (listing.isEquipment()) {
+            auctionEquipmentService.deliver(listing, playerId);
+        } else {
+            Digimon sellerDigimon = findLockedSellerDigimon(player, listing);
+            ItemDefinition itemDefinition = listing.getItemDefinition();
+            InventoryItem inventoryItem = inventoryRepository.findByDigimonIdAndItemDefinitionIdForUpdate(sellerDigimon.getId(), itemDefinition.getId()).orElse(null);
+            int currentQuantity = inventoryItem == null ? 0 : inventoryItem.getQuantity();
+            int newQuantity = currentQuantity + returnedQuantity;
+            if (itemDefinition.getMaxStack() != null && newQuantity > itemDefinition.getMaxStack()) {
+                throw new UnprocessableException("Cannot return items because the inventory stack would exceed " + itemDefinition.getMaxStack());
+            }
+            saveInventory(inventoryItem, sellerDigimon, itemDefinition, newQuantity);
         }
-        saveInventory(inventoryItem, sellerDigimon, itemDefinition, newQuantity);
         Instant now = Instant.now();
         listing.setRemainingQuantity(0);
         listing.setStatus(listing.getExpiresAt().isAfter(now) ? AuctionListingStatus.CANCELLED : AuctionListingStatus.EXPIRED);
@@ -93,7 +98,7 @@ public class CancelAuctionListingUseCase {
             inventoryRepository.save(item);
             return;
         }
-        inventoryRepository.save(InventoryItem.builder().id(UUID.randomUUID()).digimonId(digimon.getId()).itemType(resolveItemType(definition.getCode())).itemDefinition(definition).quantity(quantity).build());
+        inventoryRepository.save(InventoryItem.builder().id(UUID.randomUUID()).playerId(digimon.getPlayerId()).itemType(resolveItemType(definition.getCode())).itemDefinition(definition).quantity(quantity).build());
     }
 
     private ItemType resolveItemType(String code) {
@@ -104,7 +109,8 @@ public class CancelAuctionListingUseCase {
         }
     }
 
-    public CancelAuctionListingUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final InventoryRepository inventoryRepository, final AuctionListingRepository auctionListingRepository, final AuctionMailNotificationService auctionMailNotificationService) {
+    public CancelAuctionListingUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final InventoryRepository inventoryRepository, final AuctionListingRepository auctionListingRepository, final AuctionMailNotificationService auctionMailNotificationService, final AuctionEquipmentService auctionEquipmentService) {
+        this.auctionEquipmentService = auctionEquipmentService;
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.inventoryRepository = inventoryRepository;

@@ -1,0 +1,3 @@
+ALTER TABLE incubations
+    ADD COLUMN auto_repeat_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN auto_claim_enabled BOOLEAN NOT NULL DEFAULT FALSE;

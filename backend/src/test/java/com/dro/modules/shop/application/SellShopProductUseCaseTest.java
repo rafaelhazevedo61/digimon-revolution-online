@@ -88,9 +88,9 @@ class SellShopProductUseCaseTest {
                 .active(true)
                 .build();
 
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
-        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
-        when(equipmentRepository.findById(equipmentId)).thenReturn(Optional.of(equipment));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(equipmentRepository.findByIdForUpdate(equipmentId)).thenReturn(Optional.of(equipment));
         when(shopProductRepository.findByEquipmentTemplateNameIgnoreCase("Iron Claw"))
                 .thenReturn(Optional.of(product));
 

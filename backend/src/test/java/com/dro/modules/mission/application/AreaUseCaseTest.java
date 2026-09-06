@@ -34,19 +34,19 @@ class AreaUseCaseTest {
     private DigimonRepository digimonRepository;
 
     @Test
-    void unlocksAreasUsingOnlyTheActiveDigimonStage() {
+    void unlocksAreasUsingTheHighestOwnedDigimonStage() {
         UUID playerId = UUID.randomUUID();
         Digimon activeBaby = digimon(playerId, Stage.BABY, DigimonStatus.ACTIVE);
         Digimon storedMega = digimon(playerId, Stage.MEGA, DigimonStatus.STORED);
-        when(digimonRepository.findByPlayerIdAndStatus(playerId, DigimonStatus.ACTIVE))
-                .thenReturn(List.of(activeBaby));
+        when(digimonRepository.findByPlayerId(playerId))
+                .thenReturn(List.of(activeBaby, storedMega));
 
         List<AreaResponse> areas = new AreaUseCase(digimonRepository).execute(createToken(playerId));
 
         assertTrue(area(areas, Area.NATIVE_FOREST).unlocked());
-        assertFalse(area(areas, Area.FREEZELAND).unlocked());
-        assertFalse(area(areas, Area.SERVER_DESERT).unlocked());
-        assertFalse(area(areas, Area.INFINITY_MOUNTAIN).unlocked());
+        assertTrue(area(areas, Area.FREEZELAND).unlocked());
+        assertTrue(area(areas, Area.SERVER_DESERT).unlocked());
+        assertTrue(area(areas, Area.INFINITY_MOUNTAIN).unlocked());
     }
 
     private AreaResponse area(List<AreaResponse> areas, Area target) {

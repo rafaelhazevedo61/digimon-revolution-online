@@ -1,6 +1,7 @@
 package com.dro.modules.loot.api.dto.response;
 
 import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.equipment.domain.EquipmentRarity;
 import com.dro.modules.loot.domain.LootRarity;
 
 /**
@@ -12,6 +13,8 @@ public record ChestOpeningItemResponse(
         LootRarity rarity,
         ItemType itemType,
         String materialCode,
-        int quantity
+        int quantity,
+        String equipmentTemplateName,
+        EquipmentRarity equipmentRarity
 ) {
 }

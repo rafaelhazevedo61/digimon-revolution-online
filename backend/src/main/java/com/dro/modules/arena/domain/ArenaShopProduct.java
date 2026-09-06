@@ -1,6 +1,7 @@
 package com.dro.modules.arena.domain;
 
 import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.shop.domain.ShopProductType;
 import jakarta.persistence.*;
 
 /**
@@ -15,8 +16,15 @@ public class ArenaShopProduct {
     @Column(name = "name", nullable = false)
     private String name;
     @Enumerated(EnumType.STRING)
+    @Column(name = "product_type", nullable = false)
+    private ShopProductType productType;
+    @Column(name = "equipment_template_name")
+    private String equipmentTemplateName;
+    @Enumerated(EnumType.STRING)
     @Column(name = "item_type", nullable = false)
     private ItemType itemType;
+    @Column(name = "item_definition_code")
+    private String itemDefinitionCode;
     @Column(name = "quantity", nullable = false)
     private int quantity;
     @Column(name = "price_coins", nullable = false)
@@ -28,7 +36,10 @@ public class ArenaShopProduct {
     public static class ArenaShopProductBuilder {
         private String code;
         private String name;
+        private ShopProductType productType = ShopProductType.ITEM;
+        private String equipmentTemplateName;
         private ItemType itemType;
+        private String itemDefinitionCode;
         private int quantity;
         private int priceCoins;
         private boolean active;
@@ -51,12 +62,25 @@ public class ArenaShopProduct {
             this.name = name;
             return this;
         }
+        public ArenaShopProduct.ArenaShopProductBuilder productType(final ShopProductType productType) {
+            this.productType = productType;
+            return this;
+        }
+        public ArenaShopProduct.ArenaShopProductBuilder equipmentTemplateName(final String equipmentTemplateName) {
+            this.equipmentTemplateName = equipmentTemplateName;
+            return this;
+        }
 
         /**
          * @return {@code this}.
          */
         public ArenaShopProduct.ArenaShopProductBuilder itemType(final ItemType itemType) {
             this.itemType = itemType;
+            return this;
+        }
+
+        public ArenaShopProduct.ArenaShopProductBuilder itemDefinitionCode(final String itemDefinitionCode) {
+            this.itemDefinitionCode = itemDefinitionCode;
             return this;
         }
 
@@ -85,7 +109,7 @@ public class ArenaShopProduct {
         }
 
         public ArenaShopProduct build() {
-            return new ArenaShopProduct(this.code, this.name, this.itemType, this.quantity, this.priceCoins, this.active);
+            return new ArenaShopProduct(this.code, this.name, this.productType, this.itemType, this.itemDefinitionCode, this.equipmentTemplateName, this.quantity, this.priceCoins, this.active);
         }
 
         @Override
@@ -105,9 +129,19 @@ public class ArenaShopProduct {
     public String getName() {
         return this.name;
     }
+    public ShopProductType getProductType() {
+        return this.productType;
+    }
+    public String getEquipmentTemplateName() {
+        return this.equipmentTemplateName;
+    }
 
     public ItemType getItemType() {
         return this.itemType;
+    }
+
+    public String getItemDefinitionCode() {
+        return this.itemDefinitionCode;
     }
 
     public int getQuantity() {
@@ -129,9 +163,19 @@ public class ArenaShopProduct {
     public void setName(final String name) {
         this.name = name;
     }
+    public void setProductType(final ShopProductType productType) {
+        this.productType = productType;
+    }
+    public void setEquipmentTemplateName(final String equipmentTemplateName) {
+        this.equipmentTemplateName = equipmentTemplateName;
+    }
 
     public void setItemType(final ItemType itemType) {
         this.itemType = itemType;
+    }
+
+    public void setItemDefinitionCode(final String itemDefinitionCode) {
+        this.itemDefinitionCode = itemDefinitionCode;
     }
 
     public void setQuantity(final int quantity) {
@@ -149,10 +193,13 @@ public class ArenaShopProduct {
     public ArenaShopProduct() {
     }
 
-    public ArenaShopProduct(final String code, final String name, final ItemType itemType, final int quantity, final int priceCoins, final boolean active) {
+    public ArenaShopProduct(final String code, final String name, final ShopProductType productType, final ItemType itemType, final String itemDefinitionCode, final String equipmentTemplateName, final int quantity, final int priceCoins, final boolean active) {
         this.code = code;
         this.name = name;
+        this.productType = productType;
         this.itemType = itemType;
+        this.itemDefinitionCode = itemDefinitionCode;
+        this.equipmentTemplateName = equipmentTemplateName;
         this.quantity = quantity;
         this.priceCoins = priceCoins;
         this.active = active;

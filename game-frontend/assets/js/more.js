@@ -32,6 +32,12 @@ async function renderMorePage() {
       label: "Atividades",
       items: [
         {
+          route: "mission-teams",
+          icon: "◈",
+          title: "Meus Times",
+          desc: "Monte formações de até três Digimons para missões",
+        },
+        {
           route: "activity-calendar",
           icon: "📅",
           iconImage: "assets/img/calendario-atividades.webp",

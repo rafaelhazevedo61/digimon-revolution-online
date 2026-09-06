@@ -71,6 +71,42 @@ class GetAvailableMissionsUseCaseTest {
         );
     }
 
+    @Test
+    void returnsOnlyMissionsThatActiveDigimonCanAccess() {
+        UUID playerId = UUID.randomUUID();
+        UUID activeDigimonId = UUID.randomUUID();
+        Player player = mock(Player.class);
+        Digimon digimon = mock(Digimon.class);
+        PlayerRepository playerRepository = mock(PlayerRepository.class);
+        DigimonRepository digimonRepository = mock(DigimonRepository.class);
+        MissionDefinitionRepository missionDefinitionRepository = mock(MissionDefinitionRepository.class);
+
+        when(player.getActiveDigimonId()).thenReturn(activeDigimonId);
+        when(digimon.getLevel()).thenReturn(1);
+        when(digimon.getStage()).thenReturn(Stage.BABY_II);
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findById(activeDigimonId)).thenReturn(Optional.of(digimon));
+        when(missionDefinitionRepository.findByActiveTrue()).thenReturn(List.of(
+                mission("MISSION_NF_1", Area.NATIVE_FOREST, Stage.BABY, 1),
+                mission("MISSION_NF_2", Area.NATIVE_FOREST, Stage.BABY, 3),
+                mission("MISSION_NF_3", Area.NATIVE_FOREST, Stage.BABY, 5),
+                mission("MISSION_GS_1", Area.GEAR_SAVANNA, Stage.ROOKIE, 1)
+        ));
+
+        GetAvailableMissionsUseCase useCase = new GetAvailableMissionsUseCase(
+                playerRepository,
+                digimonRepository,
+                missionDefinitionRepository
+        );
+
+        List<MissionResponse> result = useCase.execute(makeToken(playerId));
+
+        assertEquals(
+                List.of("MISSION_NF_1"),
+                result.stream().map(MissionResponse::id).toList()
+        );
+    }
+
     private MissionDefinitionEntity mission(String id, Area area, Stage requiredStage, int requiredLevel) {
         return MissionDefinitionEntity.builder()
                 .id(id)

@@ -26,7 +26,11 @@ public class StoreDigimonUseCase {
 
     @Transactional
     public Digimon execute(String token, UUID digimonId) {
-        UUID playerId = TokenExtractor.extractPlayerId(token);
+        return executeForPlayer(TokenExtractor.extractPlayerId(token), digimonId);
+    }
+
+    @Transactional
+    public Digimon executeForPlayer(UUID playerId, UUID digimonId) {
         Player player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         Digimon digimon = digimonRepository.findByIdForUpdate(digimonId).orElseThrow(() -> new NotFoundException("Digimon not found"));
         if (!digimon.getPlayerId().equals(playerId)) {

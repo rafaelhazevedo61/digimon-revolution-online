@@ -85,6 +85,7 @@ class UnequipAllUseCaseTest {
     private Equipment createEquipment(EquipmentSlot slot) {
         return Equipment.builder()
                 .id(UUID.randomUUID())
+                .playerId(playerId)
                 .digimonId(digimonId)
                 .name("Test " + slot.name())
                 .slot(slot)
@@ -107,11 +108,11 @@ class UnequipAllUseCaseTest {
         digimon.setArmorId(armor.getId());
         digimon.setAccessoryId(accessory.getId());
 
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
-        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
-        when(equipmentRepository.findById(weapon.getId())).thenReturn(Optional.of(weapon));
-        when(equipmentRepository.findById(armor.getId())).thenReturn(Optional.of(armor));
-        when(equipmentRepository.findById(accessory.getId())).thenReturn(Optional.of(accessory));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(equipmentRepository.findByIdForUpdate(weapon.getId())).thenReturn(Optional.of(weapon));
+        when(equipmentRepository.findByIdForUpdate(armor.getId())).thenReturn(Optional.of(armor));
+        when(equipmentRepository.findByIdForUpdate(accessory.getId())).thenReturn(Optional.of(accessory));
 
         int count = unequipAllUseCase.execute(token);
 
@@ -127,8 +128,8 @@ class UnequipAllUseCaseTest {
 
     @Test
     void execute_noEquipments_returnsZero() {
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
-        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
 
         int count = unequipAllUseCase.execute(token);
 
@@ -140,9 +141,9 @@ class UnequipAllUseCaseTest {
         Equipment weapon = createEquipment(EquipmentSlot.WEAPON);
         digimon.setWeaponId(weapon.getId());
 
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
-        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
-        when(equipmentRepository.findById(weapon.getId())).thenReturn(Optional.of(weapon));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(equipmentRepository.findByIdForUpdate(weapon.getId())).thenReturn(Optional.of(weapon));
 
         int count = unequipAllUseCase.execute(token);
 
@@ -154,7 +155,7 @@ class UnequipAllUseCaseTest {
     @Test
     void execute_throwsWhenNoActiveDigimon() {
         player.setActiveDigimonId(null);
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
 
         assertThrows(RuntimeException.class, () -> unequipAllUseCase.execute(token));
     }

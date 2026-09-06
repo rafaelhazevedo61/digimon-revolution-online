@@ -1,6 +1,7 @@
 package com.dro.modules.clan.raid.api.dto.response;
 
 import com.dro.modules.boss.api.dto.response.BossDefeatSummaryResponse;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -19,6 +20,7 @@ public record AttackClanRaidResponse(
         int bitsGained,
         int clanHonorMarksGained,
         int clanXpGained,
+        List<ClanRaidRewardResponse> rewards,
         BossDefeatSummaryResponse defeatSummary
 ) {
 }

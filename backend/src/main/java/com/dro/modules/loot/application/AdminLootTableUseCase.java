@@ -3,6 +3,7 @@ package com.dro.modules.loot.application;
 import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.ItemDefinitionRepository;
+import com.dro.modules.equipment.infra.EquipmentTemplateRepository;
 import com.dro.modules.loot.api.dto.request.LootTableAdminRequest;
 import com.dro.modules.loot.api.dto.response.AdminLootItemCatalogResponse;
 import com.dro.modules.loot.api.dto.response.AdminLootTableResponse;
@@ -45,6 +46,7 @@ public class AdminLootTableUseCase {
     private final LootTableRepository lootTableRepository;
     private final ChestDefinitionRepository chestDefinitionRepository;
     private final ItemDefinitionRepository itemDefinitionRepository;
+    private final EquipmentTemplateRepository equipmentTemplateRepository;
     private final PlayerRepository playerRepository;
     private final TransactionAuditPublisher transactionAuditPublisher;
 
@@ -172,6 +174,8 @@ public class AdminLootTableUseCase {
                 throw new BadRequestException("Todas as entradas precisam estar preenchidas.");
             }
             String materialCode = normalizeMaterialCode(entry.materialCode());
+            String equipmentTemplateName = normalizeEquipmentTemplateName(entry.equipmentTemplateName());
+            boolean equipmentEntry = entry.itemType() == ItemType.EQUIPMENT;
             boolean requiresCatalogCode = entry.itemType() == ItemType.EVOLUTION_MATERIAL || entry.itemType() == ItemType.LOOT_CHEST;
             if (requiresCatalogCode && materialCode == null) {
                 throw new BadRequestException("Informe o código do material ou baú catalogado.");
@@ -179,22 +183,34 @@ public class AdminLootTableUseCase {
             if (!requiresCatalogCode && materialCode != null) {
                 throw new BadRequestException("Somente materiais nomeados e baús podem usar código específico.");
             }
+            if (equipmentEntry) {
+                if (equipmentTemplateName == null) {
+                    throw new BadRequestException("Informe o template de equipamento.");
+                }
+                if (equipmentTemplateRepository == null || equipmentTemplateRepository.findByName(equipmentTemplateName).isEmpty()) {
+                    throw new ConflictException("Template de equipamento não encontrado: " + equipmentTemplateName);
+                }
+            } else if (equipmentTemplateName != null || entry.equipmentRarity() != null) {
+                throw new BadRequestException("Template e raridade de equipamento só podem ser usados com EQUIPMENT.");
+            }
             try {
-                LootTableRules.validateEntry(entry.itemType(), materialCode, entry.weight(), entry.minQuantity(), entry.maxQuantity());
+                LootTableRules.validateEntry(entry.itemType(), materialCode, equipmentTemplateName, entry.equipmentRarity(), entry.weight(), entry.minQuantity(), entry.maxQuantity());
             } catch (IllegalArgumentException exception) {
                 throw new BadRequestException(exception.getMessage());
             }
-            String catalogCode = requiresCatalogCode ? materialCode : entry.itemType().name();
-            ItemDefinition definition = itemDefinitionRepository.findByCode(catalogCode).orElseThrow(() -> new ConflictException("Item não encontrado no catálogo: " + catalogCode));
-            validateCatalogCategory(entry.itemType(), definition, catalogCode);
-            if (definition.getMaxStack() != null && entry.maxQuantity() > definition.getMaxStack()) {
-                throw new BadRequestException("A quantidade máxima de " + catalogCode + " excede o max_stack do catálogo.");
+            String catalogCode = equipmentEntry ? equipmentTemplateName : requiresCatalogCode ? materialCode : entry.itemType().name();
+            ItemDefinition definition = equipmentEntry ? null : itemDefinitionRepository.findByCode(catalogCode).orElseThrow(() -> new ConflictException("Item não encontrado no catálogo: " + catalogCode));
+            if (!equipmentEntry) {
+                validateCatalogCategory(entry.itemType(), definition, catalogCode);
+                if (definition.getMaxStack() != null && entry.maxQuantity() > definition.getMaxStack()) {
+                    throw new BadRequestException("A quantidade máxima de " + catalogCode + " excede o max_stack do catálogo.");
+                }
             }
-            String duplicateKey = entry.rarity() + "|" + entry.itemType() + "|" + (materialCode == null ? "" : materialCode);
+            String duplicateKey = entry.rarity() + "|" + entry.itemType() + "|" + (equipmentEntry ? equipmentTemplateName : materialCode == null ? "" : materialCode);
             if (!duplicateKeys.add(duplicateKey)) {
                 throw new BadRequestException("A entrada " + catalogCode + " está duplicada na raridade " + entry.rarity() + ".");
             }
-            entries.add(new PreparedEntry(entry.rarity(), entry.itemType(), materialCode, entry.weight(), entry.minQuantity(), entry.maxQuantity(), entry.active() == null || entry.active()));
+            entries.add(new PreparedEntry(entry.rarity(), entry.itemType(), materialCode, equipmentTemplateName, entry.equipmentRarity(), entry.weight(), entry.minQuantity(), entry.maxQuantity(), entry.active() == null || entry.active()));
         }
         if (entries.size() < request.minItems()) {
             throw new BadRequestException("A Loot Table precisa ter pelo menos " + request.minItems() + " entradas distintas para atender ao mínimo configurado.");
@@ -225,13 +241,15 @@ public class AdminLootTableUseCase {
             lootTableRepository.flush();
         }
         configuration.weights().forEach((rarity, weight) -> entity.getRarityWeights().add(LootTableRarityWeightEntity.builder().lootTable(entity).rarity(rarity).weight(weight).build()));
-        configuration.entries().forEach(entry -> entity.getEntries().add(LootTableEntryEntity.builder().lootTable(entity).rarity(entry.rarity()).itemType(entry.itemType()).materialCode(entry.materialCode()).weight(entry.weight()).minQuantity(entry.minQuantity()).maxQuantity(entry.maxQuantity()).active(entry.active()).build()));
+        configuration.entries().forEach(entry -> entity.getEntries().add(LootTableEntryEntity.builder().lootTable(entity).rarity(entry.rarity()).itemType(entry.itemType()).materialCode(entry.materialCode()).equipmentTemplateName(entry.equipmentTemplateName()).equipmentRarity(entry.equipmentRarity()).weight(entry.weight()).minQuantity(entry.minQuantity()).maxQuantity(entry.maxQuantity()).active(entry.active()).build()));
     }
 
     private AdminLootTableResponse toResponse(LootTableEntity entity) {
         Map<String, ItemDefinition> catalog = new HashMap<>();
         entity.getEntries().forEach(entry -> {
-            String code = entry.getMaterialCode() != null ? entry.getMaterialCode() : entry.getItemType().name();
+            String code = entry.getItemType() == ItemType.EQUIPMENT
+                    ? entry.getEquipmentTemplateName()
+                    : entry.getMaterialCode() != null ? entry.getMaterialCode() : entry.getItemType().name();
             itemDefinitionRepository.findByCode(code).ifPresent(definition -> catalog.put(code, definition));
         });
         return AdminLootTableResponse.from(entity, catalog);
@@ -269,6 +287,11 @@ public class AdminLootTableUseCase {
         return code.trim().toUpperCase();
     }
 
+    private String normalizeEquipmentTemplateName(String name) {
+        if (name == null || name.isBlank()) return null;
+        return name.trim();
+    }
+
     private String normalizeDescription(String description) {
         if (description == null || description.isBlank()) return null;
         return description.trim();
@@ -279,13 +302,14 @@ public class AdminLootTableUseCase {
     }
 
 
-    private record PreparedEntry(LootRarity rarity, ItemType itemType, String materialCode, int weight, int minQuantity, int maxQuantity, boolean active) {
+    private record PreparedEntry(LootRarity rarity, ItemType itemType, String materialCode, String equipmentTemplateName, com.dro.modules.equipment.domain.EquipmentRarity equipmentRarity, int weight, int minQuantity, int maxQuantity, boolean active) {
     }
 
-    public AdminLootTableUseCase(final LootTableRepository lootTableRepository, final ChestDefinitionRepository chestDefinitionRepository, final ItemDefinitionRepository itemDefinitionRepository, final PlayerRepository playerRepository, final TransactionAuditPublisher transactionAuditPublisher) {
+    public AdminLootTableUseCase(final LootTableRepository lootTableRepository, final ChestDefinitionRepository chestDefinitionRepository, final ItemDefinitionRepository itemDefinitionRepository, final EquipmentTemplateRepository equipmentTemplateRepository, final PlayerRepository playerRepository, final TransactionAuditPublisher transactionAuditPublisher) {
         this.lootTableRepository = lootTableRepository;
         this.chestDefinitionRepository = chestDefinitionRepository;
         this.itemDefinitionRepository = itemDefinitionRepository;
+        this.equipmentTemplateRepository = equipmentTemplateRepository;
         this.playerRepository = playerRepository;
         this.transactionAuditPublisher = transactionAuditPublisher;
     }

@@ -1,0 +1,111 @@
+@media (min-width: 1024px) {
+  #app > .page-container:has(#dex-filters) {
+    max-width: 86rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  #app > .page-container:has(#dex-filters) > h2 {
+    margin-bottom: 1rem;
+    font-size: 1.65rem;
+    line-height: 1.2;
+  }
+
+  #dex-filters {
+    display: grid;
+    grid-template-columns: minmax(20rem, 1.8fr) repeat(3, minmax(10rem, 0.8fr));
+    gap: 0.75rem;
+    align-items: end;
+    padding: 1rem;
+  }
+
+  #dex-filters > .mb-2 {
+    margin-bottom: 0;
+  }
+
+  #dex-filters > .flex.flex-col {
+    display: contents;
+  }
+
+  #dex-filters input,
+  #dex-filters select {
+    min-height: 2.75rem;
+  }
+
+  #dex-count {
+    margin-top: 0.25rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  #dex-content > .grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+
+  #dex-content > .grid > button {
+    padding: 0.55rem;
+    border-radius: 0.9rem;
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  #dex-content > .grid > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.9rem 1.8rem rgba(2, 6, 23, 0.28);
+  }
+
+  #dex-content > .grid > button > div:first-child {
+    border-radius: 0.75rem;
+  }
+
+  #dex-content > .grid > button > p {
+    margin-top: 0.45rem;
+    font-size: 0.78rem;
+    line-height: 1.2;
+  }
+
+  #dex-load-more {
+    width: min(22rem, 100%);
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1.25rem;
+  }
+
+  #dex-modal-overlay,
+  #dex-evolution-overlay {
+    align-items: center;
+    padding: 2rem;
+  }
+
+  #dex-modal-overlay > div {
+    max-width: 46rem !important;
+    max-height: 88vh !important;
+    border-radius: 1.25rem !important;
+    padding: 1.5rem !important;
+  }
+
+  #dex-evolution-overlay > div {
+    max-width: 64rem !important;
+    max-height: 88vh !important;
+    border-radius: 1.25rem !important;
+    padding: 1.5rem !important;
+  }
+
+  #dex-evolution-content {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  #dex-evolution-content > .card {
+    margin: 0;
+    height: 100%;
+  }
+}
+
+@media (min-width: 1440px) {
+  #dex-content > .grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+}

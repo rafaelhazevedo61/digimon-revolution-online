@@ -155,6 +155,8 @@ public final class EventRewardMessageText {
                 case INCUBATOR_EPIC -> "Incubadora épica";
                 case INCUBATOR_LEGENDARY -> "Incubadora lendária";
                 case INCUBATION_SLOT_UNLOCK -> "Expansor de slot de incubação";
+                case MISSION_SLOT_UNLOCK -> "Expansor de slot de missão";
+                case TEAM_SLOT_UNLOCK -> "Expansor de slot de time";
                 case STORAGE_SLOT_1 -> "+1 Storage";
                 case STORAGE_SLOT_5 -> "+5 Storage";
                 case STORAGE_SLOT_10 -> "+10 Storage";
@@ -170,7 +172,10 @@ public final class EventRewardMessageText {
                 case FRAGMENT_MEGA -> "Fragmento Mega";
                 case EVOLUTION_MATERIAL -> "Material de evolução";
                 case LOOT_CHEST -> "Baú temático";
+                case EQUIPMENT -> "Equipamento";
                 case REFINEMENT_STONE -> "Pedra de refinamento";
+                case REFINEMENT_SUCCESS_BOOST -> "Pergaminho de Refinamento";
+                case REFINEMENT_PROTECTION -> "Cristal de Proteção";
                 case ASCENSION_CORE -> "Núcleo de Ascensão";
                 case RARITY_REROLL -> "Dado de Raridade";
                 case RARITY_PRESERVATION -> "Cristal de Preservação de Raridade";

@@ -1,6 +1,8 @@
 package com.dro.modules.mission.application;
 
 import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.domain.DigimonInfos;
+import com.dro.modules.digimon.infra.DigimonInfosRepository;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.domain.ItemDefinition;
@@ -10,6 +12,7 @@ import com.dro.modules.loot.domain.LootRoller;
 import com.dro.modules.loot.domain.ChestDefinitionEntity;
 import com.dro.modules.loot.infra.ChestDefinitionRepository;
 import com.dro.modules.inventory.infra.ItemDefinitionRepository;
+import com.dro.modules.mission.api.dto.response.MissionDigimonExperienceResponse;
 import com.dro.modules.mission.api.dto.response.MissionResultResponse;
 import com.dro.modules.mission.api.dto.response.RewardResponse;
 import com.dro.modules.mission.domain.MissionDefinition;
@@ -61,6 +64,7 @@ public class ClaimMissionUseCase {
 
     private final MissionInstanceRepository missionInstanceRepository;
     private final DigimonRepository digimonRepository;
+    private final DigimonInfosRepository digimonInfosRepository;
     private final PlayerMissionProgressRepository progressRepository;
     private final AddItemUseCase addItemUseCase;
     private final MissionDefinitionRepository missionDefinitionRepository;
@@ -77,6 +81,7 @@ public class ClaimMissionUseCase {
     public ClaimMissionUseCase(
             MissionInstanceRepository missionInstanceRepository,
             DigimonRepository digimonRepository,
+            DigimonInfosRepository digimonInfosRepository,
             PlayerMissionProgressRepository progressRepository,
             AddItemUseCase addItemUseCase,
             MissionDefinitionRepository missionDefinitionRepository,
@@ -89,7 +94,7 @@ public class ClaimMissionUseCase {
             TransactionAuditPublisher transactionAuditPublisher,
             ActivityCalendarService activityCalendarService
     ) {
-        this(missionInstanceRepository, digimonRepository, progressRepository, addItemUseCase, missionDefinitionRepository,
+        this(missionInstanceRepository, digimonRepository, digimonInfosRepository, progressRepository, addItemUseCase, missionDefinitionRepository,
                 tutorialService, clanBonusService, clanMissionProgressTracker, playerRepository, chestDefinitionRepository,
                 itemDefinitionRepository, transactionAuditPublisher, activityCalendarService, null);
     }
@@ -98,6 +103,7 @@ public class ClaimMissionUseCase {
     public ClaimMissionUseCase(
             MissionInstanceRepository missionInstanceRepository,
             DigimonRepository digimonRepository,
+            DigimonInfosRepository digimonInfosRepository,
             PlayerMissionProgressRepository progressRepository,
             AddItemUseCase addItemUseCase,
             MissionDefinitionRepository missionDefinitionRepository,
@@ -113,6 +119,7 @@ public class ClaimMissionUseCase {
     ) {
         this.missionInstanceRepository = missionInstanceRepository;
         this.digimonRepository = digimonRepository;
+        this.digimonInfosRepository = digimonInfosRepository;
         this.progressRepository = progressRepository;
         this.addItemUseCase = addItemUseCase;
         this.missionDefinitionRepository = missionDefinitionRepository;
@@ -129,9 +136,11 @@ public class ClaimMissionUseCase {
 
     @Transactional
     public MissionResultResponse execute(String token, UUID missionInstanceId) {
+        return executeForPlayer(TokenExtractor.extractPlayerId(token), missionInstanceId);
+    }
 
-        UUID playerId = TokenExtractor.extractPlayerId(token);
-
+    @Transactional
+    public MissionResultResponse executeForPlayer(UUID playerId, UUID missionInstanceId) {
         MissionInstance instance = missionInstanceRepository
                 .findByIdAndPlayerId(missionInstanceId, playerId)
                 .orElseThrow(() -> new NotFoundException("Missão não encontrada"));
@@ -146,24 +155,39 @@ public class ClaimMissionUseCase {
             throw new BadRequestException("Missão ainda não foi concluída");
         }
 
-        Digimon digimon = digimonRepository.findById(instance.getDigimonId())
-                .orElseThrow(() -> new NotFoundException("Digimon não encontrado"));
+        List<UUID> digimonIds = instance.getDigimonIds();
+        List<Digimon> digimons;
+        if (digimonIds.size() == 1) {
+            digimons = List.of(digimonRepository.findById(digimonIds.get(0))
+                    .orElseThrow(() -> new NotFoundException("Digimon não encontrado")));
+        } else {
+            List<Digimon> loadedDigimons = digimonRepository.findAllByIdForUpdate(playerId, digimonIds);
+            if (loadedDigimons.size() != digimonIds.size()) {
+                throw new NotFoundException("Um ou mais Digimons da missão não foram encontrados");
+            }
+            digimons = digimonIds.stream()
+                    .map(id -> loadedDigimons.stream()
+                            .filter(candidate -> candidate.getId().equals(id))
+                            .findFirst()
+                            .orElseThrow(() -> new NotFoundException("Digimon não encontrado")))
+                    .toList();
+        }
+        Digimon digimon = digimons.get(0);
 
         MissionDefinition mission = MissionDefinitionMapper.toDefinition(
                 missionDefinitionRepository.findById(instance.getMissionId())
                         .orElseThrow(() -> new NotFoundException("Mission not found"))
         );
 
-        PlayerMissionProgress progress =
-                getOrCreateProgress(playerId, mission.getId());
-
+        PlayerMissionProgress progress = getOrCreateProgress(playerId, mission.getId());
         int completionCount = progress.getCompletionCount();
 
+        Map<UUID, Integer> previousLevels = new LinkedHashMap<>();
+        digimons.forEach(member -> previousLevels.put(member.getId(), member.getLevel()));
         int previousLevel = digimon.getLevel();
         Stage previousStage = digimon.getStage();
 
-        Player player = playerRepository.findById(playerId)
-                .orElse(null);
+        Player player = playerRepository.findById(playerId).orElse(null);
         UUID clanId = player != null ? player.getClanId() : null;
 
         double xpMultiplier = clanId != null ? clanBonusService.getMissionXpMultiplier(clanId) : 1.0;
@@ -181,9 +205,13 @@ public class ClaimMissionUseCase {
         double digimonXpMultiplier = RarityRules.getXpMultiplier(digimon.getRarity())
                 * PersonalityRules.getXpMultiplier(digimon.getPersonality())
                 * TraitRules.getXpMultiplier(digimon.getTrait());
-        int xpGained = digimon.gainExperience(xpBeforeDigimonMultiplier);
-
-        boolean levelUp = digimon.getLevel() > previousLevel;
+        int xpGained = 0;
+        boolean levelUp = false;
+        for (Digimon member : digimons) {
+            int memberPreviousLevel = member.getLevel();
+            xpGained += member.gainExperience(xpBeforeDigimonMultiplier);
+            levelUp = levelUp || member.getLevel() > memberPreviousLevel;
+        }
 
         int bitsBeforeEventMultiplier = (int) Math.floor(
                 calculateScaledBits(mission.getBaseBits(), completionCount) * bitsMultiplier
@@ -195,23 +223,18 @@ public class ClaimMissionUseCase {
         }
 
         List<RewardResponse> rewards = new ArrayList<>();
-
         UUID digimonId = instance.getDigimonId();
 
         if (!hasMissionChest(mission)) {
-            rewards.addAll(
-                    applyFixedRewards(digimonId, mission, completionCount)
-            );
+            rewards.addAll(applyFixedRewards(digimonId, mission, completionCount));
         }
 
         applyMissionChestOrLegacyLoot(digimonId, mission, rewards);
-
         incrementProgress(progress);
-
         instance.markClaimed();
 
         missionInstanceRepository.save(instance);
-        digimonRepository.save(digimon);
+        digimons.forEach(digimonRepository::save);
         if (activityCalendarService != null) activityCalendarService.recordActivity(playerId, ActivitySource.MISSION_COMPLETED, missionInstanceId.toString());
         NewlyUnlockedContentResponse newlyUnlockedContent = newlyUnlockedContentService == null
                 ? NewlyUnlockedContentResponse.empty()
@@ -231,11 +254,23 @@ public class ClaimMissionUseCase {
                 buildAuditPayload(playerId, mission, xpGained, bitsGained)
         );
 
+        List<MissionDigimonExperienceResponse> digimonExperience = digimons.stream()
+                .map(member -> MissionDigimonExperienceResponse.from(
+                        member,
+                        missionDigimonImageUrl(member),
+                        previousLevels.getOrDefault(member.getId(), member.getLevel())
+                ))
+                .toList();
+
         return new MissionResultResponse(
                 mission.getId(),
+                instance.getTeamId(),
+                digimonExperience,
                 xpGained,
                 bitsGained,
                 levelUp,
+                instance.isAutoRepeatEnabled(),
+                instance.isAutoClaimEnabled(),
                 rewards,
                 newlyUnlockedContent,
                 new MissionRewardBreakdownResponse(
@@ -278,21 +313,16 @@ public class ClaimMissionUseCase {
                             .missionId(missionId)
                             .completionCount(0)
                             .build();
-
                     return progressRepository.save(progress);
                 });
     }
 
     private int calculateScaledXp(int baseXp, int completionCount) {
-        double multiplier = calculateProgressMultiplier(completionCount);
-
-        return (int) Math.floor(baseXp * multiplier);
+        return (int) Math.floor(baseXp * calculateProgressMultiplier(completionCount));
     }
 
     private int calculateScaledBits(int baseBits, int completionCount) {
-        double multiplier = calculateProgressMultiplier(completionCount);
-
-        return (int) Math.floor(baseBits * multiplier);
+        return (int) Math.floor(baseBits * calculateProgressMultiplier(completionCount));
     }
 
     private boolean hasMissionChest(MissionDefinition mission) {
@@ -305,34 +335,22 @@ public class ClaimMissionUseCase {
             int completionCount
     ) {
         double multiplier = calculateProgressMultiplier(completionCount);
-
         List<RewardResponse> rewards = new ArrayList<>();
 
         for (MissionReward reward : mission.getFixedRewards()) {
-
             int quantity = (int) Math.floor(reward.getBaseQuantity() * multiplier);
+            if (quantity <= 0) continue;
 
-            if (quantity > 0) {
-                ItemDefinition itemDefinition = itemDefinitionRepository
-                        .findByCode(reward.getItemType().name())
-                        .orElse(null);
+            ItemDefinition itemDefinition = itemDefinitionRepository
+                    .findByCode(reward.getItemType().name())
+                    .orElse(null);
 
-                if (itemDefinition != null) {
-                    addItemUseCase.addMaterial(digimonId, itemDefinition, quantity);
-                } else {
-                    addItemUseCase.execute(
-                            digimonId,
-                            reward.getItemType(),
-                            quantity
-                    );
-                }
+            boolean granted = itemDefinition != null
+                    ? addItemUseCase.tryAddMaterial(digimonId, itemDefinition, quantity)
+                    : addItemUseCase.tryExecute(digimonId, reward.getItemType(), quantity);
 
-                rewards.add(
-                        new RewardResponse(
-                                reward.getItemType(),
-                                quantity
-                        )
-                );
+            if (granted) {
+                rewards.add(new RewardResponse(reward.getItemType(), quantity));
             }
         }
 
@@ -350,13 +368,14 @@ public class ClaimMissionUseCase {
                     .orElseThrow(() -> new ConflictException(
                             "Baú da missão não encontrado ou inativo: " + mission.getChestCode()));
 
-            addItemUseCase.addMaterial(digimonId, chest.getItemDefinition(), 1);
-            rewards.add(new RewardResponse(
-                    ItemType.LOOT_CHEST,
-                    1,
-                    chest.getCode(),
-                    chest.getName()
-            ));
+            if (addItemUseCase.tryAddMaterial(digimonId, chest.getItemDefinition(), 1)) {
+                rewards.add(new RewardResponse(
+                        ItemType.LOOT_CHEST,
+                        1,
+                        chest.getCode(),
+                        chest.getName()
+                ));
+            }
             return;
         }
 
@@ -365,19 +384,12 @@ public class ClaimMissionUseCase {
         }
 
         LootItem lootItem = LootRoller.roll(mission.getLootTable());
-
-        addItemUseCase.execute(
-                digimonId,
-                lootItem.getItemType(),
-                lootItem.getQuantity()
-        );
-
-        rewards.add(
-                new RewardResponse(
-                        lootItem.getItemType(),
-                        lootItem.getQuantity()
-                )
-        );
+        if (addItemUseCase.tryExecute(digimonId, lootItem.getItemType(), lootItem.getQuantity())) {
+            rewards.add(new RewardResponse(
+                    lootItem.getItemType(),
+                    lootItem.getQuantity()
+            ));
+        }
     }
 
     private Map<String, Object> buildAuditPayload(
@@ -400,6 +412,13 @@ public class ClaimMissionUseCase {
         }
         payload.put("summary", "Mission claimed successfully");
         return payload;
+    }
+
+    private String missionDigimonImageUrl(Digimon digimon) {
+        if (digimonInfosRepository == null || digimon.getDigimonInfoId() == null) return null;
+        return digimonInfosRepository.findById(digimon.getDigimonInfoId())
+                .map(DigimonInfos::getImageUrl)
+                .orElse(null);
     }
 
     private double effectiveMultiplier(int baseAmount, int finalAmount) {

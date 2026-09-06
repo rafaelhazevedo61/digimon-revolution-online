@@ -1,0 +1,218 @@
+package com.dro.modules.mission.application;
+
+import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.domain.enums.DigimonStatus;
+import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.mission.api.dto.request.SaveMissionTeamRequest;
+import com.dro.modules.mission.domain.MissionStatus;
+import com.dro.modules.mission.domain.MissionTeam;
+import com.dro.modules.mission.infra.MissionInstanceRepository;
+import com.dro.modules.mission.infra.MissionTeamRepository;
+import com.dro.modules.player.domain.Player;
+import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.ConflictException;
+import com.dro.shared.security.JwtSettings;
+import com.dro.shared.security.JwtTokenCodec;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class MissionTeamUseCaseTest {
+    @Mock private MissionTeamRepository missionTeamRepository;
+    @Mock private MissionInstanceRepository missionInstanceRepository;
+    @Mock private DigimonRepository digimonRepository;
+    @Mock private PlayerRepository playerRepository;
+    @Mock private Player player;
+
+    private UUID playerId;
+    private List<UUID> digimonIds;
+    private String token;
+    private MissionTeamUseCase useCase;
+
+    @BeforeEach
+    void setUp() {
+        playerId = UUID.randomUUID();
+        digimonIds = List.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        token = JwtTokenCodec.create(
+                Map.of(
+                        "sub", playerId.toString(),
+                        "iss", JwtSettings.getIssuer(),
+                        "exp", Instant.now().getEpochSecond() + 3600
+                ),
+                JwtSettings.getSecret()
+        );
+        lenient().when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        lenient().when(player.getMaxTeamSlots()).thenReturn(3);
+        useCase = new MissionTeamUseCase(playerRepository, missionTeamRepository, missionInstanceRepository, digimonRepository);
+    }
+
+    @Test
+    void createsTeamWithThreeOwnedDigimons() {
+        when(digimonRepository.findAllByIdForUpdate(playerId, digimonIds))
+                .thenReturn(List.of(digimon(digimonIds.get(0)), digimon(digimonIds.get(1)), digimon(digimonIds.get(2))));
+        MissionTeam saved = new MissionTeam(playerId, "Exploradores", digimonIds, digimonIds.get(0));
+        when(missionTeamRepository.save(any(MissionTeam.class))).thenReturn(saved);
+
+        var response = useCase.create(token, new SaveMissionTeamRequest(" Exploradores ", digimonIds, digimonIds.get(0)));
+
+        assertEquals("Exploradores", response.name());
+        assertEquals(digimonIds, response.digimonIds());
+        assertEquals(digimonIds.get(0), response.captainDigimonId());
+        ArgumentCaptor<MissionTeam> captor = ArgumentCaptor.forClass(MissionTeam.class);
+        verify(missionTeamRepository).save(captor.capture());
+        assertEquals("Exploradores", captor.getValue().getName());
+    }
+
+    @Test
+    void createsPartialTeamWithTwoDigimons() {
+        List<UUID> partialIds = digimonIds.subList(0, 2);
+        when(digimonRepository.findAllByIdForUpdate(playerId, partialIds))
+                .thenReturn(List.of(digimon(partialIds.get(0)), digimon(partialIds.get(1))));
+        MissionTeam saved = new MissionTeam(playerId, "Dupla", partialIds, partialIds.get(1));
+        when(missionTeamRepository.save(any(MissionTeam.class))).thenReturn(saved);
+
+        var response = useCase.create(token, new SaveMissionTeamRequest("Dupla", partialIds, partialIds.get(1)));
+
+        assertEquals(partialIds, response.digimonIds());
+        assertEquals(partialIds.get(1), response.captainDigimonId());
+    }
+
+    @Test
+    void rejectsCreatingFourthTeamWithoutUnlockItem() {
+        when(missionTeamRepository.countByPlayerId(playerId)).thenReturn(3L);
+
+        BadRequestException exception = assertThrows(
+                BadRequestException.class,
+                () -> useCase.create(token, new SaveMissionTeamRequest("Quarto time", digimonIds, digimonIds.get(0)))
+        );
+
+        org.junit.jupiter.api.Assertions.assertTrue(exception.getMessage().contains("Expansor de Slot de Time"));
+        verify(missionTeamRepository, never()).save(any(MissionTeam.class));
+    }
+
+    @Test
+    void keepsExistingPlayersWithMoreThanThreeTeamsCompatibleForReadOperations() {
+        when(missionTeamRepository.findByPlayerIdOrderByCreatedAtAsc(playerId)).thenReturn(List.of(
+                new MissionTeam(playerId, "Time 1", digimonIds, digimonIds.get(0)),
+                new MissionTeam(playerId, "Time 2", digimonIds, digimonIds.get(0)),
+                new MissionTeam(playerId, "Time 3", digimonIds, digimonIds.get(0)),
+                new MissionTeam(playerId, "Time 4", digimonIds, digimonIds.get(0))
+        ));
+        when(digimonRepository.findAllById(digimonIds))
+                .thenReturn(List.of(digimon(digimonIds.get(0)), digimon(digimonIds.get(1)), digimon(digimonIds.get(2))));
+
+        assertEquals(4, useCase.list(token).size());
+    }
+
+    @Test
+    void repairsTeamThatStillReferencesSacrificedDigimon() {
+        UUID sacrificedId = digimonIds.get(0);
+        UUID remainingFirst = digimonIds.get(1);
+        UUID remainingSecond = digimonIds.get(2);
+        MissionTeam team = new MissionTeam(playerId, "Time legado", digimonIds, sacrificedId);
+
+        when(missionTeamRepository.findByPlayerIdOrderByCreatedAtAsc(playerId)).thenReturn(List.of(team));
+        when(digimonRepository.findAllById(digimonIds)).thenReturn(List.of(
+                digimonWithStatus(sacrificedId, DigimonStatus.SACRIFICED),
+                digimon(remainingFirst),
+                digimon(remainingSecond)
+        ));
+
+        var responses = useCase.list(token);
+
+        assertEquals(1, responses.size());
+        assertEquals(List.of(remainingFirst, remainingSecond), responses.get(0).digimonIds());
+        assertEquals(remainingFirst, responses.get(0).captainDigimonId());
+        verify(missionTeamRepository).save(team);
+        verify(missionTeamRepository, never()).delete(team);
+    }
+
+    @Test
+    void removesLegacyTeamWhenAllReferencedDigimonsAreUnavailable() {
+        UUID sacrificedId = digimonIds.get(0);
+        MissionTeam team = new MissionTeam(playerId, "Time inválido", List.of(sacrificedId), sacrificedId);
+
+        when(missionTeamRepository.findByPlayerIdOrderByCreatedAtAsc(playerId)).thenReturn(List.of(team));
+        when(digimonRepository.findAllById(List.of(sacrificedId))).thenReturn(List.of(
+                digimonWithStatus(sacrificedId, DigimonStatus.SACRIFICED)
+        ));
+
+        var responses = useCase.list(token);
+
+        assertEquals(0, responses.size());
+        verify(missionTeamRepository).delete(team);
+        verify(missionTeamRepository, never()).save(team);
+    }
+
+    @Test
+    void rejectsDigimonAlreadyAssignedToAnotherTeam() {
+        MissionTeam otherTeam = new MissionTeam(playerId, "Exploradores", digimonIds, digimonIds.get(0));
+        when(digimonRepository.findAllByIdForUpdate(playerId, digimonIds))
+                .thenReturn(List.of(digimon(digimonIds.get(0)), digimon(digimonIds.get(1)), digimon(digimonIds.get(2))));
+        when(missionTeamRepository.findByPlayerIdAndDigimonIds(playerId, digimonIds))
+                .thenReturn(List.of(otherTeam));
+
+        assertThrows(
+                ConflictException.class,
+                () -> useCase.create(token, new SaveMissionTeamRequest("Outro time", digimonIds, digimonIds.get(0)))
+        );
+    }
+
+    @Test
+    void rejectsRepeatedDigimonInTeam() {
+        List<UUID> repeated = List.of(digimonIds.get(0), digimonIds.get(0), digimonIds.get(2));
+
+        assertThrows(
+                BadRequestException.class,
+                () -> useCase.create(token, new SaveMissionTeamRequest("Inválido", repeated, digimonIds.get(0)))
+        );
+    }
+
+    @Test
+    void rejectsEditingTeamWhileItIsInMission() {
+        UUID teamId = UUID.randomUUID();
+        MissionTeam team = new MissionTeam(playerId, "Exploradores", digimonIds, digimonIds.get(0));
+        when(missionTeamRepository.findByIdAndPlayerIdForUpdate(teamId, playerId)).thenReturn(Optional.of(team));
+        when(missionInstanceRepository.existsByTeamIdAndStatusIn(
+                eq(teamId),
+                eq(List.of(MissionStatus.RUNNING, MissionStatus.COMPLETED))
+        )).thenReturn(true);
+
+        assertThrows(
+                ConflictException.class,
+                () -> useCase.update(token, teamId, new SaveMissionTeamRequest("Novo nome", digimonIds, digimonIds.get(1)))
+        );
+    }
+
+    private Digimon digimon(UUID id) {
+        return digimonWithStatus(id, DigimonStatus.HATCHED);
+    }
+
+    private Digimon digimonWithStatus(UUID id, DigimonStatus status) {
+        return Digimon.builder()
+                .id(id)
+                .playerId(playerId)
+                .status(status)
+                .build();
+    }
+}

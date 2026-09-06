@@ -9,7 +9,9 @@ import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.dro.shared.exception.UnprocessableException;
+import com.dro.shared.automation.AutomationFailureCode;
+import com.dro.shared.automation.AutomationFailureException;
+import org.springframework.http.HttpStatus;
 import java.util.UUID;
 
 /** Concede itens ao inventário global do jogador. */
@@ -38,8 +40,31 @@ public class AddItemUseCase {
     }
 
     @Transactional
+    public boolean tryExecute(UUID ownerId, ItemType type, int quantity) {
+        UUID playerId = resolvePlayerId(ownerId);
+        ItemDefinition itemDefinition = itemDefinitionRepository.findByCode(type.name()).orElse(null);
+        if (itemDefinition != null) {
+            return tryAddMaterialToPlayer(playerId, itemDefinition, quantity);
+        }
+        var existing = repository.findByPlayerIdAndItemType(playerId, type);
+        if (existing.isPresent()) {
+            InventoryItem item = existing.get();
+            item.setQuantity(item.getQuantity() + quantity);
+            repository.save(item);
+        } else {
+            repository.save(InventoryItem.builder().id(UUID.randomUUID()).playerId(playerId).itemType(type).quantity(quantity).build());
+        }
+        return true;
+    }
+
+    @Transactional
     public void addMaterial(UUID ownerId, ItemDefinition itemDefinition, int quantity) {
         addMaterialToPlayer(resolvePlayerId(ownerId), itemDefinition, quantity);
+    }
+
+    @Transactional
+    public boolean tryAddMaterial(UUID ownerId, ItemDefinition itemDefinition, int quantity) {
+        return tryAddMaterialToPlayer(resolvePlayerId(ownerId), itemDefinition, quantity);
     }
 
     @Transactional
@@ -49,13 +74,31 @@ public class AddItemUseCase {
         int requestedQuantity = currentQuantity + quantity;
         Integer maxStack = itemDefinition.getMaxStack();
         if (maxStack != null && requestedQuantity > maxStack) {
-            throw new UnprocessableException("Item stack limit exceeded. Maximum stack: " + maxStack);
+            throw new AutomationFailureException(
+                    "Item stack limit exceeded for item '" + itemDefinition.getName() + "'. Maximum stack: " + maxStack,
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    AutomationFailureCode.INVENTORY_STACK_FULL
+            );
         }
-        int newQuantity = requestedQuantity;
-        if (existing.isPresent()) {
-            InventoryItem item = existing.get();
-            item.setQuantity(newQuantity);
-            repository.save(item);
+        saveMaterial(playerId, itemDefinition, existing.orElse(null), requestedQuantity);
+    }
+
+    private boolean tryAddMaterialToPlayer(UUID playerId, ItemDefinition itemDefinition, int quantity) {
+        var existing = repository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, itemDefinition.getId());
+        int currentQuantity = existing.map(InventoryItem::getQuantity).orElse(0);
+        int requestedQuantity = currentQuantity + quantity;
+        Integer maxStack = itemDefinition.getMaxStack();
+        if (maxStack != null && requestedQuantity > maxStack) {
+            return false;
+        }
+        saveMaterial(playerId, itemDefinition, existing.orElse(null), requestedQuantity);
+        return true;
+    }
+
+    private void saveMaterial(UUID playerId, ItemDefinition itemDefinition, InventoryItem existing, int newQuantity) {
+        if (existing != null) {
+            existing.setQuantity(newQuantity);
+            repository.save(existing);
         } else {
             repository.save(InventoryItem.builder().id(UUID.randomUUID()).playerId(playerId).itemType(resolveItemType(itemDefinition)).itemDefinition(itemDefinition).quantity(newQuantity).build());
         }

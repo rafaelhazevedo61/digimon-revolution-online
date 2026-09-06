@@ -27,6 +27,7 @@ import com.dro.modules.mission.domain.MissionInstance;
 import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
+import com.dro.modules.mission.infra.MissionTeamRepository;
 import com.dro.modules.player.api.dto.response.ActiveMissionResponse;
 import com.dro.modules.player.api.dto.response.InventorySummaryResponse;
 import com.dro.modules.player.api.dto.response.PlayerDashboardResponse;
@@ -60,9 +61,10 @@ public class GetPlayerDashboardUseCase {
     private final MissionInstanceRepository missionInstanceRepository;
     private final IncubationRepository incubationRepository;
     private final MissionDefinitionRepository missionDefinitionRepository;
+    private final MissionTeamRepository missionTeamRepository;
     private final ClanBonusService clanBonusService;
 
-    public GetPlayerDashboardUseCase (PlayerRepository playerRepository, DigimonRepository digimonRepository, DigimonInfosRepository digimonInfosRepository, EquipmentRepository equipmentRepository, InventoryRepository inventoryRepository, MissionInstanceRepository missionInstanceRepository, IncubationRepository incubationRepository, MissionDefinitionRepository missionDefinitionRepository, ClanBonusService clanBonusService) {
+    public GetPlayerDashboardUseCase (PlayerRepository playerRepository, DigimonRepository digimonRepository, DigimonInfosRepository digimonInfosRepository, EquipmentRepository equipmentRepository, InventoryRepository inventoryRepository, MissionInstanceRepository missionInstanceRepository, IncubationRepository incubationRepository, MissionDefinitionRepository missionDefinitionRepository, MissionTeamRepository missionTeamRepository, ClanBonusService clanBonusService) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.digimonInfosRepository = digimonInfosRepository;
@@ -71,6 +73,7 @@ public class GetPlayerDashboardUseCase {
         this.missionInstanceRepository = missionInstanceRepository;
         this.incubationRepository = incubationRepository;
         this.missionDefinitionRepository = missionDefinitionRepository;
+        this.missionTeamRepository = missionTeamRepository;
         this.clanBonusService = clanBonusService;
     }
 
@@ -100,8 +103,11 @@ public class GetPlayerDashboardUseCase {
 
         long storedCount = digimonRepository.countByPlayerIdAndStatus(playerId, DigimonStatus.STORED);
         int activeCount = activeDigimon == null ? 0 : 1;
+        int currentTeams = missionTeamRepository == null
+                ? 0
+                : Math.toIntExact(missionTeamRepository.countByPlayerId(playerId));
         var slotInfo = new PlayerDashboardResponse.SlotInfoResponse(
-                activeCount, 1, (int) storedCount, player.getMaxStorageSlots()
+                activeCount, 1, (int) storedCount, player.getMaxStorageSlots(), currentTeams, player.getMaxTeamSlots()
         );
 
         return new PlayerDashboardResponse(
@@ -260,7 +266,16 @@ public class GetPlayerDashboardUseCase {
                             instance.getStatus(),
                             instance.getStartedAt(),
                             instance.getEndsAt(),
-                            remaining
+                            remaining,
+                            instance.isAutoRepeatEnabled(),
+                            instance.isAutoClaimEnabled(),
+                            instance.getTeamId(),
+                            instance.getTeamId() == null
+                                    ? null
+                                    : missionTeamRepository.findById(instance.getTeamId())
+                                            .map(team -> team.getName())
+                                            .orElse("Time de missão"),
+                            instance.getDigimonIds()
                     );
                 })
                 .toList();
@@ -313,7 +328,12 @@ public class GetPlayerDashboardUseCase {
                 incubation.getStatus(),
                 incubation.getStartedAt(),
                 incubation.getFinishAt(),
-                remaining
+                remaining,
+                incubation.isAutoRepeatEnabled(),
+                incubation.isAutoClaimEnabled(),
+                incubation.getAutomationPauseReason(),
+                incubation.getAutomationPausedAt(),
+                incubation.getAutomationLastErrorCode()
         );
     }
 

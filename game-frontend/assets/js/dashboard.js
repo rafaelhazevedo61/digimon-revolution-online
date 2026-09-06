@@ -1,5 +1,8 @@
 let dashEquippedItems = [];
 
+// Temporariamente, missões permanecem disponíveis apenas na tela dedicada.
+const DASHBOARD_MISSIONS_ENABLED = false;
+
 async function renderDashboardPage() {
   const app = document.getElementById("app");
   showBottomNav("dashboard");
@@ -103,7 +106,7 @@ function renderDashContent(data) {
         ` : ""}
 
         <!-- Active missions -->
-        ${data.activeMissions && data.activeMissions.length > 0 ? `
+        ${DASHBOARD_MISSIONS_ENABLED && data.activeMissions && data.activeMissions.length > 0 ? `
         <section class="dashboard-missions-section mb-4">
           <div class="dashboard-section-heading">
             <div><p class="dashboard-eyebrow dashboard-eyebrow-blue">Atividade em campo</p><h3 class="dashboard-section-title">Missões ativas</h3></div>
@@ -403,21 +406,51 @@ function renderSetBonus(sb) {
 
 function renderActiveMission(m) {
   const now = Date.now();
+  const autoModeIndicators = m.teamId
+    ? `<div class="dashboard-mission-mode-indicators" aria-label="Status da automação">
+        <span class="dashboard-mission-mode-badge ${m.autoRepeatEnabled ? "dashboard-mission-mode-badge-active" : "dashboard-mission-mode-badge-inactive"}">${m.autoRepeatEnabled ? "Repetição ativa" : "Repetição desligada"}</span>
+        <span class="dashboard-mission-mode-badge ${m.autoClaimEnabled ? "dashboard-mission-mode-badge-active" : "dashboard-mission-mode-badge-inactive"}">${m.autoClaimEnabled ? "Automático ativo" : "Automático desligado"}</span>
+      </div>`
+    : "";
   const endsAt = new Date(m.endsAt).getTime();
   const remaining = Math.max(0, Math.floor((endsAt - now) / 1000));
   const done = remaining <= 0;
 
   return `
-    <article class="dashboard-mission-card ${done ? "dashboard-mission-card-ready" : ""}" data-mission-instance="${m.instanceId}" data-ends-at="${m.endsAt}">
+    <article class="dashboard-mission-card ${done ? "dashboard-mission-card-ready" : ""}" data-mission-instance="${m.instanceId}" data-ends-at="${m.endsAt}" data-auto-claim="${m.autoClaimEnabled ? "true" : "false"}" data-auto-repeat="${m.autoRepeatEnabled ? "true" : "false"}">
       <div class="dashboard-mission-icon" aria-hidden="true">✦</div>
       <div class="dashboard-mission-main">
         <p class="dashboard-mission-label">Objetivo em campo</p>
         <p class="dashboard-mission-name">${escapeHtml(m.missionName)}</p>
+        <p class="dashboard-mission-team">${escapeHtml(m.teamName || (m.teamId ? "Time de missão" : "Missão legada"))}${m.teamId ? " · 3 Digimons" : ""}</p>
         <div class="dashboard-mission-state"><span class="dashboard-mission-dot ${done ? "dashboard-mission-dot-ready" : ""}"></span><span class="mission-timer">${done ? "Concluída!" : `Retorno em ${formatTime(remaining)}`}</span></div>
       </div>
-      <div class="dashboard-mission-action">${done ? `<button class="btn-sm btn-primary" onclick="claimMission('${m.instanceId}')">Resgatar</button>` : `<span class="dashboard-mission-badge">Em andamento</span>`}</div>
+      <div class="dashboard-mission-action">
+        ${autoModeIndicators}
+        ${m.teamId ? `<button type="button" class="btn-sm ${m.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoRepeat('${m.instanceId}', ${!m.autoRepeatEnabled})">${m.autoRepeatEnabled ? "Desligar repetição" : "Ligar repetição"}</button>` : ""}
+        ${done ? `<button class="btn-sm btn-primary" onclick="claimMission('${m.instanceId}')">Resgatar</button>` : `<span class="dashboard-mission-badge">Em andamento</span>`}
+      </div>
     </article>
   `;
+}
+
+async function refreshDashboardMissionSection() {
+  if (!DASHBOARD_MISSIONS_ENABLED) return;
+  const section = document.querySelector(".dashboard-missions-section");
+  if (!section) return renderDashboardPage();
+
+  const data = await apiGet("/player/dashboard");
+  const missions = Array.isArray(data && data.activeMissions) ? data.activeMissions : [];
+  if (missions.length === 0) {
+    section.remove();
+    return;
+  }
+
+  const list = section.querySelector(".dashboard-missions-list");
+  const count = section.querySelector(".dashboard-section-count");
+  if (count) count.textContent = String(missions.length);
+  if (list) list.innerHTML = missions.map(renderActiveMission).join("");
+  startMissionTimers();
 }
 
 function renderIncubation(inc) {
@@ -495,13 +528,20 @@ function dashboardIncubationEmoji(type) {
 async function claimMission(instanceId) {
   try {
     const result = await apiPost(`/missions/${instanceId}/claim`);
-    showMissionClaimModal(result);
+    const fullAutomatic = Boolean(result && result.autoClaimEnabled);
+    if (!fullAutomatic) showMissionClaimModal(result);
+    if (typeof startMissionAutoRepeat === "function") await startMissionAutoRepeat(result, fullAutomatic);
     renderDashboardPage();
-  } catch (err) {
+    } catch (err) {
+    if (typeof isInventoryStackLimitError === "function" && isInventoryStackLimitError(err)) {
+      await pauseMissionAutomation(instanceId);
+      renderDashboardPage();
+      showMissionStackLimitModal(getMissionStackLimitItemName(err));
+      return;
+    }
     showToast(err.message, "error");
   }
 }
-
 // Incubation timers
 function startIncubationTimer(inc = null) {
   if (typeof incubStopTimer === "function") incubStopTimer();
@@ -555,6 +595,7 @@ function dashboardMarkIncubationReady(slotNumber) {
 let missionTimerInterval = null;
 
 function startMissionTimers() {
+  if (!DASHBOARD_MISSIONS_ENABLED) return;
   if (missionTimerInterval) clearInterval(missionTimerInterval);
   missionTimerInterval = setInterval(() => {
     document.querySelectorAll("[data-mission-instance]").forEach(el => {
@@ -564,6 +605,43 @@ function startMissionTimers() {
       if (!timerEl) return;
 
       if (remaining <= 0) {
+        if (el.dataset.autoClaim === "true" && el.dataset.autoClaiming !== "true" && typeof claimMissionAutomatically === "function") {
+          el.dataset.autoClaiming = "true";
+          timerEl.textContent = "Resgatando...";
+          const refreshAfterAutomaticClaim = el.dataset.autoRepeat === "true"
+            ? refreshDashboardMissionSection
+            : renderDashboardPage;
+          claimMissionAutomatically(el.dataset.missionInstance)
+            .then(({ nextMission } = {}) => {
+              if (el.dataset.autoRepeat === "true" && nextMission && nextMission.endsAt) {
+                el.dataset.endsAt = nextMission.endsAt;
+                el.dataset.autoClaim = nextMission.autoClaimEnabled ? "true" : "false";
+                el.dataset.autoRepeat = nextMission.autoRepeatEnabled ? "true" : "false";
+                el.classList.remove("dashboard-mission-card-ready");
+                const dot = el.querySelector(".dashboard-mission-dot");
+                if (dot) dot.classList.remove("dashboard-mission-dot-ready");
+                const nextTimer = el.querySelector(".mission-timer");
+                if (nextTimer) {
+                  const nextRemaining = Math.max(0, Math.floor((new Date(nextMission.endsAt).getTime() - Date.now()) / 1000));
+                  nextTimer.textContent = `Retorno em ${formatTime(nextRemaining)}`;
+                }
+                return;
+              }
+              return refreshAfterAutomaticClaim();
+            })
+            .catch(async err => {
+              el.dataset.autoClaiming = "false";
+              if (isInventoryStackLimitError(err)) {
+                await pauseMissionAutomation(el.dataset.missionInstance);
+                renderDashboardPage();
+                showMissionStackLimitModal(getMissionStackLimitItemName(err));
+                return;
+              }
+              showToast(`Resgate automático pausado: ${err.message}`, "error");
+            });
+          return;
+        }
+
         timerEl.textContent = "Concluída!";
         el.classList.add("dashboard-mission-card-ready");
         const dot = el.querySelector(".dashboard-mission-dot");

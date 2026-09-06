@@ -623,6 +623,27 @@ body {
   line-height: 1.25;
 }
 
+/* Mission teams desktop composition */
+.mission-teams-page {
+  width: 100%;
+  max-width: 140rem;
+}
+@media (min-width: 46rem) {
+  .mission-teams-page {
+    padding-inline: 1.5rem;
+  }
+}
+@media (min-width: 75rem) {
+  .mission-teams-page {
+    padding-inline: 2.5rem;
+  }
+}
+@media (min-width: 100rem) {
+  .mission-teams-page {
+    padding-inline: 4rem;
+  }
+}
+
 /* ===================== Clan Surface Refresh ===================== */
 .clan-page-container {
   max-width: 92rem;
@@ -669,8 +690,8 @@ body {
 .clan-list-layout, .clan-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; align-items: start; gap: 1rem; }
 .clan-list-main, .clan-tab-content { min-width: 0; }
 .clan-list-main { display: grid; gap: 1rem; }
-.clan-surface, .clan-list-surface, .clan-ranking-surface, .clan-aside-card, .clan-rail-card, .clan-form-card, .clan-storage-capacity-card, .clan-storage-deposit-card, .clan-storage-items-panel, .clan-storage-history { border: 1px solid rgba(51, 65, 85, 0.76); border-radius: 1rem; background: rgba(15, 23, 42, 0.68); box-shadow: 0 1rem 2rem rgba(2, 6, 23, 0.12); }
-.clan-surface, .clan-list-surface, .clan-ranking-surface { padding: 1.1rem; }
+.clan-surface, .clan-list-surface, .clan-aside-card, .clan-rail-card, .clan-form-card, .clan-storage-capacity-card, .clan-storage-deposit-card, .clan-storage-items-panel, .clan-storage-history { border: 1px solid rgba(51, 65, 85, 0.76); border-radius: 1rem; background: rgba(15, 23, 42, 0.68); box-shadow: 0 1rem 2rem rgba(2, 6, 23, 0.12); }
+.clan-surface, .clan-list-surface { padding: 1.1rem; }
 .clan-section-heading, .clan-tab-heading, .clan-storage-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .clan-section-title { margin: 0.3rem 0 0; color: #f1f5f9; font-size: 1.05rem; font-weight: 850; letter-spacing: -0.02em; }
 .clan-section-title-sm { font-size: 0.9rem; }
@@ -942,9 +963,6 @@ body {
 .clan-history-copy strong { color: #cbd5e1; font-size: 0.68rem; }
 .clan-history-copy span { margin-top: 0.15rem; color: #64748b; font-size: 0.59rem; }
 .clan-history-date { color: #475569; font-size: 0.57rem; text-align: right; white-space: nowrap; }
-.clan-ranking-page { max-width: 78rem; }
-.clan-ranking-header { min-height: 9rem; }
-.clan-ranking-surface { margin-top: 1rem; }
 .clan-ranking-row { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto 1.9rem; align-items: center; gap: 0.8rem; min-width: 0; padding: 0.8rem; border: 1px solid rgba(51, 65, 85, 0.72); border-radius: 0.8rem; background: rgba(2, 6, 23, 0.3); cursor: pointer; transition: border-color 0.2s, background 0.2s; }
 .clan-ranking-row + .clan-ranking-row { margin-top: 0.55rem; }
 .clan-ranking-row:hover { border-color: rgba(245, 158, 11, 0.45); background: rgba(69, 39, 7, 0.18); }
@@ -1024,7 +1042,7 @@ body {
   .clan-page-header { padding: 1.1rem; }
   .clan-page-title { font-size: 1.85rem; }
   .clan-page-subtitle { font-size: 0.78rem; }
-  .clan-surface, .clan-list-surface, .clan-ranking-surface { padding: 0.85rem; }
+  .clan-surface, .clan-list-surface { padding: 0.85rem; }
   .clan-list-card { grid-template-columns: 2.45rem minmax(0, 1fr); gap: 0.6rem; }
   .clan-card-emblem { width: 2.45rem; height: 2.45rem; }
   .clan-card-actions { grid-column: 2; justify-content: flex-start; }
@@ -1394,7 +1412,49 @@ body {
 .dashboard-mission-action { display: flex; min-width: 5.5rem; justify-content: flex-end; }
 .dashboard-mission-action .btn-sm { padding: 0.38rem 0.58rem; font-size: 0.62rem; }
 .dashboard-mission-badge { padding: 0.3rem 0.45rem; border: 1px solid rgba(96, 165, 250, 0.2); border-radius: 9999px; background: rgba(37, 99, 235, 0.12); color: #93c5fd; font-size: 0.58rem; font-weight: 800; white-space: nowrap; }
-
+.dashboard-mission-action .btn-sm { white-space: nowrap; }
+.dashboard-mission-mode-indicators { display: flex; flex-wrap: wrap; grid-column: 1 / -1; gap: 0.35rem; min-width: 0; }
+.dashboard-mission-mode-badge { min-width: 0; overflow: hidden; padding: 0.26rem 0.42rem; border: 1px solid rgba(100, 116, 139, 0.35); border-radius: 9999px; background: rgba(51, 65, 85, 0.28); color: #94a3b8; font-size: 0.54rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.dashboard-mission-mode-badge-active { border-color: rgba(34, 211, 238, 0.32); background: rgba(8, 145, 178, 0.16); color: #67e8f9; }
+.dashboard-mission-mode-badge-inactive { color: #64748b; }
+@media (min-width: 41rem) {
+  .dashboard-mission-action {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .dashboard-mission-action > .btn-sm,
+  .dashboard-mission-action > .dashboard-mission-badge {
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+  }
+}
+@media (max-width: 40rem) {
+  .dashboard-mission-card {
+    grid-template-columns: 2.35rem minmax(0, 1fr);
+    align-items: start;
+  }
+  .dashboard-mission-action {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-column: 2;
+    width: 100%;
+    min-width: 0;
+    gap: 0.35rem;
+  }
+  .dashboard-mission-action > .btn-sm,
+  .dashboard-mission-action > .dashboard-mission-badge {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+  }
+}
 @media (max-width: 23rem) {
   .dashboard-mission-card { grid-template-columns: 2.35rem minmax(0, 1fr); }
   .dashboard-mission-action { grid-column: 2; justify-content: flex-start; min-width: 0; }
@@ -1510,6 +1570,17 @@ body {
 .missions-hero-emblem { display: flex; width: 3rem; height: 3rem; flex: 0 0 auto; align-items: center; justify-content: center; border: 1px solid rgba(34, 211, 238, 0.35); border-radius: 0.9rem; background: linear-gradient(145deg, rgba(8, 145, 178, 0.3), rgba(30, 64, 175, 0.18)); color: #67e8f9; font-size: 1.65rem; filter: drop-shadow(0 0 13px rgba(34, 211, 238, 0.2)); }
 .missions-active-section, .missions-map-section { padding: 0.85rem; border: 1px solid rgba(30, 64, 175, 0.62); border-radius: 1rem; background: linear-gradient(145deg, rgba(23, 37, 84, 0.27), rgba(15, 23, 42, 0.56)); box-shadow: 0 12px 30px rgba(2, 6, 23, 0.15); }
 .missions-active-list { display: flex; flex-direction: column; gap: 0.55rem; }
+.missions-slot-card { display: block; min-width: 0; padding: 0.85rem; border: 1px solid rgba(71, 85, 105, 0.62); border-radius: 0.8rem; background: linear-gradient(145deg, rgba(30, 41, 59, 0.68), rgba(15, 23, 42, 0.72)); }
+.missions-slot-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; min-width: 0; }
+.missions-slot-card-info { display: flex; align-items: flex-start; gap: 0.65rem; min-width: 0; flex: 1 1 auto; }
+.missions-slot-card-copy { min-width: 0; padding-top: 0.1rem; }
+.missions-slot-card-icon { display: flex; width: 2.25rem; height: 2.25rem; flex: 0 0 auto; align-items: center; justify-content: center; border: 1px solid rgba(100, 116, 139, 0.35); border-radius: 0.7rem; background: rgba(51, 65, 85, 0.28); font-size: 1.15rem; }
+.missions-slot-card-title { margin: 0.22rem 0 0; color: #e2e8f0; font-size: 0.78rem; font-weight: 800; line-height: 1.25; overflow-wrap: anywhere; }
+.missions-slot-card-description { margin: 0.75rem 0 0; color: #94a3b8; font-size: 0.68rem; line-height: 1.45; overflow-wrap: anywhere; }
+.missions-slot-card-action { display: flex; width: 100%; max-width: 100%; margin-top: 0.75rem; justify-content: center; white-space: normal; text-align: center; }
+.missions-slot-card-locked { border-color: rgba(100, 116, 139, 0.5); background: linear-gradient(145deg, rgba(30, 41, 59, 0.58), rgba(15, 23, 42, 0.7)); }
+.missions-slot-card-empty { border-color: rgba(16, 185, 129, 0.34); background: linear-gradient(145deg, rgba(6, 78, 59, 0.16), rgba(15, 23, 42, 0.7)); }
+.missions-slot-card-empty .missions-slot-card-icon { border-color: rgba(52, 211, 153, 0.28); background: rgba(16, 185, 129, 0.12); color: #6ee7b7; }
 .missions-active-card { display: grid; grid-template-columns: 2.55rem minmax(0, 1fr) auto; align-items: center; gap: 0.65rem; min-width: 0; padding: 0.65rem 0.7rem; border: 1px solid rgba(59, 130, 246, 0.42); border-radius: 0.8rem; background: linear-gradient(100deg, rgba(30, 58, 138, 0.2), rgba(15, 23, 42, 0.74)); box-shadow: inset 0 1px 0 rgba(147, 197, 253, 0.04); transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease; }
 .missions-active-card:hover { border-color: rgba(96, 165, 250, 0.78); box-shadow: 0 8px 22px rgba(2, 6, 23, 0.28), 0 0 16px rgba(59, 130, 246, 0.12); transform: translateY(-1px); }
 .missions-active-card-ready { border-color: rgba(34, 197, 94, 0.62); background: linear-gradient(100deg, rgba(20, 83, 45, 0.26), rgba(15, 23, 42, 0.72)); }
@@ -1519,13 +1590,34 @@ body {
 .missions-active-main { min-width: 0; }
 .missions-active-label { margin: 0; color: #64748b; font-size: 0.57rem; font-weight: 800; letter-spacing: 0.1em; line-height: 1.2; text-transform: uppercase; }
 .missions-active-name { margin: 0.2rem 0 0; overflow: hidden; color: #f8fafc; font-size: 0.76rem; font-weight: 800; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.missions-active-team, .dashboard-mission-team { margin: 0.2rem 0 0; overflow: hidden; color: #67e8f9; font-size: 0.58rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.dashboard-mission-team { color: #7dd3fc; }
 .missions-active-state { display: flex; align-items: center; gap: 0.32rem; margin-top: 0.35rem; color: #93c5fd; font-size: 0.62rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .missions-active-card-ready .missions-active-state { color: #86efac; }
 .missions-active-dot { width: 0.4rem; height: 0.4rem; flex: 0 0 auto; border-radius: 9999px; background: #60a5fa; box-shadow: 0 0 8px rgba(96, 165, 250, 0.65); }
 .missions-active-dot-ready { background: #4ade80; box-shadow: 0 0 8px rgba(74, 222, 128, 0.65); }
-.missions-active-action { display: flex; min-width: 5.5rem; justify-content: flex-end; }
+.missions-active-action { display: flex; min-width: 5.5rem; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.4rem; }
+.missions-auto-mode-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.missions-vip-mode-button { border-color: rgba(168, 85, 247, 0.28); background: rgba(88, 28, 135, 0.14); color: #c4b5fd; cursor: not-allowed; opacity: 0.72; }
 .missions-active-action .btn-sm { padding: 0.38rem 0.58rem; font-size: 0.62rem; }
+.missions-active-action .btn-sm { white-space: nowrap; }
 .missions-active-badge { padding: 0.3rem 0.45rem; border: 1px solid rgba(96, 165, 250, 0.2); border-radius: 9999px; background: rgba(37, 99, 235, 0.12); color: #93c5fd; font-size: 0.58rem; font-weight: 800; white-space: nowrap; }
+@media (min-width: 41rem) {
+  .missions-active-action {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-width: 18rem;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .missions-auto-mode-actions { display: contents; }
+  .missions-active-action > .btn-sm,
+  .missions-active-action > .missions-active-badge {
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+  }
+}
 .missions-map-key { display: inline-flex; align-items: center; gap: 0.32rem; color: #86efac; font-size: 0.58rem; font-weight: 800; text-transform: uppercase; }
 .missions-map-key-dot, .mission-area-access-dot { width: 0.4rem; height: 0.4rem; flex: 0 0 auto; border-radius: 9999px; background: #4ade80; box-shadow: 0 0 8px rgba(74, 222, 128, 0.55); }
 #areas-list { display: grid; grid-template-columns: 1fr; gap: 0.65rem; }
@@ -1558,11 +1650,62 @@ body {
 .mission-detail-bits { color: #facc15; }
 .mission-detail-actions { display: flex; gap: 0.55rem; margin-top: 0.8rem; }
 
+@media (max-width: 40rem) {
+  .missions-active-card {
+    grid-template-columns: 2.35rem minmax(0, 1fr);
+    align-items: start;
+    gap: 0.55rem;
+    padding: 0.62rem;
+  }
+  .missions-active-main { padding-top: 0.1rem; }
+  .missions-active-action {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-column: 2;
+    min-width: 0;
+    width: 100%;
+    justify-content: stretch;
+    align-items: stretch;
+    gap: 0.4rem;
+  }
+  .missions-auto-mode-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 0.35rem;
+  }
+  .missions-auto-mode-actions .btn-sm {
+    min-width: 0;
+    width: 100%;
+    padding-right: 0.35rem;
+    padding-left: 0.35rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .missions-active-action > .missions-active-badge,
+  .missions-active-action > .btn-sm {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .missions-active-action > .btn-sm {
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
+  }
+}
+
 @media (max-width: 23rem) {
   .missions-page-header { align-items: flex-start; }
+  .missions-slot-card { padding: 0.72rem; }
+  .missions-slot-card-header { gap: 0.55rem; }
+  .missions-slot-card-info { gap: 0.5rem; }
+  .missions-slot-card-icon { width: 2rem; height: 2rem; font-size: 1rem; }
+  .missions-slot-card-header .missions-active-badge { max-width: 7rem; overflow: hidden; text-overflow: ellipsis; }
   .missions-hero-emblem { width: 2.55rem; height: 2.55rem; font-size: 1.35rem; }
   .missions-active-card { grid-template-columns: 2.35rem minmax(0, 1fr); }
   .missions-active-action { grid-column: 2; justify-content: flex-start; min-width: 0; }
+  .missions-auto-mode-actions { width: 100%; }
+  .missions-auto-mode-actions .btn-sm { flex: 1 1 auto; }
   .mission-area-card { grid-template-columns: 2.45rem minmax(0, 1fr) auto; padding: 0.58rem; }
   .mission-area-icon { width: 2.25rem; height: 2.25rem; font-size: 1.15rem; }
   .mission-area-status { font-size: 0.48rem; }
@@ -1811,6 +1954,14 @@ body {
 .inventory-item-action .inventory-chest-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.3rem; }
 .inventory-action-danger { border: 1px solid rgba(248, 113, 113, 0.25); background: rgba(127, 29, 29, 0.7); color: #fca5a5; }
 .inventory-action-ascend { border: 1px solid rgba(251, 191, 36, 0.25); background: rgba(133, 77, 14, 0.8); color: #fde68a; }
+.inventory-action-enhance { border: 1px solid rgba(34, 211, 238, 0.3); background: rgba(8, 145, 178, 0.75); color: #cffafe; }
+.inventory-action-dismantle { border: 1px solid rgba(251, 146, 60, 0.28); background: rgba(124, 45, 18, 0.72); color: #fed7aa; }
+.inventory-action-lock { border: 1px solid rgba(167, 139, 250, 0.3); background: rgba(76, 29, 149, 0.68); color: #ddd6fe; }
+.inventory-dismantle-check { color: #fdba74; font-size: 0.58rem; font-weight: 750; white-space: nowrap; }
+.inventory-dismantle-check input { accent-color: #f97316; }
+.inventory-bulk-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.65rem; padding: 0.65rem; border: 1px solid rgba(251, 146, 60, 0.28); border-radius: 0.78rem; background: linear-gradient(145deg, rgba(124, 45, 18, 0.22), rgba(15, 23, 42, 0.65)); }
+.inventory-bulk-toolbar > div:last-child { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.35rem; }
+.inventory-bulk-toolbar .btn-sm:disabled { cursor: not-allowed; opacity: 0.45; }
 .inventory-max-btn { border: 1px solid rgba(34, 211, 238, 0.3); background: rgba(8, 145, 178, 0.2); color: #a5f3fc; }
 .inventory-max-btn:hover { border-color: rgba(103, 232, 249, 0.58); background: rgba(8, 145, 178, 0.32); }
 .inventory-equipment-card-equipped { border-color: rgba(34, 211, 238, 0.48); background: linear-gradient(145deg, rgba(8, 51, 68, 0.36), rgba(15, 23, 42, 0.62)); }
@@ -1913,6 +2064,20 @@ body {
 
 .incubation-section {
   position: relative;
+}
+
+.incubation-global-toggle {
+  width: 10.5rem;
+  min-width: 10.5rem;
+  min-height: 2.35rem;
+  justify-content: center;
+  text-align: center;
+}
+
+@media (max-width: 40rem) {
+  .incubation-global-toggle {
+    flex: 1 1 10.5rem;
+  }
 }
 
 .incubation-section + .incubation-section {
@@ -4837,6 +5002,37 @@ body {
 .mail-message-card { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); gap: 0.7rem; width: 100%; min-width: 0; padding: 0.75rem; border: 1px solid rgba(51, 65, 85, 0.7); border-radius: 0.7rem; background: rgba(15, 23, 42, 0.42); color: inherit; cursor: pointer; font: inherit; text-align: left; transition: border-color 160ms ease, background 160ms ease, transform 160ms ease; }
 .mail-message-card:hover { border-color: rgba(34, 211, 238, 0.34); background: rgba(8, 47, 73, 0.23); transform: translateY(-1px); }
 .mail-message-card.is-unread { border-color: rgba(34, 211, 238, 0.45); background: linear-gradient(105deg, rgba(8, 47, 73, 0.34), rgba(15, 23, 42, 0.5)); }
+.mail-message-card.is-system { border-color: rgba(168, 85, 247, 0.62); background: linear-gradient(110deg, rgba(88, 28, 135, 0.26), rgba(30, 41, 59, 0.5) 62%, rgba(8, 47, 73, 0.2)); box-shadow: inset 3px 0 0 rgba(217, 70, 239, 0.9), 0 0 22px rgba(126, 34, 206, 0.1); }
+.mail-message-card.is-system:hover { border-color: rgba(232, 121, 249, 0.9); background: linear-gradient(110deg, rgba(107, 33, 168, 0.34), rgba(30, 41, 59, 0.58) 62%, rgba(8, 47, 73, 0.25)); }
+.mail-message-card.is-system.is-unread { border-color: rgba(232, 121, 249, 0.9); background: linear-gradient(110deg, rgba(126, 34, 206, 0.38), rgba(30, 41, 59, 0.58) 62%, rgba(8, 47, 73, 0.28)); }
+.mail-message-icon.is-system { border-color: rgba(232, 121, 249, 0.75); background: linear-gradient(145deg, rgba(126, 34, 206, 0.5), rgba(8, 145, 178, 0.28)); color: #f0abfc; box-shadow: 0 0 14px rgba(217, 70, 239, 0.2); }
+.mail-message-card.is-system .mail-message-origin { color: #f0abfc; }
+.mail-message-card.is-system .mail-message-subject { color: #fae8ff; }
+.mail-message-card.is-system .mail-message-participant { color: #c4b5fd; }
+.mail-system-message-modal { border-color: rgba(232, 121, 249, 0.8) !important; background: linear-gradient(145deg, rgba(59, 7, 100, 0.98), rgba(15, 23, 42, 0.98) 68%) !important; box-shadow: 0 0 42px rgba(168, 85, 247, 0.22); }
+.mail-system-message-body { border: 1px solid rgba(232, 121, 249, 0.5); background: linear-gradient(135deg, rgba(88, 28, 135, 0.28), rgba(8, 47, 73, 0.36)); color: #f5d0fe; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06); }
+.mail-system-message-body p { color: #f5d0fe; }
+.mail-system-alert-heading { display: flex; align-items: center; gap: 0.75rem; padding-bottom: 0.85rem; border-bottom: 1px solid rgba(232, 121, 249, 0.25); }
+.mail-system-alert-icon { display: grid; width: 2.25rem; height: 2.25rem; flex: none; place-items: center; border: 1px solid rgba(251, 191, 36, 0.7); border-radius: 0.7rem; background: rgba(180, 83, 9, 0.3); color: #fde68a; font-size: 1.15rem; font-weight: 900; }
+.mail-system-kicker { margin: 0; color: #fbbf24 !important; font-size: 0.58rem; font-weight: 850; letter-spacing: 0.1em; text-transform: uppercase; }
+.mail-system-alert-heading h4 { margin: 0.15rem 0 0; color: #fdf4ff; font-size: 1.05rem; line-height: 1.25; }
+.mail-system-message-section { margin-top: 0.7rem; padding: 0.7rem 0.8rem; border-left: 3px solid; border-radius: 0.45rem; }
+.mail-system-message-section p { margin: 0.25rem 0 0; color: #f8fafc !important; line-height: 1.5; }
+.mail-system-section-label { display: block; font-size: 0.62rem; font-weight: 850; letter-spacing: 0.08em; text-transform: uppercase; }
+.mail-system-message-reason { border-color: #f59e0b; background: rgba(120, 53, 15, 0.3); }
+.mail-system-message-reason .mail-system-section-label { color: #fcd34d; }
+.mail-system-highlight-item { color: #fef08a !important; font-weight: 850; text-decoration: underline; text-decoration-color: rgba(250, 204, 21, 0.55); text-underline-offset: 0.15em; }
+.mail-system-message-impact { border-color: #38bdf8; background: rgba(7, 89, 133, 0.25); }
+.mail-system-message-impact .mail-system-section-label { color: #7dd3fc; }
+.mail-system-message-action { border-color: #34d399; background: rgba(6, 78, 59, 0.28); }
+.mail-system-message-action .mail-system-section-label { color: #6ee7b7; }
+.mail-system-message-body strong { color: #fef3c7; }
+.mail-message-card.is-system .mail-message-topline time { color: #d8b4fe; }
+.mail-message-card.is-system .mail-message-footer .mail-message-open { color: #c4b5fd; }
+.mail-message-card.is-system .mail-message-footer .mail-message-open b { color: #67e8f9; }
+.mail-system-message-modal .grid p { color: #d8b4fe; }
+.mail-system-message-modal .grid strong { color: #fef3c7; }
+.mail-system-message-modal > p { color: #c4b5fd; }
 .mail-message-icon { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid rgba(71, 85, 105, 0.7); border-radius: 0.65rem; background: rgba(30, 41, 59, 0.72); color: #94a3b8; font-size: 0.85rem; font-weight: 850; }
 .mail-message-icon.is-unread { border-color: rgba(34, 211, 238, 0.28); background: rgba(8, 145, 178, 0.16); color: #67e8f9; }
 .mail-message-content { display: block; min-width: 0; }

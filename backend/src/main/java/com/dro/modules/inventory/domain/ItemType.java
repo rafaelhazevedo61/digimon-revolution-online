@@ -36,6 +36,12 @@ public enum ItemType {
     // Expansão da incubadora
     INCUBATION_SLOT_UNLOCK,
 
+    // Expansão dos slots de missão
+    MISSION_SLOT_UNLOCK,
+
+    // Expansão dos slots de times
+    TEAM_SLOT_UNLOCK,
+
     // Expansão permanente do Storage
     STORAGE_SLOT_1,
     STORAGE_SLOT_5,
@@ -62,10 +68,15 @@ public enum ItemType {
     LOOT_CHEST,
 
     // Material de refinamento
+    REFINEMENT_SUCCESS_BOOST,
+    REFINEMENT_PROTECTION,
     REFINEMENT_STONE,
 
     // Material de Ascensão de equipamentos
     ASCENSION_CORE,
+
+    // Equipamentos instanciados a partir de um template
+    EQUIPMENT,
 
     // Reroll de raridade do Digimon
     RARITY_REROLL,

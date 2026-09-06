@@ -3,6 +3,8 @@ package com.dro.modules.inventory.application;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.incubation.domain.IncubatorRules;
+import com.dro.modules.mission.domain.MissionSlotRules;
+import com.dro.modules.mission.domain.TeamSlotRules;
 import com.dro.modules.inventory.api.dto.response.UseItemResponse;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
@@ -54,6 +56,12 @@ public class UseItemUseCase {
         if (type == ItemType.INCUBATION_SLOT_UNLOCK) {
             return unlockIncubationSlot(playerId);
         }
+        if (type == ItemType.MISSION_SLOT_UNLOCK) {
+            return unlockMissionSlot(playerId);
+        }
+        if (type == ItemType.TEAM_SLOT_UNLOCK) {
+            return unlockTeamSlot(playerId);
+        }
 
         boolean batchUsableItem = isBatchUsableItem(type);
         boolean xpDisk = isXpDisk(type);
@@ -73,17 +81,18 @@ public class UseItemUseCase {
 
         int storageExpansion = storageExpansionAmount(type);
         if (storageExpansion > 0) {
-            consume(item, 1);
-            player.setMaxStorageSlots(player.getMaxStorageSlots() + storageExpansion);
+            int totalStorageExpansion = storageExpansion * quantity;
+            consume(item, quantity);
+            player.setMaxStorageSlots(player.getMaxStorageSlots() + totalStorageExpansion);
             playerRepository.save(player);
             return new UseItemResponse(
                     type,
-                    1,
+                    quantity,
                     0,
                     digimon.getLevel(),
                     digimon.getLevel(),
                     false,
-                    "Storage expandido em +" + storageExpansion + " espaço(s)!",
+                    "Storage expandido em +" + totalStorageExpansion + " espaço(s)!",
                     NewlyUnlockedContentResponse.empty()
             );
         }
@@ -197,8 +206,70 @@ public class UseItemUseCase {
         );
     }
 
+    private UseItemResponse unlockMissionSlot(UUID playerId) {
+        Player player = playerRepository.findByIdForUpdate(playerId)
+                .orElseThrow(() -> new NotFoundException("Player not found"));
+        if (player.getUnlockedMissionSlots() >= MissionSlotRules.TOTAL_SLOTS) {
+            throw new BadRequestException("Todos os slots de missão já estão desbloqueados");
+        }
+
+        InventoryItem item = inventoryRepository
+                .findByPlayerIdAndItemTypeForUpdate(playerId, ItemType.MISSION_SLOT_UNLOCK)
+                .orElseThrow(() -> new NotFoundException("Item not found"));
+        if (item.getQuantity() <= 0) {
+            throw new UnprocessableException("No item available");
+        }
+
+        consume(item, 1);
+        player.setUnlockedMissionSlots(player.getUnlockedMissionSlots() + 1);
+        playerRepository.save(player);
+        return new UseItemResponse(
+                ItemType.MISSION_SLOT_UNLOCK,
+                1,
+                0,
+                0,
+                0,
+                false,
+                "Slot de missão desbloqueado!",
+                NewlyUnlockedContentResponse.empty()
+        );
+    }
+
+    private UseItemResponse unlockTeamSlot(UUID playerId) {
+        Player player = playerRepository.findByIdForUpdate(playerId)
+                .orElseThrow(() -> new NotFoundException("Player not found"));
+        if (player.getMaxTeamSlots() >= TeamSlotRules.MAX_SLOTS) {
+            throw new BadRequestException("Todos os slots de times já estão desbloqueados");
+        }
+
+        InventoryItem item = inventoryRepository
+                .findByPlayerIdAndItemTypeForUpdate(playerId, ItemType.TEAM_SLOT_UNLOCK)
+                .orElseThrow(() -> new NotFoundException("Item not found"));
+        if (item.getQuantity() <= 0) {
+            throw new UnprocessableException("No item available");
+        }
+
+        consume(item, 1);
+        player.setMaxTeamSlots(Math.min(TeamSlotRules.MAX_SLOTS, player.getMaxTeamSlots() + 1));
+        playerRepository.save(player);
+        return new UseItemResponse(
+                ItemType.TEAM_SLOT_UNLOCK,
+                1,
+                0,
+                0,
+                0,
+                false,
+                "Slot de time desbloqueado!",
+                NewlyUnlockedContentResponse.empty()
+        );
+    }
+
     private boolean isBatchUsableItem(ItemType type) {
-        return isXpDisk(type) || type == ItemType.POTION_SMALL || type == ItemType.TRAINING_STONE || type == ItemType.DATA_CORE;
+        return isXpDisk(type)
+                || type == ItemType.POTION_SMALL
+                || type == ItemType.TRAINING_STONE
+                || type == ItemType.DATA_CORE
+                || storageExpansionAmount(type) > 0;
     }
 
     private boolean isXpDisk(ItemType type) {

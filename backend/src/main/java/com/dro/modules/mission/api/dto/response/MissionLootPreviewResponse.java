@@ -67,7 +67,9 @@ public record MissionLootPreviewResponse(
             String itemName,
             int weight,
             int minQuantity,
-            int maxQuantity
+            int maxQuantity,
+            String equipmentTemplateName,
+            String equipmentRarity
     ) {
     }
 }

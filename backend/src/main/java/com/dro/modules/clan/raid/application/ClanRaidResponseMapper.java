@@ -5,6 +5,7 @@ import com.dro.modules.boss.api.dto.response.BossDefeatSummaryResponse;
 import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.modules.clan.raid.api.dto.response.ClanRaidAttackResponse;
 import com.dro.modules.clan.raid.api.dto.response.ClanRaidRankingEntryResponse;
+import com.dro.modules.clan.raid.api.dto.response.ClanRaidRewardResponse;
 import com.dro.modules.clan.raid.api.dto.response.ClanRaidResponse;
 import com.dro.modules.clan.raid.domain.ClanRaid;
 import com.dro.modules.clan.raid.domain.ClanRaidAttack;
@@ -31,6 +32,7 @@ public class ClanRaidResponseMapper {
     private final ClanRaidAttackRepository clanRaidAttackRepository;
     private final PlayerRepository playerRepository;
     private final GameplayConfig gameplayConfig;
+    private final ClanRaidRewardService clanRaidRewardService;
 
     public ClanRaidResponse toResponse(ClanRaid raid, UUID viewerPlayerId) {
         BossDefinitionEntity boss = bossDefinitionRepository.findById(raid.getBossId()).orElseThrow(() -> new NotFoundException("Boss not found"));
@@ -49,12 +51,15 @@ public class ClanRaidResponseMapper {
                 ? nextAttackCandidate
                 : null;
         List<ClanRaidAttackResponse> recentAttacks = attacks.stream().limit(RECENT_ATTACK_LIMIT).map(this::toAttackResponse).toList();
+        List<ClanRaidRewardResponse> myRewards = clanRaidRewardService == null
+                ? List.of()
+                : clanRaidRewardService.findPlayerRewards(raid.getId(), viewerPlayerId);
         return new ClanRaidResponse(
                 raid.getId(), raid.getClanId(), boss.getCode(), boss.getName(), boss.getImageUrl(),
                 raid.getMaxHp(), raid.getRemainingHp(), raid.getStatus(), raid.getCreatedAt(), raid.getDefeatedAt(),
                 attackCooldownMinutes, cooldownEnabled, nextAttackAvailableAt,
                 myTotalDamage, buildRanking(raid.getId()), recentAttacks,
-                buildDefeatSummary(raid, attacks)
+                buildDefeatSummary(raid, attacks), myRewards
         );
     }
 
@@ -87,10 +92,11 @@ public class ClanRaidResponseMapper {
         return new ClanRaidAttackResponse(attack.getId(), attack.getPlayerId(), player != null ? player.getUsername() : "Unknown", attack.getDamage(), attack.getCreatedAt());
     }
 
-    public ClanRaidResponseMapper(final BossDefinitionRepository bossDefinitionRepository, final ClanRaidAttackRepository clanRaidAttackRepository, final PlayerRepository playerRepository, final GameplayConfig gameplayConfig) {
+    public ClanRaidResponseMapper(final BossDefinitionRepository bossDefinitionRepository, final ClanRaidAttackRepository clanRaidAttackRepository, final PlayerRepository playerRepository, final GameplayConfig gameplayConfig, final ClanRaidRewardService clanRaidRewardService) {
         this.bossDefinitionRepository = bossDefinitionRepository;
         this.clanRaidAttackRepository = clanRaidAttackRepository;
         this.playerRepository = playerRepository;
         this.gameplayConfig = gameplayConfig;
+        this.clanRaidRewardService = clanRaidRewardService;
     }
 }

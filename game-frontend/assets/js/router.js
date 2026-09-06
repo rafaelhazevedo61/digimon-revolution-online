@@ -5,6 +5,7 @@ const routes = {
   "activity-calendar": renderActivityCalendarPage,
   missions: renderMissionsPage,
   "mission-area": renderMissionAreaPage,
+  "mission-teams": renderMissionTeamsPage,
   "digimon-select": renderDigimonSelectPage,
   shop: renderShopPage,
   forge: renderForgePage,
@@ -19,17 +20,23 @@ const routes = {
   bosses: renderBossesPage,
   "boss-history": renderBossHistoryPage,
   arena: renderArenaPage,
-  "arena-ranking": renderArenaRankingPage,
+  "arena-ranking": (p) => renderRankingPage({ ...p, tab: "arena" }),
   "arena-history": renderArenaHistoryPage,
   "arena-shop": renderArenaShopPage,
   storage: renderStoragePage,
   collection: renderCollectionPage,
   clans: renderClansPage,
-  "clan-ranking": renderClanRanking,
+  "clan-ranking": (p) => renderRankingPage({ ...p, tab: "clans" }),
   "world-boss": renderWorldBossPage,
   more: renderMorePage,
   settings: renderSettingsPage
 };
+
+function invalidateRouteCache(route) {
+  if (route === "mission-teams" && typeof missionTeamContextPromise !== "undefined") {
+    missionTeamContextPromise = null;
+  }
+}
 
 function navigateTo(route, params = {}) {
   if (route !== "login" && !isLoggedIn()) {
@@ -48,6 +55,7 @@ function navigateTo(route, params = {}) {
     return;
   }
 
+  invalidateRouteCache(route);
   const renderer = routes[route] || routes.dashboard;
   renderer(params);
 }
@@ -56,6 +64,7 @@ async function refreshCurrentPage() {
   const rawHash = window.location.hash.replace("#", "");
   const [route, queryString] = rawHash.split("?");
   const params = Object.fromEntries(new URLSearchParams(queryString || ""));
+  invalidateRouteCache(route);
   const renderer = routes[route] || routes.dashboard;
   window._routeParams = params;
   await renderer(params);
@@ -82,6 +91,7 @@ function setupRouter() {
     return;
   }
 
+  invalidateRouteCache(route);
   const renderer = routes[route] || routes.dashboard;
   renderer(params);
 }

@@ -1,5 +1,6 @@
 let invItems = [];
 let invEquipments = [];
+let invSelectedDismantleIds = new Set();
 let invDigimonId = null;
 let invTab = "items"; // "items" or "equipment"
 let invChestOpeningInProgress = false;
@@ -424,7 +425,7 @@ function invResolvedCategory(item) {
   if (type === "LOOT_CHEST") return "CHEST";
   if (type === "EVOLUTION_MATERIAL") return "EVOLUTION_MATERIAL";
   if (type.startsWith("FRAGMENT_")) return "FRAGMENT";
-  if (type === "POTION_SMALL" || type.startsWith("XP_DISC_") || type.startsWith("STORAGE_SLOT_") || type === "INCUBATION_SLOT_UNLOCK") return "CONSUMABLE";
+  if (type === "POTION_SMALL" || type.startsWith("XP_DISC_") || type.startsWith("STORAGE_SLOT_") || type === "INCUBATION_SLOT_UNLOCK" || type === "MISSION_SLOT_UNLOCK") return "CONSUMABLE";
   if (type === "TRAINING_STONE" || type === "DATA_CORE" || type === "REFINEMENT_STONE") return "MATERIAL";
   return "OTHER";
 }
@@ -707,6 +708,49 @@ async function invReloadItems() {
   if (document.getElementById("inv-content")) invRenderItems();
 }
 
+function invStackLimitDetails(err) {
+  const message = String(err && err.message || "");
+  const portugueseMatch = message.match(/limite máximo de (\d+) unidades para o item (.+?)\.\s*$/i);
+  if (portugueseMatch) return { itemName: portugueseMatch[2], maxStack: portugueseMatch[1] };
+  const englishMatch = message.match(/stack limit exceeded for item ['"](.+?)['"]\. Maximum stack: (\d+)/i);
+  if (englishMatch) return { itemName: englishMatch[1], maxStack: englishMatch[2] };
+  return { itemName: "o item recebido", maxStack: "999" };
+}
+
+function invIsStackLimitError(err) {
+  return /stack limit exceeded|limite máximo de|limite de stack/i.test(String(err && err.message || ""));
+}
+
+function invShowStackLimitModal(err) {
+  const existing = document.getElementById("inventory-stack-limit-modal");
+  if (existing) existing.remove();
+  const details = invStackLimitDetails(err);
+  const overlay = document.createElement("div");
+  overlay.id = "inventory-stack-limit-modal";
+  overlay.className = "fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80";
+  overlay.setAttribute("role", "alertdialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-labelledby", "inventory-stack-limit-title");
+  overlay.innerHTML = `
+    <div class="card w-full max-w-md border border-amber-700 bg-slate-900" onclick="event.stopPropagation()">
+      <div class="flex items-start gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-amber-700 bg-amber-950/50 text-xl text-amber-300" aria-hidden="true">!</div>
+        <div>
+          <p class="text-xs uppercase tracking-wider text-amber-400 font-bold">Limite do inventário</p>
+          <h3 id="inventory-stack-limit-title" class="text-xl font-bold mt-1">Não foi possível concluir</h3>
+        </div>
+      </div>
+      <p class="mt-4 text-sm leading-relaxed text-slate-200">O item <strong class="text-amber-300">${escapeHtml(details.itemName)}</strong> já atingiu o limite de <strong class="text-amber-300">${escapeHtml(details.maxStack)} unidades</strong> no inventário.</p>
+      <p class="mt-3 text-sm leading-relaxed text-slate-400">A operação foi cancelada e nenhum item foi consumido. Libere espaço ou use parte desse item antes de tentar novamente.</p>
+      <button id="inventory-stack-limit-confirm" class="btn-primary mt-6 w-full">Entendi</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const confirmButton = overlay.querySelector("#inventory-stack-limit-confirm");
+  confirmButton?.focus();
+  confirmButton?.addEventListener("click", () => overlay.remove());
+}
+
 async function invUseItem(itemType, quantity = null) {
   if (itemType === "RARITY_REROLL") {
     await invStartRarityReroll();
@@ -746,7 +790,11 @@ async function invUseItem(itemType, quantity = null) {
       showNewlyUnlockedContent(result.newlyUnlockedContent);
     }
   } catch (err) {
-    showToast(err.message, "error");
+    if (invIsStackLimitError(err)) {
+      invShowStackLimitModal(err);
+    } else {
+      showToast(err.message, "error");
+    }
   } finally {
     invItemUseInProgress = false;
   }
@@ -782,7 +830,11 @@ async function invOpenChest(chestCode, quantity = 1) {
     await invReloadItems();
     return result;
   } catch (err) {
-    showToast(err.message, "error");
+    if (invIsStackLimitError(err)) {
+      invShowStackLimitModal(err);
+    } else {
+      showToast(err.message, "error");
+    }
     return null;
   } finally {
     invChestOpeningInProgress = false;
@@ -816,18 +868,24 @@ function invShowChestOpeningResult(result) {
       <div class="card-sm mb-4 flex min-h-0 max-h-[52vh] flex-col overflow-hidden shrink-0">
         <p class="text-xs text-slate-400 mb-2 shrink-0">Recompensas</p>
         <div class="min-h-0 overflow-y-auto overscroll-contain pr-3">
-        ${items.length > 0 ? items.map(item => `
-          <div class="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
+        ${items.length > 0 ? items.map(item => {
+          const isEquipment = String(item.itemType || "") === "EQUIPMENT";
+          const effectiveRarity = isEquipment ? item.equipmentRarity : item.rarity;
+          const rarityLabel = effectiveRarity ? formatRarity(effectiveRarity) : "Indefinida";
+          const itemName = item.itemName || item.equipmentTemplateName || item.materialCode || invItemName(item.itemType);
+          return `
+          <div class="flex items-center justify-between py-3 border-b border-slate-800 last:border-0">
             <div class="min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
-                <p class="font-semibold text-sm truncate">${escapeHtml(item.itemName || item.materialCode || invItemName(item.itemType))}</p>
-                ${item.rarity ? `<span class="badge badge-${String(item.rarity).toLowerCase()}">${escapeHtml(formatRarity(item.rarity))}</span>` : ""}
+                <p class="font-semibold text-sm truncate">${escapeHtml(itemName)}</p>
+                ${effectiveRarity ? `<span class="badge badge-${String(effectiveRarity).toLowerCase()}">${escapeHtml(rarityLabel)}</span>` : ""}
               </div>
-              ${item.materialCode ? `<p class="text-xs text-slate-500">Material de evolução</p>` : ""}
+              ${isEquipment ? `<p class="text-xs font-semibold text-slate-300 mt-1">Raridade do equipamento: ${escapeHtml(rarityLabel)}</p><p class="text-xs text-slate-500 mt-1">Template: ${escapeHtml(item.equipmentTemplateName || item.itemCode || itemName)}</p>` : item.materialCode ? `<p class="text-xs text-slate-500">Material de evolução</p>` : ""}
             </div>
             <span class="font-bold text-cyan-300 ml-3">x${item.quantity}</span>
           </div>
-        `).join("") : `<p class="text-sm text-slate-400">Nenhum item foi informado.</p>`}
+        `;
+        }).join("") : `<p class="text-sm text-slate-400">Nenhum item foi informado.</p>`}
         </div>
       </div>
       <p class="text-xs text-slate-400 text-center mb-4 shrink-0">${escapeHtml(message)}</p>
@@ -865,6 +923,7 @@ function invItemName(itemType) {
     INCUBATOR_EPIC: "Incubadora Épica",
     INCUBATOR_LEGENDARY: "Incubadora Lendária",
     INCUBATION_SLOT_UNLOCK: "Expansor de Slot de Incubação",
+    MISSION_SLOT_UNLOCK: "Expansor de Slot de Missão",
     STORAGE_SLOT_1: "+1 Storage",
     STORAGE_SLOT_5: "+5 Storage",
     STORAGE_SLOT_10: "+10 Storage",
@@ -892,7 +951,7 @@ function invItemEmoji(itemType) {
     DIGITAMA_EARTH: "🌍", DIGITAMA_WIND: "🌪️", DIGITAMA_LIGHT: "✨", DIGITAMA_DARK: "🌑",
     DIGITAMA_THUNDER: "⚡", DIGITAMA_NEUTRAL: "⚪", DIGITAMA_ICE: "❄️", DIGITAMA_STEEL: "⚙️",
     INCUBATOR_COMMON: "📦", INCUBATOR_RARE: "📦", INCUBATOR_EPIC: "📦", INCUBATOR_LEGENDARY: "🌟",
-    INCUBATION_SLOT_UNLOCK: "🔓",
+    INCUBATION_SLOT_UNLOCK: "🔓", MISSION_SLOT_UNLOCK: "🚀",
     STORAGE_SLOT_1: "🗄️", STORAGE_SLOT_5: "🗄️", STORAGE_SLOT_10: "🗄️",
     XP_DISC_1: "💿", XP_DISC_3: "💿", XP_DISC_5: "💿",
     XP_DISC_10: "💿", XP_DISC_15: "💿", XP_DISC_20: "💿",
@@ -905,14 +964,14 @@ function invItemEmoji(itemType) {
 }
 
 function invIsUsable(itemType) {
-  const usable = ["POTION_SMALL", "TRAINING_STONE", "DATA_CORE", "INCUBATION_SLOT_UNLOCK",
+  const usable = ["POTION_SMALL", "TRAINING_STONE", "DATA_CORE", "INCUBATION_SLOT_UNLOCK", "MISSION_SLOT_UNLOCK",
     "STORAGE_SLOT_1", "STORAGE_SLOT_5", "STORAGE_SLOT_10",
     "XP_DISC_1", "XP_DISC_3", "XP_DISC_5", "XP_DISC_10", "XP_DISC_15", "XP_DISC_20", "RARITY_REROLL"];
   return usable.includes(itemType);
 }
 
 function invItemCategory(itemType) {
-  if (itemType === "POTION_SMALL" || itemType === "INCUBATION_SLOT_UNLOCK"
+  if (itemType === "POTION_SMALL" || itemType === "INCUBATION_SLOT_UNLOCK" || itemType === "MISSION_SLOT_UNLOCK"
       || itemType.startsWith("STORAGE_SLOT_")) return "common";
   if (itemType.startsWith("XP_DISC_")) return "rare";
   if (itemType.startsWith("DIGITAMA_")) return "rare";
@@ -927,6 +986,7 @@ function invItemCategory(itemType) {
 function invItemCategoryName(itemType) {
   if (itemType === "POTION_SMALL") return "Poção";
   if (itemType === "INCUBATION_SLOT_UNLOCK") return "Incubação";
+  if (itemType === "MISSION_SLOT_UNLOCK") return "Missões";
   if (itemType.startsWith("STORAGE_SLOT_")) return "Storage";
   if (itemType.startsWith("XP_DISC_")) return "Experiência";
   if (itemType === "TRAINING_STONE" || itemType === "DATA_CORE") return "Material";
@@ -1074,6 +1134,130 @@ function invSortEquipments(equipments) {
   });
 }
 
+function invEnhancementCoreInfo(targetTier) {
+  if (targetTier <= 4) return { code: "BASIC_ENHANCEMENT_CORE", label: "Núcleo de Aprimoramento" };
+  if (targetTier <= 7) return { code: "ADVANCED_ENHANCEMENT_CORE", label: "Núcleo Avançado" };
+  return { code: "SUPREME_ENHANCEMENT_CORE", label: "Núcleo Supremo" };
+}
+function invDismantleReward(tier) {
+  if (tier <= 3) return { code: "BASIC_ENHANCEMENT_CORE", label: "Núcleo de Aprimoramento", quantity: tier === 3 ? 2 : 1 };
+  if (tier <= 6) return { code: "ADVANCED_ENHANCEMENT_CORE", label: "Núcleo Avançado", quantity: tier === 6 ? 2 : 1 };
+  return { code: "SUPREME_ENHANCEMENT_CORE", label: "Núcleo Supremo", quantity: tier === 9 ? 2 : 1 };
+}
+function invExactEquipmentKey(equipment) {
+  return [equipment.name, equipment.setCode, equipment.slot, equipment.tier, equipment.rarity].map(value => String(value || "").toUpperCase()).join("|");
+}
+function invCoreQuantity(items, code) {
+  return (items || []).filter(item => item.itemDefinition?.code === code || item.itemType === code).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+}
+async function invOpenEnhancementModal(equipmentId) {
+  const target = invEquipments.find(equipment => equipment.id === equipmentId);
+  if (!target) { showToast("Equipamento não encontrado no inventário.", "error"); return; }
+  let equipments;
+  let items;
+  try {
+    [equipments, items] = await Promise.all([apiGet("/equipment/inventory"), apiGet("/inventory")]);
+  } catch (err) { showToast(err.message, "error"); return; }
+  const freshTarget = equipments.find(equipment => equipment.id === equipmentId) || target;
+  const targetTier = Number(freshTarget.tier) || 1;
+  if (targetTier >= 10) { showToast("Este equipamento já está no tier máximo.", "error"); return; }
+  if (freshTarget.locked) { showToast("Destranque o equipamento antes de aprimorar.", "error"); return; }
+  const candidates = equipments.filter(equipment => equipment.id !== equipmentId && !equipment.equipped && !equipment.locked && invExactEquipmentKey(equipment) === invExactEquipmentKey(freshTarget));
+  const nextTier = targetTier + 1;
+  const requiredCopies = nextTier <= 5 ? 3 : nextTier <= 8 ? 4 : 5;
+  const requiredMaterials = requiredCopies - 1;
+  const core = invEnhancementCoreInfo(nextTier);
+  const coreQuantity = invCoreQuantity(items, core.code);
+  const overlay = document.createElement("div");
+  overlay.id = "inventory-enhancement-modal";
+  overlay.className = "fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80";
+  overlay.innerHTML = `<div class="card w-full max-w-lg max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="inventory-enhancement-title"><div class="flex items-start justify-between gap-3 mb-4"><div><p class="text-xs uppercase tracking-wider text-cyan-300 font-bold">Aprimoramento de equipamento</p><h3 id="inventory-enhancement-title" class="font-bold text-xl mt-1">${escapeHtml(freshTarget.name)} → T${nextTier}</h3><p class="text-xs text-slate-400 mt-1">Selecione ${requiredMaterials} cópia(s) exata(s). A raridade será preservada.</p></div><button class="text-slate-400 text-2xl leading-none" aria-label="Fechar" onclick="invCloseEnhancementModal()">&times;</button></div><div class="rounded-xl border border-cyan-900/60 bg-cyan-950/20 p-3 mb-4"><div class="flex justify-between text-sm"><span class="text-slate-400">Equipamentos necessários</span><strong class="text-cyan-200">${requiredCopies} cópias totais</strong></div><div class="flex justify-between text-sm mt-2"><span class="text-slate-400">Equipamento principal</span><strong class="text-cyan-200">T${targetTier} · ${escapeHtml(formatRarity(freshTarget.rarity))}</strong></div><div class="flex justify-between text-sm mt-2"><span class="text-slate-400">Núcleo necessário</span><strong class="${coreQuantity > 0 ? "text-emerald-300" : "text-red-300"}">${escapeHtml(core.label)} · ${coreQuantity}/1</strong></div></div><p class="text-xs uppercase tracking-wider text-slate-500 mb-2">Cópias compatíveis (${candidates.length})</p><div id="inventory-enhancement-materials" class="flex flex-col gap-2 mb-4">${candidates.length ? candidates.map(candidate => `<label class="flex items-center gap-3 rounded-lg border border-slate-700 bg-slate-950/50 p-3 cursor-pointer hover:border-cyan-700"><input type="checkbox" class="inventory-enhancement-material h-4 w-4 accent-cyan-500" value="${candidate.id}"><span class="flex-1"><strong class="text-sm text-slate-200">${escapeHtml(candidate.name)}</strong><span class="block text-xs text-slate-500">T${candidate.tier} · ${escapeHtml(formatRarity(candidate.rarity))} · ${escapeHtml(invSetLabel(candidate.setCode))}</span></span><span class="text-xs text-slate-500">Material</span></label>`).join("") : `<div class="rounded-lg border border-amber-900/60 bg-amber-950/20 p-3 text-sm text-amber-200">Você não possui cópias compatíveis disponíveis.</div>`}</div><p id="inventory-enhancement-selection" class="text-xs text-slate-500 mb-4">0 de ${requiredMaterials} cópias selecionadas</p><div class="flex gap-2"><button class="btn-sm flex-1" style="background:#334155;color:#cbd5e1;padding:.7rem" onclick="invCloseEnhancementModal()">Cancelar</button><button id="inventory-enhancement-submit" class="btn-sm flex-1" style="background:#0e7490;color:#ecfeff;padding:.7rem" disabled>Aprimorar</button></div></div>`;
+  overlay.onclick = event => { if (event.target === overlay) invCloseEnhancementModal(); };
+  document.body.appendChild(overlay);
+  const updateSelection = () => {
+    const selected = [...overlay.querySelectorAll(".inventory-enhancement-material:checked")];
+    if (selected.length > requiredMaterials) { selected[selected.length - 1].checked = false; return updateSelection(); }
+    overlay.querySelector("#inventory-enhancement-selection").textContent = `${selected.length} de ${requiredMaterials} cópias selecionadas`;
+    const submit = overlay.querySelector("#inventory-enhancement-submit");
+    submit.disabled = selected.length !== requiredMaterials || coreQuantity < 1;
+  };
+  overlay.querySelectorAll(".inventory-enhancement-material").forEach(input => input.addEventListener("change", updateSelection));
+  overlay.querySelector("#inventory-enhancement-submit")?.addEventListener("click", async event => {
+    const button = event.currentTarget;
+    const materialEquipmentIds = [...overlay.querySelectorAll(".inventory-enhancement-material:checked")].map(input => input.value);
+    button.disabled = true; button.textContent = "Aprimorando...";
+    try {
+      const result = await apiPost("/equipment/enhance", { equipmentId, materialEquipmentIds });
+      invCloseEnhancementModal();
+      showToast(result.message || `Equipamento aprimorado para T${result.currentTier || nextTier}!`);
+      await invReloadEquipment();
+    } catch (err) { showToast(err.message, "error"); button.disabled = false; button.textContent = "Aprimorar"; }
+  });
+}
+function invCloseEnhancementModal() { document.getElementById("inventory-enhancement-modal")?.remove(); }
+function invOpenDismantleModal(equipmentId) {
+  const equipment = invEquipments.find(item => item.id === equipmentId);
+  if (!equipment) return;
+  if (equipment.locked) { showToast("Destranque o equipamento antes de desmontar.", "error"); return; }
+  const tier = Number(equipment.tier) || 1;
+  if (tier >= 10) { showToast("Equipamentos T10 não podem ser desmontados.", "error"); return; }
+  const reward = invDismantleReward(tier);
+  document.getElementById("inventory-dismantle-modal")?.remove();
+  const overlay = document.createElement("div");
+  overlay.id = "inventory-dismantle-modal";
+  overlay.className = "fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80";
+  overlay.innerHTML = `<div class="card w-full max-w-md" onclick="event.stopPropagation()" role="dialog" aria-modal="true"><div class="flex items-start justify-between gap-3"><div><p class="text-xs uppercase tracking-wider text-amber-300 font-bold">Desmontagem</p><h3 class="font-bold text-xl mt-1">Converter equipamento em núcleos?</h3></div><button class="text-slate-400 text-2xl leading-none" aria-label="Fechar" onclick="invCloseDismantleModal()">&times;</button></div><div class="rounded-xl border border-amber-900/60 bg-amber-950/20 p-4 my-4"><p class="font-bold text-slate-100">${escapeHtml(equipment.name)}</p><p class="text-sm text-slate-400 mt-1">T${tier} · ${escapeHtml(formatRarity(equipment.rarity))} · ${escapeHtml(invSetLabel(equipment.setCode))}</p><p class="text-sm text-amber-200 mt-3">Você receberá <strong>${reward.quantity}x ${escapeHtml(reward.label)}</strong>.</p></div><p class="text-xs leading-relaxed text-slate-500 mb-5">Esta ação é permanente. O equipamento será removido e a raridade não altera o retorno.</p><div class="flex gap-2"><button class="btn-sm flex-1" style="background:#334155;color:#cbd5e1;padding:.7rem" onclick="invCloseDismantleModal()">Cancelar</button><button id="inventory-dismantle-submit" class="btn-sm flex-1" style="background:#92400e;color:#fef3c7;padding:.7rem">Desmontar</button></div></div>`;
+  overlay.onclick = event => { if (event.target === overlay) invCloseDismantleModal(); };
+  document.body.appendChild(overlay);
+  overlay.querySelector("#inventory-dismantle-submit")?.addEventListener("click", async event => {
+    const button = event.currentTarget; button.disabled = true; button.textContent = "Desmontando...";
+    try {
+      const result = await apiPost("/equipment/dismantle", { equipmentId });
+      invCloseDismantleModal();
+      showToast(`Desmontagem concluída: ${result.quantityGranted || reward.quantity}x ${reward.label}.`);
+      await Promise.all([invReloadEquipment(), invReloadItems()]);
+    } catch (err) { showToast(err.message, "error"); button.disabled = false; button.textContent = "Desmontar"; }
+  });
+}
+function invCloseDismantleModal() { document.getElementById("inventory-dismantle-modal")?.remove(); }
+async function invToggleEquipmentLock(equipmentId, locked) {
+  try {
+    await apiPost("/equipment/lock", { equipmentId, locked });
+    showToast(locked ? "Equipamento trancado." : "Equipamento destrancado.");
+    await invReloadEquipment();
+  } catch (err) { showToast(err.message, "error"); }
+}
+async function invSelectAllDismantlable() {
+  try {
+    const equipments = await apiGet("/equipment/inventory");
+    const eligibleIds = equipments.filter(equipment => !equipment.equipped && !equipment.locked && Number(equipment.tier) < 10).map(equipment => equipment.id);
+    const allSelected = eligibleIds.length > 0 && eligibleIds.every(id => invSelectedDismantleIds.has(id));
+    if (allSelected) eligibleIds.forEach(id => invSelectedDismantleIds.delete(id));
+    else eligibleIds.forEach(id => invSelectedDismantleIds.add(id));
+    invRenderEquipment();
+  } catch (err) { showToast(err.message, "error"); }
+}
+function invToggleDismantleSelection(equipmentId, selected) {
+  if (selected) invSelectedDismantleIds.add(equipmentId); else invSelectedDismantleIds.delete(equipmentId);
+  const count = document.getElementById("inventory-dismantle-selected-count");
+  const button = document.getElementById("inventory-dismantle-batch-button");
+  if (count) count.textContent = String(invSelectedDismantleIds.size);
+  if (button) button.disabled = invSelectedDismantleIds.size === 0;
+}
+async function invDismantleSelected() {
+  const equipmentIds = [...invSelectedDismantleIds];
+  if (!equipmentIds.length) return;
+  if (!window.confirm(`Desmontar ${equipmentIds.length} equipamento(s) selecionado(s)? Esta ação não pode ser desfeita.`)) return;
+  const button = document.getElementById("inventory-dismantle-batch-button");
+  if (button) { button.disabled = true; button.textContent = "Desmontando..."; }
+  try {
+    const result = await apiPost("/equipment/dismantle/batch", { equipmentIds });
+    invSelectedDismantleIds.clear();
+    const summary = Object.entries(result.coresGranted || {}).map(([code, quantity]) => `${quantity}x ${code}`).join(", ");
+    showToast(`Desmontagem concluída: ${summary || `${result.dismantledCount} equipamento(s)`}.`);
+    await Promise.all([invReloadEquipment(), invReloadItems()]);
+  } catch (err) { showToast(err.message, "error"); if (button) { button.disabled = false; button.textContent = "Desmontar selecionados"; } }
+}
 function invRenderEquipment() {
   const content = document.getElementById("inv-content");
   const page = invPageData.equipment;
@@ -1091,13 +1275,17 @@ function invRenderEquipment() {
     return;
   }
 
-  content.innerHTML = equipments.map(eq => {
+  const eligibleOnPage = equipments.filter(eq => !eq.equipped && !eq.locked && Number(eq.tier) < 10);
+  const allPageSelected = eligibleOnPage.length > 0 && eligibleOnPage.every(eq => invSelectedDismantleIds.has(eq.id));
+  const dismantleToolbar = `<div class="inventory-bulk-toolbar"><div><p class="text-xs uppercase tracking-wider text-orange-300 font-bold">Desmontagem em lote</p><p class="text-xs text-slate-500 mt-1">Selecione equipamentos destrancados para converter vários de uma vez.</p></div><div class="flex gap-2"><button class="btn-sm inventory-action-enhance" onclick="invSelectAllDismantlable()">${allPageSelected ? "Limpar seleção" : "Selecionar todos"}</button><button id="inventory-dismantle-batch-button" class="btn-sm inventory-action-dismantle" onclick="invDismantleSelected()" ${invSelectedDismantleIds.size === 0 ? "disabled" : ""}>Desmontar selecionados (<span id="inventory-dismantle-selected-count">${invSelectedDismantleIds.size}</span>)</button></div></div>`;
+  content.innerHTML = dismantleToolbar + equipments.map(eq => {
     const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
     const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
     const emoji = slotEmoji[eq.slot] || "⚔️";
     const refLabel = eq.refinementLevel > 0 ? ` +${eq.refinementLevel}` : "";
     const ascensionLevel = Number(eq.ascensionLevel) || 0;
     const ascensionLabel = ascensionLevel > 0 ? `<span class="badge badge-legendary">Ascensão ${ascensionLevel}</span>` : "";
+    const lockLabel = eq.locked ? '<span class="badge badge-rare">Trancado</span>' : '';
     const canAscend = !eq.equipped && ascensionLevel < 3 && Number(eq.refinementLevel) >= 11;
 
     const stats = [];
@@ -1111,7 +1299,7 @@ function invRenderEquipment() {
         <div class="inventory-equipment-body">
           <div class="inventory-equipment-heading">
             <p class="inventory-item-name" title="${escapeAttr(`${eq.name}${refLabel}`)}" aria-label="${escapeAttr(`${eq.name}${refLabel}`)}">${escapeHtml(eq.name)}${refLabel}</p>
-            ${eq.equipped ? '<span class="badge badge-success">Equipado</span>' : '<span class="inventory-equipment-state">Disponível</span>'}
+            ${eq.equipped ? '<span class="badge badge-success">Equipado</span>' : `<span class="inventory-equipment-state">Disponível</span>${lockLabel}`}
           </div>
           <div class="inventory-equipment-meta">
             ${eq.setCode ? `<span class="badge badge-${invSetBadge(eq.setCode)}">${escapeHtml(invSetLabel(eq.setCode))}</span>` : ''}
@@ -1127,6 +1315,9 @@ function invRenderEquipment() {
           ` : `
             <button class="btn-sm btn-primary" onclick="invEquip('${eq.id}')">Equipar</button>
             ${canAscend ? `<button class="btn-sm inventory-action-ascend" onclick="invOpenAscensionPreview('${eq.id}')">Ascender</button>` : ''}
+            ${!eq.locked && Number(eq.tier) < 10 ? `<button class="btn-sm inventory-action-enhance" onclick="invOpenEnhancementModal('${eq.id}')">Aprimorar</button><button class="btn-sm inventory-action-dismantle" onclick="invOpenDismantleModal('${eq.id}')">Desmontar</button>` : ''}
+            <button class="btn-sm inventory-action-lock" onclick="invToggleEquipmentLock('${eq.id}', ${!eq.locked})">${eq.locked ? "Destrancar" : "Trancar"}</button>
+            ${!eq.locked && Number(eq.tier) < 10 ? `<label class="inventory-dismantle-check" title="Selecionar para desmontagem"><input type="checkbox" ${invSelectedDismantleIds.has(eq.id) ? "checked" : ""} onchange="invToggleDismantleSelection('${eq.id}', this.checked)"> Lote</label>` : ''}
           `}
         </div>
       </article>

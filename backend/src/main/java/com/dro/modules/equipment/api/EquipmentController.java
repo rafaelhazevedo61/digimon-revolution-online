@@ -2,6 +2,10 @@ package com.dro.modules.equipment.api;
 
 import com.dro.modules.equipment.api.dto.request.EquipRequest;
 import com.dro.modules.equipment.api.dto.request.AscendEquipmentRequest;
+import com.dro.modules.equipment.api.dto.request.EnhanceEquipmentRequest;
+import com.dro.modules.equipment.api.dto.request.DismantleEquipmentRequest;
+import com.dro.modules.equipment.api.dto.request.DismantleEquipmentBatchRequest;
+import com.dro.modules.equipment.api.dto.request.ToggleEquipmentLockRequest;
 import com.dro.modules.equipment.api.dto.request.RefineEquipmentRequest;
 import com.dro.modules.equipment.api.dto.request.UnequipRequest;
 import com.dro.modules.equipment.api.dto.response.DigimonEquipmentResponse;
@@ -11,6 +15,10 @@ import com.dro.modules.equipment.api.dto.response.RefineEquipmentResponse;
 import com.dro.modules.equipment.api.dto.response.RefinePreviewResponse;
 import com.dro.modules.equipment.api.dto.response.AscendEquipmentResponse;
 import com.dro.modules.equipment.api.dto.response.AscendEquipmentPreviewResponse;
+import com.dro.modules.equipment.api.dto.response.EnhanceEquipmentResponse;
+import com.dro.modules.equipment.api.dto.response.DismantleEquipmentResponse;
+import com.dro.modules.equipment.api.dto.response.DismantleEquipmentBatchResponse;
+import com.dro.modules.equipment.api.dto.response.ToggleEquipmentLockResponse;
 import com.dro.modules.equipment.application.*;
 import com.dro.modules.equipment.domain.EquipmentRules;
 import com.dro.modules.inventory.domain.ItemType;
@@ -31,6 +39,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/equipment")
 public class EquipmentController {
+    private final EnhanceEquipmentUseCase enhanceEquipmentUseCase;
+    private final DismantleEquipmentUseCase dismantleEquipmentUseCase;
+    private final ToggleEquipmentLockUseCase toggleEquipmentLockUseCase;
     private final GetDigimonInventoryUseCase getDigimonInventoryUseCase;
     private final GetDigimonEquipmentUseCase getDigimonEquipmentUseCase;
     private final EquipUseCase equipUseCase;
@@ -47,6 +58,34 @@ public class EquipmentController {
     @GetMapping("/inventory")
     public ResponseEntity<List<EquipmentResponse>> getInventory(@RequestHeader("Authorization") String authorization) {
         return ResponseEntity.ok(getDigimonInventoryUseCase.execute(authorization));
+    }
+
+    @PostMapping("/enhance")
+    public ResponseEntity<EnhanceEquipmentResponse> enhance(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody @Valid EnhanceEquipmentRequest request) {
+        return ResponseEntity.ok(enhanceEquipmentUseCase.execute(authorization, request));
+    }
+
+    @PostMapping("/dismantle")
+    public ResponseEntity<DismantleEquipmentResponse> dismantle(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody @Valid DismantleEquipmentRequest request) {
+        return ResponseEntity.ok(dismantleEquipmentUseCase.execute(authorization, request));
+    }
+
+    @PostMapping("/dismantle/batch")
+    public ResponseEntity<DismantleEquipmentBatchResponse> dismantleBatch(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody @Valid DismantleEquipmentBatchRequest request) {
+        return ResponseEntity.ok(dismantleEquipmentUseCase.executeBatch(authorization, request.equipmentIds()));
+    }
+
+    @PostMapping("/lock")
+    public ResponseEntity<ToggleEquipmentLockResponse> toggleLock(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody @Valid ToggleEquipmentLockRequest request) {
+        return ResponseEntity.ok(toggleEquipmentLockUseCase.execute(authorization, request));
     }
 
     @GetMapping("/inventory/page")
@@ -151,6 +190,7 @@ public class EquipmentController {
             throw new com.dro.shared.exception.ForbiddenException("Equipment does not belong to this Digimon");
         }
         var digimon = digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new com.dro.shared.exception.NotFoundException("Active digimon not found"));
+        equip.requireAvailable();
         int currentLevel = equip.getRefinementLevel();
         int costBits = EquipmentRules.refinementCostBits(currentLevel);
         int currentStones = inventoryRepository.findByDigimonIdAndItemType(digimon.getId(), ItemType.REFINEMENT_STONE).map(i -> i.getQuantity()).orElse(0);
@@ -170,7 +210,10 @@ public class EquipmentController {
                 .map(item -> item.getQuantity()).orElse(0);
     }
 
-    public EquipmentController(final GetDigimonInventoryUseCase getDigimonInventoryUseCase, final GetDigimonEquipmentUseCase getDigimonEquipmentUseCase, final EquipUseCase equipUseCase, final UnequipUseCase unequipUseCase, final UnequipAllUseCase unequipAllUseCase, final RefineEquipmentUseCase refineEquipmentUseCase, final AscendEquipmentUseCase ascendEquipmentUseCase, final com.dro.modules.equipment.infra.EquipmentRepository equipmentRepository, final InventoryRepository inventoryRepository, final ItemDefinitionRepository itemDefinitionRepository, final com.dro.modules.player.infra.PlayerRepository playerRepository, final com.dro.modules.digimon.infra.DigimonRepository digimonRepository) {
+    public EquipmentController(final EnhanceEquipmentUseCase enhanceEquipmentUseCase, final DismantleEquipmentUseCase dismantleEquipmentUseCase, final ToggleEquipmentLockUseCase toggleEquipmentLockUseCase, final GetDigimonInventoryUseCase getDigimonInventoryUseCase, final GetDigimonEquipmentUseCase getDigimonEquipmentUseCase, final EquipUseCase equipUseCase, final UnequipUseCase unequipUseCase, final UnequipAllUseCase unequipAllUseCase, final RefineEquipmentUseCase refineEquipmentUseCase, final AscendEquipmentUseCase ascendEquipmentUseCase, final com.dro.modules.equipment.infra.EquipmentRepository equipmentRepository, final InventoryRepository inventoryRepository, final ItemDefinitionRepository itemDefinitionRepository, final com.dro.modules.player.infra.PlayerRepository playerRepository, final com.dro.modules.digimon.infra.DigimonRepository digimonRepository) {
+        this.enhanceEquipmentUseCase = enhanceEquipmentUseCase;
+        this.dismantleEquipmentUseCase = dismantleEquipmentUseCase;
+        this.toggleEquipmentLockUseCase = toggleEquipmentLockUseCase;
         this.getDigimonInventoryUseCase = getDigimonInventoryUseCase;
         this.getDigimonEquipmentUseCase = getDigimonEquipmentUseCase;
         this.equipUseCase = equipUseCase;

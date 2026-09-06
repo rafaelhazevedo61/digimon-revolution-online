@@ -92,6 +92,27 @@ class ClanRaidResponseMapperTest {
         assertThat(response.nextAttackAvailableAt()).isNotNull().isAfter(Instant.now());
     }
 
+    @Test
+    void accumulatesAllPlayerDamageInPersonalTotalAndRanking() {
+        UUID raidId = UUID.randomUUID();
+        UUID playerId = UUID.randomUUID();
+        ClanRaid raid = raid(raidId, ClanRaidStatus.ACTIVE);
+        BossDefinitionEntity boss = boss();
+        ClanRaidAttack firstAttack = attack(raidId, playerId, Instant.now().minusSeconds(120));
+        firstAttack.setDamage(125);
+        ClanRaidAttack secondAttack = attack(raidId, playerId, Instant.now().minusSeconds(60));
+        secondAttack.setDamage(275);
+        stubCommon(raid, playerId, boss, secondAttack);
+        when(clanRaidAttackRepository.findByClanRaidIdOrderByCreatedAtDesc(raidId))
+                .thenReturn(List.of(secondAttack, firstAttack));
+
+        var response = mapper.toResponse(raid, playerId);
+
+        assertThat(response.myTotalDamage()).isEqualTo(400);
+        assertThat(response.ranking()).singleElement().extracting(entry -> entry.totalDamage())
+                .isEqualTo(400L);
+    }
+
     private void stubCommon(ClanRaid raid, UUID playerId, BossDefinitionEntity boss, ClanRaidAttack previousAttack) {
         when(bossDefinitionRepository.findById(raid.getBossId())).thenReturn(Optional.of(boss));
         when(clanRaidAttackRepository.findByClanRaidIdOrderByCreatedAtDesc(raid.getId()))
@@ -133,4 +154,3 @@ class ClanRaidResponseMapperTest {
                 .build();
     }
 }
-

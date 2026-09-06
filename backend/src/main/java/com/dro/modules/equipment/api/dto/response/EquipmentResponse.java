@@ -26,6 +26,7 @@ public record EquipmentResponse(
         int effectiveBonusAttack,
         int effectiveBonusDefense,
         boolean equipped,
+        boolean locked,
         LocalDateTime createdAt
 ) {
     public static EquipmentResponse from(Equipment equipment) {
@@ -45,6 +46,7 @@ public record EquipmentResponse(
                 equipment.getEffectiveBonusAttack(),
                 equipment.getEffectiveBonusDefense(),
                 equipment.isEquipped(),
+                equipment.isLocked(),
                 equipment.getCreatedAt()
         );
     }

@@ -1,6 +1,7 @@
 package com.dro.modules.loot.domain;
 
 import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.equipment.domain.EquipmentRarity;
 import jakarta.persistence.*;
 
 /**
@@ -29,6 +30,11 @@ public class LootTableEntryEntity {
     private ItemType itemType;
     @Column(name = "material_code", length = 80)
     private String materialCode;
+    @Column(name = "equipment_template_name", length = 120)
+    private String equipmentTemplateName;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "equipment_rarity", length = 20)
+    private EquipmentRarity equipmentRarity;
     @Column(nullable = false)
     private int weight;
     @Column(name = "min_quantity", nullable = false)
@@ -49,6 +55,8 @@ public class LootTableEntryEntity {
         private LootRarity rarity;
         private ItemType itemType;
         private String materialCode;
+        private String equipmentTemplateName;
+        private EquipmentRarity equipmentRarity;
         private int weight;
         private int minQuantity;
         private int maxQuantity;
@@ -101,6 +109,22 @@ public class LootTableEntryEntity {
         /**
          * @return {@code this}.
          */
+        public LootTableEntryEntity.LootTableEntryEntityBuilder equipmentTemplateName(final String equipmentTemplateName) {
+            this.equipmentTemplateName = equipmentTemplateName;
+            return this;
+        }
+
+        /**
+         * @return {@code this}.
+         */
+        public LootTableEntryEntity.LootTableEntryEntityBuilder equipmentRarity(final EquipmentRarity equipmentRarity) {
+            this.equipmentRarity = equipmentRarity;
+            return this;
+        }
+
+        /**
+         * @return {@code this}.
+         */
         public LootTableEntryEntity.LootTableEntryEntityBuilder weight(final int weight) {
             this.weight = weight;
             return this;
@@ -134,12 +158,12 @@ public class LootTableEntryEntity {
         public LootTableEntryEntity build() {
             boolean active$value = this.active$value;
             if (!this.active$set) active$value = LootTableEntryEntity.$default$active();
-            return new LootTableEntryEntity(this.id, this.lootTable, this.rarity, this.itemType, this.materialCode, this.weight, this.minQuantity, this.maxQuantity, active$value);
+            return new LootTableEntryEntity(this.id, this.lootTable, this.rarity, this.itemType, this.materialCode, this.equipmentTemplateName, this.equipmentRarity, this.weight, this.minQuantity, this.maxQuantity, active$value);
         }
 
         @Override
         public String toString() {
-            return "LootTableEntryEntity.LootTableEntryEntityBuilder(id=" + this.id + ", lootTable=" + this.lootTable + ", rarity=" + this.rarity + ", itemType=" + this.itemType + ", materialCode=" + this.materialCode + ", weight=" + this.weight + ", minQuantity=" + this.minQuantity + ", maxQuantity=" + this.maxQuantity + ", active$value=" + this.active$value + ")";
+            return "LootTableEntryEntity.LootTableEntryEntityBuilder(id=" + this.id + ", lootTable=" + this.lootTable + ", rarity=" + this.rarity + ", itemType=" + this.itemType + ", materialCode=" + this.materialCode + ", equipmentTemplateName=" + this.equipmentTemplateName + ", equipmentRarity=" + this.equipmentRarity + ", weight=" + this.weight + ", minQuantity=" + this.minQuantity + ", maxQuantity=" + this.maxQuantity + ", active$value=" + this.active$value + ")";
         }
     }
 
@@ -165,6 +189,14 @@ public class LootTableEntryEntity {
 
     public String getMaterialCode() {
         return this.materialCode;
+    }
+
+    public String getEquipmentTemplateName() {
+        return this.equipmentTemplateName;
+    }
+
+    public EquipmentRarity getEquipmentRarity() {
+        return this.equipmentRarity;
     }
 
     public int getWeight() {
@@ -203,6 +235,14 @@ public class LootTableEntryEntity {
         this.materialCode = materialCode;
     }
 
+    public void setEquipmentTemplateName(final String equipmentTemplateName) {
+        this.equipmentTemplateName = equipmentTemplateName;
+    }
+
+    public void setEquipmentRarity(final EquipmentRarity equipmentRarity) {
+        this.equipmentRarity = equipmentRarity;
+    }
+
     public void setWeight(final int weight) {
         this.weight = weight;
     }
@@ -223,12 +263,14 @@ public class LootTableEntryEntity {
         this.active = LootTableEntryEntity.$default$active();
     }
 
-    public LootTableEntryEntity(final Long id, final LootTableEntity lootTable, final LootRarity rarity, final ItemType itemType, final String materialCode, final int weight, final int minQuantity, final int maxQuantity, final boolean active) {
+    public LootTableEntryEntity(final Long id, final LootTableEntity lootTable, final LootRarity rarity, final ItemType itemType, final String materialCode, final String equipmentTemplateName, final EquipmentRarity equipmentRarity, final int weight, final int minQuantity, final int maxQuantity, final boolean active) {
         this.id = id;
         this.lootTable = lootTable;
         this.rarity = rarity;
         this.itemType = itemType;
         this.materialCode = materialCode;
+        this.equipmentTemplateName = equipmentTemplateName;
+        this.equipmentRarity = equipmentRarity;
         this.weight = weight;
         this.minQuantity = minQuantity;
         this.maxQuantity = maxQuantity;

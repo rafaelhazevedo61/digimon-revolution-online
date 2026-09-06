@@ -46,7 +46,7 @@ async function renderArenaPage() {
         </div>
         <nav class="arena-page-nav" aria-label="Navegação da Arena">
           <button type="button" class="arena-nav-link is-active" aria-current="page">Lobby</button>
-          <button type="button" class="arena-nav-link" onclick="navigateTo('arena-ranking')">Classificação</button>
+          <button type="button" class="arena-nav-link" onclick="navigateTo('ranking', {tab: 'arena'})">Classificação</button>
           <button type="button" class="arena-nav-link" onclick="navigateTo('arena-history')">Histórico</button>
           <button type="button" class="arena-nav-link" onclick="navigateTo('arena-shop')">Loja</button>
         </nav>
@@ -216,56 +216,12 @@ function renderArenaResult(result) {
 
       <div class="flex gap-2 w-full">
         <button class="btn-primary flex-1" onclick="navigateTo('arena')">Voltar a Arena</button>
-        <button class="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-700 hover:bg-slate-600 transition-colors" onclick="navigateTo('arena-ranking')">
+        <button class="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-700 hover:bg-slate-600 transition-colors" onclick="navigateTo('ranking', {tab: 'arena'})">
           Ver Classificação
         </button>
       </div>
     </div>
   `;
-}
-
-async function renderArenaRankingPage(mode = "current") {
-  const seasonMode = mode === "season";
-  const app = document.getElementById("app");
-  showBottomNav("more");
-
-  app.innerHTML = `
-    <div class="page-container arena-page-container arena-subpage">
-      <header class="arena-page-header">
-        <div class="arena-page-heading"><p class="arena-eyebrow">Competição · PvP</p><h1 class="arena-page-title">Classificação</h1><p class="arena-page-subtitle">Compare sua evolução com os melhores competidores da Arena.</p></div>
-        <nav class="arena-page-nav" aria-label="Navegação da Arena"><button type="button" class="arena-nav-link" onclick="navigateTo('arena')">Lobby</button><button type="button" class="arena-nav-link is-active" aria-current="page">Classificação</button><button type="button" class="arena-nav-link" onclick="navigateTo('arena-history')">Histórico</button><button type="button" class="arena-nav-link" onclick="navigateTo('arena-shop')">Loja</button></nav>
-      </header>
-      <section class="arena-subpage-panel">
-        <div class="arena-subpage-heading"><div><p class="arena-eyebrow arena-eyebrow-cyan">Tabela de líderes</p><h2>${seasonMode ? "Ranking da temporada" : "Ranking atual"}</h2><p>${seasonMode ? "Temporada experimental: 01/08/2026 – 31/12/2026" : "Classificação pela pontuação atual de cada Digimon ativo ou armazenado."}</p></div><span class="arena-subpage-icon">✦</span></div>
-        <div class="arena-mode-tabs" role="tablist" aria-label="Tipo de classificação"><button type="button" class="${seasonMode ? "" : "is-active"}" role="tab" aria-selected="${!seasonMode}" onclick="renderArenaRankingPage('current')">Atual</button><button type="button" class="${seasonMode ? "is-active" : ""}" role="tab" aria-selected="${seasonMode}" onclick="renderArenaRankingPage('season')">Temporada</button></div>
-        <div id="arena-player-history" class="arena-ranking-summary ${seasonMode ? "hidden" : ""}"></div>
-        <div id="arena-ranking-list"><div class="arena-ranking-row arena-loading-row"><div class="arena-loading-bar"></div><div class="arena-loading-bar short"></div></div></div>
-      </section>
-    </div>
-  `;
-
-  try {
-    const [ranking, statistics] = await Promise.all([
-      apiGet(seasonMode ? "/arena/season-ranking" : "/arena/ranking", { page: 0, size: 50 }),
-      seasonMode ? Promise.resolve(null) : apiGet("/arena/statistics").catch(() => null)
-    ]);
-    const history = document.getElementById("arena-player-history");
-    if (history && statistics) {
-      history.classList.remove("hidden");
-      history.innerHTML = `<div class="arena-summary-title">Seu histórico de arena</div><div class="arena-summary-grid"><div><span>Saldo</span><strong class="${statistics.netPoints >= 0 ? "is-positive" : "is-negative"}">${Number(statistics.netPoints || 0).toLocaleString("pt-BR")}</strong></div><div><span>Ganhos</span><strong>${Number(statistics.pointsWon || 0).toLocaleString("pt-BR")}</strong></div><div><span>Perdas</span><strong class="is-negative">${Number(statistics.pointsLost || 0).toLocaleString("pt-BR")}</strong></div></div>`;
-    }
-    const container = document.getElementById("arena-ranking-list");
-    const myId = getPlayerId();
-    if (!ranking || ranking.length === 0) { container.innerHTML = `<div class="arena-empty-state"><span>◎</span><p>Classificação vazia no momento.</p></div>`; return; }
-    container.innerHTML = ranking.map(e => {
-      const mine = myId && e.playerId === myId;
-      const medal = e.position === 1 ? "🥇" : e.position === 2 ? "🥈" : e.position === 3 ? "🥉" : `#${e.position}`;
-      if (seasonMode) return `<article class="arena-ranking-row ${mine ? "is-mine" : ""}"><span class="arena-ranking-position">${medal}</span><div class="arena-ranking-identity"><strong>@${escapeHtml(e.playerName)}</strong>${mine ? `<span class="arena-you-badge">você</span>` : ""}<p><span class="is-positive">${e.wins}V</span> / <span class="is-negative">${e.losses}D</span> · ganhos ${Number(e.pointsWon || 0).toLocaleString("pt-BR")} · perdas ${Number(e.pointsLost || 0).toLocaleString("pt-BR")}</p></div><strong class="arena-ranking-score">${Number(e.netPoints || 0).toLocaleString("pt-BR")}<small>pts</small></strong></article>`;
-      return `<article class="arena-ranking-row ${mine ? "is-mine" : ""}"><span class="arena-ranking-position">${medal}</span><div class="arena-ranking-identity"><div class="arena-ranking-name-row"><strong>${escapeHtml(e.digimonName)}</strong>${arenaTierBadge(e.tier)}${mine ? `<span class="arena-you-badge">você</span>` : ""}</div><p>@${escapeHtml(e.playerName)} · ${escapeHtml(ARENA_STAGE_LABELS[e.stage] || e.stage)} Lv.${e.level} · <span class="is-positive">${e.wins}V</span> / <span class="is-negative">${e.losses}D</span></p></div><strong class="arena-ranking-score">${Number(e.rating || 0).toLocaleString("pt-BR")}<small>pts</small></strong></article>`;
-    }).join("");
-  } catch (err) {
-    document.getElementById("arena-ranking-list").innerHTML = `<div class="card border-red-900"><p class="text-red-300 text-sm">${escapeHtml(err.message)}</p></div>`;
-  }
 }
 
 async function renderArenaHistoryPage() {
@@ -276,7 +232,7 @@ async function renderArenaHistoryPage() {
     <div class="page-container arena-page-container arena-subpage">
       <header class="arena-page-header">
         <div class="arena-page-heading"><p class="arena-eyebrow">Competição · PvP</p><h1 class="arena-page-title">Histórico</h1><p class="arena-page-subtitle">Acompanhe seus confrontos, variações de rating e recompensas.</p></div>
-        <nav class="arena-page-nav" aria-label="Navegação da Arena"><button type="button" class="arena-nav-link" onclick="navigateTo('arena')">Lobby</button><button type="button" class="arena-nav-link" onclick="navigateTo('arena-ranking')">Classificação</button><button type="button" class="arena-nav-link is-active" aria-current="page">Histórico</button><button type="button" class="arena-nav-link" onclick="navigateTo('arena-shop')">Loja</button></nav>
+        <nav class="arena-page-nav" aria-label="Navegação da Arena"><button type="button" class="arena-nav-link" onclick="navigateTo('arena')">Lobby</button><button type="button" class="arena-nav-link" onclick="navigateTo('ranking', {tab: 'arena'})">Classificação</button><button type="button" class="arena-nav-link is-active" aria-current="page">Histórico</button><button type="button" class="arena-nav-link" onclick="navigateTo('arena-shop')">Loja</button></nav>
       </header>
       <section class="arena-subpage-panel"><div class="arena-subpage-heading"><div><p class="arena-eyebrow arena-eyebrow-cyan">Registro de partidas</p><h2>Seus últimos confrontos</h2><p>Vitórias, derrotas e recompensas recebidas nas batalhas recentes.</p></div><span class="arena-subpage-icon">◷</span></div><div id="arena-history-list"><div class="arena-history-row arena-loading-row"><div class="arena-loading-bar"></div><div class="arena-loading-bar short"></div></div></div></section>
     </div>
@@ -305,7 +261,7 @@ async function renderArenaShopPage() {
     <div class="page-container arena-page-container arena-subpage">
       <header class="arena-page-header">
         <div class="arena-page-heading"><p class="arena-eyebrow">Competição · PvP</p><h1 class="arena-page-title">Loja</h1><p class="arena-page-subtitle">Troque suas moedas de Arena por itens especiais da temporada.</p></div>
-        <nav class="arena-page-nav" aria-label="Navegação da Arena"><button type="button" class="arena-nav-link" onclick="navigateTo('arena')">Lobby</button><button type="button" class="arena-nav-link" onclick="navigateTo('arena-ranking')">Classificação</button><button type="button" class="arena-nav-link" onclick="navigateTo('arena-history')">Histórico</button><button type="button" class="arena-nav-link is-active" aria-current="page">Loja</button></nav>
+        <nav class="arena-page-nav" aria-label="Navegação da Arena"><button type="button" class="arena-nav-link" onclick="navigateTo('arena')">Lobby</button><button type="button" class="arena-nav-link" onclick="navigateTo('ranking', {tab: 'arena'})">Classificação</button><button type="button" class="arena-nav-link" onclick="navigateTo('arena-history')">Histórico</button><button type="button" class="arena-nav-link is-active" aria-current="page">Loja</button></nav>
       </header>
       <section class="arena-subpage-panel"><div class="arena-subpage-heading"><div><p class="arena-eyebrow arena-eyebrow-cyan">Recompensas da temporada</p><h2>Itens disponíveis</h2><p>Ganhe moedas lutando e use-as para resgatar itens.</p></div><span class="arena-subpage-icon">✦</span></div><div id="arena-shop-content"><div class="arena-shop-loading arena-loading-row"><div class="arena-loading-bar"></div><div class="arena-loading-bar short"></div></div></div></section>
     </div>
@@ -334,7 +290,7 @@ function renderArenaShop(shop, inventoryItems = []) {
   }
 
   const productsHtml = shop.products.map(p => {
-    const inventoryQuantity = arenaShopInventoryQuantity(p.itemType, inventoryItems);
+    const inventoryQuantity = arenaShopInventoryQuantity(p.itemDefinitionCode || p.itemType, inventoryItems);
     const maxQty = arenaShopMaxPurchaseQuantity(p, coins, inventoryQuantity);
     const canBuy = maxQty >= 1;
     const unavailableLabel = coins < p.priceCoins ? "Sem saldo" : "Limite atingido";

@@ -31,6 +31,7 @@ import java.util.UUID;
  */
 @Service
 public class CreateAuctionListingUseCase {
+    private final AuctionEquipmentService auctionEquipmentService;
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final ItemDefinitionRepository itemDefinitionRepository;
@@ -39,12 +40,16 @@ public class CreateAuctionListingUseCase {
 
     @Transactional
     public AuctionListingResponse execute(String token, CreateAuctionListingRequest request) {
+        var listingType = request.resolvedType();
         AuctionRules.validateListing(request.quantity(), request.unitPrice(), request.durationHours());
         UUID playerId = TokenExtractor.extractPlayerId(token);
         Player player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         Instant now = Instant.now();
         if (auctionListingRepository.countActiveForSeller(playerId, now) >= AuctionRules.MAX_ACTIVE_LISTINGS_PER_PLAYER) {
             throw new ConflictException("Você já possui o limite de 10 anúncios ativos.");
+        }
+        if (listingType == com.dro.modules.auction.domain.AuctionListingType.EQUIPMENT) {
+            return createEquipmentListing(player, playerId, request, now);
         }
         ItemDefinition itemDefinition = itemDefinitionRepository.findById(request.itemDefinitionId()).orElseThrow(() -> new NotFoundException("Item definition not found"));
         if (!itemDefinition.isTradable()) {
@@ -75,6 +80,25 @@ public class CreateAuctionListingUseCase {
         return AuctionListingMapper.toResponse(saved, player.getUsername());
     }
 
+    private AuctionListingResponse createEquipmentListing(Player player, UUID playerId,
+            CreateAuctionListingRequest request, Instant now) {
+        Digimon sellerDigimon = findLockedActiveDigimon(player, playerId);
+        if (sellerDigimon.getBits() < AuctionRules.LISTING_FEE) {
+            throw new UnprocessableException("Not enough Bits for the listing fee");
+        }
+        var equipment = auctionEquipmentService.reserve(request.equipmentId(), playerId);
+        AuctionListing listing = AuctionListing.builder().id(UUID.randomUUID())
+                .sellerPlayerId(playerId).quantity(1).remainingQuantity(1)
+                .unitPrice(request.unitPrice()).listingFee(AuctionRules.LISTING_FEE)
+                .sellerFeeRateBps(AuctionRules.sellerFeeRateBpsForDuration(request.durationHours()))
+                .status(AuctionListingStatus.ACTIVE).createdAt(now).updatedAt(now)
+                .expiresAt(AuctionRules.expirationAt(now, request.durationHours())).build();
+        listing.describeEquipment(equipment);
+        sellerDigimon.setBits(sellerDigimon.getBits() - AuctionRules.LISTING_FEE);
+        digimonRepository.save(sellerDigimon);
+        return AuctionListingMapper.toResponse(auctionListingRepository.save(listing), player.getUsername());
+    }
+
     private Digimon findLockedActiveDigimon(Player player, UUID playerId) {
         if (player.getActiveDigimonId() == null) {
             throw new BadRequestException("No active Digimon selected");
@@ -86,7 +110,8 @@ public class CreateAuctionListingUseCase {
         return digimon;
     }
 
-    public CreateAuctionListingUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ItemDefinitionRepository itemDefinitionRepository, final InventoryRepository inventoryRepository, final AuctionListingRepository auctionListingRepository) {
+    public CreateAuctionListingUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ItemDefinitionRepository itemDefinitionRepository, final InventoryRepository inventoryRepository, final AuctionListingRepository auctionListingRepository, final AuctionEquipmentService auctionEquipmentService) {
+        this.auctionEquipmentService = auctionEquipmentService;
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.itemDefinitionRepository = itemDefinitionRepository;

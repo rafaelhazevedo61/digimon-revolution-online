@@ -27,6 +27,7 @@ public record ClanRaidResponse(
         long myTotalDamage,
         List<ClanRaidRankingEntryResponse> ranking,
         List<ClanRaidAttackResponse> recentAttacks,
-        BossDefeatSummaryResponse defeatSummary
+        BossDefeatSummaryResponse defeatSummary,
+        List<ClanRaidRewardResponse> myRewards
 ) {
 }

@@ -32,6 +32,8 @@ public record PlayerDashboardResponse(
             int activeDigimons,
             int maxDigimonSlots,
             int storedDigimons,
-            int maxStorageSlots
+            int maxStorageSlots,
+            int currentTeams,
+            int maxTeamSlots
     ) {}
 }

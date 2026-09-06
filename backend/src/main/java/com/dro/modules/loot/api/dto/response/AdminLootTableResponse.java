@@ -2,6 +2,7 @@ package com.dro.modules.loot.api.dto.response;
 
 import com.dro.modules.inventory.domain.ItemDefinition;
 import com.dro.modules.inventory.domain.ItemType;
+import com.dro.modules.equipment.domain.EquipmentRarity;
 import com.dro.modules.loot.domain.LootRarity;
 import com.dro.modules.loot.domain.LootTableEntity;
 
@@ -38,6 +39,8 @@ public record AdminLootTableResponse(
             LootRarity rarity,
             ItemType itemType,
             String materialCode,
+            String equipmentTemplateName,
+            EquipmentRarity equipmentRarity,
             int weight,
             int minQuantity,
             int maxQuantity,
@@ -60,7 +63,9 @@ public record AdminLootTableResponse(
 
         List<EntryResponse> entries = entity.getEntries().stream()
                 .map(entry -> {
-                    String catalogCode = entry.getMaterialCode() != null
+                    String catalogCode = entry.getItemType() == ItemType.EQUIPMENT
+                            ? entry.getEquipmentTemplateName()
+                            : entry.getMaterialCode() != null
                             ? entry.getMaterialCode()
                             : entry.getItemType().name();
                     ItemDefinition definition = catalog.get(catalogCode);
@@ -69,6 +74,8 @@ public record AdminLootTableResponse(
                             entry.getRarity(),
                             entry.getItemType(),
                             entry.getMaterialCode(),
+                            entry.getEquipmentTemplateName(),
+                            entry.getEquipmentRarity(),
                             entry.getWeight(),
                             entry.getMinQuantity(),
                             entry.getMaxQuantity(),
