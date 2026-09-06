@@ -125,7 +125,7 @@ function rebirthRender(digimon, equippedEquipmentCount = 0) {
             <p class="text-xs ${p.currentBits >= p.costBits ? 'text-slate-500' : 'text-red-400'}">Você tem: ${p.currentBits.toLocaleString()}</p>
           </div>
           <div class="rebirth-cost-card">
-            <p class="text-xs text-slate-500">Data Core</p>
+            <p class="text-xs text-slate-500">Núcleo de Dados</p>
             <p class="font-bold ${p.currentDataCore >= p.costDataCore ? 'text-purple-400' : 'text-red-400'}">${p.costDataCore}</p>
             <p class="text-xs ${p.currentDataCore >= p.costDataCore ? 'text-slate-500' : 'text-red-400'}">Você tem: ${p.currentDataCore}</p>
           </div>
