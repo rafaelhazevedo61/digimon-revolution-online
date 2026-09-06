@@ -68,7 +68,7 @@ public class CollectionRegistrationService {
                 .filter(milestone -> before < milestone && after >= milestone)
                 .count();
         if (reachedMilestones > 0) {
-            addItemUseCase.execute(playerId, ItemType.XP_DISC_20, reachedMilestones);
+            addItemUseCase.tryExecute(playerId, ItemType.XP_DISC_20, reachedMilestones);
         }
         return true;
     }
