@@ -89,6 +89,7 @@ class EquipUseCaseTest {
     private Equipment createEquipment(EquipmentSlot slot) {
         return Equipment.builder()
                 .id(UUID.randomUUID())
+                .playerId(playerId)
                 .digimonId(digimonId)
                 .name("Test Equipment")
                 .slot(slot)
@@ -105,9 +106,9 @@ class EquipUseCaseTest {
     void execute_equipsSuccessfully() {
         Equipment equipment = createEquipment(EquipmentSlot.WEAPON);
 
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
-        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
-        when(equipmentRepository.findById(equipment.getId())).thenReturn(Optional.of(equipment));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(equipmentRepository.findByIdForUpdate(equipment.getId())).thenReturn(Optional.of(equipment));
 
         equipUseCase.execute(token, equipment.getId());
 
@@ -125,10 +126,10 @@ class EquipUseCaseTest {
 
         Equipment newWeapon = createEquipment(EquipmentSlot.WEAPON);
 
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
-        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
-        when(equipmentRepository.findById(newWeapon.getId())).thenReturn(Optional.of(newWeapon));
-        when(equipmentRepository.findById(oldWeapon.getId())).thenReturn(Optional.of(oldWeapon));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(equipmentRepository.findByIdForUpdate(newWeapon.getId())).thenReturn(Optional.of(newWeapon));
+        when(equipmentRepository.findByIdForUpdate(oldWeapon.getId())).thenReturn(Optional.of(oldWeapon));
 
         equipUseCase.execute(token, newWeapon.getId());
 
@@ -140,7 +141,7 @@ class EquipUseCaseTest {
     @Test
     void execute_throwsWhenNoActiveDigimon() {
         player.setActiveDigimonId(null);
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
 
         assertThrows(RuntimeException.class,
                 () -> equipUseCase.execute(token, UUID.randomUUID()));
@@ -162,9 +163,9 @@ class EquipUseCaseTest {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
-        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
-        when(equipmentRepository.findById(equipment.getId())).thenReturn(Optional.of(equipment));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(equipmentRepository.findByIdForUpdate(equipment.getId())).thenReturn(Optional.of(equipment));
 
         Equipment finalEquipment = equipment;
         assertThrows(RuntimeException.class,
@@ -176,9 +177,9 @@ class EquipUseCaseTest {
         Equipment equipment = createEquipment(EquipmentSlot.WEAPON);
         equipment.equip();
 
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
-        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
-        when(equipmentRepository.findById(equipment.getId())).thenReturn(Optional.of(equipment));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(equipmentRepository.findByIdForUpdate(equipment.getId())).thenReturn(Optional.of(equipment));
 
         assertThrows(RuntimeException.class,
                 () -> equipUseCase.execute(token, equipment.getId()));

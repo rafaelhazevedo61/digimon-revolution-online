@@ -47,12 +47,12 @@ public final class AuctionListingMapper {
                 listing.getId(),
                 listing.getSellerPlayerId(),
                 sellerUsername,
-                item.getId(),
-                item.getCode(),
-                item.getName(),
-                item.getCategory(),
-                item.getRarity(),
-                item.getIcon(),
+                item == null ? null : item.getId(),
+                listing.getAssetCode(),
+                listing.getAssetName(),
+                listing.getAssetCategory(),
+                listing.getAssetRarity(),
+                listing.getAssetIcon(),
                 listing.getQuantity(),
                 listing.getRemainingQuantity(),
                 listing.getUnitPrice(),
@@ -62,7 +62,8 @@ public final class AuctionListingMapper {
                 listing.getSellerFeeRateBps(),
                 listing.getStatus(),
                 listing.getCreatedAt(),
-                listing.getExpiresAt()
+                listing.getExpiresAt(),
+                listing.getListingType(), listing.getEquipmentId(), listing.getEquipmentSnapshot()
         );
     }
 

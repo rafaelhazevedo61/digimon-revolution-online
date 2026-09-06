@@ -41,17 +41,18 @@ public class RefineEquipmentUseCase {
     public RefineEquipmentResponse execute(String token, com.dro.modules.equipment.api.dto.request.RefineEquipmentRequest request) {
         UUID equipmentId = request.equipmentId();
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        var player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+        var player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         if (player.getActiveDigimonId() == null) {
             throw new BadRequestException("No active digimon selected");
         }
-        Digimon digimon = digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Active digimon not found"));
-        Equipment equipment = equipmentRepository.findById(equipmentId).orElseThrow(() -> new NotFoundException("Equipment not found"));
+        Digimon digimon = digimonRepository.findByIdForUpdate(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Active digimon not found"));
+        Equipment equipment = equipmentRepository.findByIdForUpdate(equipmentId).orElseThrow(() -> new NotFoundException("Equipment not found"));
         boolean ownedByPlayer = playerId.equals(equipment.getPlayerId());
         boolean equippedOnActiveDigimon = digimon.getId().equals(equipment.getDigimonId());
         if (!ownedByPlayer && !equippedOnActiveDigimon) {
             throw new ForbiddenException("Equipment does not belong to this Digimon");
         }
+        equipment.requireAvailable();
         if (equipment.getRefinementLevel() >= EquipmentRules.MAX_REFINEMENT_LEVEL) {
             throw new UnprocessableException("Equipment is already at maximum refinement level (+10)");
         }

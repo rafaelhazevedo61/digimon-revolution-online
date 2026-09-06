@@ -25,17 +25,18 @@ public class UnequipAllUseCase {
     @Transactional
     public int execute(String token) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        var player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+        var player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         if (player.getActiveDigimonId() == null) {
             throw new BadRequestException("No active digimon selected");
         }
-        Digimon digimon = digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Active digimon not found"));
+        Digimon digimon = digimonRepository.findByIdForUpdate(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Active digimon not found"));
         int count = 0;
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             UUID equipId = digimon.getEquipmentIdBySlot(slot);
             if (equipId != null) {
-                Equipment equipment = equipmentRepository.findById(equipId).orElse(null);
+                Equipment equipment = equipmentRepository.findByIdForUpdate(equipId).orElse(null);
                 if (equipment != null) {
+                    equipment.requireAvailable();
                     equipment.unequip();
                     equipment.setDigimonId(null);
                     equipmentRepository.save(equipment);

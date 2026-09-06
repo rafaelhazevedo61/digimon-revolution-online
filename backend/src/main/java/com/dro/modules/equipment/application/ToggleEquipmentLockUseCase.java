@@ -25,6 +25,7 @@ public class ToggleEquipmentLockUseCase {
         if (!playerId.equals(equipment.getPlayerId())) {
             throw new ConflictException("Equipment does not belong to this player");
         }
+        equipment.requireAvailable();
         equipment.setLocked(request.locked());
         equipmentRepository.save(equipment);
         return new ToggleEquipmentLockResponse(equipment.getId(), equipment.isLocked());

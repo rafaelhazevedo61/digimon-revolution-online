@@ -190,6 +190,7 @@ public class EquipmentController {
             throw new com.dro.shared.exception.ForbiddenException("Equipment does not belong to this Digimon");
         }
         var digimon = digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new com.dro.shared.exception.NotFoundException("Active digimon not found"));
+        equip.requireAvailable();
         int currentLevel = equip.getRefinementLevel();
         int costBits = EquipmentRules.refinementCostBits(currentLevel);
         int currentStones = inventoryRepository.findByDigimonIdAndItemType(digimon.getId(), ItemType.REFINEMENT_STONE).map(i -> i.getQuantity()).orElse(0);

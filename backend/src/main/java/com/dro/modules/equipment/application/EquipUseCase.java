@@ -29,23 +29,24 @@ public class EquipUseCase {
     @Transactional
     public void execute(String token, UUID equipmentId) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        var player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+        var player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         if (player.getActiveDigimonId() == null) {
             throw new BadRequestException("No active digimon selected");
         }
-        Digimon digimon = digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Active digimon not found"));
-        Equipment equipment = equipmentRepository.findById(equipmentId).orElseThrow(() -> new NotFoundException("Equipment not found"));
+        Digimon digimon = digimonRepository.findByIdForUpdate(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Active digimon not found"));
+        Equipment equipment = equipmentRepository.findByIdForUpdate(equipmentId).orElseThrow(() -> new NotFoundException("Equipment not found"));
         if (!playerId.equals(equipment.getPlayerId())) {
             throw new ForbiddenException("Equipment does not belong to this player");
         }
         if (equipment.isEquipped() && !digimon.getId().equals(equipment.getDigimonId())) {
             throw new BadRequestException("Equipment is already equipped by another Digimon");
         }
+        equipment.requireAvailable();
         EquipmentRules.validateEquip(equipment);
         EquipmentRules.validateAscensionEquipRequirement(equipment, digimon);
         UUID currentEquipmentId = digimon.getEquipmentIdBySlot(equipment.getSlot());
         if (currentEquipmentId != null) {
-            Equipment currentEquipment = equipmentRepository.findById(currentEquipmentId).orElse(null);
+            Equipment currentEquipment = equipmentRepository.findByIdForUpdate(currentEquipmentId).orElse(null);
             if (currentEquipment != null) {
                 currentEquipment.unequip();
                 currentEquipment.setDigimonId(null);

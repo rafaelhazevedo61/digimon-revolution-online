@@ -22,25 +22,25 @@ public interface AuctionListingRepository extends JpaRepository<AuctionListing, 
     @Query(
             value = """
                     SELECT listing FROM AuctionListing listing
-                    JOIN FETCH listing.itemDefinition item
+                    LEFT JOIN FETCH listing.itemDefinition item
                     WHERE listing.status = :status
                       AND listing.remainingQuantity > 0
                       AND listing.expiresAt > :now
-                      AND (:search = '' OR LOWER(item.name) LIKE LOWER(CONCAT('%', :search, '%'))
-                           OR LOWER(item.code) LIKE LOWER(CONCAT('%', :search, '%')))
-                      AND (:category = '' OR item.category = :category)
-                      AND (:rarity = '' OR item.rarity = :rarity)
+                      AND (:search = '' OR LOWER(COALESCE(item.name, listing.equipmentSnapshot.name)) LIKE LOWER(CONCAT('%', :search, '%'))
+                           OR LOWER(COALESCE(item.code, listing.equipmentSnapshot.setCode, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+                      AND (:category = '' OR item.category = :category OR (:category = 'EQUIPMENT' AND listing.listingType = com.dro.modules.auction.domain.AuctionListingType.EQUIPMENT))
+                      AND (:rarity = '' OR COALESCE(item.rarity, listing.equipmentSnapshot.rarity) = :rarity)
                     """,
             countQuery = """
                     SELECT COUNT(listing) FROM AuctionListing listing
-                    JOIN listing.itemDefinition item
+                    LEFT JOIN listing.itemDefinition item
                     WHERE listing.status = :status
                       AND listing.remainingQuantity > 0
                       AND listing.expiresAt > :now
-                      AND (:search = '' OR LOWER(item.name) LIKE LOWER(CONCAT('%', :search, '%'))
-                           OR LOWER(item.code) LIKE LOWER(CONCAT('%', :search, '%')))
-                      AND (:category = '' OR item.category = :category)
-                      AND (:rarity = '' OR item.rarity = :rarity)
+                      AND (:search = '' OR LOWER(COALESCE(item.name, listing.equipmentSnapshot.name)) LIKE LOWER(CONCAT('%', :search, '%'))
+                           OR LOWER(COALESCE(item.code, listing.equipmentSnapshot.setCode, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+                      AND (:category = '' OR item.category = :category OR (:category = 'EQUIPMENT' AND listing.listingType = com.dro.modules.auction.domain.AuctionListingType.EQUIPMENT))
+                      AND (:rarity = '' OR COALESCE(item.rarity, listing.equipmentSnapshot.rarity) = :rarity)
                     """
     )
     Page<AuctionListing> searchActive(
@@ -53,7 +53,7 @@ public interface AuctionListingRepository extends JpaRepository<AuctionListing, 
     );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT listing FROM AuctionListing listing JOIN FETCH listing.itemDefinition WHERE listing.id = :id")
+    @Query("SELECT listing FROM AuctionListing listing WHERE listing.id = :id")
     Optional<AuctionListing> findByIdForUpdate(@Param("id") UUID id);
 
     @Query("""
@@ -71,7 +71,7 @@ public interface AuctionListingRepository extends JpaRepository<AuctionListing, 
     @Query(
             value = """
                     SELECT listing FROM AuctionListing listing
-                    JOIN FETCH listing.itemDefinition item
+                    LEFT JOIN FETCH listing.itemDefinition item
                     WHERE listing.sellerPlayerId = :sellerPlayerId
                     ORDER BY listing.createdAt DESC
                     """,

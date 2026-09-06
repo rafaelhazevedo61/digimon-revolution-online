@@ -16,6 +16,7 @@ public class GetAuctionHistoryUseCase {
     private final AuctionTransactionRepository auctionTransactionRepository;
     private final PlayerRepository playerRepository;
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public java.util.List<AuctionTransactionResponse> execute(String token, int page, int size) {
         var playerId = TokenExtractor.extractPlayerId(token);
         var pageable = PageRequest.of(Math.max(0, page), Math.min(Math.max(1, size), MAX_PAGE_SIZE));
@@ -23,11 +24,13 @@ public class GetAuctionHistoryUseCase {
                 .map(transaction -> new AuctionTransactionResponse(
                         transaction.getId(), transaction.getListing().getId(),
                         transaction.getBuyerPlayerId().equals(playerId) ? "BUY" : "SELL",
-                        transaction.getItemDefinition().getCode(), transaction.getItemDefinition().getName(),
+                        transaction.getAssetCode(), transaction.getAssetName(),
                         playerRepository.findById(transaction.getBuyerPlayerId()).map(player -> player.getUsername()).orElse("Jogador desconhecido"),
                         playerRepository.findById(transaction.getSellerPlayerId()).map(player -> player.getUsername()).orElse("Jogador desconhecido"),
                         transaction.getQuantity(), transaction.getUnitPrice(), transaction.getGrossAmount(),
-                        transaction.getFee(), transaction.getSellerNetAmount(), transaction.getCreatedAt()))
+                        transaction.getFee(), transaction.getSellerNetAmount(), transaction.getCreatedAt(),
+                        transaction.getListing().getListingType(), transaction.getListing().getEquipmentId(),
+                        transaction.getListing().getEquipmentSnapshot()))
                 .getContent();
     }
 
