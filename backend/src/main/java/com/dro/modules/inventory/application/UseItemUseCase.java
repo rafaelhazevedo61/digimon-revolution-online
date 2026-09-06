@@ -81,17 +81,18 @@ public class UseItemUseCase {
 
         int storageExpansion = storageExpansionAmount(type);
         if (storageExpansion > 0) {
-            consume(item, 1);
-            player.setMaxStorageSlots(player.getMaxStorageSlots() + storageExpansion);
+            int totalStorageExpansion = storageExpansion * quantity;
+            consume(item, quantity);
+            player.setMaxStorageSlots(player.getMaxStorageSlots() + totalStorageExpansion);
             playerRepository.save(player);
             return new UseItemResponse(
                     type,
-                    1,
+                    quantity,
                     0,
                     digimon.getLevel(),
                     digimon.getLevel(),
                     false,
-                    "Storage expandido em +" + storageExpansion + " espaço(s)!",
+                    "Storage expandido em +" + totalStorageExpansion + " espaço(s)!",
                     NewlyUnlockedContentResponse.empty()
             );
         }
@@ -264,7 +265,11 @@ public class UseItemUseCase {
     }
 
     private boolean isBatchUsableItem(ItemType type) {
-        return isXpDisk(type) || type == ItemType.POTION_SMALL || type == ItemType.TRAINING_STONE || type == ItemType.DATA_CORE;
+        return isXpDisk(type)
+                || type == ItemType.POTION_SMALL
+                || type == ItemType.TRAINING_STONE
+                || type == ItemType.DATA_CORE
+                || storageExpansionAmount(type) > 0;
     }
 
     private boolean isXpDisk(ItemType type) {
