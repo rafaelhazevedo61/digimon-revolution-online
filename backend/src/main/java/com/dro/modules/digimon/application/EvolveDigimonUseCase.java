@@ -1,5 +1,6 @@
 package com.dro.modules.digimon.application;
 
+import com.dro.modules.collection.application.CollectionRegistrationService;
 import com.dro.modules.digimon.domain.*;
 import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.digimon.infra.DigimonInfosRepository;
@@ -37,6 +38,7 @@ public class EvolveDigimonUseCase {
     private final ConsumeItemUseCase consumeItemUseCase;
     private final ItemDefinitionRepository itemDefinitionRepository;
     private final TutorialService tutorialService;
+    private final CollectionRegistrationService collectionRegistrationService;
 
     @Transactional
     public void execute(String token, Long evolutionLineId) {
@@ -63,6 +65,7 @@ public class EvolveDigimonUseCase {
         digimon.setDigimonInfoId(nextInfo.getId());
         recalculateStats(digimon, nextInfo);
         digimonRepository.save(digimon);
+        collectionRegistrationService.registerIfMissing(digimon, "EVOLUTION");
         tutorialService.completeStep(playerId, TutorialStep.EVOLVE_DIGIMON);
     }
 
@@ -131,7 +134,7 @@ public class EvolveDigimonUseCase {
         digimon.setDefense((int) Math.floor((digimonInfo.getBaseDef() + digimon.getIvDefense() * DEFENSE_IV_WEIGHT) * defenseMultiplier));
     }
 
-    public EvolveDigimonUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final DigimonInfosRepository digimonInfosRepository, final EvolutionLineRepository evolutionLineRepository, final ConsumeItemUseCase consumeItemUseCase, final ItemDefinitionRepository itemDefinitionRepository, final TutorialService tutorialService) {
+    public EvolveDigimonUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final DigimonInfosRepository digimonInfosRepository, final EvolutionLineRepository evolutionLineRepository, final ConsumeItemUseCase consumeItemUseCase, final ItemDefinitionRepository itemDefinitionRepository, final TutorialService tutorialService, final CollectionRegistrationService collectionRegistrationService) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.digimonInfosRepository = digimonInfosRepository;
@@ -139,5 +142,6 @@ public class EvolveDigimonUseCase {
         this.consumeItemUseCase = consumeItemUseCase;
         this.itemDefinitionRepository = itemDefinitionRepository;
         this.tutorialService = tutorialService;
+        this.collectionRegistrationService = collectionRegistrationService;
     }
 }
