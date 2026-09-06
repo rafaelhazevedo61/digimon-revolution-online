@@ -49,7 +49,7 @@ function renderMissionTeamMember(digimon, captainId) {
       ${digimon ? renderDigimonVisual(digimon.imageUrl, digimon.stage, "w-10 h-10", "text-3xl") : `<span class="flex w-10 h-10 items-center justify-center rounded-lg bg-slate-800 text-xl">?</span>`}
       <div class="min-w-0 flex-1">
         <p class="truncate text-xs font-bold text-slate-100">${escapeHtml(digimon ? digimon.name : "Digimon indisponível")}</p>
-        <p class="text-[0.62rem] text-slate-400">${digimon ? `Nível ${Number(digimon.level) || 0} · ${escapeHtml(formatStage(digimon.stage))}` : "Remova este membro"}</p>
+        <p class="text-[0.62rem] text-slate-400">${digimon ? `Nível ${Number(digimon.level) || 0} · ${escapeHtml(formatStage(digimon.stage))} · ${escapeHtml(digimon.rarity || "—")}` : "Remova este membro"}</p>
       </div>
       ${isCaptain ? `<span class="rounded-full border border-amber-700/70 bg-amber-900/30 px-2 py-1 text-[0.55rem] font-bold uppercase tracking-wider text-amber-300">Capitão</span>` : ""}
     </div>
@@ -167,7 +167,7 @@ function renderMissionTeamPickerList() {
     return `
       <button type="button" class="flex items-center gap-3 rounded-xl border ${selected ? "border-cyan-500 bg-cyan-950/40" : assignedElsewhere ? "border-amber-800/70 bg-amber-950/20" : "border-slate-700 bg-slate-900/60 hover:border-slate-500"} ${blocked ? "cursor-not-allowed opacity-55" : ""} p-2 text-left transition" ${blocked ? "disabled" : ""} onclick="toggleMissionTeamDigimon('${escapeAttr(id)}')">
         ${renderDigimonVisual(digimon.imageUrl, digimon.stage, "h-12 w-12", "text-3xl")}
-        <span class="min-w-0 flex-1"><span class="block truncate text-xs font-bold text-slate-100">${escapeHtml(digimon.name || "Digimon")}</span><span class="mt-1 block truncate text-[0.62rem] text-slate-400">Nível ${Number(digimon.level) || 0} · ${escapeHtml(formatStage(digimon.stage))}</span><span class="mt-1 block truncate text-[0.58rem] ${assignedElsewhere ? "text-amber-300" : "text-slate-500"}">${escapeHtml(statusLabel)}</span></span>
+        <span class="min-w-0 flex-1"><span class="block truncate text-xs font-bold text-slate-100">${escapeHtml(digimon.name || "Digimon")}</span><span class="mt-1 block truncate text-[0.62rem] text-slate-400">Nível ${Number(digimon.level) || 0} · ${escapeHtml(formatStage(digimon.stage))} · ${escapeHtml(digimon.rarity || "—")}</span><span class="mt-1 block truncate text-[0.58rem] ${assignedElsewhere ? "text-amber-300" : "text-slate-500"}">${escapeHtml(statusLabel)}</span></span>
         <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${selected ? "border-cyan-400 bg-cyan-500 text-slate-950" : assignedElsewhere ? "border-amber-700 text-amber-300" : "border-slate-600 text-slate-500"} text-xs font-bold">${selected ? "✓" : assignedElsewhere ? "×" : "+"}</span>
       </button>
     `;
