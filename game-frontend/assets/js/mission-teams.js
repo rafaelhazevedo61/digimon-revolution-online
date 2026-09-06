@@ -229,11 +229,11 @@ function openMissionTeamPicker() {
   overlay.setAttribute("role", "dialog");
   overlay.setAttribute("aria-modal", "true");
   overlay.innerHTML = `
-      <div class="card max-h-[94vh] w-full max-w-2xl overflow-y-auto lg:max-w-6xl" onclick="event.stopPropagation()">
+      <div class="card max-h-[94vh] w-[calc(100vw-2rem)] overflow-y-auto p-4 sm:p-5 lg:w-[92vw] lg:p-6 xl:w-[94vw] 2xl:max-w-[1800px]" onclick="event.stopPropagation()">
       <div class="mb-4 flex items-start justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-wider text-cyan-400">Armazém de Digimons</p><h3 class="mt-1 text-xl font-bold text-slate-100">Selecionar membros</h3><p class="mt-1 text-sm text-slate-400">Busque pelo nome ou refine por estágio. Selecione até três.</p><p class="mt-2 text-xs text-amber-300/90">Digimons marcados como “já pertence” estão vinculados a outra formação.</p></div><button type="button" class="text-2xl leading-none text-slate-400 hover:text-white" aria-label="Fechar" onclick="document.getElementById('mission-team-picker-modal')?.remove()">&times;</button></div>
       <div class="mb-3 flex flex-col gap-2 sm:flex-row"><input id="mission-team-picker-search" class="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-500" autocomplete="off" placeholder="Buscar por nome, atributo ou raridade..." aria-label="Buscar Digimon" /><select id="mission-team-picker-stage" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-500" aria-label="Filtrar por estágio"><option value="">Todos os estágios</option>${["BABY", "BABY_II", "ROOKIE", "CHAMPION", "ULTIMATE", "MEGA"].map(stage => `<option value="${stage}">${escapeHtml(formatStage(stage))}</option>`).join("")}</select></div>
       <div class="mb-3 flex items-center justify-between gap-2"><span id="mission-team-picker-count" class="text-xs font-bold text-slate-400"></span><span class="rounded-full border border-cyan-800 bg-cyan-950/30 px-2 py-1 text-xs font-bold text-cyan-300">${missionTeamEditorSelectedIds.length}/3 selecionados</span></div>
-      <div id="mission-team-picker-results" class="grid max-h-[55vh] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2 lg:max-h-[64vh] lg:grid-cols-3"></div>
+      <div id="mission-team-picker-results" class="grid max-h-[55vh] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2 lg:max-h-[64vh] lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"></div>
       <button type="button" class="btn-primary mt-4 w-full" onclick="document.getElementById('mission-team-picker-modal')?.remove()">Concluir seleção</button>
     </div>
   `;
@@ -265,12 +265,12 @@ function openMissionTeamEditor(teamId = null) {
     overlay.setAttribute("role", "dialog");
     overlay.setAttribute("aria-modal", "true");
     overlay.innerHTML = `
-      <div class="card max-h-[92vh] w-full max-w-lg overflow-y-auto lg:max-w-5xl" onclick="event.stopPropagation()">
+      <div class="card max-h-[92vh] w-[calc(100vw-2rem)] overflow-y-auto p-4 sm:p-5 lg:w-[92vw] lg:p-6 xl:w-[94vw] 2xl:max-w-[1800px]" onclick="event.stopPropagation()">
         <div class="mb-5 flex items-start justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-wider text-cyan-400">Configuração de formação</p><h3 class="mt-1 text-xl font-bold text-slate-100">${team ? "Editar time" : "Novo time"}</h3><p class="mt-1 max-w-2xl text-sm text-slate-400">Organize seus Digimons em uma formação pronta para ser enviada às missões.</p></div><button type="button" class="text-2xl leading-none text-slate-400 hover:text-white" aria-label="Fechar" onclick="document.getElementById('mission-team-editor-modal')?.remove()">&times;</button></div>
         <div class="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)] lg:items-start">
           <div>
             <label class="mb-4 block text-xs font-bold uppercase tracking-wider text-slate-400">Nome do time<input id="mission-team-name" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-500" maxlength="40" value="${escapeAttr(team ? team.name : "Novo time")}" placeholder="Ex.: Exploradores" /></label>
-            <div class="rounded-xl border border-slate-700 bg-slate-950/40 p-3 sm:p-4"><div class="flex items-center justify-between gap-2"><div><p class="text-xs font-bold uppercase tracking-wider text-slate-400">Membros do time</p><p id="mission-team-selected-count" class="mt-1 text-xs text-cyan-300"></p></div><button type="button" class="btn-secondary text-xs" onclick="openMissionTeamPicker()">Buscar Digimons</button></div><div id="mission-team-selected-list" class="mt-3 space-y-2 lg:grid lg:grid-cols-2 lg:gap-2 lg:space-y-0"></div></div>
+            <div class="rounded-xl border border-slate-700 bg-slate-950/40 p-3 sm:p-4"><div class="flex items-center justify-between gap-2"><div><p class="text-xs font-bold uppercase tracking-wider text-slate-400">Membros do time</p><p id="mission-team-selected-count" class="mt-1 text-xs text-cyan-300"></p></div><button type="button" class="btn-secondary text-xs" onclick="openMissionTeamPicker()">Buscar Digimons</button></div><div id="mission-team-selected-list" class="mt-3 space-y-2 lg:grid lg:grid-cols-3 lg:gap-2 lg:space-y-0"></div></div>
           </div>
           <div class="flex flex-col rounded-xl border border-cyan-900/70 bg-cyan-950/15 p-4 lg:min-h-[18rem]">
             <p class="text-xs font-bold uppercase tracking-wider text-cyan-300">Resumo da formação</p>
