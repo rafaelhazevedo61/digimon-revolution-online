@@ -32,6 +32,12 @@ const routes = {
   settings: renderSettingsPage
 };
 
+function invalidateRouteCache(route) {
+  if (route === "mission-teams" && typeof missionTeamContextPromise !== "undefined") {
+    missionTeamContextPromise = null;
+  }
+}
+
 function navigateTo(route, params = {}) {
   if (route !== "login" && !isLoggedIn()) {
     route = "login";
@@ -49,6 +55,7 @@ function navigateTo(route, params = {}) {
     return;
   }
 
+  invalidateRouteCache(route);
   const renderer = routes[route] || routes.dashboard;
   renderer(params);
 }
@@ -57,6 +64,7 @@ async function refreshCurrentPage() {
   const rawHash = window.location.hash.replace("#", "");
   const [route, queryString] = rawHash.split("?");
   const params = Object.fromEntries(new URLSearchParams(queryString || ""));
+  invalidateRouteCache(route);
   const renderer = routes[route] || routes.dashboard;
   window._routeParams = params;
   await renderer(params);
@@ -83,6 +91,7 @@ function setupRouter() {
     return;
   }
 
+  invalidateRouteCache(route);
   const renderer = routes[route] || routes.dashboard;
   renderer(params);
 }

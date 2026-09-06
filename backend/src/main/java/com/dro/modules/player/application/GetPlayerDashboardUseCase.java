@@ -103,8 +103,11 @@ public class GetPlayerDashboardUseCase {
 
         long storedCount = digimonRepository.countByPlayerIdAndStatus(playerId, DigimonStatus.STORED);
         int activeCount = activeDigimon == null ? 0 : 1;
+        int currentTeams = missionTeamRepository == null
+                ? 0
+                : Math.toIntExact(missionTeamRepository.countByPlayerId(playerId));
         var slotInfo = new PlayerDashboardResponse.SlotInfoResponse(
-                activeCount, 1, (int) storedCount, player.getMaxStorageSlots()
+                activeCount, 1, (int) storedCount, player.getMaxStorageSlots(), currentTeams, player.getMaxTeamSlots()
         );
 
         return new PlayerDashboardResponse(

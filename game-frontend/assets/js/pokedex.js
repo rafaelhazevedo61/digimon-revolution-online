@@ -173,7 +173,7 @@ async function dexLoadMore() {
 }
 
 async function dexShowEvolutionLines(digimonInfoId) {
-  const current = dexEntries.find(entry => entry.id === digimonInfoId);
+  const current = dexEntries.find(entry => Number(entry.id) === Number(digimonInfoId));
   if (!current) return;
 
   const overlay = document.createElement("div");
@@ -198,19 +198,12 @@ async function dexShowEvolutionLines(digimonInfoId) {
   document.body.appendChild(overlay);
 
   try {
-    const collection = await apiGet("/collection");
-    const raritiesByDigimon = new Map();
-    (collection.entries || []).forEach(entry => {
-      if (!raritiesByDigimon.has(entry.digimonInfoId)) raritiesByDigimon.set(entry.digimonInfoId, new Set());
-      raritiesByDigimon.get(entry.digimonInfoId).add(entry.rarity);
-    });
-    dexMasteryInfoIds = new Set([...raritiesByDigimon.entries()].filter(([, rarities]) => rarities.size >= 4).map(([infoId]) => Number(infoId)));
     if (!dexEvolutionLinesCache) {
       dexEvolutionLinesLoading = true;
       dexEvolutionLinesCache = await apiGet("/evolution-lines/available");
     }
     const lines = (dexEvolutionLinesCache || [])
-      .filter(line => (line.steps || []).some(step => step.digimonInfoId === digimonInfoId));
+      .filter(line => (line.steps || []).some(step => Number(step.digimonInfoId) === Number(digimonInfoId)));
     const content = document.getElementById("dex-evolution-content");
     if (!content) return;
 
@@ -230,7 +223,7 @@ async function dexShowEvolutionLines(digimonInfoId) {
           <div class="flex flex-col gap-2">
             ${steps.map((step, index) => `
               <div class="flex items-center gap-2">
-                <button type="button" class="flex-1 rounded-lg border ${step.digimonInfoId === digimonInfoId ? "border-cyan-400 bg-cyan-950/50" : "border-slate-700 bg-slate-900/60"} p-2 text-left hover:border-cyan-400 transition-colors" onclick="event.stopPropagation(); dexShowEvolutionStep(${step.digimonInfoId}, this.dataset.name)" data-name="${escapeAttr(step.digimon || "")}">
+                <button type="button" class="flex-1 rounded-lg border ${Number(step.digimonInfoId) === Number(digimonInfoId) ? "border-cyan-400 bg-cyan-950/50" : "border-slate-700 bg-slate-900/60"} p-2 text-left hover:border-cyan-400 transition-colors" onclick="event.stopPropagation(); dexShowEvolutionStep(${step.digimonInfoId}, this.dataset.name)" data-name="${escapeAttr(step.digimon || "")}">
                   <div class="flex items-center gap-2">
                     <div class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center shrink-0">
                       ${renderDigimonVisual(step.imageUrl, step.stage, "w-full h-full", "text-2xl")}
@@ -239,7 +232,7 @@ async function dexShowEvolutionLines(digimonInfoId) {
                       <p class="font-bold text-sm truncate">${escapeHtml(step.digimon || "Digimon não definido")}</p>
                       <p class="text-xs text-slate-400">${escapeHtml(dexStageName(step.stage))}</p>
                     </div>
-                    <div class="ml-auto flex items-center gap-1">${dexMasteryInfoIds.has(Number(step.digimonInfoId)) ? `<span class="badge badge-legendary whitespace-nowrap" title="Maestria adquirida">Maestria adquirida</span>` : ""}${step.digimonInfoId === digimonInfoId ? `<span class="badge badge-common">Atual</span>` : ""}</div>
+                    <div class="ml-auto flex items-center gap-1">${dexMasteryInfoIds.has(Number(step.digimonInfoId)) ? `<span class="badge badge-legendary whitespace-nowrap" title="Maestria adquirida">Maestria adquirida</span>` : ""}${Number(step.digimonInfoId) === Number(digimonInfoId) ? `<span class="badge badge-common">Atual</span>` : ""}</div>
                   </div>
                 </button>
                 ${index < steps.length - 1 ? `<span class="text-cyan-400 text-lg" aria-hidden="true">↓</span>` : ""}

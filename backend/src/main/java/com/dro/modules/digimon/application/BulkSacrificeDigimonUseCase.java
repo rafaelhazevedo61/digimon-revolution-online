@@ -7,12 +7,15 @@ import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.mission.domain.MissionStatus;
+import com.dro.modules.mission.domain.MissionTeam;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
+import com.dro.modules.mission.infra.MissionTeamRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +37,7 @@ public class BulkSacrificeDigimonUseCase {
     private final PlayerRepository playerRepository;
     private final MissionInstanceRepository missionInstanceRepository;
     private final InventoryRepository inventoryRepository;
+    private final MissionTeamRepository missionTeamRepository;
 
     @Transactional
     public BulkSacrificeDigimonResponse execute(String token, List<UUID> digimonIds) {
@@ -68,6 +72,8 @@ public class BulkSacrificeDigimonUseCase {
             digimons.addAll(batch);
         }
 
+        removeSacrificedDigimonsFromTeams(playerId, digimonIds);
+
         for (Digimon digimon : digimons) {
             inventoryRepository.deleteByDigimonId(digimon.getId());
             digimon.setStatus(DigimonStatus.SACRIFICED);
@@ -77,6 +83,32 @@ public class BulkSacrificeDigimonUseCase {
         playerRepository.save(player);
 
         return new BulkSacrificeDigimonResponse(sacrificed.size(), totalReward, sacrificed);
+    }
+
+    private void removeSacrificedDigimonsFromTeams(UUID playerId, List<UUID> sacrificedDigimonIds) {
+        if (missionTeamRepository == null) {
+            return;
+        }
+
+        Set<UUID> sacrificedIds = new HashSet<>(sacrificedDigimonIds);
+        List<MissionTeam> affectedTeams = missionTeamRepository.findByPlayerIdAndDigimonIds(playerId, sacrificedDigimonIds);
+
+        for (MissionTeam team : affectedTeams) {
+            List<UUID> remainingIds = team.getDigimonIds().stream()
+                    .filter(id -> !sacrificedIds.contains(id))
+                    .toList();
+
+            if (remainingIds.isEmpty()) {
+                missionTeamRepository.delete(team);
+                continue;
+            }
+
+            UUID captainId = remainingIds.contains(team.getCaptainDigimonId())
+                    ? team.getCaptainDigimonId()
+                    : remainingIds.get(0);
+            team.update(team.getName(), remainingIds, captainId);
+            missionTeamRepository.save(team);
+        }
     }
 
     private void validateIds(List<UUID> digimonIds) {
@@ -118,9 +150,21 @@ public class BulkSacrificeDigimonUseCase {
             MissionInstanceRepository missionInstanceRepository,
             InventoryRepository inventoryRepository
     ) {
+        this(digimonRepository, playerRepository, missionInstanceRepository, inventoryRepository, null);
+    }
+
+    @Autowired
+    public BulkSacrificeDigimonUseCase(
+            DigimonRepository digimonRepository,
+            PlayerRepository playerRepository,
+            MissionInstanceRepository missionInstanceRepository,
+            InventoryRepository inventoryRepository,
+            MissionTeamRepository missionTeamRepository
+    ) {
         this.digimonRepository = digimonRepository;
         this.playerRepository = playerRepository;
         this.missionInstanceRepository = missionInstanceRepository;
         this.inventoryRepository = inventoryRepository;
+        this.missionTeamRepository = missionTeamRepository;
     }
 }

@@ -6,6 +6,8 @@ import com.dro.modules.mission.api.dto.request.SaveMissionTeamRequest;
 import com.dro.modules.mission.api.dto.response.MissionTeamResponse;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.domain.MissionTeam;
+import com.dro.modules.mission.domain.TeamSlotRules;
+import com.dro.modules.player.domain.Player;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.mission.infra.MissionTeamRepository;
 import com.dro.modules.player.infra.PlayerRepository;
@@ -16,11 +18,13 @@ import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class MissionTeamUseCase {
@@ -35,18 +39,58 @@ public class MissionTeamUseCase {
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
 
+    @Transactional
     public List<MissionTeamResponse> list(String token) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        return missionTeamRepository.findByPlayerIdOrderByCreatedAtAsc(playerId)
-                .stream()
-                .map(MissionTeamResponse::from)
+        List<MissionTeam> teams = missionTeamRepository.findByPlayerIdOrderByCreatedAtAsc(playerId);
+        if (teams.isEmpty()) {
+            return List.of();
+        }
+
+        List<UUID> referencedDigimonIds = teams.stream()
+                .flatMap(team -> team.getDigimonIds().stream())
+                .distinct()
                 .toList();
+
+        Set<UUID> usableDigimonIds = digimonRepository.findAllById(referencedDigimonIds).stream()
+                .filter(digimon -> playerId.equals(digimon.getPlayerId()))
+                .filter(digimon -> USABLE_STATUSES.contains(digimon.getStatus()))
+                .map(digimon -> digimon.getId())
+                .collect(Collectors.toSet());
+
+        List<MissionTeamResponse> responses = new ArrayList<>();
+        for (MissionTeam team : teams) {
+            List<UUID> originalIds = team.getDigimonIds();
+            List<UUID> remainingIds = originalIds.stream()
+                    .filter(usableDigimonIds::contains)
+                    .toList();
+
+            if (remainingIds.isEmpty()) {
+                missionTeamRepository.delete(team);
+                continue;
+            }
+
+            if (remainingIds.size() != originalIds.size()) {
+                UUID captainId = remainingIds.contains(team.getCaptainDigimonId())
+                        ? team.getCaptainDigimonId()
+                        : remainingIds.get(0);
+                team.update(team.getName(), remainingIds, captainId);
+                missionTeamRepository.save(team);
+            }
+
+            responses.add(MissionTeamResponse.from(team));
+        }
+        return responses;
     }
 
     @Transactional
     public MissionTeamResponse create(String token, SaveMissionTeamRequest request) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        lockPlayer(playerId);
+        Player player = lockPlayer(playerId);
+        int currentTeamCount = Math.toIntExact(missionTeamRepository.countByPlayerId(playerId));
+        if (!TeamSlotRules.canCreate(currentTeamCount, player.getMaxTeamSlots())) {
+            throw new BadRequestException("Limite de times atingido. Adquira o item Expansor de Slot de Time na loja comum para aumentar sua capacidade até o máximo de " + TeamSlotRules.MAX_SLOTS + " times.");
+        }
         List<UUID> digimonIds = validateRequest(playerId, null, request);
         MissionTeam team = new MissionTeam(playerId, normalizeName(request.name()), digimonIds, request.captainDigimonId());
         return MissionTeamResponse.from(missionTeamRepository.save(team));
@@ -119,11 +163,15 @@ public class MissionTeamUseCase {
         return digimonIds;
     }
 
-    private void lockPlayer(UUID playerId) {
-        if (playerRepository != null) {
-            playerRepository.findByIdForUpdate(playerId)
-                    .orElseThrow(() -> new NotFoundException("Jogador não encontrado"));
+    private Player lockPlayer(UUID playerId) {
+        if (playerRepository == null) {
+            return Player.builder()
+                    .id(playerId)
+                    .maxTeamSlots(TeamSlotRules.DEFAULT_SLOTS)
+                    .build();
         }
+        return playerRepository.findByIdForUpdate(playerId)
+                .orElseThrow(() -> new NotFoundException("Jogador não encontrado"));
     }
 
     private String normalizeName(String name) {

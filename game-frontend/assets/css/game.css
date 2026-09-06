@@ -623,6 +623,27 @@ body {
   line-height: 1.25;
 }
 
+/* Mission teams desktop composition */
+.mission-teams-page {
+  width: 100%;
+  max-width: 140rem;
+}
+@media (min-width: 46rem) {
+  .mission-teams-page {
+    padding-inline: 1.5rem;
+  }
+}
+@media (min-width: 75rem) {
+  .mission-teams-page {
+    padding-inline: 2.5rem;
+  }
+}
+@media (min-width: 100rem) {
+  .mission-teams-page {
+    padding-inline: 4rem;
+  }
+}
+
 /* ===================== Clan Surface Refresh ===================== */
 .clan-page-container {
   max-width: 92rem;

@@ -4,7 +4,6 @@ import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.mission.api.dto.request.SaveMissionTeamRequest;
-import com.dro.modules.mission.domain.MissionInstance;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.domain.MissionTeam;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
@@ -32,6 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -60,7 +61,8 @@ class MissionTeamUseCaseTest {
                 ),
                 JwtSettings.getSecret()
         );
-        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        lenient().when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        lenient().when(player.getMaxTeamSlots()).thenReturn(3);
         useCase = new MissionTeamUseCase(playerRepository, missionTeamRepository, missionInstanceRepository, digimonRepository);
     }
 
@@ -93,6 +95,73 @@ class MissionTeamUseCaseTest {
 
         assertEquals(partialIds, response.digimonIds());
         assertEquals(partialIds.get(1), response.captainDigimonId());
+    }
+
+    @Test
+    void rejectsCreatingFourthTeamWithoutUnlockItem() {
+        when(missionTeamRepository.countByPlayerId(playerId)).thenReturn(3L);
+
+        BadRequestException exception = assertThrows(
+                BadRequestException.class,
+                () -> useCase.create(token, new SaveMissionTeamRequest("Quarto time", digimonIds, digimonIds.get(0)))
+        );
+
+        org.junit.jupiter.api.Assertions.assertTrue(exception.getMessage().contains("Expansor de Slot de Time"));
+        verify(missionTeamRepository, never()).save(any(MissionTeam.class));
+    }
+
+    @Test
+    void keepsExistingPlayersWithMoreThanThreeTeamsCompatibleForReadOperations() {
+        when(missionTeamRepository.findByPlayerIdOrderByCreatedAtAsc(playerId)).thenReturn(List.of(
+                new MissionTeam(playerId, "Time 1", digimonIds, digimonIds.get(0)),
+                new MissionTeam(playerId, "Time 2", digimonIds, digimonIds.get(0)),
+                new MissionTeam(playerId, "Time 3", digimonIds, digimonIds.get(0)),
+                new MissionTeam(playerId, "Time 4", digimonIds, digimonIds.get(0))
+        ));
+        when(digimonRepository.findAllById(digimonIds))
+                .thenReturn(List.of(digimon(digimonIds.get(0)), digimon(digimonIds.get(1)), digimon(digimonIds.get(2))));
+
+        assertEquals(4, useCase.list(token).size());
+    }
+
+    @Test
+    void repairsTeamThatStillReferencesSacrificedDigimon() {
+        UUID sacrificedId = digimonIds.get(0);
+        UUID remainingFirst = digimonIds.get(1);
+        UUID remainingSecond = digimonIds.get(2);
+        MissionTeam team = new MissionTeam(playerId, "Time legado", digimonIds, sacrificedId);
+
+        when(missionTeamRepository.findByPlayerIdOrderByCreatedAtAsc(playerId)).thenReturn(List.of(team));
+        when(digimonRepository.findAllById(digimonIds)).thenReturn(List.of(
+                digimonWithStatus(sacrificedId, DigimonStatus.SACRIFICED),
+                digimon(remainingFirst),
+                digimon(remainingSecond)
+        ));
+
+        var responses = useCase.list(token);
+
+        assertEquals(1, responses.size());
+        assertEquals(List.of(remainingFirst, remainingSecond), responses.get(0).digimonIds());
+        assertEquals(remainingFirst, responses.get(0).captainDigimonId());
+        verify(missionTeamRepository).save(team);
+        verify(missionTeamRepository, never()).delete(team);
+    }
+
+    @Test
+    void removesLegacyTeamWhenAllReferencedDigimonsAreUnavailable() {
+        UUID sacrificedId = digimonIds.get(0);
+        MissionTeam team = new MissionTeam(playerId, "Time inválido", List.of(sacrificedId), sacrificedId);
+
+        when(missionTeamRepository.findByPlayerIdOrderByCreatedAtAsc(playerId)).thenReturn(List.of(team));
+        when(digimonRepository.findAllById(List.of(sacrificedId))).thenReturn(List.of(
+                digimonWithStatus(sacrificedId, DigimonStatus.SACRIFICED)
+        ));
+
+        var responses = useCase.list(token);
+
+        assertEquals(0, responses.size());
+        verify(missionTeamRepository).delete(team);
+        verify(missionTeamRepository, never()).save(team);
     }
 
     @Test
@@ -136,10 +205,14 @@ class MissionTeamUseCaseTest {
     }
 
     private Digimon digimon(UUID id) {
+        return digimonWithStatus(id, DigimonStatus.HATCHED);
+    }
+
+    private Digimon digimonWithStatus(UUID id, DigimonStatus status) {
         return Digimon.builder()
                 .id(id)
                 .playerId(playerId)
-                .status(DigimonStatus.HATCHED)
+                .status(status)
                 .build();
     }
 }

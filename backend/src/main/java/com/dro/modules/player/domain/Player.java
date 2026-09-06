@@ -43,6 +43,8 @@ public class Player {
     private int maxDigimonSlots;
     @Column(name = "max_storage_slots", nullable = false)
     private int maxStorageSlots;
+    @Column(name = "max_team_slots", nullable = false)
+    private int maxTeamSlots;
     @Column(name = "arena_coins", nullable = false)
     private int arenaCoins;
     @Column(name = "bits", nullable = false)
@@ -78,6 +80,7 @@ public class Player {
         player.createdAt = createdAt;
         player.maxDigimonSlots = 1;
         player.maxStorageSlots = 50;
+        player.maxTeamSlots = 3;
         player.unlockedIncubationSlots = 1;
         player.unlockedMissionSlots = 1;
         player.userType = UserType.PLAYER;
@@ -218,6 +221,12 @@ public class Player {
     public void setMaxStorageSlots(int maxStorageSlots) {
         this.maxStorageSlots = maxStorageSlots;
     }
+    public int getMaxTeamSlots() {
+        return maxTeamSlots;
+    }
+    public void setMaxTeamSlots(int maxTeamSlots) {
+        this.maxTeamSlots = maxTeamSlots;
+    }
 
     public int getArenaCoins() {
         return arenaCoins;
@@ -331,6 +340,9 @@ public class Player {
     private static int $default$maxStorageSlots() {
         return 50;
     }
+    private static int $default$maxTeamSlots() {
+        return 3;
+    }
 
         private static int $default$arenaCoins() {
         return 0;
@@ -372,6 +384,8 @@ public class Player {
         private int maxDigimonSlots$value;
         private boolean maxStorageSlots$set;
         private int maxStorageSlots$value;
+        private boolean maxTeamSlots$set;
+        private int maxTeamSlots$value;
         private boolean arenaCoins$set;
         private int arenaCoins$value;
         private boolean bits$set;
@@ -499,6 +513,11 @@ public class Player {
             maxStorageSlots$set = true;
             return this;
         }
+        public Player.PlayerBuilder maxTeamSlots(final int maxTeamSlots) {
+            this.maxTeamSlots$value = maxTeamSlots;
+            maxTeamSlots$set = true;
+            return this;
+        }
 
         /**
          * @return {@code this}.
@@ -586,6 +605,8 @@ public class Player {
             if (!this.maxDigimonSlots$set) maxDigimonSlots$value = Player.$default$maxDigimonSlots();
             int maxStorageSlots$value = this.maxStorageSlots$value;
             if (!this.maxStorageSlots$set) maxStorageSlots$value = Player.$default$maxStorageSlots();
+            int maxTeamSlots$value = this.maxTeamSlots$value;
+            if (!this.maxTeamSlots$set) maxTeamSlots$value = Player.$default$maxTeamSlots();
             int arenaCoins$value = this.arenaCoins$value;
             if (!this.arenaCoins$set) arenaCoins$value = Player.$default$arenaCoins();
             int bits$value = this.bits$value;
@@ -598,7 +619,7 @@ public class Player {
             if (!this.digitalData$set) digitalData$value = Player.$default$digitalData();
             int usernameChangeCount$value = this.usernameChangeCount$value;
             if (!this.usernameChangeCount$set) usernameChangeCount$value = Player.$default$usernameChangeCount();
-            return new Player(this.id, this.username, this.email, this.password, this.createdAt, this.selectedDigitama, this.activeDigimonId, this.lastMissionAt, this.starterSelected, userType$value, tokenVersion$value, maxDigimonSlots$value, maxStorageSlots$value, arenaCoins$value, bits$value, unlockedIncubationSlots$value, unlockedMissionSlots$value, digitalData$value, usernameChangeCount$value, this.clanId, this.clanRole, this.clanJoinedAt, this.arenaDailyResetAt);
+            return new Player(this.id, this.username, this.email, this.password, this.createdAt, this.selectedDigitama, this.activeDigimonId, this.lastMissionAt, this.starterSelected, userType$value, tokenVersion$value, maxDigimonSlots$value, maxStorageSlots$value, maxTeamSlots$value, arenaCoins$value, bits$value, unlockedIncubationSlots$value, unlockedMissionSlots$value, digitalData$value, usernameChangeCount$value, this.clanId, this.clanRole, this.clanJoinedAt, this.arenaDailyResetAt);
         }
 
         @Override
@@ -616,6 +637,7 @@ public class Player {
         this.tokenVersion = Player.$default$tokenVersion();
         this.maxDigimonSlots = Player.$default$maxDigimonSlots();
         this.maxStorageSlots = Player.$default$maxStorageSlots();
+        this.maxTeamSlots = Player.$default$maxTeamSlots();
         this.arenaCoins = Player.$default$arenaCoins();
         this.bits = Player.$default$bits();
         this.unlockedIncubationSlots = Player.$default$unlockedIncubationSlots();
@@ -624,7 +646,7 @@ public class Player {
         this.usernameChangeCount = Player.$default$usernameChangeCount();
     }
 
-    public Player(final UUID id, final String username, final String email, final String password, final LocalDateTime createdAt, final DigitamaType selectedDigitama, final UUID activeDigimonId, final LocalDateTime lastMissionAt, final boolean starterSelected, final UserType userType, final int tokenVersion, final int maxDigimonSlots, final int maxStorageSlots, final int arenaCoins, final int bits, final int unlockedIncubationSlots, final int unlockedMissionSlots, final int digitalData, final int usernameChangeCount, final UUID clanId, final ClanRole clanRole, final LocalDateTime clanJoinedAt, final LocalDateTime arenaDailyResetAt) {
+    public Player(final UUID id, final String username, final String email, final String password, final LocalDateTime createdAt, final DigitamaType selectedDigitama, final UUID activeDigimonId, final LocalDateTime lastMissionAt, final boolean starterSelected, final UserType userType, final int tokenVersion, final int maxDigimonSlots, final int maxStorageSlots, final int maxTeamSlots, final int arenaCoins, final int bits, final int unlockedIncubationSlots, final int unlockedMissionSlots, final int digitalData, final int usernameChangeCount, final UUID clanId, final ClanRole clanRole, final LocalDateTime clanJoinedAt, final LocalDateTime arenaDailyResetAt) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -638,6 +660,7 @@ public class Player {
         this.tokenVersion = tokenVersion;
         this.maxDigimonSlots = maxDigimonSlots;
         this.maxStorageSlots = maxStorageSlots;
+        this.maxTeamSlots = maxTeamSlots;
         this.arenaCoins = arenaCoins;
         this.bits = bits;
         this.unlockedIncubationSlots = unlockedIncubationSlots;
