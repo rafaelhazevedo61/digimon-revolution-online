@@ -1,5 +1,6 @@
 package com.dro.modules.incubation.application;
 
+import com.dro.modules.collection.application.CollectionRegistrationService;
 import com.dro.modules.digitama.application.DigitamaPoolEligibilityService;
 import com.dro.modules.activitycalendar.application.ActivityCalendarService;
 import com.dro.modules.activitycalendar.domain.ActivitySource;
@@ -44,6 +45,7 @@ public class ClaimIncubationUseCase {
     private final DigitamaPoolEligibilityService digitamaPoolEligibilityService;
     private final TutorialService tutorialService;
     private final ActivityCalendarService activityCalendarService;
+    private final CollectionRegistrationService collectionRegistrationService;
 
     @Transactional
     public Digimon execute(String token, UUID incubationId) {
@@ -71,6 +73,7 @@ public class ClaimIncubationUseCase {
         ensureStorageHasSpace(player);
         Digimon digimon = createDigimonFromIncubation(playerId, incubation);
         digimonRepository.save(digimon);
+        collectionRegistrationService.registerIfMissing(digimon, "HATCH");
         finalizeIncubation(incubation);
         tutorialService.completeStep(playerId, TutorialStep.HATCH_DIGIMON);
         if (activityCalendarService != null) {
@@ -115,7 +118,6 @@ public class ClaimIncubationUseCase {
         return DigimonFactory.createBaby(playerId, digitamaType, infos, DigimonStatus.HATCHED);
     }
 
-
     private void forceReadyIfInProgress(Incubation incubation) {
         if (incubation.getStatus() == IncubationStatus.IN_PROGRESS) {
             incubation.setStatus(IncubationStatus.READY);
@@ -134,7 +136,8 @@ public class ClaimIncubationUseCase {
             final DigitamaPoolRepository digitamaPoolRepository,
             final DigitamaPoolEligibilityService digitamaPoolEligibilityService,
             final TutorialService tutorialService,
-            final ActivityCalendarService activityCalendarService
+            final ActivityCalendarService activityCalendarService,
+            final CollectionRegistrationService collectionRegistrationService
     ) {
         this.incubationRepository = incubationRepository;
         this.digimonRepository = digimonRepository;
@@ -143,6 +146,6 @@ public class ClaimIncubationUseCase {
         this.digitamaPoolEligibilityService = digitamaPoolEligibilityService;
         this.tutorialService = tutorialService;
         this.activityCalendarService = activityCalendarService;
+        this.collectionRegistrationService = collectionRegistrationService;
     }
-
 }
