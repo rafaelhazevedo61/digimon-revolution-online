@@ -28,6 +28,7 @@ public class ExpireAuctionListingsJob {
     private static final int BATCH_SIZE = 100;
     private static final long RUN_INTERVAL_MILLIS = 60000L;
     private static final Logger log = LoggerFactory.getLogger(ExpireAuctionListingsJob.class);
+    private final AuctionEquipmentService auctionEquipmentService;
     private final AuctionListingRepository auctionListingRepository;
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
@@ -47,23 +48,27 @@ public class ExpireAuctionListingsJob {
         if (listing == null || listing.getStatus() != AuctionListingStatus.ACTIVE || listing.getRemainingQuantity() <= 0 || listing.getExpiresAt().isAfter(now)) {
             return;
         }
-        Digimon sourceDigimon = findSourceDigimon(listing);
-        if (sourceDigimon == null) {
-            log.warn("Could not expire auction listing {} because its source Digimon is unavailable", listingId);
-            auctionMailNotificationService.notifyListingReturnPending(listing, "O Digimon de origem não está disponível no momento.");
-            return;
-        }
-        ItemDefinition itemDefinition = listing.getItemDefinition();
-        InventoryItem inventoryItem = inventoryRepository.findByDigimonIdAndItemDefinitionIdForUpdate(sourceDigimon.getId(), itemDefinition.getId()).orElse(null);
-        int currentQuantity = inventoryItem == null ? 0 : inventoryItem.getQuantity();
-        long newQuantity = (long) currentQuantity + listing.getRemainingQuantity();
-        if (newQuantity > Integer.MAX_VALUE || (itemDefinition.getMaxStack() != null && newQuantity > itemDefinition.getMaxStack())) {
-            log.warn("Could not return expired auction listing {} because the inventory stack is full", listingId);
-            auctionMailNotificationService.notifyListingReturnPending(listing, "O inventário não possui espaço suficiente para receber a devolução.");
-            return;
-        }
         int returnedQuantity = listing.getRemainingQuantity();
-        saveInventory(inventoryItem, sourceDigimon, itemDefinition, (int) newQuantity);
+        if (listing.isEquipment()) {
+            auctionEquipmentService.deliver(listing, listing.getSellerPlayerId());
+        } else {
+            Digimon sourceDigimon = findSourceDigimon(listing);
+            if (sourceDigimon == null) {
+                log.warn("Could not expire auction listing {} because its source Digimon is unavailable", listingId);
+                auctionMailNotificationService.notifyListingReturnPending(listing, "O Digimon de origem não está disponível no momento.");
+                return;
+            }
+            ItemDefinition itemDefinition = listing.getItemDefinition();
+            InventoryItem inventoryItem = inventoryRepository.findByDigimonIdAndItemDefinitionIdForUpdate(sourceDigimon.getId(), itemDefinition.getId()).orElse(null);
+            int currentQuantity = inventoryItem == null ? 0 : inventoryItem.getQuantity();
+            long newQuantity = (long) currentQuantity + listing.getRemainingQuantity();
+            if (newQuantity > Integer.MAX_VALUE || (itemDefinition.getMaxStack() != null && newQuantity > itemDefinition.getMaxStack())) {
+                log.warn("Could not return expired auction listing {} because the inventory stack is full", listingId);
+                auctionMailNotificationService.notifyListingReturnPending(listing, "O inventário não possui espaço suficiente para receber a devolução.");
+                return;
+            }
+            saveInventory(inventoryItem, sourceDigimon, itemDefinition, (int) newQuantity);
+        }
         listing.setRemainingQuantity(0);
         listing.setStatus(AuctionListingStatus.EXPIRED);
         listing.setUpdatedAt(now);
@@ -104,7 +109,8 @@ public class ExpireAuctionListingsJob {
         }
     }
 
-    public ExpireAuctionListingsJob(final AuctionListingRepository auctionListingRepository, final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final InventoryRepository inventoryRepository, final AuctionMailNotificationService auctionMailNotificationService) {
+    public ExpireAuctionListingsJob(final AuctionListingRepository auctionListingRepository, final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final InventoryRepository inventoryRepository, final AuctionMailNotificationService auctionMailNotificationService, final AuctionEquipmentService auctionEquipmentService) {
+        this.auctionEquipmentService = auctionEquipmentService;
         this.auctionListingRepository = auctionListingRepository;
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;

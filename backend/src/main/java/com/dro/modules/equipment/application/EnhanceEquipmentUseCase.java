@@ -82,6 +82,7 @@ public class EnhanceEquipmentUseCase {
     private void validateCopies(UUID playerId, Equipment target, List<Equipment> copies) {
         for (Equipment equipment : copies) {
             if (!playerId.equals(equipment.getPlayerId())) throw new ConflictException("All equipment must belong to the same player");
+            equipment.requireAvailable();
             if (equipment.isEquipped() || equipment.getDigimonId() != null) throw new ConflictException("Equipped equipment cannot be used as enhancement material");
             if (equipment.isLocked()) throw new ConflictException("Locked equipment cannot be used as enhancement material");
             if (!target.getName().equals(equipment.getName())

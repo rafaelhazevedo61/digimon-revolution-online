@@ -44,11 +44,11 @@ public class SellShopProductUseCase {
     @Transactional
     public SellShopProductResponse execute(String token, SellShopProductRequest request) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Jogador não encontrado"));
+        Player player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Jogador não encontrado"));
         if (player.getActiveDigimonId() == null) {
             throw new BadRequestException("Nenhum Digimon ativo selecionado");
         }
-        Digimon digimon = digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Digimon ativo não encontrado"));
+        Digimon digimon = digimonRepository.findByIdForUpdate(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Digimon ativo não encontrado"));
         if (!digimon.getPlayerId().equals(playerId)) {
             throw new ForbiddenException("O Digimon ativo não pertence a este jogador");
         }
@@ -83,10 +83,12 @@ public class SellShopProductUseCase {
     }
 
     private SellShopProductResponse sellEquipment(UUID playerId, Digimon digimon, SellShopProductRequest request) {
-        Equipment equipment = equipmentRepository.findById(request.equipmentId()).orElseThrow(() -> new NotFoundException("Equipamento não encontrado"));
+        Equipment equipment = equipmentRepository.findByIdForUpdate(request.equipmentId()).orElseThrow(() -> new NotFoundException("Equipamento não encontrado"));
         if (!playerId.equals(equipment.getPlayerId())) {
             throw new ForbiddenException("O equipamento não pertence a este jogador");
         }
+        equipment.requireAvailable();
+        if (equipment.isLocked()) throw new ConflictException("Equipamentos bloqueados não podem ser vendidos");
         if (equipment.isEquipped()) {
             throw new ConflictException("Equipamentos equipados não podem ser vendidos");
         }

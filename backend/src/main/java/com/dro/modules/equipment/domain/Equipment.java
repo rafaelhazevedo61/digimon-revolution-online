@@ -49,6 +49,35 @@ public class Equipment {
     @Column(nullable = false)
     private boolean locked;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private EquipmentAvailability availability = EquipmentAvailability.AVAILABLE;
+
+    public EquipmentAvailability getAvailability() { return availability; }
+
+    public void requireAvailable() {
+        if (availability != EquipmentAvailability.AVAILABLE) {
+            throw new com.dro.shared.exception.ConflictException("Equipamento reservado na Casa de Leilões");
+        }
+    }
+
+    public void reserveForAuction(UUID sellerId) {
+        requireAvailable();
+        if (!sellerId.equals(playerId) || equipped || digimonId != null || locked) {
+            throw new com.dro.shared.exception.ConflictException("Equipamento indisponível, equipado, bloqueado ou de outro jogador");
+        }
+        availability = EquipmentAvailability.AUCTION_ESCROW;
+    }
+
+    public void releaseFromAuction(UUID sellerId, UUID recipientId) {
+        if (availability != EquipmentAvailability.AUCTION_ESCROW || !sellerId.equals(playerId)
+                || equipped || digimonId != null) {
+            throw new com.dro.shared.exception.ConflictException("A reserva do equipamento foi alterada");
+        }
+        playerId = java.util.Objects.requireNonNull(recipientId);
+        availability = EquipmentAvailability.AVAILABLE;
+    }
+
     /**
      * Marca a peça como ocupando seu slot no Digimon.
      */

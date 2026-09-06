@@ -16,8 +16,10 @@ public interface EquipmentRepository extends JpaRepository<Equipment, UUID> {
     @Query("SELECT equipment FROM Equipment equipment WHERE equipment.id = :id")
     java.util.Optional<Equipment> findByIdForUpdate(@Param("id") UUID id);
 
-    List<Equipment> findByPlayerId(UUID playerId);
-    List<Equipment> findByPlayerIdAndEquippedFalse(UUID playerId);
+    @Query("SELECT e FROM Equipment e WHERE e.playerId = :playerId AND e.availability = com.dro.modules.equipment.domain.EquipmentAvailability.AVAILABLE")
+    List<Equipment> findByPlayerId(@Param("playerId") UUID playerId);
+    @Query("SELECT e FROM Equipment e WHERE e.playerId = :playerId AND e.equipped = false AND e.availability = com.dro.modules.equipment.domain.EquipmentAvailability.AVAILABLE")
+    List<Equipment> findByPlayerIdAndEquippedFalse(@Param("playerId") UUID playerId);
 
     long countByPlayerIdIsNull();
 

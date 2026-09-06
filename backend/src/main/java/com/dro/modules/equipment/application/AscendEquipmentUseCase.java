@@ -54,6 +54,7 @@ public class AscendEquipmentUseCase {
         if (!playerId.equals(equipment.getPlayerId())) {
             throw new ForbiddenException("Equipment does not belong to this player");
         }
+        equipment.requireAvailable();
         if (equipment.isEquipped()) {
             throw new BadRequestException("Desequipe o equipamento antes de ascendê-lo");
         }
@@ -114,6 +115,7 @@ public class AscendEquipmentUseCase {
         int afterDefense = ascendedBonus(equipment.getBonusDefense(), equipment, nextLevel);
         String restriction = null;
         if (currentLevel >= EquipmentRules.MAX_ASCENSION_LEVEL) restriction = "Este equipamento já atingiu o limite de Ascensão";
+        else if (equipment.getAvailability() != com.dro.modules.equipment.domain.EquipmentAvailability.AVAILABLE) restriction = "Equipamento reservado na Casa de Leilões";
         else if (equipment.isEquipped()) restriction = "Desequipe o equipamento antes de ascender";
         else if (equipment.getRefinementLevel() < EquipmentRules.ASCENSION_REFINEMENT_REQUIREMENT) restriction = "Refinamento insuficiente: exige +" + EquipmentRules.ASCENSION_REFINEMENT_REQUIREMENT;
         else if (digimon.getBits() < bitsCost) restriction = "Bits insuficientes";

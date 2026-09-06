@@ -36,6 +36,7 @@ import java.util.UUID;
  */
 @Service
 public class BuyAuctionListingUseCase {
+    private final AuctionEquipmentService auctionEquipmentService;
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final InventoryRepository inventoryRepository;
@@ -70,6 +71,9 @@ public class BuyAuctionListingUseCase {
         if (listing.getSellerPlayerId().equals(buyerPlayerId)) {
             throw new BadRequestException("You cannot buy your own auction listing");
         }
+        if (listing.isEquipment() && request.quantity() != 1) {
+            throw new BadRequestException("Equipamentos devem ser comprados individualmente");
+        }
         if (request.quantity() > listing.getRemainingQuantity()) {
             throw new ConflictException("Only " + listing.getRemainingQuantity() + " item(s) remain in this listing");
         }
@@ -86,15 +90,22 @@ public class BuyAuctionListingUseCase {
         if (buyerDigimon.getBits() < grossAmount) {
             throw new UnprocessableException("Not enough Bits");
         }
-        InventoryItem buyerInventory = inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(buyerPlayerId, itemDefinition.getId()).orElse(null);
-        int currentQuantity = buyerInventory == null ? 0 : buyerInventory.getQuantity();
-        int newQuantity = currentQuantity + request.quantity();
-        if (itemDefinition.getMaxStack() != null && newQuantity > itemDefinition.getMaxStack()) {
-            throw new UnprocessableException("Cannot exceed max stack of " + itemDefinition.getMaxStack() + " for item " + itemDefinition.getCode());
+        if (sellerDigimon.getBits() > Integer.MAX_VALUE - sellerNetAmount) {
+            throw new UnprocessableException("Seller Bits balance limit exceeded");
+        }
+        if (listing.isEquipment()) {
+            auctionEquipmentService.deliver(listing, buyerPlayerId);
+        } else {
+            InventoryItem buyerInventory = inventoryRepository.findByPlayerIdAndItemDefinitionIdForUpdate(buyerPlayerId, itemDefinition.getId()).orElse(null);
+            int currentQuantity = buyerInventory == null ? 0 : buyerInventory.getQuantity();
+            int newQuantity = currentQuantity + request.quantity();
+            if (itemDefinition.getMaxStack() != null && newQuantity > itemDefinition.getMaxStack()) {
+                throw new UnprocessableException("Cannot exceed max stack of " + itemDefinition.getMaxStack() + " for item " + itemDefinition.getCode());
+            }
+            saveBuyerInventory(buyerInventory, buyerDigimon, itemDefinition, newQuantity);
         }
         buyerDigimon.setBits(buyerDigimon.getBits() - grossAmount);
         sellerDigimon.setBits(sellerDigimon.getBits() + sellerNetAmount);
-        saveBuyerInventory(buyerInventory, buyerDigimon, itemDefinition, newQuantity);
         listing.setRemainingQuantity(listing.getRemainingQuantity() - request.quantity());
         listing.setStatus(listing.getRemainingQuantity() == 0 ? AuctionListingStatus.SOLD : AuctionListingStatus.ACTIVE);
         listing.setUpdatedAt(now);
@@ -104,8 +115,8 @@ public class BuyAuctionListingUseCase {
         auctionListingRepository.save(listing);
         auctionTransactionRepository.save(transaction);
         auctionMailNotificationService.notifyPurchase(transaction, buyer.getUsername());
-        transactionAuditPublisher.success("auction-purchase:" + transaction.getId(), "AUCTION_PURCHASE_COMPLETED", "AuctionListing", String.valueOf(listing.getId()), Map.of("module", "auction", "operation", "buyListing", "actorId", buyerPlayerId.toString(), "sellerPlayerId", listing.getSellerPlayerId().toString(), "quantity", request.quantity(), "grossAmount", grossAmount, "fee", sellerFee, "itemCode", itemDefinition.getCode(), "summary", "Auction listing purchased"));
-        return new AuctionPurchaseResponse(listing.getId(), itemDefinition.getCode(), itemDefinition.getName(), request.quantity(), grossAmount, sellerFee, grossAmount, sellerNetAmount, listing.getRemainingQuantity(), listing.getStatus(), buyerDigimon.getBits(), "Compra realizada com sucesso!");
+        transactionAuditPublisher.success("auction-purchase:" + transaction.getId(), "AUCTION_PURCHASE_COMPLETED", "AuctionListing", String.valueOf(listing.getId()), Map.of("module", "auction", "operation", "buyListing", "actorId", buyerPlayerId.toString(), "sellerPlayerId", listing.getSellerPlayerId().toString(), "quantity", request.quantity(), "grossAmount", grossAmount, "fee", sellerFee, "itemCode", listing.getAssetCode(), "listingType", listing.getListingType().name(), "summary", "Auction listing purchased"));
+        return new AuctionPurchaseResponse(listing.getId(), listing.getAssetCode(), listing.getAssetName(), request.quantity(), grossAmount, sellerFee, grossAmount, sellerNetAmount, listing.getRemainingQuantity(), listing.getStatus(), buyerDigimon.getBits(), "Compra realizada com sucesso!", listing.getListingType(), listing.getEquipmentId(), listing.getEquipmentSnapshot());
     }
 
     private LockedPlayers lockPlayersInStableOrder(UUID buyerPlayerId, UUID sellerPlayerId) {
@@ -171,7 +182,8 @@ public class BuyAuctionListingUseCase {
         }
     }
 
-    public BuyAuctionListingUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final InventoryRepository inventoryRepository, final AuctionListingRepository auctionListingRepository, final AuctionTransactionRepository auctionTransactionRepository, final AuctionMailNotificationService auctionMailNotificationService, final TransactionAuditPublisher transactionAuditPublisher) {
+    public BuyAuctionListingUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final InventoryRepository inventoryRepository, final AuctionListingRepository auctionListingRepository, final AuctionTransactionRepository auctionTransactionRepository, final AuctionMailNotificationService auctionMailNotificationService, final TransactionAuditPublisher transactionAuditPublisher, final AuctionEquipmentService auctionEquipmentService) {
+        this.auctionEquipmentService = auctionEquipmentService;
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.inventoryRepository = inventoryRepository;

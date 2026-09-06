@@ -86,6 +86,7 @@ class UnequipUseCaseTest {
     void execute_unequipsSuccessfully() {
         Equipment equipment = Equipment.builder()
                 .id(UUID.randomUUID())
+                .playerId(playerId)
                 .digimonId(digimonId)
                 .name("Iron Claw")
                 .slot(EquipmentSlot.WEAPON)
@@ -99,9 +100,9 @@ class UnequipUseCaseTest {
 
         digimon.setWeaponId(equipment.getId());
 
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
-        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
-        when(equipmentRepository.findById(equipment.getId())).thenReturn(Optional.of(equipment));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(equipmentRepository.findByIdForUpdate(equipment.getId())).thenReturn(Optional.of(equipment));
 
         unequipUseCase.execute(token, equipment.getId());
 
@@ -115,6 +116,7 @@ class UnequipUseCaseTest {
     void execute_throwsWhenNotEquipped() {
         Equipment equipment = Equipment.builder()
                 .id(UUID.randomUUID())
+                .playerId(playerId)
                 .digimonId(digimonId)
                 .name("Iron Claw")
                 .slot(EquipmentSlot.WEAPON)
@@ -126,9 +128,9 @@ class UnequipUseCaseTest {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
-        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
-        when(equipmentRepository.findById(equipment.getId())).thenReturn(Optional.of(equipment));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(equipmentRepository.findByIdForUpdate(equipment.getId())).thenReturn(Optional.of(equipment));
 
         assertThrows(RuntimeException.class,
                 () -> unequipUseCase.execute(token, equipment.getId()));
@@ -137,7 +139,7 @@ class UnequipUseCaseTest {
     @Test
     void execute_throwsWhenNoActiveDigimon() {
         player.setActiveDigimonId(null);
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
 
         assertThrows(RuntimeException.class,
                 () -> unequipUseCase.execute(token, UUID.randomUUID()));
@@ -158,9 +160,9 @@ class UnequipUseCaseTest {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
-        when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
-        when(equipmentRepository.findById(equipment.getId())).thenReturn(Optional.of(equipment));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(equipmentRepository.findByIdForUpdate(equipment.getId())).thenReturn(Optional.of(equipment));
 
         assertThrows(RuntimeException.class,
                 () -> unequipUseCase.execute(token, equipment.getId()));

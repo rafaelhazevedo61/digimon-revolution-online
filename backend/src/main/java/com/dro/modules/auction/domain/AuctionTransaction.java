@@ -21,7 +21,7 @@ public class AuctionTransaction {
     @Column(name = "buyer_player_id", nullable = false)
     private UUID buyerPlayerId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "item_definition_id", nullable = false)
+    @JoinColumn(name = "item_definition_id")
     private ItemDefinition itemDefinition;
     @Column(nullable = false)
     private int quantity;
@@ -153,6 +153,13 @@ public class AuctionTransaction {
 
     public static AuctionTransaction.AuctionTransactionBuilder builder() {
         return new AuctionTransaction.AuctionTransactionBuilder();
+    }
+
+    public String getAssetName() {
+        return listing != null && listing.isEquipment() ? listing.getAssetName() : itemDefinition.getName();
+    }
+    public String getAssetCode() {
+        return listing != null && listing.isEquipment() ? listing.getAssetCode() : itemDefinition.getCode();
     }
 
     public UUID getId() {

@@ -23,7 +23,7 @@ public class AuctionListing {
     @Column(name = "seller_digimon_id")
     private UUID sellerDigimonId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "item_definition_id", nullable = false)
+    @JoinColumn(name = "item_definition_id")
     private ItemDefinition itemDefinition;
     @Column(name = "quantity", nullable = false)
     private int quantity;
@@ -47,6 +47,33 @@ public class AuctionListing {
     @Version
     @Column(nullable = false)
     private long version;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "listing_type", nullable = false, length = 20)
+    private AuctionListingType listingType = AuctionListingType.ITEM;
+    // Historical identity, deliberately not a foreign key: sold equipment can be dismantled.
+    @Column(name = "equipment_id")
+    private UUID equipmentId;
+    @Embedded
+    private AuctionEquipmentSnapshot equipmentSnapshot;
+
+    public AuctionListingType getListingType() { return listingType; }
+    public boolean isEquipment() { return listingType == AuctionListingType.EQUIPMENT; }
+    public UUID getEquipmentId() { return equipmentId; }
+    public AuctionEquipmentSnapshot getEquipmentSnapshot() { return equipmentSnapshot; }
+
+    public void describeEquipment(com.dro.modules.equipment.domain.Equipment equipment) {
+        listingType = AuctionListingType.EQUIPMENT;
+        equipmentId = equipment.getId();
+        equipmentSnapshot = AuctionEquipmentSnapshot.from(equipment);
+        itemDefinition = null;
+    }
+
+    public String getAssetName() { return isEquipment() ? equipmentSnapshot.getName() : itemDefinition.getName(); }
+    public String getAssetCode() { return isEquipment() ? equipmentId.toString() : itemDefinition.getCode(); }
+    public String getAssetCategory() { return isEquipment() ? "EQUIPMENT" : itemDefinition.getCategory(); }
+    public String getAssetRarity() { return isEquipment() ? equipmentSnapshot.getRarity() : itemDefinition.getRarity(); }
+    public String getAssetIcon() { return isEquipment() ? "" : itemDefinition.getIcon(); }
 
     /**
      * Verifica se o anúncio ainda pode receber uma compra no instante informado.

@@ -27,6 +27,9 @@ public record AuctionListingResponse(
         int sellerFeeRateBps,
         AuctionListingStatus status,
         Instant createdAt,
-        Instant expiresAt
+        Instant expiresAt,
+        com.dro.modules.auction.domain.AuctionListingType listingType,
+        UUID equipmentId,
+        com.dro.modules.auction.domain.AuctionEquipmentSnapshot equipment
 ) {
 }

@@ -19,6 +19,9 @@ public record AuctionTransactionResponse(
         int grossAmount,
         int fee,
         int sellerNetAmount,
-        Instant createdAt
+        Instant createdAt,
+        com.dro.modules.auction.domain.AuctionListingType listingType,
+        UUID equipmentId,
+        com.dro.modules.auction.domain.AuctionEquipmentSnapshot equipment
 ) {
 }

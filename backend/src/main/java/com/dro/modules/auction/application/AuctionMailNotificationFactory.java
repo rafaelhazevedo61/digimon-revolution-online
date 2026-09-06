@@ -19,7 +19,7 @@ public final class AuctionMailNotificationFactory {
     }
 
     public static AuctionMailNotification purchaseForBuyer(AuctionTransaction transaction) {
-        String itemName = transaction.getItemDefinition().getName();
+        String itemName = transaction.getAssetName();
         String quantity = format(transaction.getQuantity());
         String amount = format(transaction.getGrossAmount());
         return new AuctionMailNotification(
@@ -31,13 +31,13 @@ public final class AuctionMailNotificationFactory {
                         + "Item: " + itemName + "\n"
                         + "Quantidade: " + quantity + " unidade(s)\n"
                         + "Valor total: " + amount + " Bits\n\n"
-                        + "O item já foi entregue ao seu Digimon.",
+                        + "O item já foi entregue ao seu inventário.",
                 "auction:transaction:" + transaction.getId() + ":buyer"
         );
     }
 
     public static AuctionMailNotification purchaseForSeller(AuctionTransaction transaction, String buyerUsername) {
-        String itemName = transaction.getItemDefinition().getName();
+        String itemName = transaction.getAssetName();
         String quantity = format(transaction.getQuantity());
         String grossAmount = format(transaction.getGrossAmount());
         String fee = format(transaction.getFee());
@@ -66,7 +66,7 @@ public final class AuctionMailNotificationFactory {
             AuctionListing listing,
             String reason
     ) {
-        String itemName = listing.getItemDefinition().getName();
+        String itemName = listing.getAssetName();
         String quantity = format(listing.getRemainingQuantity());
         return new AuctionMailNotification(
             listing.getSellerPlayerId(),
@@ -84,7 +84,7 @@ public final class AuctionMailNotificationFactory {
             AuctionListing listing,
             int returnedQuantity
     ) {
-        String itemName = listing.getItemDefinition().getName();
+        String itemName = listing.getAssetName();
         String quantity = format(returnedQuantity);
         boolean expired = listing.getStatus() == AuctionListingStatus.EXPIRED;
         String actionType = expired ? "LISTING_EXPIRED" : "LISTING_CANCELLED";
@@ -100,7 +100,7 @@ public final class AuctionMailNotificationFactory {
                 actionType,
                 subject,
                 reason + ". " + quantity + " unidade(s) de " + itemName
-                        + " foram devolvidas ao Digimon de origem.",
+                        + " foram devolvidas ao inventário do vendedor.",
                 "auction:listing:" + listing.getId() + ":" + (expired ? "expired" : "cancelled")
         );
     }

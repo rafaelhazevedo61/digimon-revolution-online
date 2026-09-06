@@ -61,6 +61,7 @@ public class DismantleEquipmentUseCase {
         List<Integer> tiers = new ArrayList<>();
         for (Equipment item : equipment) {
             if (!playerId.equals(item.getPlayerId())) throw new ConflictException("Equipment does not belong to this player");
+            item.requireAvailable();
             if (item.isEquipped() || item.getDigimonId() != null) throw new ConflictException("Equipped equipment cannot be dismantled");
             if (item.isLocked()) throw new ConflictException("Locked equipment cannot be dismantled");
             EquipmentEnhancementRules.DismantleReward reward = EquipmentEnhancementRules.dismantleReward(item.getTier());
