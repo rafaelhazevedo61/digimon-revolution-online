@@ -6,34 +6,47 @@ let rankHasMore = true;
 let rankGeneration = 0;
 let rankSearch = "";
 let rankSearchTimeout = null;
+let rankArenaMode = "current";
+let rankArenaStatistics = null;
 const RANK_PAGE_SIZE = 10;
 
-async function renderRankingPage() {
+async function renderRankingPage(params = {}) {
   const app = document.getElementById("app");
   showBottomNav("more");
 
-  rankTab = "power";
+  const validTabs = ["power", "rebirth", "arena", "clans"];
+  rankTab = validTabs.includes(params.tab) ? params.tab : "power";
   rankPage = 0;
   rankSearch = "";
   rankEntries = [];
   rankHasMore = true;
+  rankArenaMode = "current";
+  rankArenaStatistics = null;
 
   app.innerHTML = `
     <div class="page-container">
       <h2 class="text-lg font-bold mb-4 px-1">🏆 Ranking</h2>
 
-      <div class="flex gap-2 mb-4" id="rank-tabs">
-        <button class="tab-btn active" data-tab="power" onclick="rankSwitchTab('power')">Poder</button>
-        <button class="tab-btn" data-tab="rebirth" onclick="rankSwitchTab('rebirth')">Rebirth</button>
+      <div class="flex flex-wrap gap-2 mb-4" id="rank-tabs">
+        <button class="tab-btn ${rankTab === "power" ? "active" : ""}" data-tab="power" onclick="rankSwitchTab('power')">Poder</button>
+        <button class="tab-btn ${rankTab === "rebirth" ? "active" : ""}" data-tab="rebirth" onclick="rankSwitchTab('rebirth')">Rebirth</button>
+        <button class="tab-btn ${rankTab === "arena" ? "active" : ""}" data-tab="arena" onclick="rankSwitchTab('arena')">Arena</button>
+        <button class="tab-btn ${rankTab === "clans" ? "active" : ""}" data-tab="clans" onclick="rankSwitchTab('clans')">Clãs</button>
+      </div>
+
+      <div id="rank-arena-toggle" class="${rankTab === "arena" ? "flex" : "hidden"} gap-2 mb-4">
+        <button class="tab-btn text-xs ${rankArenaMode === "current" ? "active" : ""}" data-arena-mode="current" onclick="rankSwitchArenaMode('current')">Atual</button>
+        <button class="tab-btn text-xs ${rankArenaMode === "season" ? "active" : ""}" data-arena-mode="season" onclick="rankSwitchArenaMode('season')">Temporada</button>
       </div>
 
       <div class="mb-4" id="rank-search-wrap">
         <input
           id="rank-search"
           type="text"
-          placeholder="Buscar jogador ou Digimon..."
+          placeholder="${rankTab === "power" ? "Buscar jogador ou Digimon..." : "Busca disponível apenas no ranking de Poder"}"
           class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
           value="${escapeHtml(rankSearch)}"
+          ${rankTab === "power" ? "" : "disabled"}
           oninput="rankOnSearchInput(this.value)"
         />
       </div>
@@ -55,11 +68,22 @@ function rankSwitchTab(tab) {
   rankSearch = "";
   rankEntries = [];
   rankHasMore = true;
+  rankArenaMode = "current";
+  rankArenaStatistics = null;
   rankGeneration++;
   rankLoading = false;
 
   document.querySelectorAll("#rank-tabs .tab-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.tab === tab);
+  });
+
+  const arenaToggle = document.getElementById("rank-arena-toggle");
+  if (arenaToggle) {
+    arenaToggle.classList.toggle("hidden", tab !== "arena");
+    arenaToggle.classList.toggle("flex", tab === "arena");
+  }
+  document.querySelectorAll("#rank-arena-toggle .tab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.arenaMode === rankArenaMode);
   });
 
   const searchInput = document.getElementById("rank-search");
@@ -68,6 +92,23 @@ function rankSwitchTab(tab) {
     searchInput.disabled = tab !== "power";
     searchInput.placeholder = tab === "power" ? "Buscar jogador ou Digimon..." : "Busca disponível apenas no ranking de Poder";
   }
+
+  rankLoadPage();
+}
+
+function rankSwitchArenaMode(mode) {
+  if (!["current", "season"].includes(mode) || rankTab !== "arena") return;
+  rankArenaMode = mode;
+  rankPage = 0;
+  rankEntries = [];
+  rankHasMore = true;
+  rankArenaStatistics = null;
+  rankGeneration++;
+  rankLoading = false;
+
+  document.querySelectorAll("#rank-arena-toggle .tab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.arenaMode === mode);
+  });
 
   rankLoadPage();
 }
@@ -92,6 +133,8 @@ async function rankLoadPage() {
   if (rankLoading) return;
   rankLoading = true;
   const gen = ++rankGeneration;
+  const tab = rankTab;
+  const arenaMode = rankArenaMode;
 
   const content = document.getElementById("rank-content");
   if (rankPage === 0) {
@@ -104,10 +147,26 @@ async function rankLoadPage() {
   }
 
   try {
-    const data = await apiGet(`/ranking/${rankTab}`, params);
+    let data;
+    if (tab === "arena") {
+      const rankingRequest = apiGet(
+        arenaMode === "season" ? "/arena/season-ranking" : "/arena/ranking",
+        params
+      );
+      const statisticsRequest = arenaMode === "current"
+        ? apiGet("/arena/statistics").catch(() => null)
+        : Promise.resolve(null);
+      const [ranking, statistics] = await Promise.all([rankingRequest, statisticsRequest]);
+      data = ranking || [];
+      if (gen === rankGeneration) rankArenaStatistics = statistics;
+    } else if (tab === "clans") {
+      data = await apiGet("/clans/ranking", params);
+    } else {
+      data = await apiGet(`/ranking/${tab}`, params);
+    }
     if (gen !== rankGeneration) return;
-    rankEntries = data || [];
-    rankHasMore = rankEntries.length === RANK_PAGE_SIZE;
+    rankEntries = tab === "clans" ? (data.content || []) : (data || []);
+    rankHasMore = tab === "clans" ? !data.last : rankEntries.length === RANK_PAGE_SIZE;
     rankRender();
   } catch (err) {
     if (gen !== rankGeneration) return;
@@ -124,6 +183,60 @@ async function rankLoadPage() {
 function rankRender() {
   const content = document.getElementById("rank-content");
   const pagination = document.getElementById("rank-pagination");
+
+  if (rankTab === "arena") {
+    const summary = rankArenaMode === "current" && rankArenaStatistics
+      ? `<div class="arena-ranking-summary"><div class="arena-summary-title">Seu histórico de arena</div><div class="arena-summary-grid"><div><span>Saldo</span><strong class="${rankArenaStatistics.netPoints >= 0 ? "is-positive" : "is-negative"}">${Number(rankArenaStatistics.netPoints || 0).toLocaleString("pt-BR")}</strong></div><div><span>Ganhos</span><strong>${Number(rankArenaStatistics.pointsWon || 0).toLocaleString("pt-BR")}</strong></div><div><span>Perdas</span><strong class="is-negative">${Number(rankArenaStatistics.pointsLost || 0).toLocaleString("pt-BR")}</strong></div></div></div>`
+      : "";
+
+    if (rankEntries.length === 0) {
+      content.innerHTML = `${summary}<p class="text-slate-400 text-sm text-center py-8">Classificação da arena vazia no momento.</p>`;
+      if (pagination) pagination.innerHTML = "";
+      return;
+    }
+
+    const myPlayerId = getPlayerId();
+    const html = rankEntries.map(e => {
+      const posIcon = e.position === 1 ? "🥇" : e.position === 2 ? "🥈" : e.position === 3 ? "🥉" : `#${e.position}`;
+      const isMine = myPlayerId && e.playerId === myPlayerId;
+      if (rankArenaMode === "season") {
+        return `<article class="arena-ranking-row ${isMine ? "is-mine" : ""}"><span class="arena-ranking-position">${posIcon}</span><div class="arena-ranking-identity"><strong>@${escapeHtml(e.playerName)}</strong>${isMine ? `<span class="arena-you-badge">você</span>` : ""}<p><span class="is-positive">${e.wins}V</span> / <span class="is-negative">${e.losses}D</span> · ganhos ${Number(e.pointsWon || 0).toLocaleString("pt-BR")} · perdas ${Number(e.pointsLost || 0).toLocaleString("pt-BR")}</p></div><strong class="arena-ranking-score">${Number(e.netPoints || 0).toLocaleString("pt-BR")}<small>pts</small></strong></article>`;
+      }
+      return `<article class="arena-ranking-row ${isMine ? "is-mine" : ""}"><span class="arena-ranking-position">${posIcon}</span><div class="arena-ranking-identity"><div class="arena-ranking-name-row"><strong>${escapeHtml(e.digimonName)}</strong>${arenaTierBadge(e.tier)}${isMine ? `<span class="arena-you-badge">você</span>` : ""}</div><p>@${escapeHtml(e.playerName)} · ${escapeHtml(ARENA_STAGE_LABELS[e.stage] || e.stage)} Lv.${e.level} · <span class="is-positive">${e.wins}V</span> / <span class="is-negative">${e.losses}D</span></p></div><strong class="arena-ranking-score">${Number(e.rating || 0).toLocaleString("pt-BR")}<small>pts</small></strong></article>`;
+    }).join("");
+    content.innerHTML = `${summary}${html}`;
+  } else if (rankTab === "clans") {
+    if (rankEntries.length === 0) {
+      content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">Nenhum clã no ranking.</p>`;
+      if (pagination) pagination.innerHTML = "";
+      return;
+    }
+
+    content.innerHTML = rankEntries.map(e => {
+      const posIcon = e.position === 1 ? "🥇" : e.position === 2 ? "🥈" : e.position === 3 ? "🥉" : `<span class="text-slate-500 font-bold text-sm">#${e.position}</span>`;
+      return `
+        <article class="clan-ranking-row" onclick="clanShowPreview('${e.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); clanShowPreview('${e.id}'); }">
+          <div class="clan-ranking-position">${posIcon}</div>
+          <div class="clan-ranking-identity"><p class="clan-ranking-name">${escapeHtml(e.name)} <span>${escapeHtml(e.tag)}</span></p><p class="clan-ranking-members">${e.memberCount} membros</p></div>
+          <div class="clan-ranking-power"><span>Poder total</span><strong>${Number(e.totalPower || 0).toLocaleString("pt-BR")}</strong></div>
+          <div class="clan-icon-button" aria-hidden="true">◉</div>
+        </article>
+      `;
+    }).join("");
+  }
+
+  if (rankTab === "arena" || rankTab === "clans") {
+    if (pagination) {
+      pagination.innerHTML = `
+        <div class="flex justify-between items-center gap-2">
+          <button class="btn-secondary text-xs" ${rankPage <= 0 ? "disabled" : ""} onclick="rankChangePage(-1)">← Anterior</button>
+          <span class="text-sm text-slate-400">Página ${rankPage + 1}</span>
+          <button class="btn-secondary text-xs" ${!rankHasMore ? "disabled" : ""} onclick="rankChangePage(1)">Próxima →</button>
+        </div>
+      `;
+    }
+    return;
+  }
 
   if (rankEntries.length === 0) {
     const emptyMsg = rankTab === "rebirth"

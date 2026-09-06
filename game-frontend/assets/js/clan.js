@@ -4,11 +4,6 @@ let clanListEntries = [];
 let clanListHasMore = true;
 let clanListLoading = false;
 
-let clanRankingPage = 0;
-let clanRankingEntries = [];
-let clanRankingHasMore = true;
-let clanRankingLoading = false;
-
 let currentClan = null;
 let currentClanTab = "members";
 let clanRaidCooldownTimer = null;
@@ -119,7 +114,7 @@ function renderClanList() {
           <p class="clan-eyebrow clan-eyebrow-amber">Competição</p>
           <h2 class="clan-aside-title">Ranking de Clãs</h2>
           <p class="clan-aside-copy">Compare o poder total das equipes e descubra quem lidera a temporada.</p>
-          <button class="btn-primary w-full" onclick="renderClanRanking()">Ver classificação</button>
+          <button class="btn-primary w-full" onclick="navigateTo('ranking', {tab: 'clans'})">Ver classificação</button>
         </section>
         <section class="clan-aside-card clan-aside-note">
           <span class="clan-aside-note-mark" aria-hidden="true">i</span>
@@ -371,7 +366,7 @@ function renderClanDetailHtml(clan, opts = {}) {
             <p class="clan-eyebrow clan-eyebrow-amber">Competição</p>
             <h2 class="clan-rail-title">Ranking de Clãs</h2>
             <p class="text-xs text-slate-400 mt-1">Veja o poder das equipes mais fortes.</p>
-            <button class="btn-secondary w-full mt-3" onclick="renderClanRanking()">Ver classificação</button>
+            <button class="btn-secondary w-full mt-3" onclick="navigateTo('ranking', {tab: 'clans'})">Ver classificação</button>
           </div>
         </aside>
       ` : ""}
@@ -1503,88 +1498,4 @@ async function clanUpdate(id) {
   } catch (err) {
     showToast(err.message, "error");
   }
-}
-
-async function renderClanRanking() {
-  const app = document.getElementById("app");
-  showBottomNav("more");
-
-  app.innerHTML = `
-    <div class="page-container clan-page-container clan-ranking-page">
-      <header class="clan-page-header clan-ranking-header">
-        <div class="clan-page-header-copy">
-          <p class="clan-eyebrow clan-eyebrow-amber">Competição · Temporada</p>
-          <h1 class="clan-page-title">Classificação de Clãs</h1>
-          <p class="clan-page-subtitle">Acompanhe as equipes que estão no topo pelo poder total.</p>
-        </div>
-        <button class="clan-back-action" onclick="renderClansPage()">Voltar</button>
-      </header>
-      <section class="clan-ranking-surface">
-        <div class="clan-section-heading"><div><p class="clan-eyebrow">Panorama competitivo</p><h2 class="clan-section-title">Melhores equipes</h2></div><span class="clan-section-mark" aria-hidden="true">✦</span></div>
-        <div id="clan-ranking-content">
-          <div class="card animate-pulse"><div class="h-32"></div></div>
-        </div>
-      </section>
-    </div>
-  `;
-
-  clanRankingPage = 0;
-  clanRankingEntries = [];
-  clanRankingHasMore = true;
-  await clanLoadRanking();
-}
-
-async function clanLoadRanking() {
-  if (clanRankingLoading) return;
-  clanRankingLoading = true;
-
-  const content = safeContent("clan-ranking-content");
-  if (content && clanRankingPage === 0) {
-    content.innerHTML = `<div class="card animate-pulse"><div class="h-32"></div></div>`;
-  }
-
-  try {
-    const data = await apiGet(`/clans/ranking?page=${clanRankingPage}&size=10`);
-    const newEntries = data.content || [];
-    clanRankingEntries = clanRankingPage === 0 ? newEntries : [...clanRankingEntries, ...newEntries];
-    clanRankingHasMore = !data.last;
-    clanRenderRanking();
-  } catch (err) {
-    if (content) content.innerHTML = `<div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>`;
-  } finally {
-    clanRankingLoading = false;
-  }
-}
-
-function clanRenderRanking() {
-  const content = safeContent("clan-ranking-content");
-  if (!content) return;
-
-  if (clanRankingEntries.length === 0) {
-    content.innerHTML = `<p class="text-slate-400 text-sm text-center py-8">Nenhum clã no ranking.</p>`;
-    return;
-  }
-
-  let html = clanRankingEntries.map(e => {
-    const posIcon = e.position === 1 ? "🥇" : e.position === 2 ? "🥈" : e.position === 3 ? "🥉" : `<span class="text-slate-500 font-bold text-sm">#${e.position}</span>`;
-    return `
-      <article class="clan-ranking-row" onclick="clanShowPreview('${e.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); clanShowPreview('${e.id}'); }">
-        <div class="clan-ranking-position">${posIcon}</div>
-        <div class="clan-ranking-identity"><p class="clan-ranking-name">${escapeHtml(e.name)} <span>${escapeHtml(e.tag)}</span></p><p class="clan-ranking-members">${e.memberCount} membros</p></div>
-        <div class="clan-ranking-power"><span>Poder total</span><strong>${Number(e.totalPower || 0).toLocaleString("pt-BR")}</strong></div>
-        <div class="clan-icon-button" aria-hidden="true">◉</div>
-      </article>
-    `;
-  }).join("");
-
-  if (clanRankingHasMore) {
-    html += `<button class="btn-secondary clan-list-load-more" id="clan-ranking-load-more" onclick="clanRankingLoadMore()">Carregar mais</button>`;
-  }
-
-  content.innerHTML = html;
-}
-
-async function clanRankingLoadMore() {
-  clanRankingPage++;
-  await clanLoadRanking();
 }

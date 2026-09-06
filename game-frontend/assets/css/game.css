@@ -690,8 +690,8 @@ body {
 .clan-list-layout, .clan-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; align-items: start; gap: 1rem; }
 .clan-list-main, .clan-tab-content { min-width: 0; }
 .clan-list-main { display: grid; gap: 1rem; }
-.clan-surface, .clan-list-surface, .clan-ranking-surface, .clan-aside-card, .clan-rail-card, .clan-form-card, .clan-storage-capacity-card, .clan-storage-deposit-card, .clan-storage-items-panel, .clan-storage-history { border: 1px solid rgba(51, 65, 85, 0.76); border-radius: 1rem; background: rgba(15, 23, 42, 0.68); box-shadow: 0 1rem 2rem rgba(2, 6, 23, 0.12); }
-.clan-surface, .clan-list-surface, .clan-ranking-surface { padding: 1.1rem; }
+.clan-surface, .clan-list-surface, .clan-aside-card, .clan-rail-card, .clan-form-card, .clan-storage-capacity-card, .clan-storage-deposit-card, .clan-storage-items-panel, .clan-storage-history { border: 1px solid rgba(51, 65, 85, 0.76); border-radius: 1rem; background: rgba(15, 23, 42, 0.68); box-shadow: 0 1rem 2rem rgba(2, 6, 23, 0.12); }
+.clan-surface, .clan-list-surface { padding: 1.1rem; }
 .clan-section-heading, .clan-tab-heading, .clan-storage-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .clan-section-title { margin: 0.3rem 0 0; color: #f1f5f9; font-size: 1.05rem; font-weight: 850; letter-spacing: -0.02em; }
 .clan-section-title-sm { font-size: 0.9rem; }
@@ -963,9 +963,6 @@ body {
 .clan-history-copy strong { color: #cbd5e1; font-size: 0.68rem; }
 .clan-history-copy span { margin-top: 0.15rem; color: #64748b; font-size: 0.59rem; }
 .clan-history-date { color: #475569; font-size: 0.57rem; text-align: right; white-space: nowrap; }
-.clan-ranking-page { max-width: 78rem; }
-.clan-ranking-header { min-height: 9rem; }
-.clan-ranking-surface { margin-top: 1rem; }
 .clan-ranking-row { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto 1.9rem; align-items: center; gap: 0.8rem; min-width: 0; padding: 0.8rem; border: 1px solid rgba(51, 65, 85, 0.72); border-radius: 0.8rem; background: rgba(2, 6, 23, 0.3); cursor: pointer; transition: border-color 0.2s, background 0.2s; }
 .clan-ranking-row + .clan-ranking-row { margin-top: 0.55rem; }
 .clan-ranking-row:hover { border-color: rgba(245, 158, 11, 0.45); background: rgba(69, 39, 7, 0.18); }
@@ -1045,7 +1042,7 @@ body {
   .clan-page-header { padding: 1.1rem; }
   .clan-page-title { font-size: 1.85rem; }
   .clan-page-subtitle { font-size: 0.78rem; }
-  .clan-surface, .clan-list-surface, .clan-ranking-surface { padding: 0.85rem; }
+  .clan-surface, .clan-list-surface { padding: 0.85rem; }
   .clan-list-card { grid-template-columns: 2.45rem minmax(0, 1fr); gap: 0.6rem; }
   .clan-card-emblem { width: 2.45rem; height: 2.45rem; }
   .clan-card-actions { grid-column: 2; justify-content: flex-start; }
