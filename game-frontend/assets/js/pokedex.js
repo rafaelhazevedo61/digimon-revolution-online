@@ -198,19 +198,23 @@ async function dexShowEvolutionLines(digimonInfoId) {
   document.body.appendChild(overlay);
 
   try {
-    const collection = await apiGet("/collection");
-    const raritiesByDigimon = new Map();
-    (collection.entries || []).forEach(entry => {
-      if (!raritiesByDigimon.has(entry.digimonInfoId)) raritiesByDigimon.set(entry.digimonInfoId, new Set());
-      raritiesByDigimon.get(entry.digimonInfoId).add(entry.rarity);
-    });
-    dexMasteryInfoIds = new Set([...raritiesByDigimon.entries()].filter(([, rarities]) => rarities.size >= 4).map(([infoId]) => Number(infoId)));
     if (!dexEvolutionLinesCache) {
       dexEvolutionLinesLoading = true;
       dexEvolutionLinesCache = await apiGet("/evolution-lines/available");
     }
     const lines = (dexEvolutionLinesCache || [])
       .filter(line => (line.steps || []).some(step => step.digimonInfoId === digimonInfoId));
+    try {
+      const collection = await apiGet("/collection");
+      const raritiesByDigimon = new Map();
+      (collection.entries || []).forEach(entry => {
+        if (!raritiesByDigimon.has(entry.digimonInfoId)) raritiesByDigimon.set(entry.digimonInfoId, new Set());
+        raritiesByDigimon.get(entry.digimonInfoId).add(entry.rarity);
+      });
+      dexMasteryInfoIds = new Set([...raritiesByDigimon.entries()].filter(([, rarities]) => rarities.size >= 4).map(([infoId]) => Number(infoId)));
+    } catch (collectionError) {
+      dexMasteryInfoIds = new Set();
+    }
     const content = document.getElementById("dex-evolution-content");
     if (!content) return;
 
