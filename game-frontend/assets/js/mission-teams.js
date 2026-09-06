@@ -280,6 +280,39 @@ function openMissionTeamEditor(teamId = null) {
   }).catch(error => showToast(error.message, "error"));
 }
 
+function isMissionTeamCapacityError(error) {
+  return /limite de times atingido|expansor de slot de time/i.test(String(error && error.message || ""));
+}
+
+function showMissionTeamCapacityModal() {
+  document.getElementById("mission-team-capacity-modal")?.remove();
+  const overlay = document.createElement("div");
+  overlay.id = "mission-team-capacity-modal";
+  overlay.className = "fixed inset-0 z-[90] flex items-center justify-center bg-black/75 p-4";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-labelledby", "mission-team-capacity-modal-title");
+  overlay.innerHTML = `
+    <div class="card w-full max-w-md" onclick="event.stopPropagation()">
+      <div class="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-amber-400">Capacidade de times</p>
+          <h3 id="mission-team-capacity-modal-title" class="mt-1 text-xl font-bold text-slate-100">Limite de times atingido</h3>
+        </div>
+        <button type="button" class="text-2xl leading-none text-slate-400 hover:text-white" aria-label="Fechar" onclick="document.getElementById('mission-team-capacity-modal')?.remove()">&times;</button>
+      </div>
+      <p class="text-sm leading-relaxed text-slate-300">Você atingiu a capacidade atual de times. Para criar uma nova formação, adquira o item <strong class="text-amber-300">Expansor de Slot de Time</strong> na loja comum.</p>
+      <p class="mt-3 text-xs leading-relaxed text-slate-500">Cada expansor aumenta sua capacidade em 1 slot, até o máximo de 10 times.</p>
+      <div class="mt-6 flex gap-2">
+        <button type="button" class="btn-secondary flex-1" onclick="document.getElementById('mission-team-capacity-modal')?.remove()">Fechar</button>
+        <button type="button" class="btn-primary flex-1" onclick="document.getElementById('mission-team-capacity-modal')?.remove(); navigateTo('shop')">Ir para a loja</button>
+      </div>
+    </div>
+  `;
+  overlay.addEventListener("click", event => { if (event.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
 async function saveMissionTeamFromEditor() {
   const name = document.getElementById("mission-team-name")?.value?.trim();
   const digimonIds = missionTeamEditorSelectedIds.map(String);
@@ -300,7 +333,8 @@ async function saveMissionTeamFromEditor() {
     showToast(editing ? "Time atualizado!" : "Time criado!");
     await renderMissionTeamsPage();
   } catch (error) {
-    showToast(error.message, "error");
+    if (isMissionTeamCapacityError(error)) showMissionTeamCapacityModal();
+    else showToast(error.message, "error");
     if (button) { button.disabled = false; button.textContent = "Salvar time"; }
   }
 }

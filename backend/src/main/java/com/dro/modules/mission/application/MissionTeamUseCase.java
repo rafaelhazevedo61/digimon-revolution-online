@@ -51,7 +51,7 @@ public class MissionTeamUseCase {
         Player player = lockPlayer(playerId);
         int currentTeamCount = Math.toIntExact(missionTeamRepository.countByPlayerId(playerId));
         if (!TeamSlotRules.canCreate(currentTeamCount, player.getMaxTeamSlots())) {
-            throw new BadRequestException("Limite de times atingido. Adquira o item TEAM_SLOT_UNLOCK na loja comum para aumentar sua capacidade até o máximo de " + TeamSlotRules.MAX_SLOTS + " times.");
+            throw new BadRequestException("Limite de times atingido. Adquira o item Expansor de Slot de Time na loja comum para aumentar sua capacidade até o máximo de " + TeamSlotRules.MAX_SLOTS + " times.");
         }
         List<UUID> digimonIds = validateRequest(playerId, null, request);
         MissionTeam team = new MissionTeam(playerId, normalizeName(request.name()), digimonIds, request.captainDigimonId());

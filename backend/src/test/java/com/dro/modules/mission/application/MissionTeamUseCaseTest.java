@@ -106,7 +106,7 @@ class MissionTeamUseCaseTest {
                 () -> useCase.create(token, new SaveMissionTeamRequest("Quarto time", digimonIds, digimonIds.get(0)))
         );
 
-        org.junit.jupiter.api.Assertions.assertTrue(exception.getMessage().contains("TEAM_SLOT_UNLOCK"));
+        org.junit.jupiter.api.Assertions.assertTrue(exception.getMessage().contains("Expansor de Slot de Time"));
         verify(missionTeamRepository, org.mockito.Mockito.never()).save(any(MissionTeam.class));
     }
 
