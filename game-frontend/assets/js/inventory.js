@@ -1,6 +1,8 @@
 let invItems = [];
 let invEquipments = [];
 let invSelectedDismantleIds = new Set();
+// Deve ficar igual ao limite validado no backend (DismantleEquipmentBatchRequest, @Size(max = 50)).
+const INVENTORY_DISMANTLE_BATCH_LIMIT = 50;
 let invDigimonId = null;
 let invTab = "items"; // "items" or "equipment"
 let invChestOpeningInProgress = false;
@@ -705,7 +707,7 @@ function invCategoryBadge(category) {
 
 async function invReloadItems() {
   await invLoadItemsPage();
-  if (document.getElementById("inv-content")) invRenderItems();
+  if (invTab === "items" && document.getElementById("inv-content")) invRenderItems();
 }
 
 function invStackLimitDetails(err) {
@@ -721,7 +723,8 @@ function invIsStackLimitError(err) {
   return /stack limit exceeded|limite máximo de|limite de stack/i.test(String(err && err.message || ""));
 }
 
-function invShowStackLimitModal(err) {
+function invShowStackLimitModal(err, options = {}) {
+  const { onIgnore } = options;
   const existing = document.getElementById("inventory-stack-limit-modal");
   if (existing) existing.remove();
   const details = invStackLimitDetails(err);
@@ -731,24 +734,32 @@ function invShowStackLimitModal(err) {
   overlay.setAttribute("role", "alertdialog");
   overlay.setAttribute("aria-modal", "true");
   overlay.setAttribute("aria-labelledby", "inventory-stack-limit-title");
+  const bodyText = onIgnore
+    ? `Você pode ignorar o limite: o excedente desse item será descartado, mas o baú será aberto normalmente e as demais recompensas serão entregues. Ou cancele para não abrir agora.`
+    : `A operação foi cancelada e nenhum item foi consumido. Libere espaço ou use parte desse item antes de tentar novamente.`;
   overlay.innerHTML = `
     <div class="card w-full max-w-md border border-amber-700 bg-slate-900" onclick="event.stopPropagation()">
       <div class="flex items-start gap-3">
         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-amber-700 bg-amber-950/50 text-xl text-amber-300" aria-hidden="true">!</div>
         <div>
           <p class="text-xs uppercase tracking-wider text-amber-400 font-bold">Limite do inventário</p>
-          <h3 id="inventory-stack-limit-title" class="text-xl font-bold mt-1">Não foi possível concluir</h3>
+          <h3 id="inventory-stack-limit-title" class="text-xl font-bold mt-1">${onIgnore ? "Item no limite máximo" : "Não foi possível concluir"}</h3>
         </div>
       </div>
       <p class="mt-4 text-sm leading-relaxed text-slate-200">O item <strong class="text-amber-300">${escapeHtml(details.itemName)}</strong> já atingiu o limite de <strong class="text-amber-300">${escapeHtml(details.maxStack)} unidades</strong> no inventário.</p>
-      <p class="mt-3 text-sm leading-relaxed text-slate-400">A operação foi cancelada e nenhum item foi consumido. Libere espaço ou use parte desse item antes de tentar novamente.</p>
-      <button id="inventory-stack-limit-confirm" class="btn-primary mt-6 w-full">Entendi</button>
+      <p class="mt-3 text-sm leading-relaxed text-slate-400">${bodyText}</p>
+      ${onIgnore ? `<button id="inventory-stack-limit-ignore" class="btn-primary mt-6 w-full">Abrir mesmo assim (descartar excedente)</button><button id="inventory-stack-limit-confirm" class="btn-secondary mt-2 w-full">Cancelar</button>` : `<button id="inventory-stack-limit-confirm" class="btn-primary mt-6 w-full">Entendi</button>`}
     </div>
   `;
   document.body.appendChild(overlay);
   const confirmButton = overlay.querySelector("#inventory-stack-limit-confirm");
-  confirmButton?.focus();
+  const ignoreButton = overlay.querySelector("#inventory-stack-limit-ignore");
+  (ignoreButton || confirmButton)?.focus();
   confirmButton?.addEventListener("click", () => overlay.remove());
+  ignoreButton?.addEventListener("click", () => {
+    overlay.remove();
+    onIgnore();
+  });
 }
 
 async function invUseItem(itemType, quantity = null) {
@@ -807,7 +818,7 @@ function createChestRequestId() {
   return `chest-open-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-async function invOpenChest(chestCode, quantity = 1) {
+async function invOpenChest(chestCode, quantity = 1, ignoreMaxStackItems = false) {
   if (!chestCode) {
     showToast("Definição do baú não encontrada.", "error");
     return null;
@@ -824,14 +835,17 @@ async function invOpenChest(chestCode, quantity = 1) {
     const result = await apiPost("/inventory/chests/open", {
       chestCode,
       quantity: requestedQuantity,
-      requestId: createChestRequestId()
+      requestId: createChestRequestId(),
+      ignoreMaxStackItems: !!ignoreMaxStackItems
     });
     invShowChestOpeningResult(result);
     await invReloadItems();
     return result;
   } catch (err) {
-    if (invIsStackLimitError(err)) {
-      invShowStackLimitModal(err);
+    if (invIsStackLimitError(err) && !ignoreMaxStackItems) {
+      invShowStackLimitModal(err, {
+        onIgnore: () => invOpenChest(chestCode, requestedQuantity, true)
+      });
     } else {
       showToast(err.message, "error");
     }
@@ -849,6 +863,12 @@ function invShowChestOpeningResult(result) {
   const chestQuantity = Math.max(1, Number(result && result.quantity) || 1);
   const title = result && result.replayed ? "Abertura já processada" : chestQuantity > 1 ? "Baús abertos!" : "Baú aberto!";
   const message = result && result.message ? result.message : "Recompensas recebidas";
+  const itemsAtStackLimit = Array.isArray(result && result.itemsAtStackLimit) ? result.itemsAtStackLimit : [];
+  const stackLimitWarningHtml = itemsAtStackLimit.length > 0 ? `
+    <div class="card-sm mb-4 border border-amber-700 bg-amber-950/20 shrink-0">
+      <p class="text-xs text-amber-300 leading-relaxed"><strong>Atenção:</strong> o excedente de ${itemsAtStackLimit.map(name => escapeHtml(name)).join(", ")} foi descartado por já ter atingido o limite máximo de 999 unidades.</p>
+    </div>
+  ` : "";
 
   const overlay = document.createElement("div");
   overlay.id = "chest-opening-overlay";
@@ -888,6 +908,7 @@ function invShowChestOpeningResult(result) {
         }).join("") : `<p class="text-sm text-slate-400">Nenhum item foi informado.</p>`}
         </div>
       </div>
+      ${stackLimitWarningHtml}
       <p class="text-xs text-slate-400 text-center mb-4 shrink-0">${escapeHtml(message)}</p>
       <button class="btn-primary w-full shrink-0" onclick="document.getElementById('chest-opening-overlay').remove()">Continuar</button>
     </div>
@@ -1134,6 +1155,14 @@ function invSortEquipments(equipments) {
   });
 }
 
+function invEnhancementCoreLabel(code) {
+  const map = {
+    BASIC_ENHANCEMENT_CORE: "Núcleo de Aprimoramento",
+    ADVANCED_ENHANCEMENT_CORE: "Núcleo Avançado",
+    SUPREME_ENHANCEMENT_CORE: "Núcleo Supremo"
+  };
+  return map[code] || code;
+}
 function invEnhancementCoreInfo(targetTier) {
   if (targetTier <= 4) return { code: "BASIC_ENHANCEMENT_CORE", label: "Núcleo de Aprimoramento" };
   if (targetTier <= 7) return { code: "ADVANCED_ENHANCEMENT_CORE", label: "Núcleo Avançado" };
@@ -1232,13 +1261,35 @@ async function invSelectAllDismantlable() {
     const equipments = await apiGet("/equipment/inventory");
     const eligibleIds = equipments.filter(equipment => !equipment.equipped && !equipment.locked && Number(equipment.tier) < 10).map(equipment => equipment.id);
     const allSelected = eligibleIds.length > 0 && eligibleIds.every(id => invSelectedDismantleIds.has(id));
-    if (allSelected) eligibleIds.forEach(id => invSelectedDismantleIds.delete(id));
-    else eligibleIds.forEach(id => invSelectedDismantleIds.add(id));
+    if (allSelected) {
+      eligibleIds.forEach(id => invSelectedDismantleIds.delete(id));
+    } else {
+      let remainingSlots = INVENTORY_DISMANTLE_BATCH_LIMIT - invSelectedDismantleIds.size;
+      let skippedCount = 0;
+      for (const id of eligibleIds) {
+        if (invSelectedDismantleIds.has(id)) continue;
+        if (remainingSlots <= 0) { skippedCount++; continue; }
+        invSelectedDismantleIds.add(id);
+        remainingSlots--;
+      }
+      if (skippedCount > 0) {
+        showToast(`Limite de ${INVENTORY_DISMANTLE_BATCH_LIMIT} equipamentos por lote atingido. Desmonte a seleção atual e repita para os ${skippedCount} restante(s).`, "error");
+      }
+    }
     invRenderEquipment();
   } catch (err) { showToast(err.message, "error"); }
 }
 function invToggleDismantleSelection(equipmentId, selected) {
-  if (selected) invSelectedDismantleIds.add(equipmentId); else invSelectedDismantleIds.delete(equipmentId);
+  if (selected) {
+    if (!invSelectedDismantleIds.has(equipmentId) && invSelectedDismantleIds.size >= INVENTORY_DISMANTLE_BATCH_LIMIT) {
+      showToast(`Você pode selecionar no máximo ${INVENTORY_DISMANTLE_BATCH_LIMIT} equipamentos por vez para desmontagem em lote.`, "error");
+      invRenderEquipment();
+      return;
+    }
+    invSelectedDismantleIds.add(equipmentId);
+  } else {
+    invSelectedDismantleIds.delete(equipmentId);
+  }
   const count = document.getElementById("inventory-dismantle-selected-count");
   const button = document.getElementById("inventory-dismantle-batch-button");
   if (count) count.textContent = String(invSelectedDismantleIds.size);
@@ -1247,13 +1298,17 @@ function invToggleDismantleSelection(equipmentId, selected) {
 async function invDismantleSelected() {
   const equipmentIds = [...invSelectedDismantleIds];
   if (!equipmentIds.length) return;
-  if (!window.confirm(`Desmontar ${equipmentIds.length} equipamento(s) selecionado(s)? Esta ação não pode ser desfeita.`)) return;
+  const confirmed = await showConfirm(
+    `Desmontar ${equipmentIds.length} equipamento(s) selecionado(s)? Esta ação não pode ser desfeita.`,
+    { title: "Desmontagem em lote", confirmText: "Desmontar", danger: true }
+  );
+  if (!confirmed) return;
   const button = document.getElementById("inventory-dismantle-batch-button");
   if (button) { button.disabled = true; button.textContent = "Desmontando..."; }
   try {
     const result = await apiPost("/equipment/dismantle/batch", { equipmentIds });
     invSelectedDismantleIds.clear();
-    const summary = Object.entries(result.coresGranted || {}).map(([code, quantity]) => `${quantity}x ${code}`).join(", ");
+    const summary = Object.entries(result.coresGranted || {}).map(([code, quantity]) => `${quantity}x ${invEnhancementCoreLabel(code)}`).join(", ");
     showToast(`Desmontagem concluída: ${summary || `${result.dismantledCount} equipamento(s)`}.`);
     await Promise.all([invReloadEquipment(), invReloadItems()]);
   } catch (err) { showToast(err.message, "error"); if (button) { button.disabled = false; button.textContent = "Desmontar selecionados"; } }
@@ -1277,7 +1332,7 @@ function invRenderEquipment() {
 
   const eligibleOnPage = equipments.filter(eq => !eq.equipped && !eq.locked && Number(eq.tier) < 10);
   const allPageSelected = eligibleOnPage.length > 0 && eligibleOnPage.every(eq => invSelectedDismantleIds.has(eq.id));
-  const dismantleToolbar = `<div class="inventory-bulk-toolbar"><div><p class="text-xs uppercase tracking-wider text-orange-300 font-bold">Desmontagem em lote</p><p class="text-xs text-slate-500 mt-1">Selecione equipamentos destrancados para converter vários de uma vez.</p></div><div class="flex gap-2"><button class="btn-sm inventory-action-enhance" onclick="invSelectAllDismantlable()">${allPageSelected ? "Limpar seleção" : "Selecionar todos"}</button><button id="inventory-dismantle-batch-button" class="btn-sm inventory-action-dismantle" onclick="invDismantleSelected()" ${invSelectedDismantleIds.size === 0 ? "disabled" : ""}>Desmontar selecionados (<span id="inventory-dismantle-selected-count">${invSelectedDismantleIds.size}</span>)</button></div></div>`;
+  const dismantleToolbar = `<div class="inventory-bulk-toolbar"><div><p class="text-xs uppercase tracking-wider text-orange-300 font-bold">Desmontagem em lote</p><p class="text-xs text-slate-500 mt-1">Selecione equipamentos destrancados para converter vários de uma vez (máx. ${INVENTORY_DISMANTLE_BATCH_LIMIT} por lote).</p></div><div class="flex gap-2"><button class="btn-sm inventory-action-enhance" onclick="invSelectAllDismantlable()">${allPageSelected ? "Limpar seleção" : "Selecionar todos"}</button><button id="inventory-dismantle-batch-button" class="btn-sm inventory-action-dismantle" onclick="invDismantleSelected()" ${invSelectedDismantleIds.size === 0 ? "disabled" : ""}>Desmontar selecionados (<span id="inventory-dismantle-selected-count">${invSelectedDismantleIds.size}</span>/${INVENTORY_DISMANTLE_BATCH_LIMIT})</button></div></div>`;
   content.innerHTML = dismantleToolbar + equipments.map(eq => {
     const slotEmoji = { WEAPON: "⚔️", ARMOR: "🛡️", ACCESSORY: "💍" };
     const slotName = { WEAPON: "Arma", ARMOR: "Armadura", ACCESSORY: "Acessório" };
@@ -1406,7 +1461,7 @@ async function invReloadEquipment() {
   if (!invDigimonId) return;
   try {
     await invLoadEquipmentPage();
-    invRenderEquipment();
+    if (invTab === "equipment") invRenderEquipment();
   } catch (err) {
     showToast(err.message, "error");
   }
