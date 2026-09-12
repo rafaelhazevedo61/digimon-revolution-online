@@ -35,6 +35,12 @@ async function loadWorldBoss() {
 
   try {
     const boss = await apiGet("/world-boss/me");
+    const bossCode = String(boss.bossCode || "").toUpperCase();
+    boss.rewardPreviews = await Promise.all([
+      loadChestLootPreview(`CHEST_BOSS_WORLD_${bossCode}_ATTEMPT`),
+      loadChestLootPreview(`CHEST_BOSS_WORLD_${bossCode}_TOP_DAMAGE`),
+      loadChestLootPreview(`CHEST_BOSS_WORLD_${bossCode}_FINAL_BLOW`)
+    ]);
     renderWorldBossContent(boss);
   } catch (err) {
     container.innerHTML = `<div class="card border-red-900"><p class="text-red-300">${escapeHtml(err.message)}</p></div>`;
@@ -56,6 +62,7 @@ function renderWorldBossContent(boss) {
   const formatAliveDuration = (seconds) => { const total = Math.max(0, Number(seconds) || 0); const days = Math.floor(total / 86400); const hours = Math.floor((total % 86400) / 3600); const minutes = Math.floor((total % 3600) / 60); const secs = total % 60; return `${days}d ${hours}h ${minutes}m ${secs}s`; };
   const formatBossDateTime = (value) => { if (!value) return "Não informado"; const date = new Date(value); return `${date.toLocaleDateString("pt-BR")} - ${date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`; };
   const defeatSummaryHtml = defeated && summary ? `<div class="mt-3 rounded-lg border border-green-800/70 bg-green-950/20 p-3 text-xs"><p class="font-bold text-green-300 mb-2">Resumo da derrota</p><div class="grid grid-cols-2 gap-2"><div class="rounded-md bg-slate-900/60 p-2"><p class="text-[10px] uppercase text-slate-500">Golpe final</p><p class="mt-1 font-semibold text-white">${escapeHtml(summary.finalBlowUsername || "Desconhecido")}</p></div><div class="rounded-md bg-slate-900/60 p-2"><p class="text-[10px] uppercase text-slate-500">Maior dano</p><p class="mt-1 font-semibold text-white">${escapeHtml(summary.topDamageUsername || "Desconhecido")}<br><span class="text-cyan-300">${Number(summary.topDamage || 0).toLocaleString("pt-BR")} de dano</span></p></div><div class="rounded-md bg-slate-900/60 p-2"><p class="text-[10px] uppercase text-slate-500">Ataques totais</p><p class="mt-1 font-semibold text-white">${Number(summary.totalAttacks || 0).toLocaleString("pt-BR")}</p></div><div class="rounded-md bg-slate-900/60 p-2"><p class="text-[10px] uppercase text-slate-500">Tempo vivo</p><p class="mt-1 font-semibold text-white">${formatAliveDuration(summary.aliveDurationSeconds)}</p></div><div class="col-span-2 rounded-md bg-slate-900/60 p-2"><p class="text-[10px] uppercase text-slate-500">Próximo ciclo</p><p class="mt-1 font-semibold text-amber-300">${formatBossDateTime(summary.nextCycleAt)}</p></div></div></div>` : "";
+  const rewardPreviewHtml = modeLootPreviewMarkup(boss.rewardPreviews, "Possíveis recompensas do Chefe Mundial");
   const cooldownMinutes = Number.isFinite(Number(boss.attackCooldownMinutes)) && Number(boss.attackCooldownMinutes) > 0
     ? Number(boss.attackCooldownMinutes)
     : 5;
@@ -158,6 +165,7 @@ function renderWorldBossContent(boss) {
       ${defeated ? `<p class="world-boss-defeated-message">Chefe Mundial derrotado. O próximo renascimento ocorrerá uma hora após a derrota.</p>${defeatSummaryHtml}` : ""}
     </section>
 
+    ${rewardPreviewHtml}
     <div class="world-boss-secondary-grid">
       ${rankingHtml}
       ${attacksHtml}

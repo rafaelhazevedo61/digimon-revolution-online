@@ -60,7 +60,8 @@ async function renderArenaPage() {
 
   try {
     const lobby = await apiGet("/arena/lobby");
-    renderArenaLobby(lobby);
+    const rewardPreview = await loadChestLootPreview(`CHEST_ARENA_${String(lobby.tier || "BRONZE").toUpperCase()}`);
+    renderArenaLobby(lobby, rewardPreview);
   } catch (err) {
     document.getElementById("arena-lobby").innerHTML = `
       <div class="card border-red-900"><p class="text-red-300 text-sm">${escapeHtml(err.message)}</p></div>
@@ -68,7 +69,7 @@ async function renderArenaPage() {
   }
 }
 
-function renderArenaLobby(lobby) {
+function renderArenaLobby(lobby, rewardPreview = null) {
   const container = document.getElementById("arena-lobby");
   const total = Number(lobby.wins || 0) + Number(lobby.losses || 0);
   const winRate = total > 0 ? Math.round((Number(lobby.wins || 0) / total) * 100) : 0;
@@ -113,7 +114,7 @@ function renderArenaLobby(lobby) {
   `;
 
   if (!lobby.opponents || lobby.opponents.length === 0) {
-    container.innerHTML = myCard + `<div class="arena-lobby-layout"><section class="arena-opponents-section"><div class="arena-section-heading"><div><p class="arena-eyebrow">Fila de confrontos</p><h2>Nenhum oponente disponível</h2></div></div><div class="arena-empty-state"><span>◎</span><p>Nenhum oponente foi encontrado no seu intervalo de stage e rating.</p></div></section>${resourcesPanel}</div>`;
+    container.innerHTML = myCard + `<div class="arena-lobby-layout"><section class="arena-opponents-section"><div class="arena-section-heading"><div><p class="arena-eyebrow">Fila de confrontos</p><h2>Nenhum oponente disponível</h2></div></div><div class="arena-empty-state"><span>◎</span><p>Nenhum oponente foi encontrado no seu intervalo de stage e rating.</p></div></section>${resourcesPanel}</div>${modeLootPreviewMarkup([rewardPreview], "Possíveis recompensas da vitória")}`;
     return;
   }
 
@@ -135,7 +136,7 @@ function renderArenaLobby(lobby) {
     `;
   }).join("");
 
-  container.innerHTML = `${myCard}<div class="arena-lobby-layout"><section class="arena-opponents-section"><div class="arena-section-heading"><div><p class="arena-eyebrow">Fila de confrontos</p><h2>Escolha seu próximo desafio</h2><p>Oponentes no mesmo stage ou adjacente e dentro de ±200 pts.</p></div><span class="arena-opponent-count">${lobby.opponents.length} opções</span></div>${dailyLimitReached ? `<div class="arena-inline-alert is-danger">Limite diário de desafios atingido. Volte amanhã para continuar.</div>` : lobby.energy < lobby.energyCost ? `<div class="arena-inline-alert is-danger">Energia insuficiente para iniciar um novo desafio.</div>` : ""}<div class="arena-opponents-grid">${opponentsHtml}</div></section>${resourcesPanel}</div>`;
+  container.innerHTML = `${myCard}<div class="arena-lobby-layout"><section class="arena-opponents-section"><div class="arena-section-heading"><div><p class="arena-eyebrow">Fila de confrontos</p><h2>Escolha seu próximo desafio</h2><p>Oponentes no mesmo stage ou adjacente e dentro de ±200 pts.</p></div><span class="arena-opponent-count">${lobby.opponents.length} opções</span></div>${dailyLimitReached ? `<div class="arena-inline-alert is-danger">Limite diário de desafios atingido. Volte amanhã para continuar.</div>` : lobby.energy < lobby.energyCost ? `<div class="arena-inline-alert is-danger">Energia insuficiente para iniciar um novo desafio.</div>` : ""}<div class="arena-opponents-grid">${opponentsHtml}</div></section>${resourcesPanel}</div>${modeLootPreviewMarkup([rewardPreview], "Possíveis recompensas da vitória")}`;
   container.querySelectorAll("[data-arena-opponent-id]").forEach(button => {
     button.addEventListener("click", () => {
       startArenaChallenge(button.dataset.arenaOpponentId, button.dataset.arenaOpponentName);

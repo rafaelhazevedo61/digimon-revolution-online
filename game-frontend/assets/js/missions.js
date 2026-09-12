@@ -477,6 +477,22 @@ function missionLootItemMarkup(item, includeWeight = false) {
   `;
 }
 
+async function loadChestLootPreview(chestCode) {
+  if (!chestCode) return null;
+  try {
+    return await apiGet(`/loot/chests/${encodeURIComponent(chestCode)}/preview`);
+  } catch (err) {
+    console.warn("Não foi possível carregar o preview do baú", chestCode, err);
+    return null;
+  }
+}
+
+function modeLootPreviewMarkup(previews, title = "Possíveis drops") {
+  const validPreviews = (previews || []).filter(preview => preview && Array.isArray(preview.items));
+  if (!validPreviews.length) return "";
+  return `<section class="card mt-3 mode-loot-preview"><div class="flex items-center justify-between gap-3 mb-3"><div><p class="text-xs uppercase tracking-wide text-cyan-400 font-bold">Recompensas</p><h3 class="font-bold">${escapeHtml(title)}</h3></div><span class="text-xs text-slate-400">Conteúdo possível</span></div>${validPreviews.map(preview => `<div class="mb-4 last:mb-0"><p class="text-sm font-semibold text-slate-100">${escapeHtml(preview.name || preview.code || "Baú")}</p><p class="text-xs text-slate-500 mt-1">${Number(preview.minItems) === Number(preview.maxItems) ? `Sorteia ${Number(preview.minItems) || 0} item(ns)` : `Sorteia de ${Number(preview.minItems) || 0} a ${Number(preview.maxItems) || 0} itens`}</p><div class="grid grid-cols-1 gap-2 mt-2">${preview.items.map(item => missionLootItemMarkup(item, true)).join("")}</div></div>`).join("")}</section>`;
+}
+
 function missionRaritySort(a, b) {
   const order = ["COMMON", "RARE", "EPIC", "LEGENDARY"];
   return order.indexOf(String(a && a.rarity || "").toUpperCase()) - order.indexOf(String(b && b.rarity || "").toUpperCase());
