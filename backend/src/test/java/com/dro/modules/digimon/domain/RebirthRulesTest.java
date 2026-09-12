@@ -6,6 +6,11 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class RebirthRulesTest {
+    @Test
+    void calculateCollectionMasteryMultiplier_unlocked_returns1_05() {
+        assertEquals(1.05, RebirthRules.calculateCollectionMasteryMultiplier(true), 0.0001);
+    }
+
 
     @Test
     void calculateIvBonus_rebirth1_returns3() {

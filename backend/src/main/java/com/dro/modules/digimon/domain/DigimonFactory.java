@@ -35,7 +35,7 @@ public class DigimonFactory {
 //        String babyName = DigitamaHatchRules.rollBabyName(digitamaType);
 //        String type = digitamaType.name();
 
-        Rarity rarity = RarityRoller.roll(collectionMasteryUnlocked);
+        Rarity rarity = RarityRoller.roll();
 
         Personality personality = PersonalityRoller.roll();
 
@@ -49,6 +49,7 @@ public class DigimonFactory {
 
         DigimonGrade grade = DigimonGradeRules.calculate(ivHp, ivAttack, ivDefense);
 
+        double collectionMultiplier = RebirthRules.calculateCollectionMasteryMultiplier(collectionMasteryUnlocked);
         double rarityMultiplier = RarityRules.getStatMultiplier(rarity);
         double stageMultiplier = EvolutionRules.stageStatMultiplier(Stage.BABY);
 
@@ -56,19 +57,22 @@ public class DigimonFactory {
                 rarityMultiplier
                         * stageMultiplier
                         * PersonalityRules.getHpMultiplier(personality)
-                        * TraitRules.getHpMultiplier(trait);
+                        * TraitRules.getHpMultiplier(trait)
+                        * collectionMultiplier;
 
         double attackMultiplier =
                 rarityMultiplier
                         * stageMultiplier
                         * PersonalityRules.getAttackMultiplier(personality)
-                        * TraitRules.getAttackMultiplier(trait);
+                        * TraitRules.getAttackMultiplier(trait)
+                        * collectionMultiplier;
 
         double defenseMultiplier =
                 rarityMultiplier
                         * stageMultiplier
                         * PersonalityRules.getDefenseMultiplier(personality)
-                        * TraitRules.getDefenseMultiplier(trait);
+                        * TraitRules.getDefenseMultiplier(trait)
+                        * collectionMultiplier;
 
         int hp = (int) Math.floor((digimon.getBaseHp() + (ivHp * HP_IV_WEIGHT)) * hpMultiplier);
         int attack = (int) Math.floor((digimon.getBaseAtk() + (ivAttack * ATTACK_IV_WEIGHT)) * attackMultiplier);

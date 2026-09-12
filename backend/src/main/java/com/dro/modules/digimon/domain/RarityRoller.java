@@ -47,10 +47,6 @@ public class RarityRoller {
         return rollByDynamicWeights(0);
     }
 
-    public static Rarity roll(boolean collectionMasteryUnlocked) {
-        return rollByDynamicWeights(0, collectionMasteryUnlocked);
-    }
-
     /**
      * Sorteio explícito do Dado de Raridade. O resultado nunca repete a raridade
      * atual. Para Digimons Comuns, existe também a possibilidade de o dado não
@@ -90,16 +86,12 @@ public class RarityRoller {
      * Se não herdar, faz um novo sorteio usando pesos dinâmicos.
      */
     public static Rarity rollForRebirth(Rarity previousRarity, int rebirthCount) {
-        return rollForRebirth(previousRarity, rebirthCount, false);
-    }
-
-    public static Rarity rollForRebirth(Rarity previousRarity, int rebirthCount, boolean collectionMasteryUnlocked) {
 
         if (shouldInheritRarity(rebirthCount)) {
             return previousRarity;
         }
 
-        return rollByDynamicWeights(rebirthCount, collectionMasteryUnlocked);
+        return rollByDynamicWeights(rebirthCount);
     }
 
     private static boolean shouldInheritRarity(int rebirthCount) {
@@ -112,34 +104,20 @@ public class RarityRoller {
     }
 
     private static Rarity rollByDynamicWeights(int rebirthCount) {
-        return rollByDynamicWeights(rebirthCount, false);
-    }
 
-    private static Rarity rollByDynamicWeights(int rebirthCount, boolean collectionMasteryUnlocked) {
-        return rollByWeights(weightsFor(rebirthCount, collectionMasteryUnlocked));
-    }
-
-    static int[] weightsFor(int rebirthCount, boolean collectionMasteryUnlocked) {
         int cappedRebirth = Math.min(rebirthCount, 25);
+
+        int legendaryBonus = Math.min(cappedRebirth / 10, 5);
+
         int commonWeight = Math.max(20, 70 - (cappedRebirth * 2));
         int rareWeight = 20 + cappedRebirth;
         int epicWeight = 8 + (cappedRebirth / 2);
-        int legendaryWeight = 2 + Math.min(cappedRebirth / 10, 5);
-        if (collectionMasteryUnlocked) {
-            // A coleção completa desloca 5 pontos percentuais de COMMON para raridades superiores.
-            commonWeight -= 5;
-            rareWeight += 3;
-            epicWeight += 1;
-            legendaryWeight += 1;
-        }
-        return new int[]{commonWeight, rareWeight, epicWeight, legendaryWeight};
+        int legendaryWeight = 2 + legendaryBonus;
+
+        return rollByWeights(commonWeight, rareWeight, epicWeight, legendaryWeight);
     }
 
-    private static Rarity rollByWeights(int[] weights) {
-        int commonWeight = weights[0];
-        int rareWeight = weights[1];
-        int epicWeight = weights[2];
-        int legendaryWeight = weights[3];
+    private static Rarity rollByWeights(int commonWeight, int rareWeight, int epicWeight, int legendaryWeight) {
         int totalWeight = commonWeight + rareWeight + epicWeight + legendaryWeight;
         int roll = random.nextInt(totalWeight) + 1;
         if (roll <= commonWeight) return Rarity.COMMON;

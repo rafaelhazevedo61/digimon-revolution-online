@@ -262,7 +262,7 @@ public class RebirthUseCase {
                 && collectionRegistrationService.isSpeciesMasteryUnlocked(playerId, babyInfoId);
         Rarity rarity = preserveRarity
                 ? oldDigimon.getRarity()
-                : RarityRoller.rollForRebirth(oldDigimon.getRarity(), newRebirthCount, collectionMasteryUnlocked);
+                : RarityRoller.rollForRebirth(oldDigimon.getRarity(), newRebirthCount);
         Personality personality = PersonalityRoller.roll();
         Trait trait = TraitRoller.rollForRebirth(newRebirthCount);
         int rarityMinimumIv = RarityRules.getMinimumIv(rarity);
@@ -282,9 +282,10 @@ public class RebirthUseCase {
         double rarityMultiplier = RarityRules.getStatMultiplier(rarity);
         double stageMultiplier = EvolutionRules.stageStatMultiplier(Stage.BABY);
         double rebirthMultiplier = RebirthRules.calculateStatMultiplier(newRebirthCount);
-        int hp = (int) Math.floor((baseHp + (ivHp * HP_IV_WEIGHT)) * rarityMultiplier * stageMultiplier * PersonalityRules.getHpMultiplier(personality) * TraitRules.getHpMultiplier(trait) * rebirthMultiplier);
-        int attack = (int) Math.floor((baseAtk + (ivAttack * ATTACK_IV_WEIGHT)) * rarityMultiplier * stageMultiplier * PersonalityRules.getAttackMultiplier(personality) * TraitRules.getAttackMultiplier(trait) * rebirthMultiplier);
-        int defense = (int) Math.floor((baseDef + (ivDefense * DEFENSE_IV_WEIGHT)) * rarityMultiplier * stageMultiplier * PersonalityRules.getDefenseMultiplier(personality) * TraitRules.getDefenseMultiplier(trait) * rebirthMultiplier);
+        double collectionMultiplier = RebirthRules.calculateCollectionMasteryMultiplier(collectionMasteryUnlocked);
+        int hp = (int) Math.floor((baseHp + (ivHp * HP_IV_WEIGHT)) * rarityMultiplier * stageMultiplier * PersonalityRules.getHpMultiplier(personality) * TraitRules.getHpMultiplier(trait) * rebirthMultiplier * collectionMultiplier);
+        int attack = (int) Math.floor((baseAtk + (ivAttack * ATTACK_IV_WEIGHT)) * rarityMultiplier * stageMultiplier * PersonalityRules.getAttackMultiplier(personality) * TraitRules.getAttackMultiplier(trait) * rebirthMultiplier * collectionMultiplier);
+        int defense = (int) Math.floor((baseDef + (ivDefense * DEFENSE_IV_WEIGHT)) * rarityMultiplier * stageMultiplier * PersonalityRules.getDefenseMultiplier(personality) * TraitRules.getDefenseMultiplier(trait) * rebirthMultiplier * collectionMultiplier);
         int maxEnergy = 20 + TraitRules.getMaxEnergyBonus(trait);
         String rebornName = babyInfo != null ? babyInfo.getName() : "Reborn " + oldDigimon.getType();
         return Digimon.builder().id(UUID.randomUUID()).playerId(playerId).name(rebornName).type(oldDigimon.getType()).stage(Stage.BABY).digimonInfoId(babyInfoId).level(1).experience(0).hp(hp).attack(attack).defense(defense).ivHp(ivHp).ivAttack(ivAttack).ivDefense(ivDefense).grade(grade).rarity(rarity).personality(personality).energy(maxEnergy).maxEnergy(maxEnergy).trait(trait).lastEnergyUpdate(Instant.now()).createdAt(LocalDateTime.now()).bits(0).rebirthCount(newRebirthCount).arenaRating(oldDigimon.getArenaRating()).arenaWins(oldDigimon.getArenaWins()).arenaLosses(oldDigimon.getArenaLosses()).rebornedFrom(oldDigimon.getId()).status(DigimonStatus.ACTIVE).build();
