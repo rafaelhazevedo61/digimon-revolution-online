@@ -1,8 +1,10 @@
 package com.dro.modules.digitama.application;
 
+import com.dro.modules.collection.application.CollectionRegistrationService;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.DigimonFactory;
 import com.dro.modules.digimon.domain.DigimonInfos;
+import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.digitama.domain.DigitamaHistory;
 import com.dro.modules.digitama.domain.DigitamaPool;
@@ -36,6 +38,7 @@ public class HatchDigitamaUseCase {
     private final DigitamaPoolRepository digitamaPoolRepository;
     private final DigitamaPoolEligibilityService digitamaPoolEligibilityService;
     private final TutorialService tutorialService;
+    private final CollectionRegistrationService collectionRegistrationService;
 
     @Transactional
     public Digimon execute(String token) {
@@ -54,7 +57,14 @@ public class HatchDigitamaUseCase {
                     digitamaPoolEligibilityService.getEligibleEntries(pool)
             );
             DigimonInfos infos = selectedEntry.getDigimonInfo();
-            Digimon digimon = DigimonFactory.createBaby(playerId, player.getSelectedDigitama(), infos);
+            boolean collectionMasteryUnlocked = collectionRegistrationService.isSpeciesMasteryUnlocked(playerId, infos.getId());
+            Digimon digimon = DigimonFactory.createBaby(
+                    playerId,
+                    player.getSelectedDigitama(),
+                    infos,
+                    DigimonStatus.ACTIVE,
+                    collectionMasteryUnlocked
+            );
             if (digimon == null) {
                 throw new BadRequestException("Failed create digimon from digitama");
             }
@@ -78,7 +88,8 @@ public class HatchDigitamaUseCase {
             final DigitamaHistoryRepository historyRepository,
             final DigitamaPoolRepository digitamaPoolRepository,
             final DigitamaPoolEligibilityService digitamaPoolEligibilityService,
-            final TutorialService tutorialService
+            final TutorialService tutorialService,
+            final CollectionRegistrationService collectionRegistrationService
     ) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
@@ -86,5 +97,6 @@ public class HatchDigitamaUseCase {
         this.digitamaPoolRepository = digitamaPoolRepository;
         this.digitamaPoolEligibilityService = digitamaPoolEligibilityService;
         this.tutorialService = tutorialService;
+        this.collectionRegistrationService = collectionRegistrationService;
     }
 }

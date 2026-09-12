@@ -25,11 +25,17 @@ public class DigimonFactory {
 
     public static Digimon createBaby(UUID playerId, DigitamaType digitamaType,
                                      DigimonInfos digimon, DigimonStatus initialStatus) {
+        return createBaby(playerId, digitamaType, digimon, initialStatus, false);
+    }
+
+    public static Digimon createBaby(UUID playerId, DigitamaType digitamaType,
+                                     DigimonInfos digimon, DigimonStatus initialStatus,
+                                     boolean collectionMasteryUnlocked) {
 
 //        String babyName = DigitamaHatchRules.rollBabyName(digitamaType);
 //        String type = digitamaType.name();
 
-        Rarity rarity = RarityRoller.roll();
+        Rarity rarity = RarityRoller.roll(collectionMasteryUnlocked);
 
         Personality personality = PersonalityRoller.roll();
 

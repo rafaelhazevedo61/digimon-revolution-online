@@ -73,6 +73,13 @@ public class CollectionRegistrationService {
         return true;
     }
 
+    @Transactional(readOnly = true)
+    public boolean isSpeciesMasteryUnlocked(UUID playerId, Long digimonInfoId) {
+        return playerId != null
+                && digimonInfoId != null
+                && collectionRepository.countRaritiesForSpecies(playerId, digimonInfoId) == 4;
+    }
+
     @Transactional
     public int syncOwnedDigimons(UUID playerId) {
         int registered = 0;

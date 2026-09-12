@@ -14,6 +14,7 @@ import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.domain.MissionTeam;
 import com.dro.modules.clan.application.ClanMissionProgressTracker;
+import com.dro.modules.collection.application.CollectionRegistrationService;
 import com.dro.modules.clan.domain.enums.ClanMissionObjectiveType;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.mission.infra.MissionTeamRepository;
@@ -53,6 +54,7 @@ public class RebirthUseCase {
     private final EquipmentRepository equipmentRepository;
     private final ClanMissionProgressTracker clanMissionProgressTracker;
     private final MissionTeamRepository missionTeamRepository;
+    private final CollectionRegistrationService collectionRegistrationService;
     private final Random random = new Random();
 
     @Transactional
@@ -255,7 +257,12 @@ public class RebirthUseCase {
     }
 
     private Digimon createRebornDigimon(UUID playerId, Digimon oldDigimon, int newRebirthCount, int codeInfiniteHp, int codeInfiniteAttack, int codeInfiniteDefense, boolean preserveRarity) {
-        Rarity rarity = preserveRarity ? oldDigimon.getRarity() : RarityRoller.rollForRebirth(oldDigimon.getRarity(), newRebirthCount);
+        Long babyInfoId = resolveBabyDigimonInfoId(oldDigimon);
+        boolean collectionMasteryUnlocked = collectionRegistrationService != null
+                && collectionRegistrationService.isSpeciesMasteryUnlocked(playerId, babyInfoId);
+        Rarity rarity = preserveRarity
+                ? oldDigimon.getRarity()
+                : RarityRoller.rollForRebirth(oldDigimon.getRarity(), newRebirthCount, collectionMasteryUnlocked);
         Personality personality = PersonalityRoller.roll();
         Trait trait = TraitRoller.rollForRebirth(newRebirthCount);
         int rarityMinimumIv = RarityRules.getMinimumIv(rarity);
@@ -263,7 +270,6 @@ public class RebirthUseCase {
         int ivAttack = rollInheritedIv(oldDigimon.getIvAttack(), rarityMinimumIv, newRebirthCount, codeInfiniteAttack);
         int ivDefense = rollInheritedIv(oldDigimon.getIvDefense(), rarityMinimumIv, newRebirthCount, codeInfiniteDefense);
         DigimonGrade grade = DigimonGradeRules.calculate(ivHp, ivAttack, ivDefense);
-        Long babyInfoId = resolveBabyDigimonInfoId(oldDigimon);
         DigimonInfos babyInfo = babyInfoId != null ? digimonInfosRepository.findById(babyInfoId).orElse(null) : null;
         int baseHp = 10;
         int baseAtk = 5;
@@ -315,11 +321,11 @@ public class RebirthUseCase {
     }
 
     public RebirthUseCase(final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final InventoryRepository inventoryRepository, final MissionInstanceRepository missionInstanceRepository, final DigimonInfosRepository digimonInfosRepository, final EvolutionLineRepository evolutionLineRepository, final EquipmentRepository equipmentRepository, final ClanMissionProgressTracker clanMissionProgressTracker) {
-        this(digimonRepository, playerRepository, inventoryRepository, missionInstanceRepository, digimonInfosRepository, evolutionLineRepository, equipmentRepository, clanMissionProgressTracker, null);
+        this(digimonRepository, playerRepository, inventoryRepository, missionInstanceRepository, digimonInfosRepository, evolutionLineRepository, equipmentRepository, clanMissionProgressTracker, null, null);
     }
 
     @Autowired
-    public RebirthUseCase(final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final InventoryRepository inventoryRepository, final MissionInstanceRepository missionInstanceRepository, final DigimonInfosRepository digimonInfosRepository, final EvolutionLineRepository evolutionLineRepository, final EquipmentRepository equipmentRepository, final ClanMissionProgressTracker clanMissionProgressTracker, final MissionTeamRepository missionTeamRepository) {
+    public RebirthUseCase(final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final InventoryRepository inventoryRepository, final MissionInstanceRepository missionInstanceRepository, final DigimonInfosRepository digimonInfosRepository, final EvolutionLineRepository evolutionLineRepository, final EquipmentRepository equipmentRepository, final ClanMissionProgressTracker clanMissionProgressTracker, final MissionTeamRepository missionTeamRepository, final CollectionRegistrationService collectionRegistrationService) {
         this.digimonRepository = digimonRepository;
         this.playerRepository = playerRepository;
         this.inventoryRepository = inventoryRepository;
@@ -329,5 +335,6 @@ public class RebirthUseCase {
         this.equipmentRepository = equipmentRepository;
         this.clanMissionProgressTracker = clanMissionProgressTracker;
         this.missionTeamRepository = missionTeamRepository;
+        this.collectionRegistrationService = collectionRegistrationService;
     }
 }
