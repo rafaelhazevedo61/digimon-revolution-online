@@ -155,18 +155,21 @@ public class EvolveDigimonUseCase {
         double rarityMultiplier = RarityRules.getStatMultiplier(digimon.getRarity());
         double stageMultiplier = EvolutionRules.stageStatMultiplier(digimon.getStage());
         double rebirthMultiplier = RebirthRules.calculateStatMultiplier(digimon.getRebirthCount());
+        boolean collectionMasteryUnlocked = collectionRegistrationService != null
+                && collectionRegistrationService.isSpeciesMasteryUnlocked(digimon.getPlayerId(), digimonInfo.getId());
+        double collectionMultiplier = RebirthRules.calculateCollectionMasteryMultiplier(collectionMasteryUnlocked);
         double hpMultiplier = rarityMultiplier * stageMultiplier
                 * PersonalityRules.getHpMultiplier(digimon.getPersonality())
                 * TraitRules.getHpMultiplier(digimon.getTrait())
-                * rebirthMultiplier;
+                * rebirthMultiplier * collectionMultiplier;
         double attackMultiplier = rarityMultiplier * stageMultiplier
                 * PersonalityRules.getAttackMultiplier(digimon.getPersonality())
                 * TraitRules.getAttackMultiplier(digimon.getTrait())
-                * rebirthMultiplier;
+                * rebirthMultiplier * collectionMultiplier;
         double defenseMultiplier = rarityMultiplier * stageMultiplier
                 * PersonalityRules.getDefenseMultiplier(digimon.getPersonality())
                 * TraitRules.getDefenseMultiplier(digimon.getTrait())
-                * rebirthMultiplier;
+                * rebirthMultiplier * collectionMultiplier;
 
         digimon.setHp((int) Math.floor((digimonInfo.getBaseHp() + digimon.getIvHp() * HP_IV_WEIGHT) * hpMultiplier));
         digimon.setAttack((int) Math.floor((digimonInfo.getBaseAtk() + digimon.getIvAttack() * ATTACK_IV_WEIGHT) * attackMultiplier));

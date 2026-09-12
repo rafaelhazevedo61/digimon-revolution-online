@@ -52,7 +52,8 @@ public class CollectionAwareRebirthUseCase extends RebirthUseCase {
                 evolutionLineRepository,
                 equipmentRepository,
                 clanMissionProgressTracker,
-                missionTeamRepository
+                missionTeamRepository,
+                collectionRegistrationService
         );
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;

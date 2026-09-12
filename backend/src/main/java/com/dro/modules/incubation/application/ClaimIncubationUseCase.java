@@ -106,7 +106,15 @@ public class ClaimIncubationUseCase {
         DigitamaPool pool = digitamaPoolRepository.findByCodeAndActiveTrueAndContentActiveTrue(poolCode)
                 .orElseThrow(() -> new NotFoundException("Digitama pool not found: " + poolCode));
         DigitamaPoolEntry entry = DigitamaPoolRoller.roll(digitamaPoolEligibilityService.getEligibleEntries(pool));
-        return DigimonFactory.createBaby(playerId, digitamaType, entry.getDigimonInfo(), DigimonStatus.HATCHED);
+        boolean collectionMasteryUnlocked = collectionRegistrationService != null
+                && collectionRegistrationService.isSpeciesMasteryUnlocked(playerId, entry.getDigimonInfo().getId());
+        return DigimonFactory.createBaby(
+                playerId,
+                digitamaType,
+                entry.getDigimonInfo(),
+                DigimonStatus.HATCHED,
+                collectionMasteryUnlocked
+        );
     }
 
     private void forceReadyIfInProgress(Incubation incubation) {

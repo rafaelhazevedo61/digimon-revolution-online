@@ -22,6 +22,7 @@ renderCollectionPage = async function() {
           <div>
             <p class="font-bold text-sm text-cyan-200">Registro automático ativo</p>
             <p class="text-xs text-slate-400 mt-1">Você não precisa consumir Digimons nem usar Digivices. Cada combinação de espécie e raridade é registrada apenas uma vez.</p>
+            <p class="text-xs text-amber-200 mt-2"><strong>Maestria completa:</strong> ao registrar as 4 raridades de uma espécie, você desbloqueia <strong>+5% nos status</strong> do Digimon no nascimento, renascimento e digievolução.</p>
           </div>
         </div>
       </div>

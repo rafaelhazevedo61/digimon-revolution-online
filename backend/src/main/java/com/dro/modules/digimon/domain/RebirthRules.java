@@ -89,6 +89,14 @@ public class RebirthRules {
      * rebirthCount = 50 -> 2.00
      * rebirthCount = 60 -> 2.00
      */
+    /**
+     * Multiplicador de status concedido pela maestria da espécie na coleção.
+     * A maestria aumenta os status base em 5% no nascimento, Rebirth e evolução.
+     */
+    public static double calculateCollectionMasteryMultiplier(boolean collectionMasteryUnlocked) {
+        return collectionMasteryUnlocked ? 1.05 : 1.0;
+    }
+
     public static double calculateStatMultiplier(int rebirthCount) {
         double bonus = Math.min(
                 rebirthCount * STAT_BONUS_PER_REBIRTH,
