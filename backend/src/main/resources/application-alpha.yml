@@ -23,7 +23,7 @@ dro:
       cooldown-enabled: ${DRO_CLAN_RAID_COOLDOWN_ENABLED:true}
 
     energy:
-      consumption-enabled: ${DRO_ENERGY_CONSUMPTION_ENABLED:false}
+      consumption-enabled: ${DRO_ENERGY_CONSUMPTION_ENABLED:true}
 
     arena:
       daily-challenge-limit: ${DRO_ARENA_DAILY_CHALLENGE_LIMIT:100}

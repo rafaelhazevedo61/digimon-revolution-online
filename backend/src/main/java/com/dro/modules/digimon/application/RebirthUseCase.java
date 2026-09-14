@@ -286,7 +286,7 @@ public class RebirthUseCase {
         int hp = (int) Math.floor((baseHp + (ivHp * HP_IV_WEIGHT)) * rarityMultiplier * stageMultiplier * PersonalityRules.getHpMultiplier(personality) * TraitRules.getHpMultiplier(trait) * rebirthMultiplier * collectionMultiplier);
         int attack = (int) Math.floor((baseAtk + (ivAttack * ATTACK_IV_WEIGHT)) * rarityMultiplier * stageMultiplier * PersonalityRules.getAttackMultiplier(personality) * TraitRules.getAttackMultiplier(trait) * rebirthMultiplier * collectionMultiplier);
         int defense = (int) Math.floor((baseDef + (ivDefense * DEFENSE_IV_WEIGHT)) * rarityMultiplier * stageMultiplier * PersonalityRules.getDefenseMultiplier(personality) * TraitRules.getDefenseMultiplier(trait) * rebirthMultiplier * collectionMultiplier);
-        int maxEnergy = 20 + TraitRules.getMaxEnergyBonus(trait);
+        int maxEnergy = DigimonEnergyRules.maxEnergyAtLevel(1) + TraitRules.getMaxEnergyBonus(trait);
         String rebornName = babyInfo != null ? babyInfo.getName() : "Reborn " + oldDigimon.getType();
         return Digimon.builder().id(UUID.randomUUID()).playerId(playerId).name(rebornName).type(oldDigimon.getType()).stage(Stage.BABY).digimonInfoId(babyInfoId).level(1).experience(0).hp(hp).attack(attack).defense(defense).ivHp(ivHp).ivAttack(ivAttack).ivDefense(ivDefense).grade(grade).rarity(rarity).personality(personality).energy(maxEnergy).maxEnergy(maxEnergy).trait(trait).lastEnergyUpdate(Instant.now()).createdAt(LocalDateTime.now()).bits(0).rebirthCount(newRebirthCount).arenaRating(oldDigimon.getArenaRating()).arenaWins(oldDigimon.getArenaWins()).arenaLosses(oldDigimon.getArenaLosses()).rebornedFrom(oldDigimon.getId()).status(DigimonStatus.ACTIVE).build();
     }

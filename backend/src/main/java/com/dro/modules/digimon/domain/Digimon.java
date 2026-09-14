@@ -242,6 +242,7 @@ public class Digimon {
             return;
         }
         this.level++;
+        this.maxEnergy += DigimonEnergyRules.MAX_ENERGY_PER_LEVEL;
         this.hp += 2;
         this.attack += 1;
         this.defense += 1;
@@ -255,7 +256,8 @@ public class Digimon {
     }
 
     /**
-     * Regenera uma unidade de energia a cada cinco minutos completos.
+     * Regenera a capacidade inteira em uma janela fixa de 8h20.
+     * O tempo por ponto varia conforme a capacidade máxima.
      *
      * @param maxEnergyBonus bônus temporário ou de trait aplicado ao limite máximo
      */
@@ -263,11 +265,13 @@ public class Digimon {
         int effectiveMax = maxEnergy + maxEnergyBonus;
         if (energy >= effectiveMax) return;
         Instant now = Instant.now();
-        long minutesPassed = Duration.between(lastEnergyUpdate, now).toMinutes();
-        long energyRecovered = minutesPassed / 5;
+        long elapsedMillis = Duration.between(lastEnergyUpdate, now).toMillis();
+        long energyRecovered = DigimonEnergyRules.energyRecovered(elapsedMillis, effectiveMax);
         if (energyRecovered > 0) {
             energy = (int) Math.min(effectiveMax, energy + energyRecovered);
-            lastEnergyUpdate = lastEnergyUpdate.plus(Duration.ofMinutes(energyRecovered * 5));
+            long consumedRecoveryMillis = energyRecovered * DigimonEnergyRules.FULL_REGENERATION_DURATION_MILLIS
+                    / effectiveMax;
+            lastEnergyUpdate = lastEnergyUpdate.plusMillis(consumedRecoveryMillis);
         }
     }
 
