@@ -242,6 +242,7 @@ public class Digimon {
             return;
         }
         this.level++;
+        this.maxEnergy += DigimonEnergyRules.MAX_ENERGY_PER_LEVEL;
         this.hp += 2;
         this.attack += 1;
         this.defense += 1;
