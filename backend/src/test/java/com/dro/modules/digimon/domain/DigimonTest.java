@@ -119,14 +119,14 @@ class DigimonTest {
     @Test
     void regenerateEnergy_recoversAfterTime() {
         Digimon digimon = createDigimon();
-        digimon.setEnergy(5);
-        digimon.setMaxEnergy(10);
-        // 10 minutes ago = 2 energy recovered (1 per 5 min)
+        digimon.setEnergy(95);
+        digimon.setMaxEnergy(100);
+        // 10 minutes ago = 2 energy recovered (1 per 5 min at capacity 100)
         digimon.setLastEnergyUpdate(Instant.now().minusSeconds(600));
 
         digimon.regenerateEnergy();
 
-        assertEquals(7, digimon.getEnergy());
+        assertEquals(97, digimon.getEnergy());
     }
 
     @Test

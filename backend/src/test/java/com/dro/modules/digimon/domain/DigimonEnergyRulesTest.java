@@ -21,4 +21,12 @@ class DigimonEnergyRulesTest {
         assertEquals(100, DigimonEnergyRules.maxEnergyAtLevel(0));
         assertEquals(595, DigimonEnergyRules.maxEnergyAtLevel(150));
     }
+
+    @Test
+    void regenerationInterval_scalesWithMaximumEnergy() {
+        assertEquals(300_000L, DigimonEnergyRules.regenerationIntervalMillis(100));
+        assertEquals(435_000L, DigimonEnergyRules.regenerationIntervalMillis(145));
+        assertEquals(735_000L, DigimonEnergyRules.regenerationIntervalMillis(245));
+        assertEquals(1_785_000L, DigimonEnergyRules.regenerationIntervalMillis(595));
+    }
 }
