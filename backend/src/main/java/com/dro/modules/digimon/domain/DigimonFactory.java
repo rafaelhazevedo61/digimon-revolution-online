@@ -77,7 +77,7 @@ public class DigimonFactory {
         int hp = (int) Math.floor((digimon.getBaseHp() + (ivHp * HP_IV_WEIGHT)) * hpMultiplier);
         int attack = (int) Math.floor((digimon.getBaseAtk() + (ivAttack * ATTACK_IV_WEIGHT)) * attackMultiplier);
         int defense = (int) Math.floor((digimon.getBaseDef() + (ivDefense * DEFENSE_IV_WEIGHT)) * defenseMultiplier);
-        int maxEnergy = 20 + TraitRules.getMaxEnergyBonus(trait);
+        int maxEnergy = DigimonEnergyRules.maxEnergyAtLevel(1) + TraitRules.getMaxEnergyBonus(trait);
 
         return Digimon.builder()
                 .id(UUID.randomUUID())

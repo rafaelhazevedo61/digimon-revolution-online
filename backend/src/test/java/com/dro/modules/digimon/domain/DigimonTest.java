@@ -51,6 +51,14 @@ class DigimonTest {
     }
 
     @Test
+    void gainExperience_increasesMaxEnergyByFiveOnLevelUp() {
+        Digimon digimon = createDigimon();
+        digimon.gainExperience(100);
+
+        assertEquals(15, digimon.getMaxEnergy());
+    }
+
+    @Test
     void gainExperience_returnsTheAmountAppliedAfterDigimonMultipliers() {
         Digimon digimon = createDigimon();
         digimon.setRarity(Rarity.EPIC);
