@@ -6,7 +6,7 @@ package com.dro.modules.digimon.domain;
 public final class DigimonEnergyRules {
     public static final int BASE_MAX_ENERGY = 100;
     public static final int MAX_ENERGY_PER_LEVEL = 5;
-    public static final long BASE_REGENERATION_INTERVAL_MILLIS = 5 * 60 * 1000L;
+    public static final long FULL_REGENERATION_DURATION_MILLIS = 8 * 60 * 60 * 1000L + 20 * 60 * 1000L;
 
     private DigimonEnergyRules() {
     }
@@ -17,6 +17,12 @@ public final class DigimonEnergyRules {
     }
 
     public static long regenerationIntervalMillis(int maxEnergy) {
-        return BASE_REGENERATION_INTERVAL_MILLIS * Math.max(1, maxEnergy) / BASE_MAX_ENERGY;
+        return FULL_REGENERATION_DURATION_MILLIS / Math.max(1, maxEnergy);
+    }
+
+    public static long energyRecovered(long elapsedMillis, int maxEnergy) {
+        int normalizedMaxEnergy = Math.max(1, maxEnergy);
+        return Math.min(normalizedMaxEnergy,
+                elapsedMillis * normalizedMaxEnergy / FULL_REGENERATION_DURATION_MILLIS);
     }
 }

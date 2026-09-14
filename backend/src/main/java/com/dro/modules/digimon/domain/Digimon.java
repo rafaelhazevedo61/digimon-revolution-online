@@ -256,9 +256,8 @@ public class Digimon {
     }
 
     /**
-     * Regenera energia proporcionalmente à capacidade máxima.
-     * A capacidade base recupera 1 ponto a cada cinco minutos, mantendo
-     * constante em 8h20 o tempo para recuperar uma barra completamente.
+     * Regenera a capacidade inteira em uma janela fixa de 8h20.
+     * O tempo por ponto varia conforme a capacidade máxima.
      *
      * @param maxEnergyBonus bônus temporário ou de trait aplicado ao limite máximo
      */
@@ -267,11 +266,12 @@ public class Digimon {
         if (energy >= effectiveMax) return;
         Instant now = Instant.now();
         long elapsedMillis = Duration.between(lastEnergyUpdate, now).toMillis();
-        long recoveryIntervalMillis = DigimonEnergyRules.regenerationIntervalMillis(effectiveMax);
-        long energyRecovered = elapsedMillis / recoveryIntervalMillis;
+        long energyRecovered = DigimonEnergyRules.energyRecovered(elapsedMillis, effectiveMax);
         if (energyRecovered > 0) {
             energy = (int) Math.min(effectiveMax, energy + energyRecovered);
-            lastEnergyUpdate = lastEnergyUpdate.plusMillis(energyRecovered * recoveryIntervalMillis);
+            long consumedRecoveryMillis = energyRecovered * DigimonEnergyRules.FULL_REGENERATION_DURATION_MILLIS
+                    / effectiveMax;
+            lastEnergyUpdate = lastEnergyUpdate.plusMillis(consumedRecoveryMillis);
         }
     }
 

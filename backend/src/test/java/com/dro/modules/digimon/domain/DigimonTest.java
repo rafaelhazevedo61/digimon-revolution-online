@@ -142,6 +142,19 @@ class DigimonTest {
     }
 
     @Test
+    void regenerateEnergy_fillsAnyCapacityInEightHoursAndTwentyMinutes() {
+        Digimon digimon = createDigimon();
+        digimon.setEnergy(0);
+        digimon.setMaxEnergy(595);
+        digimon.setLastEnergyUpdate(Instant.now().minusMillis(
+                DigimonEnergyRules.FULL_REGENERATION_DURATION_MILLIS));
+
+        digimon.regenerateEnergy();
+
+        assertEquals(595, digimon.getEnergy());
+    }
+
+    @Test
     void regenerateEnergy_doesNothingWhenFull() {
         Digimon digimon = createDigimon();
         digimon.setEnergy(10);

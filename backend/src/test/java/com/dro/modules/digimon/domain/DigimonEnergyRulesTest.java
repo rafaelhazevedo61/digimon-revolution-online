@@ -24,9 +24,18 @@ class DigimonEnergyRulesTest {
 
     @Test
     void regenerationInterval_scalesWithMaximumEnergy() {
-        assertEquals(300_000L, DigimonEnergyRules.regenerationIntervalMillis(100));
-        assertEquals(435_000L, DigimonEnergyRules.regenerationIntervalMillis(145));
-        assertEquals(735_000L, DigimonEnergyRules.regenerationIntervalMillis(245));
-        assertEquals(1_785_000L, DigimonEnergyRules.regenerationIntervalMillis(595));
+        assertEquals(30_000_000L / 100, DigimonEnergyRules.regenerationIntervalMillis(100));
+        assertEquals(30_000_000L / 145, DigimonEnergyRules.regenerationIntervalMillis(145));
+        assertEquals(30_000_000L / 245, DigimonEnergyRules.regenerationIntervalMillis(245));
+        assertEquals(30_000_000L / 595, DigimonEnergyRules.regenerationIntervalMillis(595));
+    }
+
+    @Test
+    void energyRecovered_completesEveryCapacityInEightHoursAndTwentyMinutes() {
+        long fullDuration = DigimonEnergyRules.FULL_REGENERATION_DURATION_MILLIS;
+        assertEquals(100, DigimonEnergyRules.energyRecovered(fullDuration, 100));
+        assertEquals(145, DigimonEnergyRules.energyRecovered(fullDuration, 145));
+        assertEquals(245, DigimonEnergyRules.energyRecovered(fullDuration, 245));
+        assertEquals(595, DigimonEnergyRules.energyRecovered(fullDuration, 595));
     }
 }
