@@ -167,7 +167,7 @@ function renderBossList() {
   }).join("");
 }
 
-function openBossDetail(bossCode) {
+async function openBossDetail(bossCode) {
   const boss = bossesData.find(b => b.code === bossCode);
   if (!boss) return;
 
@@ -175,6 +175,7 @@ function openBossDetail(bossCode) {
 
   const equipDrops = (boss.drops || []).filter(d => d.dropType === "EQUIPMENT");
   const itemDrops = (boss.drops || []).filter(d => d.dropType !== "EQUIPMENT");
+  const chestPreview = boss.chestCode ? await loadChestLootPreview(boss.chestCode) : null;
 
   let dropsHtml = "";
   if (boss.chestCode && boss.chestName) {
@@ -246,6 +247,8 @@ function openBossDetail(bossCode) {
         <p class="text-xs text-slate-400 mb-1">Drops possiveis:</p>
         ${dropsHtml}
       </div>
+
+      ${modeLootPreviewMarkup([chestPreview], "Possíveis drops do baú")}
 
       <div class="card-sm mb-3">
         <p class="text-xs text-slate-400 mb-2">Requisitos</p>

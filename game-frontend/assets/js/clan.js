@@ -1133,6 +1133,12 @@ async function clanLoadRaid() {
 
   try {
     const raid = await apiGet("/clan-raids/me");
+    const raidBossCode = String(raid.bossCode || "CLAN_RAID_OMEGAMON").toUpperCase().replace(/^CLAN_RAID_/, "");
+    raid.rewardPreviews = await Promise.all([
+      loadChestLootPreview(`CHEST_CLAN_RAID_${raidBossCode}_ATTEMPT`),
+      loadChestLootPreview(`CHEST_CLAN_RAID_${raidBossCode}_TOP_DAMAGE`),
+      loadChestLootPreview(`CHEST_CLAN_RAID_${raidBossCode}_FINAL_BLOW`)
+    ]);
     const percent = raid.maxHp > 0
       ? Math.min(100, Math.round((raid.remainingHp / raid.maxHp) * 100))
       : 100;
@@ -1225,6 +1231,7 @@ async function clanLoadRaid() {
         </div>
 
         ${rankingHtml || attacksHtml ? `<div class="clan-raid-support-grid">${rankingHtml}${attacksHtml}</div>` : ""}
+        ${modeLootPreviewMarkup(raid.rewardPreviews, "Possíveis recompensas da incursão")}
       </div>
     `;
 
