@@ -181,46 +181,47 @@ public class RebirthRules {
      * esse valor deve ser debitado do próprio Digimon que será renascido.
      *
      * Fórmula:
-     * 10.000 * (rebirthCount + 1)
+     * 100.000 * (rebirthCount + 1)
      *
      * Exemplo:
-     * rebirthCount = 0 -> primeiro Rebirth custa 10.000
-     * rebirthCount = 1 -> segundo Rebirth custa 20.000
-     * rebirthCount = 2 -> terceiro Rebirth custa 30.000
+     * rebirthCount = 0 -> primeiro Rebirth custa 100.000
+     * rebirthCount = 1 -> segundo Rebirth custa 200.000
+     * rebirthCount = 2 -> terceiro Rebirth custa 300.000
      */
     public static int calculateBitsCost(int rebirthCount) {
-        return 10_000 * (rebirthCount + 1);
+        return 100_000 * (rebirthCount + 1);
     }
 
     /*
      * Calcula o custo em Data Core.
      *
      * Fórmula:
-     * rebirthCount + 1
+     * 10 * (rebirthCount + 1)
      *
      * Exemplo:
-     * rebirthCount = 0 -> primeiro Rebirth custa 1 Data Core
-     * rebirthCount = 1 -> segundo Rebirth custa 2 Data Cores
+     * rebirthCount = 0 -> primeiro Rebirth custa 10 Data Cores
+     * rebirthCount = 1 -> segundo Rebirth custa 20 Data Cores
      */
     public static int calculateDataCoreCost(int rebirthCount) {
-        return rebirthCount + 1;
+        return 10 * (rebirthCount + 1);
     }
 
-    /** Custo de Dados Digitais: primeiro Rebirth exige 25 unidades. */
+    /*
+     * Calcula o custo linear de Dados Digitais.
+     *
+     * Fórmula:
+     * 25 * (rebirthCount + 1)
+     *
+     * Exemplo:
+     * rebirthCount = 0 -> primeiro Rebirth custa 25 Dados Digitais
+     * rebirthCount = 1 -> segundo Rebirth custa 50 Dados Digitais
+     * rebirthCount = 99 -> centésimo Rebirth custa 2.500 Dados Digitais
+     */
     public static int calculateDigitalDataCost(int rebirthCount) {
         if (rebirthCount < 0) {
             throw new IllegalArgumentException("Rebirth count cannot be negative");
         }
-        if (rebirthCount <= 4) {
-            return switch (rebirthCount) {
-                case 0 -> 25;
-                case 1 -> 50;
-                case 2 -> 80;
-                case 3 -> 120;
-                default -> 170;
-            };
-        }
-        return (int) Math.floor(170 * Math.pow(1.35, rebirthCount - 4));
+        return 25 * (rebirthCount + 1);
     }
 
     public static int calculateCodeInfiniteIvBonus(int codeInfiniteAmount) {
