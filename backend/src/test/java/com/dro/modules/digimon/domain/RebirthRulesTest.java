@@ -107,23 +107,43 @@ class RebirthRulesTest {
     }
 
     @Test
-    void calculateBitsCost_firstRebirth_returns10000() {
-        assertEquals(10_000, RebirthRules.calculateBitsCost(0));
+    void calculateBitsCost_firstRebirth_returns100000() {
+        assertEquals(100_000, RebirthRules.calculateBitsCost(0));
     }
 
     @Test
-    void calculateBitsCost_secondRebirth_returns20000() {
-        assertEquals(20_000, RebirthRules.calculateBitsCost(1));
+    void calculateBitsCost_secondRebirth_returns200000() {
+        assertEquals(200_000, RebirthRules.calculateBitsCost(1));
     }
 
     @Test
-    void calculateDataCoreCost_firstRebirth_returns1() {
-        assertEquals(1, RebirthRules.calculateDataCoreCost(0));
+    void calculateDataCoreCost_firstRebirth_returns10() {
+        assertEquals(10, RebirthRules.calculateDataCoreCost(0));
     }
 
     @Test
-    void calculateDataCoreCost_secondRebirth_returns2() {
-        assertEquals(2, RebirthRules.calculateDataCoreCost(1));
+    void calculateDataCoreCost_secondRebirth_returns20() {
+        assertEquals(20, RebirthRules.calculateDataCoreCost(1));
+    }
+
+    @Test
+    void calculateDigitalDataCost_firstRebirth_returns25() {
+        assertEquals(25, RebirthRules.calculateDigitalDataCost(0));
+    }
+
+    @Test
+    void calculateDigitalDataCost_fifthRebirth_returns125() {
+        assertEquals(125, RebirthRules.calculateDigitalDataCost(4));
+    }
+
+    @Test
+    void calculateDigitalDataCost_hundredthRebirth_returns2500() {
+        assertEquals(2_500, RebirthRules.calculateDigitalDataCost(99));
+    }
+
+    @Test
+    void calculateDigitalDataCost_negativeRebirthCount_throwsException() {
+        assertThrows(IllegalArgumentException.class, () -> RebirthRules.calculateDigitalDataCost(-1));
     }
 
     @Test
