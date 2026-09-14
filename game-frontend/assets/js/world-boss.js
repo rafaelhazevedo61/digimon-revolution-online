@@ -36,10 +36,11 @@ async function loadWorldBoss() {
   try {
     const boss = await apiGet("/world-boss/me");
     const bossCode = String(boss.bossCode || "").toUpperCase();
+    const chestBossCode = bossCode.replace(/^WORLD_BOSS_/, "");
     boss.rewardPreviews = await Promise.all([
-      loadChestLootPreview(`CHEST_BOSS_WORLD_${bossCode}_ATTEMPT`),
-      loadChestLootPreview(`CHEST_BOSS_WORLD_${bossCode}_TOP_DAMAGE`),
-      loadChestLootPreview(`CHEST_BOSS_WORLD_${bossCode}_FINAL_BLOW`)
+      loadChestLootPreview(`CHEST_BOSS_WORLD_${chestBossCode}_ATTEMPT`),
+      loadChestLootPreview(`CHEST_BOSS_WORLD_${chestBossCode}_TOP_DAMAGE`),
+      loadChestLootPreview(`CHEST_BOSS_WORLD_${chestBossCode}_FINAL_BLOW`)
     ]);
     renderWorldBossContent(boss);
   } catch (err) {
