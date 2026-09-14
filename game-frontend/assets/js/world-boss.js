@@ -166,11 +166,11 @@ function renderWorldBossContent(boss) {
       ${defeated ? `<p class="world-boss-defeated-message">Chefe Mundial derrotado. O próximo renascimento ocorrerá uma hora após a derrota.</p>${defeatSummaryHtml}` : ""}
     </section>
 
-    ${rewardPreviewHtml}
     <div class="world-boss-secondary-grid">
       ${rankingHtml}
       ${attacksHtml}
     </div>
+    ${rewardPreviewHtml}
   `;
 
   if (cooldownActive) {
