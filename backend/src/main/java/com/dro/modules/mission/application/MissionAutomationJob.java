@@ -3,6 +3,8 @@ package com.dro.modules.mission.application;
 import com.dro.modules.mail.application.CreateSystemMailMessageUseCase;
 import com.dro.shared.automation.AutomationFailureCode;
 import com.dro.shared.automation.AutomationFailureException;
+import com.dro.shared.observability.AutomationMetrics;
+import io.micrometer.core.instrument.Timer;
 import com.dro.modules.mail.domain.MailMessageType;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
@@ -29,15 +31,18 @@ public class MissionAutomationJob {
     private final MissionInstanceRepository missionInstanceRepository;
     private final MissionAutomationProcessor processor;
     private final CreateSystemMailMessageUseCase createSystemMailMessageUseCase;
+    private final AutomationMetrics automationMetrics;
 
     public MissionAutomationJob(
             MissionInstanceRepository missionInstanceRepository,
             MissionAutomationProcessor processor,
-            CreateSystemMailMessageUseCase createSystemMailMessageUseCase
+            CreateSystemMailMessageUseCase createSystemMessageUseCase,
+            AutomationMetrics automationMetrics
     ) {
         this.missionInstanceRepository = missionInstanceRepository;
         this.processor = processor;
-        this.createSystemMailMessageUseCase = createSystemMailMessageUseCase;
+        this.createSystemMailMessageUseCase = createSystemMessageUseCase;
+        this.automationMetrics = automationMetrics;
     }
 
     @Scheduled(fixedDelay = RUN_INTERVAL_MILLIS)
@@ -49,13 +54,16 @@ public class MissionAutomationJob {
                 PageRequest.of(0, BATCH_SIZE)
         );
         missionIds.forEach(id -> {
+            Timer.Sample sample = automationMetrics.startRun("mission");
             try {
                 processor.process(id);
             } catch (RuntimeException exception) {
                 AutomationFailureCode failureCode = findFailureCode(exception);
+                automationMetrics.recordFailure("mission", failureCode != null ? failureCode.name() : AutomationFailureCode.TRANSIENT_DATABASE_ERROR.name());
                 if (failureCode == AutomationFailureCode.INVENTORY_STACK_FULL || isStackLimitError(exception)) {
                     UUID playerId = findPlayerId(id);
                     processor.pauseAutomation(id, "INVENTORY_STACK_FULL", AutomationFailureCode.INVENTORY_STACK_FULL.name());
+                    automationMetrics.recordPause("mission", "INVENTORY_STACK_FULL");
                     if (playerId != null) {
                         createSystemMailMessageUseCase.create(
                                 MailMessageType.SYSTEM,
@@ -67,14 +75,18 @@ public class MissionAutomationJob {
                                 buildStackLimitMailBody(exception),
                                 "mission-automation:inventory-full:" + id
                         );
+                        automationMetrics.recordSystemMail("mission", "INVENTORY_STACK_FULL");
                     } else {
                         log.error("Could not notify player because mission {} was not found", id);
                     }
                     log.warn("Paused mission automation for {} because the inventory stack is full", id);
                 } else {
                     processor.pauseAutomation(id, "AUTOMATION_ERROR", AutomationFailureCode.TRANSIENT_DATABASE_ERROR.name());
+                    automationMetrics.recordPause("mission", "TRANSIENT_DATABASE_ERROR");
                     log.error("Could not process automatic mission {}; automation paused", id, exception);
                 }
+            } finally {
+                automationMetrics.stopRun("mission", sample);
             }
         });
     }

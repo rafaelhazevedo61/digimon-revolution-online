@@ -3,6 +3,8 @@ package com.dro.modules.incubation.application;
 import com.dro.modules.incubation.domain.Incubation;
 import com.dro.shared.automation.AutomationFailureCode;
 import com.dro.shared.automation.AutomationFailureException;
+import com.dro.shared.observability.AutomationMetrics;
+import io.micrometer.core.instrument.Timer;
 import com.dro.modules.incubation.domain.IncubationStatus;
 import com.dro.modules.incubation.infra.IncubationRepository;
 import com.dro.modules.mail.application.CreateSystemMailMessageUseCase;
@@ -22,15 +24,18 @@ public class IncubationAutomationJob {
     private final IncubationRepository repository;
     private final IncubationAutomationProcessor processor;
     private final CreateSystemMailMessageUseCase createSystemMailMessageUseCase;
+    private final AutomationMetrics automationMetrics;
 
     public IncubationAutomationJob(
             IncubationRepository repository,
             IncubationAutomationProcessor processor,
-            CreateSystemMailMessageUseCase createSystemMailMessageUseCase
+            CreateSystemMailMessageUseCase createSystemMailMessageUseCase,
+            AutomationMetrics automationMetrics
     ) {
         this.repository = repository;
         this.processor = processor;
         this.createSystemMailMessageUseCase = createSystemMailMessageUseCase;
+        this.automationMetrics = automationMetrics;
     }
 
     @Scheduled(fixedDelay = INTERVAL_MS)
@@ -41,26 +46,32 @@ public class IncubationAutomationJob {
                 PageRequest.of(0, BATCH_SIZE)
         );
         ids.forEach(id -> {
+            Timer.Sample sample = automationMetrics.startRun("incubation");
             try {
                 processor.process(id);
             } catch (RuntimeException error) {
                 AutomationFailureCode failureCode = findFailureCode(error);
+                automationMetrics.recordFailure("incubation", failureCode != null ? failureCode.name() : AutomationFailureCode.TRANSIENT_DATABASE_ERROR.name());
                 processor.pause(id, failureCode != null ? failureCode.name() : "AUTOMATION_ERROR",
                         failureCode != null ? failureCode.name() : AutomationFailureCode.TRANSIENT_DATABASE_ERROR.name());
                 if (failureCode == AutomationFailureCode.DIGIMON_STORAGE_FULL || isStorageFullError(error)) {
-                    repository.findById(id).ifPresent(incubation ->
-                            createSystemMailMessageUseCase.create(
-                                    MailMessageType.SYSTEM,
-                                    "INCUBATION_AUTOMATION",
-                                    incubation.getPlayerId(),
-                                    id,
-                                    "INCUBATION_AUTOMATION_RESUME",
-                                    "Automação de incubação pausada",
-                                    "A automação de incubação foi pausada porque o armazém de Digimons está lotado. Libere um espaço no armazém para continuar.",
-                                    "incubation-automation:storage-full:" + id
-                            )
-                    );
+                    automationMetrics.recordPause("incubation", "DIGIMON_STORAGE_FULL");
+                    repository.findById(id).ifPresent(incubation -> {
+                        createSystemMailMessageUseCase.create(
+                                MailMessageType.SYSTEM,
+                                "INCUBATION_AUTOMATION",
+                                incubation.getPlayerId(),
+                                id,
+                                "INCUBATION_AUTOMATION_RESUME",
+                                "Automação de incubação pausada",
+                                "A automação de incubação foi pausada porque o armazém de Digimons está lotado. Libere um espaço no armazém para continuar.",
+                                "incubation-automation:storage-full:" + id
+                        );
+                        automationMetrics.recordSystemMail("incubation", "DIGIMON_STORAGE_FULL");
+                    });
                 }
+            } finally {
+                automationMetrics.stopRun("incubation", sample);
             }
         });
     }
