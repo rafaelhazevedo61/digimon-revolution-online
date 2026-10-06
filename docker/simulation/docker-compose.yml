@@ -55,6 +55,7 @@ services:
       # Tokens longos: com o relógio acelerado, 24h de jogo passariam em poucos minutos reais.
       DRO_JWT_EXPIRATION_MINUTES: "5256000"
       DRO_REGISTRATION_INVITE_REQUIRED: "false"
+      DRO_CORS_ALLOWED_ORIGINS: "http://localhost:18080,http://localhost:3000,http://127.0.0.1:5500"
       DRO_BOSS_COOLDOWN_ENABLED: "true"
       DRO_WORLD_BOSS_COOLDOWN_ENABLED: "true"
       DRO_CLAN_RAID_COOLDOWN_ENABLED: "true"
