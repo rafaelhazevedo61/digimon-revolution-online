@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 import uuid
 from collections import Counter
 from datetime import datetime, timedelta, timezone
@@ -349,9 +350,13 @@ class GameplayBot:
         return min(wakes) if wakes else None
 
     def run(self, days: float) -> None:
-        if not self.register_login() or not self.onboarding():
-            self.recorder.event(self.clock.now(), self.name, "abort", False, reason="onboarding failed")
-            return
+        for attempt in range(1, 6):
+            if self.register_login() and self.onboarding():
+                break
+            if attempt == 5:
+                self.recorder.event(self.clock.now(), self.name, "abort", False, reason="onboarding failed")
+                return
+            time.sleep(5 * attempt)
         self.start_game = self.clock.now()
         end_game = self.start_game + days * DAY
         self.recorder.event(self.start_game, self.name, "run_start", True, profile=self.profile.name, days=days)

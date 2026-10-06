@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from typing import Any
 
@@ -22,10 +23,11 @@ class ApiResult:
 
 
 class ApiClient:
-    def __init__(self, base_url: str, clock: GameClock, timeout: float = 30.0):
+    def __init__(self, base_url: str, clock: GameClock, timeout: float = 60.0, retries: int = 3):
         self.base_url = base_url.rstrip("/")
         self.clock = clock
         self.timeout = timeout
+        self.retries = max(retries, 1)
         self.session = requests.Session()
         self.token: str | None = None
 
@@ -35,12 +37,17 @@ class ApiClient:
             all_headers["Authorization"] = f"Bearer {self.token}"
         if headers:
             all_headers.update(headers)
-        try:
-            response = self.session.request(
-                method, self.base_url + path, json=json, headers=all_headers, timeout=self.timeout
-            )
-        except requests.RequestException as exc:
-            return ApiResult(0, None, f"{type(exc).__name__}: {exc}")
+        response = None
+        for attempt in range(1, self.retries + 1):
+            try:
+                response = self.session.request(
+                    method, self.base_url + path, json=json, headers=all_headers, timeout=self.timeout
+                )
+                break
+            except requests.RequestException as exc:
+                if attempt == self.retries:
+                    return ApiResult(0, None, f"{type(exc).__name__}: {exc}")
+                time.sleep(2 * attempt)
         self.clock.observe_date_header(response.headers.get("Date"))
         data: Any = None
         if response.content:
