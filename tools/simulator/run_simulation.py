@@ -1,7 +1,7 @@
 """Executa bots do DRO contra a API da stack de simulação.
 
 Exemplo:
-    python run_simulation.py --base-url http://localhost:18080 --speed 60 --days 1 \
+    python run_simulation.py --base-url http://localhost:18080 --speed 60 --days 3 \
         --bots casual:2 regular:2 hardcore:1
 """
 
@@ -31,7 +31,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--base-url", default="http://localhost:18080")
     parser.add_argument("--speed", type=float, default=60, help="Mesmo valor de DRO_SIM_SPEED da API (1 = tempo real).")
-    parser.add_argument("--days", type=float, default=1, help="Dias de jogo a simular.")
+    parser.add_argument("--days", type=float, default=3, help="Dias de jogo a simular.")
     parser.add_argument("--bots", nargs="+", default=["regular:1"],
                         help=f"perfil:quantidade. Perfis: {', '.join(PROFILES)}")
     parser.add_argument("--run-id", default=datetime.now().strftime("%Y%m%d-%H%M%S"))

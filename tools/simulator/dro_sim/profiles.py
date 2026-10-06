@@ -34,16 +34,16 @@ class Profile:
 PROFILES: dict[str, Profile] = {
     "casual": Profile(
         name="casual",
-        description="Entra 3 vezes por dia por ~20 minutos; joga missões e coleta recompensas.",
-        sessions=((8, 20), (13, 20), (21, 30)),
+        description="Entra 4 vezes por dia por 15 minutos; joga missões e coleta recompensas.",
+        sessions=((8, 15), (12, 15), (18, 15), (22, 15)),
         do_world_boss=False,
         min_boss_win_chance=70,
         min_arena_win_chance=60,
     ),
     "regular": Profile(
         name="regular",
-        description="Entra 5 vezes por dia por ~40 minutos; usa todos os sistemas principais.",
-        sessions=((7, 40), (11, 30), (15, 40), (19, 60), (22, 40)),
+        description="Entra 6 vezes por dia por 30 minutos; usa todos os sistemas principais.",
+        sessions=((7, 30), (10, 30), (13, 30), (16, 30), (19, 30), (22, 30)),
     ),
     "hardcore": Profile(
         name="hardcore",

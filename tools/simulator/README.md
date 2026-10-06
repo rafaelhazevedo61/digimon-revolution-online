@@ -22,19 +22,19 @@ DRO_SIM_SPEED=60 docker compose up -d --build   # API em http://localhost:18080
 cd tools/simulator
 python -m venv .venv && . .venv/bin/activate   # Windows: .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-python run_simulation.py --speed 60 --days 1 --bots casual:2 regular:2 hardcore:1
+python run_simulation.py --speed 60 --days 3 --bots casual:2 regular:2 hardcore:1
 python report.py runs/<run-id>
 ```
 
-`--speed` deve ser igual ao `DRO_SIM_SPEED` da API. O bot sincroniza o relógio pelo cabeçalho `Date`
+Padrão: 3 dias de jogo (~72 min reais em 60x). `--speed` deve ser igual ao `DRO_SIM_SPEED` da API. O bot sincroniza o relógio pelo cabeçalho `Date`
 da API e espera pelos horários reais devolvidos (`endsAt`, cooldowns), então funciona igual em 1x ou 60x.
 
 ## 3. Perfis (`dro_sim/profiles.py`)
 
 | Perfil | Comportamento |
 | --- | --- |
-| `casual` | 3 sessões/dia de ~20 min; boss/arena só com chance alta |
-| `regular` | 5 sessões/dia; usa todos os sistemas |
+| `casual` | 4 sessões/dia de 15 min (8h, 12h, 18h, 22h); boss/arena só com chance alta |
+| `regular` | 6 sessões/dia de 30 min (7h, 10h, 13h, 16h, 19h, 22h); usa todos os sistemas |
 | `hardcore` | online 16h/dia, reage a cada fim de missão/cooldown |
 | `afk` | 1 sessão/dia, só missões e coletas |
 
@@ -43,7 +43,7 @@ duração de missão e ganha slots).
 
 Em cada sessão o bot: coleta recompensas do tutorial, abre baús, equipa o melhor item por slot, evolui
 quando possível, enfrenta bosses e arena (respeitando chance mínima e energia), coleta/inicia missões
-e coleta o calendário de atividades.
+e coleta o calendário de atividades. Missões são sempre manuais (a automação não é usada na alfa).
 
 ## 4. Saída (`runs/<run-id>/`)
 
