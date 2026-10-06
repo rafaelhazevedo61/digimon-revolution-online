@@ -56,16 +56,17 @@ class GameplayBot:
                 self.drops[code] += int(item.get(key_qty) or 1)
 
     # ------------------------------------------------------------- onboarding
-    def login(self) -> bool:
+    def login(self, quiet: bool = False) -> bool:
         result = self.api.post("/auth/login", {"email": self.email, "password": self.password})
-        self._log("login", result)
+        if not (quiet and result.status == 401):
+            self._log("login", result)
         if result.ok and isinstance(result.data, dict):
             self.api.token = result.data.get("token")
             return bool(self.api.token)
         return False
 
     def register_login(self) -> bool:
-        if self.login():
+        if self.login(quiet=True):
             return True
         reg = self.api.post("/auth/register", {"username": self.name, "email": self.email,
                                                 "password": self.password})
