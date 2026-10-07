@@ -51,6 +51,11 @@ liberar e sobrar energia acima de `boss_energy_reserve` (padrão 5, o custo de u
 Incursão, os bots de uma rodada são agrupados em clãs de até 5 (`Sim <run-id> 1`, `Sim <run-id> 2`, …):
 o primeiro do grupo cria o clã (custo 0) e os demais entram. O perfil `afk` não ataca chefes.
 
+Antes das missões, o bot compra o **Expansor de Slot de Missão** (`MISSION_SLOT_UNLOCK`, preço lido de
+`GET /shop`) assim que tiver Bits acima de `slot_bits_reserve` (padrão 0) e o usa em `/inventory/use`,
+até liberar os 3 slots (`buy_mission_slots`). Também usa na hora todos os **XP_DISC** do inventário
+(`use_xp_discs`). O relatório mostra quando cada slot foi liberado, os Bits gastos e o XP vindo dos discos.
+
 ## 4. Saída (`runs/<run-id>/`)
 
 - `events.jsonl` — cada chamada/ação com horário de jogo, resultado e erro (sem tokens/senhas).

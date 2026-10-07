@@ -18,6 +18,7 @@ DAY = 86400.0
 # os endpoints /world-boss/me e /clan-raids/me não os expõem.
 WORLD_BOSS_ENERGY = 20
 CLAN_RAID_ENERGY = 15
+MISSION_SLOT_ITEM = "MISSION_SLOT_UNLOCK"
 
 
 class GameplayBot:
@@ -37,6 +38,8 @@ class GameplayBot:
         self.arena: dict = {}
         self.equip: dict = {}
         self.inventory: list = []
+        self.mission_slots = 1
+        self.slot_price: int | None = None
         self.counters: Counter = Counter()
         self.drops: Counter = Counter()
         self.start_game: float = 0.0
@@ -304,11 +307,16 @@ class GameplayBot:
                 return
             self.arena = lobby.data or {}
 
-    def do_chests(self) -> None:
+    def _load_inventory(self) -> bool:
         result = self._call("inventory", "GET", "/inventory")
-        if not result.ok:
+        if result.ok:
+            self.inventory = result.data or []
+        return result.ok
+
+    def do_chests(self) -> None:
+        if not self._load_inventory():
             return
-        self.inventory = result.data or []
+        reload = False
         for item in self.inventory:
             definition = item.get("itemDefinition") or {}
             if item.get("itemType") != "LOOT_CHEST" and definition.get("category") != "CHEST":
@@ -322,6 +330,71 @@ class GameplayBot:
             if opened.ok:
                 self.counters["chests_opened"] += qty
                 self._count_drops((opened.data or {}).get("items"), key_code="itemCode")
+                reload = True
+        if reload:
+            self._load_inventory()
+
+    def _owned(self, item_type: str) -> int:
+        return sum(int(i.get("quantity") or 0) for i in self.inventory if i.get("itemType") == item_type)
+
+    def _mission_slot_price(self) -> int | None:
+        if self.slot_price is None:
+            shop = self._call("shop", "GET", "/shop")
+            for group in (shop.data or {}).values() if shop.ok else []:
+                for product in group or []:
+                    if product.get("code") == MISSION_SLOT_ITEM:
+                        self.slot_price = int(product.get("price") or 0)
+        return self.slot_price
+
+    def do_mission_slots(self) -> None:
+        """Compra e usa o Expansor de Slot de Missão até liberar todos os slots."""
+        slots = self._call("mission_slots", "GET", "/missions/slots")
+        if not slots.ok:
+            return
+        data = slots.data or {}
+        self.mission_slots = int(data.get("unlockedSlots") or 1)
+        if self.mission_slots >= int(data.get("totalSlots") or 3):
+            return
+        price = 0
+        if not self._owned(MISSION_SLOT_ITEM):
+            price = self._mission_slot_price()
+            if not price or int(self.digimon.get("bits") or 0) < price + self.profile.slot_bits_reserve:
+                return
+            if not self._call("shop_buy", "POST", "/shop/buy", {"productCode": MISSION_SLOT_ITEM, "quantity": 1},
+                              product=MISSION_SLOT_ITEM, price=price).ok:
+                return
+        if not self._call("item_use", "POST", "/inventory/use", {"itemType": MISSION_SLOT_ITEM},
+                          item=MISSION_SLOT_ITEM).ok:
+            return
+        self.mission_slots += 1
+        self.counters["mission_slots_unlocked"] += 1
+        self.counters["bits_on_mission_slots"] += price
+        self.recorder.event(self.clock.now(), self.name, "mission_slot_unlocked", True, slots=self.mission_slots,
+                            price=price, level=self.digimon.get("level"),
+                            game_hours=round((self.clock.now() - self.start_game) / 3600, 2))
+        self.refresh_digimon()
+
+    def do_xp_discs(self) -> None:
+        owned = Counter()
+        for item in self.inventory:
+            if str(item.get("itemType") or "").startswith("XP_DISC_"):
+                owned[item["itemType"]] += int(item.get("quantity") or 0)
+        for item_type, qty in sorted(owned.items()):
+            if qty <= 0:
+                continue
+            used = self._call("item_use", "POST", "/inventory/use", {"itemType": item_type, "quantity": min(qty, 999)},
+                              item=item_type, quantity=qty)
+            if not used.ok:
+                continue
+            data = used.data or {}
+            self.counters["xp_discs_used"] += int(data.get("quantity") or qty)
+            self.counters["xp_from_discs"] += int(data.get("xpGranted") or 0)
+            self.recorder.event(self.clock.now(), self.name, "xp_disc_used", True, item=item_type,
+                                quantity=data.get("quantity"), xp=data.get("xpGranted"),
+                                level_from=data.get("previousLevel"), level_to=data.get("currentLevel"))
+        if owned:
+            self.inventory = [i for i in self.inventory if not str(i.get("itemType") or "").startswith("XP_DISC_")]
+            self.refresh_digimon()
 
     def do_equipment(self) -> None:
         inventory = self._call("equipment_inventory", "GET", "/equipment/inventory")
@@ -394,10 +467,11 @@ class GameplayBot:
             "inventory_items": sum(int(i.get("quantity") or 0) for i in self.inventory),
             "equipment_count": len(self.equip.get("equippedItems", [])),
             "clan": (self.clan or {}).get("name"),
+            "mission_slots": self.mission_slots,
             **{k: self.counters.get(k, 0) for k in (
                 "missions_claimed", "bosses_won", "bosses_lost", "arena_won", "arena_lost",
                 "chests_opened", "evolutions", "world_boss_attacks", "world_boss_damage",
-                "clan_raid_attacks", "clan_raid_damage", "api_errors")},
+                "clan_raid_attacks", "clan_raid_damage", "xp_discs_used", "xp_from_discs", "api_errors")},
         })
 
     # ------------------------------------------------------------ agendamento
@@ -430,6 +504,10 @@ class GameplayBot:
             self.do_tutorial()
         if p.open_chests:
             self.do_chests()
+        elif p.use_xp_discs or p.buy_mission_slots:
+            self._load_inventory()
+        if p.use_xp_discs:
+            self.do_xp_discs()
         if p.auto_equip:
             self.do_equipment()
         if p.auto_evolve:
@@ -437,6 +515,8 @@ class GameplayBot:
         boss_ready = self.do_bosses() if p.do_bosses else None
         if p.do_arena:
             self.do_arena()
+        if p.do_missions and p.buy_mission_slots:
+            self.do_mission_slots()
         mission_end = self.do_missions() if p.do_missions else None
         raid_ready = world_ready = None
         if p.do_clan_raid or p.do_world_boss:

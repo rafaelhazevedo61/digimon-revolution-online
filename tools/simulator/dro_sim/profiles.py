@@ -27,6 +27,11 @@ class Profile:
     claim_calendar: bool = True
     min_boss_win_chance: int = 50
     min_arena_win_chance: int = 40
+    # Compra o Expansor de Slot de Missão na loja assim que os Bits sobram acima da reserva.
+    buy_mission_slots: bool = True
+    slot_bits_reserve: int = 0
+    # Usa os XP_DISC do inventário assim que caem.
+    use_xp_discs: bool = True
     # Energia mínima mantida após atacar Chefe Mundial/Incursão, para não travar missões.
     boss_energy_reserve: int = 5
     # Intervalo máximo entre verificações dentro de uma sessão online (minutos de jogo).
