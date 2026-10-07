@@ -346,6 +346,18 @@ function openBossForm(id = null) {
               <input id="bf-def" type="number" min="1" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.def ?? 50}" required>
             </div>
             <div>
+              <label class="text-xs text-slate-400">HP de combate</label>
+              <input id="bf-combat-hp" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.combatHp ?? ""}" placeholder="usa HP">
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">ATK de combate</label>
+              <input id="bf-combat-atk" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.combatAtk ?? ""}" placeholder="usa ATK">
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">DEF de combate</label>
+              <input id="bf-combat-def" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.combatDef ?? ""}" placeholder="usa DEF">
+            </div>
+            <div>
               <label class="text-xs text-slate-400">Energia</label>
               <input id="bf-energy" type="number" min="0" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm" value="${boss?.energyCost ?? 5}" required>
             </div>
@@ -459,6 +471,11 @@ function closeBossForm() {
   adminBossEditId = null;
 }
 
+function optionalInt(id) {
+  const value = document.getElementById(id)?.value;
+  return value === "" || value == null ? null : parseInt(value);
+}
+
 async function saveBoss(event) {
   event?.preventDefault();
   const body = {
@@ -471,6 +488,9 @@ async function saveBoss(event) {
     hp: parseInt(document.getElementById("bf-hp").value),
     atk: parseInt(document.getElementById("bf-atk").value),
     def: parseInt(document.getElementById("bf-def").value),
+    combatHp: optionalInt("bf-combat-hp"),
+    combatAtk: optionalInt("bf-combat-atk"),
+    combatDef: optionalInt("bf-combat-def"),
     energyCost: parseInt(document.getElementById("bf-energy").value),
     cooldownMinutes: parseInt(document.getElementById("bf-cooldown").value),
     baseXpReward: parseInt(document.getElementById("bf-xp").value),
