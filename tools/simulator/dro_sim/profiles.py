@@ -30,6 +30,9 @@ class Profile:
     # Compra o Expansor de Slot de Missão na loja assim que os Bits sobram acima da reserva.
     buy_mission_slots: bool = True
     slot_bits_reserve: int = 0
+    # Choca digitamas do inventário e monta 1 time por Digimon extra para ocupar os slots 2 e 3.
+    # Com isso ligado, o slot só é comprado quando já existe um Digimon extra para ele.
+    hatch_mission_helpers: bool = True
     # Usa os XP_DISC do inventário assim que caem.
     use_xp_discs: bool = True
     # Energia mínima mantida após atacar Chefe Mundial/Incursão, para não travar missões.

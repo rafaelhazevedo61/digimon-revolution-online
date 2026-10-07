@@ -16,7 +16,7 @@ from pathlib import Path
 CHART_JS = "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"
 SERIES = [("level", "Nível"), ("bits", "Bits"), ("energy", "Energia"), ("arena_rating", "Rating arena"),
           ("missions_claimed", "Missões coletadas"), ("chests_opened", "Baús abertos"),
-          ("mission_slots", "Slots de missão desbloqueados"), ("xp_from_discs", "XP acumulado de XP_DISC"),
+          ("mission_slots", "Slots de missão desbloqueados"), ("helper_missions_claimed", "Missões dos Digimons extras"), ("xp_from_discs", "XP acumulado de XP_DISC"),
           ("world_boss_damage", "Dano acumulado — Chefe Mundial"),
           ("clan_raid_damage", "Dano acumulado — Chefe de Incursão")]
 BOSS_HITS = [("world_boss_hit", "Chefe Mundial"), ("clan_raid_hit", "Chefe de Incursão")]
@@ -86,9 +86,13 @@ def build(run_dir: Path) -> str:
     for bot, rows in sorted(by_bot.items()):
         unlocks = [e for e in events if e["bot"] == bot and e["action"] == "mission_slot_unlocked"]
         discs = [e for e in events if e["bot"] == bot and e["action"] == "xp_disc_used"]
+        hatched = [e for e in events if e["bot"] == bot and e["action"] == "helper_hatched"]
         when = [f'{e.get("slots")}º slot: nv {e.get("level")}, {num(e.get("game_hours")) or 0:.0f}h' for e in unlocks]
+        born = [f'{e.get("digimon")} ({e.get("rarity")}), {num(e.get("game_hours")) or 0:.0f}h' for e in hatched]
         last = rows[-1]
         slot_rows.append([bot, last["profile"], last.get("mission_slots") or "—", "; ".join(when) or "—",
+                          "; ".join(born) or "—", last.get("helper_missions_claimed") or 0,
+                          last.get("bits_from_helper_missions") or 0,
                           sum(int(e.get("price") or 0) for e in unlocks),
                           sum(int(e.get("quantity") or 0) for e in discs), sum(int(e.get("xp") or 0) for e in discs)])
 
@@ -131,8 +135,9 @@ th,td{{border-bottom:1px solid #334155;padding:4px 8px;text-align:left}}th{{colo
 <h2>Chefe Mundial e Chefe de Incursão</h2>
 {table(["Chefe", "Bot", "Ataques", "Ataques/dia", "Dano total", "Dano médio", "XP", "Bits", "Golpes finais"],
        boss_rows)}
-<h2>Slots de missão e XP_DISC</h2>
-{table(["Bot", "Perfil", "Slots", "Desbloqueios", "Bits gastos", "XP_DISC usados", "XP de XP_DISC"], slot_rows)}
+<h2>Slots de missão, Digimons extras e XP_DISC</h2>
+{table(["Bot", "Perfil", "Slots", "Desbloqueios", "Digimons extras chocados", "Missões dos extras",
+        "Bits dos extras", "Bits gastos em slots", "XP_DISC usados", "XP de XP_DISC"], slot_rows)}
 <h2>Evolução no tempo (eixo X = horas de jogo)</h2><div class="grid">{charts}</div>
 <h2>Evoluções</h2>{table(["Bot", "De", "Linha", "Nível", "Horas de jogo"], evolutions)}
 <h2>Drops (todos os bots)</h2>{table(["Item", "Quantidade"], drop_total.most_common())}

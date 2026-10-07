@@ -19,6 +19,8 @@ DAY = 86400.0
 WORLD_BOSS_ENERGY = 20
 CLAN_RAID_ENERGY = 15
 MISSION_SLOT_ITEM = "MISSION_SLOT_UNLOCK"
+MAX_MISSION_SLOTS = 3
+INCUBATORS_FASTEST_FIRST = ("INCUBATOR_LEGENDARY", "INCUBATOR_EPIC", "INCUBATOR_RARE", "INCUBATOR_COMMON")
 
 
 class GameplayBot:
@@ -40,6 +42,10 @@ class GameplayBot:
         self.inventory: list = []
         self.mission_slots = 1
         self.slot_price: int | None = None
+        # Digimons extras (fora o ativo) e o time de missão de cada um, usados nos slots 2 e 3.
+        self.helpers: list[dict] = []
+        self.teams: dict[str, str] = {}
+        self.teams_loaded = False
         self.counters: Counter = Counter()
         self.drops: Counter = Counter()
         self.start_game: float = 0.0
@@ -100,6 +106,9 @@ class GameplayBot:
             return False
         active = [d for d in result.data if d.get("status") == "ACTIVE"]
         self.digimon = (active or result.data)[0]
+        self.helpers = sorted((d for d in result.data if d.get("status") in ("HATCHED", "STORED")
+                               and d.get("id") != self.digimon.get("id")),
+                              key=lambda d: int(d.get("level") or 0), reverse=True)
         return True
 
     # ---------------------------------------------------------------- rotinas
@@ -129,6 +138,10 @@ class GameplayBot:
                 if claim.ok:
                     data = claim.data or {}
                     self.counters["missions_claimed"] += 1
+                    if mission.get("teamId"):
+                        self.counters["helper_missions_claimed"] += 1
+                        self.counters["bits_from_helper_missions"] += int(data.get("bitsGained") or 0)
+                        self.counters["xp_from_helper_missions"] += int(data.get("xpGained") or 0)
                     self.counters["bits_from_missions"] += int(data.get("bitsGained") or 0)
                     self.counters["xp_from_missions"] += int(data.get("xpGained") or 0)
                     self._count_drops(data.get("rewards"))
@@ -145,25 +158,35 @@ class GameplayBot:
         free = max(unlocked - len(running), 0)
         if free:
             catalog = self._call("missions_list", "GET", "/missions")
-            options = [m for m in (catalog.data or []) if m.get("requiredLevel", 1) <= self.digimon.get("level", 1)]
-            options.sort(key=lambda m: (m.get("xpReward", 0) / max(m.get("durationSeconds", 1), 1),
-                                        m.get("xpReward", 0)), reverse=True)
-            energy = int(self.digimon.get("energy") or 0)
-            for mission in options:
+            options = sorted(catalog.data or [], key=lambda m: (m.get("xpReward", 0) / max(m.get("durationSeconds", 1), 1),
+                                                               m.get("xpReward", 0)), reverse=True)
+            busy = {str(i) for m in running for i in (m.get("digimonIds") or [])}
+            # O Digimon ativo vai sem time (como no jogo); cada Digimon extra vai pelo próprio time.
+            units = [(self.digimon, None)] + [(h, self.teams[h["id"]]) for h in self.helpers if h.get("id") in self.teams]
+            for digimon, team_id in units:
                 if not free:
                     break
-                if mission.get("energyCost", 0) > energy:
-                    self.counters["energy_blocked"] += 1
+                if str(digimon.get("id")) in busy:
                     continue
-                start = self._call("mission_start", "POST", "/missions/start", {"missionId": mission["id"]},
-                                   mission=mission["id"], energy_cost=mission.get("energyCost"))
+                eligible = [m for m in options if m.get("requiredLevel", 1) <= int(digimon.get("level") or 1)]
+                energy = int(digimon.get("energy") or 0)
+                mission = next((m for m in eligible if int(m.get("energyCost") or 0) <= energy), None)
+                if mission is None:
+                    if eligible:
+                        self.counters["energy_blocked"] += 1
+                    continue
+                body = {"missionId": mission["id"]}
+                if team_id:
+                    body["teamId"] = team_id
+                start = self._call("mission_start", "POST", "/missions/start", body,
+                                   mission=mission["id"], energy_cost=mission.get("energyCost"),
+                                   digimon=digimon.get("name"), team=bool(team_id))
                 if start.ok:
                     self.counters["missions_started"] += 1
-                    energy -= int(mission.get("energyCost") or 0)
+                    if team_id:
+                        self.counters["helper_missions_started"] += 1
                     running.append({"endsAt": (start.data or {}).get("endsAt")})
                     free -= 1
-                else:
-                    break
         ends = [parse_instant(m.get("endsAt")) for m in running]
         ends = [e for e in ends if e]
         return min(ends) if ends else None
@@ -353,8 +376,10 @@ class GameplayBot:
             return
         data = slots.data or {}
         self.mission_slots = int(data.get("unlockedSlots") or 1)
-        if self.mission_slots >= int(data.get("totalSlots") or 3):
+        if self.mission_slots >= int(data.get("totalSlots") or MAX_MISSION_SLOTS):
             return
+        if self.profile.hatch_mission_helpers and len(self.teams) < self.mission_slots:
+            return  # sem Digimon extra com time, o slot novo ficaria parado
         price = 0
         if not self._owned(MISSION_SLOT_ITEM):
             price = self._mission_slot_price()
@@ -373,6 +398,92 @@ class GameplayBot:
                             price=price, level=self.digimon.get("level"),
                             game_hours=round((self.clock.now() - self.start_game) / 3600, 2))
         self.refresh_digimon()
+
+    def _take_item(self, item_type: str) -> None:
+        for item in self.inventory:
+            if item.get("itemType") == item_type and int(item.get("quantity") or 0) > 0:
+                item["quantity"] = int(item["quantity"]) - 1
+                return
+
+    def do_incubation(self) -> float | None:
+        """Choca digitamas do inventário até ter 1 Digimon extra por slot de missão adicional.
+
+        Retorna o epoch em que a próxima incubação termina, se houver.
+        """
+        state = self._call("incubation", "GET", "/incubation/me")
+        if not state.ok:
+            return None
+        wanted = MAX_MISSION_SLOTS - 1
+        hatching, free_slots, wake = 0, [], None
+        for slot in (state.data or {}).get("slots") or []:
+            if not slot.get("unlocked"):
+                continue
+            inc = slot.get("incubation")
+            if not inc or inc.get("status") == "CLAIMED":
+                free_slots.append(slot["slotNumber"])
+                continue
+            remaining = int(inc.get("remainingSeconds") or 0)
+            if inc.get("status") == "READY" or remaining <= 0:
+                claim = self._call("incubation_claim", "POST", f"/incubation/{inc['id']}/claim",
+                                   digitama=inc.get("digitamaType"))
+                if claim.ok:
+                    data = claim.data or {}
+                    self.counters["helpers_hatched"] += 1
+                    self.recorder.event(self.clock.now(), self.name, "helper_hatched", True,
+                                        digimon=data.get("name"), rarity=data.get("rarity"),
+                                        digitama=inc.get("digitamaType"), incubator=inc.get("incubatorType"),
+                                        game_hours=round((self.clock.now() - self.start_game) / 3600, 2))
+                    self.refresh_digimon()
+                    free_slots.append(slot["slotNumber"])
+                    continue
+            hatching += 1
+            wake = min(wake or float("inf"), self.clock.now() + max(remaining, 1))
+        started = False
+        for slot_number in free_slots:
+            if len(self.helpers) + hatching >= wanted:
+                break
+            digitama = next((i["itemType"] for i in sorted(self.inventory, key=lambda i: str(i.get("itemType")))
+                             if str(i.get("itemType") or "").startswith("DIGITAMA_")
+                             and int(i.get("quantity") or 0) > 0), None)
+            incubator = next((t for t in INCUBATORS_FASTEST_FIRST if self._owned(t) > 0), None)
+            if not digitama or not incubator:
+                break
+            if not self._call("incubation_start", "POST", "/incubation/start",
+                              {"slotNumber": slot_number, "digitamaType": digitama, "incubatorType": incubator},
+                              digitama=digitama, incubator=incubator).ok:
+                break
+            self._take_item(digitama)
+            self._take_item(incubator)
+            hatching += 1
+            started = True
+        if started:
+            refreshed = self._call("incubation", "GET", "/incubation/me")
+            for slot in (refreshed.data or {}).get("slots") or [] if refreshed.ok else []:
+                inc = slot.get("incubation")
+                if inc and inc.get("status") == "IN_PROGRESS":
+                    wake = min(wake or float("inf"), self.clock.now() + max(int(inc.get("remainingSeconds") or 0), 1))
+        return wake
+
+    def ensure_teams(self) -> None:
+        """Garante um time de missão (só ele, como capitão) para cada Digimon extra."""
+        if not self.teams_loaded:
+            teams = self._call("mission_teams", "GET", "/mission-teams")
+            if not teams.ok:
+                return
+            for team in teams.data or []:
+                ids = [str(i) for i in team.get("digimonIds") or []]
+                if len(ids) == 1:
+                    self.teams[ids[0]] = team["id"]
+            self.teams_loaded = True
+        for helper in self.helpers[:MAX_MISSION_SLOTS - 1]:
+            if helper.get("id") in self.teams:
+                continue
+            created = self._call("mission_team_create", "POST", "/mission-teams",
+                                 {"name": f"Bot {helper.get('name') or 'extra'}"[:40],
+                                  "digimonIds": [helper["id"]], "captainDigimonId": helper["id"]},
+                                 digimon=helper.get("name"))
+            if created.ok and created.data:
+                self.teams[helper["id"]] = created.data["id"]
 
     def do_xp_discs(self) -> None:
         owned = Counter()
@@ -468,10 +579,12 @@ class GameplayBot:
             "equipment_count": len(self.equip.get("equippedItems", [])),
             "clan": (self.clan or {}).get("name"),
             "mission_slots": self.mission_slots,
+            "helper_digimons": len(self.teams),
             **{k: self.counters.get(k, 0) for k in (
                 "missions_claimed", "bosses_won", "bosses_lost", "arena_won", "arena_lost",
                 "chests_opened", "evolutions", "world_boss_attacks", "world_boss_damage",
-                "clan_raid_attacks", "clan_raid_damage", "xp_discs_used", "xp_from_discs", "api_errors")},
+                "clan_raid_attacks", "clan_raid_damage", "xp_discs_used", "xp_from_discs",
+                "helper_missions_claimed", "bits_from_helper_missions", "api_errors")},
         })
 
     # ------------------------------------------------------------ agendamento
@@ -504,7 +617,7 @@ class GameplayBot:
             self.do_tutorial()
         if p.open_chests:
             self.do_chests()
-        elif p.use_xp_discs or p.buy_mission_slots:
+        elif p.use_xp_discs or p.buy_mission_slots or p.hatch_mission_helpers:
             self._load_inventory()
         if p.use_xp_discs:
             self.do_xp_discs()
@@ -515,6 +628,10 @@ class GameplayBot:
         boss_ready = self.do_bosses() if p.do_bosses else None
         if p.do_arena:
             self.do_arena()
+        hatch_ready = None
+        if p.do_missions and p.hatch_mission_helpers:
+            hatch_ready = self.do_incubation()
+            self.ensure_teams()
         if p.do_missions and p.buy_mission_slots:
             self.do_mission_slots()
         mission_end = self.do_missions() if p.do_missions else None
@@ -531,7 +648,7 @@ class GameplayBot:
             self.do_calendar()
         self.refresh_digimon()
         self.snapshot()
-        wakes = [t for t in (mission_end, boss_ready, raid_ready, world_ready) if t]
+        wakes = [t for t in (mission_end, boss_ready, raid_ready, world_ready, hatch_ready) if t]
         return min(wakes) if wakes else None
 
     def run(self, days: float) -> None:
