@@ -1,0 +1,73 @@
+# Stack isolada para o simulador de jogabilidade (tools/simulator).
+# Usa volumes, portas e nome de projeto próprios para não interferir na stack local.
+# A API roda com libfaketime: o relógio da JVM avança DRO_SIM_SPEED vezes mais rápido.
+name: dro-sim
+
+services:
+  sim-postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: dro_sim
+      POSTGRES_USER: dro_sim
+      POSTGRES_PASSWORD: dro_sim
+    ports:
+      - "${DRO_SIM_POSTGRES_PORT:-15432}:5432"
+    volumes:
+      - dro_sim_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dro_sim -d dro_sim"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  sim-mongodb:
+    image: mongo:7
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: dro_sim
+      MONGO_INITDB_ROOT_PASSWORD: dro_sim
+      MONGO_INITDB_DATABASE: dro_sim_audit
+    volumes:
+      - dro_sim_mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --host localhost --eval 'db.adminCommand(\"ping\").ok' | grep 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 20s
+
+  sim-api:
+    build:
+      context: ../../backend
+      dockerfile: ../docker/simulation/Dockerfile.api
+    depends_on:
+      sim-postgres:
+        condition: service_healthy
+      sim-mongodb:
+        condition: service_healthy
+    environment:
+      FAKETIME: "+0 x${DRO_SIM_SPEED:-60}"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://sim-postgres:5432/dro_sim
+      SPRING_DATASOURCE_USERNAME: dro_sim
+      SPRING_DATASOURCE_PASSWORD: dro_sim
+      SPRING_MONGODB_URI: mongodb://dro_sim:dro_sim@sim-mongodb:27017/dro_sim_audit?authSource=admin
+      DRO_JWT_SECRET: dro-simulation-only-secret-never-use-in-production-2026
+      DRO_JWT_ISSUER: digimon-revolution-online
+      # Tokens longos: com o relógio acelerado, 24h de jogo passariam em poucos minutos reais.
+      DRO_JWT_EXPIRATION_MINUTES: "5256000"
+      DRO_REGISTRATION_INVITE_REQUIRED: "false"
+      DRO_CORS_ALLOWED_ORIGINS: "http://localhost:18080,http://localhost:3000,http://127.0.0.1:5500"
+      DRO_BOSS_COOLDOWN_ENABLED: "true"
+      DRO_WORLD_BOSS_COOLDOWN_ENABLED: "true"
+      DRO_CLAN_RAID_COOLDOWN_ENABLED: "true"
+    ports:
+      - "${DRO_SIM_API_PORT:-18080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8080/actuator/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 40s
+
+volumes:
+  dro_sim_postgres_data:
+  dro_sim_mongodb_data:
