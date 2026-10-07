@@ -46,6 +46,9 @@ class GameplayBot:
         self.helpers: list[dict] = []
         self.teams: dict[str, str] = {}
         self.teams_loaded = False
+        # /missions lista o catálogo do Digimon ativo; missões que a API recusou por estágio para um extra
+        # ficam aqui como (missionId, stage) para não repetir a tentativa.
+        self.stage_locked: set[tuple[str, str]] = set()
         self.counters: Counter = Counter()
         self.drops: Counter = Counter()
         self.start_game: float = 0.0
@@ -168,25 +171,32 @@ class GameplayBot:
                     break
                 if str(digimon.get("id")) in busy:
                     continue
-                eligible = [m for m in options if m.get("requiredLevel", 1) <= int(digimon.get("level") or 1)]
+                stage = str(digimon.get("stage"))
+                eligible = [m for m in options if m.get("requiredLevel", 1) <= int(digimon.get("level") or 1)
+                            and (m["id"], stage) not in self.stage_locked]
                 energy = int(digimon.get("energy") or 0)
-                mission = next((m for m in eligible if int(m.get("energyCost") or 0) <= energy), None)
-                if mission is None:
+                affordable = [m for m in eligible if int(m.get("energyCost") or 0) <= energy]
+                if not affordable:
                     if eligible:
                         self.counters["energy_blocked"] += 1
                     continue
-                body = {"missionId": mission["id"]}
-                if team_id:
-                    body["teamId"] = team_id
-                start = self._call("mission_start", "POST", "/missions/start", body,
-                                   mission=mission["id"], energy_cost=mission.get("energyCost"),
-                                   digimon=digimon.get("name"), team=bool(team_id))
-                if start.ok:
-                    self.counters["missions_started"] += 1
+                for mission in affordable:
+                    body = {"missionId": mission["id"]}
                     if team_id:
-                        self.counters["helper_missions_started"] += 1
-                    running.append({"endsAt": (start.data or {}).get("endsAt")})
-                    free -= 1
+                        body["teamId"] = team_id
+                    start = self._call("mission_start", "POST", "/missions/start", body,
+                                       mission=mission["id"], energy_cost=mission.get("energyCost"),
+                                       digimon=digimon.get("name"), team=bool(team_id))
+                    if start.ok:
+                        self.counters["missions_started"] += 1
+                        if team_id:
+                            self.counters["helper_missions_started"] += 1
+                        running.append({"endsAt": (start.data or {}).get("endsAt")})
+                        free -= 1
+                        break
+                    if not (team_id and start.status == 400 and "locked" in str(start.error).lower()):
+                        break
+                    self.stage_locked.add((mission["id"], stage))
         ends = [parse_instant(m.get("endsAt")) for m in running]
         ends = [e for e in ends if e]
         return min(ends) if ends else None
