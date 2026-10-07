@@ -68,5 +68,12 @@ missões feitas por eles e o XP vindo dos discos.
 
 - `events.jsonl` — cada chamada/ação com horário de jogo, resultado e erro (sem tokens/senhas).
 - `snapshots.csv` — estado do bot a cada tick (nível, XP, bits, energia, stats, rating, contadores).
-- `report.html` — resumo por bot, gráficos por hora de jogo, ataques/dano/recompensas do Chefe Mundial e
-  da Incursão, evoluções, drops e erros da API.
+- `report.html` — comparação por perfil (médias e marcos nos dias 1, 3 e 7), lista de bots com link para
+  a página de cada um, Digimon por bot, Chefe Mundial e Incursão, slots/Digimons extras/XP_DISC,
+  evoluções, drops e erros da API.
+- `bots/<bot>.html` — página de cada conta: resumo, trajetória do Digimon, tabela **dia a dia** (nível,
+  saldo de Bits, missões, golpes/dano/XP dos chefes, XP_DISC, arena, baús, energia, erros), chefes,
+  slots, drops e erros só daquele bot.
+
+Os gráficos vêm desligados. Para incluir: `python report.py runs/<run-id> --charts` (usa Chart.js via
+CDN, então o HTML precisa de internet). O relatório pode ser gerado com a rodada em andamento.
