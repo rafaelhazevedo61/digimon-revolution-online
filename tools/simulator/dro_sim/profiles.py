@@ -18,6 +18,7 @@ class Profile:
     do_missions: bool = True
     do_bosses: bool = True
     do_world_boss: bool = True
+    do_clan_raid: bool = True
     do_arena: bool = True
     open_chests: bool = True
     auto_evolve: bool = True
@@ -26,6 +27,8 @@ class Profile:
     claim_calendar: bool = True
     min_boss_win_chance: int = 50
     min_arena_win_chance: int = 40
+    # Energia mínima mantida após atacar Chefe Mundial/Incursão, para não travar missões.
+    boss_energy_reserve: int = 5
     # Intervalo máximo entre verificações dentro de uma sessão online (minutos de jogo).
     max_idle_minutes: int = 15
     extra: dict = field(default_factory=dict)
@@ -36,7 +39,6 @@ PROFILES: dict[str, Profile] = {
         name="casual",
         description="Entra 4 vezes por dia por 15 minutos; joga missões e coleta recompensas.",
         sessions=((8, 15), (12, 15), (18, 15), (22, 15)),
-        do_world_boss=False,
         min_boss_win_chance=70,
         min_arena_win_chance=60,
     ),
@@ -59,6 +61,7 @@ PROFILES: dict[str, Profile] = {
         sessions=((20, 15),),
         do_bosses=False,
         do_world_boss=False,
+        do_clan_raid=False,
         do_arena=False,
         auto_equip=False,
     ),

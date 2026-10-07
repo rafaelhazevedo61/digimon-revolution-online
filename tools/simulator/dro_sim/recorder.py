@@ -39,6 +39,11 @@ SNAPSHOT_FIELDS = [
     "arena_lost",
     "chests_opened",
     "evolutions",
+    "clan",
+    "world_boss_attacks",
+    "world_boss_damage",
+    "clan_raid_attacks",
+    "clan_raid_damage",
     "api_errors",
 ]
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 import uuid
 from collections import Counter
+from urllib.parse import quote
 from datetime import datetime, timedelta, timezone
 
 from .client import ApiClient, ApiResult
@@ -13,11 +14,15 @@ from .profiles import Profile
 from .recorder import Recorder
 
 DAY = 86400.0
+# Custos de energia de boss_definitions (WORLD_BOSS_APOCALYMON e CLAN_RAID_OMEGAMON);
+# os endpoints /world-boss/me e /clan-raids/me não os expõem.
+WORLD_BOSS_ENERGY = 20
+CLAN_RAID_ENERGY = 15
 
 
 class GameplayBot:
     def __init__(self, name: str, profile: Profile, base_url: str, speed: float, recorder: Recorder,
-                 password: str = "sim-bot-password", digitama: str = "STARTER"):
+                 password: str = "sim-bot-password", digitama: str = "STARTER", clan_name: str | None = None):
         self.name = name
         self.profile = profile
         self.clock = GameClock(speed)
@@ -25,6 +30,8 @@ class GameplayBot:
         self.recorder = recorder
         self.password = password
         self.digitama = digitama
+        self.clan_name = clan_name
+        self.clan: dict | None = None
         self.email = f"{name}@sim.local"
         self.digimon: dict = {}
         self.arena: dict = {}
@@ -43,11 +50,12 @@ class GameplayBot:
         self.recorder.event(self.clock.now(), self.name, action, result.ok, **fields)
         return result
 
-    def _call(self, action: str, method: str, path: str, json=None, **fields) -> ApiResult:
-        result = self.api.request(method, path, json=json)
+    def _call(self, action: str, method: str, path: str, json=None, headers: dict | None = None,
+              **fields) -> ApiResult:
+        result = self.api.request(method, path, json=json, headers=headers)
         if result.status == 401 and action != "login":
             if self.login():
-                result = self.api.request(method, path, json=json)
+                result = self.api.request(method, path, json=json, headers=headers)
         return self._log(action, result, **fields)
 
     def _count_drops(self, items, key_code="code", key_qty="quantity") -> None:
@@ -163,8 +171,6 @@ class GameplayBot:
             return None
         next_ready = None
         for boss in result.data or []:
-            if self.profile.do_world_boss is False and str(boss.get("bossType", "")).upper().startswith("WORLD"):
-                continue
             cooldown = boss.get("cooldownRemainingSeconds") or 0
             if not boss.get("available"):
                 continue
@@ -185,6 +191,94 @@ class GameplayBot:
                 self._count_drops(data.get("drops"))
                 self.refresh_digimon()
         return next_ready
+
+    def ensure_clan(self) -> None:
+        """Entra no clã do grupo do bot (cria se ainda não existir) para liberar a Incursão."""
+        mine = self.api.get("/clans/me")
+        if mine.ok and isinstance(mine.data, dict):
+            self.clan = mine.data
+            return
+        for _ in range(3):
+            found = self._call("clan_search", "GET", f"/clans?query={quote(self.clan_name)}&size=20")
+            for clan in ((found.data or {}).get("content") or []) if found.ok else []:
+                if clan.get("name") == self.clan_name and clan.get("memberCount", 0) < clan.get("maxMembers", 0):
+                    if self._call("clan_join", "POST", f"/clans/{clan['id']}/join", clan=self.clan_name).ok:
+                        self.clan = clan
+                        return
+            created = self._call("clan_create", "POST", "/clans",
+                                 {"name": self.clan_name, "tag": uuid.uuid4().hex[:3].upper(),
+                                  "description": "Clã de simulação"}, clan=self.clan_name)
+            if created.ok:
+                self.clan = created.data
+                return
+            time.sleep(2)
+
+    def _boss_energy_ok(self, cost: int) -> bool:
+        return int(self.digimon.get("energy") or 0) >= cost + self.profile.boss_energy_reserve
+
+    def do_world_boss(self) -> float | None:
+        state = self._call("world_boss", "GET", "/world-boss/me")
+        if not state.ok:
+            return None
+        data = state.data or {}
+        if data.get("status") != "ACTIVE":
+            return None
+        ready = parse_instant(data.get("nextAttackAvailableAt"))
+        if ready and ready > self.clock.now():
+            return ready
+        if not self._boss_energy_ok(WORLD_BOSS_ENERGY):
+            return None
+        hit = self._call("world_boss_attack", "POST", "/world-boss/attack",
+                         headers={"Idempotency-Key": str(uuid.uuid4())}, boss=data.get("bossCode"))
+        if not hit.ok:
+            return None
+        result = hit.data or {}
+        self.counters["world_boss_attacks"] += 1
+        self.counters["world_boss_damage"] += int(result.get("damage") or 0)
+        self.counters["bits_from_world_boss"] += int(result.get("bitsGained") or 0)
+        self.counters["xp_from_world_boss"] += int(result.get("xpGained") or 0)
+        if result.get("defeated"):
+            self.counters["world_boss_kills"] += 1
+        self.recorder.event(self.clock.now(), self.name, "world_boss_hit", True,
+                            damage=result.get("damage"), win_chance=result.get("winChance"),
+                            remaining_hp=result.get("remainingHp"), max_hp=result.get("maxHp"),
+                            xp=result.get("xpGained"), bits=result.get("bitsGained"),
+                            defeated=result.get("defeated"))
+        self.refresh_digimon()
+        return self.clock.now() + int(data.get("attackCooldownMinutes") or 5) * 60
+
+    def do_clan_raid(self) -> float | None:
+        if not self.clan:
+            return None
+        state = self._call("clan_raid", "GET", "/clan-raids/me")
+        if not state.ok:
+            return None
+        data = state.data or {}
+        if data.get("status") != "ACTIVE":
+            return None
+        ready = parse_instant(data.get("nextAttackAvailableAt"))
+        if ready and ready > self.clock.now():
+            return ready
+        if not self._boss_energy_ok(CLAN_RAID_ENERGY):
+            return None
+        hit = self._call("clan_raid_attack", "POST", "/clan-raids/attack", boss=data.get("bossCode"))
+        if not hit.ok:
+            return None
+        result = hit.data or {}
+        self.counters["clan_raid_attacks"] += 1
+        self.counters["clan_raid_damage"] += int(result.get("damage") or 0)
+        self.counters["bits_from_clan_raid"] += int(result.get("bitsGained") or 0)
+        self.counters["xp_from_clan_raid"] += int(result.get("xpGained") or 0)
+        self.counters["clan_honor_marks"] += int(result.get("clanHonorMarksGained") or 0)
+        if result.get("defeated"):
+            self.counters["clan_raid_kills"] += 1
+        self.recorder.event(self.clock.now(), self.name, "clan_raid_hit", True,
+                            damage=result.get("damage"), win_chance=result.get("winChance"),
+                            remaining_hp=result.get("remainingHp"), max_hp=result.get("maxHp"),
+                            xp=result.get("xpGained"), bits=result.get("bitsGained"),
+                            defeated=result.get("defeated"))
+        self.refresh_digimon()
+        return self.clock.now() + int(data.get("attackCooldownMinutes") or 5) * 60
 
     def do_arena(self) -> None:
         lobby = self._call("arena_lobby", "GET", "/arena/lobby")
@@ -299,9 +393,11 @@ class GameplayBot:
             "arena_rating": self.arena.get("rating"), "arena_coins": self.arena.get("arenaCoins"),
             "inventory_items": sum(int(i.get("quantity") or 0) for i in self.inventory),
             "equipment_count": len(self.equip.get("equippedItems", [])),
+            "clan": (self.clan or {}).get("name"),
             **{k: self.counters.get(k, 0) for k in (
                 "missions_claimed", "bosses_won", "bosses_lost", "arena_won", "arena_lost",
-                "chests_opened", "evolutions", "api_errors")},
+                "chests_opened", "evolutions", "world_boss_attacks", "world_boss_damage",
+                "clan_raid_attacks", "clan_raid_damage", "api_errors")},
         })
 
     # ------------------------------------------------------------ agendamento
@@ -342,11 +438,20 @@ class GameplayBot:
         if p.do_arena:
             self.do_arena()
         mission_end = self.do_missions() if p.do_missions else None
+        raid_ready = world_ready = None
+        if p.do_clan_raid or p.do_world_boss:
+            self.refresh_digimon()
+        if p.do_clan_raid and self.clan_name:
+            if not self.clan:
+                self.ensure_clan()
+            raid_ready = self.do_clan_raid()
+        if p.do_world_boss:
+            world_ready = self.do_world_boss()
         if p.claim_calendar:
             self.do_calendar()
         self.refresh_digimon()
         self.snapshot()
-        wakes = [t for t in (mission_end, boss_ready) if t]
+        wakes = [t for t in (mission_end, boss_ready, raid_ready, world_ready) if t]
         return min(wakes) if wakes else None
 
     def run(self, days: float) -> None:

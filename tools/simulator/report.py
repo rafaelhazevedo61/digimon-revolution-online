@@ -15,7 +15,10 @@ from pathlib import Path
 
 CHART_JS = "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"
 SERIES = [("level", "Nível"), ("bits", "Bits"), ("energy", "Energia"), ("arena_rating", "Rating arena"),
-          ("missions_claimed", "Missões coletadas"), ("chests_opened", "Baús abertos")]
+          ("missions_claimed", "Missões coletadas"), ("chests_opened", "Baús abertos"),
+          ("world_boss_damage", "Dano acumulado — Chefe Mundial"),
+          ("clan_raid_damage", "Dano acumulado — Chefe de Incursão")]
+BOSS_HITS = [("world_boss_hit", "Chefe Mundial"), ("clan_raid_hit", "Chefe de Incursão")]
 
 
 def load(run_dir: Path):
@@ -43,7 +46,24 @@ def build(run_dir: Path) -> str:
         final_rows.append([bot, last["profile"], last["stage"], last["level"], last["bits"],
                            last["missions_claimed"], f'{last["bosses_won"]}/{last["bosses_lost"]}',
                            f'{last["arena_won"]}/{last["arena_lost"]}', last["arena_rating"],
-                           last["chests_opened"], last["evolutions"], last["api_errors"], last["game_hours"]])
+                           last["chests_opened"], last["evolutions"], last.get("clan") or "—",
+                           f'{last.get("world_boss_attacks") or 0}/{last.get("world_boss_damage") or 0}',
+                           f'{last.get("clan_raid_attacks") or 0}/{last.get("clan_raid_damage") or 0}',
+                           last["api_errors"], last["game_hours"]])
+
+    hours = {bot: num(rows[-1]["game_hours"]) or 0 for bot, rows in by_bot.items()}
+    boss_rows = []
+    for action, label in BOSS_HITS:
+        per_bot: dict[str, list[dict]] = defaultdict(list)
+        for e in events:
+            if e["action"] == action:
+                per_bot[e["bot"]].append(e)
+        for bot, hits in sorted(per_bot.items()):
+            damage = sum(int(h.get("damage") or 0) for h in hits)
+            days = max(hours.get(bot, 0) / 24, 1e-9)
+            boss_rows.append([label, bot, len(hits), round(len(hits) / days, 1), damage, round(damage / len(hits)),
+                              sum(int(h.get("xp") or 0) for h in hits), sum(int(h.get("bits") or 0) for h in hits),
+                              sum(1 for h in hits if h.get("defeated"))])
 
     evolutions = [[e["bot"], e.get("from_stage"), e.get("line"), e.get("level"), e.get("game_hours")]
                   for e in events if e["action"] == "evolve" and e["ok"]]
@@ -56,8 +76,8 @@ def build(run_dir: Path) -> str:
 
     datasets = {}
     for key, _ in SERIES:
-        datasets[key] = [{"label": bot, "data": [{"x": num(r["game_hours"]), "y": num(r[key])} for r in rows
-                                                 if num(r[key]) is not None]}
+        datasets[key] = [{"label": bot, "data": [{"x": num(r["game_hours"]), "y": num(r.get(key))} for r in rows
+                                                 if num(r.get(key)) is not None]}
                          for bot, rows in sorted(by_bot.items())]
 
     def table(headers, rows):
@@ -76,7 +96,11 @@ th,td{{border-bottom:1px solid #334155;padding:4px 8px;text-align:left}}th{{colo
 <p>{len(by_bot)} bot(s), {len(snapshots)} snapshots, {len(events)} eventos.</p>
 <h2>Resumo final por bot</h2>
 {table(["Bot", "Perfil", "Estágio", "Nível", "Bits", "Missões", "Boss V/D", "Arena V/D", "Rating", "Baús",
-        "Evoluções", "Erros API", "Horas de jogo"], final_rows)}
+        "Evoluções", "Clã", "Chefe Mundial ataques/dano", "Incursão ataques/dano", "Erros API", "Horas de jogo"],
+       final_rows)}
+<h2>Chefe Mundial e Chefe de Incursão</h2>
+{table(["Chefe", "Bot", "Ataques", "Ataques/dia", "Dano total", "Dano médio", "XP", "Bits", "Golpes finais"],
+       boss_rows)}
 <h2>Evolução no tempo (eixo X = horas de jogo)</h2><div class="grid">{charts}</div>
 <h2>Evoluções</h2>{table(["Bot", "De", "Linha", "Nível", "Horas de jogo"], evolutions)}
 <h2>Drops (todos os bots)</h2>{table(["Item", "Quantidade"], drop_total.most_common())}
