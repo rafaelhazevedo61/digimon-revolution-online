@@ -51,6 +51,22 @@ def build(run_dir: Path) -> str:
                            f'{last.get("clan_raid_attacks") or 0}/{last.get("clan_raid_damage") or 0}',
                            last["api_errors"], last["game_hours"]])
 
+    hatched = {e["bot"]: e for e in events if e["action"] == "hatched" and e["ok"]}
+    digimon_rows = []
+    for bot, rows in sorted(by_bot.items()):
+        path, previous = [], None
+        for r in rows:
+            current = (r.get("digimon"), r.get("stage"))
+            if current[0] and current != previous:
+                path.append(f'{current[0]} ({current[1]}, nv {r.get("level")}, {num(r["game_hours"]):.0f}h)')
+                previous = current
+        last, start = rows[-1], hatched.get(bot, {})
+        lines = sorted({e.get("line") for e in events if e["bot"] == bot and e["action"] == "evolve" and e["ok"]})
+        digimon_rows.append([bot, last["profile"], start.get("digimon") or (path[0].split(" (")[0] if path else "—"),
+                             start.get("rarity") or "—", ", ".join(filter(None, lines)) or "—",
+                             f'{last.get("digimon")} ({last.get("stage")}, nv {last.get("level")})',
+                             " → ".join(path) or "—"])
+
     hours = {bot: num(rows[-1]["game_hours"]) or 0 for bot, rows in by_bot.items()}
     boss_rows = []
     for action, label in BOSS_HITS:
@@ -98,6 +114,9 @@ th,td{{border-bottom:1px solid #334155;padding:4px 8px;text-align:left}}th{{colo
 {table(["Bot", "Perfil", "Estágio", "Nível", "Bits", "Missões", "Boss V/D", "Arena V/D", "Rating", "Baús",
         "Evoluções", "Clã", "Chefe Mundial ataques/dano", "Incursão ataques/dano", "Erros API", "Horas de jogo"],
        final_rows)}
+<h2>Digimon por bot</h2>
+{table(["Bot", "Perfil", "Digitama inicial", "Raridade", "Linha(s) de evolução", "Atual", "Trajetória"],
+       digimon_rows)}
 <h2>Chefe Mundial e Chefe de Incursão</h2>
 {table(["Chefe", "Bot", "Ataques", "Ataques/dia", "Dano total", "Dano médio", "XP", "Bits", "Golpes finais"],
        boss_rows)}
