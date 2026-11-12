@@ -52,12 +52,12 @@ As duas planilhas mapeiam as mesmas 18 peças T1 nas seis áreas abaixo. As peç
 
 | Área | Arma e missão | Armadura e missão | Acessório e missão |
 |---|---|---|---|
-| Floresta Nativa | Garra Berserker T1 (`MISSION_1`) | Couraça Berserker T1 (`MISSION_NF_2`) | Emblema Berserker T1 (`MISSION_NF_3`) |
-| Savana Gear | Lança Guardiã T1 (`MISSION_2`) | Armadura Guardiã T1 (`MISSION_GS_2`) | Medalha Guardiã T1 (`MISSION_GS_3`) |
-| Cidade Fatorial | Cetro da Vitalidade T1 (`MISSION_3`) | Vestes da Vitalidade T1 (`MISSION_FT_2`) | Emblema da Vitalidade T1 (`MISSION_FT_3`) |
-| Terra Congelada | Lâmina do Equilíbrio T1 (`MISSION_4`) | Armadura do Equilíbrio T1 (`MISSION_FL_2`) | Símbolo do Equilíbrio T1 (`MISSION_FL_3`) |
-| Deserto Server | Lâmina Overclock T1 (`MISSION_5`) | Frame Overclock T1 (`MISSION_SD_2`) | Chip Overclock T1 (`MISSION_SD_3`) |
-| Montanha Infinita | Lança Firewall T1 (`MISSION_6`) | Couraça Firewall T1 (`MISSION_IM_2`) | Núcleo Firewall T1 (`MISSION_IM_3`) |
+| Floresta Nativa | Garra Berserker T1 <br>*Patrulha na Floresta Nativa* | Couraça Berserker T1 <br>*Coleta de Dados na Floresta* | Emblema Berserker T1 <br>*Emboscada dos Insetos* |
+| Savana Gear | Lança Guardiã T1 <br>*Caçada na Savana Gear* | Armadura Guardiã T1 <br>*Patrulha nas Engrenagens* | Medalha Guardiã T1 <br>*Caça ao Clockmon Rebelde* |
+| Cidade Fatorial | Cetro da Vitalidade T1 <br>*Investigação na Cidade Fatorial* | Vestes da Vitalidade T1 <br>*Resgate na Fábrica Abandonada* | Emblema da Vitalidade T1 <br>*Sabotagem Industrial* |
+| Terra Congelada | Lâmina do Equilíbrio T1 <br>*Expedição na Terra Congelada* | Armadura do Equilíbrio T1 <br>*Caverna de Cristal* | Símbolo do Equilíbrio T1 <br>*Tempestade de Neve* |
+| Deserto Server | Lâmina Overclock T1 <br>*Travessia do Deserto Server* | Frame Overclock T1 <br>*Oásis Corrompido* | Chip Overclock T1 <br>*Ruínas do Server Antigo* |
+| Montanha Infinita | Lança Firewall T1 <br>*Ascensão à Montanha Infinita* | Couraça Firewall T1 <br>*Portão do Mundo das Trevas* | Núcleo Firewall T1 <br>*Desafio do Soberano* |
 
 Consulte [V223](../db/migration/V223__add_mission_equipment_drops.sql) e o ajuste posterior da [missão final da Montanha Infinita](../db/migration/V238__fix_infinity_mountain_final_mission_rarity_weights.sql).
 
