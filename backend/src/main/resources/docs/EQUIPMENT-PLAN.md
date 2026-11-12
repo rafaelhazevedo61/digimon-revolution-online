@@ -24,19 +24,19 @@ Seeds e normalização de raridade em [V60](../db/migration/V60__seed_equipment_
 
 O backend aplica o percentual sobre a soma dos bônus efetivos das peças equipadas. Ao equipar três peças do mesmo set, vale o bônus de três peças.
 
-| Set | 2 peças HP | 2 peças ATK | 2 peças DEF | 3 peças HP | 3 peças ATK | 3 peças DEF | Total |
+| Set | 2 peças HP | 2 peças ATK | 2 peças DEF | 3 peças HP | 3 peças ATK | 3 peças DEF | Bônus com 3 peças (HP / ATK / DEF) |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Berserker | 0% | 10% | 0% | 0% | 20% | 0% | 30% |
-| Guardião | 5% | 0% | 10% | 10% | 0% | 20% | 45% |
-| Vitalidade | 10% | 0% | 0% | 20% | 0% | 0% | 30% |
-| Equilibrado | 5% | 5% | 5% | 10% | 10% | 10% | 45% |
-| Overclock | 5% | 10% | 0% | 10% | 20% | 0% | 45% |
-| Firewall | 0% | 0% | 15% | 10% | 0% | 25% | 50% |
-| Data Breaker | 0% | 10% | 5% | 5% | 20% | 10% | 50% |
-| Kernel | 10% | 0% | 5% | 20% | 0% | 15% | 50% |
-| Overlord | 5% | 5% | 5% | 15% | 15% | 10% | 55% |
+| Berserker | 0% | 10% | 0% | 0% | 20% | 0% | HP +0% / ATK +20% / DEF +0% |
+| Guardião | 5% | 0% | 10% | 10% | 0% | 20% | HP +10% / ATK +0% / DEF +20% |
+| Vitalidade | 10% | 0% | 0% | 20% | 0% | 0% | HP +20% / ATK +0% / DEF +0% |
+| Equilibrado | 5% | 5% | 5% | 10% | 10% | 10% | HP +10% / ATK +10% / DEF +10% |
+| Overclock | 5% | 10% | 0% | 10% | 20% | 0% | HP +10% / ATK +20% / DEF +0% |
+| Firewall | 0% | 0% | 15% | 10% | 0% | 25% | HP +10% / ATK +0% / DEF +25% |
+| Data Breaker | 0% | 10% | 5% | 5% | 20% | 10% | HP +5% / ATK +20% / DEF +10% |
+| Kernel | 10% | 0% | 5% | 20% | 0% | 15% | HP +20% / ATK +0% / DEF +15% |
+| Overlord | 5% | 5% | 5% | 15% | 15% | 10% | HP +15% / ATK +15% / DEF +10% |
 
-A coluna Total soma os seis percentuais da linha. Com três peças equipadas, o jogo aplica os bônus de três peças.
+A última coluna mostra o bônus efetivo de cada atributo com o conjunto completo.
 
 Os percentuais de Overclock, Firewall, Data Breaker, Kernel e Overlord seguem a tabela de balanceamento fornecida. A implementação desses cinco bônus ainda está pendente no backend.
 
