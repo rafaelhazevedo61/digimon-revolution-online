@@ -24,17 +24,17 @@ Seeds e normalização de raridade em [V60](../db/migration/V60__seed_equipment_
 
 O backend aplica o percentual sobre a soma dos bônus efetivos das peças equipadas. Ao equipar três peças do mesmo set, vale o bônus de três peças.
 
-| Set | 2 peças HP | 2 peças ATK | 2 peças DEF | 3 peças HP | 3 peças ATK | 3 peças DEF | Bônus com 3 peças (HP / ATK / DEF) |
+| Set | 2 peças HP | 2 peças ATK | 2 peças DEF | 3 peças HP | 3 peças ATK | 3 peças DEF | Set completo · 3 peças |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Berserker | 0% | 10% | 0% | 0% | 20% | 0% | HP +0% / ATK +20% / DEF +0% |
-| Guardião | 5% | 0% | 10% | 10% | 0% | 20% | HP +10% / ATK +0% / DEF +20% |
-| Vitalidade | 10% | 0% | 0% | 20% | 0% | 0% | HP +20% / ATK +0% / DEF +0% |
-| Equilibrado | 5% | 5% | 5% | 10% | 10% | 10% | HP +10% / ATK +10% / DEF +10% |
-| Overclock | 5% | 10% | 0% | 10% | 20% | 0% | HP +10% / ATK +20% / DEF +0% |
-| Firewall | 0% | 0% | 15% | 10% | 0% | 25% | HP +10% / ATK +0% / DEF +25% |
-| Data Breaker | 0% | 10% | 5% | 5% | 20% | 10% | HP +5% / ATK +20% / DEF +10% |
-| Kernel | 10% | 0% | 5% | 20% | 0% | 15% | HP +20% / ATK +0% / DEF +15% |
-| Overlord | 5% | 5% | 5% | 15% | 15% | 10% | HP +15% / ATK +15% / DEF +10% |
+| Berserker | 0% | 10% | 0% | 0% | 20% | 0% | HP 0%<br>ATK **+20%**<br>DEF 0% |
+| Guardião | 5% | 0% | 10% | 10% | 0% | 20% | HP **+10%**<br>ATK 0%<br>DEF **+20%** |
+| Vitalidade | 10% | 0% | 0% | 20% | 0% | 0% | HP **+20%**<br>ATK 0%<br>DEF 0% |
+| Equilibrado | 5% | 5% | 5% | 10% | 10% | 10% | HP **+10%**<br>ATK **+10%**<br>DEF **+10%** |
+| Overclock | 5% | 10% | 0% | 10% | 20% | 0% | HP **+10%**<br>ATK **+20%**<br>DEF 0% |
+| Firewall | 0% | 0% | 15% | 10% | 0% | 25% | HP **+10%**<br>ATK 0%<br>DEF **+25%** |
+| Data Breaker | 0% | 10% | 5% | 5% | 20% | 10% | HP **+5%**<br>ATK **+20%**<br>DEF **+10%** |
+| Kernel | 10% | 0% | 5% | 20% | 0% | 15% | HP **+20%**<br>ATK 0%<br>DEF **+15%** |
+| Overlord | 5% | 5% | 5% | 15% | 15% | 10% | HP **+15%**<br>ATK **+15%**<br>DEF **+10%** |
 
 A última coluna mostra o bônus efetivo de cada atributo com o conjunto completo.
 
