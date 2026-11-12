@@ -38,7 +38,9 @@ O backend aplica o percentual sobre a soma dos bônus efetivos das peças equipa
 
 A última coluna mostra o bônus efetivo de cada atributo com o conjunto completo.
 
-Os percentuais de Overclock, Firewall, Data Breaker, Kernel e Overlord seguem a tabela de balanceamento fornecida. A implementação desses cinco bônus ainda está pendente no backend.
+Os percentuais de Overclock, Firewall, Data Breaker, Kernel e Overlord seguem a tabela de balanceamento fornecida. **A implementação desses cinco bônus ainda está pendente no backend.**
+
+Acompanhe esta implementação em [Pendências de código](../../../../../PENDENCIAS.md#equipamentos).
 
 Consulte [EquipmentRules](../../java/com/dro/modules/equipment/domain/EquipmentRules.java).
 
