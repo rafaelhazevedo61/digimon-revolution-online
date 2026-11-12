@@ -24,17 +24,19 @@ Seeds e normalização de raridade em [V60](../db/migration/V60__seed_equipment_
 
 O backend aplica o percentual sobre a soma dos bônus efetivos das peças equipadas. Ao equipar três peças do mesmo set, vale o bônus de três peças.
 
-| Set | 2 peças HP | 2 peças ATK | 2 peças DEF | 3 peças HP | 3 peças ATK | 3 peças DEF |
-|---|---:|---:|---:|---:|---:|---:|
-| Berserker | 0% | 10% | 0% | 0% | 20% | 0% |
-| Guardião | 5% | 0% | 10% | 10% | 0% | 20% |
-| Vitalidade | 10% | 0% | 0% | 20% | 0% | 0% |
-| Equilibrado | 5% | 5% | 5% | 10% | 10% | 10% |
-| Overclock | 5% | 10% | 0% | 10% | 20% | 0% |
-| Firewall | 0% | 0% | 15% | 10% | 0% | 25% |
-| Data Breaker | 0% | 10% | 5% | 5% | 20% | 10% |
-| Kernel | 10% | 0% | 5% | 20% | 0% | 15% |
-| Overlord | 5% | 5% | 5% | 15% | 15% | 10% |
+| Set | 2 peças HP | 2 peças ATK | 2 peças DEF | 3 peças HP | 3 peças ATK | 3 peças DEF | Total |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Berserker | 0% | 10% | 0% | 0% | 20% | 0% | 30% |
+| Guardião | 5% | 0% | 10% | 10% | 0% | 20% | 45% |
+| Vitalidade | 10% | 0% | 0% | 20% | 0% | 0% | 30% |
+| Equilibrado | 5% | 5% | 5% | 10% | 10% | 10% | 45% |
+| Overclock | 5% | 10% | 0% | 10% | 20% | 0% | 45% |
+| Firewall | 0% | 0% | 15% | 10% | 0% | 25% | 50% |
+| Data Breaker | 0% | 10% | 5% | 5% | 20% | 10% | 50% |
+| Kernel | 10% | 0% | 5% | 20% | 0% | 15% | 50% |
+| Overlord | 5% | 5% | 5% | 15% | 15% | 10% | 55% |
+
+A coluna Total soma os seis percentuais da linha. Com três peças equipadas, o jogo aplica os bônus de três peças.
 
 Os percentuais de Overclock, Firewall, Data Breaker, Kernel e Overlord seguem a tabela de balanceamento fornecida. A implementação desses cinco bônus ainda está pendente no backend.
 
