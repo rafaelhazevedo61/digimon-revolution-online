@@ -1,6 +1,6 @@
 # Digimon Revolution Online - Documento Funcional
 
-> Atualizado com base na implementação atual da branch de referência em 23/08/2026.
+> Atualizado com base na implementação atual da branch `develop` no commit `edcba47`.
 >
 > Este documento descreve **funcionalidades implementadas**. Valores de balanceamento que vivem em banco/configuração devem ser consultados na fonte de dados correspondente, evitando duplicação desnecessária e divergências futuras.
 
@@ -36,6 +36,8 @@
 26. [Frontends](#26-frontends)
 27. [Status de funcionalidades futuras](#27-status-de-funcionalidades-futuras)
 28. [Migrations](#28-migrations)
+29. [Coleção](#29-coleção)
+30. [Calendário de atividades](#30-calendário-de-atividades)
 
 ---
 
@@ -82,7 +84,8 @@ A autenticação pública utiliza JWT.
 ### Fluxos implementados
 
 - cadastro de jogador;
-- login com username/e-mail e senha conforme implementação do módulo;
+- login com e-mail e senha;
+- cadastro no perfil Alpha mediante convite de uso único, com validade e vinculado ao e-mail do tester;
 - armazenamento de senha com hash;
 - autenticação de rotas protegidas via header `Authorization`;
 - alteração de senha pelo próprio jogador;
@@ -104,7 +107,9 @@ O logout somente do dispositivo atual é realizado no frontend removendo o token
 
 ## 3. Jogador (Player)
 
-O jogador representa a conta e mantém referências para o estado principal da jornada, incluindo Digimon ativo, starter, capacidade de slots e controle de sessão.
+O jogador representa a conta e mantém referências para o estado principal da jornada, incluindo Digimon ativo, starter, capacidade de slots e controle de sessão. O saldo de Bits pertence à conta e é compartilhado entre seus Digimons.
+
+A alteração de username exige um Digimon ativo. O custo em Bits depende do histórico de alterações e da configuração. Ao concluir a troca, o servidor revoga os tokens anteriores e devolve um novo token.
 
 ### Endpoints principais
 
@@ -113,6 +118,9 @@ O jogador representa a conta e mantém referências para o estado principal da j
 | GET | `/players/me` | Dados da conta autenticada |
 | GET | `/players/me/dashboard` | Resumo da jornada e do Digimon ativo |
 | GET | `/players/me/startup` | Determina o fluxo inicial do jogador |
+| POST | `/players/me/change-email` | Alterar o e-mail da conta |
+| GET | `/players/me/change-username` | Consultar as condições da próxima alteração de username |
+| POST | `/players/me/change-username` | Alterar o username mediante pagamento em Bits |
 | POST | `/players/me/change-password` | Alteração de senha |
 | POST | `/players/me/logout-all` | Revogação global de sessões |
 
@@ -124,7 +132,7 @@ O endpoint de startup orienta o frontend entre os estados principais da jornada 
 
 ## 4. Digimon
 
-Cada Digimon pertence a um jogador e possui espécie, estágio, nível, experiência, IVs, raridade, personalidade, trait, energia, Bits, dados de rebirth e estado de armazenamento.
+Cada Digimon pertence a um jogador e possui espécie, estágio, nível, experiência, IVs, raridade, personalidade, trait, energia, dados de rebirth e estado de armazenamento.
 
 ### Estágios implementados
 
@@ -142,9 +150,16 @@ Todos esses estágios fazem parte da implementação atual.
 - raridade, personalidade, trait, estágio, rebirth e equipamentos podem influenciar os resultados finais;
 - fórmulas e multiplicadores de balanceamento devem ser consultados nas classes de domínio/configurações correspondentes, evitando manter cópias numéricas neste documento.
 
+### Energia
+
+A energia é individual por Digimon. A capacidade base aumenta com o nível e pode receber bônus de trait. A energia se recupera passivamente ao longo do tempo.
+
+O consumo é habilitado por padrão, inclusive no perfil Alpha, e controlado por `dro.gameplay.energy.consumption-enabled`. Missões, Arena, bosses convencionais, Boss Mundial e Raid de Clã aplicam o custo definido pelo respectivo fluxo quando o consumo está habilitado.
+
 ### Estados principais
 
-- `ACTIVE`: Digimon disponível na coleção ativa;
+- `ACTIVE`: parceiro ativo da conta;
+- `HATCHED`: Digimon recém-chocado aguardando a escolha de destino;
 - `STORED`: Digimon guardado no Storage;
 - `REBORN`: versão anterior preservada após Rebirth.
 
@@ -152,7 +167,7 @@ Todos esses estágios fazem parte da implementação atual.
 
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/digimon/me` | Listar Digimons ativos do jogador |
+| GET | `/digimon/me` | Listar o parceiro ativo e os Digimons recém-chocados ou armazenados do jogador |
 | GET | `/digimon/{digimonId}` | Consultar um Digimon |
 | POST | `/digimon/select` | Selecionar o Digimon ativo |
 | GET | `/digimon/{digimonId}/evolution-options` | Consultar opções de evolução |
@@ -184,9 +199,11 @@ O jogador escolhe uma opção disponível e realiza o hatch. A espécie nasce a 
 
 A incubadora possui três slots fixos, exibidos sempre para o jogador. Cada jogador começa com o slot 1 desbloqueado; os slots 2 e 3 permanecem bloqueados até serem liberados. Cada slot desbloqueado pode manter uma incubação independente, permitindo ovos em paralelo.
 
-A capacidade de incubação é persistida em `players.unlocked_incubation_slots` e pertence ao jogador, não ao Digimon ativo. O item consumível **Expansor de Slot de Incubação** desbloqueia exatamente um slot por uso, consome uma unidade do inventário e não permite ultrapassar o limite total de três slots. O inventário atual é entregue ao Digimon ativo, mas o efeito de capacidade é aplicado exclusivamente ao jogador.
+A capacidade de incubação é persistida em `players.unlocked_incubation_slots` e pertence ao jogador, não ao Digimon ativo. O item consumível **Expansor de Slot de Incubação** desbloqueia exatamente um slot por uso, consome uma unidade do inventário e não permite ultrapassar o limite total de três slots. O item é consumido do inventário da conta.
 
 O fluxo utiliza Digitama e incubadora do inventário, associa a nova incubação ao slot escolhido e permite resgatar o Digimon daquele slot quando estiver pronta. Os estados `IN_PROGRESS` e `READY` mantêm o slot ocupado; o claim altera somente a incubação selecionada para `CLAIMED` e libera sua posição.
+
+O jogador pode ativar o resgate automático por incubação e optar por repetir o ciclo após o resgate. A repetição depende do resgate automático e dos requisitos para iniciar um novo ciclo.
 
 As pools e tempos de incubação são dados de catálogo/configuração e não devem ser duplicados neste documento.
 
@@ -201,6 +218,7 @@ As pools e tempos de incubação são dados de catálogo/configuração e não d
 | POST | `/incubation/start` | Iniciar incubação em um slot desbloqueado e vazio |
 | POST | `/incubation/{incubationId}/claim` | Resgatar a incubação concluída indicada |
 | GET | `/incubation/me` | Consultar os três slots da incubadora |
+| PATCH | `/incubation/{incubationId}/automation` | Configurar resgate e repetição automáticos |
 
 ---
 
@@ -284,6 +302,12 @@ A relação exata entre área, estágio e missões deve ser consultada no catál
 4. após conclusão, o jogador realiza o claim;
 5. as recompensas configuradas são processadas.
 
+### Equipes e slots de missão
+
+O jogador pode iniciar uma missão com o parceiro ativo ou com uma equipe cadastrada de até três Digimons próprios elegíveis. Cada missão em andamento ocupa um slot de execução. A conta começa com um slot de missão desbloqueado e pode expandir até três.
+
+A capacidade de equipes cadastradas começa em três e pode chegar a dez com o Expansor de Slot de Time. Em missões de equipe, o jogador pode configurar repetição e resgate automáticos. Quando a missão cobra energia, o custo é aplicado a cada participante.
+
 ### Endpoints
 
 | Método | Rota | Descrição |
@@ -293,6 +317,15 @@ A relação exata entre área, estágio e missões deve ser consultada no catál
 | POST | `/missions/start` | Iniciar missão |
 | POST | `/missions/{missionInstanceId}/claim` | Resgatar missão |
 | GET | `/areas` | Consultar áreas |
+| GET | `/missions/slots` | Consultar a ocupação dos slots de missão |
+| GET | `/missions/{missionId}/loot` | Consultar recompensas possíveis da missão |
+| POST | `/missions/start-auto` | Iniciar missão com opções de automação |
+| PATCH | `/missions/{missionInstanceId}/auto-repeat` | Configurar repetição automática |
+| PATCH | `/missions/{missionInstanceId}/auto-claim` | Configurar resgate automático |
+| GET | `/mission-teams` | Consultar equipes cadastradas |
+| POST | `/mission-teams` | Cadastrar equipe |
+| PUT | `/mission-teams/{teamId}` | Editar equipe |
+| DELETE | `/mission-teams/{teamId}` | Excluir equipe |
 
 ---
 
@@ -322,13 +355,14 @@ Preços, itens e regras específicas de catálogo devem ser consultados em `shop
 
 ## 10. Inventário
 
-O inventário utilizado pela jornada está associado ao Digimon ativo e integra itens de catálogo, materiais, Digitamas, incubadoras e baús.
+O inventário de itens pertence à conta e integra itens de catálogo, materiais, Digitamas, incubadoras e baús.
 
 ### Características
 
 - itens catalogados são enriquecidos por `item_definitions`;
 - itens podem possuir categorias diferentes;
-- alguns itens são consumíveis diretamente;
+- consumíveis podem expandir Storage, slots de missão, capacidade de equipes ou slots de incubação, conforme o item;
+- o Dado de Raridade pode gerar uma proposta para o Digimon ativo. Quando a raridade sorteada difere da atual, o jogador pode aceitar a proposta ou pagar Bits para manter a raridade anterior;
 - os Discos de XP `XP_DISC_1`, `XP_DISC_3`, `XP_DISC_5`, `XP_DISC_10`, `XP_DISC_15` e `XP_DISC_20` concedem XP instantaneamente ao Digimon ativo;
 - os Discos de XP podem ser usados individualmente ou em lotes de até 100 unidades do mesmo tipo, com a quantidade processada e o XP total retornados pela operação;
 - baús são abertos através de operação transacional específica, individualmente ou em lotes de até 100 unidades do mesmo tipo;
@@ -338,22 +372,28 @@ O inventário utilizado pela jornada está associado ao Digimon ativo e integra 
 
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/inventory` | Inventário do Digimon ativo |
+| GET | `/inventory` | Inventário de itens do jogador |
+| GET | `/inventory/page` | Inventário paginado |
 | POST | `/inventory/use` | Utilizar item suportado, incluindo `INCUBATION_SLOT_UNLOCK` e os seis Discos de XP; `quantity` é opcional para Discos de XP, assume 1 e aceita até 100; a resposta informa a quantidade e o efeito aplicado |
 | POST | `/inventory/chests/open` | Abrir um ou mais baús do mesmo tipo; `quantity` é opcional, assume 1 e aceita até 100 |
 | GET | `/items` | Catálogo público de definições de item |
+| POST | `/inventory/rarity-reroll/start` | Usar o Dado de Raridade |
+| POST | `/inventory/rarity-reroll/{id}/accept` | Aceitar a proposta |
+| POST | `/inventory/rarity-reroll/{id}/keep` | Pagar para manter a raridade anterior |
 
 ---
 
 ## 11. Equipamentos
 
-O sistema possui equipamentos por template e instâncias pertencentes a Digimons.
+Os equipamentos são gerados a partir de templates e pertencem ao jogador. Uma instância pode ser equipada em um Digimon da conta.
 
 ### Estrutura
 
 - slots de equipamento incluem arma, armadura e acessório;
 - templates definem os dados base do equipamento;
-- instâncias possuem raridade e refinamento próprios;
+- instâncias possuem raridade, tier, nível de refinamento e nível de ascensão próprios;
+- o Ferreiro oferece refinamento, aprimoramento, ascensão e desmonte individual ou em lote;
+- o bloqueio protege equipamentos contra operações como desmonte e anúncio no leilão;
 - existem sets com bônus de conjunto;
 - equipamentos participam do cálculo efetivo de stats/combate;
 - regras de refinamento e perfis de raridade são configuráveis e não são duplicados numericamente aqui.
@@ -369,6 +409,13 @@ O sistema possui equipamentos por template e instâncias pertencentes a Digimons
 | POST | `/equipment/unequip-all` | Desequipar todos |
 | POST | `/equipment/refine` | Refinar equipamento |
 | GET | `/equipment/{equipmentId}/refine-preview` | Prévia de refinamento |
+| GET | `/equipment/inventory` | Inventário de equipamentos do jogador |
+| POST | `/equipment/enhance` | Aprimorar equipamento |
+| POST | `/equipment/ascend` | Ascender equipamento |
+| GET | `/equipment/{equipmentId}/ascend-preview` | Prévia da ascensão |
+| POST | `/equipment/lock` | Bloquear ou desbloquear equipamento |
+| POST | `/equipment/dismantle` | Desmontar equipamento |
+| POST | `/equipment/dismantle/batch` | Desmontar equipamentos em lote |
 
 ---
 
@@ -412,7 +459,7 @@ O Boss Mundial é uma atividade separada dos bosses convencionais.
 - ataques respeitam as regras e cooldown definidos pelo módulo;
 - o dano contribui para o progresso compartilhado do ciclo;
 - o sistema possui recompensas vinculadas ao conteúdo atual, incluindo integração com baús;
-- não existe limite diário de ataques; cada ataque respeita cooldown de cinco minutos somente quando `dro.gameplay.boss-cooldown-enabled` e `dro.gameplay.world-boss.cooldown-enabled` estão habilitados;
+- não existe limite diário de ataques; cada ataque respeita o cooldown do catálogo, com cinco minutos como fallback, quando `dro.gameplay.boss-cooldown-enabled` e `dro.gameplay.world-boss.cooldown-enabled` estão habilitados;
 - no perfil alpha, a flag `dro.gameplay.auto-boss-respawn-after-defeat-enabled` abre automaticamente um novo ciclo após a derrota, preservando o histórico do ciclo anterior;
 - ferramentas administrativas permitem controlar/resetar ciclos para operação e contingência.
 
@@ -433,7 +480,8 @@ O jogo possui rankings gerais de Digimons por critérios de progressão.
 
 - nível;
 - grade;
-- Rebirth.
+- Rebirth;
+- poder.
 
 O módulo possui paginação e considera apenas os Digimons elegíveis segundo o estado atual da implementação.
 
@@ -444,6 +492,7 @@ O módulo possui paginação e considera apenas os Digimons elegíveis segundo o
 | GET | `/ranking/level` | Ranking por nível |
 | GET | `/ranking/grade` | Ranking por grade |
 | GET | `/ranking/rebirth` | Ranking por Rebirth |
+| GET | `/ranking/power` | Ranking por poder |
 
 Arena e Clãs possuem rankings próprios em seus respectivos módulos.
 
@@ -461,6 +510,7 @@ O jogador possui um único Digimon ativo e pode manter os demais no Storage.
 - após o hatch, as únicas opções são `Tornar ativo` ou `Enviar para Storage`;
 - ao tornar um Digimon ativo, o parceiro ativo anterior é movido automaticamente para o Storage;
 - a troca respeita a capacidade do Storage e trata equipamentos com segurança ao mover o parceiro anterior;
+- o jogador pode bloquear Digimons armazenados e sacrificar Digimons armazenados elegíveis, individualmente ou em lote, em troca de Dados Digitais;
 - a constraint parcial `uq_digimons_one_active_per_player` reforça a unicidade no PostgreSQL.
 
 O campo histórico `max_digimon_slots` é mantido por compatibilidade de schema, mas o limite efetivo de ativos é 1. O limite de Storage continua sendo um atributo do jogador.
@@ -472,6 +522,9 @@ O campo histórico `max_digimon_slots` é mantido por compatibilidade de schema,
 | POST | `/digimon/{digimonId}/store` | Enviar Digimon HATCHED para o Storage |
 | POST | `/digimon/{digimonId}/retrieve` | Tornar Digimon armazenado o parceiro ativo |
 | GET | `/digimon/storage` | Consultar Storage |
+| PATCH | `/digimon/{digimonId}/lock` | Alterar o bloqueio do Digimon |
+| POST | `/digimon/{digimonId}/sacrifice` | Sacrificar um Digimon |
+| POST | `/digimon/sacrifice/bulk` | Sacrificar Digimons em lote |
 
 ---
 
@@ -484,7 +537,7 @@ A Arena é o sistema competitivo PvP atual.
 - lobby com adversários elegíveis;
 - desafio entre Digimons;
 - registro de resultado;
-- pontuação/ranking competitivo;
+- ranking competitivo geral e sazonal;
 - histórico de partidas;
 - loja própria da Arena;
 - recompensas integradas ao sistema atual de loot/baús.
@@ -498,6 +551,8 @@ O balanceamento de ataques diários, pontuação, moeda e recompensas deve ser c
 | GET | `/arena/lobby` | Consultar lobby |
 | POST | `/arena/challenge` | Desafiar adversário |
 | GET | `/arena/ranking` | Ranking da Arena |
+| GET | `/arena/season-ranking` | Ranking sazonal da Arena |
+| GET | `/arena/statistics` | Estatísticas da Arena |
 | GET | `/arena/history` | Histórico do jogador |
 | GET | `/arena/shop` | Loja da Arena |
 | POST | `/arena/shop/buy` | Comprar produto da Arena |
@@ -521,7 +576,8 @@ O sistema de Clãs permite organização social entre jogadores.
 - dissolução com soft delete;
 - upgrades de Clã;
 - Honor Marks;
-- ranking de Clãs.
+- ranking de Clãs;
+- armazenamento compartilhado de itens, com depósitos e retiradas conforme as permissões do membro.
 
 Permissões dependem do papel do membro e das regras de cada use case.
 
@@ -544,6 +600,9 @@ Permissões dependem do papel do membro e das regras de cada use case.
 | GET | `/clans/{id}/upgrades` | Consultar upgrades |
 | POST | `/clans/{id}/upgrades/{code}/buy` | Comprar upgrade |
 | GET | `/clans/ranking` | Ranking de Clãs |
+| GET | `/clans/{clanId}/storage` | Consultar Storage de Clã |
+| POST | `/clans/{clanId}/storage/deposit` | Depositar itens |
+| POST | `/clans/{clanId}/storage/withdraw` | Retirar itens |
 
 ---
 
@@ -581,7 +640,7 @@ Raid de Clã é uma atividade coletiva do Clã contra um alvo compartilhado.
 
 - o jogador consulta a Raid associada ao seu Clã;
 - ataques contribuem para o progresso coletivo;
-- não existe limite diário de ataques; cada jogador respeita cooldown de cinco minutos entre ataques somente quando `dro.gameplay.boss-cooldown-enabled` e `dro.gameplay.clan-raid.cooldown-enabled` estão habilitados;
+- não existe limite diário de ataques; cada jogador respeita o cooldown do catálogo entre ataques, com cinco minutos como fallback, quando `dro.gameplay.boss-cooldown-enabled` e `dro.gameplay.clan-raid.cooldown-enabled` estão habilitados;
 - no perfil alpha, a flag `dro.gameplay.auto-boss-respawn-after-defeat-enabled` abre automaticamente uma nova Raid após a derrota, preservando o histórico da instância anterior;
 - o sistema aplica as regras de disponibilidade e participação configuradas;
 - ferramentas administrativas existem para contingência/reset operacional.
@@ -604,8 +663,9 @@ A Casa de Leilões permite negociação assíncrona entre jogadores por listings
 - listar anúncios ativos;
 - pesquisa e filtros;
 - consultar os próprios anúncios;
-- publicar item elegível;
-- comprar anúncio;
+- publicar itens empilháveis elegíveis e comprar uma parte da quantidade anunciada;
+- anunciar equipamentos individuais próprios, desequipados e desbloqueados;
+- reservar o equipamento durante o anúncio, transferi-lo ao inventário do comprador na venda ou devolvê-lo ao vendedor no cancelamento ou na expiração;
 - cancelar anúncio próprio dentro das regras permitidas;
 - histórico de transações;
 - expiração automática de anúncios;
@@ -660,7 +720,7 @@ O Correio é um sistema de mensagens entre jogadores e também serve como canal 
 
 ## 22. Eventos e premiações
 
-O módulo `event` atual implementa **premiações administrativas de evento**, e não um calendário público completo de eventos automatizados.
+O módulo `event` permite distribuir premiações administrativas pelo Correio.
 
 ### Funcionamento atual
 
@@ -681,7 +741,16 @@ O módulo `event` atual implementa **premiações administrativas de evento**, e
 | POST | `/admin/mail/event-rewards` | Criar/distribuir premiação de evento (`PLAYER`, `CLAN`, `PLAYERS` ou `ALL_PLAYERS`), com Bits e até 10 itens |
 | GET | `/admin/mail/recipients/players/count` | Consultar a quantidade de jogadores elegíveis para o modo global |
 
-A expansão para calendário, programação automática ou catálogo público de eventos deve ser tratada como evolução futura, não como funcionalidade já entregue.
+### Bônus de fim de semana
+
+O jogo possui um evento de XP e Bits em dobro, com programação automática e controle manual pelo painel administrativo. O bônus é aplicado às recompensas previstas em cada fluxo, como XP e Bits de missões e Bits da Arena.
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/events/weekend-double-reward` | Consultar o estado do bônus |
+| GET | `/admin/server/weekend-double-reward` | Consultar o modo de operação do evento |
+| POST | `/admin/server/weekend-double-reward/toggle` | Alternar manualmente o estado do evento |
+| POST | `/admin/server/weekend-double-reward/automatic` | Voltar à programação automática |
 
 ---
 
@@ -697,7 +766,7 @@ Uma Loot Table persistida possui, conceitualmente:
 - estado ativo/inativo;
 - faixa de quantidade de itens por abertura;
 - pesos por raridade;
-- entradas elegíveis e seus pesos/regras.
+- entradas elegíveis e seus pesos/regras, incluindo recompensas de equipamento com template e raridade conforme a configuração.
 
 O algoritmo valida a configuração antes do roll e seleciona recompensas de acordo com raridades e entradas elegíveis.
 
@@ -771,6 +840,7 @@ O painel administrativo concentra operações de manutenção de catálogo, mode
 - configuração de baús de áreas/missões;
 - comunicados de Correio;
 - premiações de evento;
+- criação, listagem e remoção de convites Alpha em `/admin/alpha-invites`;
 - ferramentas operacionais;
 - simuladores internos;
 - configurações administrativas de servidor disponíveis no projeto.
@@ -817,7 +887,9 @@ Telas/módulos atualmente presentes incluem:
 - Rebirth;
 - ranking;
 - incubação;
-- Pokédex interna;
+- coleção de Digimons;
+- calendário de atividades;
+- equipes de missão;
 - bosses;
 - Boss Mundial;
 - Storage;
@@ -864,8 +936,6 @@ Quando uma feature futura for implementada e integrada à branch de referência,
 
 O banco utiliza Flyway para versionamento de schema, catálogos e seeds.
 
-A versão de referência analisada contém migrations até **V119**.
-
 Como novas migrations são adicionadas continuamente, este documento não mantém uma lista rígida de intervalos por feature. Para histórico exato, consulte:
 
 ```text
@@ -892,6 +962,31 @@ Entre os sistemas cobertos pelas migrations atuais estão:
 - tutorial;
 - versionamento de sessão;
 - soft delete de Clãs.
+
+---
+
+## 29. Coleção
+
+A coleção registra descobertas por espécie e raridade para cada jogador. O registro é automático no resgate da incubação, na evolução e no Rebirth. Ao consultar a coleção, o sistema também sincroniza Digimons próprios elegíveis de contas anteriores ao registro automático.
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/collection` | Consultar descobertas, progresso e marcos da coleção |
+| POST | `/collection/register` | Registrar um Digimon próprio pela operação de compatibilidade, de forma idempotente e sem consumir o Digimon |
+
+---
+
+## 30. Calendário de atividades
+
+Atividades elegíveis geram pontos para a meta diária da conta. As fontes incluem resgate de missão, partida na Arena, desafio de boss, ataque ao Boss Mundial ou à Raid de Clã e resgate da incubação. Metas, pontuação, limites por fonte e baús são configuráveis.
+
+Ao atingir a meta, o jogador pode resgatar um baú por dia do mês vigente. O baú de conclusão mensal é liberado após o resgate de todas as recompensas diárias do mês.
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/activity-calendar/current` | Consultar o calendário do mês e o progresso |
+| POST | `/activity-calendar/days/{date}/claim` | Resgatar a recompensa diária |
+| POST | `/activity-calendar/months/{yearMonth}/claim-completion` | Resgatar o baú de conclusão mensal |
 
 ---
 
