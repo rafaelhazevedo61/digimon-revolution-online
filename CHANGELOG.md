@@ -7,6 +7,8 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ## [Não lançado]
 
+## [0.0.15-SNAPSHOT]
+
 ### Adicionado
 
 - **Equipamentos na Casa de Leilões**: o jogador pode anunciar uma peça própria, desequipada e desbloqueada. A peça fica reservada durante o anúncio e é transferida ao comprador na venda ou devolvida ao vendedor no cancelamento ou na expiração.
