@@ -88,16 +88,17 @@ A tabela lista as peças possíveis, conforme [V224](../db/migration/V224__add_w
 
 ### Progressão de drops proposta nas planilhas
 
-A aba **Mapa Geral** da planilha consolidada propõe a distribuição abaixo. Os intervalos da Raid e do Boss Mundial descrevem metas de progressão. As entradas nomeadas confirmadas no repositório são as peças T1 da tabela anterior.
+A aba **Mapa Geral** da planilha consolidada propõe a distribuição abaixo. As peças Kernel da Raid de Clã e Overlord do Boss Mundial são concedidas sempre no T1 por essas fontes.
 
 | Tier | Fonte proposta no Mapa Geral |
 |---|---|
+| T1 | Missões |
 | T2 | Boss normal |
 | T3 | Boss diário |
 | T4 | Boss semanal |
 | T5 | Boss mensal |
-| T6–T7 | Raid de Clã, set Kernel |
-| T8–T9 | Boss Mundial, set Overlord |
+| T1 | Raid de Clã, set Kernel |
+| T1 | Boss Mundial, set Overlord |
 | T10 | Conversão de Fragmentos Supremos |
 
 A conversão por Fragmentos Supremos consta como proposta. O Ferreiro já permite aprimorar peças até T10 e o catálogo já define um Baú do Tier T10. A aba **Calendário** de `DROPS - ATT 020926(1).xlsm` repete as tabelas de Incursão. Para o calendário, a referência usada foi a aba correspondente da planilha consolidada. A recompensa mensal em Fragmentos Supremos faz parte da proposta.
