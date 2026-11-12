@@ -24,13 +24,19 @@ Seeds e normalização de raridade em [V60](../db/migration/V60__seed_equipment_
 
 O backend aplica o percentual sobre a soma dos bônus efetivos das peças equipadas. Ao equipar três peças do mesmo set, vale o bônus de três peças.
 
-| Set | 2 peças | 3 peças |
-|---|---|---|
-| Berserker | +10% ATK | +20% ATK |
-| Guardião | +5% HP e +10% DEF | +10% HP e +20% DEF |
-| Vitalidade | +10% HP | +20% HP |
-| Equilibrado | +5% HP, ATK e DEF | +10% HP, ATK e DEF |
-| Overclock, Firewall, Data Breaker, Kernel e Overlord | Pendente | Pendente |
+| Set | 2 peças HP | 2 peças ATK | 2 peças DEF | 3 peças HP | 3 peças ATK | 3 peças DEF |
+|---|---:|---:|---:|---:|---:|---:|
+| Berserker | 0% | 10% | 0% | 0% | 20% | 0% |
+| Guardião | 5% | 0% | 10% | 10% | 0% | 20% |
+| Vitalidade | 10% | 0% | 0% | 20% | 0% | 0% |
+| Equilibrado | 5% | 5% | 5% | 10% | 10% | 10% |
+| Overclock | 5% | 10% | 0% | 10% | 20% | 0% |
+| Firewall | 0% | 0% | 15% | 10% | 0% | 25% |
+| Data Breaker | 0% | 10% | 5% | 5% | 20% | 10% |
+| Kernel | 10% | 0% | 5% | 20% | 0% | 15% |
+| Overlord | 5% | 5% | 5% | 15% | 15% | 10% |
+
+Os percentuais de Overclock, Firewall, Data Breaker, Kernel e Overlord seguem a tabela de balanceamento fornecida. A implementação desses cinco bônus ainda está pendente no backend.
 
 Consulte [EquipmentRules](../../java/com/dro/modules/equipment/domain/EquipmentRules.java).
 
