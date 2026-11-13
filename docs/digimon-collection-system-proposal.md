@@ -1,4 +1,22 @@
-# Proposta de sistema de coleção de Digimons
+# Coleção de Digimons
+
+## Funcionamento vigente
+
+A coleção é da conta. Cada combinação inédita de **espécie e raridade** vale um ponto. O registro acontece automaticamente no resgate da incubação, na evolução e no Rebirth. Ao consultar a coleção, o servidor também sincroniza Digimons próprios elegíveis.
+
+O registro manual permanece disponível para clientes antigos. Ele registra apenas combinações inéditas e preserva o Digimon e o Digivice.
+
+Os marcos de **10, 50, 100, 150, 200, 250 e 300 pontos** acionam a tentativa de entrega automática de **1 Disco de XP de 20%** por marco atingido. A recompensa é processada no registro.
+
+Descobrir as quatro raridades da mesma espécie desbloqueia a maestria. O cálculo aplica multiplicador de **1,05×** aos atributos nos fluxos de criação, evolução e Rebirth que consultam a maestria da espécie.
+
+[Serviço de registro](../backend/src/main/java/com/dro/modules/collection/application/CollectionRegistrationService.java) · [Progressão do Digimon](../backend/src/main/resources/docs/PROGRESSAO-DIGIMON.md)
+
+## Proposta original
+
+O conteúdo abaixo é o histórico da proposta de registro com Digivice. Para as regras atuais, consulte a seção [Funcionamento vigente](#funcionamento-vigente).
+
+### Proposta de sistema de coleção de Digimons
 
 **Projeto:** Digimon Revolution Online  
 **Versão:** 2.0 — proposta refinada  

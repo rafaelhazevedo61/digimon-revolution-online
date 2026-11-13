@@ -7,7 +7,18 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ## [Não lançado]
 
+## [0.0.15-SNAPSHOT]
+
 ### Adicionado
+
+- **Equipamentos na Casa de Leilões**: o jogador pode anunciar uma peça própria, desequipada e desbloqueada. A peça fica reservada durante o anúncio e é transferida ao comprador na venda ou devolvida ao vendedor no cancelamento ou na expiração.
+- **Equipes de missão**: o jogador pode cadastrar equipes de até três Digimons, executar missões em slots paralelos e configurar repetição e resgate automáticos para missões de equipe. O Expansor de Slot de Time amplia a capacidade de equipes cadastradas.
+- **Automação da incubadora**: cada incubação pode ter resgate automático e repetição do ciclo quando houver recursos e capacidade para continuar.
+- **Calendário de atividades**: atividades do jogo geram pontos para a meta diária. O jogador pode resgatar um baú por dia elegível e outro ao resgatar todas as recompensas diárias do mês.
+- **Ferreiro e Storage**: equipamentos ganharam aprimoramento, ascensão com prévia, bloqueio e desmonte individual ou em lote. Digimons armazenados podem ser bloqueados ou, quando elegíveis, sacrificados em troca de Dados Digitais.
+- **Conta e acesso à Alpha**: foram adicionadas alterações de e-mail e username e gerenciamento administrativo de convites de uso único vinculados ao e-mail.
+- **Clãs e rankings**: Clãs ganharam armazenamento compartilhado de itens. Foram adicionados ranking por poder e ranking sazonal da Arena.
+- **Bônus de fim de semana**: XP e Bits em dobro nos fluxos elegíveis, com programação automática e controle manual pelo painel administrativo.
 
 - **Imagens do catálogo de Digimons**: migration incremental preenche URLs públicas para 63 espécies que estavam sem imagem, preservando URLs já configuradas e cobrindo todo o catálogo atual com referências verificadas da DAPI e do Wikimon.
 
@@ -35,7 +46,17 @@ e o projeto segue versionamento incremental por entregas (PRs).
   - Telas de Arena no game frontend: lobby, resultado do duelo, ranking e histórico.
   - Migrations `V74` (rating, estatísticas e tabela `arena_matches`) e `V75`/`V76` (flag `is_bot`, jogador de sistema e seed de bots).
 
+### Alterado
+
+- **Inventário e saldo da conta**: itens, equipamentos e Bits passaram a pertencer ao jogador. Equipar uma peça continua vinculando seu uso a um Digimon.
+- **Energia reativada**: o consumo voltou a ser habilitado por padrão, inclusive no perfil Alpha. A capacidade máxima passa a crescer com o nível do Digimon e a recuperação ocorre ao longo do tempo.
+- **Duração das missões**: a migration V239 ajusta as missões existentes do catálogo para dez minutos.
+- **Coleção de Digimons**: descobertas passaram a ser registradas automaticamente no resgate da incubação, na evolução e no Rebirth.
+
+
 ### Corrigido
+
+- **Referência funcional**: o `FUNCIONALIDADES.md` foi atualizado para refletir as regras e funcionalidades implementadas na `develop`. A seção de migrations passou a apontar para o diretório versionado.
 
 - **Digitama de Gelo**: corrigido o binding das flags YAML para nomes de Digimons BABY com espaços, fazendo `Yukimi Botamon` ser reconhecido corretamente como elegível quando sua flag está `true`.
 
