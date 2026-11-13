@@ -23,6 +23,17 @@ public class Player {
     @Column(name = "vip_expires_at")
     private Instant vipExpiresAt;
 
+    @Column(name = "tracked_evolution_line_id")
+    private Long trackedEvolutionLineId;
+
+    public Long getTrackedEvolutionLineId() {
+        return trackedEvolutionLineId;
+    }
+
+    public void setTrackedEvolutionLineId(Long trackedEvolutionLineId) {
+        this.trackedEvolutionLineId = trackedEvolutionLineId;
+    }
+
     private LocalDate vipEnergyChargeClaimDate;
 
     public boolean hasClaimedVipEnergyCharge(LocalDate date) {

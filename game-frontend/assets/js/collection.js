@@ -71,7 +71,7 @@ async function collectionOpenAlbum() {
   overlay.id = "collection-album-overlay";
   overlay.className = "fixed inset-0 z-[60] flex items-end justify-center";
   overlay.style.background = "rgba(0,0,0,0.72)";
-  overlay.innerHTML = `<div class="w-full max-w-4xl rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:92vh;overflow-y:auto" onclick="event.stopPropagation()"><div class="flex items-center justify-between gap-3 mb-3"><div><p class="text-xs uppercase tracking-wider text-fuchsia-400 font-bold">Coleção</p><h3 class="font-bold text-lg">Álbum completo</h3><p class="text-xs text-slate-400">Cada Digimon possui uma entrada para cada raridade.</p></div><button class="text-slate-400 text-2xl" aria-label="Fechar" onclick="collectionCloseAlbum()">&times;</button></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+  overlay.innerHTML = `<div class="w-full max-w-4xl rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:92vh;overflow-y:auto" onclick="event.stopPropagation()"><div class="flex items-center justify-between gap-3 mb-3"><div><p class="text-xs uppercase tracking-wider text-fuchsia-400 font-bold">Coleção</p><h3 class="font-bold text-lg">Álbum completo</h3><p class="text-xs text-slate-400">Cada Digimon possui uma entrada para cada raridade.</p></div><button class="text-slate-400 text-2xl" aria-label="Fechar" onclick="collectionCloseAlbum()">&times;</button></div><section id="collection-tracked-line" class="mb-3" hidden></section><div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
       <input id="collection-album-search" class="input w-full min-w-0" type="search" aria-label="Buscar Digimon por nome" placeholder="Buscar Digimon por nome" oninput="collectionRenderAlbum()" disabled />
       <select id="collection-album-stage" class="input w-full min-w-0" aria-label="Filtrar por estágio" onchange="collectionRenderAlbum()" disabled>
         <option value="ALL">Todos os estágios</option>
@@ -86,6 +86,7 @@ async function collectionOpenAlbum() {
     <p id="collection-album-count" class="text-xs text-slate-400 mb-3" aria-live="polite"></p><div id="collection-album-content"><p class="text-sm text-slate-400 text-center py-8">Carregando catálogo...</p></div></div>`;
   overlay.onclick = event => { if (event.target === overlay) collectionCloseAlbum(); };
   document.body.appendChild(overlay);
+  collectionLoadTrackedLine(overlay.querySelector("#collection-tracked-line"));
   try {
     let page = 0;
     const catalog = [];
@@ -104,6 +105,82 @@ async function collectionOpenAlbum() {
   } catch (err) {
     if (!overlay.isConnected) return;
     overlay.querySelector("#collection-album-content").innerHTML = `<p class="text-sm text-red-300 text-center py-8">${escapeHtml(err.message || "Não foi possível carregar o álbum.")}</p>`;
+  }
+}
+
+async function collectionLoadTrackedLine(panel) {
+  const endpoint = "/collection/tracked-evolution-line";
+  try {
+    const [status, lines, summary] = await Promise.all([
+      apiGet(endpoint), apiGet("/evolution-lines/available"), apiGet("/collection")
+    ]);
+    if (!panel.isConnected) return;
+
+    panel.hidden = false;
+    panel.className = "mb-3 rounded-xl border border-amber-500/30 bg-amber-950/20 p-3";
+    panel.innerHTML = '<h4 class="font-bold text-amber-200">Acompanhar linha evolutiva</h4>';
+    if (!status.vipActive) {
+      panel.insertAdjacentHTML("beforeend", '<p class="mt-1 text-xs text-slate-400">Disponível com VIP ativo.</p>');
+      return;
+    }
+
+    panel.insertAdjacentHTML("beforeend", `
+      <label class="mt-2 block text-xs text-slate-300">Linha evolutiva
+        <select class="input mt-1 w-full">
+          <option value="">Nenhuma linha acompanhada</option>
+          ${lines.map(line => `<option value="${escapeAttr(line.code)}">${escapeHtml(line.name)} · ${line.steps.map(step => escapeHtml(step.digimon)).join(" → ")}</option>`).join("")}
+        </select>
+      </label>
+      <div data-line-progress aria-live="polite"></div>
+      <p data-line-error role="alert" class="text-xs text-red-300"></p>`);
+    const select = panel.querySelector("select");
+    const progress = panel.querySelector("[data-line-progress]");
+    const error = panel.querySelector("[data-line-error]");
+    const registered = new Set(summary.entries.map(entry => String(entry.digimonInfoId)));
+    let trackedCode = status.lineCode || "";
+
+    function updateProgress() {
+      select.value = trackedCode;
+      const line = lines.find(candidate => candidate.code === trackedCode);
+      if (!line) {
+        progress.textContent = "";
+        return;
+      }
+      const steps = line.steps;
+      const missing = steps.filter(step => !registered.has(String(step.digimonInfoId)));
+      const next = missing[0];
+      progress.innerHTML = `
+        <p class="mt-3 text-sm font-semibold">${steps.length - missing.length} de ${steps.length} registrados</p>
+        <p class="text-xs text-slate-300">${next ? `Próximo registro: ${escapeHtml(next.digimon)}` : "Linha completa."}</p>
+        <ol class="mt-2 flex flex-wrap gap-2 text-xs">
+          ${steps.map(step => {
+            const done = registered.has(String(step.digimonInfoId));
+            const colors = done ? "bg-emerald-950 text-emerald-300"
+              : step === next ? "bg-amber-900 text-amber-100" : "bg-slate-800 text-slate-300";
+            return `<li class="rounded px-2 py-1 ${colors}">${escapeHtml(step.digimon)} · ${done ? "Registrado" : "Falta registrar"}</li>`;
+          }).join("")}
+        </ol>`;
+    }
+
+    updateProgress();
+    select.addEventListener("change", async () => {
+      const code = select.value;
+      select.disabled = true;
+      error.textContent = "";
+      try {
+        const updated = code ? await apiPut(endpoint, { lineCode: code }) : await apiDelete(endpoint);
+        trackedCode = updated.lineCode || "";
+      } catch (err) {
+        error.textContent = err.message || "Não foi possível salvar a linha evolutiva.";
+      } finally {
+        updateProgress();
+        select.disabled = false;
+      }
+    });
+  } catch {
+    if (!panel.isConnected) return;
+    panel.hidden = false;
+    panel.textContent = "Não foi possível carregar o acompanhamento de linhas evolutivas.";
   }
 }
 
