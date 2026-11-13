@@ -7,7 +7,9 @@ import com.dro.modules.player.api.dto.response.ResetPlayerPasswordResponse;
 import com.dro.modules.player.application.GetAdminPlayersUseCase;
 import com.dro.modules.player.application.ResetPlayerPasswordUseCase;
 import com.dro.modules.player.application.WipePlayerDataUseCase;
+import com.dro.modules.player.domain.VipPlan;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +37,14 @@ public class AdminPlayerController {
                                       @RequestBody VipRequest request) {
         return setPlayerVipUseCase.execute(authorization, id, request.expiresAt());
     }
+
+    @PostMapping("/{id}/vip/extend")
+    public AdminPlayerResponse extendVip(@RequestHeader("Authorization") String authorization, @PathVariable UUID id,
+                                         @RequestBody @Valid VipExtensionRequest request) {
+        return setPlayerVipUseCase.extend(authorization, id, request.plan());
+    }
+
+    public record VipExtensionRequest(@NotNull VipPlan plan) {}
 
     public record VipRequest(Instant expiresAt) {}
 

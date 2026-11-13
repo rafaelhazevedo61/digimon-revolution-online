@@ -5,12 +5,14 @@ import com.dro.modules.incubation.infra.IncubationRepository;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.modules.player.api.dto.response.AdminPlayerResponse;
+import com.dro.modules.player.domain.VipPlan;
 import com.dro.shared.audit.AdminAuditService;
 import com.dro.shared.exception.BadRequestException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,6 +30,20 @@ public class SetPlayerVipUseCase {
         this.missions = missions;
         this.incubations = incubations;
         this.audit = audit;
+    }
+
+    @Transactional
+    public AdminPlayerResponse extend(String authorization, UUID playerId, VipPlan plan) {
+        var player = vipAccess.lockPlayer(playerId);
+        Instant now = Instant.now();
+        Instant base = player.hasActiveVip(now) ? player.getVipExpiresAt() : now;
+        Instant expiresAt = base.plus(plan.getDays(), ChronoUnit.DAYS);
+        player.setVipExpiresAt(expiresAt);
+        audit.success(authorization, "ADMIN_PLAYER_VIP_UPDATED", "Player", playerId.toString(),
+                "extend-vip", "Passe VIP aplicado",
+                Map.of("targetPlayerId", playerId.toString(), "plan", plan.name(),
+                        "expiresAt", expiresAt.toString()));
+        return AdminPlayerResponse.from(player);
     }
 
     @Transactional

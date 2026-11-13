@@ -39,8 +39,9 @@ async function renderVipPage() {
       </div>
 
       <section class="card">
-        <h3 class="font-semibold">Custo e disponibilidade</h3>
-        <p class="text-sm text-slate-400 mt-2">Preço ainda não definido. Nesta fase, o acesso VIP é concedido pela administração.</p>
+        <h3 class="font-semibold">Planos VIP</h3>
+        <div id="vip-plans" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3" aria-live="polite">Carregando planos…</div>
+        <p class="text-sm text-slate-400 mt-3">Todos os planos incluem os mesmos benefícios. A ativação é feita pela administração, sem renovação automática.</p>
       </section>
     </div>`;
 
@@ -78,6 +79,19 @@ async function renderVipPage() {
       }
       if (claimButton.isConnected) claimStatus.textContent = error.message;
     }
+  });
+
+  const plansContainer = document.getElementById("vip-plans");
+  apiGet("/players/me/vip/plans").then(plans => {
+    if (!plansContainer.isConnected) return;
+    const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+    plansContainer.innerHTML = plans.map(({ days, priceInCents }) => `
+      <div class="rounded-xl border border-slate-700 p-3">
+        <h4 class="text-sm font-semibold">${Number(days)} ${days === 1 ? "dia (24 h)" : "dias"}</h4>
+        <p class="text-lg font-semibold text-amber-200 mt-1">${brl.format(priceInCents / 100)}</p>
+      </div>`).join("");
+  }).catch(() => {
+    if (plansContainer.isConnected) plansContainer.textContent = "Não foi possível carregar os planos.";
   });
 
   try {
