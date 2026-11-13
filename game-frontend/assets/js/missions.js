@@ -1078,6 +1078,12 @@ function getMissionArea(mission) {
   return mission.area || null;
 }
 
+function missionDurationComparison(seconds) {
+  const regularDuration = formatTime(seconds);
+  const vipDuration = formatTime(Math.ceil(seconds / 2));
+  return `⏱️ ${regularDuration} · ${vipDuration} com VIP`;
+}
+
 function renderMissionCards(missions, area) {
   const container = document.getElementById("mission-list");
   window._missionDefinitions = Object.fromEntries(missions.map(mission => [missionIdentity(mission), mission]));
@@ -1111,7 +1117,7 @@ function renderMissionCards(missions, area) {
       <div class="mission-detail-meta">
         <span><small>REQUISITO</small>⚡ Nível ${m.requiredLevel}</span>
         <span><small>CUSTO</small>🔋 ${m.energyCost} energia</span>
-        <span><small>DURAÇÃO</small>⏱️ ${formatTime(m.durationSeconds)}</span>
+        <span><small>DURAÇÃO</small>${missionDurationComparison(m.durationSeconds)}</span>
       </div>
       <div class="mission-detail-actions">
         <button type="button" class="btn-secondary flex-1 text-sm" onclick="missionShowLootPreview('${escapeAttr(m.id)}', this)">Ver recompensas</button>
