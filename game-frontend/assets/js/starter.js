@@ -80,7 +80,7 @@ function renderStarterCards(pools) {
         <span class="starter-egg starter-egg--${t.type.toLowerCase()}" aria-hidden="true"></span>
         <h3 class="font-bold text-sm mb-1">${t.label}</h3>
         <p class="text-xs text-slate-400">Digitama de ${t.label}</p>
-        ${selectable ? `<p class="text-xs text-slate-500 mt-2">${entries.map(e => escapeHtml(e.digimonName)).join(", ")}</p>` : lockedMarkup}
+        ${lockedMarkup}
       </button>
     `;
   }).join("");
