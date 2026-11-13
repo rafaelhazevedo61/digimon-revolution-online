@@ -127,6 +127,12 @@ async function renderMorePage() {
       label: "Conta",
       items: [
         {
+          route: "vip",
+          icon: "✦",
+          title: "VIP",
+          desc: "Benefícios, validade e custo",
+        },
+        {
           route: "settings",
           iconClass: "more-icon-settings",
           iconImage: "assets/img/configuracoes.webp",
