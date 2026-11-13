@@ -58,8 +58,7 @@ async function renderVipPage() {
     claimButton.disabled = !data.vipActive || data.claimedToday;
     claimButton.textContent = data.claimedToday ? "Já resgatado hoje"
       : "Resgatar Carga de Energia Total";
-    claimStatus.textContent = data.claimedToday ? "Carga de hoje já resgatada."
-      : data.vipActive ? "Resgate disponível." : "Disponível com VIP ativo.";
+    claimStatus.textContent = data.vipActive || data.claimedToday ? "" : "Disponível com VIP ativo.";
   }
 
   claimButton.addEventListener("click", async () => {
