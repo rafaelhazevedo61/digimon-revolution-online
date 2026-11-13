@@ -402,6 +402,7 @@ function openMissionTeamSelectionModal(missionId) {
           <div><p class="text-xs font-bold uppercase tracking-wider text-cyan-400">Seleção de expedição</p><h3 class="mt-1 text-xl font-bold text-slate-100">Escolha o time para esta missão</h3><p class="mt-1 text-sm text-slate-400">${escapeHtml(formatMissionName(mission))} · Slot ${Math.min(occupiedSlots + 1, 3)} de 3</p></div>
           <button type="button" class="text-2xl leading-none text-slate-400 hover:text-white" aria-label="Fechar" onclick="document.getElementById('mission-team-selection-modal')?.remove()">&times;</button>
         </div>
+        <p class="mb-3 text-sm text-slate-300">Duração: ${missionDurationComparison(mission.durationSeconds)}</p>
         ${context.teams.length ? `<div class="space-y-3">${cards}</div>` : `<div class="rounded-xl border border-dashed border-cyan-800 bg-cyan-950/20 p-5 text-center"><p class="font-bold text-slate-100">Nenhum time disponível</p><p class="mt-1 text-sm text-slate-400">Crie uma formação com até três Digimons antes de iniciar esta missão.</p><button type="button" class="btn-primary mt-4" onclick="document.getElementById('mission-team-selection-modal')?.remove(); navigateTo('mission-teams')">Gerenciar times</button></div>`}
         <button type="button" class="btn-secondary mt-4 w-full" onclick="document.getElementById('mission-team-selection-modal')?.remove()">Cancelar</button>
       </div>
