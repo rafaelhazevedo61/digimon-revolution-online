@@ -1,4 +1,4 @@
-async function renderSettingsPage() {
+function renderSettingsPage() {
   const app = document.getElementById("app");
   showBottomNav("more");
 
@@ -15,10 +15,6 @@ async function renderSettingsPage() {
         <span class="settings-menu-caption">Minha conta</span>
       </header>
 
-      <section id="settings-vip" class="settings-menu-card mb-3" aria-live="polite">
-        <p class="settings-eyebrow">VIP</p>
-        <p id="settings-vip-status" class="settings-menu-description">Consultando validade…</p>
-      </section>
       <section class="settings-menu-card">
         <div class="settings-menu-intro">
           <p class="settings-eyebrow">Gerencie sua experiência</p>
@@ -36,16 +32,7 @@ async function renderSettingsPage() {
       <p class="settings-menu-footer">Suas alterações são aplicadas imediatamente e protegidas pela sua sessão atual.</p>
     </div>
   `;
-  const status = document.getElementById("settings-vip-status");
-  try {
-    const player = await apiGet("/players/me");
-    const expires = new Date(player.vipExpiresAt);
-    if (status?.isConnected) status.textContent = expires.getTime() > Date.now()
-      ? `VIP ativo até ${expires.toLocaleString("pt-BR")}`
-      : "VIP inativo";
-  } catch {
-    if (status?.isConnected) status.textContent = "Não foi possível consultar o VIP.";
-  }
+
 }
 
 function settingsMenuItem(type, icon, title, description, category, comingSoon = false) {
