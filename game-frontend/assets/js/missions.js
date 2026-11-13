@@ -182,11 +182,13 @@ function renderActiveMissionCard(m, vipExpiresAt) {
   const endsAt = new Date(m.endsAt).getTime();
   const remaining = Math.max(0, Math.floor((endsAt - now) / 1000));
   const done = m.status === "COMPLETED" || remaining <= 0;
-  const autoRepeatControls = m.teamId
-    ? (vipActive ? `<div class="missions-auto-mode-actions">
+  const missionStatus = done ? `<button class="btn-sm btn-primary" onclick="claimMissionFromList('${m.missionInstanceId}')">Resgatar</button>` : `<span class="missions-active-badge">Em andamento</span>`;
+  const automationLocked = Boolean(m.teamId && !vipActive);
+  const autoRepeatControls = m.teamId && vipActive
+    ? `<div class="missions-auto-mode-actions">
         <button class="btn-sm ${m.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoRepeat('${m.missionInstanceId}', ${!m.autoRepeatEnabled})">${m.autoRepeatEnabled ? "Repetição ativa" : "Repetir após resgate"}</button>
         <button type="button" class="btn-sm ${m.autoClaimEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoClaim('${m.missionInstanceId}', ${!m.autoClaimEnabled})">${m.autoClaimEnabled ? "Automático ativo" : "Automático completo"}</button>
-      </div>` : `<span class="text-xs text-amber-300">🔒 Automação exclusiva VIP</span>`)
+      </div>`
     : "";
 
   return `
@@ -197,11 +199,19 @@ function renderActiveMissionCard(m, vipExpiresAt) {
         <p class="missions-active-name">${escapeHtml(formatMissionName(m))}</p>
         <p class="missions-active-team">${escapeHtml(m.teamName || (m.teamId ? "Time de missão" : "Missão legada"))}${m.teamId ? " · 3 Digimons" : ""}</p>
         <div class="missions-active-state"><span class="missions-active-dot ${done ? "missions-active-dot-ready" : ""}"></span><span class="mp-timer">${done ? "Concluída!" : `Retorno em ${formatTime(remaining)}`}</span></div>
+        ${automationLocked ? `
+          <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span class="inline-flex items-center gap-1 whitespace-nowrap text-xs text-amber-300">
+              <span aria-hidden="true">🔒</span> Automação exclusiva VIP
+            </span>
+            ${missionStatus}
+          </div>` : ""}
       </div>
-      <div class="missions-active-action">
-        ${autoRepeatControls}
-        ${done ? `<button class="btn-sm btn-primary" onclick="claimMissionFromList('${m.missionInstanceId}')">Resgatar</button>` : `<span class="missions-active-badge">Em andamento</span>`}
-      </div>
+      ${automationLocked ? "" : `
+        <div class="missions-active-action">
+          ${autoRepeatControls}
+          ${missionStatus}
+        </div>`}
     </article>
   `;
 }
