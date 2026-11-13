@@ -7,6 +7,7 @@ public enum ItemType {
 
     // Pocoes
     POTION_SMALL,
+    ENERGY_CELL,
 
     // Recursos
     TRAINING_STONE,

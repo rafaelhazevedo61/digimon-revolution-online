@@ -272,7 +272,7 @@ function shopSwitchTab(cat) {
 function shopItemEmoji(p) {
   if (p.productType === "EQUIPMENT") return "⚔️";
   const map = {
-    POTION_SMALL: "🧪", TRAINING_STONE: "💎", DATA_CORE: "🔮",
+    ENERGY_CELL: "🔋", POTION_SMALL: "🧪", TRAINING_STONE: "💎", DATA_CORE: "🔮",
     DIGITAMA_STARTER: "⭐", DIGITAMA_FIRE: "🔥", DIGITAMA_WATER: "💧", DIGITAMA_NATURE: "🌿",
     DIGITAMA_EARTH: "🌍", DIGITAMA_WIND: "🌪️", DIGITAMA_LIGHT: "✨", DIGITAMA_DARK: "🌑",
     DIGITAMA_THUNDER: "⚡", DIGITAMA_NEUTRAL: "⚪", DIGITAMA_ICE: "❄️", DIGITAMA_STEEL: "⚙️",
@@ -291,7 +291,8 @@ function shopOpenBuy(code) {
   const inventoryQuantity = isEquip ? 0 : shopProductInventoryQuantity(product);
   const remainingStackQuantity = Math.max(0, SHOP_MAX_BUY_QUANTITY - inventoryQuantity);
   const affordableQuantity = product.price > 0 ? Math.floor(shopPlayerBits / product.price) : SHOP_MAX_BUY_QUANTITY;
-  const maxQty = isEquip ? 1 : Math.min(SHOP_MAX_BUY_QUANTITY, remainingStackQuantity, affordableQuantity);
+  const purchaseLimit = product.itemType === "ENERGY_CELL" ? 1 : SHOP_MAX_BUY_QUANTITY;
+  const maxQty = isEquip ? 1 : Math.min(purchaseLimit, remainingStackQuantity, affordableQuantity);
   const purchaseUnavailable = maxQty < 1 || shopPlayerBits < product.price;
   const purchaseUnavailableMessage = remainingStackQuantity < 1
     ? "Limite de stack atingido para este item."

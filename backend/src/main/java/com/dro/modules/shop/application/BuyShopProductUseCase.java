@@ -27,6 +27,8 @@ import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.UUID;
 
@@ -40,6 +42,7 @@ import java.util.UUID;
  */
 @Service
 public class BuyShopProductUseCase {
+    private static final int ENERGY_CELL_DAILY_LIMIT = 3;
     private static final int MAX_PURCHASE_QUANTITY = 999;
 
     private final PlayerRepository playerRepository;
@@ -66,15 +69,17 @@ public class BuyShopProductUseCase {
     @Transactional
     public BuyShopProductResponse execute(String token, BuyShopProductRequest request) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Jogador não encontrado"));
+        ShopProduct product = shopProductRepository.findById(request.productCode()).map(ShopProductMapper::toProduct).orElseThrow(() -> new NotFoundException("Produto da loja não encontrado: " + request.productCode()));
+        boolean energyCell = product.getItemType() == ItemType.ENERGY_CELL;
+        Player player = (energyCell ? playerRepository.findByIdForUpdate(playerId) : playerRepository.findById(playerId)).orElseThrow(() -> new NotFoundException("Jogador não encontrado"));
         if (player.getActiveDigimonId() == null) {
             throw new BadRequestException("Nenhum Digimon ativo selecionado");
         }
-        Digimon digimon = digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Digimon ativo não encontrado"));
+        Digimon digimon = (energyCell ? digimonRepository.findByIdForUpdate(player.getActiveDigimonId())
+                : digimonRepository.findById(player.getActiveDigimonId())).orElseThrow(() -> new NotFoundException("Digimon ativo não encontrado"));
         if (!digimon.getPlayerId().equals(playerId)) {
             throw new BadRequestException("O Digimon ativo não pertence a este jogador");
         }
-        ShopProduct product = shopProductRepository.findById(request.productCode()).map(ShopProductMapper::toProduct).orElseThrow(() -> new NotFoundException("Produto da loja não encontrado: " + request.productCode()));
         int quantity = request.quantity();
         if (quantity > MAX_PURCHASE_QUANTITY) {
             throw new BadRequestException("A quantidade máxima por compra é 999 unidades");
@@ -88,6 +93,14 @@ public class BuyShopProductUseCase {
         int totalPrice = product.getPrice() * quantity;
         if (digimon.getBits() < totalPrice) {
             throw new UnprocessableException("Bits insuficientes");
+        }
+        if (energyCell) {
+            if (quantity != 1) {
+                throw new BadRequestException("Células de Energia devem ser compradas uma por vez.");
+            }
+            if (!player.registerEnergyCellPurchase(LocalDate.now(ZoneOffset.UTC), ENERGY_CELL_DAILY_LIMIT)) {
+                throw new UnprocessableException("Limite diário de 3 Células de Energia atingido.");
+            }
         }
         UUID equipmentId = null;
         if (product.getProductType() == ShopProductType.ITEM) {

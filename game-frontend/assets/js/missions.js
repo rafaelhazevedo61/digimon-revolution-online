@@ -373,6 +373,7 @@ function missionRewardLabel(reward) {
 
   const labels = {
     POTION_SMALL: "Poção Pequena",
+    ENERGY_CELL: "Célula de Energia",
     TRAINING_STONE: "Pedra de Treino",
     DATA_CORE: "Núcleo de Dados",
     DIGITAMA_STARTER: "Digitama Inicial",

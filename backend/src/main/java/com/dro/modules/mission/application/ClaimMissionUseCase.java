@@ -56,6 +56,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Componente da camada de caso de uso da aplicação do módulo de Missões.
@@ -247,6 +248,10 @@ public class ClaimMissionUseCase {
         }
 
         applyMissionChestOrLegacyLoot(digimonId, mission, rewards);
+        if (ThreadLocalRandom.current().nextInt(100) < 5
+                && addItemUseCase.tryExecute(digimonId, ItemType.ENERGY_CELL, 1)) {
+            rewards.add(new RewardResponse(ItemType.ENERGY_CELL, 1));
+        }
         incrementProgress(progress);
         instance.markClaimed();
 

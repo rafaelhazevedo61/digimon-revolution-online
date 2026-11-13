@@ -4,6 +4,7 @@ import com.dro.modules.clan.domain.ClanRole;
 import com.dro.modules.digitama.domain.enums.DigitamaType;
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -21,6 +22,21 @@ public class Player {
     private UUID id;
     @Column(name = "vip_expires_at")
     private Instant vipExpiresAt;
+
+    private LocalDate energyCellPurchaseDate;
+    private int energyCellsPurchased;
+
+    public boolean registerEnergyCellPurchase(LocalDate date, int dailyLimit) {
+        if (!date.equals(energyCellPurchaseDate)) {
+            energyCellPurchaseDate = date;
+            energyCellsPurchased = 0;
+        }
+        if (energyCellsPurchased >= dailyLimit) {
+            return false;
+        }
+        energyCellsPurchased++;
+        return true;
+    }
 
     @Column(nullable = false, unique = true)
     private String username;
