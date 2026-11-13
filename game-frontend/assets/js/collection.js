@@ -117,20 +117,19 @@ async function collectionLoadTrackedLine(panel) {
     if (!panel.isConnected) return;
 
     panel.hidden = false;
-    panel.className = "mb-3 rounded-xl border border-amber-500/30 bg-amber-950/20 p-3";
-    panel.innerHTML = '<h4 class="font-bold text-amber-200">Acompanhar linha evolutiva</h4>';
+    panel.className = "mb-4 rounded-xl border border-slate-700 bg-slate-900 p-3";
+    panel.innerHTML = '<div data-line-header class="flex flex-wrap items-center justify-between gap-2"><h4 class="text-sm font-semibold text-slate-100">Linha evolutiva acompanhada</h4></div>';
     if (!status.vipActive) {
       panel.insertAdjacentHTML("beforeend", '<p class="mt-1 text-xs text-slate-400">Disponível com VIP ativo.</p>');
       return;
     }
 
+    panel.querySelector("[data-line-header]").insertAdjacentHTML("beforeend", `
+      <select class="input w-full sm:w-auto sm:max-w-xs" aria-label="Escolher linha evolutiva">
+        <option value="">Escolher linha evolutiva</option>
+        ${lines.map(line => `<option value="${escapeAttr(line.code)}">${escapeHtml(line.name)}</option>`).join("")}
+      </select>`);
     panel.insertAdjacentHTML("beforeend", `
-      <label class="mt-2 block text-xs text-slate-300">Linha evolutiva
-        <select class="input mt-1 w-full">
-          <option value="">Nenhuma linha acompanhada</option>
-          ${lines.map(line => `<option value="${escapeAttr(line.code)}">${escapeHtml(line.name)} · ${line.steps.map(step => escapeHtml(step.digimon)).join(" → ")}</option>`).join("")}
-        </select>
-      </label>
       <div data-line-progress aria-live="polite"></div>
       <p data-line-error role="alert" class="text-xs text-red-300"></p>`);
     const select = panel.querySelector("select");
@@ -140,6 +139,7 @@ async function collectionLoadTrackedLine(panel) {
     let trackedCode = status.lineCode || "";
 
     function updateProgress() {
+      select.options[0].textContent = trackedCode ? "Parar de acompanhar" : "Escolher linha evolutiva";
       select.value = trackedCode;
       const line = lines.find(candidate => candidate.code === trackedCode);
       if (!line) {
@@ -149,15 +149,28 @@ async function collectionLoadTrackedLine(panel) {
       const steps = line.steps;
       const missing = steps.filter(step => !registered.has(String(step.digimonInfoId)));
       const next = missing[0];
+      const completed = steps.length - missing.length;
       progress.innerHTML = `
-        <p class="mt-3 text-sm font-semibold">${steps.length - missing.length} de ${steps.length} registrados</p>
-        <p class="text-xs text-slate-300">${next ? `Próximo registro: ${escapeHtml(next.digimon)}` : "Linha completa."}</p>
-        <ol class="mt-2 flex flex-wrap gap-2 text-xs">
+        <div class="mt-3 flex items-center gap-3">
+          <progress class="h-2 min-w-0 flex-1 overflow-hidden rounded-full accent-cyan-400"
+                    aria-label="Digimons registrados" value="${completed}" max="${steps.length}"></progress>
+          <span class="shrink-0 text-xs font-semibold text-slate-300">${completed}/${steps.length} registrados</span>
+        </div>
+        <ol class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           ${steps.map(step => {
             const done = registered.has(String(step.digimonInfoId));
-            const colors = done ? "bg-emerald-950 text-emerald-300"
-              : step === next ? "bg-amber-900 text-amber-100" : "bg-slate-800 text-slate-300";
-            return `<li class="rounded px-2 py-1 ${colors}">${escapeHtml(step.digimon)} · ${done ? "Registrado" : "Falta registrar"}</li>`;
+            const current = step === next;
+            const colors = current ? "border-cyan-500 bg-cyan-950/50"
+              : "border-slate-700 bg-slate-950/50";
+            const label = done ? "✓ Registrado" : current ? "Próximo registro" : "Pendente";
+            const labelColor = done ? "text-emerald-300" : current ? "text-cyan-300" : "text-slate-400";
+            return `<li class="min-w-0 rounded-lg border p-2 text-center ${colors}">
+              <div class="mx-auto mb-1 flex h-12 w-12 items-center justify-center ${!done && !current ? "opacity-60" : ""}">
+                ${renderDigimonVisual(step.imageUrl, step.stage, "w-12 h-12", "text-2xl")}
+              </div>
+              <p class="break-words text-xs font-semibold">${escapeHtml(step.digimon)}</p>
+              <p class="mt-1 text-[10px] ${labelColor}">${label}</p>
+            </li>`;
           }).join("")}
         </ol>`;
     }
