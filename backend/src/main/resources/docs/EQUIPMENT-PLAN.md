@@ -46,6 +46,8 @@ Consulte [EquipmentRules](../../java/com/dro/modules/equipment/domain/EquipmentR
 
 ## Onde obter
 
+Veja o [mapa de drops e recompensas](DROPS.md) para consultar os itens e as faixas de raridade por atividade.
+
 ### Missões
 
 As duas planilhas mapeiam as mesmas 18 peças T1 nas seis áreas abaixo. As peças constam nas entradas lendárias das Loot Tables de missão. A coluna lendária indica a faixa do sorteio da tabela. A raridade da peça é resolvida na concessão.
