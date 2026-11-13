@@ -36,6 +36,10 @@ async function renderVipPage() {
           <h4 class="font-semibold">Chefe Mundial e Incursão de Clã</h4>
           <p class="text-sm text-amber-200 mt-2">50% menos tempo entre ataques com VIP ativo. Um intervalo de 10 minutos passa a 5 minutos.</p>
         </section>
+        <section class="card">
+          <h4 class="font-semibold">Linhas evolutivas</h4>
+          <p class="text-sm text-slate-400 mt-2">Acompanhe uma linha por vez em Coleção → Álbum completo e veja quais raridades de cada Digimon você já registrou e quais ainda faltam.</p>
+        </section>
       </div>
 
       <section class="card">
