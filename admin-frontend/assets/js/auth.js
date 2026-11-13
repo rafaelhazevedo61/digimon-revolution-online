@@ -21,8 +21,8 @@ function showAdminLogin() {
 
           <form id="admin-login-form" onsubmit="adminLogin(event)">
             <div class="mb-4">
-              <label class="block text-sm text-slate-400 mb-1">Email</label>
-              <input id="admin-email" type="email" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-cyan-500" placeholder="admin@email.com" required />
+              <label class="block text-sm text-slate-400 mb-1" for="admin-identifier">E-mail ou nome de usuário</label>
+              <input id="admin-identifier" type="text" autocomplete="username" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-cyan-500" placeholder="Seu e-mail ou nome de usuário" required />
             </div>
             <div class="mb-6">
               <label class="block text-sm text-slate-400 mb-1">Senha</label>
@@ -52,7 +52,7 @@ async function adminLogin(e) {
 
   try {
     const res = await apiPostNoAuth("/auth/login", {
-      email: document.getElementById("admin-email").value,
+      identifier: document.getElementById("admin-identifier").value.trim(),
       password: document.getElementById("admin-password").value
     });
 

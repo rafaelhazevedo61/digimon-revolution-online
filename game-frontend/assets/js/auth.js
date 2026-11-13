@@ -43,13 +43,14 @@ function renderLoginPage() {
           <!-- Login form -->
           <form id="login-form" onsubmit="authLogin(event)">
             <div class="mb-4">
-              <label class="label">Email</label>
+              <label class="label" for="login-identifier">E-mail ou nome de usuário</label>
 
               <input
-                id="login-email"
-                type="email"
+                id="login-identifier"
+                type="text"
+                autocomplete="username"
                 class="input"
-                placeholder="seu@email.com"
+                placeholder="Seu e-mail ou nome de usuário"
                 required
               />
             </div>
@@ -277,9 +278,9 @@ async function authLogin(e) {
     const res = await apiPost(
       "/auth/login",
       {
-        email: document
-          .getElementById("login-email")
-          .value,
+        identifier: document
+          .getElementById("login-identifier")
+          .value.trim(),
 
         password: document
           .getElementById("login-password")

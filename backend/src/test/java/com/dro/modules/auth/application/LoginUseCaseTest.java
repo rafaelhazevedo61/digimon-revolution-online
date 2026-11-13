@@ -60,6 +60,19 @@ class LoginUseCaseTest {
     }
 
     @Test
+    void execute_returnsToken_whenUsernameMatches() {
+        Player player = createPlayer();
+        when(repository.findByUsername("testuser")).thenReturn(Optional.of(player));
+        when(passwordEncoder.matches("password123", "encoded_password")).thenReturn(true);
+        when(jwtService.generateToken(player)).thenReturn("token");
+
+        LoginResponse response = loginUseCase.execute(new LoginRequest(" testuser ", "password123"));
+
+        assertEquals(player.getId(), response.playerId());
+        assertEquals("token", response.token());
+    }
+
+    @Test
     void execute_throwsInvalidCredentials_whenEmailNotFound() {
         when(repository.findByEmail("wrong@email.com")).thenReturn(Optional.empty());
 

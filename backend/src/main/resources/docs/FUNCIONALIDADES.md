@@ -93,7 +93,7 @@ A autenticação pública utiliza JWT.
 ### Fluxos implementados
 
 - cadastro de jogador;
-- login com e-mail e senha;
+- login com e-mail ou nome de usuário e senha. A API aceita `identifier` e mantém o campo legado `email`;
 - cadastro no perfil Alpha mediante convite de uso único, com validade e vinculado ao e-mail do tester;
 - armazenamento de senha com hash;
 - autenticação de rotas protegidas via header `Authorization`;
