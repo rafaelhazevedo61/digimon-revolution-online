@@ -17,7 +17,7 @@ async function renderVipPage() {
         <h3 class="font-semibold">Carga de Energia Total</h3>
         <p class="text-sm text-slate-300 mt-2">Resgate uma unidade por dia com VIP ativo. Use no inventário para encher a barra de energia do Digimon ativo.</p>
         <p class="text-sm text-slate-400 mt-2">O resgate renova à meia-noite UTC. As cargas resgatadas ficam no inventário.</p>
-        <button id="vip-energy-claim" type="button" class="btn-secondary mt-3" disabled>Resgatar Carga de Energia Total</button>
+        <button id="vip-energy-claim" type="button" class="mt-3 rounded-xl px-5 py-2.5 text-sm font-semibold bg-amber-400 text-slate-950 enabled:hover:bg-amber-300 disabled:bg-slate-700 disabled:text-slate-300 disabled:cursor-not-allowed" disabled>Resgatar Carga de Energia Total</button>
         <p id="vip-energy-status" class="text-sm text-slate-300 mt-2" aria-live="polite"></p>
       </section>
 
@@ -56,6 +56,8 @@ async function renderVipPage() {
     status.classList.toggle("text-emerald-300", data.vipActive);
     status.classList.toggle("font-semibold", data.vipActive);
     claimButton.disabled = !data.vipActive || data.claimedToday;
+    claimButton.textContent = data.claimedToday ? "Já resgatado hoje"
+      : "Resgatar Carga de Energia Total";
     claimStatus.textContent = data.claimedToday ? "Carga de hoje já resgatada."
       : data.vipActive ? "Resgate disponível." : "Disponível com VIP ativo.";
   }
