@@ -92,7 +92,10 @@ async function renderMissionTeamsPage() {
           <h2 class="progression-page-title">Meus times</h2>
           <p class="progression-page-subtitle">Monte formações de até três Digimons para enviar juntos às missões.</p>
         </div>
-        <button type="button" class="btn-primary shrink-0 text-xs" onclick="openMissionTeamEditor()">Novo time</button>
+        <div class="flex shrink-0 flex-col items-end gap-2">
+          <button id="mission-team-new" type="button" class="btn-primary text-xs disabled:opacity-50" onclick="openMissionTeamEditor()" disabled>Novo time</button>
+          <p id="mission-team-capacity" class="text-right text-xs text-slate-400" aria-live="polite">Consultando slots…</p>
+        </div>
       </header>
       <section class="mb-5 rounded-xl border border-cyan-800/70 bg-cyan-950/20 p-3 lg:flex lg:items-center lg:justify-between lg:gap-8 lg:p-4">
         <p class="text-sm font-bold text-cyan-200">Como funciona</p>
@@ -106,9 +109,26 @@ async function renderMissionTeamsPage() {
   `;
 
   try {
-    const context = await loadMissionTeamContext();
     const container = document.getElementById("mission-teams-list");
-    if (!container) return;
+    const capacity = document.getElementById("mission-team-capacity");
+    const newButton = document.getElementById("mission-team-new");
+    const [context, dashboard] = await Promise.all([
+      loadMissionTeamContext(true),
+      apiGet("/players/me/dashboard").catch(() => null)
+    ]);
+    if (!container.isConnected) return;
+    const slots = dashboard?.slotInfo?.maxTeamSlots;
+    newButton.disabled = false;
+    if (Number.isInteger(slots)) {
+      const limit = Math.max(3, Math.min(10, slots));
+      newButton.dataset.teamLimit = String(limit);
+      const full = context.teams.length >= limit;
+      capacity.textContent = `${context.teams.length}/${limit} slots usados${full ? " · Limite atingido" : ""}`;
+      capacity.classList.toggle("text-amber-300", full);
+      capacity.classList.toggle("text-slate-400", !full);
+    } else {
+      capacity.textContent = "Capacidade indisponível";
+    }
     const digimonById = missionTeamDigimonMap(context.digimons);
     const activeMissionDigimonIds = new Set(context.activeMissions.flatMap(mission => mission.digimonIds || [] ).map(String));
     if (context.teams.length === 0) {
@@ -248,7 +268,16 @@ function openMissionTeamPicker() {
 
 function openMissionTeamEditor(teamId = null) {
   loadMissionTeamContext().then(context => {
+    const limit = document.getElementById("mission-team-new")?.dataset.teamLimit;
+    if (!teamId && limit && context.teams.length >= Number(limit)) {
+      showMissionTeamCapacityModal(Number(limit));
+      return;
+    }
     const team = teamId ? context.teams.find(item => String(item.id) === String(teamId)) : null;
+    if (teamId && !team) {
+      showToast("Time não encontrado.", "error");
+      return;
+    }
     missionTeamEditingId = team ? team.id : null;
     missionTeamPickerDigimons = missionTeamUsableDigimons(context.digimons);
     missionTeamPickerCurrentTeamId = team ? String(team.id) : null;
@@ -292,7 +321,8 @@ function isMissionTeamCapacityError(error) {
   return /limite de times atingido|expansor de slot de time/i.test(String(error && error.message || ""));
 }
 
-function showMissionTeamCapacityModal() {
+function showMissionTeamCapacityModal(limit = Number(document.getElementById("mission-team-new")?.dataset.teamLimit)) {
+  const maxReached = limit >= 10;
   document.getElementById("mission-team-capacity-modal")?.remove();
   const overlay = document.createElement("div");
   overlay.id = "mission-team-capacity-modal";
@@ -309,11 +339,11 @@ function showMissionTeamCapacityModal() {
         </div>
         <button type="button" class="text-2xl leading-none text-slate-400 hover:text-white" aria-label="Fechar" onclick="document.getElementById('mission-team-capacity-modal')?.remove()">&times;</button>
       </div>
-      <p class="text-sm leading-relaxed text-slate-300">Você atingiu a capacidade atual de times. Para criar uma nova formação, adquira o item <strong class="text-amber-300">Expansor de Slot de Time</strong> na loja comum.</p>
-      <p class="mt-3 text-xs leading-relaxed text-slate-500">Cada expansor aumenta sua capacidade em 1 slot, até o máximo de 10 times.</p>
+      ${maxReached ? `<p class="text-sm leading-relaxed text-slate-300">Você já tem 10 times salvos. Exclua um time para criar outra formação.</p>` : `<p class="text-sm leading-relaxed text-slate-300">Você atingiu a capacidade atual de times. Para criar uma nova formação, adquira o item <strong class="text-amber-300">Expansor de Slot de Time</strong> na loja comum.</p>
+      <p class="mt-3 text-xs leading-relaxed text-slate-500">Cada expansor aumenta sua capacidade em 1 slot, até o máximo de 10 times.</p>`}
       <div class="mt-6 flex gap-2">
         <button type="button" class="btn-secondary flex-1" onclick="document.getElementById('mission-team-capacity-modal')?.remove()">Fechar</button>
-        <button type="button" class="btn-primary flex-1" onclick="document.getElementById('mission-team-capacity-modal')?.remove(); navigateTo('shop')">Ir para a loja</button>
+        ${maxReached ? "" : `<button type="button" class="btn-primary flex-1" onclick="document.getElementById('mission-team-capacity-modal')?.remove(); navigateTo('shop')">Ir para a loja</button>`}
       </div>
     </div>
   `;
