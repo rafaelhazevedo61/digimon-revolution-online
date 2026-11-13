@@ -111,6 +111,8 @@ Veja o passo a passo, a quantidade de cópias por tier e as fontes dos núcleos 
 
 ## Inventário, Ferreiro e administração
 
+Veja [Regras de refino e ascensão](REGRAS-REFINO-E-ASCENSAO.md) para custos, chances e requisitos por etapa.
+
 - A peça pertence à conta. Quando equipada, ocupa um dos três slots de um Digimon próprio. Trocar a peça de um slot devolve a anterior ao inventário da conta.
 - O refino usa Bits e Pedras de Refinamento. O limite implementado é **+11**. A tentativa de +10 para +11 pode quebrar a peça em caso de falha. Pergaminhos aumentam a chance de sucesso e Cristais de Proteção podem impedir a quebra.
 - A ascensão exige peça desequipada com refino +11, Bits e Núcleos de Ascensão. Há três níveis. Equipar peças ascendidas pode exigir Rebirths.

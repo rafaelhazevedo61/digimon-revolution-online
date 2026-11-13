@@ -8,6 +8,15 @@
 
 ## Índice
 
+Guias de regras do jogo
+
+- [MISSOES-E-EQUIPES.md](MISSOES-E-EQUIPES.md)
+- [REGRAS-REFINO-E-ASCENSAO.md](REGRAS-REFINO-E-ASCENSAO.md)
+- [PROGRESSAO-DIGIMON.md](PROGRESSAO-DIGIMON.md)
+- [DIGITAMAS-E-INCUBACAO.md](DIGITAMAS-E-INCUBACAO.md)
+- [ARENA.md](ARENA.md)
+- [Coleção de Digimons](../../../../../docs/digimon-collection-system-proposal.md)
+
 1. [Princípios deste documento](#1-princípios-deste-documento)
 2. [Autenticação e sessões](#2-autenticação-e-sessões)
 3. [Jogador (Player)](#3-jogador-player)
