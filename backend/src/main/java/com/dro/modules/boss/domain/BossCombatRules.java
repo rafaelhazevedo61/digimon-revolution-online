@@ -1,5 +1,6 @@
 package com.dro.modules.boss.domain;
 
+import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -49,6 +50,11 @@ public class BossCombatRules {
     /** Retorna o cooldown efetivo, usando cinco minutos quando não há valor configurado. */
     public static int attackCooldownMinutes(int configuredMinutes) {
         return configuredMinutes > 0 ? configuredMinutes : DEFAULT_ATTACK_COOLDOWN_MINUTES;
+    }
+
+    public static Duration attackCooldown(int configuredMinutes, boolean vipActive) {
+        Duration cooldown = Duration.ofMinutes(attackCooldownMinutes(configuredMinutes));
+        return vipActive ? cooldown.dividedBy(2) : cooldown;
     }
 
     /** Verifica se a chance está abaixo do limiar mínimo recomendado. */
