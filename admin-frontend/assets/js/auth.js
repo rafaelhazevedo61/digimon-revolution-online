@@ -25,8 +25,10 @@ function showAdminLogin() {
               <input id="admin-identifier" type="text" autocomplete="username" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-cyan-500" placeholder="Seu e-mail ou nome de usuário" required />
             </div>
             <div class="mb-6">
-              <label class="block text-sm text-slate-400 mb-1">Senha</label>
-              <input id="admin-password" type="password" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-cyan-500" placeholder="••••••••" required />
+              <label class="block text-sm text-slate-400 mb-1" for="admin-password">Senha</label>
+              <input id="admin-password" type="password" autocomplete="current-password" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-cyan-500" placeholder="••••••••" required />
+              <button type="button" class="mt-2 text-sm text-cyan-300 hover:underline" aria-controls="admin-password"
+                onclick="const field = document.getElementById(this.getAttribute('aria-controls')); const show = field.type === 'password'; field.type = show ? 'text' : 'password'; this.textContent = show ? 'Ocultar senha' : 'Mostrar senha';">Mostrar senha</button>
             </div>
             <button type="submit" id="admin-login-btn" class="w-full px-4 py-2 rounded-lg font-semibold text-white bg-cyan-600 hover:bg-cyan-500 transition-colors">
               Entrar
