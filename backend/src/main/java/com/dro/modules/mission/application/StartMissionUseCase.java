@@ -121,7 +121,12 @@ public class StartMissionUseCase {
         }
 
         digimons.forEach(digimonRepository::save);
-        Duration missionDuration = isAdmin ? Duration.ZERO : Duration.ofSeconds(mission.getDurationSeconds());
+        Duration missionDuration = Duration.ofSeconds(mission.getDurationSeconds());
+        if (isAdmin) {
+            missionDuration = Duration.ZERO;
+        } else if (player.hasActiveVip(java.time.Instant.now())) {
+            missionDuration = missionDuration.plusSeconds(1).dividedBy(2).truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
+        }
         MissionInstance instance = new MissionInstance(playerId, teamId, slotNumber, digimonIds, missionId, missionDuration);
         instance.setAutoRepeatEnabled(autoRepeat && teamId != null);
         instance.setAutoClaimEnabled(autoClaim && teamId != null);
