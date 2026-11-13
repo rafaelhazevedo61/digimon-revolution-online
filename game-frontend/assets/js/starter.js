@@ -8,7 +8,7 @@ async function renderStarterPage() {
     if (startup && startup.redirectTo) {
       if (startup.redirectTo === "DIGITAMA_HATCHING") {
         const hatched = await apiPost("/digitama/hatch");
-        renderHatchingAnimation(hatched);
+        renderHatchingAnimation(hatched, startup.selectedDigitama);
         return;
       }
       if (startup.redirectTo !== "DIGITAMA_SELECTION") {
@@ -93,14 +93,18 @@ async function starterSelect(type) {
   try {
     await apiPost("/digitama/select", { type });
     const hatched = await apiPost("/digitama/hatch");
-    renderHatchingAnimation(hatched);
+    renderHatchingAnimation(hatched, type);
   } catch (err) {
     errorDiv.textContent = err.message;
     errorDiv.classList.remove("hidden");
   }
 }
 
-function renderHatchingAnimation(digimon) {
+function renderHatchingAnimation(digimon, type) {
+  const theme = /^(FIRE|WATER|NATURE|EARTH|WIND|LIGHT|DARK|THUNDER|NEUTRAL|ICE|STEEL)$/.test(type)
+    ? type.toLowerCase()
+    : "neutral";
+  const eggVisual = `<div class="egg-body starter-egg starter-egg--${theme}" aria-hidden="true"></div>`;
   const app = document.getElementById("app");
   const nav = document.getElementById("bottom-nav");
   if (nav) nav.classList.add("hidden");
@@ -111,7 +115,7 @@ function renderHatchingAnimation(digimon) {
         <div id="hatch-stage-egg" class="hatch-container">
           <div class="hatch-glow"></div>
           <div id="hatch-egg" class="hatch-egg">
-            <div class="egg-body">🥚</div>
+            ${eggVisual}
           </div>
           <p class="text-slate-400 text-sm mt-6 animate-pulse">Chocando...</p>
           <div class="hatch-particles" id="hatch-particles"></div>
@@ -120,7 +124,7 @@ function renderHatchingAnimation(digimon) {
         <div id="hatch-stage-crack" class="hatch-container hidden">
           <div class="hatch-glow hatch-glow-intense"></div>
           <div class="hatch-egg hatch-egg-crack">
-            <div class="egg-body">🥚</div>
+            ${eggVisual}
             <div class="crack-lines">✨</div>
           </div>
           <p class="text-cyan-400 text-sm mt-6 font-bold animate-pulse">Está nascendo!</p>
