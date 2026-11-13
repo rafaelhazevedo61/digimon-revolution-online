@@ -82,8 +82,8 @@ public class UseItemUseCase {
             throw new UnprocessableException("Not enough items in inventory");
         }
 
-        if (type == ItemType.ENERGY_CELL) {
-            return useEnergyCell(player, digimon, item);
+        if (type == ItemType.ENERGY_CELL || type == ItemType.VIP_ENERGY_CHARGE) {
+            return useEnergyItem(player, digimon, item, type);
         }
 
         int storageExpansion = storageExpansionAmount(type);
@@ -145,7 +145,7 @@ public class UseItemUseCase {
         );
     }
 
-    private UseItemResponse useEnergyCell(Player player, Digimon digimon, InventoryItem item) {
+    private UseItemResponse useEnergyItem(Player player, Digimon digimon, InventoryItem item, ItemType type) {
         if (!player.getId().equals(digimon.getPlayerId())) {
             throw new BadRequestException("O Digimon ativo não pertence a este jogador.");
         }
@@ -156,15 +156,17 @@ public class UseItemUseCase {
         if (missing <= 0) {
             throw new UnprocessableException("O Digimon ativo já está com a energia cheia.");
         }
-        int recovered = Math.min(missing, (int) Math.ceil(capacity / 10.0));
+        int recovered = type == ItemType.VIP_ENERGY_CHARGE
+                ? missing : Math.min(missing, (int) Math.ceil(capacity / 10.0));
         digimon.setEnergy(digimon.getEnergy() + recovered);
         if (recovered == missing) {
             digimon.setLastEnergyUpdate(Instant.now());
         }
         consume(item, 1);
         digimonRepository.save(digimon);
-        return new UseItemResponse(ItemType.ENERGY_CELL, 1, 0, digimon.getLevel(), digimon.getLevel(),
-                false, "Célula de Energia: +" + recovered + " de energia.", NewlyUnlockedContentResponse.empty());
+        String itemName = type == ItemType.VIP_ENERGY_CHARGE ? "Carga de Energia Total" : "Célula de Energia";
+        return new UseItemResponse(type, 1, 0, digimon.getLevel(), digimon.getLevel(),
+                false, itemName + ": +" + recovered + " de energia.", NewlyUnlockedContentResponse.empty());
     }
 
     private int resolveQuantity(boolean batchUsableItem, Integer requestedQuantity) {

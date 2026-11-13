@@ -86,6 +86,8 @@ public enum ItemType {
     RARITY_PRESERVATION,
 
     // Registro permanente de Digimons na coleção
-    COLLECTION_DIGIVICE
+    COLLECTION_DIGIVICE,
+
+    VIP_ENERGY_CHARGE
 
 }

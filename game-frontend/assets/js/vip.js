@@ -13,6 +13,14 @@ async function renderVipPage() {
         <p id="vip-status" class="text-sm text-slate-300 mt-2" aria-live="polite">Consultando status…</p>
       </section>
 
+      <section class="card mb-4">
+        <h3 class="font-semibold">Carga de Energia Total</h3>
+        <p class="text-sm text-slate-300 mt-2">Resgate uma unidade por dia com VIP ativo. Use no inventário para encher a barra de energia do Digimon ativo.</p>
+        <p class="text-sm text-slate-400 mt-2">O resgate renova à meia-noite UTC. As cargas resgatadas ficam no inventário.</p>
+        <button id="vip-energy-claim" type="button" class="btn-secondary mt-3" disabled>Resgatar Carga de Energia Total</button>
+        <p id="vip-energy-status" class="text-sm text-slate-300 mt-2" aria-live="polite"></p>
+      </section>
+
       <h3 class="font-semibold mb-2">Benefícios</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
         <section class="card">
@@ -37,18 +45,43 @@ async function renderVipPage() {
     </div>`;
 
   const status = document.getElementById("vip-status");
-  try {
-    const player = await apiGet("/players/me");
-    if (!status.isConnected) return;
-    const expires = new Date(player.vipExpiresAt);
-    if (!player.vipExpiresAt) {
-      status.textContent = "VIP inativo";
-    } else if (expires.getTime() > Date.now()) {
-      status.textContent = `VIP ativo até ${expires.toLocaleString("pt-BR")}`;
-      status.classList.add("text-emerald-300", "font-semibold");
-    } else {
-      status.textContent = `VIP vencido em ${expires.toLocaleString("pt-BR")}`;
+  const claimButton = document.getElementById("vip-energy-claim");
+  const claimStatus = document.getElementById("vip-energy-status");
+  const endpoint = "/players/me/vip/energy-charge";
+
+  function showStatus(data) {
+    const expires = new Date(data.vipExpiresAt).toLocaleString("pt-BR");
+    status.textContent = data.vipActive ? `VIP ativo até ${expires}`
+      : data.vipExpiresAt ? `VIP vencido em ${expires}` : "VIP inativo";
+    status.classList.toggle("text-emerald-300", data.vipActive);
+    status.classList.toggle("font-semibold", data.vipActive);
+    claimButton.disabled = !data.vipActive || data.claimedToday;
+    claimStatus.textContent = data.claimedToday ? "Carga de hoje já resgatada."
+      : data.vipActive ? "Resgate disponível." : "Disponível com VIP ativo.";
+  }
+
+  claimButton.addEventListener("click", async () => {
+    claimButton.disabled = true;
+    try {
+      const result = await apiPost(endpoint);
+      if (!claimButton.isConnected) return;
+      showStatus(result);
+      claimStatus.textContent = "Carga de Energia Total adicionada ao inventário.";
+    } catch (error) {
+      if (!claimButton.isConnected) return;
+      try {
+        const current = await apiGet(endpoint);
+        if (claimButton.isConnected) showStatus(current);
+      } catch {
+        if (claimButton.isConnected) claimButton.disabled = false;
+      }
+      if (claimButton.isConnected) claimStatus.textContent = error.message;
     }
+  });
+
+  try {
+    const data = await apiGet(endpoint);
+    if (status.isConnected) showStatus(data);
   } catch {
     if (status.isConnected) status.textContent = "Não foi possível consultar seu VIP.";
   }

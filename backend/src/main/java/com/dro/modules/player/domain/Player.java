@@ -23,6 +23,16 @@ public class Player {
     @Column(name = "vip_expires_at")
     private Instant vipExpiresAt;
 
+    private LocalDate vipEnergyChargeClaimDate;
+
+    public boolean hasClaimedVipEnergyCharge(LocalDate date) {
+        return date.equals(vipEnergyChargeClaimDate);
+    }
+
+    public void markVipEnergyChargeClaimed(LocalDate date) {
+        vipEnergyChargeClaimDate = date;
+    }
+
     private LocalDate energyCellPurchaseDate;
     private int energyCellsPurchased;
 

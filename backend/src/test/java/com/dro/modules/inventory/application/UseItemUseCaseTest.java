@@ -54,8 +54,9 @@ class UseItemUseCaseTest {
     private UseItemUseCase useItemUseCase;
 
     @ParameterizedTest
-    @CsvSource({"50, 61", "98, 101", "101, 101"})
-    void energyCellRestoresEnergyWithoutOverfilling(int startingEnergy, int expectedEnergy) {
+    @CsvSource({"ENERGY_CELL, 50, 61", "ENERGY_CELL, 98, 101", "ENERGY_CELL, 101, 101",
+            "VIP_ENERGY_CHARGE, 50, 101", "VIP_ENERGY_CHARGE, 101, 101"})
+    void energyItemRestoresEnergyWithoutOverfilling(ItemType type, int startingEnergy, int expectedEnergy) {
         UUID playerId = UUID.randomUUID();
         UUID digimonId = UUID.randomUUID();
         Player player = createPlayer(playerId, digimonId, 1);
@@ -66,20 +67,20 @@ class UseItemUseCaseTest {
                 .energy(startingEnergy)
                 .lastEnergyUpdate(Instant.now())
                 .build();
-        InventoryItem item = InventoryItem.builder().itemType(ItemType.ENERGY_CELL).quantity(1).build();
+        InventoryItem item = InventoryItem.builder().itemType(type).quantity(1).build();
 
         when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
         when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
-        when(inventoryRepository.findByPlayerIdAndItemTypeForUpdate(playerId, ItemType.ENERGY_CELL))
+        when(inventoryRepository.findByPlayerIdAndItemTypeForUpdate(playerId, type))
                 .thenReturn(Optional.of(item));
 
         if (startingEnergy == 101) {
-            assertThatThrownBy(() -> useItemUseCase.execute(tokenFor(playerId), ItemType.ENERGY_CELL))
+            assertThatThrownBy(() -> useItemUseCase.execute(tokenFor(playerId), type))
                     .isInstanceOf(com.dro.shared.exception.UnprocessableException.class);
             assertThat(item.getQuantity()).isEqualTo(1);
             verify(digimonRepository, never()).save(digimon);
         } else {
-            UseItemResponse result = useItemUseCase.execute(tokenFor(playerId), ItemType.ENERGY_CELL);
+            UseItemResponse result = useItemUseCase.execute(tokenFor(playerId), type);
             assertThat(result.xpGranted()).isZero();
             assertThat(item.getQuantity()).isZero();
             verify(inventoryRepository).delete(item);
