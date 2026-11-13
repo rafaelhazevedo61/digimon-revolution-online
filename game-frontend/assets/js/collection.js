@@ -1,3 +1,4 @@
+const collectionRarities = [["COMMON", "Comum", "rarity-box-common"], ["RARE", "Rara", "rarity-box-rare"], ["EPIC", "Épica", "rarity-box-epic"], ["LEGENDARY", "Lendária", "rarity-box-legendary"]];
 let collectionSummary = null;
 let collectionDigimons = [];
 let collectionInventory = [];
@@ -71,7 +72,7 @@ async function collectionOpenAlbum() {
   overlay.id = "collection-album-overlay";
   overlay.className = "fixed inset-0 z-[60] flex items-end justify-center";
   overlay.style.background = "rgba(0,0,0,0.72)";
-  overlay.innerHTML = `<div class="w-full max-w-4xl rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:92vh;overflow-y:auto" onclick="event.stopPropagation()"><div class="flex items-center justify-between gap-3 mb-3"><div><p class="text-xs uppercase tracking-wider text-fuchsia-400 font-bold">Coleção</p><h3 class="font-bold text-lg">Álbum completo</h3><p class="text-xs text-slate-400">Cada Digimon possui uma entrada para cada raridade.</p></div><button class="text-slate-400 text-2xl" aria-label="Fechar" onclick="collectionCloseAlbum()">&times;</button></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+  overlay.innerHTML = `<div class="w-full max-w-4xl rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:92vh;overflow-y:auto" onclick="event.stopPropagation()"><div class="flex items-center justify-between gap-3 mb-3"><div><p class="text-xs uppercase tracking-wider text-fuchsia-400 font-bold">Coleção</p><h3 class="font-bold text-lg">Álbum completo</h3><p class="text-xs text-slate-400">Cada Digimon possui uma entrada para cada raridade.</p></div><button class="text-slate-400 text-2xl" aria-label="Fechar" onclick="collectionCloseAlbum()">&times;</button></div><section id="collection-tracked-line" class="mb-3" hidden></section><div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
       <input id="collection-album-search" class="input w-full min-w-0" type="search" aria-label="Buscar Digimon por nome" placeholder="Buscar Digimon por nome" oninput="collectionRenderAlbum()" disabled />
       <select id="collection-album-stage" class="input w-full min-w-0" aria-label="Filtrar por estágio" onchange="collectionRenderAlbum()" disabled>
         <option value="ALL">Todos os estágios</option>
@@ -86,6 +87,7 @@ async function collectionOpenAlbum() {
     <p id="collection-album-count" class="text-xs text-slate-400 mb-3" aria-live="polite"></p><div id="collection-album-content"><p class="text-sm text-slate-400 text-center py-8">Carregando catálogo...</p></div></div>`;
   overlay.onclick = event => { if (event.target === overlay) collectionCloseAlbum(); };
   document.body.appendChild(overlay);
+  collectionLoadTrackedLine(overlay.querySelector("#collection-tracked-line"));
   try {
     let page = 0;
     const catalog = [];
@@ -104,6 +106,100 @@ async function collectionOpenAlbum() {
   } catch (err) {
     if (!overlay.isConnected) return;
     overlay.querySelector("#collection-album-content").innerHTML = `<p class="text-sm text-red-300 text-center py-8">${escapeHtml(err.message || "Não foi possível carregar o álbum.")}</p>`;
+  }
+}
+
+async function collectionLoadTrackedLine(panel) {
+  const endpoint = "/collection/tracked-evolution-line";
+  try {
+    const [status, lines, summary] = await Promise.all([
+      apiGet(endpoint), apiGet("/evolution-lines/available"), apiGet("/collection")
+    ]);
+    if (!panel.isConnected) return;
+
+    panel.hidden = false;
+    panel.className = "mb-4 rounded-xl border border-slate-700 bg-slate-900 p-3";
+    panel.innerHTML = '<div data-line-header class="flex flex-wrap items-center justify-between gap-2"><h4 class="text-sm font-semibold text-slate-100">Linha evolutiva acompanhada</h4></div>';
+    if (!status.vipActive) {
+      panel.insertAdjacentHTML("beforeend", '<p class="mt-1 text-xs text-slate-400">Disponível com VIP ativo.</p>');
+      return;
+    }
+
+    panel.querySelector("[data-line-header]").insertAdjacentHTML("beforeend", `
+      <select class="input w-full sm:w-auto sm:max-w-xs" aria-label="Escolher linha evolutiva">
+        <option value="">Escolher linha evolutiva</option>
+        ${lines.map(line => `<option value="${escapeAttr(line.code)}">${escapeHtml(line.name)}</option>`).join("")}
+      </select>`);
+    panel.insertAdjacentHTML("beforeend", `
+      <div data-line-progress aria-live="polite"></div>
+      <p data-line-error role="alert" class="text-xs text-red-300"></p>`);
+    const select = panel.querySelector("select");
+    const progress = panel.querySelector("[data-line-progress]");
+    const error = panel.querySelector("[data-line-error]");
+    const registered = new Set((summary.entries || []).map(entry => `${entry.digimonInfoId}:${entry.rarity}`));
+    let trackedCode = status.lineCode || "";
+
+    function updateProgress() {
+      select.options[0].textContent = trackedCode ? "Parar de acompanhar" : "Escolher linha evolutiva";
+      select.value = trackedCode;
+      const line = lines.find(candidate => candidate.code === trackedCode);
+      if (!line) {
+        progress.textContent = "";
+        return;
+      }
+      const steps = line.steps.map(step => ({
+        ...step,
+        rarities: collectionRarities.map(([code, label, cssClass]) => ({
+          label, cssClass, registered: registered.has(`${step.digimonInfoId}:${code}`)
+        }))
+      }));
+      const next = steps.find(step => step.rarities.some(rarity => !rarity.registered));
+      const total = steps.length * collectionRarities.length;
+      const completed = steps.reduce((count, step) =>
+        count + step.rarities.filter(rarity => rarity.registered).length, 0);
+      progress.innerHTML = `
+        <div class="mt-3 flex items-center gap-3">
+          <progress class="h-2 min-w-0 flex-1 overflow-hidden rounded-full accent-cyan-400"
+                    aria-label="Raridades registradas na linha" value="${completed}" max="${total}"></progress>
+          <span class="shrink-0 text-xs font-semibold text-slate-300">${completed}/${total} registros</span>
+        </div>
+        <ol class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          ${steps.map(step => `<li class="min-w-0 rounded-lg border p-2 text-center ${step === next ? "border-cyan-500 bg-cyan-950/50" : "border-slate-700 bg-slate-950/50"}">
+            <div class="mx-auto mb-1 flex h-12 w-12 items-center justify-center">
+              ${renderDigimonVisual(step.imageUrl, step.stage, "w-12 h-12", "text-2xl")}
+            </div>
+            <p class="break-words text-xs font-semibold">${escapeHtml(step.digimon)}</p>
+            <ul class="mt-2 grid grid-cols-2 gap-1">
+              ${step.rarities.map(rarity => `
+                <li class="${rarity.cssClass} rounded border px-1 py-1 text-[10px] ${rarity.registered ? "" : "opacity-60 grayscale"}">
+                  <span aria-hidden="true">${rarity.registered ? "✓" : "–"}</span>
+                  ${rarity.label}<span class="sr-only">, ${rarity.registered ? "registrada" : "pendente"}</span>
+                </li>`).join("")}
+            </ul>
+            <p class="mt-1 text-[10px] ${step === next ? "text-cyan-300" : "text-emerald-300"}">${step === next ? "Próxima etapa" : step.rarities.every(rarity => rarity.registered) ? "Completo" : ""}</p>
+          </li>`).join("")}
+        </ol>`;
+    }
+
+    updateProgress();
+    select.addEventListener("change", async () => {
+      const code = select.value;
+      select.disabled = true;
+      error.textContent = "";
+      try {
+        const updated = code ? await apiPut(endpoint, { lineCode: code }) : await apiDelete(endpoint);
+        trackedCode = updated.lineCode || "";
+      } catch (err) {
+        error.textContent = err.message || "Não foi possível salvar a linha evolutiva.";
+      } finally {
+        updateProgress();
+        select.disabled = false;
+      }
+    });
+  } catch {
+    if (!panel.isConnected) return;
+    panel.hidden = false;
+    panel.textContent = "Não foi possível carregar o acompanhamento de linhas evolutivas.";
   }
 }
 
@@ -129,7 +225,7 @@ function collectionRenderAlbum() {
   );
   const count = document.getElementById("collection-album-count");
   if (count) count.textContent = `${items.length} Digimon(s)`;
-  const rarities = [["COMMON", "Comum", "rarity-box-common"], ["RARE", "Rara", "rarity-box-rare"], ["EPIC", "Épica", "rarity-box-epic"], ["LEGENDARY", "Lendária", "rarity-box-legendary"]];
+  const rarities = collectionRarities;
   target.innerHTML = items.length ? `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${items.map(item => { const masteryComplete = rarities.every(([code]) => entries.has(`${item.id}:${code}`)); return `<div class="rounded-xl border ${masteryComplete ? "border-amber-500/70 bg-amber-950/20" : "border-slate-700 bg-slate-900/60"} p-3"><div class="flex items-center gap-2 mb-3"><div class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">${renderDigimonVisual(item.imageUrl, item.stage, "w-full h-full", "text-2xl")}</div><div class="min-w-0 flex-1"><div class="flex items-center justify-between gap-2"><p class="font-bold truncate">${escapeHtml(item.name)}</p>${masteryComplete ? '<span class="badge badge-legendary whitespace-nowrap">Maestria adquirida</span>' : ""}</div><p class="text-xs text-slate-500">${escapeHtml(item.stage)}</p></div></div><div class="grid grid-cols-4 gap-1.5">${rarities.map(([code, label, rarityClass]) => { const registered = entries.has(`${item.id}:${code}`); return `<div class="${rarityClass} rounded-lg border p-1.5 text-center ${registered ? "opacity-100" : "opacity-50 grayscale"}" title="${registered ? "Registrado" : "Ainda não registrado"}"><div class="aspect-square rounded bg-slate-950/60 flex items-center justify-center overflow-hidden">${renderDigimonVisual(item.imageUrl, item.stage, "w-full h-full", "text-2xl")}</div><p class="text-[9px] font-semibold mt-1 truncate">${label}</p><p class="text-[10px]">${registered ? "✓" : "—"}</p></div>`; }).join("")}</div>${collectionRenderEvolutionLines(item.id)}</div>`; }).join("")}</div>` : '<p class="text-sm text-slate-400 text-center py-8">Nenhum Digimon corresponde aos filtros.</p>';
 }
 

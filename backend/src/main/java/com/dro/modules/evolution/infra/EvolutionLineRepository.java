@@ -52,4 +52,6 @@ public interface EvolutionLineRepository extends JpaRepository<EvolutionLine, Lo
 
     Optional<EvolutionLine> findByCode(String code);
 
+    Optional<EvolutionLine> findByCodeAndActiveTrueAndContentActiveTrue(String code);
+
 }
