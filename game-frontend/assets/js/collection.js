@@ -71,22 +71,39 @@ async function collectionOpenAlbum() {
   overlay.id = "collection-album-overlay";
   overlay.className = "fixed inset-0 z-[60] flex items-end justify-center";
   overlay.style.background = "rgba(0,0,0,0.72)";
-  overlay.innerHTML = `<div class="w-full max-w-4xl rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:92vh;overflow-y:auto" onclick="event.stopPropagation()"><div class="flex items-center justify-between gap-3 mb-3"><div><p class="text-xs uppercase tracking-wider text-fuchsia-400 font-bold">Coleção</p><h3 class="font-bold text-lg">Álbum completo</h3><p class="text-xs text-slate-400">Cada Digimon possui uma entrada para cada raridade.</p></div><button class="text-slate-400 text-2xl" aria-label="Fechar" onclick="collectionCloseAlbum()">&times;</button></div><div class="flex w-full items-center gap-2 mb-4"><input id="collection-album-search" class="input flex-1 min-w-0" type="search" placeholder="Buscar Digimon por nome" oninput="collectionRenderAlbum()" /><span id="collection-album-count" class="text-xs text-slate-400 whitespace-nowrap"></span></div><div id="collection-album-content"><p class="text-sm text-slate-400 text-center py-8">Carregando catálogo...</p></div></div>`;
+  overlay.innerHTML = `<div class="w-full max-w-4xl rounded-t-2xl p-4 pb-8" style="background:#0f172a;max-height:92vh;overflow-y:auto" onclick="event.stopPropagation()"><div class="flex items-center justify-between gap-3 mb-3"><div><p class="text-xs uppercase tracking-wider text-fuchsia-400 font-bold">Coleção</p><h3 class="font-bold text-lg">Álbum completo</h3><p class="text-xs text-slate-400">Cada Digimon possui uma entrada para cada raridade.</p></div><button class="text-slate-400 text-2xl" aria-label="Fechar" onclick="collectionCloseAlbum()">&times;</button></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+      <input id="collection-album-search" class="input w-full min-w-0" type="search" aria-label="Buscar Digimon por nome" placeholder="Buscar Digimon por nome" oninput="collectionRenderAlbum()" disabled />
+      <select id="collection-album-stage" class="input w-full min-w-0" aria-label="Filtrar por estágio" onchange="collectionRenderAlbum()" disabled>
+        <option value="ALL">Todos os estágios</option>
+        <option value="BABY">Baby</option>
+        <option value="BABY_II">Baby II</option>
+        <option value="ROOKIE">Rookie</option>
+        <option value="CHAMPION">Champion</option>
+        <option value="ULTIMATE">Ultimate</option>
+        <option value="MEGA">Mega</option>
+      </select>
+    </div>
+    <p id="collection-album-count" class="text-xs text-slate-400 mb-3" aria-live="polite"></p><div id="collection-album-content"><p class="text-sm text-slate-400 text-center py-8">Carregando catálogo...</p></div></div>`;
   overlay.onclick = event => { if (event.target === overlay) collectionCloseAlbum(); };
   document.body.appendChild(overlay);
   try {
     let page = 0;
-    window.collectionAlbumEntries = [];
+    const catalog = [];
     let hasNext = true;
     while (hasNext) {
       const result = await apiGet(`/digimon-infos?page=${page}&size=100`);
-      window.collectionAlbumEntries.push(...(result.items || []));
+      if (!overlay.isConnected) return;
+      catalog.push(...(result.items || []));
       hasNext = Boolean(result.hasNext);
       page++;
     }
+    window.collectionAlbumEntries = catalog;
+    overlay.querySelector("#collection-album-search").disabled = false;
+    overlay.querySelector("#collection-album-stage").disabled = false;
     collectionRenderAlbum();
   } catch (err) {
-    document.getElementById("collection-album-content").innerHTML = `<p class="text-sm text-red-300 text-center py-8">${escapeHtml(err.message || "Não foi possível carregar o álbum.")}</p>`;
+    if (!overlay.isConnected) return;
+    overlay.querySelector("#collection-album-content").innerHTML = `<p class="text-sm text-red-300 text-center py-8">${escapeHtml(err.message || "Não foi possível carregar o álbum.")}</p>`;
   }
 }
 
@@ -105,11 +122,15 @@ function collectionRenderAlbum() {
   if (!target) return;
   const search = String(document.getElementById("collection-album-search")?.value || "").trim().toLowerCase();
   const entries = new Set((collectionSummary?.entries || []).map(e => `${e.digimonInfoId}:${e.rarity}`));
-  const items = (window.collectionAlbumEntries || []).filter(item => !search || String(item.name || "").toLowerCase().includes(search));
+  const stage = document.getElementById("collection-album-stage")?.value || "ALL";
+  const items = (window.collectionAlbumEntries || []).filter(item =>
+    (stage === "ALL" || item.stage === stage) &&
+    (!search || String(item.name || "").toLowerCase().includes(search))
+  );
   const count = document.getElementById("collection-album-count");
   if (count) count.textContent = `${items.length} Digimon(s)`;
   const rarities = [["COMMON", "Comum", "rarity-box-common"], ["RARE", "Rara", "rarity-box-rare"], ["EPIC", "Épica", "rarity-box-epic"], ["LEGENDARY", "Lendária", "rarity-box-legendary"]];
-  target.innerHTML = items.length ? `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${items.map(item => { const masteryComplete = rarities.every(([code]) => entries.has(`${item.id}:${code}`)); return `<div class="rounded-xl border ${masteryComplete ? "border-amber-500/70 bg-amber-950/20" : "border-slate-700 bg-slate-900/60"} p-3"><div class="flex items-center gap-2 mb-3"><div class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">${renderDigimonVisual(item.imageUrl, item.stage, "w-full h-full", "text-2xl")}</div><div class="min-w-0 flex-1"><div class="flex items-center justify-between gap-2"><p class="font-bold truncate">${escapeHtml(item.name)}</p>${masteryComplete ? '<span class="badge badge-legendary whitespace-nowrap">Maestria adquirida</span>' : ""}</div><p class="text-xs text-slate-500">${escapeHtml(item.stage)}</p></div></div><div class="grid grid-cols-4 gap-1.5">${rarities.map(([code, label, rarityClass]) => { const registered = entries.has(`${item.id}:${code}`); return `<div class="${rarityClass} rounded-lg border p-1.5 text-center ${registered ? "opacity-100" : "opacity-50 grayscale"}" title="${registered ? "Registrado" : "Ainda não registrado"}"><div class="aspect-square rounded bg-slate-950/60 flex items-center justify-center overflow-hidden">${renderDigimonVisual(item.imageUrl, item.stage, "w-full h-full", "text-2xl")}</div><p class="text-[9px] font-semibold mt-1 truncate">${label}</p><p class="text-[10px]">${registered ? "✓" : "—"}</p></div>`; }).join("")}</div>${collectionRenderEvolutionLines(item.id)}</div>`; }).join("")}</div>` : '<p class="text-sm text-slate-400 text-center py-8">Nenhum Digimon corresponde à busca.</p>';
+  target.innerHTML = items.length ? `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${items.map(item => { const masteryComplete = rarities.every(([code]) => entries.has(`${item.id}:${code}`)); return `<div class="rounded-xl border ${masteryComplete ? "border-amber-500/70 bg-amber-950/20" : "border-slate-700 bg-slate-900/60"} p-3"><div class="flex items-center gap-2 mb-3"><div class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">${renderDigimonVisual(item.imageUrl, item.stage, "w-full h-full", "text-2xl")}</div><div class="min-w-0 flex-1"><div class="flex items-center justify-between gap-2"><p class="font-bold truncate">${escapeHtml(item.name)}</p>${masteryComplete ? '<span class="badge badge-legendary whitespace-nowrap">Maestria adquirida</span>' : ""}</div><p class="text-xs text-slate-500">${escapeHtml(item.stage)}</p></div></div><div class="grid grid-cols-4 gap-1.5">${rarities.map(([code, label, rarityClass]) => { const registered = entries.has(`${item.id}:${code}`); return `<div class="${rarityClass} rounded-lg border p-1.5 text-center ${registered ? "opacity-100" : "opacity-50 grayscale"}" title="${registered ? "Registrado" : "Ainda não registrado"}"><div class="aspect-square rounded bg-slate-950/60 flex items-center justify-center overflow-hidden">${renderDigimonVisual(item.imageUrl, item.stage, "w-full h-full", "text-2xl")}</div><p class="text-[9px] font-semibold mt-1 truncate">${label}</p><p class="text-[10px]">${registered ? "✓" : "—"}</p></div>`; }).join("")}</div>${collectionRenderEvolutionLines(item.id)}</div>`; }).join("")}</div>` : '<p class="text-sm text-slate-400 text-center py-8">Nenhum Digimon corresponde aos filtros.</p>';
 }
 
 function collectionCloseAlbum() {
