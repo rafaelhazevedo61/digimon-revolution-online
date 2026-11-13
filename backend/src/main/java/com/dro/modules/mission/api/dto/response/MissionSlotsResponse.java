@@ -1,5 +1,6 @@
 package com.dro.modules.mission.api.dto.response;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -8,6 +9,7 @@ import java.util.List;
 public record MissionSlotsResponse(
         int totalSlots,
         int unlockedSlots,
-        List<MissionInstanceResponse> activeMissions
+        List<MissionInstanceResponse> activeMissions,
+        Instant vipExpiresAt
 ) {
 }

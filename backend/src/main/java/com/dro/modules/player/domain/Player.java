@@ -3,6 +3,7 @@ package com.dro.modules.player.domain;
 import com.dro.modules.clan.domain.ClanRole;
 import com.dro.modules.digitama.domain.enums.DigitamaType;
 import jakarta.persistence.*;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -18,6 +19,9 @@ import java.util.UUID;
 public class Player {
     @Id
     private UUID id;
+    @Column(name = "vip_expires_at")
+    private Instant vipExpiresAt;
+
     @Column(nullable = false, unique = true)
     private String username;
     @Column(nullable = false, unique = true)
@@ -91,6 +95,18 @@ public class Player {
      * Informa se o jogador já concluiu a seleção do Digitama inicial.
      */
     public boolean isIncubationAutoRepeatEnabled() { return incubationAutoRepeatEnabled; }
+    public Instant getVipExpiresAt() {
+        return vipExpiresAt;
+    }
+
+    public void setVipExpiresAt(Instant vipExpiresAt) {
+        this.vipExpiresAt = vipExpiresAt;
+    }
+
+    public boolean hasActiveVip(Instant now) {
+        return vipExpiresAt != null && vipExpiresAt.isAfter(now);
+    }
+
     public boolean isIncubationAutoClaimEnabled() { return incubationAutoClaimEnabled; }
     public void setIncubationAutoRepeatEnabled(boolean enabled) { this.incubationAutoRepeatEnabled = enabled; }
     public void setIncubationAutoClaimEnabled(boolean enabled) { this.incubationAutoClaimEnabled = enabled; }

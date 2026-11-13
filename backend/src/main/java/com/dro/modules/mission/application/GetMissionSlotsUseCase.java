@@ -26,7 +26,8 @@ public class GetMissionSlotsUseCase {
         return new MissionSlotsResponse(
                 MissionSlotRules.TOTAL_SLOTS,
                 unlockedSlots,
-                getActiveMissionsUseCase.execute(token)
+                getActiveMissionsUseCase.execute(token),
+                player.getVipExpiresAt()
         );
     }
 

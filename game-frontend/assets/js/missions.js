@@ -135,7 +135,7 @@ async function loadActiveMissions() {
         </article>
       `;
     }
-    return renderActiveMissionCard(mission);
+    return renderActiveMissionCard(mission, slotResponse?.vipExpiresAt);
   }).join("");
 
   container.innerHTML = `
@@ -176,20 +176,21 @@ function formatMissionName(mission) {
     .replace(/Infinity Mountain/g, "Montanha Infinita");
 }
 
-function renderActiveMissionCard(m) {
+function renderActiveMissionCard(m, vipExpiresAt) {
+  const vipActive = new Date(vipExpiresAt).getTime() > Date.now();
   const now = Date.now();
   const endsAt = new Date(m.endsAt).getTime();
   const remaining = Math.max(0, Math.floor((endsAt - now) / 1000));
   const done = m.status === "COMPLETED" || remaining <= 0;
   const autoRepeatControls = m.teamId
-    ? `<div class="missions-auto-mode-actions">
+    ? (vipActive ? `<div class="missions-auto-mode-actions">
         <button class="btn-sm ${m.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoRepeat('${m.missionInstanceId}', ${!m.autoRepeatEnabled})">${m.autoRepeatEnabled ? "Repetição ativa" : "Repetir após resgate"}</button>
         <button type="button" class="btn-sm ${m.autoClaimEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoClaim('${m.missionInstanceId}', ${!m.autoClaimEnabled})">${m.autoClaimEnabled ? "Automático ativo" : "Automático completo"}</button>
-      </div>`
+      </div>` : `<span class="text-xs text-amber-300">🔒 Automação exclusiva VIP</span>`)
     : "";
 
   return `
-    <article class="missions-active-card ${done ? "missions-active-card-ready" : ""}" data-mp-instance="${m.missionInstanceId}" data-mp-ends-at="${m.endsAt}" data-mp-auto-claim="${m.autoClaimEnabled ? "true" : "false"}">
+    <article class="missions-active-card ${done ? "missions-active-card-ready" : ""}" data-mp-instance="${m.missionInstanceId}" data-mp-ends-at="${m.endsAt}" data-mp-vip-expires-at="${escapeAttr(vipExpiresAt || "")}" data-mp-auto-claim="${vipActive && m.autoClaimEnabled ? "true" : "false"}">
       <div class="missions-active-icon" aria-hidden="true">✦</div>
       <div class="missions-active-main">
         <p class="missions-active-label">Objetivo em campo${m.slotNumber ? ` · Slot ${m.slotNumber}` : ""}</p>
@@ -271,7 +272,7 @@ function waitForMissionAutoClaimRetry(attempt) {
 async function claimMissionWithRetry(instanceId) {
   for (let attempt = 1; attempt <= MISSION_AUTO_CLAIM_MAX_ATTEMPTS; attempt += 1) {
     try {
-      return await apiPost(`/missions/${instanceId}/claim`);
+      return await apiPost(`/missions/${instanceId}/claim-auto`);
     } catch (err) {
       const canRetry = isMissionNotCompletedError(err) && attempt < MISSION_AUTO_CLAIM_MAX_ATTEMPTS;
       if (!canRetry) throw err;
@@ -904,14 +905,14 @@ function startMissionsPageTimers() {
       if (!timerEl) return;
 
       if (remaining <= 0) {
-        if (el.dataset.mpAutoClaim === "true" && el.dataset.mpAutoClaiming !== "true") {
+        if (new Date(el.dataset.mpVipExpiresAt).getTime() > Date.now() && el.dataset.mpAutoClaim === "true" && el.dataset.mpAutoClaiming !== "true") {
           el.dataset.mpAutoClaiming = "true";
           timerEl.textContent = "Resgatando...";
           claimMissionAutomatically(el.dataset.mpInstance)
             .then(() => loadActiveMissions())
             .catch(async err => {
               el.dataset.mpAutoClaiming = "false";
-              if (isMissionAlreadyClaimedError(err)) {
+              if (isMissionAlreadyClaimedError(err) || /VIP ativo|Resgate automático desativado/.test(err.message)) {
                 await loadActiveMissions();
                 return;
               }

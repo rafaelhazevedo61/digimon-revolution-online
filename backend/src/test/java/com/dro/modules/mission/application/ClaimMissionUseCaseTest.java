@@ -131,13 +131,13 @@ class ClaimMissionUseCaseTest {
                 .build();
         ChestDefinitionEntity chest = chest(chestCode);
 
-        when(missionInstanceRepository.findByIdAndPlayerId(any(UUID.class), eq(playerId)))
+        when(missionInstanceRepository.findByIdForUpdate(any(UUID.class)))
                 .thenReturn(Optional.of(instance));
         when(missionDefinitionRepository.findById(missionId)).thenReturn(Optional.of(mission));
         when(progressRepository.findByPlayerIdAndMissionId(playerId, missionId))
                 .thenReturn(Optional.of(progress));
         when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
         when(chestDefinitionRepository.findWithCatalogByCode(chestCode))
                 .thenReturn(Optional.of(chest));
         when(addItemUseCase.tryAddMaterial(digimonId, chest.getItemDefinition(), 1)).thenReturn(true);
@@ -216,12 +216,12 @@ class ClaimMissionUseCaseTest {
         Player player = Player.builder().id(playerId).activeDigimonId(digimonId).build();
         ChestDefinitionEntity chest = chest(chestCode);
 
-        when(missionInstanceRepository.findByIdAndPlayerId(any(UUID.class), eq(playerId)))
+        when(missionInstanceRepository.findByIdForUpdate(any(UUID.class)))
                 .thenReturn(Optional.of(instance));
         when(missionDefinitionRepository.findById(missionId)).thenReturn(Optional.of(mission));
         when(progressRepository.findByPlayerIdAndMissionId(playerId, missionId)).thenReturn(Optional.of(progress));
         when(digimonRepository.findById(digimonId)).thenReturn(Optional.of(digimon));
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
         when(chestDefinitionRepository.findWithCatalogByCode(chestCode)).thenReturn(Optional.of(chest));
         when(addItemUseCase.tryAddMaterial(digimonId, chest.getItemDefinition(), 1)).thenReturn(false);
 

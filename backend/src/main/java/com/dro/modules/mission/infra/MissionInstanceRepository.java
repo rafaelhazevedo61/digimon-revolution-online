@@ -40,6 +40,9 @@ public interface MissionInstanceRepository
 
     Optional<MissionInstance> findByIdAndPlayerId(UUID id, UUID playerId);
 
+    @Query("SELECT activity.playerId FROM MissionInstance activity WHERE activity.id = :id")
+    Optional<UUID> findOwnerId(@Param("id") UUID id);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT m FROM MissionInstance m WHERE m.id = :id")
     Optional<MissionInstance> findByIdForUpdate(@Param("id") UUID id);

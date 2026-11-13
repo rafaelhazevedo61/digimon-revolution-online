@@ -1,5 +1,6 @@
 package com.dro.modules.incubation.application;
 
+import com.dro.modules.player.application.VipAccess;
 import com.dro.modules.digimon.application.StoreDigimonUseCase;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.incubation.domain.Incubation;
@@ -9,22 +10,26 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
 public class IncubationAutomationProcessor {
+    private final VipAccess vipAccess;
     private final IncubationRepository repository;
     private final ClaimIncubationUseCase claimUseCase;
     private final StoreDigimonUseCase storeDigimonUseCase;
     private final StartIncubationUseCase startUseCase;
 
     public IncubationAutomationProcessor(
+            VipAccess vipAccess,
             IncubationRepository repository,
             ClaimIncubationUseCase claimUseCase,
             StoreDigimonUseCase storeDigimonUseCase,
             StartIncubationUseCase startUseCase
     ) {
+        this.vipAccess = vipAccess;
         this.repository = repository;
         this.claimUseCase = claimUseCase;
         this.storeDigimonUseCase = storeDigimonUseCase;
@@ -39,10 +44,19 @@ public class IncubationAutomationProcessor {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void process(UUID id) {
+        UUID ownerId = repository.findOwnerId(id).orElse(null);
+        if (ownerId == null) return;
+        var player = vipAccess.lockPlayer(ownerId);
         Incubation i = repository.findByIdForUpdate(id).orElse(null);
         if (i == null || !i.isAutoClaimEnabled()
                 || (i.getStatus() != IncubationStatus.IN_PROGRESS && i.getStatus() != IncubationStatus.READY)
                 || i.getFinishAt().isAfter(LocalDateTime.now())) {
+            return;
+        }
+
+        if (!player.hasActiveVip(Instant.now())) {
+            i.pauseAutomation(VipAccess.PAUSE_REASON, VipAccess.PAUSE_REASON);
+            repository.save(i);
             return;
         }
 

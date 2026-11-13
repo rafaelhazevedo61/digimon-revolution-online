@@ -1,5 +1,6 @@
 package com.dro.modules.mission.application;
 
+import com.dro.modules.player.application.VipAccess;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.digimon.infra.DigimonRepository;
@@ -60,7 +61,10 @@ public class StartMissionUseCase {
 
     @Transactional
     public MissionStartResponse executeForPlayer(UUID playerId, String missionId, UUID teamId, boolean autoRepeat, boolean autoClaim) {
-        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+        boolean automatic = autoRepeat || autoClaim;
+        Player player = (automatic ? playerRepository.findByIdForUpdate(playerId) : playerRepository.findById(playerId))
+                .orElseThrow(() -> new NotFoundException("Player not found"));
+        if (automatic) VipAccess.requireActive(player);
         List<Digimon> digimons = teamId == null
                 ? List.of(getActiveDigimon(player))
                 : getTeamDigimons(playerId, teamId);

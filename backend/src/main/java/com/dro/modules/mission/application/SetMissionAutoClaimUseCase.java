@@ -1,5 +1,6 @@
 package com.dro.modules.mission.application;
 
+import com.dro.modules.player.application.VipAccess;
 import com.dro.modules.mission.api.dto.response.MissionAutoRepeatResponse;
 import com.dro.modules.mission.domain.MissionInstance;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
@@ -18,14 +19,20 @@ import java.util.UUID;
 public class SetMissionAutoClaimUseCase {
     private final MissionInstanceRepository missionInstanceRepository;
 
-    public SetMissionAutoClaimUseCase(MissionInstanceRepository missionInstanceRepository) {
+    private final VipAccess vipAccess;
+
+    public SetMissionAutoClaimUseCase(MissionInstanceRepository missionInstanceRepository, VipAccess vipAccess) {
+        this.vipAccess = vipAccess;
         this.missionInstanceRepository = missionInstanceRepository;
     }
 
     @Transactional
     public MissionAutoRepeatResponse execute(String token, UUID missionInstanceId, boolean enabled) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        MissionInstance instance = missionInstanceRepository.findByIdAndPlayerId(missionInstanceId, playerId)
+        var player = vipAccess.lockPlayer(playerId);
+        if (enabled) VipAccess.requireActive(player);
+        MissionInstance instance = missionInstanceRepository.findByIdForUpdate(missionInstanceId)
+                .filter(mission -> playerId.equals(mission.getPlayerId()))
                 .orElseThrow(() -> new NotFoundException("Missão não encontrada"));
 
         instance.updateStatusIfFinished();

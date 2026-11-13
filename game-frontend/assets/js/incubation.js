@@ -74,6 +74,7 @@ function incubRenderSlots(response, inventory = [], slotInfo = window._incubSlot
   const availableSlots = renderSlots.filter(slot => slot.unlocked && !slot.incubation);
   const incubators = inventory.filter(item => incubIsItem(item, "INCUBATOR") && Number(item.quantity) > 0);
   const availableIncubators = availableSlots.length;
+  const vipActive = new Date(response?.vipExpiresAt).getTime() > Date.now();
   const automationSource = renderSlots.find(slot => slot.incubation)?.incubation || null;
   const storedDigimons = Number(slotInfo?.storedDigimons);
   const maxStorageSlots = Number(slotInfo?.maxStorageSlots);
@@ -107,11 +108,11 @@ function incubRenderSlots(response, inventory = [], slotInfo = window._incubSlot
           <h3 class="incubation-section-title">Configuração de todos os slots</h3>
         </div>
         <div class="flex flex-wrap gap-2">
-          <button type="button" class="btn-sm incubation-global-toggle ${automationSource?.autoClaimEnabled ? "btn-primary" : "btn-secondary"}" ${automationSource ? `onclick="incubToggleAutomation('${escapeAttr(String(automationSource.id))}', 'autoClaim', ${!automationSource.autoClaimEnabled})"` : "disabled"}>${automationSource?.autoClaimEnabled ? "Auto-coleta ativa" : "Ativar auto-coleta"}</button>
-          <button type="button" class="btn-sm incubation-global-toggle ${automationSource?.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" ${automationSource ? `onclick="incubToggleAutomation('${escapeAttr(String(automationSource.id))}', 'autoRepeat', ${!automationSource.autoRepeatEnabled})"` : "disabled"}>${automationSource?.autoRepeatEnabled ? "Repetição ativa" : "Ativar repetição"}</button>
+          <button type="button" class="btn-sm incubation-global-toggle ${automationSource?.autoClaimEnabled ? "btn-primary" : "btn-secondary"}" ${vipActive && automationSource ? `onclick="incubToggleAutomation('${escapeAttr(String(automationSource.id))}', 'autoClaim', ${!automationSource.autoClaimEnabled})"` : "disabled"}>${automationSource?.autoClaimEnabled ? "Auto-coleta ativa" : "Ativar auto-coleta"}</button>
+          <button type="button" class="btn-sm incubation-global-toggle ${automationSource?.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" ${vipActive && automationSource ? `onclick="incubToggleAutomation('${escapeAttr(String(automationSource.id))}', 'autoRepeat', ${!automationSource.autoRepeatEnabled})"` : "disabled"}>${automationSource?.autoRepeatEnabled ? "Repetição ativa" : "Ativar repetição"}</button>
         </div>
       </div>
-      <p class="text-xs text-slate-500 mt-2">As alterações valem para todas as incubações ativas.</p>
+      <p class="text-xs text-slate-500 mt-2">${vipActive ? "As alterações valem para todas as incubações ativas." : "🔒 Automação exclusiva VIP. A coleta manual continua disponível."}</p>
     </section>
 
     <section class="incubation-section">

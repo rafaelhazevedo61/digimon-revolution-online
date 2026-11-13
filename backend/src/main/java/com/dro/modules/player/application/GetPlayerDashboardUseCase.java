@@ -97,7 +97,7 @@ public class GetPlayerDashboardUseCase {
 
         List<InventorySummaryResponse> inventory = buildInventory(player);
 
-        List<ActiveMissionResponse> activeMissions = buildActiveMissions(playerId);
+        List<ActiveMissionResponse> activeMissions = buildActiveMissions(playerId, player.hasActiveVip(Instant.now()));
 
         IncubationSlotsResponse incubation = buildIncubation(playerId, player);
 
@@ -241,7 +241,7 @@ public class GetPlayerDashboardUseCase {
                 .toList();
     }
 
-    private List<ActiveMissionResponse> buildActiveMissions(UUID playerId) {
+    private List<ActiveMissionResponse> buildActiveMissions(UUID playerId, boolean vipActive) {
 
         List<MissionInstance> missions = missionInstanceRepository
                 .findByPlayerIdAndStatusIn(playerId, List.of(MissionStatus.RUNNING, MissionStatus.COMPLETED));
@@ -267,8 +267,8 @@ public class GetPlayerDashboardUseCase {
                             instance.getStartedAt(),
                             instance.getEndsAt(),
                             remaining,
-                            instance.isAutoRepeatEnabled(),
-                            instance.isAutoClaimEnabled(),
+                            vipActive && instance.isAutoRepeatEnabled(),
+                            vipActive && instance.isAutoClaimEnabled(),
                             instance.getTeamId(),
                             instance.getTeamId() == null
                                     ? null
@@ -299,23 +299,25 @@ public class GetPlayerDashboardUseCase {
             activeBySlot.put(incubation.getSlotNumber(), incubation);
         }
 
+        boolean vipActive = player.hasActiveVip(Instant.now());
         List<IncubationSlotResponse> slots = java.util.stream.IntStream
                 .rangeClosed(1, IncubatorRules.TOTAL_SLOTS)
                 .mapToObj(slotNumber -> new IncubationSlotResponse(
                         slotNumber,
                         slotNumber <= unlockedSlots,
-                        toIncubationResponse(activeBySlot.get(slotNumber), now)
+                        toIncubationResponse(activeBySlot.get(slotNumber), now, vipActive)
                 ))
                 .toList();
 
         return new IncubationSlotsResponse(
                 IncubatorRules.TOTAL_SLOTS,
                 unlockedSlots,
-                slots
+                slots,
+                player.getVipExpiresAt()
         );
     }
 
-    private IncubationResponse toIncubationResponse(Incubation incubation, LocalDateTime now) {
+    private IncubationResponse toIncubationResponse(Incubation incubation, LocalDateTime now, boolean vipActive) {
         if (incubation == null) {
             return null;
         }
@@ -329,8 +331,8 @@ public class GetPlayerDashboardUseCase {
                 incubation.getStartedAt(),
                 incubation.getFinishAt(),
                 remaining,
-                incubation.isAutoRepeatEnabled(),
-                incubation.isAutoClaimEnabled(),
+                vipActive && incubation.isAutoRepeatEnabled(),
+                vipActive && incubation.isAutoClaimEnabled(),
                 incubation.getAutomationPauseReason(),
                 incubation.getAutomationPausedAt(),
                 incubation.getAutomationLastErrorCode()

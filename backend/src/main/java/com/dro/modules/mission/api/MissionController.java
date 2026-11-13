@@ -75,6 +75,12 @@ public class MissionController {
         return claimMissionUseCase.execute(authorization, missionInstanceId);
     }
 
+    @PostMapping("/{missionInstanceId}/claim-auto")
+    public MissionResultResponse claimAutomatically(@RequestHeader("Authorization") String authorization,
+                                                    @PathVariable UUID missionInstanceId) {
+        return claimMissionUseCase.executeAutomatic(authorization, missionInstanceId);
+    }
+
     @GetMapping("/active")
     public List<MissionInstanceResponse> getActiveMissions(@RequestHeader("Authorization") String token) {
         return getActiveMissionsUseCase.execute(token);

@@ -12,7 +12,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.Instant;
 import java.util.UUID;
+
+import com.dro.modules.player.api.dto.response.AdminPlayerResponse;
+import com.dro.modules.player.application.SetPlayerVipUseCase;
 
 /**
  * Componente da camada de controller da API do módulo de Jogadores.
@@ -23,6 +27,16 @@ public class AdminPlayerController {
     private final GetAdminPlayersUseCase getAdminPlayersUseCase;
     private final WipePlayerDataUseCase wipePlayerDataUseCase;
     private final ResetPlayerPasswordUseCase resetPlayerPasswordUseCase;
+
+    private final SetPlayerVipUseCase setPlayerVipUseCase;
+
+    @PutMapping("/{id}/vip")
+    public AdminPlayerResponse setVip(@RequestHeader("Authorization") String authorization, @PathVariable UUID id,
+                                      @RequestBody VipRequest request) {
+        return setPlayerVipUseCase.execute(authorization, id, request.expiresAt());
+    }
+
+    public record VipRequest(Instant expiresAt) {}
 
     @GetMapping
     public ResponseEntity<AdminPlayerPageResponse> getPlayers(@RequestParam(required = false) String username, @RequestParam(required = false) String email, @RequestParam(required = false) String selectedDigitama, @RequestParam(required = false) Boolean starterSelected, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
@@ -48,7 +62,8 @@ public class AdminPlayerController {
         return Math.min(size, 100);
     }
 
-    public AdminPlayerController(final GetAdminPlayersUseCase getAdminPlayersUseCase, final WipePlayerDataUseCase wipePlayerDataUseCase, final ResetPlayerPasswordUseCase resetPlayerPasswordUseCase) {
+    public AdminPlayerController(final GetAdminPlayersUseCase getAdminPlayersUseCase, final WipePlayerDataUseCase wipePlayerDataUseCase, final ResetPlayerPasswordUseCase resetPlayerPasswordUseCase, final SetPlayerVipUseCase setPlayerVipUseCase) {
+        this.setPlayerVipUseCase = setPlayerVipUseCase;
         this.getAdminPlayersUseCase = getAdminPlayersUseCase;
         this.wipePlayerDataUseCase = wipePlayerDataUseCase;
         this.resetPlayerPasswordUseCase = resetPlayerPasswordUseCase;

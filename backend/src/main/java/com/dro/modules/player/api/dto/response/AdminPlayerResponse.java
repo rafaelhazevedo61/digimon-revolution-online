@@ -2,6 +2,7 @@ package com.dro.modules.player.api.dto.response;
 
 import com.dro.modules.player.domain.Player;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -17,7 +18,8 @@ public record AdminPlayerResponse(
         String selectedDigitama,
         UUID activeDigimonId,
         LocalDateTime lastMissionAt,
-        boolean starterSelected
+        boolean starterSelected,
+        Instant vipExpiresAt
 ) {
     public static AdminPlayerResponse from(Player player) {
         return new AdminPlayerResponse(
@@ -29,7 +31,8 @@ public record AdminPlayerResponse(
                 player.getSelectedDigitama() != null ? player.getSelectedDigitama().name() : null,
                 player.getActiveDigimonId(),
                 player.getLastMissionAt(),
-                player.hasSelectedStarter()
+                player.hasSelectedStarter(),
+                player.getVipExpiresAt()
         );
     }
 }
