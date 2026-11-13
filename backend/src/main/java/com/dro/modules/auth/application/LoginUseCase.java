@@ -19,7 +19,10 @@ public class LoginUseCase {
     private final JwtService jwtService;
 
     public LoginResponse execute(LoginRequest request) {
-        Player player = repository.findByEmail(request.email()).orElseThrow(InvalidCredentialsException::new);
+        String identifier = request.identifier().trim();
+        Player player = repository.findByEmail(identifier)
+                .or(() -> repository.findByUsername(identifier))
+                .orElseThrow(InvalidCredentialsException::new);
         if (!passwordEncoder.matches(request.password(), player.getPassword())) {
             throw new InvalidCredentialsException();
         }

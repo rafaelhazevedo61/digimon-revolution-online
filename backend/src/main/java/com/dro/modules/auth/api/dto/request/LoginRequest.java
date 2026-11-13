@@ -1,6 +1,6 @@
 package com.dro.modules.auth.api.dto.request;
 
-import jakarta.validation.constraints.Email;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotBlank;
 
 /**
@@ -8,8 +8,9 @@ import jakarta.validation.constraints.NotBlank;
  */
 public record LoginRequest(
 
-        @Email
-        String email,
+        @NotBlank
+        @JsonAlias("email")
+        String identifier,
 
         @NotBlank
         String password
