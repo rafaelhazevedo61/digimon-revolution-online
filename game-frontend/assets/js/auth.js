@@ -56,15 +56,17 @@ function renderLoginPage() {
             </div>
 
             <div class="mb-6">
-              <label class="label">Senha</label>
+              <label class="label" for="login-password">Senha</label>
 
               <input
                 id="login-password"
-                type="password"
+                type="password" autocomplete="current-password"
                 class="input"
                 placeholder="••••••••"
                 required
               />
+              <button type="button" class="mt-2 text-sm text-cyan-300 hover:underline" aria-controls="login-password"
+                onclick="const field = document.getElementById(this.getAttribute('aria-controls')); const show = field.type === 'password'; field.type = show ? 'text' : 'password'; this.textContent = show ? 'Ocultar senha' : 'Mostrar senha';">Mostrar senha</button>
             </div>
 
             <button
