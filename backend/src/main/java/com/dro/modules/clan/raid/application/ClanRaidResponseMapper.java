@@ -1,5 +1,6 @@
 package com.dro.modules.clan.raid.application;
 
+import com.dro.modules.boss.domain.BossCombatRules;
 import com.dro.modules.boss.domain.BossDefinitionEntity;
 import com.dro.modules.boss.api.dto.response.BossDefeatSummaryResponse;
 import com.dro.modules.boss.infra.BossDefinitionRepository;
@@ -9,7 +10,6 @@ import com.dro.modules.clan.raid.api.dto.response.ClanRaidRewardResponse;
 import com.dro.modules.clan.raid.api.dto.response.ClanRaidResponse;
 import com.dro.modules.clan.raid.domain.ClanRaid;
 import com.dro.modules.clan.raid.domain.ClanRaidAttack;
-import com.dro.modules.clan.raid.domain.ClanRaidRules;
 import com.dro.modules.clan.raid.domain.ClanRaidStatus;
 import com.dro.modules.clan.raid.infra.ClanRaidAttackRepository;
 import com.dro.modules.player.domain.Player;
@@ -39,15 +39,20 @@ public class ClanRaidResponseMapper {
         List<ClanRaidAttack> attacks = clanRaidAttackRepository.findByClanRaidIdOrderByCreatedAtDesc(raid.getId());
         List<ClanRaidAttack> myAttacks = attacks.stream().filter(attack -> attack.getPlayerId().equals(viewerPlayerId)).toList();
         long myTotalDamage = myAttacks.stream().mapToLong(ClanRaidAttack::getDamage).sum();
-        int attackCooldownMinutes = ClanRaidRules.attackCooldownMinutes(boss.getCooldownMinutes());
+        Instant now = Instant.now();
+        boolean vipActive = playerRepository.findById(viewerPlayerId)
+                .map(player -> player.hasActiveVip(now))
+                .orElse(false);
+        Duration cooldown = BossCombatRules.attackCooldown(boss.getCooldownMinutes(), vipActive);
+        double attackCooldownMinutes = cooldown.toSeconds() / 60.0;
         boolean cooldownEnabled = gameplayConfig.isClanRaidCooldownEnabled();
         Instant nextAttackCandidate = myAttacks.isEmpty() || myAttacks.get(0).getCreatedAt() == null
                 ? null
-                : myAttacks.get(0).getCreatedAt().plus(Duration.ofMinutes(attackCooldownMinutes));
+                : myAttacks.get(0).getCreatedAt().plus(cooldown);
         Instant nextAttackAvailableAt = cooldownEnabled
                 && raid.getStatus() == ClanRaidStatus.ACTIVE
                 && nextAttackCandidate != null
-                && nextAttackCandidate.isAfter(Instant.now())
+                && nextAttackCandidate.isAfter(now)
                 ? nextAttackCandidate
                 : null;
         List<ClanRaidAttackResponse> recentAttacks = attacks.stream().limit(RECENT_ATTACK_LIMIT).map(this::toAttackResponse).toList();

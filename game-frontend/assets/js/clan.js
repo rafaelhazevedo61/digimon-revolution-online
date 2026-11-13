@@ -1154,7 +1154,7 @@ async function clanLoadRaid() {
       && nextAttackAt > Date.now();
     const formatNumber = (value) => Number(value || 0).toLocaleString("pt-BR");
     const cooldownCopy = cooldownEnabled
-      ? `Intervalo de ${cooldownMinutes} minuto(s) entre ataques.`
+      ? `Intervalo de ${cooldownMinutes.toLocaleString("pt-BR")} minuto(s) entre ataques.`
       : "Intervalo desativado pelo administrador.";
     let rankingHtml = "";
     if (raid.ranking && raid.ranking.length > 0) {

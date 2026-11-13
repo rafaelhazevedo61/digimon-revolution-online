@@ -6,6 +6,7 @@ import com.dro.modules.boss.world.domain.WorldBossInstance;
 import com.dro.modules.boss.world.domain.WorldBossStatus;
 import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.modules.boss.world.infra.WorldBossAttackRepository;
+import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.config.GameplayConfig;
 import org.junit.jupiter.api.Test;
@@ -86,12 +87,12 @@ class WorldBossResponseMapperTest {
         var response = mapper.toResponse(instance, playerId);
 
         assertThat(response.cooldownEnabled()).isFalse();
-        assertThat(response.attackCooldownMinutes()).isEqualTo(5);
+        assertThat(response.attackCooldownMinutes()).isEqualTo(5.0);
         assertThat(response.nextAttackAvailableAt()).isNull();
     }
 
     @Test
-    void exposesNextAttackWhenCooldownFlagsAreEnabled () {
+    void exposesReducedCooldownForActiveVip() {
         UUID worldBossId = UUID.randomUUID();
         UUID playerId = UUID.randomUUID();
         WorldBossInstance instance = WorldBossInstance.builder()
@@ -124,14 +125,16 @@ class WorldBossResponseMapperTest {
         when(worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(worldBossId))
                 .thenReturn(List.of(previousAttack));
         when(playerRepository.findAllById(any())).thenReturn(List.of());
-        when(playerRepository.findById(playerId)).thenReturn(Optional.empty());
+        Player player = Player.builder().id(playerId).build();
+        player.setVipExpiresAt(Instant.now().plusSeconds(3600));
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
         when(worldBossRewardService.findPlayerRewards(worldBossId, playerId)).thenReturn(List.of());
         when(gameplayConfig.isWorldBossCooldownEnabled()).thenReturn(true);
 
         var response = mapper.toResponse(instance, playerId);
 
         assertThat(response.cooldownEnabled()).isTrue();
-        assertThat(response.attackCooldownMinutes()).isEqualTo(5);
-        assertThat(response.nextAttackAvailableAt()).isNotNull().isAfter(Instant.now());
+        assertThat(response.attackCooldownMinutes()).isEqualTo(2.5);
+        assertThat(response.nextAttackAvailableAt()).isEqualTo(previousAttack.getCreatedAt().plusSeconds(150));
     }
 }

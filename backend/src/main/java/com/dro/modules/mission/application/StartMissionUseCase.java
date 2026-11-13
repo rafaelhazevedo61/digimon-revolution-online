@@ -1,5 +1,6 @@
 package com.dro.modules.mission.application;
 
+import com.dro.modules.player.application.VipAccess;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.digimon.infra.DigimonRepository;
@@ -60,7 +61,10 @@ public class StartMissionUseCase {
 
     @Transactional
     public MissionStartResponse executeForPlayer(UUID playerId, String missionId, UUID teamId, boolean autoRepeat, boolean autoClaim) {
-        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+        boolean automatic = autoRepeat || autoClaim;
+        Player player = (automatic ? playerRepository.findByIdForUpdate(playerId) : playerRepository.findById(playerId))
+                .orElseThrow(() -> new NotFoundException("Player not found"));
+        if (automatic) VipAccess.requireActive(player);
         List<Digimon> digimons = teamId == null
                 ? List.of(getActiveDigimon(player))
                 : getTeamDigimons(playerId, teamId);
@@ -117,7 +121,12 @@ public class StartMissionUseCase {
         }
 
         digimons.forEach(digimonRepository::save);
-        Duration missionDuration = isAdmin ? Duration.ZERO : Duration.ofSeconds(mission.getDurationSeconds());
+        Duration missionDuration = Duration.ofSeconds(mission.getDurationSeconds());
+        if (isAdmin) {
+            missionDuration = Duration.ZERO;
+        } else if (player.hasActiveVip(java.time.Instant.now())) {
+            missionDuration = missionDuration.plusSeconds(1).dividedBy(2).truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
+        }
         MissionInstance instance = new MissionInstance(playerId, teamId, slotNumber, digimonIds, missionId, missionDuration);
         instance.setAutoRepeatEnabled(autoRepeat && teamId != null);
         instance.setAutoClaimEnabled(autoClaim && teamId != null);

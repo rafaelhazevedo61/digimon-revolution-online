@@ -6,6 +6,7 @@ import com.dro.modules.clan.raid.domain.ClanRaid;
 import com.dro.modules.clan.raid.domain.ClanRaidAttack;
 import com.dro.modules.clan.raid.domain.ClanRaidStatus;
 import com.dro.modules.clan.raid.infra.ClanRaidAttackRepository;
+import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.config.GameplayConfig;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,7 @@ class ClanRaidResponseMapperTest {
     private ClanRaidResponseMapper mapper;
 
     @Test
-    void exposesNextAttackAvailableAtWhileCooldownIsActive() {
+    void exposesReducedCooldownForActiveVip() {
         UUID raidId = UUID.randomUUID();
         UUID playerId = UUID.randomUUID();
         Instant previousAttackAt = Instant.now().minusSeconds(60);
@@ -51,12 +52,15 @@ class ClanRaidResponseMapperTest {
         BossDefinitionEntity boss = boss();
         ClanRaidAttack previousAttack = attack(raidId, playerId, previousAttackAt);
         stubCommon(raid, playerId, boss, previousAttack);
+        Player player = Player.builder().id(playerId).build();
+        player.setVipExpiresAt(Instant.now().plusSeconds(3600));
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
 
         var response = mapper.toResponse(raid, playerId);
 
         assertThat(response.cooldownEnabled()).isTrue();
-        assertThat(response.attackCooldownMinutes()).isEqualTo(5);
-        assertThat(response.nextAttackAvailableAt()).isAfter(previousAttackAt);
+        assertThat(response.attackCooldownMinutes()).isEqualTo(2.5);
+        assertThat(response.nextAttackAvailableAt()).isEqualTo(previousAttackAt.plusSeconds(150));
     }
 
     @Test
@@ -72,7 +76,7 @@ class ClanRaidResponseMapperTest {
         var response = mapper.toResponse(raid, playerId);
 
         assertThat(response.cooldownEnabled()).isFalse();
-        assertThat(response.attackCooldownMinutes()).isEqualTo(5);
+        assertThat(response.attackCooldownMinutes()).isEqualTo(5.0);
         assertThat(response.nextAttackAvailableAt()).isNull();
     }
 
@@ -88,7 +92,7 @@ class ClanRaidResponseMapperTest {
         var response = mapper.toResponse(raid, playerId);
 
         assertThat(response.cooldownEnabled()).isTrue();
-        assertThat(response.attackCooldownMinutes()).isEqualTo(5);
+        assertThat(response.attackCooldownMinutes()).isEqualTo(5.0);
         assertThat(response.nextAttackAvailableAt()).isNotNull().isAfter(Instant.now());
     }
 

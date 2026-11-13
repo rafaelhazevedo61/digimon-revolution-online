@@ -1,5 +1,6 @@
 package com.dro.modules.inventory.application;
 
+import com.dro.modules.clan.application.ClanBonusService;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.incubation.domain.IncubatorRules;
@@ -22,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -34,6 +36,7 @@ public class UseItemUseCase {
     private final InventoryRepository inventoryRepository;
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
+    private final ClanBonusService clanBonusService;
     private final NewlyUnlockedContentService newlyUnlockedContentService;
 
     @Transactional
@@ -77,6 +80,10 @@ public class UseItemUseCase {
         }
         if (item.getQuantity() < quantity) {
             throw new UnprocessableException("Not enough items in inventory");
+        }
+
+        if (type == ItemType.ENERGY_CELL || type == ItemType.VIP_ENERGY_CHARGE) {
+            return useEnergyItem(player, digimon, item, type);
         }
 
         int storageExpansion = storageExpansionAmount(type);
@@ -136,6 +143,30 @@ public class UseItemUseCase {
                 message,
                 newlyUnlockedContent
         );
+    }
+
+    private UseItemResponse useEnergyItem(Player player, Digimon digimon, InventoryItem item, ItemType type) {
+        if (!player.getId().equals(digimon.getPlayerId())) {
+            throw new BadRequestException("O Digimon ativo não pertence a este jogador.");
+        }
+        int clanBonus = player.getClanId() == null ? 0 : clanBonusService.getMaxEnergyBonus(player.getClanId());
+        digimon.regenerateEnergy(clanBonus);
+        int capacity = digimon.getMaxEnergy() + clanBonus;
+        int missing = capacity - digimon.getEnergy();
+        if (missing <= 0) {
+            throw new UnprocessableException("O Digimon ativo já está com a energia cheia.");
+        }
+        int recovered = type == ItemType.VIP_ENERGY_CHARGE
+                ? missing : Math.min(missing, (int) Math.ceil(capacity / 10.0));
+        digimon.setEnergy(digimon.getEnergy() + recovered);
+        if (recovered == missing) {
+            digimon.setLastEnergyUpdate(Instant.now());
+        }
+        consume(item, 1);
+        digimonRepository.save(digimon);
+        String itemName = type == ItemType.VIP_ENERGY_CHARGE ? "Carga de Energia Total" : "Célula de Energia";
+        return new UseItemResponse(type, 1, 0, digimon.getLevel(), digimon.getLevel(),
+                false, itemName + ": +" + recovered + " de energia.", NewlyUnlockedContentResponse.empty());
     }
 
     private int resolveQuantity(boolean batchUsableItem, Integer requestedQuantity) {
@@ -302,11 +333,12 @@ public class UseItemUseCase {
     }
 
     public UseItemUseCase(final InventoryRepository inventoryRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository) {
-        this(inventoryRepository, digimonRepository, playerRepository, null);
+        this(inventoryRepository, digimonRepository, playerRepository, null, null);
     }
 
     @Autowired
-    public UseItemUseCase(final InventoryRepository inventoryRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final NewlyUnlockedContentService newlyUnlockedContentService) {
+    public UseItemUseCase(final InventoryRepository inventoryRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final NewlyUnlockedContentService newlyUnlockedContentService, final ClanBonusService clanBonusService) {
+        this.clanBonusService = clanBonusService;
         this.inventoryRepository = inventoryRepository;
         this.digimonRepository = digimonRepository;
         this.playerRepository = playerRepository;

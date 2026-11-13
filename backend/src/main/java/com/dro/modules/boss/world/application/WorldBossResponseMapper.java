@@ -1,5 +1,6 @@
 package com.dro.modules.boss.world.application;
 
+import com.dro.modules.boss.domain.BossCombatRules;
 import com.dro.modules.boss.domain.BossDefinitionEntity;
 import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.modules.boss.world.api.dto.response.WorldBossAttackResponse;
@@ -8,7 +9,6 @@ import com.dro.modules.boss.world.api.dto.response.WorldBossResponse;
 import com.dro.modules.boss.api.dto.response.BossDefeatSummaryResponse;
 import com.dro.modules.boss.world.domain.WorldBossAttack;
 import com.dro.modules.boss.world.domain.WorldBossInstance;
-import com.dro.modules.boss.world.domain.WorldBossRules;
 import com.dro.modules.boss.world.infra.WorldBossAttackRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
@@ -36,10 +36,15 @@ public class WorldBossResponseMapper {
         BossDefinitionEntity boss = bossDefinitionRepository.findById(instance.getBossId()).orElseThrow(() -> new NotFoundException("Boss not found"));
         List<WorldBossAttack> myAttacks = worldBossAttackRepository.findByWorldBossIdAndPlayerIdOrderByCreatedAtDesc(instance.getId(), viewerPlayerId);
         long myTotalDamage = myAttacks.stream().mapToLong(WorldBossAttack::getDamage).sum();
-        int attackCooldownMinutes = WorldBossRules.attackCooldownMinutes(boss.getCooldownMinutes());
+        Instant now = Instant.now();
+        boolean vipActive = playerRepository.findById(viewerPlayerId)
+                .map(player -> player.hasActiveVip(now))
+                .orElse(false);
+        Duration cooldown = BossCombatRules.attackCooldown(boss.getCooldownMinutes(), vipActive);
+        double attackCooldownMinutes = cooldown.toSeconds() / 60.0;
         boolean cooldownEnabled = gameplayConfig.isWorldBossCooldownEnabled();
-        Instant nextAttackCandidate = myAttacks.isEmpty() || myAttacks.get(0).getCreatedAt() == null ? null : myAttacks.get(0).getCreatedAt().plus(Duration.ofMinutes(attackCooldownMinutes));
-        Instant nextAttackAvailableAt = cooldownEnabled && instance.getStatus() == com.dro.modules.boss.world.domain.WorldBossStatus.ACTIVE && nextAttackCandidate != null && nextAttackCandidate.isAfter(Instant.now()) ? nextAttackCandidate : null;
+        Instant nextAttackCandidate = myAttacks.isEmpty() || myAttacks.get(0).getCreatedAt() == null ? null : myAttacks.get(0).getCreatedAt().plus(cooldown);
+        Instant nextAttackAvailableAt = cooldownEnabled && instance.getStatus() == com.dro.modules.boss.world.domain.WorldBossStatus.ACTIVE && nextAttackCandidate != null && nextAttackCandidate.isAfter(now) ? nextAttackCandidate : null;
         List<WorldBossAttackResponse> recentAttacks = worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(instance.getId()).stream().limit(RECENT_ATTACK_LIMIT).map(this::toAttackResponse).toList();
         return new WorldBossResponse(instance.getId(), boss.getCode(), boss.getName(), boss.getImageUrl(), instance.getMaxHp(), instance.getRemainingHp(), instance.getStatus(), instance.getCreatedAt(), instance.getDefeatedAt(), attackCooldownMinutes, cooldownEnabled, nextAttackAvailableAt, myTotalDamage, buildRanking(instance.getId()), recentAttacks, worldBossRewardService.findPlayerRewards(instance.getId(), viewerPlayerId), buildDefeatSummary(instance, worldBossAttackRepository.findByWorldBossIdOrderByCreatedAtDesc(instance.getId())));
     }

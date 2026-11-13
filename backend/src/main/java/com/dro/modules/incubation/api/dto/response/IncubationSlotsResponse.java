@@ -1,5 +1,6 @@
 package com.dro.modules.incubation.api.dto.response;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -8,6 +9,7 @@ import java.util.List;
 public record IncubationSlotsResponse(
         int totalSlots,
         int unlockedSlots,
-        List<IncubationSlotResponse> slots
+        List<IncubationSlotResponse> slots,
+        Instant vipExpiresAt
 ) {
 }

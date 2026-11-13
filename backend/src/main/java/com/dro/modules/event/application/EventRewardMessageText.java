@@ -135,6 +135,8 @@ public final class EventRewardMessageText {
         try {
             return switch (ItemType.valueOf(itemType)) {
                 case POTION_SMALL -> "Poção pequena";
+                case ENERGY_CELL -> "Célula de Energia";
+                case VIP_ENERGY_CHARGE -> "Carga de Energia Total";
                 case TRAINING_STONE -> "Pedra de treinamento";
                 case DATA_CORE -> "Núcleo de dados";
                 case CODE_INFINITE -> "Código Infinito";

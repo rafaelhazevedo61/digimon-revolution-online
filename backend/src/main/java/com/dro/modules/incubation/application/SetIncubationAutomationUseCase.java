@@ -1,5 +1,6 @@
 package com.dro.modules.incubation.application;
 
+import com.dro.modules.player.application.VipAccess;
 import com.dro.modules.incubation.domain.Incubation;
 import com.dro.modules.incubation.domain.IncubationStatus;
 import com.dro.modules.incubation.infra.IncubationRepository;
@@ -22,6 +23,7 @@ public class SetIncubationAutomationUseCase {
     public void execute(String token, UUID id, boolean autoClaim, Boolean autoRepeat) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         Player player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+        if (autoClaim || Boolean.TRUE.equals(autoRepeat)) VipAccess.requireActive(player);
         Incubation incubation = repository.findByIdAndPlayerIdForUpdate(id, playerId)
                 .orElseThrow(() -> new NotFoundException("Incubation not found"));
         if (incubation.getStatus() == IncubationStatus.CLAIMED) throw new BadRequestException("Incubation already claimed");
@@ -31,7 +33,7 @@ public class SetIncubationAutomationUseCase {
         if (!autoClaim) incubation.setAutoRepeatEnabled(false);
         if (incubation.isAutoRepeatEnabled()) incubation.setAutoClaimEnabled(true);
         player.setIncubationAutoClaimEnabled(autoClaim);
-        player.setIncubationAutoRepeatEnabled(autoRepeat != null && autoRepeat);
+        player.setIncubationAutoRepeatEnabled(incubation.isAutoRepeatEnabled());
         repository.findByPlayerIdAndStatusNotOrderBySlotNumberAsc(playerId, IncubationStatus.CLAIMED).forEach(active -> {
             active.setAutoClaimEnabled(player.isIncubationAutoClaimEnabled());
             active.setAutoRepeatEnabled(player.isIncubationAutoRepeatEnabled());

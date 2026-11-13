@@ -1,5 +1,7 @@
 package com.dro.modules.incubation.application;
 
+import com.dro.modules.player.application.VipAccess;
+import java.time.Instant;
 import com.dro.modules.incubation.domain.DigitamaRules;
 import com.dro.modules.incubation.domain.Incubation;
 import com.dro.modules.incubation.domain.IncubationStatus;
@@ -45,6 +47,8 @@ public class StartIncubationUseCase {
         // e consumir os itens.
         Player player = playerRepository.findByIdForUpdate(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));
+        if (autoRepeat || autoClaim) VipAccess.requireActive(player);
+        boolean vipActive = player.hasActiveVip(Instant.now());
         int unlockedSlots = player.getUnlockedIncubationSlots();
         if (!IncubatorRules.isUnlocked(slotNumber, unlockedSlots)) {
             throw new ConflictException("Incubation slot is locked");
@@ -93,8 +97,8 @@ public class StartIncubationUseCase {
                 .startedAt(now)
                 .finishAt(finishAt)
                 .status(IncubationStatus.IN_PROGRESS)
-                .autoRepeatEnabled(player.isIncubationAutoRepeatEnabled())
-                .autoClaimEnabled(player.isIncubationAutoClaimEnabled())
+                .autoRepeatEnabled(vipActive && player.isIncubationAutoRepeatEnabled())
+                .autoClaimEnabled(vipActive && player.isIncubationAutoClaimEnabled())
                 .build();
         incubationRepository.save(incubation);
     }

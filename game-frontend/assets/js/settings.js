@@ -1,4 +1,4 @@
-async function renderSettingsPage() {
+function renderSettingsPage() {
   const app = document.getElementById("app");
   showBottomNav("more");
 
@@ -32,6 +32,7 @@ async function renderSettingsPage() {
       <p class="settings-menu-footer">Suas alterações são aplicadas imediatamente e protegidas pela sua sessão atual.</p>
     </div>
   `;
+
 }
 
 function settingsMenuItem(type, icon, title, description, category, comingSoon = false) {

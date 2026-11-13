@@ -26,6 +26,9 @@ public interface IncubationRepository extends JpaRepository<Incubation, UUID> {
     @Query("SELECT i.id FROM Incubation i WHERE i.status IN :statuses AND i.autoClaimEnabled = true AND i.finishAt <= :finishAt ORDER BY i.finishAt ASC")
     List<UUID> findIdsReadyForAutomation(@Param("statuses") List<IncubationStatus> statuses, @Param("finishAt") LocalDateTime finishAt, Pageable pageable);
 
+    @Query("SELECT activity.playerId FROM Incubation activity WHERE activity.id = :id")
+    Optional<UUID> findOwnerId(@Param("id") UUID id);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT i FROM Incubation i WHERE i.id = :id")
     Optional<Incubation> findByIdForUpdate(@Param("id") UUID id);

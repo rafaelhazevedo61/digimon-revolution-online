@@ -13,6 +13,7 @@ import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -49,23 +50,25 @@ public class GetIncubationUseCase {
             activeBySlot.put(incubation.getSlotNumber(), incubation);
         }
 
+        boolean vipActive = player.hasActiveVip(Instant.now());
         List<IncubationSlotResponse> slots = java.util.stream.IntStream
                 .rangeClosed(1, IncubatorRules.TOTAL_SLOTS)
                 .mapToObj(slotNumber -> new IncubationSlotResponse(
                         slotNumber,
                         slotNumber <= unlockedSlots,
-                        toResponse(activeBySlot.get(slotNumber), now)
+                        toResponse(activeBySlot.get(slotNumber), now, vipActive)
                 ))
                 .toList();
 
         return new IncubationSlotsResponse(
                 IncubatorRules.TOTAL_SLOTS,
                 unlockedSlots,
-                slots
+                slots,
+                player.getVipExpiresAt()
         );
     }
 
-    private IncubationResponse toResponse(Incubation incubation, LocalDateTime now) {
+    private IncubationResponse toResponse(Incubation incubation, LocalDateTime now, boolean vipActive) {
         if (incubation == null) {
             return null;
         }
@@ -79,8 +82,8 @@ public class GetIncubationUseCase {
                 incubation.getStartedAt(),
                 incubation.getFinishAt(),
                 remaining,
-                incubation.isAutoRepeatEnabled(),
-                incubation.isAutoClaimEnabled(),
+                vipActive && incubation.isAutoRepeatEnabled(),
+                vipActive && incubation.isAutoClaimEnabled(),
                 incubation.getAutomationPauseReason(),
                 incubation.getAutomationPausedAt(),
                 incubation.getAutomationLastErrorCode()

@@ -25,6 +25,9 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.dro.modules.player.domain.VipPlan;
+import java.util.List;
+
 /**
  * Componente da camada de controller da API do módulo de Jogadores.
  */
@@ -39,6 +42,11 @@ public class PlayerController {
     private final ChangeUsernameUseCase changeUsernameUseCase;
     private final RevokePlayerSessionsUseCase revokePlayerSessionsUseCase;
     private final PlayerDisplayPreferenceService displayPreferenceService;
+
+    @GetMapping("/me/vip/plans")
+    public List<VipPlan.Offer> vipPlans() {
+        return VipPlan.offers();
+    }
 
     @GetMapping("/me")
     public ResponseEntity<PlayerResponse> me(@RequestHeader("Authorization") String authorization) {

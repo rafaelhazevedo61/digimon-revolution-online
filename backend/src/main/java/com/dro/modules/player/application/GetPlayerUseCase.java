@@ -18,7 +18,7 @@ public class GetPlayerUseCase {
     public PlayerResponse execute(String token) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         Player player = repository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
-        return new PlayerResponse(player.getId(), player.getUsername(), player.getEmail(), player.getCreatedAt());
+        return new PlayerResponse(player.getId(), player.getUsername(), player.getEmail(), player.getCreatedAt(), player.getVipExpiresAt());
     }
 
     public GetPlayerUseCase(final PlayerRepository repository) {

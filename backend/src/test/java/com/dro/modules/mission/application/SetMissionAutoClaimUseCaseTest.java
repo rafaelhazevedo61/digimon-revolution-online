@@ -1,5 +1,8 @@
 package com.dro.modules.mission.application;
 
+import com.dro.modules.player.application.VipAccess;
+import com.dro.modules.player.domain.Player;
+import com.dro.shared.exception.ForbiddenException;
 import com.dro.modules.mission.domain.MissionInstance;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.shared.exception.BadRequestException;
@@ -26,20 +29,27 @@ class SetMissionAutoClaimUseCaseTest {
     @Mock
     private MissionInstanceRepository missionInstanceRepository;
 
+    @Mock
+    private VipAccess vipAccess;
+
     @Test
     void enablesFullAutomaticModeAndKeepsRepeatEnabled() {
         UUID playerId = UUID.randomUUID();
         UUID missionInstanceId = UUID.randomUUID();
         UUID teamId = UUID.randomUUID();
+        Player player = Player.builder().id(playerId).build();
+        player.setVipExpiresAt(Instant.now().plusSeconds(300));
+        when(vipAccess.lockPlayer(playerId)).thenReturn(player);
         MissionInstance instance = org.mockito.Mockito.mock(MissionInstance.class);
         when(instance.getId()).thenReturn(missionInstanceId);
         when(instance.getTeamId()).thenReturn(teamId);
         when(instance.getSlotNumber()).thenReturn(2);
+        when(instance.getPlayerId()).thenReturn(playerId);
         when(instance.isAlreadyClaimed()).thenReturn(false);
-        when(missionInstanceRepository.findByIdAndPlayerId(missionInstanceId, playerId))
+        when(missionInstanceRepository.findByIdForUpdate(missionInstanceId))
                 .thenReturn(Optional.of(instance));
 
-        var response = new SetMissionAutoClaimUseCase(missionInstanceRepository)
+        var response = new SetMissionAutoClaimUseCase(missionInstanceRepository, vipAccess)
                 .execute(tokenFor(playerId), missionInstanceId, true);
 
         assertThat(response.enabled()).isTrue();
@@ -52,16 +62,32 @@ class SetMissionAutoClaimUseCaseTest {
     void rejectsFullAutomaticModeForLegacyMissionWithoutTeam() {
         UUID playerId = UUID.randomUUID();
         UUID missionInstanceId = UUID.randomUUID();
+        Player player = Player.builder().id(playerId).build();
+        player.setVipExpiresAt(Instant.now().plusSeconds(300));
+        when(vipAccess.lockPlayer(playerId)).thenReturn(player);
         MissionInstance instance = org.mockito.Mockito.mock(MissionInstance.class);
         when(instance.getTeamId()).thenReturn(null);
+        when(instance.getPlayerId()).thenReturn(playerId);
         when(instance.isAlreadyClaimed()).thenReturn(false);
-        when(missionInstanceRepository.findByIdAndPlayerId(missionInstanceId, playerId))
+        when(missionInstanceRepository.findByIdForUpdate(missionInstanceId))
                 .thenReturn(Optional.of(instance));
 
-        assertThatThrownBy(() -> new SetMissionAutoClaimUseCase(missionInstanceRepository)
+        assertThatThrownBy(() -> new SetMissionAutoClaimUseCase(missionInstanceRepository, vipAccess)
                 .execute(tokenFor(playerId), missionInstanceId, true))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("time de missão");
+    }
+
+    @Test
+    void rejectsExpiredVipBeforeEnablingAutomation() {
+        UUID playerId = UUID.randomUUID();
+        Player player = Player.builder().id(playerId).build();
+        player.setVipExpiresAt(Instant.now().minusSeconds(1));
+        when(vipAccess.lockPlayer(playerId)).thenReturn(player);
+
+        assertThatThrownBy(() -> new SetMissionAutoClaimUseCase(missionInstanceRepository, vipAccess)
+                .execute(tokenFor(playerId), UUID.randomUUID(), true))
+                .isInstanceOf(ForbiddenException.class);
     }
 
     private String tokenFor(UUID playerId) {

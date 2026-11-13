@@ -150,6 +150,12 @@ function renderPlayersResult(result) {
   
       ${items.length === 0 ? renderEmptyPlayers() : ""}
     `;
+  container.querySelectorAll("[data-player-vip]").forEach(button => {
+    button.addEventListener("click", () => {
+      const player = items.find(item => String(item.id) === button.dataset.playerVip);
+      if (player) adminOpenVip(player);
+    });
+  });
   container.querySelectorAll("[data-player-reset]").forEach(button => {
     button.addEventListener("click", () => {
       const player = items.find(item => String(item.id) === button.dataset.playerReset);
@@ -194,6 +200,10 @@ function renderPlayerRow(player) {
         </td>
 
         <td>
+          <div class="text-xs text-amber-300 mb-1">
+            ${new Date(player.vipExpiresAt).getTime() > Date.now() ? `VIP até ${formatDateTime(player.vipExpiresAt)}` : "VIP inativo"}
+          </div>
+          <button type="button" class="btn-secondary text-xs" data-player-vip="${escapeAttr(player.id)}">Gerenciar VIP</button>
           <button class="btn-secondary text-xs" data-player-reset="${escapeAttr(player.id)}">
             Resetar senha
           </button>
@@ -278,6 +288,71 @@ function formatDateTime(value) {
         ${date.toLocaleString("pt-BR")}
       </span>
     `;
+}
+
+function adminOpenVip(player) {
+  const dialog = document.createElement("dialog");
+  dialog.className = "card w-full max-w-md bg-slate-900 text-slate-100 border border-slate-700";
+  dialog.setAttribute("aria-labelledby", "admin-vip-title");
+  dialog.innerHTML = `
+    <form class="space-y-4">
+      <h3 id="admin-vip-title" class="font-bold text-lg">VIP · ${escapeHtml(player.username)}</h3>
+      <div class="flex flex-wrap gap-2" aria-label="Aplicar passe VIP">
+        <button class="btn-secondary" type="button" data-vip-plan="ONE_DAY">Adicionar 1 dia</button>
+        <button class="btn-secondary" type="button" data-vip-plan="SEVEN_DAYS">Adicionar 7 dias</button>
+        <button class="btn-secondary" type="button" data-vip-plan="THIRTY_DAYS">Adicionar 30 dias</button>
+      </div>
+      <label class="block text-sm">Validade no seu horário local
+        <input name="expiresAt" type="datetime-local" class="input w-full mt-1" required />
+      </label>
+      <p role="alert" class="text-sm text-red-300"></p>
+      <div class="flex flex-wrap gap-2">
+        <button class="btn-primary" type="submit">Salvar validade</button>
+        ${player.vipExpiresAt ? '<button class="btn-secondary" type="button" data-vip-revoke>Revogar VIP</button>' : ""}
+        <button class="btn-secondary" type="button" data-vip-close>Fechar</button>
+      </div>
+    </form>`;
+  const form = dialog.querySelector("form");
+  const dateInput = form.elements.expiresAt;
+  if (player.vipExpiresAt) {
+    const date = new Date(player.vipExpiresAt);
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    dateInput.value = local.toISOString().slice(0, 16);
+  }
+
+  async function save(request) {
+    const buttons = form.querySelectorAll("button");
+    buttons.forEach(button => { button.disabled = true; });
+    try {
+      await request();
+      dialog.close();
+      await loadPlayers();
+    } catch (err) {
+      form.querySelector("[role=alert]").textContent = err.message;
+    } finally {
+      buttons.forEach(button => { button.disabled = false; });
+    }
+  }
+
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    const expiry = new Date(dateInput.value);
+    if (!(expiry.getTime() > Date.now())) {
+      form.querySelector("[role=alert]").textContent = "Informe uma data de validade futura.";
+      return;
+    }
+    save(() => apiPut(`/admin/players/${player.id}/vip`, { expiresAt: expiry.toISOString() }));
+  });
+  dialog.querySelectorAll("[data-vip-plan]").forEach(button => {
+    button.addEventListener("click", () => save(() =>
+      apiPost(`/admin/players/${player.id}/vip/extend`, { plan: button.dataset.vipPlan })));
+  });
+  dialog.querySelector("[data-vip-revoke]")?.addEventListener("click", () =>
+    save(() => apiPut(`/admin/players/${player.id}/vip`, { expiresAt: null })));
+  dialog.querySelector("[data-vip-close]").addEventListener("click", () => dialog.close());
+  dialog.addEventListener("close", () => dialog.remove());
+  document.body.appendChild(dialog);
+  dialog.showModal();
 }
 
 async function adminResetPassword(player) {

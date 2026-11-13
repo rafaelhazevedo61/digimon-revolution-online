@@ -1,5 +1,6 @@
 package com.dro.modules.mission.application;
 
+import com.dro.modules.player.application.VipAccess;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.DigimonInfos;
 import com.dro.modules.digimon.infra.DigimonInfosRepository;
@@ -55,6 +56,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Componente da camada de caso de uso da aplicação do módulo de Missões.
@@ -140,10 +142,27 @@ public class ClaimMissionUseCase {
     }
 
     @Transactional
+    public MissionResultResponse executeAutomatic(String token, UUID missionInstanceId) {
+        return claimForPlayer(TokenExtractor.extractPlayerId(token), missionInstanceId, true);
+    }
+
+    @Transactional
     public MissionResultResponse executeForPlayer(UUID playerId, UUID missionInstanceId) {
-        MissionInstance instance = missionInstanceRepository
-                .findByIdAndPlayerId(missionInstanceId, playerId)
+        return claimForPlayer(playerId, missionInstanceId, false);
+    }
+
+    private MissionResultResponse claimForPlayer(UUID playerId, UUID missionInstanceId, boolean automatic) {
+        Player player = playerRepository.findByIdForUpdate(playerId)
+                .orElseThrow(() -> new NotFoundException("Player not found"));
+        MissionInstance instance = missionInstanceRepository.findByIdForUpdate(missionInstanceId)
+                .filter(mission -> playerId.equals(mission.getPlayerId()))
                 .orElseThrow(() -> new NotFoundException("Missão não encontrada"));
+        if (automatic) {
+            VipAccess.requireActive(player);
+            if (!instance.isAutoClaimEnabled()) {
+                throw new BadRequestException("Resgate automático desativado.");
+            }
+        }
 
         instance.updateStatusIfFinished();
 
@@ -187,8 +206,7 @@ public class ClaimMissionUseCase {
         int previousLevel = digimon.getLevel();
         Stage previousStage = digimon.getStage();
 
-        Player player = playerRepository.findById(playerId).orElse(null);
-        UUID clanId = player != null ? player.getClanId() : null;
+        UUID clanId = player.getClanId();
 
         double xpMultiplier = clanId != null ? clanBonusService.getMissionXpMultiplier(clanId) : 1.0;
         double bitsMultiplier = clanId != null ? clanBonusService.getMissionBitsMultiplier(clanId) : 1.0;
@@ -230,6 +248,10 @@ public class ClaimMissionUseCase {
         }
 
         applyMissionChestOrLegacyLoot(digimonId, mission, rewards);
+        if (ThreadLocalRandom.current().nextInt(100) < 5
+                && addItemUseCase.tryExecute(digimonId, ItemType.ENERGY_CELL, 1)) {
+            rewards.add(new RewardResponse(ItemType.ENERGY_CELL, 1));
+        }
         incrementProgress(progress);
         instance.markClaimed();
 
@@ -269,8 +291,8 @@ public class ClaimMissionUseCase {
                 xpGained,
                 bitsGained,
                 levelUp,
-                instance.isAutoRepeatEnabled(),
-                instance.isAutoClaimEnabled(),
+                player.hasActiveVip(rewardTime) && instance.isAutoRepeatEnabled(),
+                player.hasActiveVip(rewardTime) && instance.isAutoClaimEnabled(),
                 rewards,
                 newlyUnlockedContent,
                 new MissionRewardBreakdownResponse(

@@ -74,7 +74,7 @@ function renderWorldBossContent(boss) {
     && Number.isFinite(nextAttackAt)
     && nextAttackAt > Date.now();
   const cooldownInfoHtml = cooldownEnabled
-    ? `<p class="world-boss-cooldown-info">Intervalo entre ataques: ${cooldownMinutes} minuto(s)</p>`
+    ? `<p class="world-boss-cooldown-info">Intervalo entre ataques: ${cooldownMinutes.toLocaleString("pt-BR")} minuto(s)</p>`
     : `<p class="world-boss-cooldown-info world-boss-cooldown-info-safe">Intervalo desativado pelo administrador</p>`;
   const attackButtonHtml = !defeated
     ? `${cooldownInfoHtml}<button id="world-boss-attack-button" class="btn-primary world-boss-attack-button" onclick="attackWorldBoss()"${cooldownActive ? " disabled" : ""}>${cooldownActive ? "Próximo ataque em <span id=\"world-boss-countdown\">--:--</span>" : "Atacar Chefe Mundial"}</button>`

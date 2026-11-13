@@ -135,7 +135,7 @@ async function loadActiveMissions() {
         </article>
       `;
     }
-    return renderActiveMissionCard(mission);
+    return renderActiveMissionCard(mission, slotResponse?.vipExpiresAt);
   }).join("");
 
   container.innerHTML = `
@@ -176,12 +176,15 @@ function formatMissionName(mission) {
     .replace(/Infinity Mountain/g, "Montanha Infinita");
 }
 
-function renderActiveMissionCard(m) {
+function renderActiveMissionCard(m, vipExpiresAt) {
+  const vipActive = new Date(vipExpiresAt).getTime() > Date.now();
   const now = Date.now();
   const endsAt = new Date(m.endsAt).getTime();
   const remaining = Math.max(0, Math.floor((endsAt - now) / 1000));
   const done = m.status === "COMPLETED" || remaining <= 0;
-  const autoRepeatControls = m.teamId
+  const missionStatus = done ? `<button class="btn-sm btn-primary" onclick="claimMissionFromList('${m.missionInstanceId}')">Resgatar</button>` : `<span class="missions-active-badge">Em andamento</span>`;
+  const automationLocked = Boolean(m.teamId && !vipActive);
+  const autoRepeatControls = m.teamId && vipActive
     ? `<div class="missions-auto-mode-actions">
         <button class="btn-sm ${m.autoRepeatEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoRepeat('${m.missionInstanceId}', ${!m.autoRepeatEnabled})">${m.autoRepeatEnabled ? "Repetição ativa" : "Repetir após resgate"}</button>
         <button type="button" class="btn-sm ${m.autoClaimEnabled ? "btn-primary" : "btn-secondary"}" onclick="toggleMissionAutoClaim('${m.missionInstanceId}', ${!m.autoClaimEnabled})">${m.autoClaimEnabled ? "Automático ativo" : "Automático completo"}</button>
@@ -189,18 +192,26 @@ function renderActiveMissionCard(m) {
     : "";
 
   return `
-    <article class="missions-active-card ${done ? "missions-active-card-ready" : ""}" data-mp-instance="${m.missionInstanceId}" data-mp-ends-at="${m.endsAt}" data-mp-auto-claim="${m.autoClaimEnabled ? "true" : "false"}">
+    <article class="missions-active-card ${done ? "missions-active-card-ready" : ""}" data-mp-instance="${m.missionInstanceId}" data-mp-ends-at="${m.endsAt}" data-mp-vip-expires-at="${escapeAttr(vipExpiresAt || "")}" data-mp-auto-claim="${vipActive && m.autoClaimEnabled ? "true" : "false"}">
       <div class="missions-active-icon" aria-hidden="true">✦</div>
       <div class="missions-active-main">
         <p class="missions-active-label">Objetivo em campo${m.slotNumber ? ` · Slot ${m.slotNumber}` : ""}</p>
         <p class="missions-active-name">${escapeHtml(formatMissionName(m))}</p>
         <p class="missions-active-team">${escapeHtml(m.teamName || (m.teamId ? "Time de missão" : "Missão legada"))}${m.teamId ? " · 3 Digimons" : ""}</p>
         <div class="missions-active-state"><span class="missions-active-dot ${done ? "missions-active-dot-ready" : ""}"></span><span class="mp-timer">${done ? "Concluída!" : `Retorno em ${formatTime(remaining)}`}</span></div>
+        ${automationLocked ? `
+          <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span class="inline-flex items-center gap-1 whitespace-nowrap text-xs text-amber-300">
+              <span aria-hidden="true">🔒</span> Automação exclusiva VIP
+            </span>
+            ${missionStatus}
+          </div>` : ""}
       </div>
-      <div class="missions-active-action">
-        ${autoRepeatControls}
-        ${done ? `<button class="btn-sm btn-primary" onclick="claimMissionFromList('${m.missionInstanceId}')">Resgatar</button>` : `<span class="missions-active-badge">Em andamento</span>`}
-      </div>
+      ${automationLocked ? "" : `
+        <div class="missions-active-action">
+          ${autoRepeatControls}
+          ${missionStatus}
+        </div>`}
     </article>
   `;
 }
@@ -271,7 +282,7 @@ function waitForMissionAutoClaimRetry(attempt) {
 async function claimMissionWithRetry(instanceId) {
   for (let attempt = 1; attempt <= MISSION_AUTO_CLAIM_MAX_ATTEMPTS; attempt += 1) {
     try {
-      return await apiPost(`/missions/${instanceId}/claim`);
+      return await apiPost(`/missions/${instanceId}/claim-auto`);
     } catch (err) {
       const canRetry = isMissionNotCompletedError(err) && attempt < MISSION_AUTO_CLAIM_MAX_ATTEMPTS;
       if (!canRetry) throw err;
@@ -362,6 +373,7 @@ function missionRewardLabel(reward) {
 
   const labels = {
     POTION_SMALL: "Poção Pequena",
+    ENERGY_CELL: "Célula de Energia",
     TRAINING_STONE: "Pedra de Treino",
     DATA_CORE: "Núcleo de Dados",
     DIGITAMA_STARTER: "Digitama Inicial",
@@ -904,14 +916,14 @@ function startMissionsPageTimers() {
       if (!timerEl) return;
 
       if (remaining <= 0) {
-        if (el.dataset.mpAutoClaim === "true" && el.dataset.mpAutoClaiming !== "true") {
+        if (new Date(el.dataset.mpVipExpiresAt).getTime() > Date.now() && el.dataset.mpAutoClaim === "true" && el.dataset.mpAutoClaiming !== "true") {
           el.dataset.mpAutoClaiming = "true";
           timerEl.textContent = "Resgatando...";
           claimMissionAutomatically(el.dataset.mpInstance)
             .then(() => loadActiveMissions())
             .catch(async err => {
               el.dataset.mpAutoClaiming = "false";
-              if (isMissionAlreadyClaimedError(err)) {
+              if (isMissionAlreadyClaimedError(err) || /VIP ativo|Resgate automático desativado/.test(err.message)) {
                 await loadActiveMissions();
                 return;
               }
@@ -1067,6 +1079,12 @@ function getMissionArea(mission) {
   return mission.area || null;
 }
 
+function missionDurationComparison(seconds) {
+  const regularDuration = formatTime(seconds);
+  const vipDuration = formatTime(Math.ceil(seconds / 2));
+  return `⏱️ ${regularDuration} · ${vipDuration} com VIP`;
+}
+
 function renderMissionCards(missions, area) {
   const container = document.getElementById("mission-list");
   window._missionDefinitions = Object.fromEntries(missions.map(mission => [missionIdentity(mission), mission]));
@@ -1100,7 +1118,7 @@ function renderMissionCards(missions, area) {
       <div class="mission-detail-meta">
         <span><small>REQUISITO</small>⚡ Nível ${m.requiredLevel}</span>
         <span><small>CUSTO</small>🔋 ${m.energyCost} energia</span>
-        <span><small>DURAÇÃO</small>⏱️ ${formatTime(m.durationSeconds)}</span>
+        <span><small>DURAÇÃO</small>${missionDurationComparison(m.durationSeconds)}</span>
       </div>
       <div class="mission-detail-actions">
         <button type="button" class="btn-secondary flex-1 text-sm" onclick="missionShowLootPreview('${escapeAttr(m.id)}', this)">Ver recompensas</button>
