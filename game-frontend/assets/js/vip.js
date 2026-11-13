@@ -16,8 +16,9 @@ async function renderVipPage() {
       <h3 class="font-semibold mb-2">Benefícios</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
         <section class="card">
-          <h4 class="font-semibold">Missões de equipe</h4>
-          <p class="text-sm text-slate-400 mt-2">Resgate recompensas e repita missões automaticamente.</p>
+          <h4 class="font-semibold">Missões</h4>
+          <p class="text-sm text-amber-200 mt-2">50% menos tempo nas missões iniciadas com VIP ativo. Uma missão de 10 minutos leva 5 minutos.</p>
+          <p class="text-sm text-slate-400 mt-2">Em missões de equipe, resgate recompensas e repita missões automaticamente.</p>
         </section>
         <section class="card">
           <h4 class="font-semibold">Incubação</h4>
