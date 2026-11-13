@@ -30,7 +30,7 @@ public class GetPlayerStartupUseCase {
         } else {
             redirectTo = StartupDestination.DASHBOARD;
         }
-        return new PlayerStartupResponse(hasSelectedStarter, redirectTo);
+        return new PlayerStartupResponse(hasSelectedStarter, redirectTo, player.getSelectedDigitama());
     }
 
     public GetPlayerStartupUseCase(final PlayerRepository playerRepository) {

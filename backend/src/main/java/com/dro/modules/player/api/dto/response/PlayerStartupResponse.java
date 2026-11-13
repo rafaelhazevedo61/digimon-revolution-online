@@ -1,5 +1,6 @@
 package com.dro.modules.player.api.dto.response;
 
+import com.dro.modules.digitama.domain.enums.DigitamaType;
 import com.dro.modules.player.domain.enums.StartupDestination;
 
 /**
@@ -7,6 +8,7 @@ import com.dro.modules.player.domain.enums.StartupDestination;
  */
 public record PlayerStartupResponse(
         boolean hasSelectedStarter,
-        StartupDestination redirectTo
+        StartupDestination redirectTo,
+        DigitamaType selectedDigitama
 ) {
 }
