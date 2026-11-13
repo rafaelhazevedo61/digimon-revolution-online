@@ -88,3 +88,9 @@
   --egg-rim: #b9c5db;
   --egg-pattern: radial-gradient(circle at 26% 56%, #e7eef9 0 4%, #3c475d 5% 8%, transparent 9%), radial-gradient(circle at 70% 56%, #e7eef9 0 4%, #3c475d 5% 8%, transparent 9%), linear-gradient(0deg, transparent 40%, #4e5c71 41% 43%, #dce3ee8f 44% 58%, #4e5c71 59% 61%, transparent 62%);
 }
+
+.hatch-egg .starter-egg {
+  width: 4.75rem;
+  height: 6.25rem;
+  margin: 0;
+}
