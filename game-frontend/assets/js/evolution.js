@@ -146,7 +146,10 @@ function evoRenderOption(opt, digimon) {
       </div>
       ${reqHtml}
       ${reasonHtml}
-      <div class="mt-3">
+      <div class="mt-3 space-y-2">
+        ${next.stage === "BABY_II" && materials.some(material => material.playerHas < material.quantity)
+          ? `<button type="button" class="btn-secondary w-full" onclick="evoOpenFragmentExchange(${opt.evolutionLineId})">Trocar fragmentos Baby II</button>`
+          : ""}
         <button class="progression-button progression-button-cyan w-full ${!canEvolve ? 'opacity-50 cursor-not-allowed' : ''}"
           ${canEvolve ? `onclick="evoEvolve(${opt.evolutionLineId})"` : 'disabled'}
           id="evo-btn-${opt.evolutionLineId}">
@@ -155,6 +158,99 @@ function evoRenderOption(opt, digimon) {
       </div>
     </article>
   `;
+}
+
+async function evoOpenFragmentExchange(lineId) {
+  const content = document.getElementById("evo-content");
+  const endpoint = `/digimon/${evoDigimonId}/fragment-exchange/${lineId}`;
+  if (document.getElementById("evo-fragment-exchange")) return;
+
+  const dialog = document.createElement("dialog");
+  dialog.id = "evo-fragment-exchange";
+  dialog.className = "card w-[calc(100%-2rem)] max-w-md max-h-[85vh] overflow-auto text-slate-100";
+  dialog.setAttribute("aria-labelledby", "evo-fragment-title");
+  dialog.innerHTML = `
+    <div class="flex items-center justify-between gap-2">
+      <h3 id="evo-fragment-title" class="font-bold">Trocar fragmentos Baby II</h3>
+      <button type="button" aria-label="Fechar" class="btn-sm" data-close>×</button>
+    </div>
+    <div data-offer class="mt-3">Carregando fragmentos…</div>`;
+  dialog.querySelector("[data-close]").onclick = () => dialog.close();
+  dialog.addEventListener("close", () => dialog.remove());
+  document.body.appendChild(dialog);
+  dialog.showModal();
+
+  const offer = dialog.querySelector("[data-offer]");
+  try {
+    const { targetName, rate, inputs } = await apiGet(endpoint);
+    if (!dialog.isConnected || !content.isConnected) {
+      dialog.remove();
+      return;
+    }
+    const available = inputs.reduce((total, item) => total + item.quantity, 0);
+    offer.innerHTML = `
+      <p class="text-sm text-slate-300">Entregue ${rate} fragmentos de outras formas Baby II para receber 1 <strong>${escapeHtml(targetName)}</strong>.</p>
+      ${available < rate ? '<p class="mt-3 text-sm text-amber-300">Você ainda não tem fragmentos suficientes para uma troca.</p>' : `
+        <form class="mt-3 space-y-3">
+          <div class="max-h-60 space-y-2 overflow-auto">
+            ${inputs.map(item => `<label class="flex items-center justify-between gap-3 text-sm">
+              <span>${escapeHtml(item.name)} <small class="text-slate-400">(${item.quantity} disponíveis)</small></span>
+              <input class="input w-20 shrink-0" name="${escapeAttr(item.code)}" type="number" min="0" max="${item.quantity}" step="1" value="0" />
+            </label>`).join("")}
+          </div>
+          <p data-total class="text-sm text-slate-300" aria-live="polite"></p>
+          <p data-error class="text-sm text-red-300" role="alert"></p>
+          <button type="submit" class="btn-primary w-full" disabled>Confirmar troca</button>
+        </form>`}`;
+    const form = offer.querySelector("form");
+    if (!form) return;
+    const submit = form.querySelector("[type=submit]");
+    const fields = [...form.querySelectorAll("input")];
+    const close = dialog.querySelector("[data-close]");
+    const error = form.querySelector("[data-error]");
+    let submitting = false;
+    dialog.addEventListener("cancel", event => {
+      if (submitting) event.preventDefault();
+    });
+
+    function updateTotal() {
+      const total = fields.reduce((sum, field) => sum + Number(field.value), 0);
+      const valid = fields.every(field => field.validity.valid) && total >= rate && total % rate === 0 && total <= 2997;
+      submit.disabled = submitting || !valid;
+      form.querySelector("[data-total]").textContent = valid
+        ? `Entregar ${total} · Receber ${total / rate}`
+        : `${total} selecionados · Escolha um múltiplo de ${rate}, até 2.997.`;
+      return valid;
+    }
+
+    form.addEventListener("input", updateTotal);
+    updateTotal();
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      if (submitting || !updateTotal()) return;
+      const selection = Object.fromEntries(fields.filter(field => Number(field.value) > 0)
+        .map(field => [field.name, Number(field.value)]));
+      submitting = true;
+      submit.disabled = true;
+      close.disabled = true;
+      fields.forEach(field => { field.disabled = true; });
+      error.textContent = "";
+      try {
+        const result = await apiPost(endpoint, { inputs: selection });
+        dialog.close();
+        showToast(`Troca concluída. Você recebeu ${result.quantity} × ${result.targetName}.`);
+        if (content.isConnected) await renderEvolutionPage();
+      } catch (err) {
+        error.textContent = err.message;
+        submitting = false;
+        close.disabled = false;
+        fields.forEach(field => { field.disabled = false; });
+        updateTotal();
+      }
+    });
+  } catch (err) {
+    offer.textContent = err.message;
+  }
 }
 
 async function evoEvolve(evolutionLineId) {
