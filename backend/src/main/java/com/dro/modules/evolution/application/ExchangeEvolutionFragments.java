@@ -55,7 +55,7 @@ public class ExchangeEvolutionFragments {
                 .filter(item -> item.getQuantity() > 0 && isInput(item.getItemDefinition(), target))
                 .map(item -> new Fragment(item.getItemDefinition().getCode(),
                         item.getItemDefinition().getName(), item.getQuantity()))
-                .sorted(Comparator.comparing(Fragment::name))
+                .sorted(Comparator.comparingInt(Fragment::quantity).reversed().thenComparing(Fragment::name))
                 .toList();
         return new Offer(target.getName(), RATE, inputs);
     }
