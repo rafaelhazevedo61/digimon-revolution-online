@@ -1,0 +1,37 @@
+FROM maven:3.9.9-eclipse-temurin-17 AS build
+
+WORKDIR /workspace
+
+COPY pom.xml mvnw ./
+COPY .mvn .mvn
+
+RUN chmod +x mvnw
+RUN ./mvnw -B -DskipTests dependency:go-offline
+
+COPY src src
+
+RUN ./mvnw -B -DskipTests package
+
+FROM eclipse-temurin:17-jre
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl libfaketime \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -s "$(find /usr/lib -name 'libfaketime.so.1' | head -n 1)" /usr/local/lib/libfaketime.so.1
+
+RUN useradd --system --create-home --uid 10001 dro
+
+WORKDIR /app
+
+COPY --from=build /workspace/target/*.jar /app/app.jar
+
+USER dro
+
+ENV LD_PRELOAD=/usr/local/lib/libfaketime.so.1 \
+    FAKETIME_DONT_FAKE_MONOTONIC=1 \
+    FAKETIME_NO_CACHE=1 \
+    FAKETIME="+0 x60"
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

@@ -477,6 +477,7 @@ A collection não deve armazenar tokens reais, senhas ou dados pessoais. Preench
 | [`javadoc-guidelines.md`](docs/javadoc-guidelines.md) | Padrão de documentação do código Java |
 | [`observability-guide.md`](docs/observability-guide.md) | Operação de PostgreSQL, MongoDB, Outbox, TTL, retry e DEAD_LETTER |
 | [`observability-manual-test-plan.md`](docs/observability-manual-test-plan.md) | Roteiro manual da cadeia de observabilidade |
+| [`tools/simulator/README.md`](tools/simulator/README.md) | Bots de simulação de jogabilidade e stack isolada com tempo acelerado |
 | [`official-site/README.md`](official-site/README.md) | Execução e manutenção do site oficial |
 | [Wiki de Sistemas](official-site/wiki/sistemas.html) | Explicações voltadas aos jogadores |
 
