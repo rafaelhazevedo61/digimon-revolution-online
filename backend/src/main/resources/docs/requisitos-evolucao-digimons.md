@@ -21,10 +21,10 @@ Uma linha completa de Baby a Mega exige **115 fragmentos**, distribuídos entre 
 - O backend verifica o nível e consome os materiais da etapa ao confirmar. No catálogo padrão, o custo é composto pelos fragmentos da espécie de destino. Se uma etapa tiver outros materiais cadastrados, eles também são exigidos.
 - A evolução mantém o nível e a raridade do Digimon e recalcula HP, ataque e defesa para a nova forma.
 
-Consulte o [guia de drops](../backend/src/main/resources/docs/DROPS.md) para as fontes de fragmentos.
+Consulte o [guia de drops](DROPS.md) para as fontes de fragmentos.
 
 ## Referência no código
 
-- O nível mínimo fica em `evolution_line_steps.required_level`. O padrão inicial vem da [migração V37](../backend/src/main/resources/db/migration/V37__add_required_level_to_evolution_steps.sql).
-- Os materiais e as quantidades ficam em `evolution_step_materials`, por etapa. A [migração V40](../backend/src/main/resources/db/migration/V40__seed_evolution_step_materials.sql) cadastra os custos das linhas iniciais.
-- [GetEvolutionOptionsUseCase](../backend/src/main/java/com/dro/modules/evolution/application/GetEvolutionOptionsUseCase.java) consulta as opções e seus requisitos. [EvolveDigimonUseCase](../backend/src/main/java/com/dro/modules/digimon/application/EvolveDigimonUseCase.java) valida e aplica a evolução.
+- O nível mínimo fica em `evolution_line_steps.required_level`. O padrão inicial vem da [migração V37](../db/migration/V37__add_required_level_to_evolution_steps.sql).
+- Os materiais e as quantidades ficam em `evolution_step_materials`, por etapa. A [migração V40](../db/migration/V40__seed_evolution_step_materials.sql) cadastra os custos das linhas iniciais.
+- [GetEvolutionOptionsUseCase](../../java/com/dro/modules/evolution/application/GetEvolutionOptionsUseCase.java) consulta as opções e seus requisitos. [EvolveDigimonUseCase](../../java/com/dro/modules/digimon/application/EvolveDigimonUseCase.java) valida e aplica a evolução.
