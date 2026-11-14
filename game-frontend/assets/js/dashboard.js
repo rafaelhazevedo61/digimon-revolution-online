@@ -101,7 +101,7 @@ function renderDashContent(data) {
           <div class="dashboard-sidebar-heading"><div><p class="dashboard-eyebrow dashboard-eyebrow-amber">Atalhos do treinador</p><h3 class="dashboard-section-title">Acesso rápido</h3></div><span class="dashboard-sidebar-mark">↗</span></div>
           <button class="dashboard-action dashboard-action-primary" onclick="navigateTo('evolution')"><span class="dashboard-action-icon">ϟ</span><span><strong>Evoluir</strong><small>Fortaleça seu Digimon</small></span><span class="dashboard-action-arrow">›</span></button>
           <button class="dashboard-action dashboard-action-amber" onclick="navigateTo('rebirth')"><span class="dashboard-action-icon">↻</span><span><strong>Renascer</strong><small>Recomece mais forte</small></span><span class="dashboard-action-arrow">›</span></button>
-          <button class="dashboard-action dashboard-action-cyan" onclick="navigateTo('storage')"><span class="dashboard-action-icon">▣</span><span><strong>Armazém</strong><small>Gerencie seus itens</small></span><span class="dashboard-action-arrow">›</span></button>
+          <button class="dashboard-action dashboard-action-cyan" onclick="navigateTo('storage')"><span class="dashboard-action-icon">▣</span><span><strong>Armazém</strong><small>Gerencie seus Digimons</small></span><span class="dashboard-action-arrow">›</span></button>
         </section>
         ` : ""}
 
