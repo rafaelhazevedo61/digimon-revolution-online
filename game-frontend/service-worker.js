@@ -1,4 +1,4 @@
-const CACHE_NAME = "dro-cache-v72";
+const CACHE_NAME = "dro-cache-v73";
 const STATIC_ASSETS = [
   "/",
   "/index.html",
@@ -11,6 +11,7 @@ const STATIC_ASSETS = [
   "/assets/js/auth.js",
   "/assets/js/starter.js",
   "/assets/js/dashboard.js",
+  "/assets/js/evolution.js",
   "/assets/js/more.js",
   "/assets/js/incubation.js",
   "/assets/js/missions.js",
