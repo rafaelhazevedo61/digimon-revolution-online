@@ -98,6 +98,12 @@ async function renderMorePage() {
       label: "Digimon",
       items: [
         {
+          route: "evolution",
+          icon: "ϟ",
+          title: "Evoluir",
+          desc: "Veja as opções de evolução do seu Digimon ativo",
+        },
+        {
           route: "incubation",
           iconImage: "assets/img/incubacao.webp",
           title: "Incubação",
