@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -232,5 +233,17 @@ class AttackClanRaidUseCaseTest {
         claims.put("exp", Instant.now().getEpochSecond() + 3600);
         return JwtTokenCodec.create(claims, JwtSettings.getSecret());
     }
-}
 
+    @Test
+    void winChanceUsesCombatStatsInsteadOfBossLifeHp() {
+        boss.setCombatHp(600);
+        boss.setCombatAtk(180);
+        boss.setCombatDef(150);
+        when(digimonPowerService.calculatePower(digimon, clanId)).thenReturn(300.0);
+
+        AttackClanRaidResponse response = useCase.execute(token);
+
+        assertEquals(50, response.winChance());
+        assertEquals(100_000, raid.getMaxHp());
+    }
+}

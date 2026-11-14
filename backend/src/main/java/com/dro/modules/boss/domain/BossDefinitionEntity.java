@@ -38,6 +38,15 @@ public class BossDefinitionEntity {
     private int atk;
     @Column(nullable = false)
     private int def;
+    /**
+     * Atributos usados só no cálculo da chance. Quando nulos, valem hp/atk/def.
+     */
+    @Column(name = "combat_hp")
+    private Integer combatHp;
+    @Column(name = "combat_atk")
+    private Integer combatAtk;
+    @Column(name = "combat_def")
+    private Integer combatDef;
     @Column(name = "energy_cost", nullable = false)
     private int energyCost;
     @Column(name = "cooldown_minutes", nullable = false)
@@ -212,6 +221,9 @@ public class BossDefinitionEntity {
         private int hp;
         private int atk;
         private int def;
+        private Integer combatHp;
+        private Integer combatAtk;
+        private Integer combatDef;
         private int energyCost;
         private int cooldownMinutes;
         private int baseXpReward;
@@ -309,6 +321,21 @@ public class BossDefinitionEntity {
          */
         public BossDefinitionEntity.BossDefinitionEntityBuilder def(final int def) {
             this.def = def;
+            return this;
+        }
+
+        public BossDefinitionEntity.BossDefinitionEntityBuilder combatHp(final Integer combatHp) {
+            this.combatHp = combatHp;
+            return this;
+        }
+
+        public BossDefinitionEntity.BossDefinitionEntityBuilder combatAtk(final Integer combatAtk) {
+            this.combatAtk = combatAtk;
+            return this;
+        }
+
+        public BossDefinitionEntity.BossDefinitionEntityBuilder combatDef(final Integer combatDef) {
+            this.combatDef = combatDef;
             return this;
         }
 
@@ -440,7 +467,11 @@ public class BossDefinitionEntity {
         }
 
         public BossDefinitionEntity build() {
-            return new BossDefinitionEntity(this.id, this.code, this.name, this.bossType, this.requiredStage, this.requiredLevel, this.requiredRebirths, this.hp, this.atk, this.def, this.energyCost, this.cooldownMinutes, this.baseXpReward, this.baseBitsReward, this.clanHonorMarksReward, this.defeatXpPercent, this.imageUrl, this.active, this.chestDefinition, this.worldAttemptChestDefinition, this.worldTopDamageChestDefinition, this.worldFinalBlowChestDefinition, this.clanRaidAttemptChestDefinition, this.clanRaidTopDamageChestDefinition, this.clanRaidFinalBlowChestDefinition, this.drops);
+            BossDefinitionEntity entity = new BossDefinitionEntity(this.id, this.code, this.name, this.bossType, this.requiredStage, this.requiredLevel, this.requiredRebirths, this.hp, this.atk, this.def, this.energyCost, this.cooldownMinutes, this.baseXpReward, this.baseBitsReward, this.clanHonorMarksReward, this.defeatXpPercent, this.imageUrl, this.active, this.chestDefinition, this.worldAttemptChestDefinition, this.worldTopDamageChestDefinition, this.worldFinalBlowChestDefinition, this.clanRaidAttemptChestDefinition, this.clanRaidTopDamageChestDefinition, this.clanRaidFinalBlowChestDefinition, this.drops);
+            entity.combatHp = this.combatHp;
+            entity.combatAtk = this.combatAtk;
+            entity.combatDef = this.combatDef;
+            return entity;
         }
 
         @Override
@@ -491,6 +522,28 @@ public class BossDefinitionEntity {
 
     public int getDef() {
         return this.def;
+    }
+
+    public Integer getCombatHp() {
+        return this.combatHp;
+    }
+
+    public Integer getCombatAtk() {
+        return this.combatAtk;
+    }
+
+    public Integer getCombatDef() {
+        return this.combatDef;
+    }
+
+    /**
+     * Poder do boss no cálculo da chance, independente do HP de vida quando combat_* estiver definido.
+     */
+    public double combatPower() {
+        return BossCombatRules.calculatePower(
+                combatHp != null ? combatHp : hp,
+                combatAtk != null ? combatAtk : atk,
+                combatDef != null ? combatDef : def);
     }
 
     public int getEnergyCost() {
@@ -607,6 +660,18 @@ public class BossDefinitionEntity {
 
     public void setDef(final int def) {
         this.def = def;
+    }
+
+    public void setCombatHp(final Integer combatHp) {
+        this.combatHp = combatHp;
+    }
+
+    public void setCombatAtk(final Integer combatAtk) {
+        this.combatAtk = combatAtk;
+    }
+
+    public void setCombatDef(final Integer combatDef) {
+        this.combatDef = combatDef;
     }
 
     public void setEnergyCost(final int energyCost) {

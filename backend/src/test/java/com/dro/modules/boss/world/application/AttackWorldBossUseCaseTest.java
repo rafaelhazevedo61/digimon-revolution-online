@@ -325,4 +325,22 @@ class AttackWorldBossUseCaseTest {
         claims.put("exp", Instant.now().getEpochSecond() + 3600);
         return JwtTokenCodec.create(claims, JwtSettings.getSecret());
     }
+
+    @Test
+    void winChanceUsesCombatStatsInsteadOfBossLifeHp() {
+        boss.setHp(1_000_000);
+        boss.setAtk(5000);
+        boss.setDef(4000);
+        boss.setCombatHp(1000);
+        boss.setCombatAtk(300);
+        boss.setCombatDef(250);
+        instance.setMaxHp(1_000_000);
+        instance.setRemainingHp(1_000_000);
+        when(digimonPowerService.calculatePower(digimon, null)).thenReturn(500.0);
+
+        AttackWorldBossResponse response = useCase.execute(token, "request-combat");
+
+        assertEquals(50, response.winChance());
+        assertFalse(response.defeated());
+    }
 }

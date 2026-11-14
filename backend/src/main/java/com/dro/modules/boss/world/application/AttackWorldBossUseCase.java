@@ -1,7 +1,6 @@
 package com.dro.modules.boss.world.application;
 
 import com.dro.modules.arena.application.DigimonPowerService;
-import com.dro.modules.boss.domain.BossCombatRules;
 import com.dro.modules.boss.domain.BossDefinitionEntity;
 import com.dro.modules.boss.infra.BossDefinitionRepository;
 import com.dro.modules.boss.world.api.dto.response.AttackWorldBossResponse;
@@ -103,7 +102,7 @@ public class AttackWorldBossUseCase {
             digimon.consumeEnergy(energyCost);
         }
         double digimonPower = digimonPowerService.calculatePower(digimon, clanId);
-        double bossPower = BossCombatRules.calculatePower(boss.getHp(), boss.getAtk(), boss.getDef());
+        double bossPower = boss.combatPower();
         int winChance = WorldBossRules.calculateWinChance(digimonPower, bossPower);
         int damage = (int) Math.round(WorldBossRules.calculateDamage(instance.getMaxHp(), winChance) * globalDamageBuffService.getMultiplier());
         int actualDamage = Math.min(damage, instance.getRemainingHp());

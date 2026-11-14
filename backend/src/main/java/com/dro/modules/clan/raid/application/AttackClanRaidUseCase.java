@@ -100,7 +100,7 @@ public class AttackClanRaidUseCase {
             digimon.consumeEnergy(energyCost);
         }
         double digimonPower = digimonPowerService.calculatePower(digimon, player.getClanId());
-        double bossPower = BossCombatRules.calculatePower(boss.getHp(), boss.getAtk(), boss.getDef());
+        double bossPower = boss.combatPower();
         int winChance = BossCombatRules.calculateWinChance(digimonPower, bossPower);
         int damage = (int) Math.round(ClanRaidRules.calculateDamage(raid.getMaxHp(), winChance) * globalDamageBuffService.getMultiplier());
         int actualDamage = Math.min(damage, raid.getRemainingHp());
