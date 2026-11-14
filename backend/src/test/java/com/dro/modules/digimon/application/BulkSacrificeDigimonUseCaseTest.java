@@ -79,7 +79,7 @@ class BulkSacrificeDigimonUseCaseTest {
     }
 
     @Test
-    void removesSacrificedDigimonFromTeamAndReassignsCaptain() {
+    void rejectsSacrificeOfTeamCaptain() {
         UUID playerId = UUID.randomUUID();
         UUID sacrificedId = UUID.randomUUID();
         UUID remainingId = UUID.randomUUID();
@@ -99,16 +99,21 @@ class BulkSacrificeDigimonUseCaseTest {
         when(missionTeamRepository.findByPlayerIdAndDigimonIds(playerId, List.of(sacrificedId)))
                 .thenReturn(List.of(team));
 
-        useCase().execute(JwtTestToken.create(playerId), List.of(sacrificedId));
+        assertThrows(BadRequestException.class, () ->
+                useCase().execute(JwtTestToken.create(playerId), List.of(sacrificedId)));
 
-        assertEquals(List.of(remainingId), team.getDigimonIds());
-        assertEquals(remainingId, team.getCaptainDigimonId());
-        verify(missionTeamRepository).save(team);
+        assertEquals(DigimonStatus.STORED, sacrificed.getStatus());
+        verify(digimonRepository, never()).save(any());
+        verify(playerRepository, never()).save(any());
+
+        assertEquals(List.of(sacrificedId, remainingId), team.getDigimonIds());
+        assertEquals(sacrificedId, team.getCaptainDigimonId());
+        verify(missionTeamRepository, never()).save(team);
         verify(missionTeamRepository, never()).delete(team);
     }
 
     @Test
-    void deletesTeamWhenItsLastDigimonIsSacrificed() {
+    void rejectsSacrificeOfOnlyTeamMember() {
         UUID playerId = UUID.randomUUID();
         UUID sacrificedId = UUID.randomUUID();
         Player player = Player.builder().id(playerId).digitalData(0).build();
@@ -127,9 +132,14 @@ class BulkSacrificeDigimonUseCaseTest {
         when(missionTeamRepository.findByPlayerIdAndDigimonIds(playerId, List.of(sacrificedId)))
                 .thenReturn(List.of(team));
 
-        useCase().execute(JwtTestToken.create(playerId), List.of(sacrificedId));
+        assertThrows(BadRequestException.class, () ->
+                useCase().execute(JwtTestToken.create(playerId), List.of(sacrificedId)));
 
-        verify(missionTeamRepository).delete(team);
+        assertEquals(DigimonStatus.STORED, sacrificed.getStatus());
+        verify(digimonRepository, never()).save(any());
+        verify(playerRepository, never()).save(any());
+
+        verify(missionTeamRepository, never()).delete(team);
         verify(missionTeamRepository, never()).save(team);
     }
 

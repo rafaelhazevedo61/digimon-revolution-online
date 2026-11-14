@@ -7,6 +7,7 @@ import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
+import com.dro.modules.mission.infra.MissionTeamRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.BadRequestException;
@@ -15,6 +16,7 @@ import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 /** Converte um Digimon armazenado em Dados Digitais de forma atômica. */
@@ -24,6 +26,7 @@ public class SacrificeDigimonUseCase {
     private final PlayerRepository playerRepository;
     private final MissionInstanceRepository missionInstanceRepository;
     private final InventoryRepository inventoryRepository;
+    private final MissionTeamRepository missionTeamRepository;
 
     @Transactional
     public int execute(String token, UUID digimonId) {
@@ -49,6 +52,10 @@ public class SacrificeDigimonUseCase {
             throw new BadRequestException("Digimon cannot be sacrificed while in a running mission");
         }
 
+        if (!missionTeamRepository.findByPlayerIdAndDigimonIds(playerId, List.of(digimonId)).isEmpty()) {
+            throw new BadRequestException("Remova o Digimon do time antes de sacrificá-lo.");
+        }
+
         int reward = DigitalDataRules.calculate(
                 digimon.getStage(), digimon.getLevel(),
                 digimon.getIvHp(), digimon.getIvAttack(), digimon.getIvDefense());
@@ -60,10 +67,11 @@ public class SacrificeDigimonUseCase {
         return reward;
     }
 
-    public SacrificeDigimonUseCase(DigimonRepository digimonRepository, PlayerRepository playerRepository, MissionInstanceRepository missionInstanceRepository, InventoryRepository inventoryRepository) {
+    public SacrificeDigimonUseCase(DigimonRepository digimonRepository, PlayerRepository playerRepository, MissionInstanceRepository missionInstanceRepository, InventoryRepository inventoryRepository, MissionTeamRepository missionTeamRepository) {
         this.digimonRepository = digimonRepository;
         this.playerRepository = playerRepository;
         this.missionInstanceRepository = missionInstanceRepository;
         this.inventoryRepository = inventoryRepository;
+        this.missionTeamRepository = missionTeamRepository;
     }
 }
