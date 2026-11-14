@@ -1,4 +1,9 @@
 let storageDigimons = [];
+let storageTeamMemberIds = new Set();
+
+function storageCanSacrifice(digimon) {
+  return Boolean(digimon && !digimon.locked && !storageTeamMemberIds.has(String(digimon.id)));
+}
 let storageSelectedDigimonIds = new Set();
 let storageCollectionEntries = new Set();
 const STORAGE_PAGE_SIZE = 5;
@@ -188,12 +193,14 @@ async function renderStoragePage() {
   }
 
   try {
-    const [stored, dashboard, collection] = await Promise.all([
+    const [stored, dashboard, collection, teams] = await Promise.all([
       apiGet("/digimon/storage"),
       apiGet("/players/me/dashboard"),
-      apiGet("/collection")
+      apiGet("/collection"),
+      apiGet("/mission-teams")
     ]);
 
+    storageTeamMemberIds = new Set(teams.flatMap(team => team.digimonIds || []).map(String));
     storageDigimons = Array.isArray(stored) ? stored : [];
     storageCollectionEntries = new Set((collection?.entries || []).map(entry => `${entry.digimonInfoId}:${String(entry.rarity || "").toUpperCase()}`));
 
@@ -288,17 +295,20 @@ function storageRenderList() {
 
   container.innerHTML = pageItems.map(d => {
     const locked = d.locked === true;
+    const inTeam = storageTeamMemberIds.has(String(d.id));
+    const canSacrifice = storageCanSacrifice(d);
+    const sacrificeBlock = inTeam ? "Remova o Digimon do time para sacrificá-lo" : "Protegido contra sacrifício";
     const registered = storageCollectionEntries.has(`${d.digimonInfoId}:${String(d.rarity || "").toUpperCase()}`);
-    const selected = storageSelectedDigimonIds.has(String(d.id));
+    const selected = canSacrifice && storageSelectedDigimonIds.has(String(d.id));
     return `
       <article class="storage-digimon-card ${locked ? "storage-digimon-card-locked" : ""}">
-        <label class="storage-selection-control ${locked ? "storage-selection-control-locked" : ""}" title="${locked ? "Digimon bloqueado contra sacrifício" : "Selecionar Digimon para sacrifício"}">
+        <label class="storage-selection-control ${!canSacrifice ? "storage-selection-control-locked" : ""}" title="${!canSacrifice ? sacrificeBlock : "Selecionar Digimon para sacrifício"}">
           <input
             type="checkbox"
             class="storage-sacrifice-checkbox"
             data-digimon-id="${escapeAttr(d.id)}"
             ${selected ? "checked" : ""}
-            ${locked ? "disabled" : ""}
+            ${!canSacrifice ? "disabled" : ""}
             onchange="storageToggleSelection('${escapeAttr(d.id)}', this.checked)"
             aria-label="Selecionar ${escapeAttr(d.name || "Digimon")} para sacrifício"
           />
@@ -318,7 +328,7 @@ function storageRenderList() {
           </div>
           <p class="storage-digimon-meta">Lv.${d.level} <span>•</span> ${escapeHtml(d.stage)} <span>•</span> ${formatRarity(d.rarity)} ${renderRarityDieIndicator(d)}</p>
           <p class="storage-digimon-stats"><span>HP ${d.hp}</span><span>ATK ${d.attack}</span><span>DEF ${d.defense}</span></p>
-          <p class="storage-digimon-reward ${locked ? "storage-digimon-reward-locked" : ""}">${locked ? "Protegido contra sacrifício" : `Sacrifício: +${calculateDigitalDataPreview(d)} Dados Digitais`}</p>
+          <p class="storage-digimon-reward ${!canSacrifice ? "storage-digimon-reward-locked" : ""}">${!canSacrifice ? sacrificeBlock : `Sacrifício: +${calculateDigitalDataPreview(d)} Dados Digitais`}</p>
         </div>
         <div class="storage-digimon-actions">
           <button type="button" class="storage-info-button storage-info-button-mobile" onclick="storageOpenInfoModal('${escapeAttr(d.id)}')" aria-label="Ver mais informações de ${escapeAttr(d.name || "Digimon")}">+Info</button>
@@ -333,8 +343,8 @@ function storageRenderList() {
           </button>
           <button type="button" class="storage-action-button storage-action-danger"
             onclick="storageSacrifice('${escapeHtml(d.id)}', '${encodeURIComponent(d.name || "Digimon")}')"
-            ${locked ? "disabled" : ""}>
-            <span aria-hidden="true">×</span><span>${locked ? "Bloqueado" : "Sacrificar"}</span>
+            ${!canSacrifice ? "disabled" : ""}>
+            <span aria-hidden="true">×</span><span>${inTeam ? "Em time" : locked ? "Bloqueado" : "Sacrificar"}</span>
           </button>
         </div>
       </article>
@@ -491,10 +501,10 @@ function storageUpdateBulkActions() {
   if (!container) return;
 
   storageDigimons.forEach(digimon => {
-    if (digimon.locked === true) storageSelectedDigimonIds.delete(String(digimon.id));
+    if (!storageCanSacrifice(digimon)) storageSelectedDigimonIds.delete(String(digimon.id));
   });
 
-  const eligible = storageDigimons.filter(d => d.locked !== true);
+  const eligible = storageDigimons.filter(storageCanSacrifice);
   const selected = eligible.filter(d => storageSelectedDigimonIds.has(String(d.id)));
   const count = selected.length;
   const totalReward = selected.reduce((sum, digimon) => sum + calculateDigitalDataPreview(digimon), 0);
@@ -516,7 +526,7 @@ function storageUpdateBulkActions() {
       <div class="storage-bulk-heading">
         <div>
           <p class="storage-bulk-title">Seleção em massa</p>
-          <p class="storage-bulk-copy">${eligible.length} Digimon${eligible.length === 1 ? " desbloqueado" : "s desbloqueados"} disponível${eligible.length === 1 ? "" : "eis"}. Digimons com cadeado ficam de fora.</p>
+          <p class="storage-bulk-copy">${eligible.length} Digimon${eligible.length === 1 ? " disponível" : "s disponíveis"} para sacrifício.</p>
         </div>
         <button type="button" class="storage-select-all-button" onclick="storageSelectAllUnlocked()" ${eligible.length === 0 ? "disabled" : ""}>
           Selecionar todos
@@ -529,7 +539,7 @@ function storageUpdateBulkActions() {
 
 function storageSelectAllUnlocked() {
   storageDigimons
-    .filter(digimon => digimon.locked !== true)
+    .filter(storageCanSacrifice)
     .forEach(digimon => storageSelectedDigimonIds.add(String(digimon.id)));
   storageRenderList();
 }
@@ -537,7 +547,7 @@ function storageSelectAllUnlocked() {
 function storageToggleSelection(digimonId, selected) {
   const id = String(digimonId);
   const digimon = storageDigimons.find(item => String(item.id) === id);
-  if (digimon?.locked === true) {
+  if (!storageCanSacrifice(digimon)) {
     storageSelectedDigimonIds.delete(id);
     storageUpdateBulkActions();
     return;
@@ -660,8 +670,10 @@ function calculateDigitalDataPreview(digimon) {
 
 async function storageSacrifice(digimonId, encodedDigimonName) {
   const digimon = storageDigimons.find(item => String(item.id) === String(digimonId));
-  if (digimon?.locked === true) {
-    showToast("Este Digimon está bloqueado e não pode ser sacrificado.", "error");
+  if (!storageCanSacrifice(digimon)) {
+    showToast(storageTeamMemberIds.has(String(digimonId))
+      ? "Remova o Digimon do time antes de sacrificá-lo."
+      : "Este Digimon não está disponível para sacrifício.", "error");
     return;
   }
   const digimonName = decodeURIComponent(encodedDigimonName || "Digimon");
@@ -685,7 +697,7 @@ async function storageSacrifice(digimonId, encodedDigimonName) {
 }
 
 async function storageSacrificeSelected() {
-  const selected = storageDigimons.filter(d => d.locked !== true && storageSelectedDigimonIds.has(String(d.id)));
+  const selected = storageDigimons.filter(d => storageCanSacrifice(d) && storageSelectedDigimonIds.has(String(d.id)));
   if (selected.length === 0) return;
 
   const totalReward = selected.reduce((sum, digimon) => sum + calculateDigitalDataPreview(digimon), 0);
