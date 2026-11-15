@@ -13,8 +13,8 @@ class AreaRulesTest {
     }
 
     @Test
-    void requiredStage_gearSavanna_returnsBabyII() {
-        assertEquals(Stage.BABY_II, AreaRules.requiredStage(Area.GEAR_SAVANNA));
+    void requiredStage_gearSavanna_hasNoAdditionalStageFloor() {
+        assertEquals(Stage.BABY, AreaRules.requiredStage(Area.GEAR_SAVANNA));
     }
 
     @Test
@@ -40,11 +40,6 @@ class AreaRulesTest {
     @Test
     void isUnlocked_babyStage_unlocksNativeForest() {
         assertTrue(AreaRules.isUnlocked(Stage.BABY, Area.NATIVE_FOREST));
-    }
-
-    @Test
-    void isUnlocked_babyStage_doesNotUnlockGearSavanna() {
-        assertFalse(AreaRules.isUnlocked(Stage.BABY, Area.GEAR_SAVANNA));
     }
 
     @Test

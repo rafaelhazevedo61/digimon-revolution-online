@@ -11,6 +11,7 @@ import com.dro.modules.mission.domain.MissionDefinitionEntity;
 import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -31,7 +32,8 @@ public class NewlyUnlockedContentService {
         int currentLevel = digimon.getLevel();
         Stage currentStage = digimon.getStage();
 
-        List<NewlyUnlockedMissionResponse> missions = missionDefinitionRepository.findByActiveTrue().stream()
+        var activeMissions = missionDefinitionRepository.findByActiveTrue();
+        List<NewlyUnlockedMissionResponse> missions = activeMissions.stream()
                 .filter(mission -> mission.getRequiredLevel() > previousLevel)
                 .filter(mission -> mission.getRequiredLevel() <= currentLevel)
                 .filter(mission -> currentStage.ordinal() >= mission.getRequiredStage().ordinal())
@@ -45,11 +47,19 @@ public class NewlyUnlockedContentService {
                 ))
                 .toList();
 
-        List<NewlyUnlockedAreaResponse> areas = Arrays.stream(Area.values())
+        List<NewlyUnlockedAreaResponse> areas = new ArrayList<>(Arrays.stream(Area.values())
+                .filter(area -> area != Area.GEAR_SAVANNA)
                 .filter(area -> previousStage.ordinal() < AreaRules.requiredStage(area).ordinal())
                 .filter(area -> currentStage.ordinal() >= AreaRules.requiredStage(area).ordinal())
                 .map(area -> new NewlyUnlockedAreaResponse(area.name(), AreaRules.requiredStage(area).name()))
-                .toList();
+                .toList());
+        activeMissions.stream()
+                .filter(mission -> AreaRules.GEAR_SAVANNA_ENTRY_MISSION.equals(mission.getId())
+                        && mission.getArea() == Area.GEAR_SAVANNA)
+                .filter(mission -> !AreaRules.meetsMissionRequirements(previousStage, previousLevel, mission)
+                        && AreaRules.meetsMissionRequirements(currentStage, currentLevel, mission))
+                .findFirst().ifPresent(mission -> areas.add(new NewlyUnlockedAreaResponse(
+                        Area.GEAR_SAVANNA.name(), mission.getRequiredStage().name())));
 
         return new NewlyUnlockedContentResponse(missions, areas);
     }

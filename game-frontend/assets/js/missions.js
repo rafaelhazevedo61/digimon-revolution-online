@@ -988,7 +988,9 @@ function renderMissionAreaCard(a, index) {
       <div class="mission-area-main">
         <p class="mission-area-label">Área ${areaNumber}</p>
         <h3 class="mission-area-name">${info.name}</h3>
-        <p class="mission-area-requirement">Estágio mínimo · ${formatStage(a.requiredStage)}</p>
+        <p class="mission-area-requirement">${a.requiredStage
+          ? `Estágio mínimo · ${formatStage(a.requiredStage)}${a.requiredLevel != null ? ` · Nível ${a.requiredLevel}` : ""}`
+          : "Missão inicial indisponível"}</p>
       </div>
       <div class="mission-area-status">${locked ? `<span class="mission-area-lock" aria-hidden="true">🔒</span><span>Bloqueada</span>` : `<span class="mission-area-access-dot"></span><span>Acessível</span>`}<span class="mission-area-arrow" aria-hidden="true">›</span></div>
     </article>
