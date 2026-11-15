@@ -2,6 +2,8 @@ package com.dro.modules.maintenance.application;
 
 import com.dro.modules.mission.infra.MissionInstanceRepository;
 import com.dro.shared.audit.AuditOutboxRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,8 @@ import java.time.Instant;
 /** Remove registros finalizados que já ultrapassaram a janela de retenção. */
 @Service
 public class StaleDataCleanupService {
+    private static final Logger log = LoggerFactory.getLogger(StaleDataCleanupService.class);
+
     private final MissionInstanceRepository missionInstanceRepository;
     private final AuditOutboxRepository auditOutboxRepository;
 
@@ -23,6 +27,7 @@ public class StaleDataCleanupService {
     private int batchSize;
 
     /** Executa a limpeza automática diariamente por padrão às 03:00 UTC. */
+    @Transactional
     @Scheduled(
             cron = "${dro.maintenance.cleanup.cron:0 0 3 * * *}",
             zone = "${dro.maintenance.cleanup.zone:UTC}"
@@ -30,8 +35,7 @@ public class StaleDataCleanupService {
     public void scheduledCleanup() {
         CleanupReport report = execute(false);
         if (report.totalDeleted() > 0) {
-            org.slf4j.LoggerFactory.getLogger(StaleDataCleanupService.class)
-                    .info("Stale data cleanup completed: missionInstancesDeleted={}, outboxEventsDeleted={}, cutoff={}",
+            log.info("Stale data cleanup summary: missionInstancesDeleted={}, outboxEventsDeleted={}, cutoff={}",
                             report.missionInstancesDeleted(), report.outboxEventsDeleted(), report.cutoff());
         }
     }

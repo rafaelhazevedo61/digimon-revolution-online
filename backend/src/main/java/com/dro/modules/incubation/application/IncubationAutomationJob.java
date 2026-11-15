@@ -7,6 +7,9 @@ import com.dro.modules.incubation.domain.IncubationStatus;
 import com.dro.modules.incubation.infra.IncubationRepository;
 import com.dro.modules.mail.application.CreateSystemMailMessageUseCase;
 import com.dro.modules.mail.domain.MailMessageType;
+import com.dro.shared.exception.BusinessException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -17,6 +20,7 @@ import java.util.UUID;
 
 @Service
 public class IncubationAutomationJob {
+    private static final Logger log = LoggerFactory.getLogger(IncubationAutomationJob.class);
     private static final int BATCH_SIZE = 100;
     private static final long INTERVAL_MS = 5000L;
     private final IncubationRepository repository;
@@ -47,7 +51,8 @@ public class IncubationAutomationJob {
                 AutomationFailureCode failureCode = findFailureCode(error);
                 processor.pause(id, failureCode != null ? failureCode.name() : "AUTOMATION_ERROR",
                         failureCode != null ? failureCode.name() : AutomationFailureCode.TRANSIENT_DATABASE_ERROR.name());
-                if (failureCode == AutomationFailureCode.DIGIMON_STORAGE_FULL || isStorageFullError(error)) {
+                boolean storageFull = failureCode == AutomationFailureCode.DIGIMON_STORAGE_FULL || isStorageFullError(error);
+                if (storageFull) {
                     repository.findById(id).ifPresent(incubation ->
                             createSystemMailMessageUseCase.create(
                                     MailMessageType.SYSTEM,
@@ -60,6 +65,14 @@ public class IncubationAutomationJob {
                                     "incubation-automation:storage-full:" + id
                             )
                     );
+                    log.debug("Incubation automation paused. incubationId={}, reason={}",
+                            id, AutomationFailureCode.DIGIMON_STORAGE_FULL);
+                } else if (error instanceof BusinessException rejection && rejection.getStatus().is4xxClientError()
+                        && failureCode != AutomationFailureCode.TRANSIENT_DATABASE_ERROR) {
+                    log.debug("Incubation automation paused by game rule. incubationId={}, reason={}",
+                            id, failureCode == null ? rejection.getCode() : failureCode);
+                } else {
+                    log.error("Could not process automatic incubation {}; automation paused", id, error);
                 }
             }
         });

@@ -7,10 +7,6 @@ spring:
   mongodb:
     uri: ${SPRING_MONGODB_URI:mongodb://127.0.0.1:27017/dro_audit}
 
-logging:
-  level:
-    org.springframework.jdbc: DEBUG
-
 dro:
   app-version: ${DRO_APP_VERSION:0.0.6-SNAPSHOT}
   gameplay:

@@ -17,6 +17,8 @@ import com.dro.modules.tutorial.infra.TutorialProgressRepository;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.util.TokenExtractor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class TutorialService {
+    private static final Logger log = LoggerFactory.getLogger(TutorialService.class);
     private final TutorialProgressRepository tutorialProgressRepository;
     private final TutorialCompletionRepository tutorialCompletionRepository;
     private final PlayerRepository playerRepository;
@@ -50,9 +53,10 @@ public class TutorialService {
             }
             LocalDateTime completedAt = LocalDateTime.now();
             tutorialProgressRepository.save(TutorialProgress.builder().id(UUID.randomUUID()).playerId(playerId).step(step).completedAt(completedAt).rewardClaimedAt(step.hasReward() ? null : completedAt).build());
-        } catch (RuntimeException ignored) {
+        } catch (RuntimeException failure) {
+            log.warn("Could not record tutorial step. step={}, exceptionType={}",
+                    step, failure.getClass().getSimpleName());
         }
-        // O tutorial é um bônus; falhas aqui não devem quebrar a ação principal.
     }
 
     @Transactional
