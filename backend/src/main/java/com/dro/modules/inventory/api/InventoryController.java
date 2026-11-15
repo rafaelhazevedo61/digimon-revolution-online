@@ -1,6 +1,8 @@
 package com.dro.modules.inventory.api;
 
 import com.dro.modules.inventory.api.dto.request.UseItemRequest;
+import com.dro.modules.inventory.api.dto.request.TeamEnergyRequest;
+import com.dro.modules.inventory.api.dto.response.TeamEnergyResponse;
 import com.dro.modules.inventory.api.dto.response.UseItemResponse;
 import com.dro.modules.inventory.api.dto.response.InventoryPageResponse;
 import com.dro.modules.inventory.application.UseItemUseCase;
@@ -185,6 +187,18 @@ public class InventoryController {
     @PostMapping("/rarity-reroll/{id}/keep")
     public ResponseEntity<RarityRerollResponse> keepRarityReroll(@RequestHeader("Authorization") String authorization, @PathVariable UUID id) {
         return ResponseEntity.ok(rarityRerollUseCase.keep(authorization, id));
+    }
+
+    @GetMapping("/energy/team/{teamId}")
+    public TeamEnergyResponse previewTeamEnergy(@RequestHeader("Authorization") String authorization, @PathVariable UUID teamId) {
+        return useItemUseCase.previewTeamEnergy(authorization, teamId);
+    }
+
+    @PostMapping("/energy/team/{teamId}")
+    public Map<String, Integer> useTeamEnergy(@RequestHeader("Authorization") String authorization, @PathVariable UUID teamId,
+                                             @RequestBody @Valid TeamEnergyRequest request) {
+        int recovered = useItemUseCase.useEnergyOnTeam(authorization, teamId, request.itemType(), request.memberIds());
+        return Map.of("energyRecovered", recovered);
     }
 
     @PostMapping("/use")

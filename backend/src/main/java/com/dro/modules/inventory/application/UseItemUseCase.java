@@ -2,11 +2,13 @@ package com.dro.modules.inventory.application;
 
 import com.dro.modules.clan.application.ClanBonusService;
 import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.incubation.domain.IncubatorRules;
 import com.dro.modules.mission.domain.MissionSlotRules;
 import com.dro.modules.mission.domain.TeamSlotRules;
 import com.dro.modules.inventory.api.dto.response.UseItemResponse;
+import com.dro.modules.inventory.api.dto.response.TeamEnergyResponse;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
@@ -14,8 +16,11 @@ import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.mission.application.NewlyUnlockedContentService;
+import com.dro.modules.mission.domain.MissionTeam;
+import com.dro.modules.mission.infra.MissionTeamRepository;
 import com.dro.modules.mission.api.dto.response.NewlyUnlockedContentResponse;
 import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.util.TokenExtractor;
@@ -24,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -34,6 +40,7 @@ public class UseItemUseCase {
     private static final int GENERIC_ITEM_XP = 50;
     private static final int MAX_BATCH_QUANTITY = 999;
     private final InventoryRepository inventoryRepository;
+    private final MissionTeamRepository missionTeamRepository;
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
     private final ClanBonusService clanBonusService;
@@ -149,24 +156,107 @@ public class UseItemUseCase {
         if (!player.getId().equals(digimon.getPlayerId())) {
             throw new BadRequestException("O Digimon ativo não pertence a este jogador.");
         }
-        int clanBonus = player.getClanId() == null ? 0 : clanBonusService.getMaxEnergyBonus(player.getClanId());
-        digimon.regenerateEnergy(clanBonus);
-        int capacity = digimon.getMaxEnergy() + clanBonus;
-        int missing = capacity - digimon.getEnergy();
-        if (missing <= 0) {
+        int recovered = restoreEnergy(digimon, maxEnergyBonus(player), type);
+        if (recovered == 0) {
             throw new UnprocessableException("O Digimon ativo já está com a energia cheia.");
-        }
-        int recovered = type == ItemType.VIP_ENERGY_CHARGE
-                ? missing : Math.min(missing, (int) Math.ceil(capacity / 10.0));
-        digimon.setEnergy(digimon.getEnergy() + recovered);
-        if (recovered == missing) {
-            digimon.setLastEnergyUpdate(Instant.now());
         }
         consume(item, 1);
         digimonRepository.save(digimon);
         String itemName = type == ItemType.VIP_ENERGY_CHARGE ? "Carga de Energia Total" : "Célula de Energia";
         return new UseItemResponse(type, 1, 0, digimon.getLevel(), digimon.getLevel(),
                 false, itemName + ": +" + recovered + " de energia.", NewlyUnlockedContentResponse.empty());
+    }
+
+    @Transactional(readOnly = true)
+    public TeamEnergyResponse previewTeamEnergy(String token, UUID teamId) {
+        UUID playerId = TokenExtractor.extractPlayerId(token);
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new NotFoundException("Jogador não encontrado"));
+        MissionTeam team = missionTeamRepository.findByIdAndPlayerId(teamId, playerId)
+                .orElseThrow(() -> new NotFoundException("Time não encontrado"));
+        List<Digimon> members = validateTeamMembers(team, digimonRepository.findAllById(team.getDigimonIds()));
+        int bonus = maxEnergyBonus(player);
+        var energy = members.stream().map(digimon -> {
+            // Calculate passive regeneration on a snapshot so the preview never changes stored energy.
+            Digimon snapshot = Digimon.builder()
+                    .energy(digimon.getEnergy())
+                    .maxEnergy(digimon.getMaxEnergy())
+                    .lastEnergyUpdate(digimon.getLastEnergyUpdate())
+                    .build();
+            snapshot.regenerateEnergy(bonus);
+            int capacity = snapshot.getMaxEnergy() + bonus;
+            int current = snapshot.getEnergy();
+            return new TeamEnergyResponse.Member(digimon.getId(), digimon.getName(), current, capacity,
+                    recoveryAmount(ItemType.ENERGY_CELL, capacity, current),
+                    recoveryAmount(ItemType.VIP_ENERGY_CHARGE, capacity, current));
+        }).toList();
+        return new TeamEnergyResponse(team.getName(), energy,
+                availableQuantity(playerId, ItemType.ENERGY_CELL),
+                availableQuantity(playerId, ItemType.VIP_ENERGY_CHARGE));
+    }
+
+    @Transactional
+    public int useEnergyOnTeam(String token, UUID teamId, ItemType type, List<UUID> expectedMembers) {
+        if (type != ItemType.ENERGY_CELL && type != ItemType.VIP_ENERGY_CHARGE) {
+            throw new BadRequestException("Selecione um item de recuperação de energia.");
+        }
+        UUID playerId = TokenExtractor.extractPlayerId(token);
+        Player player = playerRepository.findByIdForUpdate(playerId)
+                .orElseThrow(() -> new NotFoundException("Jogador não encontrado"));
+        MissionTeam team = missionTeamRepository.findByIdAndPlayerIdForUpdate(teamId, playerId)
+                .orElseThrow(() -> new NotFoundException("Time não encontrado"));
+        List<UUID> memberIds = team.getDigimonIds();
+        if (!memberIds.equals(expectedMembers)) {
+            throw new ConflictException("A formação mudou. Abra a recarga do time novamente.");
+        }
+        List<Digimon> members = validateTeamMembers(team, digimonRepository.findAllByIdForUpdate(playerId, memberIds));
+        InventoryItem item = inventoryRepository.findByPlayerIdAndItemTypeForUpdate(playerId, type)
+                .filter(entry -> entry.getQuantity() > 0)
+                .orElseThrow(() -> new UnprocessableException("Você não tem esse item no inventário."));
+        int bonus = maxEnergyBonus(player);
+        int totalRecovered = members.stream().mapToInt(digimon -> restoreEnergy(digimon, bonus, type)).sum();
+        if (totalRecovered == 0) {
+            throw new UnprocessableException("Todos os Digimons do time já estão com energia cheia.");
+        }
+        consume(item, 1);
+        digimonRepository.saveAll(members);
+        return totalRecovered;
+    }
+
+    private List<Digimon> validateTeamMembers(MissionTeam team, List<Digimon> digimons) {
+        return team.getDigimonIds().stream().map(id -> digimons.stream()
+                .filter(digimon -> id.equals(digimon.getId()) && team.getPlayerId().equals(digimon.getPlayerId()))
+                .filter(digimon -> digimon.getStatus() == DigimonStatus.ACTIVE
+                        || digimon.getStatus() == DigimonStatus.HATCHED || digimon.getStatus() == DigimonStatus.STORED)
+                .findFirst()
+                .orElseThrow(() -> new ConflictException("Um ou mais Digimons do time não estão disponíveis.")))
+                .toList();
+    }
+
+    private int availableQuantity(UUID playerId, ItemType type) {
+        return inventoryRepository.findByPlayerIdAndItemType(playerId, type).map(InventoryItem::getQuantity).orElse(0);
+    }
+
+    private int maxEnergyBonus(Player player) {
+        return player.getClanId() == null ? 0 : clanBonusService.getMaxEnergyBonus(player.getClanId());
+    }
+
+    private static int recoveryAmount(ItemType type, int capacity, int current) {
+        int missing = Math.max(0, capacity - current);
+        return type == ItemType.VIP_ENERGY_CHARGE ? missing : Math.min(missing, (capacity + 9) / 10);
+    }
+
+    private int restoreEnergy(Digimon digimon, int bonus, ItemType type) {
+        digimon.regenerateEnergy(bonus);
+        int capacity = digimon.getMaxEnergy() + bonus;
+        int recovered = recoveryAmount(type, capacity, digimon.getEnergy());
+        if (recovered > 0) {
+            digimon.setEnergy(digimon.getEnergy() + recovered);
+            if (digimon.getEnergy() == capacity) {
+                digimon.setLastEnergyUpdate(Instant.now());
+            }
+        }
+        return recovered;
     }
 
     private int resolveQuantity(boolean batchUsableItem, Integer requestedQuantity) {
@@ -333,11 +423,12 @@ public class UseItemUseCase {
     }
 
     public UseItemUseCase(final InventoryRepository inventoryRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository) {
-        this(inventoryRepository, digimonRepository, playerRepository, null, null);
+        this(inventoryRepository, digimonRepository, playerRepository, null, null, null);
     }
 
     @Autowired
-    public UseItemUseCase(final InventoryRepository inventoryRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final NewlyUnlockedContentService newlyUnlockedContentService, final ClanBonusService clanBonusService) {
+    public UseItemUseCase(final InventoryRepository inventoryRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final NewlyUnlockedContentService newlyUnlockedContentService, final ClanBonusService clanBonusService, final MissionTeamRepository missionTeamRepository) {
+        this.missionTeamRepository = missionTeamRepository;
         this.clanBonusService = clanBonusService;
         this.inventoryRepository = inventoryRepository;
         this.digimonRepository = digimonRepository;

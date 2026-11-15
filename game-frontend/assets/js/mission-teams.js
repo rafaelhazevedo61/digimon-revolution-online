@@ -73,6 +73,7 @@ function renderMissionTeamCard(team, digimonById, activeMissionDigimonIds = new 
         ${[0, 1, 2].map(index => renderMissionTeamMember(members[index], team.captainDigimonId)).join("")}
       </div>
       <div class="mt-auto grid grid-cols-2 gap-2 pt-5">
+        <button type="button" class="btn-primary col-span-2 w-full text-xs" onclick="openMissionTeamEnergy('${escapeAttr(team.id)}')">Recuperar time</button>
         <button type="button" class="btn-secondary w-full text-xs" onclick="openMissionTeamEditor('${escapeAttr(team.id)}')">Editar</button>
         <button type="button" class="btn-secondary w-full text-xs" onclick="deleteMissionTeam('${escapeAttr(team.id)}')">Excluir</button>
       </div>
@@ -146,6 +147,94 @@ async function renderMissionTeamsPage() {
   } catch (error) {
     const container = document.getElementById("mission-teams-list");
     if (container) container.innerHTML = `<div class="card border-red-900 md:col-span-2 xl:col-span-3 2xl:col-span-4"><p class="text-red-300">${escapeHtml(error.message)}</p></div>`;
+  }
+}
+
+async function openMissionTeamEnergy(teamId) {
+  if (document.getElementById("mission-team-energy-dialog")) return;
+  const dialog = document.createElement("dialog");
+  dialog.id = "mission-team-energy-dialog";
+  dialog.className = "card m-auto w-[calc(100%-2rem)] max-w-md max-h-[85vh] overflow-y-auto text-slate-100 backdrop:bg-black/70";
+  dialog.setAttribute("aria-labelledby", "mission-team-energy-title");
+  dialog.innerHTML = `
+    <h3 id="mission-team-energy-title" class="text-lg font-bold">Recuperar time</h3>
+    <p data-energy-status class="mt-2 text-sm text-slate-300" aria-live="polite">Consultando energia e itens…</p>
+    <form method="dialog" class="mt-4"><button class="btn-secondary w-full">Fechar</button></form>
+  `;
+  document.querySelector(".mission-teams-page").appendChild(dialog);
+  dialog.addEventListener("close", () => dialog.remove());
+  dialog.showModal();
+  const endpoint = `/inventory/energy/team/${encodeURIComponent(teamId)}`;
+  const status = dialog.querySelector("[data-energy-status]");
+  try {
+    const preview = await apiGet(endpoint);
+    if (!dialog.open) return;
+
+    const items = [
+      { type: "ENERGY_CELL", label: "Célula de Energia", quantity: preview.energyCells, gain: "cellRecovery" },
+      { type: "VIP_ENERGY_CHARGE", label: "Carga de Energia Total", quantity: preview.vipCharges, gain: "vipRecovery" }
+    ];
+    const full = preview.members.every(member => member.vipRecovery === 0);
+    const hasItems = items.some(item => item.quantity > 0);
+    status.textContent = full ? "Todos os Digimons já estão com energia cheia." :
+      hasItems ? "A recarga usa 1 unidade para todo o time." :
+      "Você não tem itens de recuperação de energia no inventário.";
+    const controls = document.createElement("form");
+    controls.className = "mt-4 space-y-3";
+    controls.innerHTML = `
+      <p class="break-words text-sm font-semibold">${escapeHtml(preview.teamName)}</p>
+      <label class="block text-sm" for="mission-team-energy-item">Item de recuperação</label>
+      <select id="mission-team-energy-item" class="input w-full">
+        ${items.map(item => `<option value="${item.type}" ${item.quantity <= 0 ? "disabled" : ""}>${item.label} (${item.quantity} disponíveis)</option>`).join("")}
+      </select>
+      <ul class="space-y-2 text-sm" data-energy-members></ul>
+      <button class="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50" type="submit">Confirmar recarga</button>
+    `;
+    status.after(controls);
+    const selector = controls.querySelector("select");
+    const members = controls.querySelector("[data-energy-members]");
+    const submit = controls.querySelector("button");
+    const close = dialog.querySelector('form[method="dialog"] button');
+    const refreshPreview = () => {
+      const item = items.find(option => option.type === selector.value);
+      members.innerHTML = preview.members.map(member => {
+        const gain = item ? member[item.gain] : 0;
+        return `<li class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg bg-slate-800 px-3 py-2">
+          <span class="min-w-0 break-words font-semibold">${escapeHtml(member.name)}</span>
+          <span class="text-slate-300">${member.energy}/${member.maxEnergy}${gain > 0 ? ` <strong class="text-emerald-300">+${gain}</strong>` : ""}</span>
+        </li>`;
+      }).join("");
+      submit.disabled = full || !item || item.quantity <= 0;
+    };
+    selector.disabled = full || !hasItems;
+    selector.addEventListener("change", refreshPreview);
+    refreshPreview();
+    dialog.addEventListener("cancel", event => {
+      if (close.disabled) event.preventDefault();
+    });
+    controls.addEventListener("submit", async event => {
+      event.preventDefault();
+      if (submit.disabled) return;
+      submit.disabled = true;
+      close.disabled = true;
+      selector.disabled = true;
+      try {
+        const result = await apiPost(endpoint, {
+          itemType: selector.value,
+          memberIds: preview.members.map(member => member.id)
+        });
+        dialog.close();
+        missionTeamContextPromise = null;
+        showToast(`Time recuperado! +${result.energyRecovered} de energia no total.`);
+      } catch (error) {
+        status.textContent = error.message;
+        close.disabled = false;
+        selector.disabled = false;
+        refreshPreview();
+      }
+    });
+  } catch (error) {
+    status.textContent = error.message;
   }
 }
 
