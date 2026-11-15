@@ -7,10 +7,17 @@ import com.dro.modules.digimon.domain.enums.Stage;
  */
 public class AreaRules {
 
+    public static final String GEAR_SAVANNA_ENTRY_MISSION = "MISSION_2";
+
+    public static boolean meetsMissionRequirements(Stage stage, int level, MissionDefinitionEntity mission) {
+        return stage != null && stage.ordinal() >= mission.getRequiredStage().ordinal()
+                && level >= mission.getRequiredLevel();
+    }
+
     public static Stage requiredStage(Area area) {
         return switch (area) {
             case NATIVE_FOREST -> Stage.BABY;
-            case GEAR_SAVANNA -> Stage.BABY_II;
+            case GEAR_SAVANNA -> Stage.BABY; // The entry mission defines the actual requirements.
             case FACTORIAL_TOWN -> Stage.ROOKIE;
             case FREEZELAND -> Stage.CHAMPION;
             case SERVER_DESERT -> Stage.ULTIMATE;

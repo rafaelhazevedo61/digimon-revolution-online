@@ -9,5 +9,6 @@ import com.dro.modules.mission.domain.Area;
 public record AreaResponse(
         Area area,
         Stage requiredStage,
+        Integer requiredLevel,
         boolean unlocked
 ) {}

@@ -9,6 +9,8 @@ import com.dro.modules.digimon.domain.enums.Stage;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.mission.api.dto.response.AreaResponse;
 import com.dro.modules.mission.domain.Area;
+import com.dro.modules.mission.domain.MissionDefinitionEntity;
+import com.dro.modules.mission.infra.MissionDefinitionRepository;
 import com.dro.shared.security.JwtSettings;
 import com.dro.shared.security.JwtTokenCodec;
 import org.junit.jupiter.api.Test;
@@ -21,8 +23,10 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
@@ -33,6 +37,9 @@ class AreaUseCaseTest {
     @Mock
     private DigimonRepository digimonRepository;
 
+    @Mock
+    private MissionDefinitionRepository missions;
+
     @Test
     void unlocksAreasUsingTheHighestOwnedDigimonStage() {
         UUID playerId = UUID.randomUUID();
@@ -41,12 +48,35 @@ class AreaUseCaseTest {
         when(digimonRepository.findByPlayerId(playerId))
                 .thenReturn(List.of(activeBaby, storedMega));
 
-        List<AreaResponse> areas = new AreaUseCase(digimonRepository).execute(createToken(playerId));
+        List<AreaResponse> areas = new AreaUseCase(digimonRepository, missions).execute(createToken(playerId));
 
         assertTrue(area(areas, Area.NATIVE_FOREST).unlocked());
         assertTrue(area(areas, Area.FREEZELAND).unlocked());
         assertTrue(area(areas, Area.SERVER_DESERT).unlocked());
         assertTrue(area(areas, Area.INFINITY_MOUNTAIN).unlocked());
+    }
+
+    @Test
+    void gearSavannaRequiresOneDigimonToMeetBothRequirementsOfTheEntryMission() {
+        UUID playerId = UUID.randomUUID();
+        Digimon babyII = digimon(playerId, Stage.BABY_II, DigimonStatus.ACTIVE);
+        babyII.setLevel(20);
+        Digimon rookie = digimon(playerId, Stage.ROOKIE, DigimonStatus.STORED);
+        rookie.setLevel(7);
+        when(digimonRepository.findByPlayerId(playerId)).thenReturn(List.of(babyII, rookie));
+        var mission = MissionDefinitionEntity.builder().id("MISSION_2").area(Area.GEAR_SAVANNA)
+                .requiredStage(Stage.ROOKIE).requiredLevel(8).build();
+        when(missions.findByIdAndActiveTrue("MISSION_2")).thenReturn(Optional.of(mission));
+
+        var useCase = new AreaUseCase(digimonRepository, missions);
+        String token = createToken(playerId);
+        AreaResponse locked = area(useCase.execute(token), Area.GEAR_SAVANNA);
+        assertEquals(Stage.ROOKIE, locked.requiredStage());
+        assertEquals(8, locked.requiredLevel().intValue());
+        assertFalse(locked.unlocked());
+
+        rookie.setLevel(8);
+        assertTrue(area(useCase.execute(token), Area.GEAR_SAVANNA).unlocked());
     }
 
     private AreaResponse area(List<AreaResponse> areas, Area target) {
