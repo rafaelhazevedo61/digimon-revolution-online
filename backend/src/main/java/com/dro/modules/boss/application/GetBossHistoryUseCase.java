@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -24,7 +25,8 @@ public class GetBossHistoryUseCase {
     public List<BossAttemptResponse> execute(String token, int page, int size) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
         List<BossAttemptEntity> attempts = bossAttemptRepository.findByPlayerIdOrderByCreatedAtDesc(playerId, PageRequest.of(page, size));
-        Map<Long, BossDefinitionEntity> bossMap = bossDefinitionRepository.findAll().stream().collect(Collectors.toMap(BossDefinitionEntity::getId, b -> b));
+        Set<Long> bossIds = attempts.stream().map(BossAttemptEntity::getBossId).collect(Collectors.toSet());
+        Map<Long, BossDefinitionEntity> bossMap = bossIds.isEmpty() ? Map.of() : bossDefinitionRepository.findAllById(bossIds).stream().collect(Collectors.toMap(BossDefinitionEntity::getId, b -> b));
         return attempts.stream().map(a -> {
             BossDefinitionEntity boss = bossMap.get(a.getBossId());
             return new BossAttemptResponse(a.getId(), boss != null ? boss.getCode() : "UNKNOWN", boss != null ? boss.getName() : "Unknown", a.getStatus().name(), a.getXpGained(), a.getBitsGained(), a.getCreatedAt());
