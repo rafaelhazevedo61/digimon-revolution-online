@@ -27,8 +27,12 @@ import com.dro.shared.exception.ConflictException;
 import com.dro.shared.exception.NotFoundException;
 import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.util.TokenExtractor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -48,6 +52,7 @@ import java.util.UUID;
  */
 @Service
 public class OpenChestUseCase {
+    private static final Logger log = LoggerFactory.getLogger(OpenChestUseCase.class);
     private static final String OPENING_SOURCE = "PLAYER_INVENTORY";
     private static final int MAX_BATCH_QUANTITY = 999;
     private final PlayerRepository playerRepository;
@@ -122,7 +127,24 @@ public class OpenChestUseCase {
                 .build();
         openingItems.forEach(item -> item.setChestOpening(openingToPersist));
         ChestOpeningEntity opening = chestOpeningRepository.saveAndFlush(openingToPersist);
-        transactionAuditPublisher.success("chest-opening:" + opening.getId(), "CHEST_OPENED", "ChestOpening", String.valueOf(opening.getId()), buildAuditPayload(opening, activeDigimon, itemsAtStackLimit));
+        Map<String, Object> auditPayload = buildAuditPayload(opening, activeDigimon, itemsAtStackLimit);
+        transactionAuditPublisher.success("chest-opening:" + opening.getId(), "CHEST_OPENED",
+                "ChestOpening", String.valueOf(opening.getId()), auditPayload);
+
+        if (log.isInfoEnabled() && TransactionSynchronizationManager.isSynchronizationActive()) {
+            var openingId = opening.getId();
+            String username = player.getUsername();
+            String chestCode = opening.getChestDefinition().getCode();
+            int chestQuantity = opening.getQuantity();
+            Object items = auditPayload.get("items");
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    log.info("Chest opened. openingId={}, playerId={}, username={}, chestCode={}, chestQuantity={}, items={}",
+                            openingId, playerId, username, chestCode, chestQuantity, items);
+                }
+            });
+        }
         return toResponse(opening, false, List.copyOf(itemsAtStackLimit));
     }
 
