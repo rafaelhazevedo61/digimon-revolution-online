@@ -39,16 +39,21 @@ public class ErrorAuditService {
     ) {
         String correlationId = CorrelationIdContext.current();
 
+        String method = request.getMethod();
+        String path = request.getRequestURI();
         if (httpStatus >= 500) {
             log.error(
                     "Application error. correlationId={}, method={}, path={}, status={}, errorCode={}",
                     correlationId,
-                    request.getMethod(),
-                    request.getRequestURI(),
+                    method,
+                    path,
                     httpStatus,
                     errorCode,
                     exception
             );
+        } else {
+            log.debug("Request rejected. correlationId={}, method={}, path={}, status={}, errorCode={}",
+                    correlationId, method, path, httpStatus, errorCode);
         }
 
         ErrorLogDocument document = new ErrorLogDocument(
@@ -59,13 +64,13 @@ public class ErrorAuditService {
                 null,
                 "http",
                 exception.getClass().getSimpleName(),
-                request.getMethod(),
-                request.getRequestURI(),
+                method,
+                path,
                 httpStatus,
                 errorCode.name(),
                 exception.getClass().getName(),
                 sanitize(exception.getMessage(), MAX_MESSAGE_LENGTH),
-                sanitize(stackTrace(exception), MAX_STACK_TRACE_LENGTH),
+                httpStatus >= 500 ? sanitize(stackTrace(exception), MAX_STACK_TRACE_LENGTH) : null,
                 transactionOutcome,
                 Map.of(),
                 0,

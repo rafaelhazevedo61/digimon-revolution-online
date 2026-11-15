@@ -33,7 +33,9 @@ management:
 
 logging:
   level:
-    org.springframework.jdbc: INFO
+    root: INFO
+    org.springframework.jdbc: ${DRO_JDBC_LOG_LEVEL:INFO}
+    org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver: ERROR
 
 dro:
   maintenance:

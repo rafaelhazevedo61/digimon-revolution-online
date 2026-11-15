@@ -6,6 +6,7 @@ import com.dro.shared.automation.AutomationFailureException;
 import com.dro.modules.mail.domain.MailMessageType;
 import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.mission.infra.MissionInstanceRepository;
+import com.dro.shared.exception.BusinessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -70,10 +71,16 @@ public class MissionAutomationJob {
                     } else {
                         log.error("Could not notify player because mission {} was not found", id);
                     }
-                    log.warn("Paused mission automation for {} because the inventory stack is full", id);
+                    log.debug("Mission automation paused. missionId={}, reason={}", id, AutomationFailureCode.INVENTORY_STACK_FULL);
                 } else {
                     processor.pauseAutomation(id, "AUTOMATION_ERROR", AutomationFailureCode.TRANSIENT_DATABASE_ERROR.name());
-                    log.error("Could not process automatic mission {}; automation paused", id, exception);
+                    if (exception instanceof BusinessException rejection && rejection.getStatus().is4xxClientError()
+                            && failureCode != AutomationFailureCode.TRANSIENT_DATABASE_ERROR) {
+                        log.debug("Mission automation paused by game rule. missionId={}, reason={}",
+                                id, failureCode == null ? rejection.getCode() : failureCode);
+                    } else {
+                        log.error("Could not process automatic mission {}; automation paused", id, exception);
+                    }
                 }
             }
         });

@@ -51,6 +51,7 @@ class ErrorAuditServiceTest {
         assertThat(document.path()).isEqualTo("/mail");
         assertThat(document.transactionOutcome()).isEqualTo(TransactionOutcome.REJECTED);
         assertThat(document.message()).doesNotContain("\u0000");
+        assertThat(document.stackTrace()).isNull();
         assertThat(document.severity()).isEqualTo(AuditSeverity.WARN);
     }
 

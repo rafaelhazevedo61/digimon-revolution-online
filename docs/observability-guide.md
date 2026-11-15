@@ -16,6 +16,20 @@ Este documento descreve a operação local da infraestrutura de auditoria do **D
 
 As operações críticas gravam o evento no Outbox na mesma transação PostgreSQL que altera o jogo. O processador agendado lê eventos `PENDING` e `FAILED`, publica a auditoria positiva no MongoDB e marca o evento como `PUBLISHED`. Um rollback da transação oficial também remove o evento outbox, evitando auditoria positiva de uma operação que não foi efetivada.
 
+## Logs em tempo de execução
+
+O console usa `INFO` em todos os perfis por padrão. Ative `DRO_JDBC_LOG_LEVEL=DEBUG` temporariamente para diagnosticar conexões JDBC ou `LOGGING_LEVEL_COM_DRO=DEBUG` para investigar decisões do jogo. O SQL do Hibernate permanece desativado por padrão.
+
+| Nível ou destino | Eventos |
+| --- | --- |
+| `INFO` | Inicialização, migrações e resumos de manutenção ou expiração quando há registros afetados. |
+| `WARN` | Retentativas de entrega da auditoria, devolução de itens do leilão bloqueada e falhas recuperadas no registro do tutorial. |
+| `ERROR` | Erros HTTP 5xx, falhas inesperadas nas tarefas, falha ao persistir auditoria e eventos enviados para dead letter. |
+| `DEBUG` | Rejeições HTTP tratadas e pausas esperadas da automação, como falta de energia ou armazém cheio. |
+| Auditoria | Operações administrativas e transações de jogo já instrumentadas, como compras, resgates, abertura de baús e combates. Rejeições HTTP continuam registradas no MongoDB, com stack trace reservado aos 5xx. |
+
+Consultas de catálogo, cálculos de regras, respostas de sucesso rotineiras e ciclos sem trabalho ficam sem log por chamada. Registre falhas na camada que decide o resultado, como o handler HTTP ou o job. Para correlacionar erros, use o identificador da requisição ou da entidade, a operação e um código de motivo. Evite incluir senhas, tokens, corpos de requisição ou parâmetros de conexão em novas mensagens.
+
 ## Execução local
 
 Na raiz do projeto, prepare o ambiente a partir do exemplo, substituindo as senhas locais pelos valores desejados:
