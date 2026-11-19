@@ -83,7 +83,7 @@ function renderMissionTeamCard(team, digimonById, activeMissionDigimonIds = new 
 
 async function renderMissionTeamsPage() {
   const app = document.getElementById("app");
-  showBottomNav("more");
+  showBottomNav("mission-teams");
   app.innerHTML = `
     <div class="page-container mission-teams-page">
       <header class="mb-4 flex items-start justify-between gap-3 border-b border-slate-800 pb-4 lg:items-end">
