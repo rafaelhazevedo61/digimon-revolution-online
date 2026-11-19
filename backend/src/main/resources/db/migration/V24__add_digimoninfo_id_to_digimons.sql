@@ -1,1 +1,0 @@
-ALTER TABLE digimons ADD COLUMN digimon_info_id BIGINT;

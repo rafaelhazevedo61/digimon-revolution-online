@@ -1,6 +1,0 @@
-BEGIN;
-
-ALTER TABLE boss_definitions
-    ADD COLUMN cooldown_enabled BOOLEAN NOT NULL DEFAULT TRUE;
-
-COMMIT;

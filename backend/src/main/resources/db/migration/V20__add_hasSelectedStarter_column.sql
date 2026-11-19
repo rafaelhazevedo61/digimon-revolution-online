@@ -1,2 +1,0 @@
-ALTER TABLE players
-ADD COLUMN has_selected_starter BOOLEAN NOT NULL DEFAULT FALSE;
