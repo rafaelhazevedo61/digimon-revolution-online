@@ -1,0 +1,29 @@
+# Validação do modal de informações do storage
+
+A prévia executada com o mesmo `storage.js` e helpers da aplicação exibiu o modal com identidade do Digimon, raridade, status da coleção, nível, estágio, tipo, observação do Dado de Raridade, progressão de XP, renascimentos, personalidade, especialidade, atributo, elemento, tier, energia, potencial base, estatísticas efetivas com decomposição de bônus e Bits.
+
+A composição desktop foi conferida em viewport ampla. O overlay recebeu `role="dialog"`, `aria-modal="true"`, título associado por `aria-labelledby`, fechamento por botão, clique fora e tecla Escape. O console não apresentou erros durante a montagem.
+
+## Validação responsiva
+
+A primeira captura mobile revelou que a animação global `fade-in` aplicava `translateX(-50%)` ao modal, deslocando-o parcialmente para fora da viewport. Foi criada uma animação específica, `storage-info-modal-fade-in`, que usa apenas deslocamento vertical. Após a correção, o modal ficou centralizado no desktop e ocupou corretamente a largura mobile, com rolagem vertical para o conteúdo completo.
+
+A captura desktop confirmou uma largura confortável, perfil em quatro colunas, potencial em três colunas e estatísticas efetivas distribuídas horizontalmente. A captura mobile confirmou perfil em duas colunas, estatísticas de combate empilhadas e acesso ao restante do conteúdo por rolagem.
+
+## Simplificação de conteúdo
+
+A informação de origem/tipo associada à Digitama foi removida da identidade do modal, que agora mostra apenas nível e estágio no resumo principal. O valor de Bits também foi removido do rodapé, deixando o botão `Fechar` alinhado à direita.
+
+As capturas desktop (1440×1000) e mobile (375×812) confirmaram que a remoção reduziu ruído sem criar desalinhamento ou espaço visual inadequado. As checagens `node --check` e `git diff --check` continuam aprovadas.
+
+## Posicionamento do botão +Info
+
+O botão `+Info` foi retirado da linha de status. Em desktop, ele aparece abaixo da imagem do Digimon, centralizado na coluna visual. Em mobile, ocupa uma linha própria acima de Bloquear/Desbloquear, mantendo os três botões de ação principais na linha seguinte.
+
+A composição foi conferida em 1440×1000 e 375×812. O botão permanece acessível nas duas versões e não interfere no badge de coleção, nos metadados ou nas ações existentes.
+
+## Alinhamento da busca
+
+A lupa da busca estava posicionada em relação à altura total do formulário quando o layout mobile empilhava o input e os botões, fazendo o símbolo descer para fora do centro do campo. Foi adicionado um override mobile que ancora o ícone no centro vertical do input (`top: 1.175rem` e `translateY(-50%)`).
+
+A correção foi validada em 375×500 e 1440×500. No mobile, a lupa ficou centralizada dentro do campo; no desktop, o posicionamento original permaneceu intacto.

@@ -1,0 +1,346 @@
+const eqtState = {
+  templates: [],
+  activeOnly: false,
+  editing: null,
+  search: "",
+  sortCol: "name",
+  sortDir: "asc"
+};
+
+function renderEquipmentTemplatesPage() {
+  setPageHeader(
+    "Equipment Templates",
+    "Gerencie os templates de equipamento do jogo"
+  );
+
+  const app = document.getElementById("app");
+
+  app.innerHTML = `
+    <div class="card mb-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-4 flex-wrap">
+          <input type="text" id="eqt-search" class="input" placeholder="Buscar por nome..." 
+            value="${escapeAttr(eqtState.search)}" oninput="eqtOnSearch(this.value)" style="width:220px" />
+          <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+            <input type="checkbox" id="eqt-active-only" ${eqtState.activeOnly ? "checked" : ""} 
+              onchange="eqtToggleActiveFilter()" class="accent-cyan-500" />
+            Apenas ativos
+          </label>
+        </div>
+
+        <button class="btn-primary" onclick="eqtShowCreateModal()">
+          + Novo Template
+        </button>
+      </div>
+    </div>
+
+    <div id="eqt-result"></div>
+    <div id="eqt-modal"></div>
+  `;
+
+  loadEquipmentTemplates();
+}
+
+async function loadEquipmentTemplates() {
+  const container = document.getElementById("eqt-result");
+  container.innerHTML = `<div class="card"><p class="text-slate-400">Carregando templates...</p></div>`;
+
+  try {
+    const params = {};
+    if (eqtState.activeOnly) params.activeOnly = "true";
+
+    const templates = await apiGet("/admin/equipment-templates", params);
+    eqtState.templates = templates;
+    eqtRenderFiltered();
+  } catch (error) {
+    container.innerHTML = `
+      <div class="card border-red-900 bg-red-950/30">
+        <h3 class="font-bold text-red-300 mb-2">Erro ao carregar templates</h3>
+        <p class="text-red-200">${escapeHtml(error.message)}</p>
+      </div>
+    `;
+  }
+}
+
+function eqtOnSearch(value) {
+  eqtState.search = value;
+  eqtRenderFiltered();
+}
+
+function eqtToggleSort(col) {
+  if (eqtState.sortCol === col) {
+    eqtState.sortDir = eqtState.sortDir === "asc" ? "desc" : "asc";
+  } else {
+    eqtState.sortCol = col;
+    eqtState.sortDir = "asc";
+  }
+  eqtRenderFiltered();
+}
+
+function eqtRenderFiltered() {
+  let filtered = [...eqtState.templates];
+
+  if (eqtState.search.trim()) {
+    const q = eqtState.search.trim().toLowerCase();
+    filtered = filtered.filter(t => t.name.toLowerCase().includes(q));
+  }
+
+  const col = eqtState.sortCol;
+  const dir = eqtState.sortDir === "asc" ? 1 : -1;
+
+  filtered.sort((a, b) => {
+    let va = a[col];
+    let vb = b[col];
+    if (col === "tier" || col === "bonusHp" || col === "bonusAttack" || col === "bonusDefense") {
+      return ((va || 0) - (vb || 0)) * dir;
+    }
+    if (col === "active") {
+      return ((va ? 1 : 0) - (vb ? 1 : 0)) * dir;
+    }
+    va = (va || "").toString().toLowerCase();
+    vb = (vb || "").toString().toLowerCase();
+    return va.localeCompare(vb) * dir;
+  });
+
+  renderEquipmentTemplatesTable(filtered);
+}
+
+function eqtSortIcon(col) {
+  if (eqtState.sortCol !== col) return '<span class="text-slate-600 ml-1">&#8597;</span>';
+  return eqtState.sortDir === "asc"
+    ? '<span class="text-cyan-400 ml-1">&#9650;</span>'
+    : '<span class="text-cyan-400 ml-1">&#9660;</span>';
+}
+
+function renderEquipmentTemplatesTable(templates) {
+  const container = document.getElementById("eqt-result");
+
+  const total = eqtState.templates.length;
+  const shown = templates.length;
+  const countLabel = eqtState.search.trim() ? `${shown} de ${total}` : `${total}`;
+
+  container.innerHTML = `
+    <div class="mb-4">
+      <h3 class="text-lg font-bold">Templates de Equipamento</h3>
+      <p class="text-sm text-slate-400">Total: ${countLabel}</p>
+    </div>
+
+    <div class="table-wrapper">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="cursor-pointer select-none" onclick="eqtToggleSort('name')">Nome ${eqtSortIcon('name')}</th>
+            <th class="cursor-pointer select-none" onclick="eqtToggleSort('slot')">Slot ${eqtSortIcon('slot')}</th>
+            <th class="cursor-pointer select-none" onclick="eqtToggleSort('setCode')">Set ${eqtSortIcon('setCode')}</th>
+            <th class="cursor-pointer select-none" onclick="eqtToggleSort('tier')">Tier ${eqtSortIcon('tier')}</th>
+            <th class="cursor-pointer select-none" onclick="eqtToggleSort('bonusHp')">HP ${eqtSortIcon('bonusHp')}</th>
+            <th class="cursor-pointer select-none" onclick="eqtToggleSort('bonusAttack')">ATK ${eqtSortIcon('bonusAttack')}</th>
+            <th class="cursor-pointer select-none" onclick="eqtToggleSort('bonusDefense')">DEF ${eqtSortIcon('bonusDefense')}</th>
+            <th class="cursor-pointer select-none" onclick="eqtToggleSort('active')">Status ${eqtSortIcon('active')}</th>
+            <th>Atualizado</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${templates.map(renderEqtRow).join("")}
+        </tbody>
+      </table>
+    </div>
+
+    ${templates.length === 0 ? '<div class="card mt-4"><p class="text-slate-400">Nenhum template encontrado.</p></div>' : ""}
+  `;
+  container.querySelectorAll("[data-eqt-edit]").forEach(button => {
+    button.addEventListener("click", () => eqtShowEditModal(button.dataset.eqtEdit));
+  });
+  container.querySelectorAll("[data-eqt-toggle]").forEach(button => {
+    button.addEventListener("click", () => eqtToggleActive(button.dataset.eqtToggle));
+  });
+}
+
+function renderEqtRow(t) {
+  const statusClass = t.active ? "badge-success" : "badge-danger";
+  const statusText = t.active ? "Ativo" : "Inativo";
+
+  return `
+    <tr>
+      <td class="font-semibold">${escapeHtml(t.name)}</td>
+      <td><span class="badge">${escapeHtml(t.slot)}</span></td>
+      <td><span class="badge">${escapeHtml(t.setCode || '-')}</span></td>
+      <td>${t.tier || '-'}</td>
+      <td>${t.bonusHp > 0 ? `+${t.bonusHp}` : "-"}</td>
+      <td>${t.bonusAttack > 0 ? `+${t.bonusAttack}` : "-"}</td>
+      <td>${t.bonusDefense > 0 ? `+${t.bonusDefense}` : "-"}</td>
+      <td><span class="badge ${statusClass}">${statusText}</span></td>
+      <td>
+        <div class="text-xs text-slate-400">${eqtFormatDate(t.updatedAt)}</div>
+        <div class="text-xs text-slate-500">por ${escapeHtml(t.updatedBy || "-")}</div>
+      </td>
+      <td>
+        <div class="flex gap-2">
+          <button class="btn-sm btn-secondary" data-eqt-edit="${escapeAttr(t.name)}">
+            Editar
+          </button>
+          <button class="btn-sm ${t.active ? 'btn-warning' : 'btn-success-outline'}" data-eqt-toggle="${escapeAttr(t.name)}">
+            ${t.active ? "Desativar" : "Ativar"}
+          </button>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function eqtToggleActiveFilter() {
+  eqtState.activeOnly = document.getElementById("eqt-active-only").checked;
+  loadEquipmentTemplates();
+}
+
+function eqtShowCreateModal() {
+  eqtState.editing = null;
+  eqtRenderModal("Novo Template", {
+    name: "",
+    slot: "WEAPON",
+    setCode: "BERSERKER",
+    tier: 1,
+    bonusHp: 0,
+    bonusAttack: 0,
+    bonusDefense: 0
+  }, false);
+}
+
+function eqtShowEditModal(name) {
+  const template = eqtState.templates.find(t => t.name === name);
+  if (!template) return;
+  eqtState.editing = name;
+  eqtRenderModal("Editar Template", template, true);
+}
+
+function eqtRenderModal(title, data, isEdit) {
+  const modal = document.getElementById("eqt-modal");
+
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="eqtCloseModal()">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold">${escapeHtml(title)}</h3>
+          <button class="text-slate-400 hover:text-white text-2xl" onclick="eqtCloseModal()">&times;</button>
+        </div>
+
+        <form id="eqt-form" onsubmit="eqtSubmitForm(event)">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+              <label class="text-sm text-slate-400">Nome</label>
+              <input id="eqt-name" class="input mt-1" value="${escapeAttr(data.name)}"
+                ${isEdit ? "disabled" : ""} required />
+            </div>
+
+            <div>
+              <label class="text-sm text-slate-400">Slot</label>
+              <select id="eqt-slot" class="input mt-1">
+                ${eqtSlotOptions(data.slot)}
+              </select>
+            </div>
+
+            <div>
+              <label class="text-sm text-slate-400">Set</label>
+              <select id="eqt-set" class="input mt-1">
+                ${eqtSetOptions(data.setCode)}
+              </select>
+            </div>
+
+            <div>
+              <label class="text-sm text-slate-400">Tier</label>
+              <input id="eqt-tier" type="number" min="1" max="10" class="input mt-1" value="${data.tier || 1}" required />
+            </div>
+
+            <div>
+              <label class="text-sm text-slate-400">Bonus HP</label>
+              <input id="eqt-hp" type="number" min="0" class="input mt-1" value="${data.bonusHp}" required />
+            </div>
+
+            <div>
+              <label class="text-sm text-slate-400">Bonus ATK</label>
+              <input id="eqt-atk" type="number" min="0" class="input mt-1" value="${data.bonusAttack}" required />
+            </div>
+
+            <div>
+              <label class="text-sm text-slate-400">Bonus DEF</label>
+              <input id="eqt-def" type="number" min="0" class="input mt-1" value="${data.bonusDefense}" required />
+            </div>
+          </div>
+
+          <div class="mt-3 p-2 rounded bg-slate-800 text-xs text-slate-500">
+            Raridade e definida por instancia (no grant/drop), nao no template.
+          </div>
+
+          <div id="eqt-form-error" class="hidden mt-4 p-3 rounded-lg bg-red-950/30 border border-red-900 text-red-200 text-sm"></div>
+
+          <div class="flex gap-3 mt-6">
+            <button type="submit" class="btn-primary flex-1">${isEdit ? "Salvar" : "Criar"}</button>
+            <button type="button" class="btn-secondary flex-1" onclick="eqtCloseModal()">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+async function eqtSubmitForm(event) {
+  event.preventDefault();
+
+  const errorDiv = document.getElementById("eqt-form-error");
+  errorDiv.classList.add("hidden");
+
+  const body = {
+    slot: document.getElementById("eqt-slot").value,
+    setCode: document.getElementById("eqt-set").value,
+    tier: Number(document.getElementById("eqt-tier").value),
+    bonusHp: Number(document.getElementById("eqt-hp").value),
+    bonusAttack: Number(document.getElementById("eqt-atk").value),
+    bonusDefense: Number(document.getElementById("eqt-def").value)
+  };
+
+  try {
+    if (eqtState.editing) {
+      await apiPut(`/admin/equipment-templates/${encodeURIComponent(eqtState.editing)}`, body);
+    } else {
+      body.name = document.getElementById("eqt-name").value.trim();
+      if (!body.name) throw new Error("Nome é obrigatório");
+      await apiPost("/admin/equipment-templates", body);
+    }
+
+    eqtCloseModal();
+    loadEquipmentTemplates();
+  } catch (error) {
+    errorDiv.textContent = error.message;
+    errorDiv.classList.remove("hidden");
+  }
+}
+
+async function eqtToggleActive(name) {
+  try {
+    await apiPatch(`/admin/equipment-templates/${encodeURIComponent(name)}/toggle-active`);
+    loadEquipmentTemplates();
+  } catch (error) {
+    alert("Erro ao alterar status: " + error.message);
+  }
+}
+
+function eqtCloseModal() {
+  document.getElementById("eqt-modal").innerHTML = "";
+}
+
+function eqtSlotOptions(selected) {
+  const slots = ["WEAPON", "ARMOR", "ACCESSORY"];
+  return slots.map(s => `<option value="${s}" ${s === selected ? "selected" : ""}>${s}</option>`).join("");
+}
+
+function eqtSetOptions(selected) {
+  const sets = ["BERSERKER", "GUARDIAN", "VITALITY", "BALANCED"];
+  return sets.map(s => `<option value="${s}" ${s === selected ? "selected" : ""}>${s}</option>`).join("");
+}
+
+function eqtFormatDate(dateStr) {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}

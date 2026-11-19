@@ -1,0 +1,107 @@
+/* Desktop-only layout improvements for the Auction House.
+   Mobile/tablet keep the existing game.css structure unchanged. */
+
+@media (min-width: 1024px) {
+  .page-container:has(#auction-content) {
+    max-width: 86rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  .page-container:has(#auction-content) > .flex.items-center.justify-between.mb-4 {
+    min-height: 5.5rem;
+    padding: 0.25rem 0.5rem 1rem;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.55);
+  }
+
+  .page-container:has(#auction-content) > .flex.gap-2.mb-4.w-full {
+    width: min(42rem, 100%);
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1.5rem;
+  }
+
+  .page-container:has(#auction-content) #auction-content {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 1rem;
+  }
+
+  .page-container:has(#auction-content) #auction-content > * {
+    margin-top: 0 !important;
+    min-width: 0;
+  }
+
+  /* Filter/header cards and pagination should always use the whole desktop width. */
+  .page-container:has(#auction-content) #auction-content > :first-child,
+  .page-container:has(#auction-content) #auction-content > :last-child {
+    grid-column: 1 / -1;
+  }
+
+  /* Market filter card: search + category + rarity in one desktop row. */
+  .page-container:has(#auction-content) #auction-content > .card:first-child:has(#auction-search) > .grid.grid-cols-2 {
+    grid-template-columns: minmax(18rem, 2fr) minmax(11rem, 1fr) minmax(11rem, 1fr);
+    align-items: end;
+  }
+
+  .page-container:has(#auction-content) #auction-content > .card:first-child:has(#auction-search) > .grid.grid-cols-2 > .col-span-2 {
+    grid-column: auto;
+  }
+
+  .page-container:has(#auction-content) #auction-content > .card:first-child:has(#auction-search) > .grid.grid-cols-2.mt-3 {
+    grid-template-columns: minmax(10rem, 1fr) minmax(10rem, 1fr);
+    width: min(28rem, 100%);
+    margin-left: auto;
+  }
+
+  /* Publication type buttons form their own equal-width row, not the market filters. */
+  .page-container:has(#auction-content) #auction-content > .card:first-child:not(:has(#auction-search)) > .grid.grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    max-width: 70rem;
+    margin-left: auto;
+    margin-right: auto;
+    align-items: stretch;
+  }
+
+  .page-container:has(#auction-content) #auction-content > .card:first-child:not(:has(#auction-search)) > .grid.grid-cols-2 > button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Listing cards gain breathing room without becoming excessively tall. */
+  .page-container:has(#auction-content) #auction-content > .card:not(:first-child) {
+    min-height: 9.25rem;
+  }
+
+  .page-container:has(#auction-content) #auction-content > .card:not(:first-child) .font-bold.text-lg {
+    white-space: nowrap;
+  }
+
+  /* Publication form benefits from the wider canvas but stays readable. */
+  .page-container:has(#auction-content) #auction-content > .card:first-child:only-child,
+  .page-container:has(#auction-content) #auction-content > .card:first-child:nth-last-child(1) {
+    grid-column: 1 / -1;
+  }
+
+  .page-container:has(#auction-content) #auction-content form {
+    max-width: 70rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (min-width: 1440px) {
+  .page-container:has(#auction-content) {
+    max-width: 92rem;
+  }
+
+  .page-container:has(#auction-content) #auction-content {
+    gap: 1.15rem;
+  }
+}

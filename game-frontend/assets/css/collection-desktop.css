@@ -1,0 +1,147 @@
+@media (min-width: 1024px) {
+  .collection-auto-page {
+    width: min(1240px, calc(100vw - 64px));
+    max-width: 1240px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .collection-auto-header {
+    align-items: flex-end;
+    margin-bottom: 18px;
+  }
+
+  .collection-auto-header h2 {
+    font-size: 1.75rem;
+    line-height: 2rem;
+  }
+
+  .collection-auto-header > div:first-child > p:last-child {
+    font-size: 0.875rem;
+    max-width: 720px;
+  }
+
+  .collection-auto-notice {
+    margin-bottom: 16px;
+    padding: 18px 20px;
+  }
+
+  .collection-auto-notice > div {
+    align-items: center;
+  }
+
+  .collection-auto-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .collection-stat-card {
+    min-height: 132px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .collection-stat-card > p:first-child {
+    font-size: 2rem;
+    line-height: 2.25rem;
+  }
+
+  .collection-stat-card > p:nth-child(2) {
+    font-size: 0.75rem;
+  }
+
+  .collection-auto-content-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.8fr) minmax(0, 2.2fr);
+    gap: 16px;
+    align-items: start;
+  }
+
+  .collection-milestones-card,
+  .collection-entries-card {
+    margin-bottom: 0;
+    min-height: 100%;
+  }
+
+  .collection-milestones-card {
+    padding: 18px;
+  }
+
+  .collection-milestones-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .collection-milestones-summary .btn-sm {
+    width: 100%;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  .collection-entries-card {
+    padding: 18px;
+  }
+
+  .collection-entries-header {
+    margin-bottom: 14px;
+  }
+
+  .collection-recent-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .collection-recent-entry {
+    min-height: 58px;
+    padding: 12px 14px;
+  }
+
+  #collection-milestones-overlay,
+  #collection-album-overlay {
+    align-items: center !important;
+    padding: 32px;
+  }
+
+  #collection-milestones-overlay > div {
+    width: min(680px, calc(100vw - 64px)) !important;
+    max-width: 680px !important;
+    border-radius: 18px !important;
+    padding: 24px !important;
+    max-height: 82vh !important;
+  }
+
+  #collection-album-overlay > div {
+    width: min(1180px, calc(100vw - 64px)) !important;
+    max-width: 1180px !important;
+    border-radius: 18px !important;
+    padding: 24px !important;
+    max-height: 88vh !important;
+  }
+
+  #collection-album-content > div {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+  }
+}
+
+@media (min-width: 1440px) {
+  .collection-auto-page {
+    width: min(1380px, calc(100vw - 96px));
+    max-width: 1380px;
+  }
+
+  .collection-auto-content-grid {
+    grid-template-columns: 340px minmax(0, 1fr);
+  }
+
+  .collection-recent-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  #collection-album-content > div {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}

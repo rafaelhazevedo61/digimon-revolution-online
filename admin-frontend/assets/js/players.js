@@ -1,0 +1,431 @@
+const playerState = {
+  page: 0,
+  size: 20,
+  username: "",
+  email: "",
+  selectedDigitama: "",
+  starterSelected: "",
+  lastResult: null
+};
+
+function renderPlayersPage() {
+  setPageHeader(
+    "Players",
+    "Consulte os jogadores cadastrados e dados principais da conta"
+  );
+
+  const app = document.getElementById("app");
+
+  app.innerHTML = `
+      <div class="card mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+  
+          <div>
+            <label class="text-sm text-slate-400">Username</label>
+            <input id="player-filter-username" class="input mt-1" placeholder="Ex: rafael" value="${escapeAttr(playerState.username)}" />
+          </div>
+  
+          <div>
+            <label class="text-sm text-slate-400">Email</label>
+            <input id="player-filter-email" class="input mt-1" placeholder="Ex: gmail" value="${escapeAttr(playerState.email)}" />
+          </div>
+  
+          <div>
+            <label class="text-sm text-slate-400">Digitama</label>
+            <select id="player-filter-selected-digitama" class="input mt-1">
+              ${digitamaOptions(playerState.selectedDigitama)}
+            </select>
+          </div>
+  
+          <div>
+            <label class="text-sm text-slate-400">Starter selecionado</label>
+            <select id="player-filter-starter-selected" class="input mt-1">
+              ${booleanOptions(playerState.starterSelected)}
+            </select>
+          </div>
+  
+          <div>
+            <label class="text-sm text-slate-400">Itens por página</label>
+            <select id="player-filter-size" class="input mt-1">
+              ${sizeOptions(playerState.size)}
+            </select>
+          </div>
+  
+        </div>
+  
+        <div class="flex flex-col md:flex-row gap-3 mt-6">
+          <button class="btn-primary" onclick="applyPlayerFilters()">
+            Buscar
+          </button>
+  
+          <button class="btn-secondary" onclick="clearPlayerFilters()">
+            Limpar filtros
+          </button>
+        </div>
+      </div>
+  
+      <div id="players-result"></div>
+    `;
+
+  loadPlayers();
+}
+
+async function loadPlayers() {
+  const container = document.getElementById("players-result");
+
+  container.innerHTML = `
+      <div class="card">
+        <p class="text-slate-400">Carregando players...</p>
+      </div>
+    `;
+
+  try {
+    const result = await apiGet("/admin/players", {
+      page: playerState.page,
+      size: playerState.size,
+      username: playerState.username,
+      email: playerState.email,
+      selectedDigitama: playerState.selectedDigitama,
+      starterSelected: playerState.starterSelected
+    });
+
+    playerState.lastResult = result;
+    renderPlayersResult(result);
+  } catch (error) {
+    container.innerHTML = `
+        <div class="card border-red-900 bg-red-950/30">
+          <h3 class="font-bold text-red-300 mb-2">Erro ao carregar players</h3>
+          <p class="text-red-200">${escapeHtml(error.message)}</p>
+          <p class="text-sm text-slate-400 mt-4">
+            Verifique se o backend está rodando e se o endpoint GET /admin/players existe.
+          </p>
+        </div>
+      `;
+  }
+}
+
+function renderPlayersResult(result) {
+  const container = document.getElementById("players-result");
+  const items = result.items || [];
+
+  container.innerHTML = `
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+        <div>
+          <h3 class="text-lg font-bold">Players encontrados</h3>
+          <p class="text-sm text-slate-400">
+            Total: ${result.totalItems ?? 0} | Página ${result.page + 1} de ${result.totalPages || 1}
+          </p>
+        </div>
+  
+        <div class="flex gap-2">
+          <button class="btn-secondary" ${!result.hasPrevious ? "disabled" : ""} onclick="previousPlayerPage()">
+            Anterior
+          </button>
+  
+          <button class="btn-secondary" ${!result.hasNext ? "disabled" : ""} onclick="nextPlayerPage()">
+            Próxima
+          </button>
+        </div>
+      </div>
+  
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Email</th>
+              <th>Digitama</th>
+              <th>Starter Selected</th>
+              <th>Digimon Ativo</th>
+              <th>Última Missão</th>
+              <th>Criado em</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map(renderPlayerRow).join("")}
+          </tbody>
+        </table>
+      </div>
+  
+      ${items.length === 0 ? renderEmptyPlayers() : ""}
+    `;
+  container.querySelectorAll("[data-player-vip]").forEach(button => {
+    button.addEventListener("click", () => {
+      const player = items.find(item => String(item.id) === button.dataset.playerVip);
+      if (player) adminOpenVip(player);
+    });
+  });
+  container.querySelectorAll("[data-player-reset]").forEach(button => {
+    button.addEventListener("click", () => {
+      const player = items.find(item => String(item.id) === button.dataset.playerReset);
+      if (player) adminResetPassword(player);
+    });
+  });
+}
+
+function renderPlayerRow(player) {
+  return `
+      <tr>
+        <td>
+          <div class="font-semibold text-cyan-300">${escapeHtml(player.username)}</div>
+          <div class="text-xs text-slate-500 font-mono">${escapeHtml(player.id)}</div>
+        </td>
+  
+        <td>
+          <div class="text-slate-200">${escapeHtml(player.email)}</div>
+        </td>
+  
+        <td>
+          ${player.selectedDigitama ? `<span class="badge">${escapeHtml(player.selectedDigitama)}</span>` : `<span class="text-slate-500">-</span>`}
+        </td>
+  
+        <td>
+          ${player.starterSelected ? `<span class="badge">Sim</span>` : `<span class="badge">Não</span>`}
+        </td>
+  
+        <td>
+          ${player.activeDigimonId
+      ? `<div class="font-mono text-xs text-slate-300">${escapeHtml(player.activeDigimonId)}</div>`
+      : `<span class="text-slate-500">-</span>`
+    }
+        </td>
+  
+        <td>
+          ${formatDateTime(player.lastMissionAt)}
+        </td>
+  
+        <td>
+          ${formatDateTime(player.createdAt)}
+        </td>
+
+        <td>
+          <div class="text-xs text-amber-300 mb-1">
+            ${new Date(player.vipExpiresAt).getTime() > Date.now() ? `VIP até ${formatDateTime(player.vipExpiresAt)}` : "VIP inativo"}
+          </div>
+          <button type="button" class="btn-secondary text-xs" data-player-vip="${escapeAttr(player.id)}">Gerenciar VIP</button>
+          <button class="btn-secondary text-xs" data-player-reset="${escapeAttr(player.id)}">
+            Resetar senha
+          </button>
+        </td>
+      </tr>
+    `;
+}
+
+function renderEmptyPlayers() {
+  return `
+      <div class="card mt-4">
+        <p class="text-slate-400">Nenhum player encontrado com os filtros atuais.</p>
+      </div>
+    `;
+}
+
+function applyPlayerFilters() {
+  playerState.username = document.getElementById("player-filter-username").value;
+  playerState.email = document.getElementById("player-filter-email").value;
+  playerState.selectedDigitama = document.getElementById("player-filter-selected-digitama").value;
+  playerState.starterSelected = document.getElementById("player-filter-starter-selected").value;
+  playerState.size = Number(document.getElementById("player-filter-size").value);
+  playerState.page = 0;
+
+  loadPlayers();
+}
+
+function clearPlayerFilters() {
+  playerState.page = 0;
+  playerState.size = 20;
+  playerState.username = "";
+  playerState.email = "";
+  playerState.selectedDigitama = "";
+  playerState.starterSelected = "";
+
+  renderPlayersPage();
+}
+
+function previousPlayerPage() {
+  if (playerState.page > 0) {
+    playerState.page--;
+    loadPlayers();
+  }
+}
+
+function nextPlayerPage() {
+  if (playerState.lastResult?.hasNext) {
+    playerState.page++;
+    loadPlayers();
+  }
+}
+
+function digitamaOptions(selectedValue) {
+  const options = [
+    { label: "Todos", value: "" },
+    { label: "Starter", value: "STARTER" },
+    { label: "Fire", value: "FIRE" },
+    { label: "Water", value: "WATER" },
+    { label: "Nature", value: "NATURE" }
+  ];
+
+  return options.map(option => `
+      <option value="${option.value}" ${String(selectedValue) === option.value ? "selected" : ""}>
+        ${option.label}
+      </option>
+    `).join("");
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return `<span class="text-slate-500">-</span>`;
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return `<span class="text-slate-400">${value}</span>`;
+  }
+
+  return `
+      <span class="text-slate-300">
+        ${date.toLocaleString("pt-BR")}
+      </span>
+    `;
+}
+
+function adminOpenVip(player) {
+  const dialog = document.createElement("dialog");
+  dialog.className = "card w-full max-w-md bg-slate-900 text-slate-100 border border-slate-700";
+  dialog.setAttribute("aria-labelledby", "admin-vip-title");
+  dialog.innerHTML = `
+    <form class="space-y-4">
+      <h3 id="admin-vip-title" class="font-bold text-lg">VIP · ${escapeHtml(player.username)}</h3>
+      <div class="flex flex-wrap gap-2" aria-label="Aplicar passe VIP">
+        <button class="btn-secondary" type="button" data-vip-plan="ONE_DAY">Adicionar 1 dia</button>
+        <button class="btn-secondary" type="button" data-vip-plan="SEVEN_DAYS">Adicionar 7 dias</button>
+        <button class="btn-secondary" type="button" data-vip-plan="THIRTY_DAYS">Adicionar 30 dias</button>
+      </div>
+      <label class="block text-sm">Validade no seu horário local
+        <input name="expiresAt" type="datetime-local" class="input w-full mt-1" required />
+      </label>
+      <p role="alert" class="text-sm text-red-300"></p>
+      <div class="flex flex-wrap gap-2">
+        <button class="btn-primary" type="submit">Salvar validade</button>
+        ${player.vipExpiresAt ? '<button class="btn-secondary" type="button" data-vip-revoke>Revogar VIP</button>' : ""}
+        <button class="btn-secondary" type="button" data-vip-close>Fechar</button>
+      </div>
+    </form>`;
+  const form = dialog.querySelector("form");
+  const dateInput = form.elements.expiresAt;
+  if (player.vipExpiresAt) {
+    const date = new Date(player.vipExpiresAt);
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    dateInput.value = local.toISOString().slice(0, 16);
+  }
+
+  async function save(request) {
+    const buttons = form.querySelectorAll("button");
+    buttons.forEach(button => { button.disabled = true; });
+    try {
+      await request();
+      dialog.close();
+      await loadPlayers();
+    } catch (err) {
+      form.querySelector("[role=alert]").textContent = err.message;
+    } finally {
+      buttons.forEach(button => { button.disabled = false; });
+    }
+  }
+
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    const expiry = new Date(dateInput.value);
+    if (!(expiry.getTime() > Date.now())) {
+      form.querySelector("[role=alert]").textContent = "Informe uma data de validade futura.";
+      return;
+    }
+    save(() => apiPut(`/admin/players/${player.id}/vip`, { expiresAt: expiry.toISOString() }));
+  });
+  dialog.querySelectorAll("[data-vip-plan]").forEach(button => {
+    button.addEventListener("click", () => save(() =>
+      apiPost(`/admin/players/${player.id}/vip/extend`, { plan: button.dataset.vipPlan })));
+  });
+  dialog.querySelector("[data-vip-revoke]")?.addEventListener("click", () =>
+    save(() => apiPut(`/admin/players/${player.id}/vip`, { expiresAt: null })));
+  dialog.querySelector("[data-vip-close]").addEventListener("click", () => dialog.close());
+  dialog.addEventListener("close", () => dialog.remove());
+  document.body.appendChild(dialog);
+  dialog.showModal();
+}
+
+async function adminResetPassword(player) {
+  const generateRandom = window.confirm(
+    `Gerar senha aleatória para ${player.username}?\n\nClique OK para gerar automática.\nClique Cancelar para digitar uma senha manual.`
+  );
+
+  let body = { generateRandom };
+
+  if (!generateRandom) {
+    const newPassword = window.prompt(`Nova senha para ${player.username}:`);
+    if (newPassword === null) return;
+    if (newPassword.length < 8 || newPassword.length > 60) {
+      window.alert("A senha deve ter entre 8 e 60 caracteres.");
+      return;
+    }
+    body.newPassword = newPassword;
+  }
+
+  try {
+    const result = await apiPost(`/admin/players/${player.id}/reset-password`, body);
+    showResetPasswordModal(result.username, result.newPassword);
+  } catch (error) {
+    window.alert(`Erro ao resetar senha: ${error.message}`);
+  }
+}
+
+function showResetPasswordModal(username, password) {
+  const existing = document.getElementById("reset-password-modal");
+  if (existing) existing.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "reset-password-modal";
+  modal.className = "fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4";
+  modal.innerHTML = `
+      <div class="card w-full max-w-md">
+        <h3 class="text-lg font-bold mb-2">Senha redefinida</h3>
+        <p class="text-sm text-slate-400 mb-4">Player: <span id="reset-password-username" class="text-cyan-300"></span></p>
+
+        <label class="text-sm text-slate-400">Nova senha</label>
+        <div class="flex gap-2 mt-1 mb-4">
+          <input id="reset-password-value" type="text" readonly class="input font-mono text-sm flex-1" />
+          <button id="reset-password-copy" class="btn-primary whitespace-nowrap">Copiar</button>
+        </div>
+
+        <div class="flex justify-end gap-2">
+          <button id="reset-password-close" class="btn-secondary">Fechar</button>
+        </div>
+      </div>
+    `;
+
+  document.body.appendChild(modal);
+
+  modal.querySelector("#reset-password-username").textContent = username;
+  const input = modal.querySelector("#reset-password-value");
+  input.value = password;
+  input.focus();
+  input.select();
+
+  modal.querySelector("#reset-password-copy").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(input.value);
+      window.alert("Senha copiada para a área de transferência.");
+    } catch {
+      input.select();
+      document.execCommand("copy");
+      window.alert("Senha selecionada. Use Ctrl+C para copiar.");
+    }
+  });
+
+  modal.querySelector("#reset-password-close").addEventListener("click", () => modal.remove());
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}

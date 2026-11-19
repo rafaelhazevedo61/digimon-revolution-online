@@ -1,0 +1,315 @@
+{
+  "info": {
+    "_postman_id": "19a0cb2e-bfea-4c65-9b0d-efc91d9ec9f7",
+    "name": "DRO - MISSIONS SPRINT 3",
+    "description": "Collection para validar a integração dos Baús da Área com as Missões. O JWT deve ser preenchido localmente na variável playerToken. Execute as pastas na ordem e aguarde o término da missão antes do claim.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "playerToken",
+      "value": ""
+    },
+    {
+      "key": "missionId",
+      "value": "MISSION_1"
+    },
+    {
+      "key": "missionInstanceId",
+      "value": ""
+    },
+    {
+      "key": "missionChestCode",
+      "value": ""
+    },
+    {
+      "key": "missionChestQuantityBefore",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Configuração",
+      "description": "Preencha playerToken com um JWT válido. O jogador deve possuir um Digimon ativo e atender aos requisitos da missão escolhida.",
+      "item": [
+        {
+          "name": "Healthcheck",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "health"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('API disponível', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Healthcheck UP', function () { pm.expect(pm.response.json().status).to.eql('UP'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar inventário antes da missão",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/inventory",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory"]
+            },
+            "description": "Captura a quantidade atual de um baú CHEST_MISSION_* para comparação posterior."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Inventário disponível', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "const inventory = Array.isArray(body) ? body : (body.items || body.inventory || []);",
+                  "const chest = inventory.find(function (item) {",
+                  "    const definition = item.itemDefinition || {};",
+                  "    return item.itemType === 'LOOT_CHEST' || definition.category === 'CHEST';",
+                  "});",
+                  "if (chest) {",
+                  "    pm.collectionVariables.set('missionChestCode', (chest.itemDefinition || {}).code || '');",
+                  "    pm.collectionVariables.set('missionChestQuantityBefore', String(chest.quantity));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 - Missão e Baú da Área",
+      "description": "A missão deve manter XP, Bits e energia. O claim deverá entregar exatamente um item LOOT_CHEST, sem executar o LootRoller legado.",
+      "item": [
+        {
+          "name": "Listar missões disponíveis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/missions",
+              "host": ["{{baseUrl}}"],
+              "path": ["missions"]
+            },
+            "description": "Confirma que a missão escolhida está disponível para o Digimon ativo."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Missões retornam HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "const missions = pm.response.json();",
+                  "const selected = missions.find(function (mission) { return mission.id === pm.collectionVariables.get('missionId'); });",
+                  "pm.test('Missão escolhida está disponível', function () { pm.expect(selected, 'Verifique nível/estágio do Digimon').to.exist; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Iniciar missão",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"missionId\": \"{{missionId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/missions/start",
+              "host": ["{{baseUrl}}"],
+              "path": ["missions", "start"]
+            },
+            "description": "Inicia a missão e captura missionInstanceId. Aguarde até endsAt antes de executar o claim."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Missão iniciada', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Resposta possui missionInstanceId', function () { pm.expect(body.missionInstanceId).to.exist; });",
+                  "pm.collectionVariables.set('missionInstanceId', body.missionInstanceId);",
+                  "console.log('Aguarde endsAt antes do claim:', body.endsAt);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar missões ativas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/missions/active",
+              "host": ["{{baseUrl}}"],
+              "path": ["missions", "active"]
+            },
+            "description": "Executar durante a duração para confirmar que a instância está em andamento."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Missões ativas retornam HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "const active = pm.response.json();",
+                  "pm.test('Instância aparece como ativa', function () {",
+                  "    pm.expect(active.some(function (item) { return item.id === pm.collectionVariables.get('missionInstanceId'); })).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resgatar missão e receber Baú da Área",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/missions/{{missionInstanceId}}/claim",
+              "host": ["{{baseUrl}}", "missions", "{{missionInstanceId}}", "claim"]
+            },
+            "description": "Execute somente depois de endsAt. Esperado: XP e Bits mantidos, recompensa LOOT_CHEST com quantidade 1 e missão marcada como CLAIMED."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Claim retorna HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Claim mantém XP e Bits no response', function () {",
+                  "    pm.expect(body).to.have.property('xpGained');",
+                  "    pm.expect(body).to.have.property('bitsGained');",
+                  "});",
+                  "const chestReward = body.rewards.find(function (reward) { return reward.item === 'LOOT_CHEST'; });",
+                  "pm.test('Claim entrega exatamente um LOOT_CHEST', function () {",
+                  "    pm.expect(chestReward).to.exist;",
+                  "    pm.expect(chestReward.quantity).to.eql(1);",
+                  "    pm.expect(chestReward.itemCode).to.match(/^CHEST_MISSION_/);",
+                  "    pm.expect(chestReward.itemName).to.be.a('string').and.not.empty;",
+                  "});",
+                  "pm.test('Claim não retorna fragmentos genéricos como drop aleatório', function () {",
+                  "    pm.expect(body.rewards.some(function (reward) { return ['FRAGMENT_ROOKIE', 'FRAGMENT_CHAMPION', 'FRAGMENT_ULTIMATE', 'FRAGMENT_MEGA'].includes(reward.item); })).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - Verificação pós-claim",
+      "item": [
+        {
+          "name": "Listar inventário após o claim",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/inventory",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory"]
+            },
+            "description": "Confirma que o inventário recebeu um baú da definição vinculada à missão."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Inventário pós-claim retorna HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "const inventory = Array.isArray(body) ? body : (body.items || body.inventory || []);",
+                  "pm.test('Inventário contém ao menos um LOOT_CHEST', function () {",
+                  "    pm.expect(inventory.some(function (item) { return item.itemType === 'LOOT_CHEST' || (item.itemDefinition || {}).category === 'CHEST'; })).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - Consultas SQL",
+      "description": "Executar no DBeaver/psql depois do claim.\n\n-- Missões vinculadas\nSELECT md.id, md.name, md.area, md.chest_definition_id, cd.code AS chest_code, lt.code AS loot_table_code FROM mission_definitions md JOIN chest_definitions cd ON cd.id = md.chest_definition_id JOIN loot_tables lt ON lt.id = cd.loot_table_id ORDER BY md.area, md.required_level;\n\n-- Pool da missão\nSELECT lt.code, lte.rarity, lte.item_type, lte.material_code, lte.weight, lte.min_quantity, lte.max_quantity FROM mission_definitions md JOIN chest_definitions cd ON cd.id = md.chest_definition_id JOIN loot_tables lt ON lt.id = cd.loot_table_id JOIN loot_table_entries lte ON lte.loot_table_id = lt.id WHERE md.id = 'MISSION_1' ORDER BY lte.rarity, lte.id;\n\n-- Auditoria do claim\nSELECT event_id, event_type, aggregate_type, aggregate_id, status, payload_json FROM audit_outbox_events WHERE event_type = 'MISSION_CLAIMED' ORDER BY created_at DESC;"
+    }
+  ]
+}

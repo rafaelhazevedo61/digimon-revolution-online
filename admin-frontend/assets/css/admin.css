@@ -1,0 +1,374 @@
+.nav-link {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    color: #cbd5e1;
+    background: transparent;
+    text-align: left;
+    transition: all 0.2s ease;
+  }
+  
+  .nav-link:hover {
+    background: #1e293b;
+    color: #ffffff;
+  }
+  
+  .nav-link.active {
+    background: linear-gradient(135deg, #0891b2, #2563eb);
+    color: #ffffff;
+    font-weight: 600;
+  }
+  
+  .nav-link.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  
+  .input {
+    width: 100%;
+    border-radius: 0.75rem;
+    background: #020617;
+    border: 1px solid #334155;
+    padding: 0.65rem 0.85rem;
+    color: #f8fafc;
+    outline: none;
+  }
+  
+  .input:focus {
+    border-color: #06b6d4;
+    box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+  }
+
+  .input-sm {
+    width: auto;
+    min-width: 10rem;
+    padding: 0.45rem 0.65rem;
+    font-size: 0.85rem;
+  }
+  
+  .btn-primary {
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, #0891b2, #2563eb);
+    color: white;
+    padding: 0.65rem 1rem;
+    font-weight: 600;
+    transition: opacity 0.2s ease;
+  }
+  
+  .btn-primary:hover {
+    opacity: 0.9;
+  }
+  
+  .btn-secondary {
+    border-radius: 0.75rem;
+    background: #1e293b;
+    color: #cbd5e1;
+    padding: 0.65rem 1rem;
+    font-weight: 600;
+  }
+  
+  .btn-secondary:hover {
+    background: #334155;
+    color: white;
+  }
+  
+  .card {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 1rem;
+    padding: 1.25rem;
+  }
+  
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: #1e293b;
+    color: #cbd5e1;
+  }
+  
+  .table-wrapper {
+    overflow-x: auto;
+    border-radius: 1rem;
+    border: 1px solid #1e293b;
+  }
+  
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+  }
+  
+  .table th {
+    background: #020617;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: left;
+    padding: 0.9rem;
+    border-bottom: 1px solid #1e293b;
+  }
+  
+  .table td {
+    padding: 0.9rem;
+    border-bottom: 1px solid #1e293b;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+  }
+  
+  .table tr:hover td {
+    background: rgba(30, 41, 59, 0.45);
+  }
+
+  /* --- Small buttons for table actions --- */
+
+  .btn-sm {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .btn-warning {
+    background: #78350f;
+    color: #fbbf24;
+  }
+
+  .btn-warning:hover {
+    background: #92400e;
+  }
+
+  .btn-success-outline {
+    background: transparent;
+    border: 1px solid #22c55e;
+    color: #22c55e;
+  }
+
+  .btn-success-outline:hover {
+    background: rgba(34, 197, 94, 0.1);
+  }
+
+  .btn-danger {
+    background: #7f1d1d;
+    color: #fca5a5;
+  }
+
+  .btn-danger:hover {
+    background: #991b1b;
+  }
+
+  /* --- Status badges --- */
+
+  .badge-success {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+  }
+
+  .badge-danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+  }
+
+  /* --- Rarity badges --- */
+
+  .badge-common {
+    background: #334155;
+    color: #94a3b8;
+  }
+
+  .badge-rare {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+  }
+
+  .badge-epic {
+    background: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+  }
+
+  .badge-legendary {
+    background: rgba(234, 179, 8, 0.15);
+    color: #facc15;
+  }
+
+  .badge-area {
+    background: rgba(16, 185, 129, 0.15);
+    color: #6ee7b7;
+  }
+
+  .card-sm {
+    background: #111c31;
+    border: 1px solid #24344d;
+    border-radius: 0.75rem;
+    padding: 0.85rem;
+  }
+
+  /* --- Modal --- */
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 1rem;
+  }
+
+  .modal-content {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 36rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-wide {
+    max-width: 56rem;
+  }
+
+  .loot-table-modal {
+    max-width: 72rem;
+  }
+
+  .loot-selected-item {
+    min-height: 3.25rem;
+  }
+
+  .loot-selected-item-label {
+    display: block;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+  }
+
+  .loot-entry-layout {
+    display: grid;
+    grid-template-columns: minmax(20rem, 3fr) minmax(11rem, 1.35fr) auto auto;
+    gap: 0.9rem 1rem;
+    align-items: end;
+  }
+
+  .loot-entry-item-field,
+  .loot-entry-rarity-field,
+  .loot-entry-equipment-rarity-field {
+    min-width: 0;
+  }
+
+  .loot-entry-active-field {
+    min-height: 2.75rem;
+    padding: 0 0.25rem 0.2rem;
+    white-space: nowrap;
+  }
+
+  .loot-entry-remove {
+    min-width: 5.75rem;
+    min-height: 2.25rem;
+  }
+
+  .loot-entry-quantity-fields {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(9rem, 1fr));
+    gap: 0.75rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid #24344d;
+  }
+
+  @media (max-width: 900px) {
+    .loot-entry-layout {
+      grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.8fr);
+    }
+
+    .loot-entry-item-field {
+      grid-column: 1 / -1;
+    }
+
+    .loot-entry-active-field,
+    .loot-entry-remove {
+      justify-self: start;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .loot-entry-layout,
+    .loot-entry-quantity-fields {
+      grid-template-columns: 1fr;
+    }
+
+    .loot-entry-item-field,
+    .loot-entry-quantity-fields {
+      grid-column: auto;
+    }
+
+    .loot-entry-active-field,
+    .loot-entry-remove {
+      width: 100%;
+      justify-self: stretch;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .loot-table-modal {
+      max-width: calc(100vw - 2rem);
+      padding: 1rem;
+    }
+  }
+
+  .modal-catalog {
+    max-width: 48rem;
+  }
+
+  /* --- Catalog Browser --- */
+
+  .catalog-tab {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    background: #1e293b;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .catalog-tab:hover {
+    background: #334155;
+    color: #e2e8f0;
+  }
+
+  .catalog-tab-active {
+    background: linear-gradient(135deg, #0891b2, #2563eb);
+    color: #ffffff;
+  }
+
+  .catalog-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 55vh;
+    overflow-y: auto;
+  }
+
+  .catalog-card {
+    background: #020617;
+    border: 1px solid #1e293b;
+    border-radius: 0.75rem;
+    padding: 0.85rem 1rem;
+    transition: border-color 0.2s;
+  }
+
+  .catalog-card:hover {
+    border-color: #0891b2;
+  }

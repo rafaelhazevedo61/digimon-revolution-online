@@ -1,0 +1,5 @@
+CREATE TABLE player_display_preferences (
+    player_id UUID PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+    pagination_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

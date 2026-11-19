@@ -1,0 +1,38 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/dro_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:arisco2017}
+
+  mongodb:
+    uri: ${SPRING_MONGODB_URI:mongodb://127.0.0.1:27017/dro_audit}
+
+dro:
+  app-version: ${DRO_APP_VERSION:0.0.6-SNAPSHOT}
+  gameplay:
+    rarity-reroll:
+      keep-cost-bits: ${DRO_RARITY_REROLL_KEEP_COST_BITS:5000}
+    auto-boss-respawn-after-defeat-enabled: false
+    boss-cooldown-enabled: ${DRO_BOSS_COOLDOWN_ENABLED:false}
+
+    clan-raid:
+      cooldown-enabled: ${DRO_CLAN_RAID_COOLDOWN_ENABLED:false}
+
+    world-boss:
+      cooldown-enabled: ${DRO_WORLD_BOSS_COOLDOWN_ENABLED:true}
+
+    energy:
+      consumption-enabled: ${DRO_ENERGY_CONSUMPTION_ENABLED:true}
+
+    arena:
+      daily-challenge-limit: ${DRO_ARENA_DAILY_CHALLENGE_LIMIT:99}
+
+  registration:
+    invite-required: ${DRO_REGISTRATION_INVITE_REQUIRED:false}
+
+  cors:
+    allowed-origins: ${DRO_ALLOWED_ORIGINS:http://localhost:8080,http://localhost:3000,http://localhost:27017,http://127.0.0.1:5500,http://127.0.0.1:59527,http://127.0.0.1:63501,http://localhost:5500}
+
+  security:
+    jwt:
+      secret: ${DRO_JWT_SECRET:dro-local-development-secret-change-this-before-production-2026}

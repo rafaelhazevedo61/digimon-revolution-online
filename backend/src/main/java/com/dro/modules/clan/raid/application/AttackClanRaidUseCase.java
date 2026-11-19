@@ -1,0 +1,183 @@
+package com.dro.modules.clan.raid.application;
+
+import com.dro.modules.arena.application.DigimonPowerService;
+import com.dro.modules.boss.domain.BossCombatRules;
+import com.dro.modules.boss.domain.BossDefinitionEntity;
+import com.dro.modules.boss.infra.BossDefinitionRepository;
+import com.dro.modules.clan.application.ClanBonusService;
+import com.dro.modules.activitycalendar.application.ActivityCalendarService;
+import com.dro.modules.activitycalendar.domain.ActivitySource;
+import com.dro.modules.clan.domain.Clan;
+import com.dro.modules.clan.domain.ClanRules;
+import com.dro.modules.clan.infra.ClanRepository;
+import com.dro.modules.clan.raid.api.dto.response.AttackClanRaidResponse;
+import com.dro.modules.clan.raid.api.dto.response.ClanRaidRewardResponse;
+import com.dro.modules.boss.api.dto.response.BossDefeatSummaryResponse;
+import com.dro.modules.clan.raid.domain.ClanRaid;
+import com.dro.modules.clan.raid.domain.ClanRaidAttack;
+import com.dro.modules.clan.raid.domain.ClanRaidRules;
+import com.dro.modules.clan.raid.domain.ClanRaidStatus;
+import com.dro.modules.clan.raid.infra.ClanRaidAttackRepository;
+import com.dro.modules.clan.raid.infra.ClanRaidRepository;
+import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.infra.DigimonRepository;
+import com.dro.modules.player.domain.Player;
+import com.dro.modules.player.infra.PlayerRepository;
+import com.dro.modules.server.application.GlobalDamageBuffService;
+import com.dro.shared.config.GameplayConfig;
+import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.NotFoundException;
+import com.dro.shared.util.TokenExtractor;
+import com.dro.shared.gameplay.WeekendDoubleRewardRules;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Componente da camada de caso de uso da aplicação do módulo de Clãs.
+ */
+@Service
+public class AttackClanRaidUseCase {
+    private final PlayerRepository playerRepository;
+    private final DigimonRepository digimonRepository;
+    private final ClanRepository clanRepository;
+    private final BossDefinitionRepository bossDefinitionRepository;
+    private final ClanRaidRepository clanRaidRepository;
+    private final ClanRaidAttackRepository clanRaidAttackRepository;
+    private final ClanRaidService clanRaidService;
+    private final ClanRaidRewardService clanRaidRewardService;
+    private final DigimonPowerService digimonPowerService;
+    private final ClanBonusService clanBonusService;
+    private final GlobalDamageBuffService globalDamageBuffService;
+    private final GameplayConfig gameplayConfig;
+    private final ActivityCalendarService activityCalendarService;
+
+    @Transactional
+    public AttackClanRaidResponse execute(String token) {
+        UUID playerId = TokenExtractor.extractPlayerId(token);
+        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+        if (player.getClanId() == null) {
+            throw new BadRequestException("You must be in a clan to attack the raid");
+        }
+        if (player.getActiveDigimonId() == null) {
+            throw new BadRequestException("No active Digimon selected");
+        }
+        Digimon digimon = digimonRepository.findById(player.getActiveDigimonId()).orElseThrow(() -> new NotFoundException("Active Digimon not found"));
+        if (!digimon.getPlayerId().equals(playerId)) {
+            throw new BadRequestException("Digimon does not belong to player");
+        }
+        ClanRaid raid = clanRaidService.getOrCreateToday(player.getClanId());
+        if (raid.getStatus() == ClanRaidStatus.DEFEATED || raid.getRemainingHp() <= 0) {
+            throw new BadRequestException("The clan raid has already been defeated today");
+        }
+        BossDefinitionEntity boss = bossDefinitionRepository.findById(raid.getBossId()).orElseThrow(() -> new NotFoundException("Boss not found"));
+        validateRequirements(boss, digimon);
+        ClanRaidAttack lastAttack = clanRaidAttackRepository
+                .findFirstByClanRaidIdAndPlayerIdOrderByCreatedAtDesc(raid.getId(), playerId)
+                .orElse(null);
+        Instant now = Instant.now();
+        Duration cooldown = BossCombatRules.attackCooldown(boss.getCooldownMinutes(), player.hasActiveVip(now));
+        if (gameplayConfig.isClanRaidCooldownEnabled() && lastAttack != null && lastAttack.getCreatedAt() != null) {
+            Instant nextAttackAt = lastAttack.getCreatedAt().plus(cooldown);
+            if (now.isBefore(nextAttackAt)) {
+                long remainingSeconds = Math.max(1, Duration.between(now, nextAttackAt).toSeconds());
+                long remainingMinutes = (remainingSeconds + 59) / 60;
+                throw new BadRequestException("Clan raid attack cooldown active. Try again in " + remainingMinutes + " minute(s).");
+            }
+        }
+        int energyCost = 0;
+        if (gameplayConfig.isEnergyConsumptionEnabled()) {
+            int maxEnergyBonus = clanBonusService.getMaxEnergyBonus(player.getClanId());
+            digimon.regenerateEnergy(maxEnergyBonus);
+            int baseEnergyCost = boss.getEnergyCost();
+            energyCost = applyCostReduction(baseEnergyCost, clanBonusService.getEnergyCostMultiplier(player.getClanId()));
+            if (digimon.getEnergy() < energyCost) {
+                throw new BadRequestException("Not enough energy. Required: " + energyCost + ", current: " + digimon.getEnergy());
+            }
+            digimon.consumeEnergy(energyCost);
+        }
+        double digimonPower = digimonPowerService.calculatePower(digimon, player.getClanId());
+        double bossPower = BossCombatRules.calculatePower(boss.getHp(), boss.getAtk(), boss.getDef());
+        int winChance = BossCombatRules.calculateWinChance(digimonPower, bossPower);
+        int damage = (int) Math.round(ClanRaidRules.calculateDamage(raid.getMaxHp(), winChance) * globalDamageBuffService.getMultiplier());
+        int actualDamage = Math.min(damage, raid.getRemainingHp());
+        Instant rewardTime = Instant.now();
+        int xpGained = WeekendDoubleRewardRules.multiplyXp(ClanRaidRules.hitXp(boss.getBaseXpReward(), boss.getDefeatXpPercent()), rewardTime);
+        int bitsGained = WeekendDoubleRewardRules.multiplyBits(ClanRaidRules.hitBits(boss.getBaseBitsReward(), boss.getDefeatXpPercent()), rewardTime);
+        digimon.gainExperience(xpGained);
+        digimon.setBits(digimon.getBits() + bitsGained);
+        raid.setRemainingHp(raid.getRemainingHp() - actualDamage);
+        raid.setUpdatedAt(Instant.now());
+        boolean defeated = false;
+        int clanHonorMarksGained = 0;
+        int clanXpGained = 0;
+        if (raid.getRemainingHp() <= 0) {
+            defeated = true;
+            raid.setStatus(ClanRaidStatus.DEFEATED);
+            raid.setDefeatedAt(Instant.now());
+            Clan clan = clanRepository.findById(player.getClanId()).orElseThrow(() -> new NotFoundException("Clan not found"));
+            double honorMarksMultiplier = 1.0 + clanBonusService.getHonorMarksBonusPercent(clan.getId());
+            clanHonorMarksGained = (int) Math.floor(boss.getClanHonorMarksReward() * honorMarksMultiplier);
+            clanXpGained = boss.getBaseXpReward();
+            clan.setHonorMarks(clan.getHonorMarks() + clanHonorMarksGained);
+            ClanRules.addExperience(clan, clanXpGained);
+            clanRepository.save(clan);
+        }
+        ClanRaidAttack attack = ClanRaidAttack.builder().id(UUID.randomUUID()).clanRaidId(raid.getId()).playerId(playerId).digimonId(digimon.getId()).damage(actualDamage).energyCost(energyCost).bitsGained(bitsGained).xpGained(xpGained).createdAt(Instant.now()).build();
+        digimonRepository.save(digimon);
+        clanRaidRepository.save(raid);
+        clanRaidAttackRepository.save(attack);
+        if (activityCalendarService != null) activityCalendarService.recordActivity(playerId, ActivitySource.CLAN_RAID_ATTACK, attack.getId().toString());
+        List<ClanRaidRewardResponse> rewards = clanRaidRewardService == null
+                ? List.of()
+                : clanRaidRewardService.grant(boss, raid, attack, defeated);
+        return new AttackClanRaidResponse(raid.getId(), boss.getCode(), boss.getName(), actualDamage, raid.getRemainingHp(), raid.getMaxHp(), defeated, winChance, xpGained, bitsGained, clanHonorMarksGained, clanXpGained, rewards, buildDefeatSummary(raid, attack));
+    }
+
+    private BossDefeatSummaryResponse buildDefeatSummary(ClanRaid raid, ClanRaidAttack finalBlow) {
+        if (raid.getStatus() != ClanRaidStatus.DEFEATED) return null;
+        var attacks = clanRaidAttackRepository.findByClanRaidIdOrderByCreatedAtDesc(raid.getId());
+        var totals = attacks.stream().collect(java.util.stream.Collectors.groupingBy(ClanRaidAttack::getPlayerId, java.util.stream.Collectors.summingLong(ClanRaidAttack::getDamage)));
+        UUID topPlayer = totals.entrySet().stream().max(java.util.Map.Entry.<UUID, Long>comparingByValue()).orElseThrow().getKey();
+        String finalName = playerRepository.findById(finalBlow.getPlayerId()).map(Player::getUsername).orElse("Desconhecido");
+        String topName = playerRepository.findById(topPlayer).map(Player::getUsername).orElse("Desconhecido");
+        long duration = raid.getDefeatedAt() == null ? 0 : Math.max(0, Duration.between(raid.getCreatedAt(), raid.getDefeatedAt()).getSeconds());
+        return new BossDefeatSummaryResponse(finalBlow.getPlayerId(), finalName, topPlayer, topName, totals.get(topPlayer), attacks.size(), duration, raid.getDefeatedAt().plus(Duration.ofHours(1)));
+    }
+
+    private void validateRequirements(BossDefinitionEntity boss, Digimon digimon) {
+        if (digimon.getStage().ordinal() < boss.getRequiredStage().ordinal()) {
+            throw new BadRequestException("Digimon stage too low. Required: " + boss.getRequiredStage());
+        }
+        if (digimon.getLevel() < boss.getRequiredLevel()) {
+            throw new BadRequestException("Digimon level too low. Required: " + boss.getRequiredLevel());
+        }
+        if (digimon.getRebirthCount() < boss.getRequiredRebirths()) {
+            throw new BadRequestException("Not enough rebirths. Required: " + boss.getRequiredRebirths());
+        }
+    }
+
+    private int applyCostReduction(int baseCost, double multiplier) {
+        if (multiplier >= 1.0) return baseCost;
+        return Math.max(1, (int) Math.floor(baseCost * multiplier));
+    }
+
+    public AttackClanRaidUseCase(final PlayerRepository playerRepository, final DigimonRepository digimonRepository, final ClanRepository clanRepository, final BossDefinitionRepository bossDefinitionRepository, final ClanRaidRepository clanRaidRepository, final ClanRaidAttackRepository clanRaidAttackRepository, final ClanRaidService clanRaidService, final ClanRaidRewardService clanRaidRewardService, final DigimonPowerService digimonPowerService, final ClanBonusService clanBonusService, final GlobalDamageBuffService globalDamageBuffService, final GameplayConfig gameplayConfig, final ActivityCalendarService activityCalendarService) {
+        this.playerRepository = playerRepository;
+        this.digimonRepository = digimonRepository;
+        this.clanRepository = clanRepository;
+        this.bossDefinitionRepository = bossDefinitionRepository;
+        this.clanRaidRepository = clanRaidRepository;
+        this.clanRaidAttackRepository = clanRaidAttackRepository;
+        this.clanRaidService = clanRaidService;
+        this.clanRaidRewardService = clanRaidRewardService;
+        this.digimonPowerService = digimonPowerService;
+        this.clanBonusService = clanBonusService;
+        this.globalDamageBuffService = globalDamageBuffService;
+        this.gameplayConfig = gameplayConfig;
+        this.activityCalendarService = activityCalendarService;
+    }
+}

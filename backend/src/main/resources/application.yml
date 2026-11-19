@@ -1,0 +1,166 @@
+spring:
+  application:
+    name: digimon-revolution-online
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  data:
+    mongodb:
+      auto-index-creation: ${SPRING_DATA_MONGODB_AUTO_INDEX_CREATION:false}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: INFO
+    org.springframework.jdbc: ${DRO_JDBC_LOG_LEVEL:INFO}
+    org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver: ERROR
+
+dro:
+  maintenance:
+    cleanup:
+      retention-hours: ${DRO_MAINTENANCE_CLEANUP_RETENTION_HOURS:24}
+      batch-size: ${DRO_MAINTENANCE_CLEANUP_BATCH_SIZE:500}
+      cron: ${DRO_MAINTENANCE_CLEANUP_CRON:0 0 3 * * *}
+      zone: ${DRO_MAINTENANCE_CLEANUP_ZONE:UTC}
+  digitama:
+    # Controle temporário dos Digimons BABY elegíveis nos pools de Digitama.
+    # A origem será migrada futuramente para available_contents.
+    baby-digimons:
+      Algomon Baby I: true
+      Bombmon: true
+      Bommon: true
+      Botamon: true
+      Bubbmon: true
+      Chibickmon: true
+      Chicomon: true
+      Choromon: true
+      Cocomon: true
+      Cotsucomon: true
+      Curimon: true
+      Dodomon: true
+      Dokimon: true
+      Fufumon: true
+      Fukamon: true
+      Fusamon: true
+      Jyarimon: true
+      Keemon: true
+      Kekomon: true
+      Ketomon: true
+      Kuramon: true
+      Leafmon: true
+      Mokumon: true
+      Nyokimon: true
+      Paomon: true
+      Pafumon: true
+      Peti Meramon: true
+      Petitmon: true
+      Pipimon: true
+      Pitchmon: true
+      Popomon: true
+      Poyomon: true
+      Punimon: true
+      Pupumon: true
+      Pururumon: true
+      Pusumon: true
+      Puttimon: true
+      Puwamon: true
+      Puyomon: true
+      Pyonmon: true
+      Relemon: true
+      Sakumon: true
+      Sunamon: true
+      Tomorimon: true
+      Torikara Ballmon: true
+      Tsubumon: true
+      Yolkmon: true
+      Yukimi Botamon: true
+      Yuramon: true
+      Zerimon: true
+      MetalKoromon: true
+      Zurumon: true
+
+  gameplay:
+    rarity-reroll:
+      keep-cost-bits: ${DRO_RARITY_REROLL_KEEP_COST_BITS:5000}
+    username-change:
+      # Índice 0 representa a primeira troca; valores posteriores continuam crescentes.
+      costs: ${DRO_USERNAME_CHANGE_COSTS:1000,5000,10000}
+    auto-boss-respawn-after-defeat-enabled: false
+    boss-cooldown-enabled: ${DRO_BOSS_COOLDOWN_ENABLED:true}
+
+    clan-raid:
+      cooldown-enabled: ${DRO_CLAN_RAID_COOLDOWN_ENABLED:true}
+
+    energy:
+      consumption-enabled: ${DRO_ENERGY_CONSUMPTION_ENABLED:true}
+
+    arena:
+      daily-challenge-limit: ${DRO_ARENA_DAILY_CHALLENGE_LIMIT:5}
+
+    world-boss:
+      cooldown-enabled: ${DRO_WORLD_BOSS_COOLDOWN_ENABLED:true}
+
+    activity-calendar:
+      enabled: ${DRO_ACTIVITY_CALENDAR_ENABLED:true}
+      daily-goal: ${DRO_ACTIVITY_CALENDAR_DAILY_GOAL:10}
+      reward-chest-code: ${DRO_ACTIVITY_CALENDAR_REWARD_CHEST_CODE:CHEST_ACTIVITY_CALENDAR}
+      monthly-completion-chest-code: ${DRO_ACTIVITY_CALENDAR_MONTHLY_CHEST_CODE:CHEST_ACTIVITY_CALENDAR_MONTHLY}
+      mission-completed: ${DRO_ACTIVITY_CALENDAR_POINTS_MISSION:1}
+      arena-match: ${DRO_ACTIVITY_CALENDAR_POINTS_ARENA:1}
+      clan-raid-attack: ${DRO_ACTIVITY_CALENDAR_POINTS_CLAN_RAID:1}
+      world-boss-attack: ${DRO_ACTIVITY_CALENDAR_POINTS_WORLD_BOSS:1}
+      boss-challenge: ${DRO_ACTIVITY_CALENDAR_POINTS_BOSS:1}
+      digitama-hatched: ${DRO_ACTIVITY_CALENDAR_POINTS_HATCH:1}
+      mission-limit: ${DRO_ACTIVITY_CALENDAR_LIMIT_MISSION:0}
+      arena-limit: ${DRO_ACTIVITY_CALENDAR_LIMIT_ARENA:0}
+      clan-raid-limit: ${DRO_ACTIVITY_CALENDAR_LIMIT_CLAN_RAID:0}
+      world-boss-limit: ${DRO_ACTIVITY_CALENDAR_LIMIT_WORLD_BOSS:0}
+      boss-limit: ${DRO_ACTIVITY_CALENDAR_LIMIT_BOSS:0}
+      hatch-limit: ${DRO_ACTIVITY_CALENDAR_LIMIT_HATCH:0}
+
+  registration:
+    invite-required: ${DRO_REGISTRATION_INVITE_REQUIRED:false}
+
+  audit:
+    outbox:
+      fixed-delay-ms: ${DRO_AUDIT_OUTBOX_FIXED_DELAY_MS:5000}
+      max-attempts: ${DRO_AUDIT_OUTBOX_MAX_ATTEMPTS:5}
+
+  cache:
+    catalogs:
+      maximum-size: ${DRO_CACHE_CATALOGS_MAX_SIZE:500}
+      ttl-seconds: ${DRO_CACHE_CATALOGS_TTL_SECONDS:300}
+
+  security:
+    jwt:
+      issuer: ${DRO_JWT_ISSUER:digimon-revolution-online}
+      expiration-minutes: ${DRO_JWT_EXPIRATION_MINUTES:1440}
+
+  dro:
+    bootstrap-admin:
+      enabled: ${DRO_BOOTSTRAP_ADMIN_ENABLED:false}
+      username: ${DRO_BOOTSTRAP_ADMIN_USERNAME:}
+      email: ${DRO_BOOTSTRAP_ADMIN_EMAIL:}
+      password: ${DRO_BOOTSTRAP_ADMIN_PASSWORD:}

@@ -1,0 +1,18 @@
+/* Arena navigation: keep all section buttons the same width. */
+.arena-page-nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: min(100%, 24rem);
+}
+
+.arena-nav-link {
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+@media (max-width: 45.99rem) {
+  .arena-page-nav {
+    width: 100%;
+  }
+}

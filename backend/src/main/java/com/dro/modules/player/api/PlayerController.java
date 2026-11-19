@@ -1,0 +1,112 @@
+package com.dro.modules.player.api;
+
+import com.dro.modules.player.api.dto.request.ChangeEmailRequest;
+import com.dro.modules.player.api.dto.request.ChangePasswordRequest;
+import com.dro.modules.player.api.dto.request.ChangeUsernameRequest;
+import com.dro.modules.player.api.dto.response.ChangeEmailResponse;
+import com.dro.modules.player.api.dto.response.ChangePasswordResponse;
+import com.dro.modules.player.api.dto.response.ChangeUsernameResponse;
+import com.dro.modules.player.api.dto.response.UsernameChangeInfoResponse;
+import com.dro.modules.player.api.dto.response.PlayerDashboardResponse;
+import com.dro.modules.player.api.dto.response.PlayerResponse;
+import com.dro.modules.player.api.dto.response.PlayerStartupResponse;
+import com.dro.modules.player.api.dto.response.PlayerPaginationPreferenceResponse;
+import com.dro.modules.player.api.dto.request.UpdatePlayerPaginationPreferenceRequest;
+import com.dro.modules.player.application.PlayerDisplayPreferenceService;
+import com.dro.shared.util.TokenExtractor;
+import com.dro.modules.player.application.ChangePlayerEmailUseCase;
+import com.dro.modules.player.application.ChangePlayerPasswordUseCase;
+import com.dro.modules.player.application.ChangeUsernameUseCase;
+import com.dro.modules.player.application.GetPlayerDashboardUseCase;
+import com.dro.modules.player.application.GetPlayerStartupUseCase;
+import com.dro.modules.player.application.GetPlayerUseCase;
+import com.dro.modules.player.application.RevokePlayerSessionsUseCase;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import com.dro.modules.player.domain.VipPlan;
+import java.util.List;
+
+/**
+ * Componente da camada de controller da API do módulo de Jogadores.
+ */
+@RestController
+@RequestMapping("/players")
+public class PlayerController {
+    private final GetPlayerUseCase useCase;
+    private final GetPlayerDashboardUseCase dashboardUseCase;
+    private final GetPlayerStartupUseCase startupUseCase;
+    private final ChangePlayerEmailUseCase changePlayerEmailUseCase;
+    private final ChangePlayerPasswordUseCase changePlayerPasswordUseCase;
+    private final ChangeUsernameUseCase changeUsernameUseCase;
+    private final RevokePlayerSessionsUseCase revokePlayerSessionsUseCase;
+    private final PlayerDisplayPreferenceService displayPreferenceService;
+
+    @GetMapping("/me/vip/plans")
+    public List<VipPlan.Offer> vipPlans() {
+        return VipPlan.offers();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<PlayerResponse> me(@RequestHeader("Authorization") String authorization) {
+        return ResponseEntity.ok(useCase.execute(authorization));
+    }
+
+    @GetMapping("/me/dashboard")
+    public ResponseEntity<PlayerDashboardResponse> dashboard(@RequestHeader("Authorization") String authorization) {
+        return ResponseEntity.ok(dashboardUseCase.execute(authorization));
+    }
+
+    @GetMapping("/me/startup")
+    public ResponseEntity<PlayerStartupResponse> startup(@RequestHeader("Authorization") String authorization) {
+        return ResponseEntity.ok(startupUseCase.execute(authorization));
+    }
+
+    @GetMapping("/me/preferences/pagination")
+    public ResponseEntity<PlayerPaginationPreferenceResponse> paginationPreference(@RequestHeader("Authorization") String authorization) {
+        return ResponseEntity.ok(PlayerPaginationPreferenceResponse.from(displayPreferenceService.get(TokenExtractor.extractPlayerId(authorization))));
+    }
+
+    @PutMapping("/me/preferences/pagination")
+    public ResponseEntity<PlayerPaginationPreferenceResponse> updatePaginationPreference(@RequestHeader("Authorization") String authorization, @RequestBody @Valid UpdatePlayerPaginationPreferenceRequest request) {
+        return ResponseEntity.ok(PlayerPaginationPreferenceResponse.from(displayPreferenceService.set(TokenExtractor.extractPlayerId(authorization), request.paginationEnabled())));
+    }
+
+    @PostMapping("/me/change-email")
+    public ResponseEntity<ChangeEmailResponse> changeEmail(@RequestHeader("Authorization") String authorization, @RequestBody @Valid ChangeEmailRequest request) {
+        return ResponseEntity.ok(changePlayerEmailUseCase.execute(authorization, request));
+    }
+
+    @GetMapping("/me/change-username")
+    public ResponseEntity<UsernameChangeInfoResponse> usernameChangeInfo(@RequestHeader("Authorization") String authorization) {
+        return ResponseEntity.ok(changeUsernameUseCase.preview(authorization));
+    }
+
+    @PostMapping("/me/change-username")
+    public ResponseEntity<ChangeUsernameResponse> changeUsername(@RequestHeader("Authorization") String authorization, @RequestBody @Valid ChangeUsernameRequest request) {
+        return ResponseEntity.ok(changeUsernameUseCase.execute(authorization, request));
+    }
+
+    @PostMapping("/me/change-password")
+    public ResponseEntity<ChangePasswordResponse> changePassword(@RequestHeader("Authorization") String authorization, @RequestBody @Valid ChangePasswordRequest request) {
+        return ResponseEntity.ok(changePlayerPasswordUseCase.execute(authorization, request));
+    }
+
+    @PostMapping("/me/logout-all")
+    public ResponseEntity<Void> logoutAll(@RequestHeader("Authorization") String authorization) {
+        revokePlayerSessionsUseCase.execute(authorization);
+        return ResponseEntity.ok().build();
+    }
+
+    public PlayerController(final GetPlayerUseCase useCase, final GetPlayerDashboardUseCase dashboardUseCase, final GetPlayerStartupUseCase startupUseCase, final ChangePlayerEmailUseCase changePlayerEmailUseCase, final ChangePlayerPasswordUseCase changePlayerPasswordUseCase, final ChangeUsernameUseCase changeUsernameUseCase, final RevokePlayerSessionsUseCase revokePlayerSessionsUseCase, final PlayerDisplayPreferenceService displayPreferenceService) {
+        this.useCase = useCase;
+        this.dashboardUseCase = dashboardUseCase;
+        this.startupUseCase = startupUseCase;
+        this.changePlayerEmailUseCase = changePlayerEmailUseCase;
+        this.changePlayerPasswordUseCase = changePlayerPasswordUseCase;
+        this.changeUsernameUseCase = changeUsernameUseCase;
+        this.revokePlayerSessionsUseCase = revokePlayerSessionsUseCase;
+        this.displayPreferenceService = displayPreferenceService;
+    }
+}

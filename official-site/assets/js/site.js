@@ -1,0 +1,66 @@
+(() => {
+  const header = document.querySelector('.site-header');
+  const toggle = document.querySelector('.menu-toggle');
+  const nav = document.querySelector('.main-nav');
+
+  const setHeaderState = () => header?.classList.toggle('is-scrolled', window.scrollY > 24 || !document.querySelector('.hero'));
+  setHeaderState();
+  window.addEventListener('scroll', setHeaderState, { passive: true });
+
+  toggle?.addEventListener('click', () => {
+    const open = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!open));
+    nav?.classList.toggle('is-open', !open);
+    document.body.classList.toggle('menu-open', !open);
+  });
+
+  nav?.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => {
+      toggle?.setAttribute('aria-expanded', 'false');
+      nav.classList.remove('is-open');
+      document.body.classList.remove('menu-open');
+    });
+  });
+
+  const observer = 'IntersectionObserver' in window ? new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.14 }) : null;
+
+  window.DRO_initReveal = () => {
+    document.querySelectorAll('.reveal:not([data-reveal-ready])').forEach((element) => {
+      element.dataset.revealReady = 'true';
+      if (observer) observer.observe(element);
+      else element.classList.add('is-visible');
+    });
+  };
+
+  window.DRO_initReveal();
+  const year = document.getElementById('current-year');
+  if (year) year.textContent = String(new Date().getFullYear());
+
+  const themeToggle = document.querySelector('[data-theme-toggle]');
+  const savedTheme = localStorage.getItem('dro-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    if (themeToggle) themeToggle.textContent = '☀️';
+  }
+  themeToggle?.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('dro-theme', 'light');
+      themeToggle.textContent = '🌙';
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('dro-theme', 'dark');
+      themeToggle.textContent = '☀️';
+    }
+  });
+
+})();

@@ -1,0 +1,57 @@
+package com.dro.modules.digitama.api.dto.response;
+
+import com.dro.modules.digimon.domain.Digimon;
+import com.dro.modules.digimon.domain.enums.*;
+
+import java.util.UUID;
+
+/**
+ * Contrato de dados do módulo de Digitama.
+ */
+public record HatchDigitamaResponse(
+        UUID id,
+        String name,
+        String type,
+        Stage stage,
+        int level,
+        int hp,
+        int attack,
+        int defense,
+        int ivHp,
+        int ivAttack,
+        int ivDefense,
+        Rarity rarity,
+        Personality personality,
+        Trait trait,
+        int energy,
+        int maxEnergy,
+        Long digimonInfoId,
+        String imageUrl
+) {
+    public static HatchDigitamaResponse from(Digimon digimon) {
+        return from(digimon, null);
+    }
+
+    public static HatchDigitamaResponse from(Digimon digimon, String imageUrl) {
+        return new HatchDigitamaResponse(
+                digimon.getId(),
+                digimon.getName(),
+                digimon.getType(),
+                digimon.getStage(),
+                digimon.getLevel(),
+                digimon.getHp(),
+                digimon.getAttack(),
+                digimon.getDefense(),
+                digimon.getIvHp(),
+                digimon.getIvAttack(),
+                digimon.getIvDefense(),
+                digimon.getRarity(),
+                digimon.getPersonality(),
+                digimon.getTrait(),
+                digimon.getEnergy(),
+                digimon.getMaxEnergy(),
+                digimon.getDigimonInfoId(),
+                imageUrl
+        );
+    }
+}
