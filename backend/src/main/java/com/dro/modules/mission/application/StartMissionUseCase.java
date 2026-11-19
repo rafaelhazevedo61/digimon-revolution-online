@@ -20,6 +20,10 @@ import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -30,6 +34,7 @@ import java.util.*;
  */
 @Service
 public class StartMissionUseCase {
+    private static final Logger log = LoggerFactory.getLogger(StartMissionUseCase.class);
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
     private final MissionInstanceRepository missionInstanceRepository;
@@ -93,6 +98,7 @@ public class StartMissionUseCase {
                         ? "Todos os slots de missão estão ocupados"
                         : "Todos os slots de missão desbloqueados estão ocupados"));
 
+        int energyConsumedPerDigimon = 0;
         UUID clanId = player.getClanId();
         if (!isAdmin && gameplayConfig.isEnergyConsumptionEnabled()) {
             int maxEnergyBonus = clanId != null ? clanBonusService.getMaxEnergyBonus(clanId) : 0;
@@ -106,6 +112,7 @@ public class StartMissionUseCase {
                 }
             }
             digimons.forEach(digimon -> digimon.consumeEnergy(energyCost));
+            energyConsumedPerDigimon = energyCost;
         }
 
         List<UUID> digimonIds = digimons.stream().map(Digimon::getId).toList();
@@ -131,6 +138,26 @@ public class StartMissionUseCase {
         instance.setAutoRepeatEnabled(autoRepeat && teamId != null);
         instance.setAutoClaimEnabled(autoClaim && teamId != null);
         missionInstanceRepository.save(instance);
+        if (log.isInfoEnabled() && TransactionSynchronizationManager.isSynchronizationActive()) {
+            UUID instanceId = instance.getId();
+            String username = player.getUsername();
+            String missionCode = mission.getId();
+            String missionName = mission.getName();
+            java.time.Instant endsAt = instance.getEndsAt();
+            long durationSeconds = missionDuration.getSeconds();
+            int consumedEnergy = energyConsumedPerDigimon;
+            var members = digimons.stream().map(member -> Map.of(
+                    "digimonId", member.getId(), "name", member.getName(),
+                    "energyRemaining", member.getEnergy())).toList();
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    log.info("Mission started. missionInstanceId={}, playerId={}, username={}, missionCode={}, missionName={}, teamId={}, digimons={}, energyCostPerDigimon={}, durationSeconds={}, endsAt={}, autoRepeat={}, autoClaim={}",
+                            instanceId, playerId, username, missionCode, missionName, teamId, members,
+                            consumedEnergy, durationSeconds, endsAt, autoRepeat, autoClaim);
+                }
+            });
+        }
         return new MissionStartResponse(instance.getId(), instance.getEndsAt());
     }
 
