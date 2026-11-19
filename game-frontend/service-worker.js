@@ -1,4 +1,4 @@
-const CACHE_NAME = "dro-cache-v76";
+const CACHE_NAME = "dro-cache-v77";
 const STATIC_ASSETS = [
   "/",
   "/index.html",
@@ -21,6 +21,8 @@ const STATIC_ASSETS = [
   "/assets/js/world-boss.js",
   "/assets/js/settings.js",
   "/assets/js/vip.js",
+  "/assets/js/achievements.js",
+  "/assets/css/achievements.css",
   "/assets/js/collection.js",
   "/assets/img/world-boss-apocalymon.png"
 ];

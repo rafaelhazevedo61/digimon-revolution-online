@@ -137,6 +137,7 @@ public final class EventRewardMessageText {
                 case POTION_SMALL -> "Poção pequena";
                 case ENERGY_CELL -> "Célula de Energia";
                 case VIP_ENERGY_CHARGE -> "Carga de Energia Total";
+                case VIP_DAY_PASS -> "Passe VIP de 1 Dia";
                 case TRAINING_STONE -> "Pedra de treinamento";
                 case DATA_CORE -> "Núcleo de dados";
                 case CODE_INFINITE -> "Código Infinito";

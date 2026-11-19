@@ -7,6 +7,11 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Conquistas (protótipo)**: 33 metas permanentes por conta, disponíveis em Mais → Conquistas, com filtros, progresso e resgate único de Bits e itens. Inclui expansores que somam até +20 espaços de storage e contador de missões que sobrevive à limpeza de histórico.
+- **Passe VIP de 1 Dia**: recompensa guardada no inventário; ao usar, ativa 24 horas de VIP ou acrescenta esse período à validade existente. Não pode ser vendido ou negociado.
+
 ## [0.0.15-SNAPSHOT]
 
 ### Adicionado
