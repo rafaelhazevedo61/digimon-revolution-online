@@ -89,10 +89,23 @@ async function renderVipPage() {
   apiGet("/players/me/vip/plans").then(plans => {
     if (!plansContainer.isConnected) return;
     const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+    // Substitua cada SVG pelo QR de pagamento real do respectivo plano.
+    const paymentQrImages = {
+      1: "assets/img/vip/qr-vip-1.svg",
+      7: "assets/img/vip/qr-vip-7.svg",
+      30: "assets/img/vip/qr-vip-30.svg",
+    };
     plansContainer.innerHTML = plans.map(({ days, priceInCents }) => `
       <div class="rounded-xl border border-slate-700 p-3">
         <h4 class="text-sm font-semibold">${Number(days)} ${days === 1 ? "dia (24 h)" : "dias"}</h4>
         <p class="text-lg font-semibold text-amber-200 mt-1">${brl.format(priceInCents / 100)}</p>
+        <figure class="mt-3 text-center">
+          <img src="${paymentQrImages[days] || paymentQrImages[1]}"
+            alt="QR code demonstrativo do plano VIP de ${Number(days)} dias"
+            width="160" height="160" class="mx-auto rounded-lg bg-white"
+            style="max-width:100%;height:auto" />
+          <figcaption class="text-xs text-slate-400 mt-2">QR code de exemplo.<br>Não efetue pagamentos.</figcaption>
+        </figure>
       </div>`).join("");
   }).catch(() => {
     if (plansContainer.isConnected) plansContainer.textContent = "Não foi possível carregar os planos.";
