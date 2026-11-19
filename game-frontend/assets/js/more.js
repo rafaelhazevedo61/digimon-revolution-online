@@ -32,6 +32,12 @@ async function renderMorePage() {
       label: "Atividades",
       items: [
         {
+          route: "achievements",
+          icon: "🏆",
+          title: "Conquistas",
+          desc: "Registre sua jornada e resgate Bits e itens",
+        },
+        {
           route: "mission-teams",
           icon: "◈",
           title: "Meus Times",

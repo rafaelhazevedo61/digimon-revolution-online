@@ -63,6 +63,9 @@ public class UseItemUseCase {
             throw new BadRequestException("O Cristal de Preservação deve ser usado na tela de Renascimento");
         }
         UUID playerId = TokenExtractor.extractPlayerId(token);
+        if (type == ItemType.VIP_DAY_PASS) {
+            return useVipPass(playerId, requestedQuantity);
+        }
         if (type == ItemType.INCUBATION_SLOT_UNLOCK) {
             return unlockIncubationSlot(playerId);
         }
@@ -150,6 +153,24 @@ public class UseItemUseCase {
                 message,
                 newlyUnlockedContent
         );
+    }
+
+    private UseItemResponse useVipPass(UUID playerId, Integer requestedQuantity) {
+        if (requestedQuantity != null && requestedQuantity != 1) {
+            throw new BadRequestException("Utilize um Passe VIP por vez.");
+        }
+        Player player = playerRepository.findByIdForUpdate(playerId)
+                .orElseThrow(() -> new NotFoundException("Jogador não encontrado."));
+        InventoryItem item = inventoryRepository.findByPlayerIdAndItemTypeForUpdate(playerId, ItemType.VIP_DAY_PASS)
+                .filter(entry -> entry.getQuantity() > 0)
+                .orElseThrow(() -> new UnprocessableException("Você não tem um Passe VIP disponível."));
+        Instant expiry = com.dro.modules.player.domain.VipPassRules.extendOneDay(player.getVipExpiresAt(), Instant.now());
+        consume(item, 1);
+        player.setVipExpiresAt(expiry);
+        playerRepository.save(player);
+        return new UseItemResponse(ItemType.VIP_DAY_PASS, 1, 0, 0, 0, false,
+                "Passe utilizado! Mais 24 horas de VIP. Consulte a validade na página VIP.",
+                NewlyUnlockedContentResponse.empty());
     }
 
     private UseItemResponse useEnergyItem(Player player, Digimon digimon, InventoryItem item, ItemType type) {
