@@ -49,6 +49,10 @@ import com.dro.shared.gameplay.WeekendDoubleRewardRules;
 import java.time.Instant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -63,6 +67,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 @Service
 public class ClaimMissionUseCase {
+    private static final Logger log = LoggerFactory.getLogger(ClaimMissionUseCase.class);
 
     private final MissionInstanceRepository missionInstanceRepository;
     private final DigimonRepository digimonRepository;
@@ -283,6 +288,34 @@ public class ClaimMissionUseCase {
                         previousLevels.getOrDefault(member.getId(), member.getLevel())
                 ))
                 .toList();
+
+        if (log.isInfoEnabled() && TransactionSynchronizationManager.isSynchronizationActive()) {
+            String username = player.getUsername();
+            String missionCode = mission.getId();
+            String missionName = mission.getName();
+            UUID teamId = instance.getTeamId();
+            boolean autoClaimEnabled = instance.isAutoClaimEnabled();
+            int totalXp = xpGained;
+            var members = digimons.stream().map(member -> Map.of(
+                    "digimonId", member.getId(), "name", member.getName(),
+                    "previousLevel", previousLevels.get(member.getId()), "currentLevel", member.getLevel())).toList();
+            var items = rewards.stream().map(reward -> {
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("itemType", reward.item());
+                item.put("quantity", reward.quantity());
+                if (reward.itemCode() != null) item.put("itemCode", reward.itemCode());
+                if (reward.itemName() != null) item.put("itemName", reward.itemName());
+                return item;
+            }).toList();
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    log.info("Mission claimed. missionInstanceId={}, playerId={}, username={}, missionCode={}, missionName={}, teamId={}, autoClaimEnabled={}, digimons={}, xpGained={}, bitsGained={}, items={}",
+                            missionInstanceId, playerId, username, missionCode, missionName, teamId,
+                            autoClaimEnabled, members, totalXp, bitsGained, items);
+                }
+            });
+        }
 
         return new MissionResultResponse(
                 mission.getId(),

@@ -15,7 +15,7 @@ async function renderVipPage() {
 
       <section class="card mb-4">
         <h3 class="font-semibold">Carga de Energia Total</h3>
-        <p class="text-sm text-slate-300 mt-2">Resgate uma unidade por dia com VIP ativo. Use no inventário para encher a barra de energia do Digimon ativo.</p>
+        <p class="text-sm text-slate-300 mt-2">Resgate uma unidade por dia com VIP ativo. Encha a barra do Digimon ativo pelo inventário ou a de todos os integrantes pela tela Meus times, usando uma carga.</p>
         <p class="text-sm text-slate-400 mt-2">O resgate renova à meia-noite UTC. As cargas resgatadas ficam no inventário.</p>
         <button id="vip-energy-claim" type="button" class="mt-3 rounded-xl px-5 py-2.5 text-sm font-semibold bg-amber-400 text-slate-950 enabled:hover:bg-amber-300 disabled:bg-slate-700 disabled:text-slate-300 disabled:cursor-not-allowed" disabled>Resgatar Carga de Energia Total</button>
         <p id="vip-energy-status" class="text-sm text-slate-300 mt-2" aria-live="polite"></p>
@@ -89,10 +89,23 @@ async function renderVipPage() {
   apiGet("/players/me/vip/plans").then(plans => {
     if (!plansContainer.isConnected) return;
     const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+    // Substitua cada SVG pelo QR de pagamento real do respectivo plano.
+    const paymentQrImages = {
+      1: "assets/img/vip/qr-vip-1.svg",
+      7: "assets/img/vip/qr-vip-7.svg",
+      30: "assets/img/vip/qr-vip-30.svg",
+    };
     plansContainer.innerHTML = plans.map(({ days, priceInCents }) => `
       <div class="rounded-xl border border-slate-700 p-3">
         <h4 class="text-sm font-semibold">${Number(days)} ${days === 1 ? "dia (24 h)" : "dias"}</h4>
         <p class="text-lg font-semibold text-amber-200 mt-1">${brl.format(priceInCents / 100)}</p>
+        <figure class="mt-3 text-center">
+          <img src="${paymentQrImages[days] || paymentQrImages[1]}"
+            alt="QR code demonstrativo do plano VIP de ${Number(days)} dias"
+            width="160" height="160" class="mx-auto rounded-lg bg-white"
+            style="max-width:100%;height:auto" />
+          <figcaption class="text-xs text-slate-400 mt-2">QR code de exemplo.<br>Não efetue pagamentos.</figcaption>
+        </figure>
       </div>`).join("");
   }).catch(() => {
     if (plansContainer.isConnected) plansContainer.textContent = "Não foi possível carregar os planos.";

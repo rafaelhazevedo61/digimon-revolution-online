@@ -147,8 +147,8 @@ function evoRenderOption(opt, digimon) {
       ${reqHtml}
       ${reasonHtml}
       <div class="mt-3 space-y-2">
-        ${next.stage === "BABY_II" && materials.some(material => material.playerHas < material.quantity)
-          ? `<button type="button" class="btn-secondary w-full" onclick="evoOpenFragmentExchange(${opt.evolutionLineId})">Trocar fragmentos Baby II</button>`
+        ${["BABY_II", "ROOKIE", "CHAMPION", "ULTIMATE", "MEGA"].includes(next.stage) && materials.some(material => material.playerHas < material.quantity)
+          ? `<button type="button" class="btn-secondary w-full" onclick="evoOpenFragmentExchange(${opt.evolutionLineId})">Trocar fragmentos</button>`
           : ""}
         <button class="progression-button progression-button-cyan w-full ${!canEvolve ? 'opacity-50 cursor-not-allowed' : ''}"
           ${canEvolve ? `onclick="evoEvolve(${opt.evolutionLineId})"` : 'disabled'}
@@ -171,7 +171,7 @@ async function evoOpenFragmentExchange(lineId) {
   dialog.setAttribute("aria-labelledby", "evo-fragment-title");
   dialog.innerHTML = `
     <div class="flex items-center justify-between gap-2">
-      <h3 id="evo-fragment-title" class="font-bold">Trocar fragmentos Baby II</h3>
+      <h3 id="evo-fragment-title" class="font-bold">Trocar fragmentos</h3>
       <button type="button" aria-label="Fechar" class="btn-sm" data-close>×</button>
     </div>
     <div data-offer class="mt-3">Carregando fragmentos…</div>`;
@@ -182,15 +182,16 @@ async function evoOpenFragmentExchange(lineId) {
 
   const offer = dialog.querySelector("[data-offer]");
   try {
-    const { targetName, rate, inputs } = await apiGet(endpoint);
+    const { targetName, rate, inputs, targetStage, dailyLimit, remainingToday } = await apiGet(endpoint);
     if (!dialog.isConnected || !content.isConnected) {
       dialog.remove();
       return;
     }
     const available = inputs.reduce((total, item) => total + item.quantity, 0);
     offer.innerHTML = `
-      <p class="text-sm text-slate-300">Entregue ${rate} fragmentos de outras formas Baby II para receber 1 <strong>${escapeHtml(targetName)}</strong>.</p>
-      ${available < rate ? '<p class="mt-3 text-sm text-amber-300">Você ainda não tem fragmentos suficientes para uma troca.</p>' : `
+      <p class="text-sm text-slate-300">Entregue ${rate} fragmentos de outras formas ${escapeHtml(evoFormatStage(targetStage))} para receber 1 <strong>${escapeHtml(targetName)}</strong>.</p>
+      <p class="mt-2 text-sm text-slate-400">${dailyLimit == null ? "Administrador: sem limite diário." : `Limite diário: ${dailyLimit} recebidos · Restam ${remainingToday}. Reinicia às 00h UTC.`}</p>
+      ${remainingToday === 0 ? '<p class="mt-3 text-sm text-amber-300">Limite diário deste estágio atingido.</p>' : available < rate ? '<p class="mt-3 text-sm text-amber-300">Você ainda não tem fragmentos suficientes para uma troca.</p>' : `
         <form class="mt-3 space-y-3">
           <div class="max-h-60 space-y-2 overflow-auto">
             ${inputs.map(item => `<label class="flex items-center justify-between gap-3 text-sm">
@@ -215,11 +216,11 @@ async function evoOpenFragmentExchange(lineId) {
 
     function updateTotal() {
       const total = fields.reduce((sum, field) => sum + Number(field.value), 0);
-      const valid = fields.every(field => field.validity.valid) && total >= rate && total % rate === 0 && total <= 2997;
+      const valid = fields.every(field => field.validity.valid) && total >= rate && total % rate === 0 && total <= 2997 && (remainingToday == null || total / rate <= remainingToday);
       submit.disabled = submitting || !valid;
       form.querySelector("[data-total]").textContent = valid
         ? `Entregar ${total} · Receber ${total / rate}`
-        : `${total} selecionados · Escolha um múltiplo de ${rate}, até 2.997.`;
+        : `${total} selecionados · Escolha um múltiplo de ${rate}, até ${remainingToday == null ? 2997 : Math.min(2997, remainingToday * rate)}.`;
       return valid;
     }
 

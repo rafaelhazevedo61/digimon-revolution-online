@@ -24,6 +24,7 @@ const PLAYER_SHORTCUT_CATALOG = [
   { route: "dashboard", label: "Home", icon: "🏠" },
   { route: "activity-calendar", label: "Atividades", image: "assets/img/calendario-atividades.webp" },
   { route: "missions", label: "Missões", image: "assets/img/missoes.webp" },
+  { route: "mission-teams", label: "Times", icon: "◈" },
   { route: "shop", label: "Loja", image: "assets/img/loja.webp" },
   { route: "forge", label: "Ferreiro", icon: "🔨" },
   { route: "auction-house", label: "Leilão", icon: "🔨" },

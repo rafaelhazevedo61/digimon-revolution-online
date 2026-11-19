@@ -2,6 +2,7 @@ package com.dro.modules.inventory.application;
 
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.enums.Element;
+import com.dro.modules.digimon.domain.enums.DigimonStatus;
 import com.dro.modules.digimon.domain.enums.Personality;
 import com.dro.modules.digimon.domain.enums.Rarity;
 import com.dro.modules.digimon.domain.enums.Trait;
@@ -10,6 +11,8 @@ import com.dro.modules.inventory.api.dto.response.UseItemResponse;
 import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
+import com.dro.modules.mission.domain.MissionTeam;
+import com.dro.modules.mission.infra.MissionTeamRepository;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.security.JwtSettings;
@@ -17,6 +20,7 @@ import com.dro.shared.security.JwtTokenCodec;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -49,6 +53,9 @@ class UseItemUseCaseTest {
 
     @Mock
     private PlayerRepository playerRepository;
+
+    @Mock
+    private MissionTeamRepository missionTeamRepository;
 
     @InjectMocks
     private UseItemUseCase useItemUseCase;
@@ -86,6 +93,90 @@ class UseItemUseCaseTest {
             verify(inventoryRepository).delete(item);
         }
         assertThat(digimon.getEnergy()).isEqualTo(expectedEnergy);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"ENERGY_CELL, 50, 53, 17, 61", "VIP_ENERGY_CHARGE, 50, 53, 57, 101", "ENERGY_CELL, 101, 59, 0, 101"})
+    void energyItemRestoresTeamWithOnlyOneUnit(ItemType type, int firstEnergy, int secondEnergy,
+                                               int totalRecovery, int firstMemberEnergy) {
+        UUID playerId = UUID.randomUUID();
+        UUID teamId = UUID.randomUUID();
+        Digimon first = teamMember(playerId, firstEnergy, 101);
+        Digimon second = teamMember(playerId, secondEnergy, 59);
+        Digimon full = teamMember(playerId, 75, 75);
+        List<UUID> ids = List.of(first.getId(), second.getId(), full.getId());
+        InventoryItem item = InventoryItem.builder().itemType(type).quantity(2).build();
+        MissionTeam team = new MissionTeam(playerId, "Time", ids, first.getId());
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(createPlayer(playerId, null, 1)));
+        when(missionTeamRepository.findByIdAndPlayerIdForUpdate(teamId, playerId)).thenReturn(Optional.of(team));
+        when(digimonRepository.findAllByIdForUpdate(playerId, ids)).thenReturn(List.of(full, second, first));
+        when(inventoryRepository.findByPlayerIdAndItemTypeForUpdate(playerId, type)).thenReturn(Optional.of(item));
+
+        if (totalRecovery == 0) {
+            assertThatThrownBy(() -> useItemUseCase.useEnergyOnTeam(tokenFor(playerId), teamId, type, ids))
+                    .isInstanceOf(com.dro.shared.exception.UnprocessableException.class)
+                    .hasMessageContaining("energia cheia");
+            assertThat(item.getQuantity()).isEqualTo(2);
+            verify(inventoryRepository, never()).save(item);
+        } else {
+            assertThat(useItemUseCase.useEnergyOnTeam(tokenFor(playerId), teamId, type, ids)).isEqualTo(totalRecovery);
+            assertThat(item.getQuantity()).isEqualTo(1);
+            verify(inventoryRepository).save(item);
+            assertThat(second.getEnergy()).isEqualTo(59);
+        }
+        assertThat(first.getEnergy()).isEqualTo(firstMemberEnergy);
+        assertThat(full.getEnergy()).isEqualTo(75);
+    }
+
+    @Test
+    void rejectsRechargeWhenFormationChangedSincePreview() {
+        UUID playerId = UUID.randomUUID();
+        UUID teamId = UUID.randomUUID();
+        UUID memberId = UUID.randomUUID();
+        MissionTeam team = new MissionTeam(playerId, "Time", List.of(memberId), memberId);
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(createPlayer(playerId, null, 1)));
+        when(missionTeamRepository.findByIdAndPlayerIdForUpdate(teamId, playerId)).thenReturn(Optional.of(team));
+
+        assertThatThrownBy(() -> useItemUseCase.useEnergyOnTeam(tokenFor(playerId), teamId,
+                ItemType.ENERGY_CELL, List.of(UUID.randomUUID())))
+                .isInstanceOf(com.dro.shared.exception.ConflictException.class);
+        verifyNoInteractions(inventoryRepository, digimonRepository);
+    }
+
+    @Test
+    void teamEnergyPreviewIncludesPassiveRegenerationWithoutChangingTheDigimon() {
+        UUID playerId = UUID.randomUUID();
+        UUID teamId = UUID.randomUUID();
+        Digimon member = teamMember(playerId, 25, 100);
+        member.setLastEnergyUpdate(Instant.now().minusSeconds(3_000));
+        List<UUID> ids = List.of(member.getId());
+        MissionTeam team = new MissionTeam(playerId, "Time", ids, member.getId());
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(createPlayer(playerId, null, 1)));
+        when(missionTeamRepository.findByIdAndPlayerId(teamId, playerId)).thenReturn(Optional.of(team));
+        when(digimonRepository.findAllById(ids)).thenReturn(List.of(member));
+        when(inventoryRepository.findByPlayerIdAndItemType(playerId, ItemType.ENERGY_CELL))
+                .thenReturn(Optional.of(InventoryItem.builder().quantity(2).build()));
+
+        var preview = useItemUseCase.previewTeamEnergy(tokenFor(playerId), teamId);
+        assertThat(preview.energyCells()).isEqualTo(2);
+        assertThat(preview.vipCharges()).isZero();
+        assertThat(preview.members()).singleElement().satisfies(energy -> {
+            assertThat(energy.energy()).isEqualTo(35);
+            assertThat(energy.cellRecovery()).isEqualTo(10);
+            assertThat(energy.vipRecovery()).isEqualTo(65);
+        });
+        assertThat(member.getEnergy()).isEqualTo(25);
+    }
+
+    private Digimon teamMember(UUID playerId, int energy, int capacity) {
+        return Digimon.builder()
+                .id(UUID.randomUUID())
+                .playerId(playerId)
+                .status(DigimonStatus.STORED)
+                .energy(energy)
+                .maxEnergy(capacity)
+                .lastEnergyUpdate(Instant.now())
+                .build();
     }
 
     @Test

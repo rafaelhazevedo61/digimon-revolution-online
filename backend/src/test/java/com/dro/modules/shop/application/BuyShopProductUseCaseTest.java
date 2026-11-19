@@ -10,6 +10,7 @@ import com.dro.modules.inventory.domain.ItemType;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.player.domain.Player;
+import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.shop.api.dto.BuyShopProductResponse;
 import com.dro.modules.shop.api.dto.request.BuyShopProductRequest;
@@ -20,6 +21,7 @@ import com.dro.modules.shop.infra.ShopProductRepository;
 import com.dro.modules.tutorial.application.TutorialService;
 import com.dro.shared.audit.TransactionAuditPublisher;
 import com.dro.shared.exception.BadRequestException;
+import com.dro.shared.exception.UnprocessableException;
 import com.dro.shared.security.JwtSettings;
 import com.dro.shared.security.JwtTokenCodec;
 import org.junit.jupiter.api.Test;
@@ -40,6 +42,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -268,6 +271,59 @@ class BuyShopProductUseCaseTest {
         assertEquals(1, response.quantity());
         assertEquals(99_999, response.remainingBits());
         verify(addItemUseCase).execute(digimonId, ItemType.FRAGMENT_CHAMPION, 1);
+    }
+
+
+    @Test
+    void regularPlayerCanBuyThreeEnergyCellsButNotAFourth() {
+        Player player = prepareEnergyCellBuyer(UserType.PLAYER);
+        String token = createToken(player.getId());
+        BuyShopProductRequest request = new BuyShopProductRequest("ENERGY_CELL", 1);
+
+        for (int i = 0; i < 3; i++) {
+            useCase.execute(token, request);
+        }
+
+        UnprocessableException exception = assertThrows(UnprocessableException.class,
+                () -> useCase.execute(token, request));
+
+        assertEquals("Limite diário de 3 Células de Energia atingido.", exception.getMessage());
+        verify(addItemUseCase, times(3)).execute(player.getActiveDigimonId(), ItemType.ENERGY_CELL, 1);
+        verify(digimonRepository, times(3)).save(any(Digimon.class));
+    }
+
+    @Test
+    void adminCanBuyEnergyCellsEvenAfterDailyQuotaWasExhausted() {
+        Player player = prepareEnergyCellBuyer(UserType.ADMIN);
+        for (int i = 0; i < 3; i++) {
+            player.registerEnergyCellPurchase(java.time.LocalDate.now(java.time.ZoneOffset.UTC), 3);
+        }
+        String token = createToken(player.getId());
+        BuyShopProductRequest request = new BuyShopProductRequest("ENERGY_CELL", 1);
+
+        for (int i = 0; i < 5; i++) {
+            BuyShopProductResponse response = useCase.execute(token, request);
+            assertEquals(1, response.quantity());
+            assertEquals(100, response.totalPrice());
+            assertEquals(1000 - (i + 1) * 100, response.remainingBits());
+        }
+
+        verify(addItemUseCase, times(5)).execute(player.getActiveDigimonId(), ItemType.ENERGY_CELL, 1);
+    }
+
+    private Player prepareEnergyCellBuyer(UserType userType) {
+        UUID playerId = UUID.randomUUID();
+        UUID digimonId = UUID.randomUUID();
+        Player player = Player.builder().id(playerId).activeDigimonId(digimonId).userType(userType).build();
+        Digimon digimon = Digimon.builder().id(digimonId).playerId(playerId).bits(1000).build();
+        ShopProductEntity product = ShopProductEntity.builder()
+                .code("ENERGY_CELL").name("Célula de Energia")
+                .productType(ShopProductType.ITEM).itemType(ItemType.ENERGY_CELL)
+                .price(100).active(true).build();
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
+        when(digimonRepository.findByIdForUpdate(digimonId)).thenReturn(Optional.of(digimon));
+        when(shopProductRepository.findById("ENERGY_CELL")).thenReturn(Optional.of(product));
+        return player;
     }
 
     private static String createToken(UUID subject) {
