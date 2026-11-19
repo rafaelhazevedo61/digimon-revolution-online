@@ -11,6 +11,7 @@ import com.dro.modules.inventory.domain.InventoryItem;
 import com.dro.modules.inventory.infra.InventoryRepository;
 import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import com.dro.modules.player.domain.Player;
+import com.dro.modules.player.domain.UserType;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.modules.shop.api.dto.BuyShopProductResponse;
 import com.dro.modules.shop.api.dto.request.BuyShopProductRequest;
@@ -98,7 +99,7 @@ public class BuyShopProductUseCase {
             if (quantity != 1) {
                 throw new BadRequestException("Células de Energia devem ser compradas uma por vez.");
             }
-            if (!player.registerEnergyCellPurchase(LocalDate.now(ZoneOffset.UTC), ENERGY_CELL_DAILY_LIMIT)) {
+            if (player.getUserType() != UserType.ADMIN && !player.registerEnergyCellPurchase(LocalDate.now(ZoneOffset.UTC), ENERGY_CELL_DAILY_LIMIT)) {
                 throw new UnprocessableException("Limite diário de 3 Células de Energia atingido.");
             }
         }
