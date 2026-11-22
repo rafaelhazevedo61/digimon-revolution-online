@@ -8,7 +8,7 @@ Acesso: **Mais → Conquistas**. São 100 conquistas permanentes por conta, com 
 - Categorias, busca por nome/descrição/recompensa e filtro por status.
 - Progresso por etapa, com recompensas disponíveis primeiro.
 - Resgate manual e único, com atualização do inventário global e dos Bits da conta.
-- Progresso atualizado ao abrir/atualizar a página ou tentar um resgate, sem notificações em tempo real nesta versão.
+- Progresso processado em segundo plano, com intervalo padrão de 30 segundos entre lotes de até 100 contas pendentes. A página e o resgate não recalculam metas.
 - Uma conclusão observada nunca é perdida, mesmo após renascimento ou troca de parceiro.
 
 Para visualizar com dados fictícios sem login nem backend, abra `docs/prototypes/achievements.html` no navegador. Essa demonstração usa a mesma página e CSS do jogo. Seus resgates não alteram contas reais.
@@ -66,13 +66,13 @@ Ao usar uma unidade:
 - Arena: apenas vitórias de desafios iniciados pela própria conta; não conta defesa passiva.
 - Chefes: ataques registrados, sem contar de novo uma repetição idempotente da mesma requisição.
 - Primeiro equipamento: conclusão persistida do tutorial de equipar.
-- Refinamento/ascensão: a condição é **possuir** uma peça no patamar ao consultar a página. Após reconhecida, a conquista permanece concluída mesmo se a peça for vendida. Não se tenta reconstruir peças já vendidas antes da primeira consulta.
+- Refinamento/ascensão: a V252 preserva o maior patamar na gravação da peça, mesmo se ela for vendida antes do próximo lote. Peças já vendidas antes da instalação, sem evidências, não são reconstruídas.
 
 Históricos já apagados antes da instalação não são inventados nem reconstruídos a partir do bônus de recompensa de missões (esse contador tem teto de 100). Administradores podem experimentar o protótipo na própria conta; não há ranking público nesta versão.
 
 ## Consistência
 
-`player_achievements` possui chave composta por conta e conquista. Leitura/sincronização e resgate obtêm o lock da conta. O resgate também faz uma atualização condicional de `claimed_at`; Bits, item, auditoria e marca de resgate estão na mesma transação. Se o stack não comportar o item, o resgate falha inteiro e permanece disponível. Nenhuma quantidade ou recompensa é aceita do cliente.
+`player_achievements` possui chave composta por conta e conquista. A página faz somente leituras, sem lock pessimista da conta. O worker bloqueia apenas a linha de pendência com FOR UPDATE SKIP LOCKED; o resgate mantém o lock da conta. O resgate também faz uma atualização condicional de `claimed_at`; Bits, item, auditoria e marca de resgate estão na mesma transação. Se o stack não comportar o item, o resgate falha inteiro e permanece disponível. Nenhuma quantidade ou recompensa é aceita do cliente.
 
 Rotas autenticadas:
 
@@ -103,3 +103,15 @@ A suíte existente `UseItemUseCaseTest` apresenta 14 falhas de mocks desatualiza
 6. Resgate um expansor e use-o: o storage deve aumentar em +5 por unidade.
 7. Resgate um Passe VIP: apenas o inventário muda. Use com VIP inativo e depois com VIP ativo para conferir início e extensão.
 8. Confira a página em celular e desktop. Validação visual em navegador completo e homologação contra o banco do jogo ainda devem ser feitas antes do merge.
+
+## Processamento agendado (V252)
+
+A página lê somente o progresso persistido, mostra a última atualização e informa se há pendências. O botão Atualizar não dispara processamento. O resgate verifica a conclusão persistida e mantém a transação de entrega, sem consultar métricas do jogo.
+
+A fila no PostgreSQL agrupa atividades por conta. Os triggers só enfileiram mudanças relevantes; energia, Bits e consultas sem mudança não geram trabalho. Novas contas, novos eventos e derrotas coletivas enfileiram os jogadores afetados. Alterar o catálogo enfileira as contas uma vez. Há uma carga inicial única ao instalar a V252.
+
+Cada conta tem transação independente, com lock na pendência e SKIP LOCKED para múltiplas instâncias. O worker não bloqueia Player, evitando inversão de locks com ações que já bloqueiam a conta antes de registrar atividade. Atualizações concorrentes da fila esperam o lock e voltam a enfileirar a conta após a remoção, sem perder a atividade. Uma falha reverte o progresso e preserva a pendência; por padrão, a nova tentativa fica disponível após 60 segundos.
+
+Os padrões são configuráveis em `dro.achievements.scheduler` e variáveis `DRO_ACHIEVEMENTS_SCHEDULER_*`. Os 30 segundos são intervalo entre lotes, não garantia de latência máxima. O teste de concorrência/carga com múltiplas instâncias e PostgreSQL de homologação continua pendente.
+
+Documentação operacional: `backend/src/main/resources/docs/PROCESSAMENTO-CONQUISTAS.md`.

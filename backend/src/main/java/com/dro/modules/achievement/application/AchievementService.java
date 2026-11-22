@@ -2,6 +2,7 @@ package com.dro.modules.achievement.application;
 
 import com.dro.modules.achievement.api.AchievementDtos.*;
 import com.dro.modules.achievement.infra.AchievementRepository;
+import com.dro.modules.achievement.infra.AchievementQueueRepository;
 import com.dro.modules.achievement.infra.AchievementRepository.Definition;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.infra.ItemDefinitionRepository;
@@ -25,35 +26,39 @@ public class AchievementService {
     private final ItemDefinitionRepository items;
     private final AddItemUseCase grant;
     private final TransactionAuditPublisher audit;
+    private final AchievementQueueRepository queue;
 
     public AchievementService(AchievementRepository repository, PlayerRepository players,
-                              ItemDefinitionRepository items, AddItemUseCase grant, TransactionAuditPublisher audit) {
+                              ItemDefinitionRepository items, AddItemUseCase grant, TransactionAuditPublisher audit, AchievementQueueRepository queue) {
         this.repository = repository; this.players = players; this.items = items; this.grant = grant;
-        this.audit = audit;
+        this.audit = audit; this.queue = queue;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Page list(UUID playerId) {
-        lockPlayer(playerId);
-        List<Definition> definitions = synchronize(playerId);
+        players.findById(playerId).orElseThrow(() -> new NotFoundException("Jogador não encontrado."));
+        List<Definition> definitions = repository.definitions();
         var stored = repository.progress(playerId);
         List<Entry> entries = definitions.stream().map(d -> {
-            var p = stored.get(d.code());
+            var p = stored.getOrDefault(d.code(), new AchievementRepository.Progress(0, null, null));
             return new Entry(d.code(), d.category(), d.name(), d.description(), p.progress(), d.target(),
                     p.claimedAt() != null ? "CLAIMED" : p.completedAt() != null ? "AVAILABLE" : "IN_PROGRESS",
                     p.completedAt(), p.claimedAt(), d.reward());
         }).toList();
         long claimed = entries.stream().filter(e -> "CLAIMED".equals(e.status())).count();
         long available = entries.stream().filter(e -> "AVAILABLE".equals(e.status())).count();
-        return new Page(new Summary(entries.size(), claimed + available, available, claimed), entries);
+        var state = queue.state(playerId);
+        return new Page(new Summary(entries.size(), claimed + available, available, claimed), entries,
+                state.processedAt(), state.pending());
     }
 
     @Transactional
     public Claim claim(UUID playerId, String code) {
         Player player = lockPlayer(playerId);
-        Definition definition = synchronize(playerId).stream().filter(d -> d.code().equals(code)).findFirst()
+        Definition definition = repository.definitions().stream().filter(d -> d.code().equals(code)).findFirst()
                 .orElseThrow(() -> new NotFoundException("Conquista não encontrada."));
         var progress = repository.progress(playerId).get(code);
+        if (progress == null) throw new BadRequestException("Conquistas aguardando processamento. Aguarde a próxima atualização.");
         if (progress.claimedAt() != null) throw new ConflictException("Recompensa já resgatada.");
         if (progress.completedAt() == null) throw new BadRequestException("A meta desta conquista ainda não foi atingida.");
         var reward = definition.reward();
@@ -77,10 +82,4 @@ public class AchievementService {
         return players.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Jogador não encontrado."));
     }
 
-    private List<Definition> synchronize(UUID playerId) {
-        var definitions = repository.definitions();
-        var metrics = repository.metrics(playerId);
-        definitions.forEach(d -> repository.observe(playerId, d, metrics.getOrDefault(d.metric(), 0L)));
-        return definitions;
-    }
 }

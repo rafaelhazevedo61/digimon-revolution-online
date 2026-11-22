@@ -2,6 +2,7 @@ package com.dro.modules.achievement.application;
 
 import com.dro.modules.achievement.api.AchievementDtos.Reward;
 import com.dro.modules.achievement.infra.AchievementRepository;
+import com.dro.modules.achievement.infra.AchievementQueueRepository;
 import com.dro.modules.achievement.infra.AchievementRepository.*;
 import com.dro.modules.inventory.application.AddItemUseCase;
 import com.dro.modules.inventory.domain.ItemDefinition;
@@ -29,6 +30,7 @@ class AchievementServiceTest {
     @Mock ItemDefinitionRepository items;
     @Mock AddItemUseCase grant;
     @Mock TransactionAuditPublisher audit;
+    @Mock AchievementQueueRepository queue;
     AchievementService service;
     final UUID id = UUID.randomUUID();
     final Reward reward = new Reward(300, "ENERGY_CELL", "Célula de Energia", 2);
@@ -37,11 +39,12 @@ class AchievementServiceTest {
 
     @BeforeEach
     void setup() {
-        service = new AchievementService(repository, players, items, grant, audit);
+        service = new AchievementService(repository, players, items, grant, audit, queue);
         player = Player.builder().id(id).bits(100).build();
-        when(players.findByIdForUpdate(id)).thenReturn(Optional.of(player));
+        lenient().when(players.findByIdForUpdate(id)).thenReturn(Optional.of(player));
+        lenient().when(players.findById(id)).thenReturn(Optional.of(player));
+        lenient().when(queue.state(id)).thenReturn(new AchievementQueueRepository.State(Instant.parse("2026-11-22T12:00:00Z"), false));
         when(repository.definitions()).thenReturn(List.of(definition));
-        when(repository.metrics(id)).thenReturn(Map.of("MISSIONS", 10L));
     }
 
     @Test
@@ -99,11 +102,36 @@ class AchievementServiceTest {
 
     @Test
     void listShowsPermanentCompletionEvenIfCurrentObservationIsLower() {
-        when(repository.metrics(id)).thenReturn(Map.of("MISSIONS", 0L));
         when(repository.progress(id)).thenReturn(Map.of(definition.code(), new Progress(10, Instant.now(), null)));
         var page = service.list(id);
         assertEquals(1, page.summary().available());
         assertEquals("AVAILABLE", page.achievements().get(0).status());
         assertEquals(10, page.achievements().get(0).progress());
+        assertEquals(Instant.parse("2026-11-22T12:00:00Z"), page.lastUpdatedAt());
+        verify(repository, never()).metrics(any());
+        verify(repository, never()).observe(any(), any(), anyLong());
+        verify(players, never()).findByIdForUpdate(any());
     }
+    @Test
+    void firstVisitReturnsZeroAndPendingWithoutRecalculating() {
+        when(repository.progress(id)).thenReturn(Map.of());
+        when(queue.state(id)).thenReturn(new AchievementQueueRepository.State(null, true));
+        var page = service.list(id);
+        assertNull(page.lastUpdatedAt());
+        assertTrue(page.updatePending());
+        assertEquals(0, page.achievements().get(0).progress());
+        assertEquals("IN_PROGRESS", page.achievements().get(0).status());
+        verify(repository, never()).metrics(any());
+        verify(repository, never()).observe(any(), any(), anyLong());
+    }
+
+    @Test
+    void claimDoesNotForceProcessingWhenQueueHasNotRunYet() {
+        when(repository.progress(id)).thenReturn(Map.of());
+        assertThrows(BadRequestException.class, () -> service.claim(id, definition.code()));
+        verify(repository, never()).metrics(any());
+        verify(repository, never()).observe(any(), any(), anyLong());
+        verifyNoInteractions(grant, items);
+    }
+
 }

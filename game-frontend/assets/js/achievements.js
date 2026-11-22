@@ -73,7 +73,12 @@ async function renderAchievementsPage() {
 
   function render() {
     const summary = data.summary;
-    body.innerHTML = `<div class="achievements-stats">
+    const updatedAt = data.lastUpdatedAt ? new Date(data.lastUpdatedAt).toLocaleString("pt-BR") : null;
+    const updateLabel = updatedAt ? `Última atualização: ${updatedAt}` : "Aguardando a primeira atualização";
+    body.innerHTML = `<div class="achievements-sync" role="status">
+      <span>${escapeHtml(updateLabel)}</span>
+      <span>${data.updatePending ? "Há atividades aguardando processamento." : "Progresso processado."} A atualização pode levar alguns instantes.</span>
+    </div><div class="achievements-stats">
       <div><span>Concluídas</span><strong>${summary.completed}<small> / ${summary.total}</small></strong></div>
       <div class="achievements-stat-ready"><span>Para resgatar</span><strong>${summary.available}</strong></div>
       <div><span>Já resgatadas</span><strong>${summary.claimed}</strong></div>
@@ -87,7 +92,7 @@ async function renderAchievementsPage() {
       <label class="achievement-filter"><span>Status</span><select data-status><option value="ALL">Todos os status</option><option value="AVAILABLE">Para resgatar</option><option value="IN_PROGRESS">Em andamento</option><option value="CLAIMED">Resgatadas</option></select></label>
       <button type="button" class="achievement-refresh" data-refresh>↻ Atualizar</button></div>
     <p class="achievements-result-count" data-count></p><div class="achievements-grid" data-grid></div>
-    <p class="achievements-footnote">O progresso é atualizado ao abrir ou atualizar esta página. Feitos anteriores são reconhecidos quando constam no histórico do jogo. As conquistas não expiram.</p>`;
+    <p class="achievements-footnote">O progresso é processado periodicamente pelo servidor. O botão Atualizar consulta o resultado disponível, sem antecipar o processamento. As conquistas não expiram.</p>`;
     body.querySelector("[data-status]").value = status;
     body.querySelector("[data-search]").value = search;
     body.querySelectorAll("[data-category]").forEach(button => {

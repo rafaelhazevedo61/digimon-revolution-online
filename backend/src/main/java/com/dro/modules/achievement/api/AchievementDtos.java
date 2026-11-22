@@ -11,6 +11,6 @@ public final class AchievementDtos {
                         long progress, long target, String status, Instant completedAt,
                         Instant claimedAt, Reward reward) {}
     public record Summary(int total, long completed, long available, long claimed) {}
-    public record Page(Summary summary, List<Entry> achievements) {}
+    public record Page(Summary summary, List<Entry> achievements, Instant lastUpdatedAt, boolean updatePending) {}
     public record Claim(String message, Reward reward) {}
 }

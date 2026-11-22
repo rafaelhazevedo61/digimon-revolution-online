@@ -131,6 +131,8 @@ public class AchievementRepository {
                 ON CONFLICT (player_id, achievement_code) DO UPDATE SET
                     progress = GREATEST(player_achievements.progress, EXCLUDED.progress),
                     completed_at = COALESCE(player_achievements.completed_at, EXCLUDED.completed_at)
+                WHERE player_achievements.progress < EXCLUDED.progress
+                   OR (player_achievements.completed_at IS NULL AND EXCLUDED.completed_at IS NOT NULL)
                 """, playerId, definition.code(), progress, progress, definition.target());
     }
 

@@ -4,6 +4,6 @@ function showBottomNav(){}
 function navigateTo(){location.reload()}
 function escapeHtml(value){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function showToast(message){document.getElementById('demo-toast').textContent=message;setTimeout(()=>document.getElementById('demo-toast').textContent='',4000)}
-async function apiGet(){return {summary:{total:demoEntries.length,completed:demoEntries.filter(e=>e.status!=='IN_PROGRESS').length,available:demoEntries.filter(e=>e.status==='AVAILABLE').length,claimed:demoEntries.filter(e=>e.status==='CLAIMED').length},achievements:structuredClone(demoEntries)}}
+async function apiGet(){return {lastUpdatedAt:new Date().toISOString(),updatePending:false,summary:{total:demoEntries.length,completed:demoEntries.filter(e=>e.status!=='IN_PROGRESS').length,available:demoEntries.filter(e=>e.status==='AVAILABLE').length,claimed:demoEntries.filter(e=>e.status==='CLAIMED').length},achievements:structuredClone(demoEntries)}}
 async function apiPost(path){const code=decodeURIComponent(path.split('/').at(-2));const entry=demoEntries.find(e=>e.code===code);if(!entry||entry.status!=='AVAILABLE')throw Error('Conquista indisponível.');entry.status='CLAIMED';return {message:'Demonstração: recompensa resgatada!',reward:entry.reward}}
 </script><script src="../../game-frontend/assets/js/achievements.js"></script><script>renderAchievementsPage()</script></body></html>

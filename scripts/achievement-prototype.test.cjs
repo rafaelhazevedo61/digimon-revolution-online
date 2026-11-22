@@ -10,6 +10,8 @@ const root = path.resolve(__dirname, '..');
 const java = fs.readFileSync(path.join(root, 'backend/src/main/java/com/dro/modules/achievement/infra/AchievementRepository.java'), 'utf8');
 const sql = fs.readFileSync(path.join(root, 'backend/src/main/resources/db/migration/V250__achievement_prototype_and_vip_pass.sql'), 'utf8');
 const expansion = fs.readFileSync(path.join(root, 'backend/src/main/resources/db/migration/V251__expand_achievements_to_100.sql'), 'utf8');
+const scheduling = fs.readFileSync(path.join(root, 'backend/src/main/resources/db/migration/V252__scheduled_achievement_processing.sql'), 'utf8');
+const queueJava = fs.readFileSync(path.join(root, 'backend/src/main/java/com/dro/modules/achievement/infra/AchievementQueueRepository.java'), 'utf8');
 const recorder = fs.readFileSync(path.join(root, 'backend/src/main/java/com/dro/modules/achievement/application/AchievementGameplayRecorder.java'), 'utf8');
 const player = '00000000-0000-0000-0000-000000000001';
 const other = '00000000-0000-0000-0000-000000000002';
@@ -37,7 +39,7 @@ async function database(upgrade = true) {
     CREATE TABLE clan_raid_attacks(player_id uuid,clan_raid_id bigint,damage int);
     CREATE TABLE clan_raid_instances(id bigint,status text);
     CREATE TABLE tutorial_progress(player_id uuid,step text);
-    CREATE TABLE inventory_equipments(player_id uuid,refinement_level int,ascension_level int);`);
+    CREATE TABLE inventory_equipments(player_id uuid,refinement_level int,ascension_level int,equipped boolean DEFAULT false,digimon_id uuid,set_code text);`);
   // Itens existentes referenciados pelo catálogo novo.
   const itemCodes = new Set([...sql.matchAll(/, '(ENERGY_CELL|XP_DISC_\d+|INCUBATOR_\w+|RARITY_\w+|VIP_ENERGY_CHARGE|STORAGE_SLOT_\d+|ASCENSION_CORE|REFINEMENT_PROTECTION)', \d+, \d+\)/g)].map(m=>m[1]));
   assert.ok(itemCodes.size >= 10);
@@ -50,7 +52,7 @@ async function database(upgrade = true) {
   await db.exec(`INSERT INTO available_contents VALUES(1,true);
     INSERT INTO evolution_lines VALUES(10,1,true),(11,1,true);
     INSERT INTO evolution_line_steps VALUES(10,1),(10,2),(11,1),(11,3);`);
-  if (upgrade) await db.exec(expansion);
+  if (upgrade) { await db.exec(expansion); await db.exec(scheduling); }
   return db;
 }
 
@@ -118,6 +120,7 @@ test('Página: categorias, busca, filtros e resgate único com resumo atualizado
  try {
   const d=dom.window.document;
   await wait(()=>d.querySelectorAll('.achievement-card').length===100);
+  assert.match(d.querySelector(".achievements-sync").textContent,/Última atualização/);
   const ready=Number(d.querySelector('.achievements-stat-ready strong').textContent);
   d.querySelector('.achievement-ready [data-claim]').click();
   await wait(()=>Number(d.querySelector('.achievements-stat-ready strong').textContent)===ready-1);
@@ -244,4 +247,121 @@ test('Upgrade preserva as 33 definições antigas e recompensas já resgatadas',
   assert.ok(progress.claimed_at);
   assert.equal((await db.query(positional(block('UPDATE player_achievements SET claimed_at')),[player,'FIRST_HATCH'])).affectedRows,0);
  } finally {await db.close()}
+});
+
+const queueBlock = prefix => queueJava.match(new RegExp('"""\\s*('+prefix+'[\\s\\S]*?)"""'))[1];
+const readySql = queueBlock('SELECT player_id FROM achievement_pending_players');
+async function finishQueue(db,id) {
+ await db.query(positional(queueBlock('INSERT INTO achievement_processing_state')),[id]);
+ await db.query('DELETE FROM achievement_pending_players WHERE player_id=$1',[id]);
+}
+
+test('Fila: carga inicial única, coalescência e progresso só depois do processamento',async()=>{
+ const db=await database();
+ try {
+  assert.equal((await db.query('SELECT * FROM achievement_pending_players')).rows.length,2);
+  await db.exec('DELETE FROM achievement_pending_players');
+  await db.query("INSERT INTO mission_instances(player_id,status) VALUES($1,'CLAIMED'),($1,'CLAIMED')",[player]);
+  const pending=(await db.query('SELECT * FROM achievement_pending_players')).rows;
+  assert.equal(pending.length,1);assert.equal(pending[0].player_id,player);
+  assert.ok(Number(pending[0].activity_version)>=2);
+  assert.equal((await db.query('SELECT * FROM player_achievements')).rows.length,0);
+  await db.exec('BEGIN');
+  assert.equal((await db.query(readySql)).rows[0].player_id,player);
+  const observed=await metric(db,'MISSIONS');
+  await db.query(positional(block('INSERT INTO player_achievements')),[player,'FIRST_MISSION',1,Math.min(observed,1),1]);
+  await finishQueue(db,player);
+  await db.exec('COMMIT');
+  const state=(await db.query(positional(queueBlock('SELECT s.processed_at')),[player])).rows[0];
+  assert.ok(state.processed_at);assert.equal(state.pending,false);
+  assert.equal((await db.query('SELECT * FROM achievement_pending_players')).rows.length,0);
+  assert.equal((await db.query('SELECT * FROM player_achievements')).rows.length,1);
+  // Uma atividade posterior volta para a fila, sem apagar o progresso já processado.
+  await db.query("INSERT INTO mission_instances(player_id,status) VALUES($1,'CLAIMED')",[player]);
+  assert.equal((await db.query(positional(queueBlock('SELECT s.processed_at')),[player])).rows[0].pending,true);
+  assert.match(readySql,/FOR UPDATE SKIP LOCKED/);
+ }finally{await db.close()}
+});
+
+test('Fila: rollback da ação não deixa pendência nem incremento fantasma',async()=>{
+ const db=await database();
+ try {
+  await db.exec('DELETE FROM achievement_pending_players');
+  await db.exec('BEGIN');
+  await db.query("INSERT INTO mission_instances(player_id,status) VALUES($1,'CLAIMED')",[player]);
+  await db.exec('ROLLBACK');
+  assert.equal((await db.query('SELECT * FROM achievement_pending_players')).rows.length,0);
+  assert.equal(await metric(db,'MISSIONS'),0);
+ }finally{await db.close()}
+});
+
+test('Fila: falha do worker reverte progresso/timestamp e permite nova tentativa',async()=>{
+ const db=await database();
+ try {
+  await db.exec('DELETE FROM achievement_pending_players');
+  await db.query('SELECT achievement_enqueue_player($1)',[player]);
+  await db.exec('BEGIN');
+  assert.equal((await db.query(readySql)).rows[0].player_id,player);
+  await db.query(positional(block('INSERT INTO player_achievements')),[player,'FIRST_MISSION',1,1,1]);
+  await finishQueue(db,player);
+  await db.exec('ROLLBACK');
+  assert.equal((await db.query('SELECT * FROM player_achievements')).rows.length,0);
+  assert.equal((await db.query('SELECT * FROM achievement_processing_state')).rows.length,0);
+  assert.equal((await db.query('SELECT * FROM achievement_pending_players')).rows.length,1);
+  await db.query(positional(queueBlock('UPDATE achievement_pending_players SET failures')),[60000,player]);
+  assert.equal((await db.query(readySql)).rows.length,0);
+  await db.query('SELECT achievement_enqueue_player($1)',[other]);
+  assert.equal((await db.query(readySql)).rows[0].player_id,other);
+  const failed=(await db.query('SELECT * FROM achievement_pending_players WHERE player_id=$1',[player])).rows[0];
+  assert.equal(failed.failures,1);
+ }finally{await db.close()}
+});
+
+test('Fila: alterações irrelevantes não enfileiram e marcos de equipamento não se perdem',async()=>{
+ const db=await database();
+ try {
+  await db.query("INSERT INTO digimons VALUES($1,'ROOKIE','ACTIVE')",[player]);
+  await db.exec('DELETE FROM achievement_pending_players');
+  await db.query("UPDATE digimons SET status='ACTIVE',stage='ROOKIE' WHERE player_id=$1",[player]);
+  await db.query("INSERT INTO incubations VALUES($1,'IN_PROGRESS')",[player]);
+  await db.query('UPDATE players SET bits=bits+1 WHERE id=$1',[player]);
+  assert.equal((await db.query('SELECT * FROM achievement_pending_players')).rows.length,0);
+  await db.query('INSERT INTO inventory_equipments(player_id,refinement_level,ascension_level) VALUES($1,10,2)',[player]);
+  await db.query('DELETE FROM inventory_equipments WHERE player_id=$1',[player]);
+  const counters=(await db.query('SELECT metric,value FROM player_achievement_counters WHERE player_id=$1',[player])).rows;
+  assert.equal(Number(counters.find(r=>r.metric==='REFINEMENT').value),10);
+  assert.equal(Number(counters.find(r=>r.metric==='ASCENSION').value),2);
+  assert.equal((await db.query('SELECT * FROM achievement_pending_players')).rows.length,1);
+ }finally{await db.close()}
+});
+
+test('Fila: derrota coletiva enfileira participantes e novo jogador é descoberto',async()=>{
+ const db=await database();
+ try {
+  await db.exec("INSERT INTO world_boss_instances VALUES(10,'ACTIVE'); INSERT INTO clan_raid_instances VALUES(20,'ACTIVE')");
+  await db.query('INSERT INTO world_boss_attacks VALUES($1,10,20),($2,10,50)',[player,other]);
+  await db.exec('DELETE FROM achievement_pending_players');
+  await db.exec("UPDATE world_boss_instances SET status='DEFEATED' WHERE id=10");
+  assert.equal((await db.query('SELECT * FROM achievement_pending_players')).rows.length,2);
+  await db.query('INSERT INTO clan_raid_attacks VALUES($1,20,30),($2,20,0)',[player,other]);
+  await db.exec('DELETE FROM achievement_pending_players');
+  await db.exec("UPDATE clan_raid_instances SET status='DEFEATED' WHERE id=20");
+  assert.deepEqual((await db.query('SELECT player_id FROM achievement_pending_players')).rows.map(r=>r.player_id),[player]);
+  const newbie='00000000-0000-0000-0000-000000000003';
+  await db.query('INSERT INTO players(id) VALUES($1)',[newbie]);
+  assert.ok((await db.query('SELECT * FROM achievement_pending_players WHERE player_id=$1',[newbie])).rows.length);
+ }finally{await db.close()}
+});
+
+test('Fila: editar catálogo reavalia uma vez; observação idêntica não regrava progresso',async()=>{
+ const db=await database();
+ try {
+  await db.exec('DELETE FROM achievement_pending_players');
+  await db.exec("UPDATE achievement_definitions SET reward_bits=reward_bits+1 WHERE code='FIRST_HATCH'");
+  assert.equal((await db.query('SELECT * FROM achievement_pending_players')).rows.length,2);
+  const observe=positional(block('INSERT INTO player_achievements'));
+  assert.equal((await db.query(observe,[player,'MISSION_10',5,5,10])).affectedRows,1);
+  assert.equal((await db.query(observe,[player,'MISSION_10',5,5,10])).affectedRows,0);
+  assert.equal((await db.query(observe,[player,'MISSION_10',3,3,10])).affectedRows,0);
+ }finally{await db.close()}
 });

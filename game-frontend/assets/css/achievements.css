@@ -83,3 +83,6 @@
   .achievement-filter select { flex: 1; min-width: 0; }
   .achievement-card { padding: 17px; }
 }
+
+.achievements-sync { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin: 16px 0 0; color: #94a3b8; font-size: 11px; line-height: 1.7; }
+.achievements-sync span:first-child { color: #cbd5e1; }

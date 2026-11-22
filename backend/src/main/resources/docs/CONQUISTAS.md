@@ -2,9 +2,9 @@
 
 O catálogo contém **100 conquistas permanentes por conta**, em **13 categorias**. Acesso: **Mais → Conquistas**. Cada recompensa pode ser resgatada uma única vez por conta, independentemente do Digimon ativo.
 
-Fontes: [V250 — catálogo inicial](../db/migration/V250__achievement_prototype_and_vip_pass.sql) e [V251 — expansão para 100](../db/migration/V251__expand_achievements_to_100.sql). A expansão preserva as 33 definições originais e seus resgates.
+Fontes: [V250 — catálogo inicial](../db/migration/V250__achievement_prototype_and_vip_pass.sql) e [V251 — expansão para 100](../db/migration/V251__expand_achievements_to_100.sql). A expansão preserva as 33 definições originais e seus resgates. A [V252](../db/migration/V252__scheduled_achievement_processing.sql) acrescenta o processamento agendado, sem mudar as 100 metas ou recompensas.
 
-As metas acumulam o progresso entre etapas. Os Bits são creditados à conta e os itens ficam no inventário até o uso. O progresso é atualizado ao abrir/atualizar a página ou tentar um resgate.
+As metas acumulam o progresso entre etapas. Os Bits são creditados à conta e os itens ficam no inventário até o uso. O progresso é processado em segundo plano, com intervalo padrão de 30 segundos entre lotes de até 100 contas pendentes. Abrir/atualizar a página consulta o resultado já processado; resgatar não força um recálculo.
 
 ## Primeiros passos
 
@@ -208,7 +208,7 @@ Os expansores mantêm o total de **+20 espaços de storage**, depois do uso. Os 
 - **Arena:** conta vitórias de desafios iniciados pela conta; defesas passivas não contam.
 - **Chefes individuais:** conta tentativas com `VICTORY`. Chefes distintos são identificados pelo ID da definição do chefe, não pelo nome nem pelo número de tentativas.
 - **Participação coletiva:** exige pelo menos um ataque com dano positivo naquele mesmo ciclo e que a instância termine em `DEFEATED`. Não exige maior dano, vitória individual ou golpe final. Múltiplos ataques ao mesmo ciclo não multiplicam sua participação.
-- **Possuir refinamento/ascensão:** reconhece o maior patamar de uma peça na conta ao consultar a página. Depois de reconhecida, a conclusão permanece mesmo com venda ou perda da peça.
+- **Possuir refinamento/ascensão:** a V252 preserva o maior patamar observado na gravação da peça. A venda ou perda posterior não apaga esse marco enquanto a conta aguarda processamento. Peças já vendidas antes da instalação e sem evidência não são reconstruídas.
 - **Realizar refinamentos/ascensões:** novas ações passam a ser registradas pela V251. Refinamentos falhos não contam. Comprar uma peça pronta não conta. Não se tenta reconstruir essas ações a partir do nível atual do equipamento.
 - **Equipar e ativar conjuntos:** o primeiro equipamento usa o registro existente do tutorial. As novas metas registram equipagens após a V251. O conjunto precisa realmente ativar o bônus de três peças; repetir o mesmo código de conjunto não conta como outro conjunto. A ativação permanece registrada após desequipar ou vender peças.
 
@@ -224,3 +224,11 @@ Uma conclusão reconhecida não perde o estado após troca de parceiro, renascim
 ## Manutenção
 
 As definições ficam em `achievement_definitions`; progresso e resgates ficam em `player_achievements`. Alterações em metas ou recompensas devem atualizar esta lista. Use migrations novas para modificar catálogos já implantados, sem reescrever V250/V251.
+
+## Atualização em segundo plano
+
+A captura de ações e fotografias de nascimento continua imediata e transacional. Apenas contas com pendências são avaliadas pela rotina. Uma conta ocupa no máximo uma linha na fila, mesmo com várias atividades; a ordem considera a primeira atividade pendente. A instalação faz uma carga inicial única para reconhecer históricos anteriores.
+
+A página exibe `lastUpdatedAt` (último processamento) e `updatePending` (existem atividades aguardando processamento). Antes do primeiro lote, o progresso aparece em zero com indicação de espera. Atualizar a página não antecipa a fila. Uma conquista só pode ser resgatada após sua conclusão ter sido persistida pelo processador.
+
+Os 30 segundos são um intervalo de execução, não um prazo garantido: backlog, duração do lote e falhas podem aumentar a espera. Metas já concluídas não são reavaliadas. Veja [PROCESSAMENTO-CONQUISTAS.md](PROCESSAMENTO-CONQUISTAS.md) para configuração, concorrência e recuperação de falhas.
