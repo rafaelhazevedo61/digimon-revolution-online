@@ -1,5 +1,6 @@
 package com.dro.modules.equipment.application;
 
+import com.dro.modules.achievement.application.AchievementGameplayRecorder;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.equipment.api.dto.request.AscendEquipmentRequest;
@@ -26,6 +27,7 @@ import java.util.UUID;
 
 @Service
 public class AscendEquipmentUseCase {
+    private final AchievementGameplayRecorder achievementRecorder;
     private final EquipmentRepository equipmentRepository;
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
@@ -33,10 +35,17 @@ public class AscendEquipmentUseCase {
 
     public AscendEquipmentUseCase(EquipmentRepository equipmentRepository, DigimonRepository digimonRepository,
                                   PlayerRepository playerRepository, InventoryRepository inventoryRepository) {
+        this(equipmentRepository, digimonRepository, playerRepository, inventoryRepository, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public AscendEquipmentUseCase(EquipmentRepository equipmentRepository, DigimonRepository digimonRepository,
+                                  PlayerRepository playerRepository, InventoryRepository inventoryRepository, AchievementGameplayRecorder achievementRecorder) {
         this.equipmentRepository = equipmentRepository;
         this.digimonRepository = digimonRepository;
         this.playerRepository = playerRepository;
         this.inventoryRepository = inventoryRepository;
+        this.achievementRecorder = achievementRecorder;
     }
 
     @Transactional
@@ -83,6 +92,7 @@ public class AscendEquipmentUseCase {
         equipmentRepository.save(equipment);
         if (core.getQuantity() == 0) inventoryRepository.delete(core);
         else inventoryRepository.save(core);
+        if (achievementRecorder != null) achievementRecorder.ascension(playerId, equipment.getId(), targetLevel);
         return new AscendEquipmentResponse(
                 "Ascensão " + targetLevel + " realizada com sucesso!",
                 targetLevel,

@@ -1,17 +1,10 @@
 # Conquistas — catálogo completo
 
-Este documento lista as **33 conquistas** cadastradas no catálogo versionado do sistema, com suas condições e recompensas. Acesso no jogo: **Mais → Conquistas**.
+O catálogo contém **100 conquistas permanentes por conta**, em **13 categorias**. Acesso: **Mais → Conquistas**. Cada recompensa pode ser resgatada uma única vez por conta, independentemente do Digimon ativo.
 
-Fonte: [V250 — catálogo de conquistas e Passe VIP](../db/migration/V250__achievement_prototype_and_vip_pass.sql). Os valores abaixo refletem essa migration; alterações posteriores diretamente no banco precisam ser refletidas neste documento.
+Fontes: [V250 — catálogo inicial](../db/migration/V250__achievement_prototype_and_vip_pass.sql) e [V251 — expansão para 100](../db/migration/V251__expand_achievements_to_100.sql). A expansão preserva as 33 definições originais e seus resgates.
 
-## Regras gerais
-
-- Cada conquista concede os Bits e a quantidade de itens indicados na tabela, uma única vez por conta.
-- O resgate é manual. Os itens vão para o inventário, sem ativação ou uso automático.
-- As etapas acumulativas compartilham a mesma contagem: as primeiras 10 missões fazem parte da meta de 100.
-- O progresso é consultado e atualizado ao abrir/atualizar a página ou tentar resgatar uma conquista.
-- Uma conclusão já reconhecida permanece registrada após renascimento ou troca de Digimon.
-- Feitos anteriores são aproveitados quando existem registros confiáveis no banco.
+As metas acumulam o progresso entre etapas. Os Bits são creditados à conta e os itens ficam no inventário até o uso. O progresso é atualizado ao abrir/atualizar a página ou tentar um resgate.
 
 ## Primeiros passos
 
@@ -28,6 +21,23 @@ Fonte: [V250 — catálogo de conquistas e Passe VIP](../db/migration/V250__achi
 | `HATCH_10` | Berçário digital I | Choque 10 Digitamas. | 500 | 1 × Incubadora rara |
 | `HATCH_50` | Berçário digital II | Choque 50 Digitamas. | 2.000 | 1 × Incubadora épica |
 | `HATCH_100` | Guardião do berçário | Choque 100 Digitamas. | 5.000 | 1 × Dado de Raridade |
+| `HATCH_5` | Berçário em expansão — 5 | Choque 5 Digitamas. | 75 | 2 × Disco de XP +10% |
+| `HATCH_25` | Berçário em expansão — 25 | Choque 25 Digitamas. | 375 | 2 × Disco de XP +10% |
+| `HATCH_250` | Berçário em expansão — 250 | Choque 250 Digitamas. | 3.750 | 2 × Disco de XP +10% |
+| `HATCH_500` | Berçário em expansão — 500 | Choque 500 Digitamas. | 7.500 | 1 × Dado de Raridade |
+
+## Raridade e talentos ao nascer
+
+| Código | Conquista | Condição | Bits | Item recebido |
+|---|---|---|---:|---|
+| `BIRTH_RARE` | Um brilho diferente | Choque seu primeiro Digimon Raro. | 300 | 2 × Célula de Energia |
+| `BIRTH_EPIC` | Nascimento extraordinário | Choque seu primeiro Digimon Épico. | 750 | 2 × Disco de XP +10% |
+| `BIRTH_LEGENDARY` | Uma lenda nasceu | Choque seu primeiro Digimon Lendário. | 2.500 | 1 × Cristal de Preservação de Raridade |
+| `BIRTH_ELITE_10` | Berçário de elite | Choque 10 Digimons Épicos ou Lendários. | 3.000 | 3 × Carga de Energia Total |
+| `BIRTH_PERFECT_IV` | Potencial perfeito | Choque um Digimon com pelo menos um IV 100. | 1.000 | 2 × Disco de XP +20% |
+| `BIRTH_ALL_PERFECT_IV` | Perfeição digital | Choque um Digimon com os três IVs 100. | 5.000 | 1 × Dado de Raridade |
+| `BIRTH_TRAIT_1` | Personalidade marcante | Choque seu primeiro Digimon com trait. | 500 | 2 × Célula de Energia |
+| `BIRTH_TRAIT_10` | Novos talentos | Choque 10 Digimons com trait. | 2.000 | 2 × Carga de Energia Total |
 
 ## Evolução
 
@@ -46,6 +56,9 @@ Fonte: [V250 — catálogo de conquistas e Passe VIP](../db/migration/V250__achi
 | `REBIRTH_1` | Um novo começo | Realize seu primeiro renascimento. | 750 | 1 × Cristal de Preservação de Raridade |
 | `REBIRTH_10` | Dez novos destinos | Realize 10 renascimentos na conta. | 3.500 | 1 × Dado de Raridade |
 | `REBIRTH_25` | O ciclo continua | Realize 25 renascimentos na conta. | 7.500 | 2 × Cristal de Preservação de Raridade |
+| `REBIRTH_5` | Novos ciclos — 5 | Realize 5 renascimentos na conta. | 500 | 2 × Disco de XP +20% |
+| `REBIRTH_50` | Novos ciclos — 50 | Realize 50 renascimentos na conta. | 5.000 | 2 × Disco de XP +20% |
+| `REBIRTH_100` | Novos ciclos — 100 | Realize 100 renascimentos na conta. | 10.000 | 1 × Cristal de Preservação de Raridade |
 
 ## Coleção
 
@@ -55,6 +68,20 @@ Fonte: [V250 — catálogo de conquistas e Passe VIP](../db/migration/V250__achi
 | `SPECIES_25` | Olhar de colecionador | Registre 25 espécies diferentes na coleção. | 1.500 | 1 × Dado de Raridade |
 | `SPECIES_50` | Uma família digital | Registre 50 espécies diferentes na coleção. | 3.000 | 1 × Expansor de Storage +5 |
 | `SPECIES_100` | Enciclopédia viva | Registre 100 espécies diferentes na coleção. | 6.000 | 2 × Expansor de Storage +5 |
+| `SPECIES_5` | Descobertas digitais — 5 | Registre 5 espécies diferentes. | 100 | 2 × Disco de XP +10% |
+| `SPECIES_75` | Descobertas digitais — 75 | Registre 75 espécies diferentes. | 1.500 | 2 × Disco de XP +10% |
+| `SPECIES_150` | Descobertas digitais — 150 | Registre 150 espécies diferentes. | 3.000 | 1 × Dado de Raridade |
+| `MASTERY_1` | Muitas faces | Registre as quatro raridades de 1 espécie(s). | 500 | 2 × Disco de XP +20% |
+| `MASTERY_5` | Conhecimento aprofundado | Registre as quatro raridades de 5 espécie(s). | 2.500 | 2 × Disco de XP +20% |
+| `MASTERY_10` | Especialista em espécies | Registre as quatro raridades de 10 espécie(s). | 5.000 | 2 × Disco de XP +20% |
+| `LINES_1` | Do início ao fim | Registre todas as espécies de 1 linha(s) evolutiva(s). | 750 | 1 × Carga de Energia Total |
+| `LINES_5` | Caminhos conhecidos | Registre todas as espécies de 5 linha(s) evolutiva(s). | 3.750 | 3 × Carga de Energia Total |
+| `LINES_10` | Arquivista digital | Registre todas as espécies de 10 linha(s) evolutiva(s). | 7.500 | 3 × Carga de Energia Total |
+| `COLLECTION_BABY_10` | Pequenos companheiros | Registre 10 espécies diferentes do estágio BABY. | 1.500 | 2 × Disco de XP +20% |
+| `COLLECTION_ROOKIE_10` | Novos aventureiros | Registre 10 espécies diferentes do estágio ROOKIE. | 1.500 | 2 × Disco de XP +20% |
+| `COLLECTION_CHAMPION_10` | Grandes guerreiros | Registre 10 espécies diferentes do estágio CHAMPION. | 1.500 | 2 × Disco de XP +20% |
+| `COLLECTION_ULTIMATE_10` | Poder extraordinário | Registre 10 espécies diferentes do estágio ULTIMATE. | 1.500 | 2 × Disco de XP +20% |
+| `COLLECTION_MEGA_10` | Encontro de lendas | Registre 10 espécies diferentes do estágio MEGA. | 1.500 | 2 × Disco de XP +20% |
 
 ## Missões
 
@@ -64,6 +91,30 @@ Fonte: [V250 — catálogo de conquistas e Passe VIP](../db/migration/V250__achi
 | `MISSION_100` | Explorador II | Resgate 100 missões, incluindo resgates automáticos. | 1.500 | 2 × Carga de Energia Total |
 | `MISSION_500` | Explorador III | Resgate 500 missões. | 5.000 | 1 × Passe VIP de 1 Dia |
 | `MISSION_1000` | Lenda das expedições | Resgate 1.000 missões. | 10.000 | 1 × Incubadora lendária |
+| `MISSION_25` | Expedições sem fronteiras — 25 | Resgate 25 missões. | 125 | 2 × Célula de Energia |
+| `MISSION_50` | Expedições sem fronteiras — 50 | Resgate 50 missões. | 250 | 2 × Célula de Energia |
+| `MISSION_250` | Expedições sem fronteiras — 250 | Resgate 250 missões. | 1.250 | 2 × Carga de Energia Total |
+| `MISSION_2500` | Expedições sem fronteiras — 2500 | Resgate 2500 missões. | 12.500 | 4 × Carga de Energia Total |
+| `MISSION_5000` | Expedições sem fronteiras — 5000 | Resgate 5000 missões. | 25.000 | 4 × Carga de Energia Total |
+
+## Exploração
+
+| Código | Conquista | Condição | Bits | Item recebido |
+|---|---|---|---:|---|
+| `EXPLORE_NATIVE_FOREST` | Conhecedor de Floresta Nativa | Resgate ao menos uma vez todas as missões de Floresta Nativa incluídas nesta conquista. | 2.000 | 2 × Carga de Energia Total |
+| `EXPLORE_GEAR_SAVANNA` | Conhecedor de Savana Gear | Resgate ao menos uma vez todas as missões de Savana Gear incluídas nesta conquista. | 2.000 | 2 × Carga de Energia Total |
+| `EXPLORE_FACTORIAL_TOWN` | Conhecedor de Cidade Fatorial | Resgate ao menos uma vez todas as missões de Cidade Fatorial incluídas nesta conquista. | 2.000 | 2 × Carga de Energia Total |
+| `EXPLORE_FREEZELAND` | Conhecedor de Freezeland | Resgate ao menos uma vez todas as missões de Freezeland incluídas nesta conquista. | 2.000 | 2 × Carga de Energia Total |
+| `EXPLORE_SERVER_DESERT` | Conhecedor de Deserto do Server | Resgate ao menos uma vez todas as missões de Deserto do Server incluídas nesta conquista. | 2.000 | 2 × Carga de Energia Total |
+| `EXPLORE_INFINITY_MOUNTAIN` | Conhecedor de Montanha Infinita | Resgate ao menos uma vez todas as missões de Montanha Infinita incluídas nesta conquista. | 2.000 | 2 × Carga de Energia Total |
+
+## Equipes
+
+| Código | Conquista | Condição | Bits | Item recebido |
+|---|---|---|---:|---|
+| `TEAM_1` | Melhor acompanhado | Resgate 1 missão(ões) com time completo de três Digimons. | 200 | 1 × Célula de Energia |
+| `TEAM_100` | Trabalho em equipe | Resgate 100 missão(ões) com time completo de três Digimons. | 800 | 2 × Carga de Energia Total |
+| `TEAM_500` | Esquadrão veterano | Resgate 500 missão(ões) com time completo de três Digimons. | 4.000 | 2 × Carga de Energia Total |
 
 ## Combate
 
@@ -75,6 +126,24 @@ Fonte: [V250 — catálogo de conquistas e Passe VIP](../db/migration/V250__achi
 | `WORLD_1` | Na linha de frente | Realize um ataque válido ao Chefe Mundial. | 250 | 1 × Célula de Energia |
 | `WORLD_50` | Presença constante | Realize 50 ataques ao Chefe Mundial. | 2.500 | 1 × Núcleo de Ascensão |
 | `WORLD_200` | Defensor do Mundo Digital | Realize 200 ataques ao Chefe Mundial. | 7.500 | 5 × Carga de Energia Total |
+| `ARENA_10` | Vitórias na arena — 10 | Vença 10 desafios iniciados por você na arena. | 150 | 2 × Célula de Energia |
+| `ARENA_50` | Vitórias na arena — 50 | Vença 50 desafios iniciados por você na arena. | 750 | 2 × Célula de Energia |
+| `ARENA_250` | Vitórias na arena — 250 | Vença 250 desafios iniciados por você na arena. | 3.750 | 2 × Carga de Energia Total |
+| `ARENA_500` | Vitórias na arena — 500 | Vença 500 desafios iniciados por você na arena. | 7.500 | 2 × Carga de Energia Total |
+| `WORLD_10` | Vanguarda mundial — 10 | Realize 10 ataques válidos ao Chefe Mundial. | 100 | 2 × Célula de Energia |
+| `WORLD_100` | Vanguarda mundial — 100 | Realize 100 ataques válidos ao Chefe Mundial. | 1.000 | 2 × Carga de Energia Total |
+| `WORLD_500` | Vanguarda mundial — 500 | Realize 500 ataques válidos ao Chefe Mundial. | 5.000 | 2 × Carga de Energia Total |
+
+## Chefes
+
+| Código | Conquista | Condição | Bits | Item recebido |
+|---|---|---|---:|---|
+| `BOSS_WIN_1` | Primeiro grande adversário | Vença 1 desafio(s) de chefes. | 250 | 1 × Célula de Energia |
+| `BOSS_WIN_10` | Caçador de chefes | Vença 10 desafio(s) de chefes. | 500 | 2 × Carga de Energia Total |
+| `BOSS_WIN_100` | Caçador veterano | Vença 100 desafio(s) de chefes. | 5.000 | 2 × Carga de Energia Total |
+| `BOSS_DISTINCT_5` | Adversários conhecidos | Derrote cinco chefes diferentes. | 2.000 | 3 × Disco de XP +20% |
+| `WORLD_PARTICIPATION` | Unidos contra o impossível | Ataque um Chefe Mundial em um ciclo que termine em derrota do chefe. | 1.500 | 2 × Carga de Energia Total |
+| `RAID_PARTICIPATION` | Vitória do clã | Ataque um chefe de incursão em um ciclo que termine em derrota do chefe. | 1.500 | 2 × Carga de Energia Total |
 
 ## Clã
 
@@ -82,6 +151,10 @@ Fonte: [V250 — catálogo de conquistas e Passe VIP](../db/migration/V250__achi
 |---|---|---|---:|---|
 | `RAID_10` | Força em conjunto | Realize 10 ataques em incursões de clã. | 1.000 | 1 × Carga de Energia Total |
 | `RAID_50` | Companheiro de batalha | Realize 50 ataques em incursões de clã. | 3.000 | 1 × Núcleo de Ascensão |
+| `RAID_1` | Pelo clã — 1 | Realize 1 ataques em incursões de clã. | 100 | 1 × Célula de Energia |
+| `RAID_25` | Pelo clã — 25 | Realize 25 ataques em incursões de clã. | 375 | 2 × Célula de Energia |
+| `RAID_100` | Pelo clã — 100 | Realize 100 ataques em incursões de clã. | 1.500 | 2 × Carga de Energia Total |
+| `RAID_250` | Pelo clã — 250 | Realize 250 ataques em incursões de clã. | 3.750 | 2 × Carga de Energia Total |
 
 ## Equipamentos
 
@@ -90,64 +163,64 @@ Fonte: [V250 — catálogo de conquistas e Passe VIP](../db/migration/V250__achi
 | `REFINE_5` | Arsenal aprimorado | Tenha um equipamento com refinamento +5 ou superior. | 1.000 | 2 × Cristal de Proteção |
 | `REFINE_10` | Obra de mestre | Tenha um equipamento com refinamento +10 ou superior. | 3.000 | 1 × Núcleo de Ascensão |
 | `ASCEND_1` | Um novo patamar | Tenha um equipamento com uma ascensão ou mais. | 1.500 | 3 × Cristal de Proteção |
+| `FULL_EQUIPPED` | Pronto para o combate | Equipe arma, armadura e acessório no mesmo Digimon. | 500 | 1 × Cristal de Proteção |
+| `SET_1` | Sinergia de conjunto | Ative um bônus de conjunto com três peças. | 1.000 | 2 × Cristal de Proteção |
+| `SET_3` | Arsenal diversificado | Ative três conjuntos diferentes com três peças cada. | 3.000 | 1 × Núcleo de Ascensão |
+| `REFINE_SUCCESS_1` | Primeiro aprimoramento | Realize 1 refinamento(s) bem-sucedido(s). | 250 | 1 × Célula de Energia |
+| `REFINE_SUCCESS_50` | Ferreiro dedicado | Realize 50 refinamento(s) bem-sucedido(s). | 3.000 | 3 × Cristal de Proteção |
+| `ASCENSION_DONE_1` | Transformação de equipamento | Realize 1 ascensão(ões) de equipamento. | 1.000 | 2 × Cristal de Proteção |
+| `ASCENSION_DONE_10` | Artesão experiente | Realize 10 ascensão(ões) de equipamento. | 5.000 | 2 × Núcleo de Ascensão |
 
-## Resumo das recompensas
+## Total de recompensas
 
-Ao concluir e resgatar todas as conquistas deste catálogo, a conta recebe **79.600 Bits**, além dos seguintes itens:
+O resgate das 100 conquistas concede **258.550 Bits** e:
 
-| Item | Código do item | Quantidade total |
+| Item | Código | Quantidade total |
 |---|---|---:|
-| Célula de Energia | `ENERGY_CELL` | 8 |
+| Célula de Energia | `ENERGY_CELL` | 28 |
 | Disco de XP +5% | `XP_DISC_5` | 4 |
 | Incubadora rara | `INCUBATOR_RARE` | 1 |
 | Incubadora épica | `INCUBATOR_EPIC` | 1 |
-| Dado de Raridade | `RARITY_REROLL` | 4 |
-| Disco de XP +10% | `XP_DISC_10` | 3 |
-| Carga de Energia Total | `VIP_ENERGY_CHARGE` | 10 |
+| Dado de Raridade | `RARITY_REROLL` | 7 |
+| Disco de XP +10% | `XP_DISC_10` | 15 |
+| Carga de Energia Total | `VIP_ENERGY_CHARGE` | 68 |
 | Passe VIP de 1 Dia | `VIP_DAY_PASS` | 2 |
-| Cristal de Preservação de Raridade | `RARITY_PRESERVATION` | 3 |
+| Cristal de Preservação de Raridade | `RARITY_PRESERVATION` | 5 |
 | Expansor de Storage +5 | `STORAGE_SLOT_5` | 4 |
 | Incubadora lendária | `INCUBATOR_LEGENDARY` | 1 |
-| Disco de XP +20% | `XP_DISC_20` | 3 |
-| Núcleo de Ascensão | `ASCENSION_CORE` | 3 |
-| Cristal de Proteção | `REFINEMENT_PROTECTION` | 5 |
+| Disco de XP +20% | `XP_DISC_20` | 28 |
+| Núcleo de Ascensão | `ASCENSION_CORE` | 6 |
+| Cristal de Proteção | `REFINEMENT_PROTECTION` | 13 |
 
-Os quatro expansores de Storage +5 somam **+20 espaços**, depois de usados. Os dois Passes VIP somam **48 horas de VIP**, se ambos forem usados.
+Os expansores mantêm o total de **+20 espaços de storage**, depois do uso. Os dois Passes VIP mantêm o total de **48 horas de VIP**, depois do uso. A expansão não acrescenta outros expansores ou Passes VIP.
 
-## Como cada condição é contada
+## Contagem, histórico e expurgo
 
-| Condição | Origem da contagem |
-|---|---|
-| Nascimentos | Nascimentos diretos registrados e incubações resgatadas. Renascimentos e compras não contam como nascimento. |
-| Missões | Resgates manuais e automáticos. Iniciar ou apenas terminar o tempo de uma missão não basta: ela precisa chegar a `CLAIMED`. |
-| Espécies | Espécies distintas registradas na coleção. Raridades diferentes da mesma espécie não aumentam essa contagem. |
-| Estágio | Maior estágio comprovado pelo álbum ou pelos registros de Digimons da conta. Um estágio superior também satisfaz os anteriores. |
-| Renascimentos | Quantidade de registros de Digimons com status `REBORN`, sem somar o contador de todas as gerações da mesma linhagem. |
-| Arena | Vitórias de desafios iniciados pela própria conta. Defesas passivas não entram. |
-| Chefe Mundial | Ataques válidos registrados para a conta. |
-| Incursões de clã | Ataques registrados em incursões de clã. |
-| Primeiro equipamento | Etapa `EQUIP_ITEM` registrada no tutorial. |
-| Refinamento e ascensão | Maior patamar de uma peça que a conta possui ao consultar a página. Não soma refinamentos de várias peças. |
+- **Nascimentos totais:** histórico de nascimentos diretos mais incubações resgatadas. Compras e renascimentos não contam como nascimento.
+- **Raridade, IVs e traits ao nascer:** usam uma fotografia imutável capturada pelos fluxos de nascimento direto/incubação após a implantação da V251. Não são inferidos a partir de atributos atuais. Reroll posterior, evolução, compra e renascimento não criam essa fotografia.
+- **Missões:** contam quando passam para `CLAIMED`, manual ou automaticamente. O contador permanente sobrevive ao expurgo.
+- **Equipes:** contam somente missões resgatadas com três integrantes e time associado. Um time de dois não é completo. O contador permanece após excluir o time ou expurgar a missão. A instalação aproveita apenas as instâncias antigas ainda disponíveis.
+- **Exploração:** mantém o conjunto de missões ativas de cada área na implantação da V251, excluindo a missão administrativa. Cada missão precisa ter sido resgatada ao menos uma vez. A instalação aproveita o progresso por missão e as instâncias resgatadas restantes. O registro de conclusões por missão não é expurgado. Missões adicionadas ao jogo no futuro não aumentam automaticamente essas metas.
+- **Coleção:** conta espécies diferentes, sem multiplicar uma espécie pelas raridades. As quatro raridades de uma espécie precisam estar registradas no álbum para contar como domínio completo.
+- **Linhas:** cada linha conta uma vez; todas as suas espécies precisam constar no álbum em alguma raridade. A V251 congela as espécies das linhas ativas com conteúdo disponível. Adicionar etapas futuras não retira conquistas anteriores. Novas linhas podem ser incluídas por uma migration posterior.
+- **Estágio:** considera registros de Digimons e do álbum; um estágio superior também satisfaz metas anteriores.
+- **Renascimentos:** conta registros com status `REBORN`, sem somar os contadores de todas as gerações da linhagem.
+- **Arena:** conta vitórias de desafios iniciados pela conta; defesas passivas não contam.
+- **Chefes individuais:** conta tentativas com `VICTORY`. Chefes distintos são identificados pelo ID da definição do chefe, não pelo nome nem pelo número de tentativas.
+- **Participação coletiva:** exige pelo menos um ataque com dano positivo naquele mesmo ciclo e que a instância termine em `DEFEATED`. Não exige maior dano, vitória individual ou golpe final. Múltiplos ataques ao mesmo ciclo não multiplicam sua participação.
+- **Possuir refinamento/ascensão:** reconhece o maior patamar de uma peça na conta ao consultar a página. Depois de reconhecida, a conclusão permanece mesmo com venda ou perda da peça.
+- **Realizar refinamentos/ascensões:** novas ações passam a ser registradas pela V251. Refinamentos falhos não contam. Comprar uma peça pronta não conta. Não se tenta reconstruir essas ações a partir do nível atual do equipamento.
+- **Equipar e ativar conjuntos:** o primeiro equipamento usa o registro existente do tutorial. As novas metas registram equipagens após a V251. O conjunto precisa realmente ativar o bônus de três peças; repetir o mesmo código de conjunto não conta como outro conjunto. A ativação permanece registrada após desequipar ou vender peças.
 
-### Missões e expurgo
+Uma conclusão reconhecida não perde o estado após troca de parceiro, renascimento ou redução de um histórico. Feitos anteriores sem evidências confiáveis não são inventados. Dados já apagados antes da implantação não podem ser reconstruídos integralmente.
 
-O contador de conquistas de missões é separado das instâncias de missão. A transição para `CLAIMED` incrementa esse contador de forma permanente; regravar o mesmo status não incrementa novamente. Portanto, **expurgar missões antigas não apaga as contagens posteriores à instalação do sistema**.
+## Recompensas especiais
 
-Na instalação, o contador é inicializado com as missões resgatadas que ainda constam no histórico. Missões já expurgadas antes disso não podem ser recuperadas. O contador antigo de bônus de missão, limitado a 100 conclusões por missão, não é usado para inventar esse total.
+- `VIP_DAY_PASS`: começa 24 horas de VIP no uso se estiver inativo, ou soma 24 horas ao vencimento ativo. Não é vendido/negociado e não resgata automaticamente a Carga Total diária.
+- `STORAGE_SLOT_5`: aumenta o storage em +5 por unidade ao ser usado.
+- `RARITY_PRESERVATION`: Cristal de Preservação de Raridade, usado no renascimento.
+- `REFINEMENT_PROTECTION`: Cristal de Proteção, usado no refinamento. Não é o mesmo item de preservação de raridade.
 
-### Equipamentos
+## Manutenção
 
-A peça precisa estar na conta quando a condição for reconhecida. Uma peça vendida antes da primeira consulta pode não ser reconhecida. Depois de registrada a conclusão, vender a peça ou renascer não remove a conquista.
-
-### Passe VIP de 1 Dia
-
-O item `VIP_DAY_PASS` permanece no inventário até ser usado. Concede **24 horas** a partir do uso se o VIP estiver inativo/vencido; com VIP ativo, soma 24 horas ao vencimento existente. Não pode ser vendido ou negociado e não resgata automaticamente a Carga de Energia Total diária.
-
-### Itens diferentes com nomes semelhantes
-
-- **Cristal de Preservação de Raridade** (`RARITY_PRESERVATION`): preserva a raridade no renascimento.
-- **Cristal de Proteção** (`REFINEMENT_PROTECTION`): item de proteção do refinamento de equipamentos.
-
-## Manutenção do catálogo
-
-As definições ficam em `achievement_definitions`, e o progresso/resgate em `player_achievements`. Mudanças de nome, meta, Bits, item ou quantidade devem ser acompanhadas da atualização desta lista. Após aplicar uma migration, crie outra para alterar o catálogo; não reescreva migrations já executadas.
+As definições ficam em `achievement_definitions`; progresso e resgates ficam em `player_achievements`. Alterações em metas ou recompensas devem atualizar esta lista. Use migrations novas para modificar catálogos já implantados, sem reescrever V250/V251.

@@ -1,5 +1,6 @@
 package com.dro.modules.digitama.application;
 
+import com.dro.modules.achievement.application.AchievementGameplayRecorder;
 import com.dro.modules.collection.application.CollectionRegistrationService;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.domain.DigimonFactory;
@@ -31,6 +32,7 @@ import java.util.UUID;
  */
 @Service
 public class HatchDigitamaUseCase {
+    private final AchievementGameplayRecorder achievementRecorder;
     private static final String STARTER_DIGITAMA_POOL_CODE = "DIGITAMA_STARTER";
     private final PlayerRepository playerRepository;
     private final DigimonRepository digimonRepository;
@@ -69,6 +71,7 @@ public class HatchDigitamaUseCase {
                 throw new BadRequestException("Failed create digimon from digitama");
             }
             digimonRepository.save(digimon);
+            if (achievementRecorder != null) achievementRecorder.birth(digimon);
             historyRepository.save(DigitamaHistory.builder().id(UUID.randomUUID()).playerId(playerId).digitamaType(player.getSelectedDigitama()).digimonName(infos.getName()).digimonId(digimon.getId()).hatchedAt(LocalDateTime.now()).source(HatchSource.DIRECT_HATCH).build());
             if (player.getActiveDigimonId() == null) {
                 player.setActiveDigimonId(digimon.getId());
@@ -91,6 +94,19 @@ public class HatchDigitamaUseCase {
             final TutorialService tutorialService,
             final CollectionRegistrationService collectionRegistrationService
     ) {
+        this(playerRepository, digimonRepository, historyRepository, digitamaPoolRepository, digitamaPoolEligibilityService, tutorialService, collectionRegistrationService, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public HatchDigitamaUseCase(
+            final PlayerRepository playerRepository,
+            final DigimonRepository digimonRepository,
+            final DigitamaHistoryRepository historyRepository,
+            final DigitamaPoolRepository digitamaPoolRepository,
+            final DigitamaPoolEligibilityService digitamaPoolEligibilityService,
+            final TutorialService tutorialService,
+            final CollectionRegistrationService collectionRegistrationService,
+            AchievementGameplayRecorder achievementRecorder) {
         this.playerRepository = playerRepository;
         this.digimonRepository = digimonRepository;
         this.historyRepository = historyRepository;
@@ -98,5 +114,6 @@ public class HatchDigitamaUseCase {
         this.digitamaPoolEligibilityService = digitamaPoolEligibilityService;
         this.tutorialService = tutorialService;
         this.collectionRegistrationService = collectionRegistrationService;
+        this.achievementRecorder = achievementRecorder;
     }
 }

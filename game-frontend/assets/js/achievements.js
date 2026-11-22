@@ -1,5 +1,9 @@
 const ACHIEVEMENT_CATEGORIES = {
   PRIMEIROS_PASSOS: { name: "Primeiros passos", icon: "✧" },
+  RARIDADE: { name: "Raridade e talentos", icon: "🎲" },
+  EXPLORACAO: { name: "Exploração", icon: "🗺" },
+  EQUIPES: { name: "Equipes", icon: "◈" },
+  CHEFES: { name: "Chefes", icon: "♜" },
   CRIACAO: { name: "Criação", icon: "🥚" },
   EVOLUCAO: { name: "Evolução", icon: "ϟ" },
   RENASCIMENTO: { name: "Renascimento", icon: "↻" },

@@ -1,6 +1,6 @@
 # Conquistas — protótipo
 
-Acesso: **Mais → Conquistas**. São 33 conquistas permanentes por conta, com Bits e um item garantido por meta. Sem pontos, títulos, ranking ou temporadas nesta versão.
+Acesso: **Mais → Conquistas**. São 100 conquistas permanentes por conta, com Bits e um item garantido por meta. Sem pontos, títulos, ranking ou temporadas nesta versão.
 
 ## Experiência
 
@@ -15,7 +15,7 @@ Para visualizar com dados fictícios sem login nem backend, abra `docs/prototype
 
 ## Recompensas
 
-O catálogo completo está na migration `V250__achievement_prototype_and_vip_pass.sql`. Nome, descrição, meta, Bits, item, quantidade, ordem e disponibilidade são configuráveis em `achievement_definitions`. Não edite a migration depois de aplicada: altere o catálogo com uma nova migration.
+O catálogo completo está em `backend/src/main/resources/docs/CONQUISTAS.md`, baseado nas migrations V250 e V251. Nome, descrição, meta, Bits, item, quantidade, ordem e disponibilidade são configuráveis em `achievement_definitions`. Não edite a migration depois de aplicada: altere o catálogo com uma nova migration.
 
 | Família | Marcos | Itens, além dos Bits |
 |---|---|---|
@@ -32,6 +32,18 @@ O catálogo completo está na migration `V250__achievement_prototype_and_vip_pas
 Há **+20 espaços de storage** no catálogo, distribuídos em quatro unidades do item existente `STORAGE_SLOT_5`. O jogador usa o expansor no inventário. Há somente **dois Passes VIP** no catálogo: primeiro Mega e 500 missões.
 
 O Cristal de Preservação de Raridade mantém sua função existente no renascimento; não foi confundido com o Cristal de Proteção de refinamento.
+
+## Expansão para 100 conquistas
+
+As 67 novas conquistas preservam as 33 originais e todos os resgates. A V251 adiciona novas etapas e metas de raridade/IVs/trait ao nascer, quatro raridades por espécie, linhas completas, exploração de seis áreas, times completos, conjuntos, ações de aprimoramento e chefes.
+
+Nascimentos têm fotografias imutáveis capturadas pelos fluxos de hatch. Novas ações de refinamento/ascensão e ativações de conjuntos têm evidências idempotentes; não se inferem essas ações de itens comprados. Os construtores anteriores dos casos de uso permanecem compatíveis com testes antigos; o Spring injeta o recorder obrigatório pelo novo construtor.
+
+As regiões congelam as missões ativas na instalação. Linhas congelam as espécies das linhas ativas com conteúdo disponível. Novos dados não retiram metas concluídas. A V251 estende o trigger de resgate para preservar missões distintas e contagem de times completos, mesmo após expurgo.
+
+O catálogo mantém **dois Passes VIP e +20 espaços de storage**. O total de Bits passa a **258.550**. A demonstração visual inclui as 100 metas.
+
+Veja o [catálogo completo](../backend/src/main/resources/docs/CONQUISTAS.md) para todas as metas, recompensas e regras de contagem.
 
 ## Passe VIP de 1 Dia
 
@@ -69,8 +81,8 @@ Rotas autenticadas:
 
 ## Validação
 
-- Testes Java: `AchievementServiceTest`, `VipPassRulesTest`, `UseVipPassTest` e regressão `EventRewardMessageTextTest`.
-- Testes PostgreSQL (PGlite) e DOM (jsdom): `scripts/achievement-prototype.test.cjs`. O script executa a migration e as consultas SQL reais, verifica isolamento de conta, resgate único, rollback, progresso permanente, proteção contra limpeza e os filtros/resgate da página.
+- Testes Java: `AchievementServiceTest`, `VipPassRulesTest`, `UseVipPassTest`, `AchievementGameplayRecorderTest` e regressões de mensagens, equipagem e incubação.
+- Testes PostgreSQL (PGlite) e DOM (jsdom): `scripts/achievement-prototype.test.cjs`. O script executa a migration e as consultas SQL reais, verifica isolamento de conta, resgate único, rollback, progresso permanente, proteção contra limpeza, novas métricas e os filtros/resgate da página com 100 conquistas.
 
 ```sh
 npm install --prefix /tmp/dro-achievement-tests jsdom @electric-sql/pglite

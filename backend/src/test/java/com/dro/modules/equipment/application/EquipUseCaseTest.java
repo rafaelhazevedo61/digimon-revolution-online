@@ -41,6 +41,9 @@ class EquipUseCaseTest {
     @Mock
     private TutorialService tutorialService;
 
+    @Mock
+    private com.dro.modules.achievement.application.AchievementGameplayRecorder achievementRecorder;
+
     @InjectMocks
     private EquipUseCase equipUseCase;
 
@@ -112,6 +115,7 @@ class EquipUseCaseTest {
 
         equipUseCase.execute(token, equipment.getId());
 
+        verify(achievementRecorder).equipped(eq(playerId), eq(digimonId), anyList());
         assertTrue(equipment.isEquipped());
         assertEquals(equipment.getId(), digimon.getWeaponId());
         verify(equipmentRepository).save(equipment);

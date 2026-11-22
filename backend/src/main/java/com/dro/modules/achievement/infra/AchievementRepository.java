@@ -53,6 +53,67 @@ public class AchievementRepository {
         result.put("EQUIPPED", number("SELECT COUNT(*) FROM tutorial_progress WHERE player_id = ? AND step = 'EQUIP_ITEM'", playerId));
         result.put("REFINEMENT", number("SELECT COALESCE(MAX(refinement_level), 0) FROM inventory_equipments WHERE player_id = ?", playerId));
         result.put("ASCENSION", number("SELECT COALESCE(MAX(ascension_level), 0) FROM inventory_equipments WHERE player_id = ?", playerId));
+        // Contagens novas não dependem de estado mutável posterior ao nascimento.
+        jdbc.query("""
+                SELECT
+                    COUNT(*) FILTER (WHERE rarity = 'RARE') AS rare,
+                    COUNT(*) FILTER (WHERE rarity = 'EPIC') AS epic,
+                    COUNT(*) FILTER (WHERE rarity = 'LEGENDARY') AS legendary,
+                    COUNT(*) FILTER (WHERE rarity IN ('EPIC', 'LEGENDARY')) AS elite,
+                    COUNT(*) FILTER (WHERE iv_hp = 100 OR iv_attack = 100 OR iv_defense = 100) AS perfect,
+                    COUNT(*) FILTER (WHERE iv_hp = 100 AND iv_attack = 100 AND iv_defense = 100) AS all_perfect,
+                    COUNT(*) FILTER (WHERE trait IS NOT NULL) AS traits
+                FROM achievement_birth_snapshots WHERE player_id = ?
+                """, rs -> {
+                    result.put("BIRTH_RARE", rs.getLong("rare"));
+                    result.put("BIRTH_EPIC", rs.getLong("epic"));
+                    result.put("BIRTH_LEGENDARY", rs.getLong("legendary"));
+                    result.put("BIRTH_ELITE", rs.getLong("elite"));
+                    result.put("BIRTH_PERFECT_IV", rs.getLong("perfect"));
+                    result.put("BIRTH_ALL_PERFECT_IV", rs.getLong("all_perfect"));
+                    result.put("BIRTH_TRAIT", rs.getLong("traits"));
+                }, playerId);
+        jdbc.query("SELECT metric, value FROM player_achievement_counters WHERE player_id = ?",
+                rs -> { result.put(rs.getString("metric"), rs.getLong("value")); }, playerId);
+        jdbc.query("SELECT metric, COUNT(*) AS value FROM achievement_gameplay_events WHERE player_id = ? GROUP BY metric",
+                rs -> { result.put(rs.getString("metric"), rs.getLong("value")); }, playerId);
+        result.put("MASTERED_SPECIES", number("""
+                SELECT COUNT(*) FROM (
+                    SELECT digimon_info_id FROM digimon_collection_entries WHERE player_id = ?
+                    AND rarity IN ('COMMON', 'RARE', 'EPIC', 'LEGENDARY')
+                    GROUP BY digimon_info_id HAVING COUNT(DISTINCT rarity) = 4
+                ) mastered
+                """, playerId));
+        result.put("COMPLETE_LINES", number("""
+                SELECT COUNT(*) FROM (
+                    SELECT s.line_id FROM achievement_line_species s
+                    LEFT JOIN digimon_collection_entries c ON c.digimon_info_id = s.digimon_info_id AND c.player_id = ?
+                    GROUP BY s.line_id
+                    HAVING COUNT(DISTINCT c.digimon_info_id) = COUNT(DISTINCT s.digimon_info_id)
+                ) completed
+                """, playerId));
+        jdbc.query("""
+                SELECT i.stage, COUNT(DISTINCT c.digimon_info_id) AS value
+                FROM digimon_collection_entries c JOIN digimon_infos i ON i.id = c.digimon_info_id
+                WHERE c.player_id = ? GROUP BY i.stage
+                """, rs -> { result.put("SPECIES_" + rs.getString("stage"), rs.getLong("value")); }, playerId);
+        jdbc.query("""
+                SELECT a.area, COUNT(c.mission_id) AS value FROM achievement_area_missions a
+                LEFT JOIN achievement_completed_missions c ON c.mission_id = a.mission_id AND c.player_id = ?
+                GROUP BY a.area
+                """, rs -> { result.put("AREA_" + rs.getString("area"), rs.getLong("value")); }, playerId);
+        result.put("BOSS_WINS", number("SELECT COUNT(*) FROM boss_attempts WHERE player_id = ? AND status = 'VICTORY'", playerId));
+        result.put("DISTINCT_BOSSES", number("SELECT COUNT(DISTINCT boss_id) FROM boss_attempts WHERE player_id = ? AND status = 'VICTORY'", playerId));
+        result.put("WORLD_DEFEATS", number("""
+                SELECT COUNT(DISTINCT a.world_boss_id) FROM world_boss_attacks a
+                JOIN world_boss_instances b ON b.id = a.world_boss_id
+                WHERE a.player_id = ? AND a.damage > 0 AND b.status = 'DEFEATED'
+                """, playerId));
+        result.put("RAID_DEFEATS", number("""
+                SELECT COUNT(DISTINCT a.clan_raid_id) FROM clan_raid_attacks a
+                JOIN clan_raid_instances b ON b.id = a.clan_raid_id
+                WHERE a.player_id = ? AND a.damage > 0 AND b.status = 'DEFEATED'
+                """, playerId));
         return result;
     }
 

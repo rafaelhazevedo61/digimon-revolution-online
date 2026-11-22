@@ -9,7 +9,9 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Adicionado
 
-- **Conquistas (protótipo)**: 33 metas permanentes por conta, disponíveis em Mais → Conquistas, com filtros, progresso e resgate único de Bits e itens. Inclui expansores que somam até +20 espaços de storage e contador de missões que sobrevive à limpeza de histórico.
+- **Expansão de conquistas**: 67 novas metas de raridade ao nascer, domínio de espécies, linhas completas, exploração, equipes, conjuntos e chefes. Registros imutáveis impedem que rerolls e compras contem como nascimento ou aprimoramento realizado.
+
+- **Conquistas (protótipo)**: 100 metas permanentes por conta, disponíveis em Mais → Conquistas, com filtros, progresso e resgate único de Bits e itens. Inclui expansores que somam até +20 espaços de storage e contador de missões que sobrevive à limpeza de histórico.
 - **Passe VIP de 1 Dia**: recompensa guardada no inventário; ao usar, ativa 24 horas de VIP ou acrescenta esse período à validade existente. Não pode ser vendido ou negociado.
 
 ## [0.0.15-SNAPSHOT]
