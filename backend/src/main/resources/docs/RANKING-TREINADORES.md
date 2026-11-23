@@ -311,6 +311,7 @@ Classificação inicial: **básica = 25**, **intermediária = 50**, **avançada 
 | `BOSS_DISTINCT_5` | Adversários conhecidos | 50 |
 | `WORLD_PARTICIPATION` | Unidos contra o impossível | 50 |
 | `RAID_PARTICIPATION` | Vitória do clã | 50 |
+| `TRAINER_GUIDE_COMPLETE` | Treinador bem informado | 25 |
 
 ## Referências
 

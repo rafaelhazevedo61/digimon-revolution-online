@@ -9,6 +9,10 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Adicionado
 
+- **Treinador bem informado**: nova conquista por ler os 12 conteúdos do Guia do Treinador, com 500 Bits, 1 Carga de Energia Total e 25 pontos de treinador. Leituras anteriores contam e a conclusão segue o processamento agendado.
+
+- **Guia do Treinador**: tutorial inicial com orientações atualizadas e 12 conteúdos opcionais apresentados após os primeiros marcos, incluindo coleção, conquistas, times, torre e classificação. Leituras salvas por conta, sem refazer etapas concluídas.
+
 - **Progresso semanal e variação diária dos treinadores**: modalidade semanal com bases por conta/regra e calendário de São Paulo, além de subida/queda/estabilidade/nova entrada no geral. Trata ausência de histórico, novas contas e rebalanceamento, com testes de datas simuladas.
 
 - **Busca e perfil público de treinadores**: busca parcial com posições globais preservadas, modal com resumo de coleção/conquistas/torre/clã e histórico diário por versão de regra em São Paulo, preparando comparações futuras.

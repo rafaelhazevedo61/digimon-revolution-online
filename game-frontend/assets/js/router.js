@@ -29,6 +29,7 @@ const routes = {
   "clan-ranking": (p) => renderRankingPage({ ...p, tab: "clans" }),
   "world-boss": renderWorldBossPage,
   more: renderMorePage,
+  "trainer-guide": renderTrainerGuidePage,
   vip: renderVipPage,
   achievements: renderAchievementsPage,
   tower: renderTowerPage,

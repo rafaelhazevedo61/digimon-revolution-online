@@ -139,6 +139,7 @@ async function renderMorePage() {
     {
       label: "Conta",
       items: [
+        { route: "trainer-guide", icon: "🎓", title: "Guia do Treinador", desc: "Primeiros passos e novas descobertas" },
         {
           route: "vip",
           icon: "✦",

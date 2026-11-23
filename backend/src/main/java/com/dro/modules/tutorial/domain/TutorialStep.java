@@ -10,7 +10,7 @@ public enum TutorialStep {
     SELECT_DIGITAMA(
             1,
             "Escolha sua Digitama",
-            "Escolha o ovo do seu primeiro Digimon na tela inicial.",
+            "Escolha a Digitama do seu primeiro parceiro na tela inicial.",
             0,
             null,
             0
@@ -18,7 +18,7 @@ public enum TutorialStep {
     HATCH_DIGIMON(
             2,
             "Choque seu Digimon",
-            "Choque o ovo e conheça seu primeiro parceiro.",
+            "Conclua o nascimento na tela inicial e conheça os atributos do seu primeiro parceiro.",
             100,
             null,
             0
@@ -26,7 +26,7 @@ public enum TutorialStep {
     COMPLETE_MISSION(
             3,
             "Complete uma Missão",
-            "Envie seu Digimon em uma missão e resgate a recompensa.",
+            "Na tela Missões, escolha um desafio liberado, aguarde o término e resgate Bits, experiência e os itens obtidos.",
             100,
             ItemType.POTION_SMALL,
             3
@@ -34,7 +34,7 @@ public enum TutorialStep {
     BUY_SHOP(
             4,
             "Compre na Loja",
-            "Gaste seus Bits comprando algo na loja.",
+            "Conheça os preços da Loja e faça sua primeira compra com Bits. Confira os limites e guarde recursos para evoluir.",
             0,
             ItemType.REFINEMENT_STONE,
             2
@@ -42,7 +42,7 @@ public enum TutorialStep {
     EQUIP_ITEM(
             5,
             "Equipe um Item",
-            "Equipe uma arma, armadura ou acessório no seu Digimon.",
+            "No Inventário, equipe uma arma, armadura ou acessório pertencente ao seu Digimon e confira os bônus.",
             150,
             null,
             0
@@ -50,7 +50,7 @@ public enum TutorialStep {
     EVOLVE_DIGIMON(
             6,
             "Evolua seu Digimon",
-            "Suba de nível e evolua seu Digimon para o próximo estágio.",
+            "Na tela Evolução, confira o nível e os fragmentos exigidos. Faça missões para reunir os requisitos e evolua para o próximo estágio.",
             300,
             null,
             0

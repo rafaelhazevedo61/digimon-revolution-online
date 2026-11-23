@@ -1,8 +1,8 @@
 # Conquistas — catálogo completo
 
-O catálogo contém **100 conquistas permanentes por conta**, em **13 categorias**. Acesso: **Mais → Conquistas**. Cada recompensa pode ser resgatada uma única vez por conta, independentemente do Digimon ativo.
+O catálogo contém **101 conquistas permanentes por conta**, em **13 categorias**. Acesso: **Mais → Conquistas**. Cada recompensa pode ser resgatada uma única vez por conta, independentemente do Digimon ativo.
 
-Fontes: [V250 — catálogo inicial](../db/migration/V250__achievement_prototype_and_vip_pass.sql) e [V251 — expansão para 100](../db/migration/V251__expand_achievements_to_100.sql). A expansão preserva as 33 definições originais e seus resgates. A [V252](../db/migration/V252__scheduled_achievement_processing.sql) acrescenta o processamento agendado, sem mudar as 100 metas ou recompensas.
+Fontes: [V250 — catálogo inicial](../db/migration/V250__achievement_prototype_and_vip_pass.sql) e [V251 — expansão para 100](../db/migration/V251__expand_achievements_to_100.sql). A expansão preserva as 33 definições originais e seus resgates. A [V252](../db/migration/V252__scheduled_achievement_processing.sql) acrescenta o processamento agendado, sem mudar as 100 metas ou recompensas originais. A V259 acrescenta a conquista de leitura do Guia do Treinador.
 
 As metas acumulam o progresso entre etapas. Os Bits são creditados à conta e os itens ficam no inventário até o uso. O progresso é processado em segundo plano, com intervalo padrão de 30 segundos entre lotes de até 100 contas pendentes. Abrir/atualizar a página consulta o resultado já processado; resgatar não força um recálculo.
 
@@ -13,6 +13,7 @@ As metas acumulam o progresso entre etapas. Os Bits são creditados à conta e o
 | `FIRST_HATCH` | Primeiro companheiro | Choque seu primeiro Digitama. | 100 | 1 × Célula de Energia |
 | `FIRST_MISSION` | Primeira expedição | Resgate sua primeira missão. | 100 | 1 × Célula de Energia |
 | `FIRST_EQUIP` | Pronto para a aventura | Equipe uma peça em seu Digimon. | 150 | 2 × Disco de XP +5% |
+| `TRAINER_GUIDE_COMPLETE` | Treinador bem informado | Marque Entendi nos 12 conteúdos do Guia do Treinador. | 500 | 1 × Carga de Energia Total |
 
 ## Criação
 
@@ -173,7 +174,7 @@ As metas acumulam o progresso entre etapas. Os Bits são creditados à conta e o
 
 ## Total de recompensas
 
-O resgate das 100 conquistas concede **258.550 Bits** e:
+O resgate das 101 conquistas concede **259.050 Bits** e:
 
 | Item | Código | Quantidade total |
 |---|---|---:|
@@ -183,7 +184,7 @@ O resgate das 100 conquistas concede **258.550 Bits** e:
 | Incubadora épica | `INCUBATOR_EPIC` | 1 |
 | Dado de Raridade | `RARITY_REROLL` | 7 |
 | Disco de XP +10% | `XP_DISC_10` | 15 |
-| Carga de Energia Total | `VIP_ENERGY_CHARGE` | 68 |
+| Carga de Energia Total | `VIP_ENERGY_CHARGE` | 69 |
 | Passe VIP de 1 Dia | `VIP_DAY_PASS` | 2 |
 | Cristal de Preservação de Raridade | `RARITY_PRESERVATION` | 5 |
 | Expansor de Storage +5 | `STORAGE_SLOT_5` | 4 |
@@ -232,3 +233,12 @@ A captura de ações e fotografias de nascimento continua imediata e transaciona
 A página exibe `lastUpdatedAt` (último processamento) e `updatePending` (existem atividades aguardando processamento). Antes do primeiro lote, o progresso aparece em zero com indicação de espera. Atualizar a página não antecipa a fila. Uma conquista só pode ser resgatada após sua conclusão ter sido persistida pelo processador.
 
 Os 30 segundos são um intervalo de execução, não um prazo garantido: backlog, duração do lote e falhas podem aumentar a espera. Metas já concluídas não são reavaliadas. Veja [PROCESSAMENTO-CONQUISTAS.md](PROCESSAMENTO-CONQUISTAS.md) para configuração, concorrência e recuperação de falhas.
+
+
+## Conquista do Guia do Treinador
+
+`TRAINER_GUIDE_COMPLETE`, categoria Primeiros passos, métrica `GUIDE_READ_TOPICS`, meta 12. Conta os reconhecimentos Entendi dos tópicos COLLECTION, ACHIEVEMENTS, ENERGY, INCUBATION, TEAMS, BOSSES, ARENA, TOWER, RANKING, FORGE, REBIRTH e VIP. Abrir a página ou navegar para uma atividade não basta. Não é necessário usar/comprar VIP, renascer, vencer a torre ou executar as atividades descritas: trata-se da leitura das orientações liberadas pelos marcos iniciais.
+
+As leituras já salvas antes da V259 contam. Cada leitura nova apenas enfileira a conta na rotina existente; não recalcula as conquistas no clique. A definição nova também enfileira as contas para avaliação retroativa. A conclusão e o resgate são os mesmos das outras conquistas: recompensa única, transacional, de **500 Bits + 1 Carga de Energia Total**, e **25 pontos de treinador** por concluir, sem exigir resgate.
+
+A lista de 12 tópicos está congelada para esta meta. Tópicos futuros/desconhecidos não substituem uma leitura obrigatória nem retiram uma conquista concluída; alterações futuras precisam de decisão explícita no catálogo. Não muda as seis etapas nem os resgates do tutorial inicial.
