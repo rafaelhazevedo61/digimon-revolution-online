@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Torre Infinita — protótipo DRO</title>
+<link rel="stylesheet" href="../../game-frontend/assets/css/tower.css"><style>*{box-sizing:border-box}body{margin:0;background:#080e1c;font-family:system-ui,sans-serif}h1,h2,h3,p{margin:0}button,select{font:inherit}.page-container{padding:28px 20px 48px}.btn-primary,.btn-secondary{display:inline-block;border-radius:9px;padding:11px 16px;text-decoration:none;font-weight:700;font-size:.85rem;cursor:pointer}.btn-primary{background:#0891b2;border:1px solid #22d3ee;color:white}.btn-secondary{background:#1e293b;border:1px solid #475569;color:#cbd5e1}.demo-banner{text-align:center;padding:12px;background:#17243b;color:#aabbd4;font-size:12px}.demo-banner button{margin-left:12px;padding:5px 10px}.tower-header p:last-child{margin-top:8px}</style></head>
+<body><div class="demo-banner">Demonstração visual · dados de exemplo · sem alterações na sua conta <button type="button" onclick="demoReset()">Reiniciar</button></div><main id="app"></main>
+<script>
+const formations=[{id:'elite',name:'Guardiões Digitais',digimonIds:['a','b','c']},{id:'novice',name:'Novos parceiros',digimonIds:['d']}];
+const digimons=[{id:'a',name:'Greymon',level:35,stage:'CHAMPION'},{id:'b',name:'Garurumon',level:35,stage:'CHAMPION'},{id:'c',name:'Kabuterimon',level:32,stage:'CHAMPION'},{id:'d',name:'Koromon',level:8,stage:'BABY_II'}];
+let state;
+function demoFloor(n){const boss=n%5===0,marco=n%10===0;const scale=(1+(n-1)/10)**2*(marco?1.8:boss?1.4:1);return {number:n,kind:marco?'MARCO':boss?'CHEFE':'COMUM',enemyName:['Agumon','Gabumon','Tentomon','Gomamon'][(n-1)%4],profile:['Equilibrado','Ofensivo','Defensivo','Resistente'][(n-1)%4],stats:{hp:Math.ceil(40*scale),attack:Math.ceil(8*scale),defense:Math.ceil(4*scale)},reward:{bits:(100+25*Math.min(196,Math.floor(n/10)))*(boss?2:1),itemCode:marco?'ASCENSION_CORE':boss?'VIP_ENERGY_CHARGE':'ENERGY_CELL',itemName:marco?'Núcleo de Ascensão':boss?'Carga de Energia Total':'Célula de Energia',quantity:1}}}
+function demoReset(){state={highestFloor:24,attempts:31,serverTime:new Date().toISOString(),availableAt:null,nextFloor:demoFloor(25),lastResult:null};if(typeof renderTowerPage==='function')renderTowerPage()}
+function escapeHtml(v){return String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;')}
+const escapeAttr=escapeHtml;
+function formatStage(v){return v.replace('_',' ')}
+function showBottomNav(){}
+async function apiGet(p){state.serverTime=new Date().toISOString();return p.endsWith('/tower')?structuredClone(state):p==='/mission-teams'?formations:digimons}
+async function apiPost(p,r){const now=new Date(),won=r.teamId==='elite',floor=state.nextFloor;state.lastResult={requestId:r.requestId,floor:floor.number,won,rounds:won?5:2,teamName:formations.find(t=>t.id===r.teamId).name,enemyName:floor.enemyName,reward:won?floor.reward:{bits:0,quantity:0,itemName:null},members:formations.find(t=>t.id===r.teamId).digimonIds.map((id,index)=>({digimonId:id,name:digimons.find(d=>d.id===id).name,maxHp:[1200,1100,1000][index],remainingHp:won?[830,220,0][index]:0}))};state.attempts++;state.serverTime=now.toISOString();state.availableAt=new Date(+now+30000).toISOString();if(won){state.highestFloor=floor.number;state.nextFloor=demoFloor(floor.number+1)}return structuredClone(state)}
+window.addEventListener('hashchange',()=>{if(location.hash!=='#tower')alert('Na versão do jogo, este link abre a página correspondente. Use o seletor para trocar o time nesta demonstração.')});
+demoReset();
+</script><script src="../../game-frontend/assets/js/tower.js"></script><script>renderTowerPage()</script></body></html>

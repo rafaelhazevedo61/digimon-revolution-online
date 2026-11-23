@@ -6,6 +6,7 @@ async function renderMorePage() {
     {
       label: "Combate",
       items: [
+        { route: "tower", icon: "♜", title: "Torre Infinita", desc: "Suba com seu time e conquiste recompensas" },
         {
           route: "bosses",
           iconImage: "assets/img/batalhadochefe.webp",

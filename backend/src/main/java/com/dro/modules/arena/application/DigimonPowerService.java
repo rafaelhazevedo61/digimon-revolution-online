@@ -27,6 +27,14 @@ public class DigimonPowerService {
     }
 
     public double calculatePower(Digimon digimon, UUID clanId) {
+        var stats = effectiveStats(digimon, clanId);
+        return BossCombatRules.calculatePower(stats.hp(), stats.attack(), stats.defense());
+    }
+
+    /** Atributos reais compartilhados pela arena e pela torre. */
+    public record CombatStats(int hp, int attack, int defense) {}
+
+    public CombatStats effectiveStats(Digimon digimon, UUID clanId) {
         List<Equipment> equipped = equipmentRepository.findByDigimonId(digimon.getId()).stream().filter(Equipment::isEquipped).toList();
         double atkBonus = clanId != null ? clanBonusService.getAttackBonusPercent(clanId) : 0.0;
         double defBonus = clanId != null ? clanBonusService.getDefenseBonusPercent(clanId) : 0.0;
@@ -34,7 +42,7 @@ public class DigimonPowerService {
         int totalHp = applyBonus(digimon.getHp() + EquipmentRules.totalBonusHp(equipped), hpBonus);
         int totalAtk = applyBonus(digimon.getAttack() + EquipmentRules.totalBonusAttack(equipped), atkBonus);
         int totalDef = applyBonus(digimon.getDefense() + EquipmentRules.totalBonusDefense(equipped), defBonus);
-        return BossCombatRules.calculatePower(totalHp, totalAtk, totalDef);
+        return new CombatStats(totalHp, totalAtk, totalDef);
     }
 
     private int applyBonus(int base, double percent) {

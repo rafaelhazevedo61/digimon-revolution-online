@@ -17,6 +17,7 @@ public class GameplayConfig {
     private ClanRaid clanRaid = new ClanRaid();
     private boolean autoBossRespawnAfterDefeatEnabled = false;
     private boolean bossCooldownEnabled = true;
+    private boolean towerCooldownEnabled = true;
     private ActivityCalendar activityCalendar = new ActivityCalendar();
 
     public Energy getEnergy() {
@@ -69,6 +70,14 @@ public class GameplayConfig {
 
     public void setBossCooldownEnabled(boolean bossCooldownEnabled) {
         this.bossCooldownEnabled = bossCooldownEnabled;
+    }
+
+    public boolean isTowerCooldownEnabled() {
+        return towerCooldownEnabled;
+    }
+
+    public void setTowerCooldownEnabled(boolean towerCooldownEnabled) {
+        this.towerCooldownEnabled = towerCooldownEnabled;
     }
 
     public boolean isWorldBossCooldownEnabled() {
