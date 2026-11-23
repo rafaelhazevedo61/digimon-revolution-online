@@ -9,6 +9,12 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Adicionado
 
+- **Progresso semanal e variação diária dos treinadores**: modalidade semanal com bases por conta/regra e calendário de São Paulo, além de subida/queda/estabilidade/nova entrada no geral. Trata ausência de histórico, novas contas e rebalanceamento, com testes de datas simuladas.
+
+- **Busca e perfil público de treinadores**: busca parcial com posições globais preservadas, modal com resumo de coleção/conquistas/torre/clã e histórico diário por versão de regra em São Paulo, preparando comparações futuras.
+
+- **Ranking de Treinadores**: aba Jogadores com pontuação por coleção, maestrias, conquistas concluídas e maior andar da torre; posição pessoal, detalhamento e atualização agendada a cada 5 minutos. Exclui administradores, bots e contas de teste marcadas. Regras em `RANKING-TREINADORES.md`.
+
 - **Detalhes do combate da torre**: seção expansível no último resultado com HP restante/máximo e estado de cada Digimon, persistidos na ordem da formação. Resultados antigos permanecem disponíveis sem HP retroativo.
 
 - **Torre Infinita**: desafios permanentes por conta com times de 1–3 Digimons, chefes a cada 5 andares, marcos a cada 10, recompensas automáticas por primeira vitória e cooldown de 30 segundos. Inclui tela, API, persistência transacional, proteção contra pedidos repetidos e documentação em `TORRE-INFINITA.md`.

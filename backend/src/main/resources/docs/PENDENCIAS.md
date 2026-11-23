@@ -61,8 +61,20 @@ Estes itens complementam as propostas funcionais. São trabalhos de validação 
 | ☐ | TEC-TOR-004 | Média | Avaliar configuração versionada de encontros e recompensas. | Definir e implementar uma fonte de configuração com validação, prévia consistente e comportamento explícito para mudanças enquanto há tentativas em andamento. | Hoje nomes, perfis, fórmulas e recompensas ficam em TowerRules. Definir abordagem antes de substituir as regras. |
 | ☐ | TEC-TOR-005 | Média | Medir desempenho e definir retenção dos dados adicionais. | Medir consultas, bloqueios, payloads e volume de dados com carga representativa; definir índices, paginação e retenção para histórico/rodadas, preservando progresso e controle de recompensas. | Especialmente relevante antes de TOR-007, TOR-009 e TOR-013. |
 
+## Ranking de Treinadores — evolução
+
+| Check | ID | Prioridade | Atividade | Critério de conclusão | Referência / andamento |
+| --- | --- | --- | --- | --- | --- |
+| ☑ | RANK-001 | Alta | Busca por jogador. | Nome parcial, paginação filtrada e posições globais preservadas; proteção contra respostas antigas e caracteres especiais. | PR #302; primeira etapa. |
+| ☑ | RANK-002 | Alta | Perfil público do treinador. | Modal com coleção, conquistas, recorde da torre, pontuação e clã; apenas dados públicos e participantes elegíveis. | PR #302; primeira etapa. |
+| ☑ | RANK-003 | Alta | Preparar histórico diário. | Captura imutável por conta/dia/regra em São Paulo, junto à transação da classificação, sem inventar datas anteriores. | PR #302; migration V256. |
+| ☑ | RANK-004 | Alta | Classificação semanal de progresso. | Semana segunda às 00h de São Paulo; bases definidas para contas novas/primeira semana e mudanças de fórmula sem ganho fictício; paginação e posição pessoal. | PR #302; V257, bases por semana/regra e testes com datas simuladas. |
+| ☑ | RANK-005 | Alta | Variação de posição diária. | Comparação com registro válido do dia anterior e indicação de subida, queda, estabilidade ou nova entrada; tratar dias sem coleta e versões diferentes explicitamente. | PR #302; V257, marcadores de coleta e comparação com ontem sob a mesma regra. |
+
 ## Documentação relacionada
 
 - [Funcionamento da Torre Infinita](TORRE-INFINITA.md): guardiões, perfis, recompensas, fórmulas, API e configuração local.
 - [Plano de equipamentos](EQUIPMENT-PLAN.md): conjuntos e seus bônus.
 - [Catálogo de conquistas](CONQUISTAS.md): metas existentes e recompensas.
+
+- [Ranking de Treinadores](RANKING-TREINADORES.md): pontuação, busca, perfil e histórico.

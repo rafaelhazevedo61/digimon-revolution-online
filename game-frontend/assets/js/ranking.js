@@ -8,13 +8,20 @@ let rankSearch = "";
 let rankSearchTimeout = null;
 let rankArenaMode = "current";
 let rankArenaStatistics = null;
+let rankTrainerData = null;
+let rankTrainerMode = "overall";
 const RANK_PAGE_SIZE = 10;
 
 async function renderRankingPage(params = {}) {
   const app = document.getElementById("app");
+  rankGeneration++;
+  rankLoading = false;
+  clearTimeout(rankSearchTimeout);
+  rankTrainerData = null;
+  rankTrainerMode = "overall";
   showBottomNav("more");
 
-  const validTabs = ["power", "rebirth", "arena", "clans"];
+  const validTabs = ["players", "power", "rebirth", "arena", "clans"];
   rankTab = validTabs.includes(params.tab) ? params.tab : "power";
   rankPage = 0;
   rankSearch = "";
@@ -25,9 +32,10 @@ async function renderRankingPage(params = {}) {
 
   app.innerHTML = `
     <div class="page-container">
-      <h2 class="text-lg font-bold mb-4 px-1">🏆 Ranking</h2>
+      <h2 class="text-lg font-bold mb-4 px-1">🏆 Classificação</h2>
 
       <div class="flex flex-wrap gap-2 mb-4" id="rank-tabs">
+        <button class="tab-btn ${rankTab === "players" ? "active" : ""}" data-tab="players" onclick="rankSwitchTab(\'players\')">Jogadores</button>
         <button class="tab-btn ${rankTab === "power" ? "active" : ""}" data-tab="power" onclick="rankSwitchTab('power')">Poder</button>
         <button class="tab-btn ${rankTab === "rebirth" ? "active" : ""}" data-tab="rebirth" onclick="rankSwitchTab('rebirth')">Rebirth</button>
         <button class="tab-btn ${rankTab === "arena" ? "active" : ""}" data-tab="arena" onclick="rankSwitchTab('arena')">Arena</button>
@@ -39,14 +47,18 @@ async function renderRankingPage(params = {}) {
         <button class="tab-btn text-xs ${rankArenaMode === "season" ? "active" : ""}" data-arena-mode="season" onclick="rankSwitchArenaMode('season')">Temporada</button>
       </div>
 
+      <div id="rank-trainer-toggle" class="${rankTab === "players" ? "flex" : "hidden"} gap-2 mb-4" aria-label="Modalidade de classificação">
+        <button class="tab-btn active" data-trainer-mode="overall" onclick="rankSwitchTrainerMode('overall')">Geral</button>
+        <button class="tab-btn" data-trainer-mode="weekly" onclick="rankSwitchTrainerMode('weekly')">Progresso semanal</button>
+      </div>
       <div class="mb-4" id="rank-search-wrap">
         <input
           id="rank-search"
           type="text"
-          placeholder="${rankTab === "power" ? "Buscar jogador ou Digimon..." : "Busca disponível apenas no ranking de Poder"}"
+          placeholder="${rankTab === "players" ? "Buscar jogador por nome..." : rankTab === "power" ? "Buscar jogador ou Digimon..." : "Busca disponível em Poder e Jogadores"}"
           class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
           value="${escapeHtml(rankSearch)}"
-          ${rankTab === "power" ? "" : "disabled"}
+          ${["power", "players"].includes(rankTab) ? "" : "disabled"} ${rankTab === "players" ? 'maxlength="50"' : ""}
           oninput="rankOnSearchInput(this.value)"
         />
       </div>
@@ -63,6 +75,9 @@ async function renderRankingPage(params = {}) {
 }
 
 function rankSwitchTab(tab) {
+  clearTimeout(rankSearchTimeout);
+  rankTrainerData = null;
+  rankTrainerMode = "overall";
   rankTab = tab;
   rankPage = 0;
   rankSearch = "";
@@ -86,13 +101,33 @@ function rankSwitchTab(tab) {
     btn.classList.toggle("active", btn.dataset.arenaMode === rankArenaMode);
   });
 
+  const trainerToggle = document.getElementById("rank-trainer-toggle");
+  if (trainerToggle) {
+    trainerToggle.classList.toggle("hidden", tab !== "players");
+    trainerToggle.classList.toggle("flex", tab === "players");
+    trainerToggle.querySelectorAll("button").forEach(button => button.classList.toggle("active", button.dataset.trainerMode === rankTrainerMode));
+  }
   const searchInput = document.getElementById("rank-search");
   if (searchInput) {
     searchInput.value = "";
-    searchInput.disabled = tab !== "power";
-    searchInput.placeholder = tab === "power" ? "Buscar jogador ou Digimon..." : "Busca disponível apenas no ranking de Poder";
+    searchInput.disabled = !["power", "players"].includes(tab);
+    if (tab === "players") searchInput.maxLength = 50; else searchInput.removeAttribute("maxlength");
+    searchInput.placeholder = tab === "players" ? "Buscar jogador por nome..." : tab === "power" ? "Buscar jogador ou Digimon..." : "Busca disponível em Poder e Jogadores";
   }
 
+  rankLoadPage();
+}
+
+function rankSwitchTrainerMode(mode) {
+  if (rankTab !== "players" || !["overall", "weekly"].includes(mode)) return;
+  clearTimeout(rankSearchTimeout);
+  rankTrainerMode = mode;
+  rankPage = 0;
+  rankTrainerData = null;
+  rankSearch = (document.getElementById("rank-search")?.value || rankSearch).trim();
+  rankGeneration++;
+  rankLoading = false;
+  document.querySelectorAll("[data-trainer-mode]").forEach(button => button.classList.toggle("active", button.dataset.trainerMode === mode));
   rankLoadPage();
 }
 
@@ -115,8 +150,13 @@ function rankSwitchArenaMode(mode) {
 
 function rankOnSearchInput(value) {
   clearTimeout(rankSearchTimeout);
-  if (rankTab !== "power") return;
+  if (!["power", "players"].includes(rankTab)) return;
+  const tab = rankTab;
+  const root = document.getElementById("rank-content");
+  rankGeneration++;
+  rankLoading = false;
   rankSearchTimeout = setTimeout(() => {
+    if (rankTab !== tab || !root?.isConnected) return;
     rankSearch = value.trim();
     rankPage = 0;
     rankLoadPage();
@@ -142,7 +182,8 @@ async function rankLoadPage() {
   }
 
   const params = { page: rankPage, size: RANK_PAGE_SIZE };
-  if (rankTab === "power" && rankSearch) {
+  if (tab === "players") params.mode = rankTrainerMode;
+  if (["power", "players"].includes(rankTab) && rankSearch) {
     params.search = rankSearch;
   }
 
@@ -164,7 +205,14 @@ async function rankLoadPage() {
     } else {
       data = await apiGet(`/ranking/${tab}`, params);
     }
-    if (gen !== rankGeneration) return;
+    if (gen !== rankGeneration || !content.isConnected) return;
+    if (tab === "players") {
+      rankTrainerData = data;
+      rankEntries = data.entries || [];
+      rankHasMore = Boolean(data.hasNext);
+      rankRender();
+      return;
+    }
     rankEntries = tab === "clans" ? (data.content || []) : (data || []);
     rankHasMore = tab === "clans" ? !data.last : rankEntries.length === RANK_PAGE_SIZE;
     rankRender();
@@ -176,7 +224,7 @@ async function rankLoadPage() {
       </div>
     `;
   } finally {
-    rankLoading = false;
+    if (gen === rankGeneration) rankLoading = false;
   }
 }
 
@@ -184,7 +232,10 @@ function rankRender() {
   const content = document.getElementById("rank-content");
   const pagination = document.getElementById("rank-pagination");
 
-  if (rankTab === "arena") {
+  if (rankTab === "players") {
+    content.innerHTML = trainerRankingContent(rankTrainerData);
+    bindTrainerProfileLinks(content);
+  } else if (rankTab === "arena") {
     const summary = rankArenaMode === "current" && rankArenaStatistics
       ? `<div class="arena-ranking-summary"><div class="arena-summary-title">Seu histórico de arena</div><div class="arena-summary-grid"><div><span>Saldo</span><strong class="${rankArenaStatistics.netPoints >= 0 ? "is-positive" : "is-negative"}">${Number(rankArenaStatistics.netPoints || 0).toLocaleString("pt-BR")}</strong></div><div><span>Ganhos</span><strong>${Number(rankArenaStatistics.pointsWon || 0).toLocaleString("pt-BR")}</strong></div><div><span>Perdas</span><strong class="is-negative">${Number(rankArenaStatistics.pointsLost || 0).toLocaleString("pt-BR")}</strong></div></div></div>`
       : "";
@@ -225,7 +276,7 @@ function rankRender() {
     }).join("");
   }
 
-  if (rankTab === "arena" || rankTab === "clans") {
+  if (rankTab === "arena" || rankTab === "clans" || rankTab === "players") {
     if (pagination) {
       pagination.innerHTML = `
         <div class="flex justify-between items-center gap-2">
