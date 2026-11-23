@@ -56,10 +56,10 @@ A página mostra uma próxima descoberta sugerida, seguida de grupos recolhívei
 ## Leitura e progresso
 
 - **Conhecer** abre a tela correspondente. Isso não declara uma ação realizada.
-- **Entendi** registra somente a leitura educativa, sem dar Bits, itens, conquistas ou pontos de classificação.
+- **Entendi** registra somente a leitura educativa e não declara combates, missões ou outras ações realizadas. Ler os 12 conteúdos conta para a conquista Treinador bem informado, processada pela rotina agendada.
 - Cada tópico pode ser reconhecido uma única vez por conta; repetir o pedido é idempotente.
 - O reconhecimento é salvo no servidor e aparece em outros dispositivos após carregar a página.
-- Os tópicos lidos continuam consultáveis. Não há reset de leitura ou prêmio por ler todos nesta versão.
+- Os tópicos lidos continuam consultáveis. Não há reset de leitura nesta versão. Ao ler os 12 conteúdos, a conquista oferece 500 Bits + 1 Carga de Energia Total, resgatados em Conquistas após o processamento.
 - Contas que já finalizaram o tutorial mantêm seu estado e têm as orientações disponíveis no guia; o card encerrado não reaparece no dashboard.
 
 ## Backend e persistência
@@ -73,7 +73,7 @@ Catálogo: `TutorialGuideTopic`. Pré-requisitos usam eventos existentes de `Tut
 | GET /tutorial/guide | Retorna o tutorial inicial, os tópicos disponíveis/lidos e a contagem de leituras. Não grava progresso. |
 | POST /tutorial/guide/{topic}/acknowledge | Valida o código e seu pré-requisito, registra a leitura para a identidade do token e retorna a página atualizada. |
 
-O corpo não recebe identidade de outro jogador. Códigos desconhecidos e orientações ainda bloqueadas são rejeitados. Um registro desconhecido no banco não aumenta a contagem do catálogo atual. Não existem gatilhos de recompensas ou contadores de gameplay nessa tabela.
+O corpo não recebe identidade de outro jogador. Códigos desconhecidos e orientações ainda bloqueadas são rejeitados. Um registro desconhecido no banco não aumenta a contagem do catálogo atual. A V259 adiciona um trigger leve de enfileiramento para conquistas em cada leitura nova. A tabela não concede recompensas diretamente nem registra ações de gameplay fictícias.
 
 ## Validação
 
@@ -83,3 +83,6 @@ O corpo não recebe identidade de outro jogador. Códigos desconhecidos e orient
 - O plano manual em `docs/tutorial-manual-test-plan.md` inclui os cenários de integração do guia.
 
 O cache da PWA inclui os scripts/CSS do guia. Homologar também no celular e com o backend real antes de publicar para todos os jogadores.
+
+
+A conquista `TRAINER_GUIDE_COMPLETE` considera os 12 tópicos atuais, inclusive leituras anteriores à V259. A conclusão vale 25 pontos de treinador, independentemente do resgate; consulte [CONQUISTAS.md](CONQUISTAS.md).

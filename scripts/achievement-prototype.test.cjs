@@ -53,6 +53,7 @@ async function database(upgrade = true) {
     INSERT INTO evolution_lines VALUES(10,1,true),(11,1,true);
     INSERT INTO evolution_line_steps VALUES(10,1),(10,2),(11,1),(11,3);`);
   if (upgrade) { await db.exec(expansion); await db.exec(scheduling); }
+  await db.exec(fs.readFileSync(path.join(root,'backend/src/main/resources/db/migration/V258__trainer_guide_read_topics.sql'),'utf8'));
   return db;
 }
 
@@ -97,7 +98,7 @@ test('PostgreSQL: consultas reais reconhecem históricos e separam contas',async
   await db.query("INSERT INTO digimon_collection_entries(player_id,digimon_info_id) VALUES($1,1),($1,1),($1,2)",[player]);
   await db.query("INSERT INTO digimons VALUES($1,'BABY','REBORN')",[player]);
   await db.query("INSERT INTO arena_matches VALUES($1,true),($1,false),($2,true)",[player,other]);
-  const expected={HATCHES:2,MISSIONS:1,SPECIES:2,STAGE:2,REBIRTHS:1,ARENA_WINS:1,WORLD_ATTACKS:0,RAID_ATTACKS:0,EQUIPPED:0,REFINEMENT:0,ASCENSION:0,MASTERED_SPECIES:0,COMPLETE_LINES:1,BOSS_WINS:0,DISTINCT_BOSSES:0,WORLD_DEFEATS:0,RAID_DEFEATS:0};
+  const expected={HATCHES:2,MISSIONS:1,SPECIES:2,STAGE:2,REBIRTHS:1,ARENA_WINS:1,WORLD_ATTACKS:0,RAID_ATTACKS:0,EQUIPPED:0,REFINEMENT:0,ASCENSION:0,MASTERED_SPECIES:0,COMPLETE_LINES:1,BOSS_WINS:0,DISTINCT_BOSSES:0,WORLD_DEFEATS:0,RAID_DEFEATS:0,GUIDE_READ_TOPICS:0};
   const pattern=/result\.put\("([A-Z_]+)", number\((?:"""([\s\S]*?)"""|"([^"\n]+)")/g;
   let count=0;
   for (const m of java.matchAll(pattern)) {
@@ -105,7 +106,7 @@ test('PostgreSQL: consultas reais reconhecem históricos e separam contas',async
    const result=await db.query(statement,params);const value=Number(Object.values(result.rows[0])[0]);
    assert.equal(value,expected[m[1]],m[1]);count++;
   }
-  assert.equal(count,17);
+  assert.equal(count,Object.keys(expected).length);
   // Atualizar CLAIMED novamente não conta duas vezes; apagar instâncias não reduz o total.
   await db.query("UPDATE mission_instances SET status='CLAIMED' WHERE player_id=$1 AND status='COMPLETED'",[player]);
   await db.query("UPDATE mission_instances SET status='CLAIMED' WHERE player_id=$1",[player]);
@@ -364,4 +365,48 @@ test('Fila: editar catálogo reavalia uma vez; observação idêntica não regra
   assert.equal((await db.query(observe,[player,'MISSION_10',5,5,10])).affectedRows,0);
   assert.equal((await db.query(observe,[player,'MISSION_10',3,3,10])).affectedRows,0);
  }finally{await db.close()}
+});
+
+const guideAchievement=fs.readFileSync(path.join(root,'backend/src/main/resources/db/migration/V259__trainer_guide_completion_achievement.sql'),'utf8');
+const guideTopics=[...fs.readFileSync(path.join(root,'backend/src/main/java/com/dro/modules/tutorial/domain/TutorialGuideTopic.java'),'utf8').matchAll(/^    ([A-Z_]+)\(/gm)].map(m=>m[1]);
+async function installGuideAchievement(db){await db.exec('ALTER TABLE achievement_definitions ADD COLUMN trainer_points integer not null default 25');await db.exec(guideAchievement);}
+test('Guia: leituras anteriores contam, catálogo tem 101 metas e resgate é único',async()=>{
+ const db=await database();try{
+  await db.exec('DELETE FROM achievement_pending_players');
+  for(const topic of guideTopics)await db.query('INSERT INTO trainer_guide_read_topics(player_id,topic) VALUES ($1,$2)',[player,topic]);
+  await installGuideAchievement(db);
+  const def=(await db.query("SELECT * FROM achievement_definitions WHERE code='TRAINER_GUIDE_COMPLETE'")).rows[0];
+  assert.equal((await db.query('SELECT * FROM achievement_definitions')).rows.length,101);
+  assert.equal(Number(def.target),12);assert.equal(def.reward_bits,500);assert.equal(def.reward_item_code,'VIP_ENERGY_CHARGE');assert.equal(def.reward_quantity,1);assert.equal(def.trainer_points,25);
+  assert.equal(await metric(db,'GUIDE_READ_TOPICS'),12);assert.equal(await metric(db,'GUIDE_READ_TOPICS',other),0);
+  assert.equal((await db.query('SELECT * FROM achievement_pending_players WHERE player_id=$1',[player])).rows.length,1);
+  const observe=positional(block('INSERT INTO player_achievements'));
+  await db.query(observe,[player,def.code,12,12,12]);
+  const row=(await db.query('SELECT * FROM player_achievements WHERE player_id=$1 AND achievement_code=$2',[player,def.code])).rows[0];assert.ok(row.completed_at);assert.equal(row.claimed_at,null);
+  const claim=positional(block('UPDATE player_achievements SET claimed_at'));
+  assert.equal((await db.query(claim,[player,def.code])).affectedRows,1);assert.equal((await db.query(claim,[player,def.code])).affectedRows,0);
+ }finally{await db.close();}
+});
+test('Guia: leitura nova só enfileira; repetição não cria novo evento ou conclusão imediata',async()=>{
+ const db=await database();try{await installGuideAchievement(db);await db.exec('DELETE FROM achievement_pending_players');
+ const read='INSERT INTO trainer_guide_read_topics(player_id,topic) VALUES ($1,$2) ON CONFLICT DO NOTHING';
+ await db.query(read,[player,'COLLECTION']);await db.query(read,[player,'COLLECTION']);
+ let pending=(await db.query('SELECT * FROM achievement_pending_players WHERE player_id=$1',[player])).rows[0];assert.equal(Number(pending.activity_version),1);
+ assert.equal((await db.query('SELECT * FROM player_achievements WHERE player_id=$1',[player])).rows.length,0);
+ await db.query(read,[player,'ACHIEVEMENTS']);pending=(await db.query('SELECT * FROM achievement_pending_players WHERE player_id=$1',[player])).rows[0];assert.equal(Number(pending.activity_version),2);
+ assert.equal((await db.query('SELECT * FROM achievement_pending_players WHERE player_id=$1',[other])).rows.length,0);
+ }finally{await db.close();}
+});
+test('Guia: onze tópicos mais um desconhecido não substituem a leitura que falta',async()=>{
+ const db=await database();try{await installGuideAchievement(db);
+ for(const topic of [...guideTopics.slice(0,11),'FUTURE_TOPIC'])await db.query('INSERT INTO trainer_guide_read_topics(player_id,topic) VALUES ($1,$2)',[player,topic]);
+ assert.equal(await metric(db,'GUIDE_READ_TOPICS'),11);
+ const observe=positional(block('INSERT INTO player_achievements'));await db.query(observe,[player,'TRAINER_GUIDE_COMPLETE',11,11,12]);
+ assert.equal((await db.query("SELECT completed_at FROM player_achievements WHERE player_id=$1 AND achievement_code='TRAINER_GUIDE_COMPLETE'",[player])).rows[0].completed_at,null);
+ }finally{await db.close();}
+});
+test('Guia: lista da métrica coincide com os doze conteúdos atuais',()=>{
+ const sql=java.match(/result\.put\("GUIDE_READ_TOPICS", number\("""([\s\S]*?)"""/)[1];
+ const codes=[...sql.matchAll(/'([A-Z_]+)'/g)].map(m=>m[1]);
+ assert.equal(guideTopics.length,12);assert.deepEqual(codes.sort(),guideTopics.slice().sort());
 });

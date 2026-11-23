@@ -114,6 +114,11 @@ public class AchievementRepository {
                 JOIN clan_raid_instances b ON b.id = a.clan_raid_id
                 WHERE a.player_id = ? AND a.damage > 0 AND b.status = 'DEFEATED'
                 """, playerId));
+        // Catálogo congelado da conquista: tópicos futuros/desconhecidos não completam a meta por engano.
+        result.put("GUIDE_READ_TOPICS", number("""
+                SELECT COUNT(*) FROM trainer_guide_read_topics WHERE player_id = ?
+                    AND topic IN ('COLLECTION', 'ACHIEVEMENTS', 'ENERGY', 'INCUBATION', 'TEAMS', 'BOSSES', 'ARENA', 'TOWER', 'RANKING', 'FORGE', 'REBIRTH', 'VIP')
+                """, playerId));
         return result;
     }
 

@@ -90,7 +90,7 @@ A V116 marca como resgatadas as etapas que já existiam antes da alteração, po
 - Após nascer: liberar coleção, conquistas, energia e incubação, sugerindo um conteúdo por vez.
 - Após resgatar a primeira missão: liberar times, chefes, arena, torre e classificação.
 - Após evoluir: liberar ferreiro, renascimento e VIP. Conferir que isso não ignora os requisitos reais dessas atividades.
-- Marcar Entendi, atualizar a página e acessar em outro dispositivo: leitura permanece; nenhum item, Bit, evento de gameplay ou ponto é concedido.
+- Marcar Entendi, atualizar a página e acessar em outro dispositivo: leitura permanece; nenhum prêmio é entregue diretamente. Ao completar os 12 tópicos, aguardar o processamento de Treinador bem informado e resgatar somente em Conquistas.
 - Fazer POST repetido e dar duplo clique: uma leitura, mesma contagem, sem duplicatas.
 - Finalizar o tutorial inicial com leituras opcionais pendentes: finalizar normalmente, sem obrigar torre, arena ou VIP.
 - Conta que já finalizou: dashboard permanece sem o card antigo; guia acessível em Mais → Conta, sem repetir recompensas.
