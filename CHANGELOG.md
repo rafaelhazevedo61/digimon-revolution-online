@@ -9,6 +9,8 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Adicionado
 
+- **Torre Infinita**: desafios permanentes por conta com times de 1–3 Digimons, chefes a cada 5 andares, marcos a cada 10, recompensas automáticas por primeira vitória e cooldown de 30 segundos. Inclui tela, API, persistência transacional, proteção contra pedidos repetidos e documentação em `TORRE-INFINITA.md`.
+
 - **Processamento agendado de conquistas**: fila por conta, lotes configuráveis (padrão: 100 contas a cada 30 segundos), recuperação de falhas e última atualização na página. Consultar ou resgatar não recalcula metas; a captura dos eventos continua imediata.
 
 - **Expansão de conquistas**: 67 novas metas de raridade ao nascer, domínio de espécies, linhas completas, exploração, equipes, conjuntos e chefes. Registros imutáveis impedem que rerolls e compras contem como nascimento ou aprimoramento realizado.

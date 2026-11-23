@@ -31,6 +31,7 @@ const routes = {
   more: renderMorePage,
   vip: renderVipPage,
   achievements: renderAchievementsPage,
+  tower: renderTowerPage,
   settings: renderSettingsPage
 };
 
