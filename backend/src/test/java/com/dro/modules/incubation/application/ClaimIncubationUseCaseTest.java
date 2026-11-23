@@ -51,6 +51,9 @@ class ClaimIncubationUseCaseTest {
     @Mock
     private TutorialService tutorialService;
 
+    @Mock
+    private com.dro.modules.achievement.application.AchievementGameplayRecorder achievementRecorder;
+
     @Test
     void claimsOnlyTheRequestedIncubation() {
         UUID playerId = UUID.randomUUID();
@@ -103,9 +106,12 @@ class ClaimIncubationUseCaseTest {
                 digitamaPoolRepository,
                 digitamaPoolEligibilityService,
                 tutorialService,
-                null
+                null,
+                null,
+                achievementRecorder
         ).execute(JwtTestToken.create(playerId), incubationId);
 
+        verify(achievementRecorder).birth(digimon);
         assertNotNull(digimon);
         assertEquals(playerId, digimon.getPlayerId());
         assertEquals(DigimonStatus.HATCHED, digimon.getStatus());

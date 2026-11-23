@@ -1,5 +1,6 @@
 package com.dro.modules.incubation.application;
 
+import com.dro.modules.achievement.application.AchievementGameplayRecorder;
 import com.dro.modules.collection.application.CollectionRegistrationService;
 import com.dro.modules.digitama.application.DigitamaPoolEligibilityService;
 import com.dro.modules.activitycalendar.application.ActivityCalendarService;
@@ -36,6 +37,7 @@ import java.util.UUID;
 
 @Service
 public class ClaimIncubationUseCase {
+    private final AchievementGameplayRecorder achievementRecorder;
     private final IncubationRepository incubationRepository;
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
@@ -71,6 +73,7 @@ public class ClaimIncubationUseCase {
         ensureStorageHasSpace(player);
         Digimon digimon = createDigimonFromIncubation(playerId, incubation);
         digimonRepository.save(digimon);
+        if (achievementRecorder != null) achievementRecorder.birth(digimon);
         if (collectionRegistrationService != null) {
             collectionRegistrationService.registerIfMissing(digimon, "HATCH");
         }
@@ -139,7 +142,6 @@ public class ClaimIncubationUseCase {
                 digitamaPoolEligibilityService, tutorialService, activityCalendarService, null);
     }
 
-    @Autowired
     public ClaimIncubationUseCase(
             IncubationRepository incubationRepository,
             DigimonRepository digimonRepository,
@@ -150,6 +152,20 @@ public class ClaimIncubationUseCase {
             ActivityCalendarService activityCalendarService,
             CollectionRegistrationService collectionRegistrationService
     ) {
+        this(incubationRepository, digimonRepository, playerRepository, digitamaPoolRepository, digitamaPoolEligibilityService, tutorialService, activityCalendarService, collectionRegistrationService, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public ClaimIncubationUseCase(
+            IncubationRepository incubationRepository,
+            DigimonRepository digimonRepository,
+            PlayerRepository playerRepository,
+            DigitamaPoolRepository digitamaPoolRepository,
+            DigitamaPoolEligibilityService digitamaPoolEligibilityService,
+            TutorialService tutorialService,
+            ActivityCalendarService activityCalendarService,
+            CollectionRegistrationService collectionRegistrationService,
+            AchievementGameplayRecorder achievementRecorder) {
         this.incubationRepository = incubationRepository;
         this.digimonRepository = digimonRepository;
         this.playerRepository = playerRepository;
@@ -158,5 +174,6 @@ public class ClaimIncubationUseCase {
         this.tutorialService = tutorialService;
         this.activityCalendarService = activityCalendarService;
         this.collectionRegistrationService = collectionRegistrationService;
+        this.achievementRecorder = achievementRecorder;
     }
 }

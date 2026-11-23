@@ -38,6 +38,13 @@ logging:
     org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver: ERROR
 
 dro:
+  achievements:
+    scheduler:
+      enabled: ${DRO_ACHIEVEMENTS_SCHEDULER_ENABLED:true}
+      delay-ms: ${DRO_ACHIEVEMENTS_SCHEDULER_DELAY_MS:30000}
+      initial-delay-ms: ${DRO_ACHIEVEMENTS_SCHEDULER_INITIAL_DELAY_MS:30000}
+      batch-size: ${DRO_ACHIEVEMENTS_SCHEDULER_BATCH_SIZE:100}
+      retry-delay-ms: ${DRO_ACHIEVEMENTS_SCHEDULER_RETRY_DELAY_MS:60000}
   maintenance:
     cleanup:
       retention-hours: ${DRO_MAINTENANCE_CLEANUP_RETENTION_HOURS:24}

@@ -1,0 +1,117 @@
+# Conquistas — protótipo
+
+Acesso: **Mais → Conquistas**. São 100 conquistas permanentes por conta, com Bits e um item garantido por meta. Sem pontos, títulos, ranking ou temporadas nesta versão.
+
+## Experiência
+
+- Resumo de concluídas, disponíveis para resgate e resgatadas.
+- Categorias, busca por nome/descrição/recompensa e filtro por status.
+- Progresso por etapa, com recompensas disponíveis primeiro.
+- Resgate manual e único, com atualização do inventário global e dos Bits da conta.
+- Progresso processado em segundo plano, com intervalo padrão de 30 segundos entre lotes de até 100 contas pendentes. A página e o resgate não recalculam metas.
+- Uma conclusão observada nunca é perdida, mesmo após renascimento ou troca de parceiro.
+
+Para visualizar com dados fictícios sem login nem backend, abra `docs/prototypes/achievements.html` no navegador. Essa demonstração usa a mesma página e CSS do jogo. Seus resgates não alteram contas reais.
+
+## Recompensas
+
+O catálogo completo está em `backend/src/main/resources/docs/CONQUISTAS.md`, baseado nas migrations V250 e V251. Nome, descrição, meta, Bits, item, quantidade, ordem e disponibilidade são configuráveis em `achievement_definitions`. Não edite a migration depois de aplicada: altere o catálogo com uma nova migration.
+
+| Família | Marcos | Itens, além dos Bits |
+|---|---|---|
+| Primeiros passos | Primeiro nascimento, primeira missão, primeiro equipamento | Células, discos de XP |
+| Criação | 10 / 50 / 100 nascimentos | Incubadoras rara/épica, Dado de Raridade |
+| Evolução | Baby II até Mega | Discos, Células, Cargas Totais, Passe VIP |
+| Renascimento | 1 / 10 / 25 renascimentos | Cristal de Preservação de Raridade, Dado de Raridade |
+| Coleção | 10 / 25 / 50 / 100 espécies | Expansores de storage, Dado de Raridade |
+| Missões | 10 / 100 / 500 / 1.000 resgates | Células, Cargas Totais, Passe VIP, incubadora lendária |
+| Combate | Vitórias na arena, ataques ao Chefe Mundial | Células, discos, Dado de Raridade, Núcleo de Ascensão |
+| Clã | 10 / 50 ataques em incursões | Carga Total, Núcleo de Ascensão |
+| Equipamentos | Possuir refinamento +5 / +10 e ascensão 1 | Cristais de Proteção, Núcleo de Ascensão |
+
+Há **+20 espaços de storage** no catálogo, distribuídos em quatro unidades do item existente `STORAGE_SLOT_5`. O jogador usa o expansor no inventário. Há somente **dois Passes VIP** no catálogo: primeiro Mega e 500 missões.
+
+O Cristal de Preservação de Raridade mantém sua função existente no renascimento; não foi confundido com o Cristal de Proteção de refinamento.
+
+## Expansão para 100 conquistas
+
+As 67 novas conquistas preservam as 33 originais e todos os resgates. A V251 adiciona novas etapas e metas de raridade/IVs/trait ao nascer, quatro raridades por espécie, linhas completas, exploração de seis áreas, times completos, conjuntos, ações de aprimoramento e chefes.
+
+Nascimentos têm fotografias imutáveis capturadas pelos fluxos de hatch. Novas ações de refinamento/ascensão e ativações de conjuntos têm evidências idempotentes; não se inferem essas ações de itens comprados. Os construtores anteriores dos casos de uso permanecem compatíveis com testes antigos; o Spring injeta o recorder obrigatório pelo novo construtor.
+
+As regiões congelam as missões ativas na instalação. Linhas congelam as espécies das linhas ativas com conteúdo disponível. Novos dados não retiram metas concluídas. A V251 estende o trigger de resgate para preservar missões distintas e contagem de times completos, mesmo após expurgo.
+
+O catálogo mantém **dois Passes VIP e +20 espaços de storage**. O total de Bits passa a **258.550**. A demonstração visual inclui as 100 metas.
+
+Veja o [catálogo completo](../backend/src/main/resources/docs/CONQUISTAS.md) para todas as metas, recompensas e regras de contagem.
+
+## Passe VIP de 1 Dia
+
+Novo item `VIP_DAY_PASS`, empilhável, sem venda ou negociação. O resgate de uma conquista apenas entrega o item; não inicia o VIP.
+
+Ao usar uma unidade:
+
+- VIP inativo/vencido: começa no momento do uso e dura 24 horas.
+- VIP ativo: soma 24 horas ao vencimento atual.
+- Funciona sem Digimon ativo e consome exatamente uma unidade por solicitação.
+- Não altera os planos VIP nem renova automaticamente. O uso não resgata automaticamente a Carga Total diária.
+
+## Contagem e dados anteriores
+
+- Nascimentos: histórico de nascimento direto + incubações resgatadas. Renascimento, compra ou troca de parceiro não contam como nascimento.
+- Missões: contador permanente incrementado pela transição para `CLAIMED`, abrangendo resgate manual e automático. A migration inicializa o contador com o histórico ainda disponível. O trigger e a missão participam da mesma transação; regravar `CLAIMED` não incrementa novamente. A limpeza de instâncias antigas não reduz o contador.
+- Coleção: espécies distintas no álbum, sem contar novamente as raridades da mesma espécie.
+- Estágio: maior estágio comprovado pelo álbum ou pelos registros de Digimons. Estágios superiores também satisfazem as metas anteriores.
+- Renascimentos: registros de Digimons com status `REBORN`, sem somar contadores de gerações da mesma linhagem.
+- Arena: apenas vitórias de desafios iniciados pela própria conta; não conta defesa passiva.
+- Chefes: ataques registrados, sem contar de novo uma repetição idempotente da mesma requisição.
+- Primeiro equipamento: conclusão persistida do tutorial de equipar.
+- Refinamento/ascensão: a V252 preserva o maior patamar na gravação da peça, mesmo se ela for vendida antes do próximo lote. Peças já vendidas antes da instalação, sem evidências, não são reconstruídas.
+
+Históricos já apagados antes da instalação não são inventados nem reconstruídos a partir do bônus de recompensa de missões (esse contador tem teto de 100). Administradores podem experimentar o protótipo na própria conta; não há ranking público nesta versão.
+
+## Consistência
+
+`player_achievements` possui chave composta por conta e conquista. A página faz somente leituras, sem lock pessimista da conta. O worker bloqueia apenas a linha de pendência com FOR UPDATE SKIP LOCKED; o resgate mantém o lock da conta. O resgate também faz uma atualização condicional de `claimed_at`; Bits, item, auditoria e marca de resgate estão na mesma transação. Se o stack não comportar o item, o resgate falha inteiro e permanece disponível. Nenhuma quantidade ou recompensa é aceita do cliente.
+
+Rotas autenticadas:
+
+- `GET /players/me/achievements`
+- `POST /players/me/achievements/{code}/claim`
+
+## Validação
+
+- Testes Java: `AchievementServiceTest`, `VipPassRulesTest`, `UseVipPassTest`, `AchievementGameplayRecorderTest` e regressões de mensagens, equipagem e incubação.
+- Testes PostgreSQL (PGlite) e DOM (jsdom): `scripts/achievement-prototype.test.cjs`. O script executa a migration e as consultas SQL reais, verifica isolamento de conta, resgate único, rollback, progresso permanente, proteção contra limpeza, novas métricas e os filtros/resgate da página com 100 conquistas.
+
+```sh
+npm install --prefix /tmp/dro-achievement-tests jsdom @electric-sql/pglite
+NODE_PATH=/tmp/dro-achievement-tests/node_modules node --test scripts/achievement-prototype.test.cjs
+```
+
+O ambiente de desenvolvimento desta revisão tem runtime Java 21 sem `ct.sym`; a compilação foi feita com `source/target=17`, sem alterar o POM. Mockito foi carregado como agente para evitar self-attach indisponível no ambiente.
+
+A suíte existente `UseItemUseCaseTest` apresenta 14 falhas de mocks desatualizados (`findById` versus `findByIdForUpdate`). As mesmas 14 falhas foram reproduzidas com a implementação original da branch base. Não foram alteradas neste PR.
+
+## Roteiro de homologação
+
+1. Abra Mais → Conquistas e confira o reconhecimento de feitos que já constam na conta.
+2. Filtre por categoria/status e busque pelo nome de uma recompensa.
+3. Resgate uma conquista: confira Bits e inventário; repita a chamada para verificar a rejeição.
+4. Encha o stack da recompensa e confira que o resgate não dá Bits nem desaparece.
+5. Complete uma missão manual e outra automática; confira o avanço. A limpeza de histórico não deve reduzi-lo.
+6. Resgate um expansor e use-o: o storage deve aumentar em +5 por unidade.
+7. Resgate um Passe VIP: apenas o inventário muda. Use com VIP inativo e depois com VIP ativo para conferir início e extensão.
+8. Confira a página em celular e desktop. Validação visual em navegador completo e homologação contra o banco do jogo ainda devem ser feitas antes do merge.
+
+## Processamento agendado (V252)
+
+A página lê somente o progresso persistido, mostra a última atualização e informa se há pendências. O botão Atualizar não dispara processamento. O resgate verifica a conclusão persistida e mantém a transação de entrega, sem consultar métricas do jogo.
+
+A fila no PostgreSQL agrupa atividades por conta. Os triggers só enfileiram mudanças relevantes; energia, Bits e consultas sem mudança não geram trabalho. Novas contas, novos eventos e derrotas coletivas enfileiram os jogadores afetados. Alterar o catálogo enfileira as contas uma vez. Há uma carga inicial única ao instalar a V252.
+
+Cada conta tem transação independente, com lock na pendência e SKIP LOCKED para múltiplas instâncias. O worker não bloqueia Player, evitando inversão de locks com ações que já bloqueiam a conta antes de registrar atividade. Atualizações concorrentes da fila esperam o lock e voltam a enfileirar a conta após a remoção, sem perder a atividade. Uma falha reverte o progresso e preserva a pendência; por padrão, a nova tentativa fica disponível após 60 segundos.
+
+Os padrões são configuráveis em `dro.achievements.scheduler` e variáveis `DRO_ACHIEVEMENTS_SCHEDULER_*`. Os 30 segundos são intervalo entre lotes, não garantia de latência máxima. O teste de concorrência/carga com múltiplas instâncias e PostgreSQL de homologação continua pendente.
+
+Documentação operacional: `backend/src/main/resources/docs/PROCESSAMENTO-CONQUISTAS.md`.

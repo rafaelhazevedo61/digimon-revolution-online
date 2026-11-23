@@ -88,6 +88,7 @@ public enum ItemType {
     // Registro permanente de Digimons na coleção
     COLLECTION_DIGIVICE,
 
-    VIP_ENERGY_CHARGE
+    VIP_ENERGY_CHARGE,
+    VIP_DAY_PASS
 
 }

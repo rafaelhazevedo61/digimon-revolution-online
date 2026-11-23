@@ -1,5 +1,6 @@
 package com.dro.modules.equipment.application;
 
+import com.dro.modules.achievement.application.AchievementGameplayRecorder;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.equipment.api.dto.response.EquipmentResponse;
@@ -29,6 +30,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 @Service
 public class RefineEquipmentUseCase {
+    private final AchievementGameplayRecorder achievementRecorder;
     private static final int STONES_PER_REFINEMENT = 1;
     private final EquipmentRepository equipmentRepository;
     private final DigimonRepository digimonRepository;
@@ -97,6 +99,7 @@ public class RefineEquipmentUseCase {
         if (equipmentDestroyed) equipmentRepository.delete(equipment);
         else equipmentRepository.save(equipment);
         transactionAuditPublisher.success("equipment-refine:" + UUID.randomUUID(), "EQUIPMENT_REFINED", "Equipment", equipmentId.toString(), Map.ofEntries(Map.entry("module", "equipment"), Map.entry("operation", "refine"), Map.entry("actorId", playerId.toString()), Map.entry("digimonId", digimon.getId().toString()), Map.entry("equipmentId", equipmentId.toString()), Map.entry("previousLevel", currentLevel), Map.entry("newLevel", equipment.getRefinementLevel()), Map.entry("success", success), Map.entry("successRate", successRate), Map.entry("costBits", costBits), Map.entry("refinementStones", STONES_PER_REFINEMENT), Map.entry("summary", "Equipment refinement processed")));
+        if (success && achievementRecorder != null) achievementRecorder.refinement(playerId, UUID.randomUUID());
         String message = success ? "Refinamento bem-sucedido! +" + equipment.getRefinementLevel()
                 : equipmentDestroyed ? "Refinamento falhou! O equipamento foi destruído."
                 : breakAttempt ? "Refinamento falhou! O Cristal de Proteção impediu a quebra."
@@ -113,11 +116,17 @@ public class RefineEquipmentUseCase {
     }
 
     public RefineEquipmentUseCase(final EquipmentRepository equipmentRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final InventoryRepository inventoryRepository, final TransactionAuditPublisher transactionAuditPublisher, final ItemDefinitionRepository itemDefinitionRepository) {
+        this(equipmentRepository, digimonRepository, playerRepository, inventoryRepository, transactionAuditPublisher, itemDefinitionRepository, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public RefineEquipmentUseCase(final EquipmentRepository equipmentRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final InventoryRepository inventoryRepository, final TransactionAuditPublisher transactionAuditPublisher, final ItemDefinitionRepository itemDefinitionRepository, AchievementGameplayRecorder achievementRecorder) {
         this.equipmentRepository = equipmentRepository;
         this.digimonRepository = digimonRepository;
         this.playerRepository = playerRepository;
         this.inventoryRepository = inventoryRepository;
         this.transactionAuditPublisher = transactionAuditPublisher;
         this.itemDefinitionRepository = itemDefinitionRepository;
+        this.achievementRecorder = achievementRecorder;
     }
 }

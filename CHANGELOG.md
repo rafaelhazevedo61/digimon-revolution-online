@@ -7,6 +7,15 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Processamento agendado de conquistas**: fila por conta, lotes configuráveis (padrão: 100 contas a cada 30 segundos), recuperação de falhas e última atualização na página. Consultar ou resgatar não recalcula metas; a captura dos eventos continua imediata.
+
+- **Expansão de conquistas**: 67 novas metas de raridade ao nascer, domínio de espécies, linhas completas, exploração, equipes, conjuntos e chefes. Registros imutáveis impedem que rerolls e compras contem como nascimento ou aprimoramento realizado.
+
+- **Conquistas (protótipo)**: 100 metas permanentes por conta, disponíveis em Mais → Conquistas, com filtros, progresso e resgate único de Bits e itens. Inclui expansores que somam até +20 espaços de storage e contador de missões que sobrevive à limpeza de histórico.
+- **Passe VIP de 1 Dia**: recompensa guardada no inventário; ao usar, ativa 24 horas de VIP ou acrescenta esse período à validade existente. Não pode ser vendido ou negociado.
+
 ## [0.0.15-SNAPSHOT]
 
 ### Adicionado

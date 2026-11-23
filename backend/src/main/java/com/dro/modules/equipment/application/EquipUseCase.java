@@ -1,5 +1,6 @@
 package com.dro.modules.equipment.application;
 
+import com.dro.modules.achievement.application.AchievementGameplayRecorder;
 import com.dro.modules.digimon.domain.Digimon;
 import com.dro.modules.digimon.infra.DigimonRepository;
 import com.dro.modules.equipment.domain.Equipment;
@@ -21,6 +22,7 @@ import java.util.UUID;
  */
 @Service
 public class EquipUseCase {
+    private final AchievementGameplayRecorder achievementRecorder;
     private final EquipmentRepository equipmentRepository;
     private final DigimonRepository digimonRepository;
     private final PlayerRepository playerRepository;
@@ -59,12 +61,21 @@ public class EquipUseCase {
         equipmentRepository.save(equipment);
         digimonRepository.save(digimon);
         tutorialService.completeStep(playerId, TutorialStep.EQUIP_ITEM);
+        if (achievementRecorder != null) {
+            achievementRecorder.equipped(playerId, digimon.getId(), equipmentRepository.findByDigimonIdAndEquippedTrue(digimon.getId()));
+        }
     }
 
     public EquipUseCase(final EquipmentRepository equipmentRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final TutorialService tutorialService) {
+        this(equipmentRepository, digimonRepository, playerRepository, tutorialService, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public EquipUseCase(final EquipmentRepository equipmentRepository, final DigimonRepository digimonRepository, final PlayerRepository playerRepository, final TutorialService tutorialService, AchievementGameplayRecorder achievementRecorder) {
         this.equipmentRepository = equipmentRepository;
         this.digimonRepository = digimonRepository;
         this.playerRepository = playerRepository;
         this.tutorialService = tutorialService;
+        this.achievementRecorder = achievementRecorder;
     }
 }

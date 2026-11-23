@@ -30,6 +30,7 @@ const routes = {
   "world-boss": renderWorldBossPage,
   more: renderMorePage,
   vip: renderVipPage,
+  achievements: renderAchievementsPage,
   settings: renderSettingsPage
 };
 
