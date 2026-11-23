@@ -67,7 +67,7 @@ public class GetRankingUseCase {
         int safePage = Math.max(page, 0);
         int safeSize = sanitizeSize(size);
 
-        List<Digimon> digimons = digimonRepository.findByStatusInAndBotFalse(RANKING_STATUSES);
+        List<Digimon> digimons = new java.util.ArrayList<>(digimonRepository.findByStatusInAndBotFalse(RANKING_STATUSES));
         Map<UUID, Double> powers = new HashMap<>();
         for (Digimon d : digimons) {
             powers.put(d.getId(), digimonPowerService.calculatePower(d));

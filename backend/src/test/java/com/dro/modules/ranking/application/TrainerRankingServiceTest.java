@@ -48,6 +48,29 @@ class TrainerRankingServiceTest {
         assertThrows(BadRequestException.class, () -> service.page(playerId, 0, 51));
         verifyNoInteractions(repository);
     }
+    @Test void searchPreservesGlobalPositionAndOwnEntryWithFilteredPagination() {
+        when(repository.eligibility(playerId)).thenReturn(List.of(true));
+        when(repository.state()).thenReturn(new State(Instant.EPOCH, 100));
+        when(repository.me(playerId)).thenReturn(entry);
+        when(repository.countMatching("Trein")).thenReturn(1L);
+        when(repository.page(0, 10, "Trein")).thenReturn(List.of(entry));
+        var result = service.page(playerId, 0, 10, "  Trein  ");
+        assertEquals(42, result.entries().get(0).position());
+        assertEquals(100, result.totalPlayers()); assertEquals(1, result.matchingPlayers());
+        assertEquals(entry, result.me()); assertFalse(result.hasNext());
+    }
+    @Test void oversizedSearchIsRejectedBeforeQuerying() {
+        assertThrows(BadRequestException.class, () -> service.page(playerId, 0, 10, "x".repeat(51)));
+        verifyNoInteractions(repository);
+    }
+    @Test void publicProfileReturnsOnlyThePublicDto() {
+        var profile = new Profile(entry, null, null, null, Instant.EPOCH);
+        when(repository.profile(playerId)).thenReturn(profile);
+        assertEquals(profile, service.profile(playerId));
+    }
+    @Test void missingOrExcludedPublicProfileIsRejected() {
+        assertThrows(NotFoundException.class, () -> service.profile(playerId));
+    }
     @Test void missingPlayerIsRejected() {
         when(repository.eligibility(playerId)).thenReturn(List.of());
         assertThrows(NotFoundException.class, () -> service.page(playerId, 0, 10));
@@ -55,12 +78,12 @@ class TrainerRankingServiceTest {
     @Test void refreshRequiresSharedDatabaseLockAndFreshnessCheck() {
         var refresher = new TrainerRankingRefresher(repository);
         when(repository.lockIfDue(300000)).thenReturn(false);
-        assertFalse(refresher.refresh(300000)); verify(repository, never()).rebuild();
+        assertFalse(refresher.refresh(300000)); verify(repository, never()).rebuild(); verify(repository, never()).captureDailyHistory();
     }
     @Test void refreshRebuildsAfterLock() {
         var refresher = new TrainerRankingRefresher(repository);
         when(repository.lockIfDue(300000)).thenReturn(true);
-        assertTrue(refresher.refresh(300000)); verify(repository).rebuild();
+        assertTrue(refresher.refresh(300000)); verify(repository).rebuild(); verify(repository).captureDailyHistory();
     }
     @Test void schedulerCanBeDisabled() {
         var refresher = mock(TrainerRankingRefresher.class);

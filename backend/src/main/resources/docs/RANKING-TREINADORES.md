@@ -99,7 +99,7 @@ A aba mostra:
 - `myStatus`: `RANKED` (posição disponível), `PENDING` (conta elegível aguardando atualização), `EXCLUDED` (não participa).
 - Antes do primeiro ciclo: lista vazia, `updatedAt = null` e aviso de processamento pendente.
 - Não retorna e-mail, IDs dos Digimons, tokens ou outros dados privados; o identificador público da conta permite destacar o próprio jogador.
-- Não há busca por nome nesta aba no protótipo; a busca existente de Poder permanece.
+- Busca parcial por nome via `search`, sem distinguir maiúsculas/minúsculas, com até 50 caracteres. O texto é literal (inclusive `%` e `_`), e os parâmetros são enviados separadamente do SQL. A busca mantém posições globais, a posição pessoal e a quantidade total; `matchingPlayers` informa o número de resultados e controla a paginação filtrada. A busca de Poder permanece.
 - A leitura da página, do próprio jogador e dos metadados usa transação `REPEATABLE_READ` para não misturar versões durante uma renovação.
 
 ## Persistência e operação
@@ -121,9 +121,29 @@ Testes adicionados:
 - `TrainerRankingServiceTest`: posição pessoal, elegibilidade, pendência inicial, paginação e execução do job.
 - `scripts/trainer-ranking.test.cjs`: migration e SQL real em PGlite, composição dos pontos, exclusão de bots/admin/teste, desempate, idempotência, resgate sem pontos extras, rollback e DOM da aba.
 
-O ambiente de execução estava indisponível na elaboração desta entrega: os testes foram escritos, mas sua execução e a compilação Java precisam ser realizadas na homologação. Verificações de sintaxe JavaScript e renderização direta foram feitas separadamente. PGlite não substitui testes de concorrência com PostgreSQL e múltiplas instâncias reais.
+A execução de testes Java, DOM e SQL passou a ser possível nesta etapa. Testes cobrem busca literal, posições globais, perfil público, escape de nomes, resultados antigos em requisições concorrentes e persistência transacional do histórico. PGlite não substitui testes de concorrência com PostgreSQL e múltiplas instâncias reais.
 
-Próximos ajustes possíveis: homologar pesos com jogadores reais, medir duração do recálculo com muitas contas, avaliar atualização incremental por contas alteradas, incluir gestão de exclusão no admin e ranking sazonal separado. Esta entrega não concede prêmios por posição.
+## Perfil público do treinador
+
+Clicar no nome de um participante abre um modal acessível com nome público, posição global, pontuação total e por componente, registros da coleção, maestrias, conquistas concluídas, recorde da torre e nome/tag do clã atual. Escape, o botão de fechar ou o fundo fecham o modal; o foco retorna ao elemento anterior. Respostas tardias são ignoradas se o modal já foi fechado ou substituído.
+
+Endpoint autenticado: `GET /ranking/players/{playerId}`. A resposta contém `ranking`, `clanId`, `clanName`, `clanTag` e `updatedAt`. Não inclui e-mail, senha, Bits, inventário, dados de autenticação ou lista privada de Digimons. Pontuação e contagens usam a classificação publicada, sem recalcular conquistas ao abrir o perfil. O clã é consultado no cadastro atual; clãs inativos não aparecem. Contas excluídas, bots e administradores não possuem perfil público nesta funcionalidade, mesmo se houver uma linha antiga na classificação. Uma conta aguardando a primeira atualização também não tem perfil disponível ainda.
+
+## Histórico diário — estrutura para a segunda etapa
+
+A migration **V256__trainer_search_profile_and_history.sql** cria `trainer_ranking_daily_history`. Cada atualização bem-sucedida do ranking, sob o mesmo lock e transação, tenta salvar a primeira observação de cada participante no dia de **America/Sao_Paulo**. Novas tentativas do mesmo dia/regra não sobrescrevem esse registro.
+
+Cada linha guarda data local, instante efetivo da observação, posição global, nome público, contagens e parcelas da pontuação. A chave contém data, versão da regra e conta. Um índice por conta/data atende comparações futuras. O histórico é removido por FK quando a conta é excluída.
+
+A versão é um fingerprint MD5 determinístico da fórmula identificada como `trainer-v1` (pesos 10/50/20) e dos códigos/pesos de conquistas ativas, ordenados por código. Se os pesos ou o conjunto ativo mudarem, inicia-se outro grupo de observações, inclusive no mesmo dia. A finalidade do hash é separar regras, não criptografar informações. Futuras alterações de fórmula devem mudar o identificador e a descrição dos pesos no fingerprint.
+
+O recálculo e a captura usam `REPEATABLE_READ`: catálogo, pontuação e versão da regra pertencem à mesma visão. Falhas na captura revertem também a renovação do ranking. Se não houver processamento em um dia, não se inventa uma observação; o horário efetivo fica registrado, sem afirmar que a coleta ocorreu exatamente à meia-noite. Não se preenche histórico anterior à implantação.
+
+**Esta é a primeira etapa aprovada: busca, perfil e coleta do histórico. A classificação semanal e as setas de variação ainda não são exibidas.** Na segunda etapa, a semana começará segunda-feira às 00h de São Paulo; deverão ser definidas bases explícitas para a primeira semana, contas novas, dias sem coleta e mudanças de regra. Não se deve tratar rebalanceamento como pontos conquistados pelo jogador, nem presumir uma posição de ontem sem observação válida. O registro diário fornece a base, mas não substitui a implementação dessas regras.
+
+Não há expurgo automático do histórico nesta etapa. O volume é proporcional a participantes × dias × versões de regra; definir retenção antes de ampliar a coleta ou adicionar observações mais frequentes.
+
+Próximos ajustes possíveis: concluir a segunda etapa, homologar pesos com jogadores reais, medir duração do recálculo com muitas contas, avaliar atualização incremental por contas alteradas, otimizar busca com índices apropriados se necessário e incluir gestão de exclusão no admin. Esta entrega não concede prêmios por posição.
 
 ## Catálogo inicial de pontuação das conquistas
 

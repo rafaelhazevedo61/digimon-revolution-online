@@ -10,7 +10,8 @@ public final class TrainerRankingDtos {
     public record Entry(UUID playerId, String playerName, long position, BigDecimal totalScore,
                         BigDecimal collectionScore, BigDecimal achievementScore, BigDecimal towerScore,
                         long collectionEntries, long masteredSpecies, long completedAchievements, long highestFloor) {}
+    public record Profile(Entry ranking, UUID clanId, String clanName, String clanTag, Instant updatedAt) {}
     public record State(Instant updatedAt, long totalPlayers) {}
     public record Page(List<Entry> entries, Entry me, String myStatus, Instant updatedAt,
-                       long totalPlayers, int page, int size, boolean hasNext) {}
+                       long totalPlayers, long matchingPlayers, int page, int size, boolean hasNext) {}
 }

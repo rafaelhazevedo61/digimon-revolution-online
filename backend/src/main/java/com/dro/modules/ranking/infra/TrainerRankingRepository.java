@@ -80,9 +80,51 @@ public class TrainerRankingRepository {
             return new State(updated == null ? null : updated.toInstant(), rs.getLong("total_players"));
         });
     }
-    public List<Entry> page(int page, int size) {
-        return jdbc.query("SELECT * FROM trainer_ranking_entries ORDER BY position LIMIT ? OFFSET ?",
-                ENTRY, size, (long) page * size);
+    public List<Entry> page(int page, int size) { return page(page, size, ""); }
+    public List<Entry> page(int page, int size, String search) {
+        return jdbc.query("""
+                SELECT * FROM trainer_ranking_entries
+                WHERE STRPOS(LOWER(player_name), LOWER(?)) > 0
+                ORDER BY position LIMIT ? OFFSET ?
+                """, ENTRY, search, size, (long) page * size);
+    }
+    public long countMatching(String search) {
+        Long count = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM trainer_ranking_entries
+                WHERE STRPOS(LOWER(player_name), LOWER(?)) > 0
+                """, Long.class, search);
+        return count == null ? 0 : count;
+    }
+    public Profile profile(UUID playerId) {
+        return jdbc.query("""
+                SELECT e.*, c.id AS clan_id, c.name AS clan_name, c.tag AS clan_tag, s.updated_at
+                FROM trainer_ranking_entries e JOIN players p ON p.id = e.player_id
+                CROSS JOIN trainer_ranking_state s
+                LEFT JOIN clans c ON c.id = p.clan_id AND c.active = TRUE
+                WHERE e.player_id = ? AND s.id = 1 AND p.user_type = 'PLAYER'
+                    AND p.trainer_ranking_excluded = FALSE
+                    AND NOT EXISTS (SELECT 1 FROM digimons d WHERE d.player_id = p.id AND d.is_bot = TRUE)
+                """, (rs, row) -> new Profile(ENTRY.mapRow(rs, row), rs.getObject("clan_id", UUID.class),
+                rs.getString("clan_name"), rs.getString("clan_tag"), rs.getTimestamp("updated_at").toInstant()), playerId)
+                .stream().findFirst().orElse(null);
+    }
+
+    /** Called inside the snapshot transaction and its database lock. First daily observation is immutable. */
+    public void captureDailyHistory() {
+        jdbc.update("""
+                INSERT INTO trainer_ranking_daily_history (snapshot_date, rules_version, player_id,
+                    observed_at, position, player_name, collection_entries, mastered_species,
+                    completed_achievements, highest_floor, collection_score, achievement_score, tower_score, total_score)
+                SELECT (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')::date,
+                    (SELECT MD5('trainer-v1;collection=10;mastery=50;tower=20;' || COALESCE(
+                        STRING_AGG(code || ':' || trainer_points::text, ';' ORDER BY code), ''))
+                     FROM achievement_definitions WHERE active = TRUE),
+                    e.player_id, CURRENT_TIMESTAMP, e.position, e.player_name, e.collection_entries,
+                    e.mastered_species, e.completed_achievements, e.highest_floor,
+                    e.collection_score, e.achievement_score, e.tower_score, e.total_score
+                FROM trainer_ranking_entries e
+                ON CONFLICT (snapshot_date, rules_version, player_id) DO NOTHING
+                """);
     }
     public Entry me(UUID playerId) {
         return jdbc.query("SELECT * FROM trainer_ranking_entries WHERE player_id = ?", ENTRY, playerId)

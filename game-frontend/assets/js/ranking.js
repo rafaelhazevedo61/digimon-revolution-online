@@ -49,10 +49,10 @@ async function renderRankingPage(params = {}) {
         <input
           id="rank-search"
           type="text"
-          placeholder="${rankTab === "power" ? "Buscar jogador ou Digimon..." : "Busca disponível apenas no ranking de Poder"}"
+          placeholder="${rankTab === "players" ? "Buscar jogador por nome..." : rankTab === "power" ? "Buscar jogador ou Digimon..." : "Busca disponível em Poder e Jogadores"}"
           class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
           value="${escapeHtml(rankSearch)}"
-          ${rankTab === "power" ? "" : "disabled"}
+          ${["power", "players"].includes(rankTab) ? "" : "disabled"} ${rankTab === "players" ? 'maxlength="50"' : ""}
           oninput="rankOnSearchInput(this.value)"
         />
       </div>
@@ -97,8 +97,9 @@ function rankSwitchTab(tab) {
   const searchInput = document.getElementById("rank-search");
   if (searchInput) {
     searchInput.value = "";
-    searchInput.disabled = tab !== "power";
-    searchInput.placeholder = tab === "power" ? "Buscar jogador ou Digimon..." : "Busca disponível apenas no ranking de Poder";
+    searchInput.disabled = !["power", "players"].includes(tab);
+    if (tab === "players") searchInput.maxLength = 50; else searchInput.removeAttribute("maxlength");
+    searchInput.placeholder = tab === "players" ? "Buscar jogador por nome..." : tab === "power" ? "Buscar jogador ou Digimon..." : "Busca disponível em Poder e Jogadores";
   }
 
   rankLoadPage();
@@ -123,8 +124,13 @@ function rankSwitchArenaMode(mode) {
 
 function rankOnSearchInput(value) {
   clearTimeout(rankSearchTimeout);
-  if (rankTab !== "power") return;
+  if (!["power", "players"].includes(rankTab)) return;
+  const tab = rankTab;
+  const root = document.getElementById("rank-content");
+  rankGeneration++;
+  rankLoading = false;
   rankSearchTimeout = setTimeout(() => {
+    if (rankTab !== tab || !root?.isConnected) return;
     rankSearch = value.trim();
     rankPage = 0;
     rankLoadPage();
@@ -150,7 +156,7 @@ async function rankLoadPage() {
   }
 
   const params = { page: rankPage, size: RANK_PAGE_SIZE };
-  if (rankTab === "power" && rankSearch) {
+  if (["power", "players"].includes(rankTab) && rankSearch) {
     params.search = rankSearch;
   }
 
@@ -201,6 +207,7 @@ function rankRender() {
 
   if (rankTab === "players") {
     content.innerHTML = trainerRankingContent(rankTrainerData);
+    bindTrainerProfileLinks(content);
   } else if (rankTab === "arena") {
     const summary = rankArenaMode === "current" && rankArenaStatistics
       ? `<div class="arena-ranking-summary"><div class="arena-summary-title">Seu histórico de arena</div><div class="arena-summary-grid"><div><span>Saldo</span><strong class="${rankArenaStatistics.netPoints >= 0 ? "is-positive" : "is-negative"}">${Number(rankArenaStatistics.netPoints || 0).toLocaleString("pt-BR")}</strong></div><div><span>Ganhos</span><strong>${Number(rankArenaStatistics.pointsWon || 0).toLocaleString("pt-BR")}</strong></div><div><span>Perdas</span><strong class="is-negative">${Number(rankArenaStatistics.pointsLost || 0).toLocaleString("pt-BR")}</strong></div></div></div>`

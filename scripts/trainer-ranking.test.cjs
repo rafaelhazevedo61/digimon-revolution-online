@@ -13,7 +13,8 @@ const ids=Array.from({length:5},(_,i)=>'00000000-0000-0000-0000-'+String(i+1).pa
 async function database(){
  const d=new PGlite();
  await d.exec(`
- CREATE TABLE players(id uuid primary key,username varchar(50),user_type text);
+ CREATE TABLE players(id uuid primary key,username varchar(50),user_type text,clan_id uuid);
+ CREATE TABLE clans(id uuid primary key,name text,tag text,active boolean);
  CREATE TABLE digimons(player_id uuid,is_bot boolean);
  CREATE TABLE achievement_definitions(code varchar(60) primary key,active boolean default true);
  CREATE TABLE player_achievements(player_id uuid,achievement_code varchar(60),completed_at timestamptz,claimed_at timestamptz);
@@ -22,6 +23,7 @@ async function database(){
  INSERT INTO achievement_definitions(code) VALUES ('FIRST_HATCH'),('WORLD_500'),('HATCH_50'),('STAGE_MEGA');
  `);
  await d.exec(read('backend/src/main/resources/db/migration/V255__trainer_ranking.sql'));
+ await d.exec(read('backend/src/main/resources/db/migration/V256__trainer_search_profile_and_history.sql'));
  for(let i=0;i<ids.length;i++)await d.query('INSERT INTO players(id,username,user_type) VALUES ($1,$2,$3)',[ids[i],['Alpha','Beta','Admin','Teste','Bot'][i],i===2?'ADMIN':'PLAYER']);
  await d.query('UPDATE players SET trainer_ranking_excluded=true WHERE id=$1',[ids[3]]);
  await d.query('INSERT INTO digimons VALUES ($1,true)',[ids[4]]);
@@ -72,6 +74,7 @@ test('inactive achievement does not score and test-account exclusion takes effec
 function ui(){
  const dom=new JSDOM('<div id="rank-content"></div><div id="rank-pagination"></div>',{runScripts:'outside-only',url:'https://game.test'});
  const w=dom.window;w.getPlayerId=()=>ids[0];w.escapeHtml=v=>String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
+ w.escapeAttr=w.escapeHtml;
  w.eval(read('game-frontend/assets/js/trainer-ranking.js'));return dom;
 }
 test('renders own rank, breakdown, safe names and empty first snapshot',()=>{
@@ -91,5 +94,68 @@ test('existing ranking tabs remain and players uses paged endpoint with personal
  await new Promise(r=>setTimeout(r,0));
  assert.match(w.document.getElementById('rank-content').textContent,/não participa/);
  const source=read('game-frontend/assets/js/ranking.js');for(const name of ['Poder','Rebirth','Arena','Clãs','Jogadores'])assert.ok(source.includes(name));
+ }finally{dom.window.close();}
+});
+
+const positional=sql=>{let i=0;return sql.replace(/\?/g,()=>'$'+(++i));};
+const searchSql=positional(block('SELECT [*] FROM trainer_ranking_entries'));
+const profileSql=positional(block('SELECT e[.]\\*'));
+const historySql=block('INSERT INTO trainer_ranking_daily_history');
+test('literal case-insensitive search preserves global position and never treats wildcard characters specially',async()=>{
+ const d=await database();try{await seed(d);await rebuild(d);
+ const rows=(await d.query(searchSql,['beTA',10,0])).rows;assert.equal(rows.length,1);assert.equal(Number(rows[0].position),2);
+ assert.equal((await d.query(searchSql,['%',10,0])).rows.length,0);
+ assert.equal((await d.query(searchSql,["' OR true --",10,0])).rows.length,0);
+ }finally{await d.close();}
+});
+test('profile exposes score snapshot and current active clan but hides excluded users',async()=>{
+ const d=await database();try{await seed(d);await rebuild(d);
+ const clan='00000000-0000-0000-0000-000000000099';await d.query("INSERT INTO clans VALUES ($1,'Tamers','TMR',true)",[clan]);
+ await d.query('UPDATE players SET clan_id=$1 WHERE id=$2',[clan,ids[0]]);
+ let row=(await d.query(profileSql,[ids[0]])).rows[0];assert.equal(row.clan_name,'Tamers');assert.equal(Number(row.total_score),415);
+ assert.equal(row.email,undefined);assert.equal(row.password,undefined);
+ await d.query('UPDATE players SET trainer_ranking_excluded=true WHERE id=$1',[ids[0]]);
+ assert.equal((await d.query(profileSql,[ids[0]])).rows.length,0);
+ }finally{await d.close();}
+});
+test('daily history is immutable within same rule/day and changes version after reweighting',async()=>{
+ const d=await database();try{await seed(d);await rebuild(d);await d.exec(historySql);
+ let rows=(await d.query('SELECT * FROM trainer_ranking_daily_history WHERE player_id=$1',[ids[0]])).rows;
+ assert.equal(rows.length,1);assert.equal(Number(rows[0].total_score),415);
+ const firstVersion=rows[0].rules_version;
+ await d.query('UPDATE player_tower_progress SET highest_floor=20 WHERE player_id=$1',[ids[0]]);
+ await rebuild(d);await d.exec(historySql);
+ rows=(await d.query('SELECT * FROM trainer_ranking_daily_history WHERE player_id=$1',[ids[0]])).rows;
+ assert.equal(rows.length,1);assert.equal(Number(rows[0].total_score),415);
+ await d.exec("UPDATE achievement_definitions SET trainer_points=50 WHERE code='FIRST_HATCH'");await rebuild(d);await d.exec(historySql);
+ rows=(await d.query('SELECT * FROM trainer_ranking_daily_history WHERE player_id=$1',[ids[0]])).rows;
+ assert.equal(rows.length,2);assert.ok(rows.some(r=>r.rules_version!==firstVersion));
+ assert.equal((await d.query("SELECT COUNT(*) n FROM trainer_ranking_daily_history WHERE snapshot_date <> (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')::date")).rows[0].n,0);
+ }finally{await d.close();}
+});
+test('history insertion rolls back together with the published ranking',async()=>{
+ const d=await database();try{await seed(d);await rebuild(d);
+ await assert.rejects(d.transaction(async tx=>{await tx.exec(historySql);await tx.exec('DELETE FROM trainer_ranking_entries');throw Error('rollback');}));
+ assert.equal((await d.query('SELECT * FROM trainer_ranking_daily_history')).rows.length,0);
+ assert.equal((await d.query('SELECT * FROM trainer_ranking_entries')).rows.length,2);
+ }finally{await d.close();}
+});
+test('clicking a player opens safe public profile and Escape closes it',async()=>{
+ const dom=ui();try{const w=dom.window;
+ w.apiGet=async p=>{assert.equal(p,'/ranking/players/'+ids[0]);return{ranking:{playerName:'Alpha<script>',position:42,totalScore:415,collectionScore:90,achievementScore:125,towerScore:200,collectionEntries:4,masteredSpecies:1,completedAchievements:2,highestFloor:10},clanName:'Tamers<script>',clanTag:'TMR',updatedAt:'2026-11-23T12:00:00Z'};};
+ await w.openTrainerProfile(ids[0]);const overlay=w.document.querySelector('#trainer-profile-overlay');
+ assert.match(overlay.textContent,/415/);assert.match(overlay.textContent,/Tamers/);assert.equal(overlay.querySelectorAll('script').length,0);
+ overlay.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape'}));assert.equal(w.document.querySelector('#trainer-profile-overlay'),null);
+ }finally{dom.window.close();}
+});
+test('typing a new search invalidates an older response and retains global pagination',async()=>{
+ const dom=ui();try{const w=dom.window;w.showBottomNav=()=>{};w.document.body.innerHTML='<div id="app"></div>';
+ w.eval(read('game-frontend/assets/js/ranking.js'));
+ let resolveOld;const old=new Promise(r=>resolveOld=r);const calls=[];
+ w.apiGet=async(p,params)=>{calls.push({...params});if(calls.length===1)return old;return{entries:[],me:null,myStatus:'PENDING',updatedAt:null,totalPlayers:10,matchingPlayers:0,hasNext:false};};
+ const first=w.renderRankingPage({tab:'players'});const input=w.document.querySelector('#rank-search');assert.equal(input.disabled,false);
+ w.rankOnSearchInput('Beta');await new Promise(r=>setTimeout(r,350));
+ resolveOld({entries:[],me:null,myStatus:'PENDING',updatedAt:null,totalPlayers:999,hasNext:false});await first;
+ assert.equal(calls[1].search,'Beta');assert.match(w.document.querySelector('#rank-content').textContent,/0 encontrados/);assert.doesNotMatch(w.document.querySelector('#rank-content').textContent,/999/);
  }finally{dom.window.close();}
 });
