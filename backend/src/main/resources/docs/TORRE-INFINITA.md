@@ -6,7 +6,7 @@ Disponível em **Mais → Combate → Torre Infinita**. A torre reutiliza as for
 
 - Progresso permanente por conta, começando no andar 1; sem temporada ou reset.
 - Vitória avança exatamente um andar. Derrota não remove andares e não concede recompensa.
-- Sem gasto de energia ou limite diário; intervalo obrigatório de **30 segundos** após cada combate, inclusive derrotas, para todas as contas.
+- Sem gasto de energia ou limite diário; intervalo padrão de **30 segundos** após cada combate, inclusive derrotas, para todas as contas. No perfil local, o cooldown está desligado por padrão pela flag descrita ao final.
 - É possível trocar de formação entre tentativas. Cada combate começa com HP completo; não altera HP ou energia fora da torre.
 - Membros devem pertencer à conta e estar ACTIVE, HATCHED ou STORED. Bots e Digimons renascidos/sacrificados/consumidos não participam.
 - Membros vinculados a missões RUNNING ou COMPLETED precisam concluir e resgatar essas missões antes do desafio.
@@ -20,7 +20,55 @@ O andar define o encontro, independentemente do jogador. São quatro perfis alte
 
 Para o andar `n`, o fator é `(1 + (n - 1) / 10)²`, aplicado a HP 40, ATK 8 e DEF 4. Chefes (múltiplos de 5) multiplicam os atributos por 1,4; marcos (múltiplos de 10) por 1,8, substituindo o multiplicador de chefe. Arredondamento para cima. Chefes podem formar picos de dificuldade.
 
-Os nomes dos guardiões rotacionam a cada quatro andares: Baby II nos andares 1–20, Rookie 21–40, Champion 41–60, Ultimate 61–80 e Mega a partir de 81. São encontros próprios da torre; seus atributos não alteram o catálogo de Digimons.
+### Digimons usados nos desafios
+
+| Andares | Estágio representado | Equilibrado | Ofensivo | Defensivo | Resistente |
+| --- | --- | --- | --- | --- | --- |
+| 1–20 | Baby II | Koromon | Tsunomon | Tokomon | Tanemon |
+| 21–40 | Rookie | Agumon | Gabumon | Tentomon | Gomamon |
+| 41–60 | Champion | Greymon | Garurumon | Kabuterimon | Ikkakumon |
+| 61–80 | Ultimate | MetalGreymon | WereGarurumon | MegaKabuterimon | Zudomon |
+| 81 em diante | Mega | WarGreymon | MetalGarurumon | HerculesKabuterimon | Vikemon |
+
+A sequência de perfis é **Equilibrado → Ofensivo → Defensivo → Resistente**, repetida a cada quatro andares. O índice é `(andar - 1) % 4`. Cada faixa de 20 andares usa os quatro Digimons da linha correspondente; a partir do 81, os mesmos quatro Megas continuam alternando sem uma última faixa.
+
+Por exemplo: 1 = Koromon, 2 = Tsunomon, 3 = Tokomon, 4 = Tanemon, 5 = Koromon (chefe). No andar 21, a sequência passa a Agumon, Gabumon, Tentomon e Gomamon.
+
+**Chefes e marcos usam essa mesma seleção; ainda não existe um catálogo exclusivo de chefes.** O tipo do andar aumenta os atributos e altera a recompensa. Por exemplo, o andar 10 é um Tsunomon ofensivo com multiplicador de marco; o 20 é um Tanemon resistente com multiplicador de marco.
+
+São encontros próprios da torre: os nomes representam os guardiões, mas os atributos vêm das fórmulas do andar, sem usar os atributos-base das espécies no catálogo ou alterar seus registros.
+
+### Perfis e tipos de andar
+
+| Perfil | HP | ATK | DEF |
+| --- | --- | --- | --- |
+| Equilibrado | ×1,00 | ×1,00 | ×1,00 |
+| Ofensivo | ×0,85 | ×1,40 | ×1,00 |
+| Defensivo | ×1,00 | ×0,85 | ×1,80 |
+| Resistente | ×1,60 | ×0,85 | ×1,00 |
+
+| Tipo | Quando aparece | Multiplicador adicional de HP, ATK e DEF |
+| --- | --- | --- |
+| Comum | Andar não múltiplo de 5 | ×1,00 |
+| Chefe | Múltiplo de 5, exceto múltiplos de 10 | ×1,40 |
+| Marco | Múltiplo de 10 | ×1,80 |
+
+O cálculo aplica crescimento, perfil e tipo antes de arredondar cada atributo para cima. O marco substitui o multiplicador de chefe; não soma nem multiplica os dois.
+
+### Exemplos dos primeiros desafios
+
+| Andar | Guardião | Perfil | Tipo | HP | ATK | DEF |
+| --- | --- | --- | --- | ---: | ---: | ---: |
+| 1 | Koromon | Equilibrado | Comum | 40 | 8 | 4 |
+| 2 | Tsunomon | Ofensivo | Comum | 42 | 14 | 5 |
+| 3 | Tokomon | Defensivo | Comum | 58 | 10 | 11 |
+| 4 | Tanemon | Resistente | Comum | 109 | 12 | 7 |
+| 5 | Koromon | Equilibrado | Chefe | 110 | 22 | 11 |
+| 10 | Tsunomon | Ofensivo | Marco | 221 | 73 | 26 |
+
+Esses exemplos são iguais para todos os jogadores. Uma composição mais forte não faz o guardião aumentar seus atributos.
+
+### Resolução do combate
 
 Dano por ataque: `ceil(max(ATK - DEF_alvo × 0,5; ATK × 0,1; 1))`. Sem sorteio de vitória. A ordem dos membros pode influenciar a sobrevivência.
 
@@ -33,6 +81,32 @@ Atributos usam BigDecimal para não transbordar em andares altos. Não há últi
 | Comum | `100 + 25 × min(196, floor(andar / 10))`, teto 5.000 | 1 Célula de Energia |
 | Chefe (5, 15, 25…) | Duas vezes os Bits comuns, teto 10.000 | 1 Carga de Energia Total |
 | Marco (10, 20, 30…) | Duas vezes os Bits comuns, teto 10.000 | 1 Núcleo de Ascensão |
+
+### Códigos de item e exemplos de recompensa
+
+| Tipo | Código no inventário | Quantidade por vitória |
+| --- | --- | ---: |
+| Comum | `ENERGY_CELL` | 1 |
+| Chefe | `VIP_ENERGY_CHARGE` | 1 |
+| Marco | `ASCENSION_CORE` | 1 |
+
+O código `VIP_ENERGY_CHARGE` corresponde ao item exibido na torre como **Carga de Energia Total**.
+
+| Andar | Tipo | Bits | Item |
+| --- | --- | ---: | --- |
+| 1–4 | Comum | 100 por andar | 1 Célula de Energia por andar |
+| 5 | Chefe | 200 | 1 Carga de Energia Total |
+| 6–9 | Comum | 100 por andar | 1 Célula de Energia por andar |
+| 10 | Marco | 250 | 1 Núcleo de Ascensão |
+| 11 | Comum | 125 | 1 Célula de Energia |
+| 15 | Chefe | 250 | 1 Carga de Energia Total |
+| 20 | Marco | 300 | 1 Núcleo de Ascensão |
+| 50 | Marco | 450 | 1 Núcleo de Ascensão |
+| 100 | Marco | 700 | 1 Núcleo de Ascensão |
+| 1.960 | Marco | 10.000 | 1 Núcleo de Ascensão |
+| 1.961 | Comum | 5.000 | 1 Célula de Energia |
+
+A base de Bits aumenta em 25 a cada dez andares, até atingir 5.000 no andar 1.960. Chefes e marcos dobram a base, até 10.000. A quantidade e a seleção dos itens seguem o tipo do andar, sem escalada de quantidade. Não há XP, equipamentos, fragmentos, pontos de coleção ou sorteio de loot na recompensa desta versão.
 
 Recebidas uma única vez por andar, na primeira vitória, diretamente na carteira e no inventário. Não é possível selecionar ou repetir andares concluídos. Itens não aumentam em quantidade com a altura da torre. Valores são iniciais para avaliação de balanceamento.
 
