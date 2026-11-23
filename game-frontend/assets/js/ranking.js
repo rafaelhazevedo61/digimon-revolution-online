@@ -30,7 +30,7 @@ async function renderRankingPage(params = {}) {
 
   app.innerHTML = `
     <div class="page-container">
-      <h2 class="text-lg font-bold mb-4 px-1">🏆 Ranking</h2>
+      <h2 class="text-lg font-bold mb-4 px-1">🏆 Classificação</h2>
 
       <div class="flex flex-wrap gap-2 mb-4" id="rank-tabs">
         <button class="tab-btn ${rankTab === "players" ? "active" : ""}" data-tab="players" onclick="rankSwitchTab(\'players\')">Jogadores</button>
