@@ -9,6 +9,8 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Adicionado
 
+- **Ranking de Treinadores**: aba Jogadores com pontuação por coleção, maestrias, conquistas concluídas e maior andar da torre; posição pessoal, detalhamento e atualização agendada a cada 5 minutos. Exclui administradores, bots e contas de teste marcadas. Regras em `RANKING-TREINADORES.md`.
+
 - **Detalhes do combate da torre**: seção expansível no último resultado com HP restante/máximo e estado de cada Digimon, persistidos na ordem da formação. Resultados antigos permanecem disponíveis sem HP retroativo.
 
 - **Torre Infinita**: desafios permanentes por conta com times de 1–3 Digimons, chefes a cada 5 andares, marcos a cada 10, recompensas automáticas por primeira vitória e cooldown de 30 segundos. Inclui tela, API, persistência transacional, proteção contra pedidos repetidos e documentação em `TORRE-INFINITA.md`.
