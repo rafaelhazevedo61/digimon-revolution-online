@@ -53,6 +53,7 @@ class TowerServiceTest {
         when(teams.findByIdAndPlayerIdForUpdate(teamId, playerId)).thenReturn(Optional.of(new MissionTeam(playerId, "Meu time", List.of(digimonId), digimonId)));
         Digimon d = mock(Digimon.class);
         lenient().when(d.getId()).thenReturn(digimonId);
+        lenient().when(d.getName()).thenReturn("Agumon");
         when(d.getStatus()).thenReturn(DigimonStatus.ACTIVE);
         when(digimons.findAllByIdForUpdate(playerId, List.of(digimonId))).thenReturn(List.of(d));
         lenient().when(power.effectiveStats(d, null)).thenReturn(new CombatStats(1000, 1000, 100));
@@ -68,6 +69,7 @@ class TowerServiceTest {
         when(items.findByCode("ENERGY_CELL")).thenReturn(Optional.of(item));
         Page result = service.challenge(playerId, request);
         assertTrue(result.lastResult().won()); assertEquals(1, result.highestFloor());
+        assertEquals(List.of(new MemberHealth(digimonId, "Agumon", 1000, 1000)), result.lastResult().members());
         assertEquals(2, result.nextFloor().number()); assertEquals(1, result.attempts()); assertEquals(120, player.getBits());
         assertEquals(30, java.time.Duration.between(result.serverTime(), result.availableAt()).getSeconds());
         verify(grant).addMaterialToPlayer(playerId, item, 1);
@@ -76,11 +78,13 @@ class TowerServiceTest {
     @Test void defeatKeepsFloorWithoutRewards() {
         team(); when(power.effectiveStats(any(), any())).thenReturn(new CombatStats(1, 1, 0));
         Page result = service.challenge(playerId, request);
-        assertFalse(result.lastResult().won()); assertEquals(0, result.highestFloor()); assertEquals(1, result.attempts());
+        assertFalse(result.lastResult().won());
+        assertEquals(List.of(new MemberHealth(digimonId, "Agumon", 0, 1)), result.lastResult().members());
+        assertEquals(0, result.highestFloor()); assertEquals(1, result.attempts());
         assertEquals(20, player.getBits()); verifyNoInteractions(grant, items);
     }
     @Test void retryReturnsSavedResultEvenDuringCooldown() {
-        Result saved = new Result(request.requestId(), 1, true, 1, "Time", "Koromon", new Reward(100, "ENERGY_CELL", "Célula", 1));
+        Result saved = new Result(request.requestId(), 1, true, 1, "Time", "Koromon", new Reward(100, "ENERGY_CELL", "Célula", 1), List.of(new MemberHealth(digimonId, "Agumon", 1000, 1000)));
         when(repository.state(playerId)).thenReturn(new State(1, 1, Instant.now().plusSeconds(30), saved));
         assertEquals(saved, service.challenge(playerId, request).lastResult());
         verifyNoInteractions(teams, digimons, grant, audit); verify(repository, never()).save(any(), any());

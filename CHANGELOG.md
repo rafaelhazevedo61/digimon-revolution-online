@@ -9,6 +9,8 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Adicionado
 
+- **Detalhes do combate da torre**: seção expansível no último resultado com HP restante/máximo e estado de cada Digimon, persistidos na ordem da formação. Resultados antigos permanecem disponíveis sem HP retroativo.
+
 - **Torre Infinita**: desafios permanentes por conta com times de 1–3 Digimons, chefes a cada 5 andares, marcos a cada 10, recompensas automáticas por primeira vitória e cooldown de 30 segundos. Inclui tela, API, persistência transacional, proteção contra pedidos repetidos e documentação em `TORRE-INFINITA.md`.
 
 - **Processamento agendado de conquistas**: fila por conta, lotes configuráveis (padrão: 100 contas a cada 30 segundos), recuperação de falhas e última atualização na página. Consultar ou resgatar não recalcula metas; a captura dos eventos continua imediata.

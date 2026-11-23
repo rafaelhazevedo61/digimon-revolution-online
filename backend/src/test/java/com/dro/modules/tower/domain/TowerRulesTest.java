@@ -35,10 +35,26 @@ class TowerRulesTest {
     @Test void winningHitHasNoRetaliation() {
         var result = fight(List.of(Stats.of(1, 1000, 0)), Stats.of(10, 10000, 0));
         assertTrue(result.won()); assertEquals(1, result.rounds());
+        assertEquals(List.of(BigDecimal.ONE), result.remainingHp());
     }
     @Test void fightsStopAtSixtyRounds() {
         var result = fight(List.of(Stats.of(100000, 1, 1000)), Stats.of(100000, 1, 1000));
         assertFalse(result.won()); assertEquals(60, result.rounds());
+    }
+    @Test void remainingHealthFollowsFormationAndClampsOverkill() {
+        var result = fight(List.of(Stats.of(5, 4, 0), Stats.of(100, 4, 0)), Stats.of(14, 10, 0));
+        assertTrue(result.won());
+        assertEquals(List.of(BigDecimal.ZERO, BigDecimal.valueOf(90)), result.remainingHp());
+    }
+    @Test void defeatReportsZeroForEveryFallenMember() {
+        var result = fight(List.of(Stats.of(1, 1, 0), Stats.of(1, 1, 0)), Stats.of(100, 1000, 0));
+        assertFalse(result.won());
+        assertEquals(List.of(BigDecimal.ZERO, BigDecimal.ZERO), result.remainingHp());
+    }
+    @Test void timeoutPreservesSurvivingHealth() {
+        var result = fight(List.of(Stats.of(100000, 1, 1000)), Stats.of(100000, 1, 1000));
+        assertFalse(result.won());
+        assertEquals(List.of(BigDecimal.valueOf(99940)), result.remainingHp());
     }
     @Test void invalidFloorAndTeamAreRejected() {
         assertThrows(IllegalArgumentException.class, () -> floor(0));

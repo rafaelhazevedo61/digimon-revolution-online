@@ -10,6 +10,7 @@ Disponível em **Mais → Combate → Torre Infinita**. A torre reutiliza as for
 - É possível trocar de formação entre tentativas. Cada combate começa com HP completo; não altera HP ou energia fora da torre.
 - Membros devem pertencer à conta e estar ACTIVE, HATCHED ou STORED. Bots e Digimons renascidos/sacrificados/consumidos não participam.
 - Membros vinculados a missões RUNNING ou COMPLETED precisam concluir e resgatar essas missões antes do desafio.
+- A caixa do último resultado possui detalhes expansíveis com nome, HP restante/máximo, barra de vida e estado de cada membro na ordem da formação. É um snapshot persistente do fim do combate; não modifica o HP real dos Digimons. Derrota por limite de rodadas pode deixar sobreviventes. Resultados anteriores à V254 continuam disponíveis sem detalhes retroativos.
 - O combate é automático e determinístico. O time ataca primeiro; os membros vivos atacam o mesmo guardião, que alterna seus ataques entre os membros vivos em ordem de formação. Limite de 60 rodadas; se não vencer nesse prazo, conta como derrota.
 - Equipamentos, refinamento, conjuntos e bônus de clã usam os mesmos atributos efetivos calculados pela arena. Não há vantagens elementais, atributos de personalidade ou habilidades adicionais nesta versão.
 
@@ -43,7 +44,7 @@ Se a pilha do item estiver cheia ou a carteira não comportar os Bits, toda a te
 - `POST /players/me/tower/challenge`: `{ "teamId": "UUID", "requestId": "UUID", "expectedAttempts": 0 }`.
 - A identidade vem do token; nunca do corpo. Times e membros são validados no servidor.
 - O bloqueio pessimista da linha do jogador serializa tentativas da mesma conta, inclusive na primeira participação e entre instâncias. Time e Digimons também são bloqueados.
-- Bits, item, progresso, cooldown e auditoria são gravados na mesma transação. A migration V253 cria uma linha por conta em `player_tower_progress`.
+- Bits, item, progresso, cooldown e auditoria são gravados na mesma transação. A migration V253 cria uma linha por conta em `player_tower_progress`; a V254 acrescenta `player_tower_last_members`, com até três snapshots por conta, substituídos a cada tentativa aceita. Nomes e HP continuam disponíveis mesmo se o time mudar ou o Digimon for removido. Progresso e detalhes são lidos em uma única consulta, sem misturar tentativas concorrentes.
 - Repetir o último `requestId` devolve o estado salvo, sem novo combate ou recompensa. Pedidos antigos são recusados pela versão `expectedAttempts`, mesmo após o cooldown. O cliente reutiliza o pedido após falha de rede e reconcilia com GET.
 - Apenas o último resultado é mantido na tabela de progresso (crescimento proporcional às contas). Auditoria dos combates usa o outbox existente.
 - Expurgo de missões não altera o progresso da torre. Esta entrega não adiciona novas conquistas.

@@ -71,8 +71,9 @@ public class TowerService {
             throw new ConflictException("Um ou mais membros do time estão indisponíveis.");
         if (missions.existsByPlayerIdAndAnyDigimonIdAndStatusIn(playerId, ids, List.of(MissionStatus.RUNNING, MissionStatus.COMPLETED)))
             throw new ConflictException("Um membro do time está em missão. Finalize e resgate a missão antes de entrar na torre.");
-        var stats = ids.stream().map(id -> members.stream().filter(d -> d.getId().equals(id)).findFirst().orElseThrow())
-                .map(d -> power.effectiveStats(d, player.getClanId()))
+        var orderedMembers = ids.stream()
+                .map(id -> members.stream().filter(d -> d.getId().equals(id)).findFirst().orElseThrow()).toList();
+        var stats = orderedMembers.stream().map(d -> power.effectiveStats(d, player.getClanId()))
                 .map(s -> Stats.of(s.hp(), s.attack(), s.defense())).toList();
         Floor floor = TowerRules.floor(Math.addExact(state.highestFloor(), 1));
         Combat combat = TowerRules.fight(stats, floor.stats());
@@ -85,7 +86,14 @@ public class TowerService {
             player.addBits(reward.bits());
             players.save(player);
         }
-        Result result = new Result(request.requestId(), floor.number(), combat.won(), combat.rounds(), team.getName(), floor.enemyName(), reward);
+        List<MemberHealth> health = new ArrayList<>();
+        for (int i = 0; i < orderedMembers.size(); i++) {
+            var member = orderedMembers.get(i);
+            health.add(new MemberHealth(member.getId(), member.getName(),
+                    combat.remainingHp().get(i).intValueExact(), stats.get(i).hp().intValueExact()));
+        }
+        Result result = new Result(request.requestId(), floor.number(), combat.won(), combat.rounds(),
+                team.getName(), floor.enemyName(), reward, health);
         State updated = new State(combat.won() ? floor.number() : state.highestFloor(), Math.addExact(state.attempts(), 1),
                 now.plusSeconds(TowerRules.COOLDOWN_SECONDS), result);
         repository.save(playerId, updated);

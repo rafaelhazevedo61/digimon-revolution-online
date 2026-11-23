@@ -20,7 +20,11 @@ public final class TowerRules {
     }
     public record Reward(int bits, String itemCode, String itemName, int quantity) {}
     public record Floor(long number, String kind, String enemyName, String profile, Stats stats, Reward reward) {}
-    public record Combat(boolean won, int rounds) {}
+    public record Combat(boolean won, int rounds, List<BigDecimal> remainingHp) {
+        public Combat {
+            remainingHp = remainingHp.stream().map(hp -> hp.max(BigDecimal.ZERO)).toList();
+        }
+    }
 
     public static Floor floor(long n) {
         if (n < 1) throw new IllegalArgumentException("Andar inválido");
@@ -69,12 +73,12 @@ public final class TowerRules {
             for (int i = 0; i < team.size(); i++) {
                 if (health.get(i).signum() > 0) enemyHealth = enemyHealth.subtract(damage(team.get(i), enemy));
             }
-            if (enemyHealth.signum() <= 0) return new Combat(true, round);
+            if (enemyHealth.signum() <= 0) return new Combat(true, round, health);
             while (health.get(target).signum() <= 0) target = (target + 1) % team.size();
             health.set(target, health.get(target).subtract(damage(enemy, team.get(target))));
-            if (health.stream().allMatch(h -> h.signum() <= 0)) return new Combat(false, round);
+            if (health.stream().allMatch(h -> h.signum() <= 0)) return new Combat(false, round, health);
             target = (target + 1) % team.size();
         }
-        return new Combat(false, 60);
+        return new Combat(false, 60, health);
     }
 }

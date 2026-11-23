@@ -18,6 +18,7 @@ async function db() {
   await db.exec('CREATE TABLE players(id uuid primary key,bits int not null default 0); CREATE TABLE items(player_id uuid,quantity int CHECK(quantity <= 1));');
   await db.query('INSERT INTO players VALUES ($1, 20)', [player]);
   await db.exec(read('backend/src/main/resources/db/migration/V253__infinite_tower.sql'));
+  await db.exec(read('backend/src/main/resources/db/migration/V254__tower_result_member_health.sql'));
   return db;
 }
 test('real migration and repository upsert persist one row per account', async()=>{
@@ -78,4 +79,57 @@ test('network failure keeps same request ID on retry',async()=>{
 });
 test('navigation away ignores late responses',async()=>{
  let resolve;const response=new Promise(r=>resolve=r);const dom=await ui({post:()=>response});try{const d=dom.window.document;d.querySelector('#tower-challenge').click();d.querySelector('#app').innerHTML='<p>Outra página</p>';resolve(initial());await new Promise(r=>setTimeout(r,0));assert.equal(d.querySelector('#app').textContent,'Outra página');}finally{dom.window.close();}
+});
+
+
+// Queries taken from the repository, including the one-statement snapshot read.
+const memberInsert = java.match(/"""\s*(INSERT INTO player_tower_last_members[\s\S]*?)"""/)[1].replace(/\?/g, (()=>{let i=0; return () => '$'+(++i);})());
+const snapshotSelect = java.match(/"""\s*(SELECT p\.\*[\s\S]*?)"""/)[1].replace('?', '$1');
+test('member HP snapshots survive reload and retain formation order', async()=>{
+ const d=await db();try {
+   await d.query(sql,params);
+   await d.query(memberInsert,[player,1,'00000000-0000-0000-0000-000000000004','Gabumon',0,100]);
+   await d.query(memberInsert,[player,0,'00000000-0000-0000-0000-000000000003','Agumon',73,120]);
+   const rows=(await d.query(snapshotSelect,[player])).rows;
+   assert.deepEqual(rows.map(r=>[r.digimon_name,r.remaining_hp,r.max_hp]),[['Agumon',73,120],['Gabumon',0,100]]);
+   assert.ok(rows.every(r=>r.request_id===request));
+   await assert.rejects(d.query(memberInsert,[player,2,'00000000-0000-0000-0000-000000000005','Patamon',121,120]));
+ }finally{await d.close();}
+});
+test('older results without snapshots still load',async()=>{
+ const d=await db();try{
+   await d.query(sql,params);
+   const rows=(await d.query(snapshotSelect,[player])).rows;
+   assert.equal(rows.length,1);assert.equal(rows[0].digimon_id,null);assert.equal(rows[0].last_won,true);
+ }finally{await d.close();}
+});
+test('failed snapshot replacement rolls back to previous result and HP',async()=>{
+ const d=await db();try{
+   await d.query(sql,params);
+   await d.query(memberInsert,[player,0,'00000000-0000-0000-0000-000000000003','Agumon',73,120]);
+   await assert.rejects(d.transaction(async tx=>{
+     const next=[...params];next[2]=2;await tx.query(sql,next);
+     await tx.query('DELETE FROM player_tower_last_members WHERE player_id = $1',[player]);
+     await tx.query(memberInsert,[player,0,'00000000-0000-0000-0000-000000000003','Agumon',-1,120]);
+   }));
+   const row=(await d.query(snapshotSelect,[player])).rows[0];
+   assert.equal(Number(row.attempts),1);assert.equal(row.remaining_hp,73);
+ }finally{await d.close();}
+});
+test('result details display each member HP and defeated status safely',async()=>{
+ const state=initial();state.lastResult={floor:1,won:true,rounds:3,teamName:'Time',enemyName:'Koromon',reward:state.nextFloor.reward,
+ members:[{digimonId:'d1',name:'Agumon<script>bad()</script>',remainingHp:73,maxHp:120},{digimonId:'d2',name:'Gabumon',remainingHp:0,maxHp:100}]};
+ const dom=await ui({state});try{
+   const d=dom.window.document,details=d.querySelector('.tower-health-details');
+   assert.match(details.querySelector('summary').textContent,/HP restante/);
+   assert.equal(details.querySelectorAll('article').length,2);
+   assert.match(details.textContent,/73 \/ 120/);assert.match(details.textContent,/Derrotado/);
+   assert.equal(details.querySelectorAll('script').length,0);
+   assert.equal(details.querySelector('progress').value,73);assert.equal(details.querySelector('progress').max,120);
+   assert.equal(details.querySelector('.is-defeated progress').value,0);
+ }finally{dom.window.close();}
+});
+test('old result explains that HP details start with the next fight',async()=>{
+ const state=initial();state.lastResult={floor:1,won:false,rounds:1,teamName:'Time',enemyName:'Koromon',reward:{bits:0},members:[]};
+ const dom=await ui({state});try{assert.match(dom.window.document.body.textContent,/Detalhes de HP disponíveis a partir do próximo combate/);}finally{dom.window.close();}
 });

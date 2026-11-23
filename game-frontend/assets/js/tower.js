@@ -6,6 +6,28 @@ function towerRewardText(reward) {
   return `${Number(reward.bits).toLocaleString("pt-BR")} Bits + ${reward.quantity} × ${reward.itemName}`;
 }
 
+// HP is a snapshot of this fight, independent of the current team or inventory.
+function towerResultHealth(result) {
+  const members = result.members || [];
+  if (!members.length) return '<p class="tower-health-legacy">Detalhes de HP disponíveis a partir do próximo combate.</p>';
+  const number = value => Number(value).toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+  return `<details class="tower-health-details"><summary>Detalhes do time · HP restante</summary>
+    <div class="tower-health-grid">${members.map(member => {
+      const max = Math.max(1, Number(member.maxHp) || 1);
+      const remaining = Math.max(0, Math.min(max, Number(member.remainingHp) || 0));
+      const percentage = remaining / max * 100;
+      const status = remaining === 0 ? "Derrotado" : "Em pé";
+      return `<article class="tower-health-member ${remaining === 0 ? "is-defeated" : ""}">
+        <div class="tower-health-heading"><strong>${escapeHtml(member.name || "Digimon")}</strong><span>${status}</span></div>
+        <div class="tower-health-values"><span>HP restante</span><strong>${number(remaining)} / ${number(max)}</strong></div>
+        <progress class="tower-health-bar ${percentage <= 25 ? "is-low" : ""}" value="${remaining}" max="${max}"
+          aria-label="HP restante de ${escapeAttr(member.name || "Digimon")}"></progress>
+      </article>`;
+    }).join("")}</div>
+    <p class="tower-health-note">HP ao final deste combate. O próximo desafio começa com o time recuperado.</p>
+  </details>`;
+}
+
 async function renderTowerPage() {
   const generation = ++towerPageGeneration;
   clearInterval(towerCooldownTimer);
@@ -47,7 +69,7 @@ async function renderTowerPage() {
         ${teams.length ? `<label for="tower-team-select">Time de 1 a 3 Digimons</label><select id="tower-team-select">${teams.map(t => `<option value="${escapeAttr(t.id)}" ${String(t.id) === String(selected) ? "selected" : ""}>${escapeHtml(t.name)}</option>`).join("")}</select><div id="tower-members"></div><button id="tower-challenge" class="btn-primary" type="button">Desafiar andar</button>` : '<p>Monte seu primeiro time para começar a subir a torre.</p>'}
         <p id="tower-status" role="status" aria-live="polite"></p><p id="tower-error" role="alert"></p><a class="btn-secondary tower-manage" href="#mission-teams">${teams.length ? "Gerenciar times" : "Criar meu primeiro time"}</a>
         <p class="tower-note">Sem custo de energia e sem limite diário. Aguarde 30 segundos entre combates. Membros em missão precisam retornar antes de participar.</p></section></div>
-      ${result ? `<section class="tower-result ${result.won ? "tower-victory" : "tower-defeat"}" aria-live="polite"><p class="tower-eyebrow">Último combate · andar ${number(result.floor)}</p><h2>${result.won ? "Vitória! Próximo andar liberado." : "Seu time foi derrotado. Prepare uma nova estratégia."}</h2><p>${escapeHtml(result.teamName)} × ${escapeHtml(result.enemyName)} · ${result.rounds} rodada(s)</p><p>${escapeHtml(towerRewardText(result.reward))}</p>${!result.won ? '<small>Seu progresso permanece salvo. Você pode trocar o time e tentar novamente.</small>' : '<small>Recompensa adicionada automaticamente à sua conta.</small>'}</section>` : ""}
+      ${result ? `<section class="tower-result ${result.won ? "tower-victory" : "tower-defeat"}" aria-live="polite"><p class="tower-eyebrow">Último combate · andar ${number(result.floor)}</p><h2>${result.won ? "Vitória! Próximo andar liberado." : "Seu time foi derrotado. Prepare uma nova estratégia."}</h2><p>${escapeHtml(result.teamName)} × ${escapeHtml(result.enemyName)} · ${result.rounds} rodada(s)</p><p>${escapeHtml(towerRewardText(result.reward))}</p>${!result.won ? '<small>Seu progresso permanece salvo. Você pode trocar o time e tentar novamente.</small>' : '<small>Recompensa adicionada automaticamente à sua conta.</small>'}${towerResultHealth(result)}</section>` : ""}
       <footer class="tower-rules"><h2>Como funciona</h2><p>Vitórias avançam um andar. Derrotas mantêm seu progresso. Um chefe espera a cada 5 andares e um guardião especial a cada 10. A dificuldade de cada andar é igual para todos.</p><p>Os combates são automáticos, com até 60 rodadas. Equipamentos e bônus de clã contam. O time ataca primeiro e o guardião alterna entre os membros vivos. Não há perda de HP fora da torre.</p></footer>`;
     const select = root.querySelector("select");
     if (select) {
