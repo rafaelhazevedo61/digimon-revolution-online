@@ -1,6 +1,7 @@
 package com.dro.modules.ranking.application;
 
 import com.dro.modules.ranking.infra.TrainerRankingRepository;
+import com.dro.modules.ranking.infra.TrainerRankingProgressRepository;
 import com.dro.modules.ranking.api.dto.response.TrainerRankingDtos.*;
 import com.dro.shared.exception.BadRequestException;
 import com.dro.shared.exception.NotFoundException;
@@ -14,6 +15,7 @@ import static org.mockito.Mockito.*;
 
 class TrainerRankingServiceTest {
     final TrainerRankingRepository repository = mock(TrainerRankingRepository.class);
+    final TrainerRankingProgressRepository progress = mock(TrainerRankingProgressRepository.class);
     final TrainerRankingService service = new TrainerRankingService(repository);
     final UUID playerId = UUID.randomUUID();
     final Entry entry = new Entry(playerId, "Treinador", 42, BigDecimal.valueOf(415),
@@ -71,19 +73,44 @@ class TrainerRankingServiceTest {
     @Test void missingOrExcludedPublicProfileIsRejected() {
         assertThrows(NotFoundException.class, () -> service.profile(playerId));
     }
+    @Test void weeklyModeUsesWeeklyOrderingAndSnapshotDates() {
+        when(repository.eligibility(playerId)).thenReturn(List.of(true));
+        var monday = java.time.LocalDate.of(2026, 11, 23);
+        when(repository.state()).thenReturn(new State(Instant.EPOCH, 100, monday, Instant.EPOCH,
+                monday.minusDays(1), true, "version"));
+        when(repository.me(playerId)).thenReturn(entry);
+        when(repository.weeklyPage(0, 10, "")).thenReturn(List.of(entry));
+        var result = service.page(playerId, 0, 10, null, "weekly");
+        assertEquals("weekly", result.mode()); assertEquals(monday, result.weekStart());
+        assertTrue(result.comparisonAvailable()); assertEquals(entry, result.me());
+        verify(repository, never()).page(anyInt(), anyInt());
+    }
+    @Test void weeklyModeWaitsForFirstPublishedPeriod() {
+        when(repository.eligibility(playerId)).thenReturn(List.of(true));
+        when(repository.state()).thenReturn(new State(Instant.EPOCH, 100));
+        when(repository.me(playerId)).thenReturn(entry);
+        var result = service.page(playerId, 0, 10, "", "weekly");
+        assertEquals("PENDING", result.myStatus()); assertNull(result.me());
+        assertTrue(result.entries().isEmpty()); assertEquals(0, result.matchingPlayers());
+        verify(repository, never()).weeklyPage(anyInt(), anyInt(), any());
+    }
+    @Test void unknownModeIsRejectedBeforeReading() {
+        assertThrows(BadRequestException.class, () -> service.page(playerId, 0, 10, "", "invalid"));
+        verifyNoInteractions(repository);
+    }
     @Test void missingPlayerIsRejected() {
         when(repository.eligibility(playerId)).thenReturn(List.of());
         assertThrows(NotFoundException.class, () -> service.page(playerId, 0, 10));
     }
     @Test void refreshRequiresSharedDatabaseLockAndFreshnessCheck() {
-        var refresher = new TrainerRankingRefresher(repository);
+        var refresher = new TrainerRankingRefresher(repository, progress);
         when(repository.lockIfDue(300000)).thenReturn(false);
         assertFalse(refresher.refresh(300000)); verify(repository, never()).rebuild(); verify(repository, never()).captureDailyHistory();
     }
     @Test void refreshRebuildsAfterLock() {
-        var refresher = new TrainerRankingRefresher(repository);
+        var refresher = new TrainerRankingRefresher(repository, progress);
         when(repository.lockIfDue(300000)).thenReturn(true);
-        assertTrue(refresher.refresh(300000)); verify(repository).rebuild(); verify(repository).captureDailyHistory();
+        assertTrue(refresher.refresh(300000)); verify(repository).rebuild(); verify(repository).captureDailyHistory(); verify(progress).publish();
     }
     @Test void schedulerCanBeDisabled() {
         var refresher = mock(TrainerRankingRefresher.class);

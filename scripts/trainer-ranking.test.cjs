@@ -24,6 +24,7 @@ async function database(){
  `);
  await d.exec(read('backend/src/main/resources/db/migration/V255__trainer_ranking.sql'));
  await d.exec(read('backend/src/main/resources/db/migration/V256__trainer_search_profile_and_history.sql'));
+ await d.exec(read('backend/src/main/resources/db/migration/V257__trainer_weekly_progress_and_daily_movement.sql'));
  for(let i=0;i<ids.length;i++)await d.query('INSERT INTO players(id,username,user_type) VALUES ($1,$2,$3)',[ids[i],['Alpha','Beta','Admin','Teste','Bot'][i],i===2?'ADMIN':'PLAYER']);
  await d.query('UPDATE players SET trainer_ranking_excluded=true WHERE id=$1',[ids[3]]);
  await d.query('INSERT INTO digimons VALUES ($1,true)',[ids[4]]);
@@ -157,5 +158,134 @@ test('typing a new search invalidates an older response and retains global pagin
  w.rankOnSearchInput('Beta');await new Promise(r=>setTimeout(r,350));
  resolveOld({entries:[],me:null,myStatus:'PENDING',updatedAt:null,totalPlayers:999,hasNext:false});await first;
  assert.equal(calls[1].search,'Beta');assert.match(w.document.querySelector('#rank-content').textContent,/0 encontrados/);assert.doesNotMatch(w.document.querySelector('#rank-content').textContent,/999/);
+ }finally{dom.window.close();}
+});
+
+const progressJava=read('backend/src/main/java/com/dro/modules/ranking/infra/TrainerRankingProgressRepository.java');
+const progressSql=[...progressJava.matchAll(/jdbc[.]update\("""\s*([\s\S]*?)"""\)/g)].map(m=>m[1]);
+assert.equal(progressSql.length,6);
+async function publishAt(d,when,fail=false){
+ await d.transaction(async tx=>{
+   await tx.exec('DELETE FROM trainer_ranking_entries');await tx.exec(insert);await tx.exec(update);
+   await tx.query('UPDATE trainer_ranking_state SET updated_at=$1 WHERE id=1',[when]);
+   await tx.exec(historySql);for(const sql of progressSql)await tx.exec(sql);
+   if(fail)throw Error('simulated publish failure');
+ });
+}
+async function ranked(d,id=ids[0]){return(await d.query('SELECT * FROM trainer_ranking_entries WHERE player_id=$1',[id])).rows[0];}
+test('weekly gain counts changes once and resets at Monday midnight Sao Paulo',async()=>{
+ const d=await database();try{await seed(d);await publishAt(d,'2026-11-22T15:00:00Z');
+ assert.equal(Number((await ranked(d)).weekly_gain),0);
+ await d.query('UPDATE player_tower_progress SET highest_floor=20 WHERE player_id=$1',[ids[0]]);
+ await publishAt(d,'2026-11-23T02:59:59Z');assert.equal(Number((await ranked(d)).weekly_gain),200);
+ await publishAt(d,'2026-11-23T03:00:00Z');assert.equal(Number((await ranked(d)).weekly_gain),0);
+ assert.equal((await d.query('SELECT week_start::text AS week_start FROM trainer_ranking_state')).rows[0].week_start,'2026-11-23');
+ await d.query('UPDATE player_tower_progress SET highest_floor=21 WHERE player_id=$1',[ids[0]]);
+ await publishAt(d,'2026-11-23T04:00:00Z');assert.equal(Number((await ranked(d)).weekly_gain),20);
+ await publishAt(d,'2026-11-23T04:05:00Z');assert.equal(Number((await ranked(d)).weekly_gain),20);
+ }finally{await d.close();}
+});
+test('daily movement reports up, down, same and new with valid yesterday record',async()=>{
+ const d=await database();try{await seed(d);await publishAt(d,'2026-11-23T12:00:00Z');
+ await publishAt(d,'2026-11-24T12:00:00Z');assert.equal((await ranked(d)).movement,'SAME');
+ await d.query('INSERT INTO player_tower_progress VALUES ($1,40)',[ids[1]]);
+ const newcomer='00000000-0000-0000-0000-000000000006';await d.query("INSERT INTO players(id,username,user_type) VALUES ($1,'New','PLAYER')",[newcomer]);
+ await d.query('INSERT INTO player_tower_progress VALUES ($1,5)',[newcomer]);
+ await publishAt(d,'2026-11-24T13:00:00Z');
+ assert.equal((await ranked(d,ids[1])).movement,'UP');assert.equal(Number((await ranked(d,ids[1])).position_change),1);
+ assert.equal((await ranked(d)).movement,'DOWN');assert.equal(Number((await ranked(d)).position_change),-1);
+ assert.equal((await ranked(d,newcomer)).movement,'NEW');
+ assert.equal(Number((await ranked(d,newcomer)).weekly_gain),100);assert.equal((await ranked(d,newcomer)).weekly_baseline_kind,'NEW_ENTRY');
+ }finally{await d.close();}
+});
+test('missing yesterday is unavailable rather than a fabricated new entry',async()=>{
+ const d=await database();try{await seed(d);await publishAt(d,'2026-11-23T12:00:00Z');await publishAt(d,'2026-11-25T12:00:00Z');
+ assert.equal((await ranked(d)).movement,'UNAVAILABLE');assert.equal((await ranked(d)).position_change,null);
+ }finally{await d.close();}
+});
+test('weight change rebases the week and prevents administrative points from counting as progress',async()=>{
+ const d=await database();try{await seed(d);await publishAt(d,'2026-11-23T12:00:00Z');
+ await d.exec("UPDATE achievement_definitions SET trainer_points=50 WHERE code='FIRST_HATCH'");
+ await publishAt(d,'2026-11-24T12:00:00Z');assert.equal(Number((await ranked(d)).weekly_gain),0);
+ assert.equal((await ranked(d)).movement,'UNAVAILABLE');
+ await d.query('UPDATE player_tower_progress SET highest_floor=11 WHERE player_id=$1',[ids[0]]);
+ await publishAt(d,'2026-11-24T13:00:00Z');assert.equal(Number((await ranked(d)).weekly_gain),20);
+ assert.equal((await d.query('SELECT * FROM trainer_ranking_weeks')).rows.length,2);
+ }finally{await d.close();}
+});
+test('existing account excluded when week opened gets observed baseline upon joining',async()=>{
+ const d=await database();try{await seed(d);await d.query('INSERT INTO player_tower_progress VALUES ($1,30)',[ids[3]]);
+ await publishAt(d,'2026-11-23T12:00:00Z');await d.query('UPDATE players SET trainer_ranking_excluded=false WHERE id=$1',[ids[3]]);
+ await publishAt(d,'2026-11-23T13:00:00Z');const row=await ranked(d,ids[3]);
+ assert.equal(Number(row.total_score),600);assert.equal(Number(row.weekly_gain),0);assert.equal(row.weekly_baseline_kind,'RETURNING');
+ }finally{await d.close();}
+});
+test('first rollout can use real history earlier in the same week without reconstructing older days',async()=>{
+ const d=await database();try{await seed(d);await rebuild(d);
+ await d.exec("UPDATE trainer_ranking_state SET updated_at='2026-11-23T12:00:00Z'");await d.exec(historySql);
+ await d.query('UPDATE player_tower_progress SET highest_floor=15 WHERE player_id=$1',[ids[0]]);
+ await publishAt(d,'2026-11-25T12:00:00Z');const row=await ranked(d);assert.equal(Number(row.weekly_gain),100);
+ assert.equal(new Date(row.weekly_baseline_at).toISOString(),'2026-11-23T12:00:00.000Z');
+ assert.equal((await d.query("SELECT * FROM trainer_ranking_daily_history WHERE snapshot_date<'2026-11-23'")).rows.length,0);
+ }finally{await d.close();}
+});
+test('weekly ordering uses gain then permanent position; ties stay deterministic',async()=>{
+ const d=await database();try{await seed(d);await publishAt(d,'2026-11-23T12:00:00Z');
+ await d.query('INSERT INTO player_tower_progress VALUES ($1,5)',[ids[1]]);await publishAt(d,'2026-11-23T13:00:00Z');
+ assert.equal(Number((await ranked(d,ids[1])).weekly_position),1);assert.equal(Number((await ranked(d)).weekly_position),2);
+ await d.query('UPDATE player_tower_progress SET highest_floor=15 WHERE player_id=$1',[ids[0]]);await publishAt(d,'2026-11-23T14:00:00Z');
+ assert.equal(Number((await ranked(d)).weekly_position),1);assert.equal(Number((await ranked(d,ids[1])).weekly_position),2);
+ }finally{await d.close();}
+});
+test('failed week rollover keeps old score, comparisons and baseline metadata atomically',async()=>{
+ const d=await database();try{await seed(d);await publishAt(d,'2026-11-22T12:00:00Z');
+ const old=(await d.query('SELECT * FROM trainer_ranking_state')).rows[0];
+ await assert.rejects(publishAt(d,'2026-11-23T03:00:00Z',true));
+ const current=(await d.query('SELECT * FROM trainer_ranking_state')).rows[0];assert.deepEqual(current,old);
+ assert.equal((await d.query('SELECT * FROM trainer_ranking_weeks')).rows.length,1);
+ }finally{await d.close();}
+});
+
+test('weekly search keeps weekly and global positions distinct',async()=>{
+ const d=await database();try{await seed(d);await publishAt(d,'2026-11-23T12:00:00Z');
+ await d.query('INSERT INTO player_tower_progress VALUES ($1,5)',[ids[1]]);await publishAt(d,'2026-11-23T13:00:00Z');
+ const query=[...java.matchAll(/"""\s*([\s\S]*?)"""/g)].map(m=>m[1]).find(q=>q.includes('ORDER BY weekly_position'));
+ const rows=(await d.query(positional(query),['alpha',10,0])).rows;
+ assert.equal(rows.length,1);assert.equal(Number(rows[0].position),1);assert.equal(Number(rows[0].weekly_position),2);
+ }finally{await d.close();}
+});
+test('a recorded empty day permits a real new entry comparison next day',async()=>{
+ const d=await database();try{await seed(d);await d.exec('UPDATE players SET trainer_ranking_excluded=true');
+ await publishAt(d,'2026-11-23T12:00:00Z');assert.equal((await d.query('SELECT * FROM trainer_ranking_entries')).rows.length,0);
+ await d.query('UPDATE players SET trainer_ranking_excluded=false WHERE id=$1',[ids[0]]);await publishAt(d,'2026-11-24T12:00:00Z');
+ assert.equal((await ranked(d)).movement,'NEW');assert.equal(Number((await ranked(d)).weekly_gain),0);
+ }finally{await d.close();}
+});
+test('negative corrections do not generate negative weekly points',async()=>{
+ const d=await database();try{await seed(d);await publishAt(d,'2026-11-23T12:00:00Z');
+ await d.query('UPDATE player_tower_progress SET highest_floor=0 WHERE player_id=$1',[ids[0]]);await publishAt(d,'2026-11-23T13:00:00Z');
+ assert.equal(Number((await ranked(d)).weekly_gain),0);
+ }finally{await d.close();}
+});
+test('weekly UI displays weekly gain and position while retaining global context',()=>{
+ const dom=ui();try{const w=dom.window;
+ const entry={playerId:ids[0],playerName:'Alpha',position:42,totalScore:415,weeklyPosition:7,weeklyGain:200,weeklyBaselineAt:'2026-11-23T12:00:00Z',weeklyBaselineKind:'EXISTING',collectionScore:90,achievementScore:125,towerScore:200};
+ w.document.body.innerHTML=w.trainerRankingContent({mode:'weekly',entries:[entry],me:entry,myStatus:'RANKED',updatedAt:'2026-11-24T12:00:00Z',totalPlayers:100,weekStart:'2026-11-23',weekBaselineAt:'2026-11-23T12:00:00Z'});
+ assert.match(w.document.body.textContent,/#7/);assert.match(w.document.body.textContent,/#42 no geral/);assert.match(w.document.body.textContent,/pontos na semana/);assert.match(w.document.body.textContent,/23\/11\/2026/);
+ assert.match(w.document.querySelector('.trainer-rank-total').textContent,/200/);
+ }finally{dom.window.close();}
+});
+test('all daily movement labels are rendered without inventing a comparison',()=>{
+ const dom=ui();try{const w=dom.window;
+ for(const [status,delta,label] of [['UP',3,'↑ 3'],['DOWN',-2,'↓ 2'],['SAME',0,'—'],['NEW',null,'Nova entrada'],['UNAVAILABLE',null,'Sem base de ontem']])assert.ok(w.trainerMovement({movement:status,positionChange:delta}).includes(label));
+ }finally{dom.window.close();}
+});
+test('weekly toggle sends mode and preserves search',async()=>{
+ const dom=ui();try{const w=dom.window;w.showBottomNav=()=>{};w.document.body.innerHTML='<div id="app"></div>';
+ w.eval(read('game-frontend/assets/js/ranking.js'));const requests=[];
+ w.apiGet=async(p,params)=>{requests.push(params);return{mode:params.mode,entries:[],me:null,myStatus:'PENDING',updatedAt:null,totalPlayers:0,matchingPlayers:0,hasNext:false};};
+ await w.renderRankingPage({tab:'players'});w.document.querySelector('#rank-search').value='Alpha';w.rankSwitchTrainerMode('weekly');await new Promise(r=>setTimeout(r,0));
+ assert.equal(requests.at(-1).mode,'weekly');assert.equal(requests.at(-1).search,'Alpha');assert.equal(requests.at(-1).page,0);
+ assert.match(w.document.querySelector('#rank-content').textContent,/primeira base semanal/);
  }finally{dom.window.close();}
 });

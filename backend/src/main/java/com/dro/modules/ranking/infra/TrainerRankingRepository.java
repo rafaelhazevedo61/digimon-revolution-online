@@ -17,7 +17,10 @@ public class TrainerRankingRepository {
             rs.getBigDecimal("total_score"), rs.getBigDecimal("collection_score"),
             rs.getBigDecimal("achievement_score"), rs.getBigDecimal("tower_score"),
             rs.getLong("collection_entries"), rs.getLong("mastered_species"),
-            rs.getLong("completed_achievements"), rs.getLong("highest_floor"));
+            rs.getLong("completed_achievements"), rs.getLong("highest_floor"), rs.getBigDecimal("weekly_gain"),
+            rs.getObject("weekly_position", Long.class), instant(rs.getTimestamp("weekly_baseline_at")),
+            rs.getString("weekly_baseline_kind"), rs.getString("movement"), rs.getObject("position_change", Long.class));
+    private static java.time.Instant instant(Timestamp value) { return value == null ? null : value.toInstant(); }
 
     /** Metadata row is the cross-instance lock; re-check freshness after acquiring it. */
     public boolean lockIfDue(long intervalMillis) {
@@ -75,9 +78,11 @@ public class TrainerRankingRepository {
     }
 
     public State state() {
-        return jdbc.queryForObject("SELECT updated_at, total_players FROM trainer_ranking_state WHERE id = 1", (rs, row) -> {
+        return jdbc.queryForObject("SELECT * FROM trainer_ranking_state WHERE id = 1", (rs, row) -> {
             Timestamp updated = rs.getTimestamp("updated_at");
-            return new State(updated == null ? null : updated.toInstant(), rs.getLong("total_players"));
+            return new State(instant(updated), rs.getLong("total_players"), rs.getObject("week_start", java.time.LocalDate.class),
+                    instant(rs.getTimestamp("week_baseline_at")), rs.getObject("comparison_date", java.time.LocalDate.class),
+                    rs.getBoolean("comparison_available"), rs.getString("rules_version"));
         });
     }
     public List<Entry> page(int page, int size) { return page(page, size, ""); }
@@ -86,6 +91,13 @@ public class TrainerRankingRepository {
                 SELECT * FROM trainer_ranking_entries
                 WHERE STRPOS(LOWER(player_name), LOWER(?)) > 0
                 ORDER BY position LIMIT ? OFFSET ?
+                """, ENTRY, search, size, (long) page * size);
+    }
+    public List<Entry> weeklyPage(int page, int size, String search) {
+        return jdbc.query("""
+                SELECT * FROM trainer_ranking_entries
+                WHERE STRPOS(LOWER(player_name), LOWER(?)) > 0 AND weekly_position IS NOT NULL
+                ORDER BY weekly_position LIMIT ? OFFSET ?
                 """, ENTRY, search, size, (long) page * size);
     }
     public long countMatching(String search) {
@@ -115,14 +127,11 @@ public class TrainerRankingRepository {
                 INSERT INTO trainer_ranking_daily_history (snapshot_date, rules_version, player_id,
                     observed_at, position, player_name, collection_entries, mastered_species,
                     completed_achievements, highest_floor, collection_score, achievement_score, tower_score, total_score)
-                SELECT (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')::date,
-                    (SELECT MD5('trainer-v1;collection=10;mastery=50;tower=20;' || COALESCE(
-                        STRING_AGG(code || ':' || trainer_points::text, ';' ORDER BY code), ''))
-                     FROM achievement_definitions WHERE active = TRUE),
-                    e.player_id, CURRENT_TIMESTAMP, e.position, e.player_name, e.collection_entries,
+                SELECT (s.updated_at AT TIME ZONE 'America/Sao_Paulo')::date, trainer_ranking_rules_version(),
+                    e.player_id, s.updated_at, e.position, e.player_name, e.collection_entries,
                     e.mastered_species, e.completed_achievements, e.highest_floor,
                     e.collection_score, e.achievement_score, e.tower_score, e.total_score
-                FROM trainer_ranking_entries e
+                FROM trainer_ranking_entries e CROSS JOIN trainer_ranking_state s WHERE s.id = 1
                 ON CONFLICT (snapshot_date, rules_version, player_id) DO NOTHING
                 """);
     }

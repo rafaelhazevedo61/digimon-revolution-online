@@ -2,7 +2,7 @@
 
 ## Objetivo e acesso
 
-A aba **Jogadores**, na página **Classificação**, ordena contas pelo progresso em coleção, conquistas e Torre Infinita. É uma classificação permanente, sem temporada, reset ou recompensa própria. As classificações existentes de Poder, Rebirth, Arena e Clãs continuam disponíveis.
+A aba **Jogadores**, na página **Classificação**, oferece as modalidades **Geral** (progresso permanente) e **Progresso semanal** (ganho de pontos no período). Ambas usam coleção, conquistas e Torre Infinita. O progresso permanente não é resetado e não há recompensa automática por posição. As classificações existentes de Poder, Rebirth, Arena e Clãs continuam disponíveis.
 
 Link interno: `#ranking?tab=players`. A classificação é da conta, independentemente do Digimon ativo.
 
@@ -92,10 +92,10 @@ A aba mostra:
 - Sua posição em destaque, mesmo quando está fora da página exibida.
 - Horário da última atualização, quantidade de participantes e paginação.
 
-`GET /ranking/players?page=0&size=10`, autenticado pelo token.
+`GET /ranking/players?page=0&size=10&mode=overall`, autenticado pelo token. Use `mode=weekly` para progresso semanal.
 
 - Página começa em zero; tamanho permitido de 1 a 50.
-- Resposta: `entries`, `me`, `myStatus`, `updatedAt`, `totalPlayers`, `page`, `size`, `hasNext`.
+- Resposta: `entries`, `me`, `myStatus`, `updatedAt`, `totalPlayers`, `matchingPlayers`, `page`, `size`, `hasNext`, `mode`, `weekStart`, `weekBaselineAt`, `comparisonDate` e `comparisonAvailable`.
 - `myStatus`: `RANKED` (posição disponível), `PENDING` (conta elegível aguardando atualização), `EXCLUDED` (não participa).
 - Antes do primeiro ciclo: lista vazia, `updatedAt = null` e aviso de processamento pendente.
 - Não retorna e-mail, IDs dos Digimons, tokens ou outros dados privados; o identificador público da conta permite destacar o próprio jogador.
@@ -129,21 +129,81 @@ Clicar no nome de um participante abre um modal acessível com nome público, po
 
 Endpoint autenticado: `GET /ranking/players/{playerId}`. A resposta contém `ranking`, `clanId`, `clanName`, `clanTag` e `updatedAt`. Não inclui e-mail, senha, Bits, inventário, dados de autenticação ou lista privada de Digimons. Pontuação e contagens usam a classificação publicada, sem recalcular conquistas ao abrir o perfil. O clã é consultado no cadastro atual; clãs inativos não aparecem. Contas excluídas, bots e administradores não possuem perfil público nesta funcionalidade, mesmo se houver uma linha antiga na classificação. Uma conta aguardando a primeira atualização também não tem perfil disponível ainda.
 
-## Histórico diário — estrutura para a segunda etapa
+## Histórico diário e versão da pontuação
 
 A migration **V256__trainer_search_profile_and_history.sql** cria `trainer_ranking_daily_history`. Cada atualização bem-sucedida do ranking, sob o mesmo lock e transação, tenta salvar a primeira observação de cada participante no dia de **America/Sao_Paulo**. Novas tentativas do mesmo dia/regra não sobrescrevem esse registro.
 
 Cada linha guarda data local, instante efetivo da observação, posição global, nome público, contagens e parcelas da pontuação. A chave contém data, versão da regra e conta. Um índice por conta/data atende comparações futuras. O histórico é removido por FK quando a conta é excluída.
 
-A versão é um fingerprint MD5 determinístico da fórmula identificada como `trainer-v1` (pesos 10/50/20) e dos códigos/pesos de conquistas ativas, ordenados por código. Se os pesos ou o conjunto ativo mudarem, inicia-se outro grupo de observações, inclusive no mesmo dia. A finalidade do hash é separar regras, não criptografar informações. Futuras alterações de fórmula devem mudar o identificador e a descrição dos pesos no fingerprint.
+A versão vem da função SQL `trainer_ranking_rules_version()`, criada pela V257: um fingerprint MD5 determinístico da fórmula identificada como `trainer-v1` (pesos 10/50/20) e dos códigos/pesos de conquistas ativas, ordenados por código. Se os pesos ou o conjunto ativo mudarem, inicia-se outro grupo de observações, inclusive no mesmo dia. A finalidade do hash é separar regras, não criptografar informações. Futuras alterações de fórmula devem atualizar por migration o identificador e os pesos descritos nessa função.
 
 O recálculo e a captura usam `REPEATABLE_READ`: catálogo, pontuação e versão da regra pertencem à mesma visão. Falhas na captura revertem também a renovação do ranking. Se não houver processamento em um dia, não se inventa uma observação; o horário efetivo fica registrado, sem afirmar que a coleta ocorreu exatamente à meia-noite. Não se preenche histórico anterior à implantação.
 
-**Esta é a primeira etapa aprovada: busca, perfil e coleta do histórico. A classificação semanal e as setas de variação ainda não são exibidas.** Na segunda etapa, a semana começará segunda-feira às 00h de São Paulo; deverão ser definidas bases explícitas para a primeira semana, contas novas, dias sem coleta e mudanças de regra. Não se deve tratar rebalanceamento como pontos conquistados pelo jogador, nem presumir uma posição de ontem sem observação válida. O registro diário fornece a base, mas não substitui a implementação dessas regras.
+## Classificação semanal de progresso
 
-Não há expurgo automático do histórico nesta etapa. O volume é proporcional a participantes × dias × versões de regra; definir retenção antes de ampliar a coleta ou adicionar observações mais frequentes.
+Disponível em **Jogadores → Progresso semanal**. O calendário da semana começa **segunda-feira às 00h de America/Sao_Paulo**, independentemente do fuso do servidor ou do navegador.
 
-Próximos ajustes possíveis: concluir a segunda etapa, homologar pesos com jogadores reais, medir duração do recálculo com muitas contas, avaliar atualização incremental por contas alteradas, otimizar busca com índices apropriados se necessário e incluir gestão de exclusão no admin. Esta entrega não concede prêmios por posição.
+`Ganho semanal = max(0, pontuação total atual - pontuação da base da conta)`.
+
+O ganho é uma diferença entre pontuações persistidas, não um contador incrementado a cada execução. Reprocessar ou consultar não duplica os pontos. Correções que reduzam o total não geram valores negativos. O desempate é a posição na classificação geral; portanto, a ordenação é determinística. Participantes com ganho zero também aparecem.
+
+### Bases, implantação e novas contas
+
+- Cada semana e versão da regra possuem um período e bases próprias.
+- Na abertura do período, contas existentes usam a primeira observação real disponível daquela semana/regra; sem histórico, usam o total atual. Assim, a primeira semana pode começar parcialmente, sem contar todo o progresso antigo como ganho novo.
+- A criação da base registra todas as contas existentes, inclusive as excluídas da competição. Uma conta excluída sem pontuação conhecida recebe base pendente; ao entrar depois, parte do total observado, sem transformar progresso antigo em ganho semanal.
+- Uma conta criada **depois da abertura do período**, ainda sem linha de base, entra com base zero. Seus pontos já obtidos até a primeira participação contam como progresso dessa nova conta naquela semana.
+- Se uma conta já possuía histórico elegível naquela semana, a base observada fica preservada mesmo que ela saia e volte à classificação.
+- O instante efetivo da base de cada conta aparece no detalhamento. A tela também informa o início da coleta do período.
+- O scheduler não promete uma observação exatamente às 00h: ele publica em intervalos de cinco minutos. No início de uma nova semana sem histórico prévio, a base é a primeira observação depois da virada. O intervalo anterior a essa observação não é reconstruído nem pontuado retroativamente para contas existentes. Em indisponibilidades longas, a base pode começar mais tarde; isso é mostrado com o horário real.
+
+Exemplo: uma conta existente abre a base com 1.000 pontos e chega a 1.160: ganho semanal = 160. Outra conta criada após a abertura do período chega a 90 pontos na primeira participação: ganho = 90. Na virada de segunda-feira, as contas já existentes passam a uma nova base e começam com ganho zero, preservando os pontos gerais.
+
+### Mudanças de regra
+
+Uma nova versão de pesos/catálogo abre bases independentes, usando observações da própria versão. O aumento provocado por rebalanceamento não é comparado com a pontuação sob pesos antigos. Se uma versão anteriormente observada for restaurada na mesma semana, a base já registrada dessa versão é reutilizada, sem duplicar pontos. O fingerprint não identifica alterações administrativas diretas nos dados de progresso; essas correções mudam o total observado normalmente.
+
+Não há prêmios semanais ou tela de semanas encerradas nesta versão. Bases e períodos anteriores permanecem armazenados para auditoria e evolução futura.
+
+## Variação diária de posição
+
+A modalidade **Geral** mostra a comparação entre a posição global atual e a **primeira observação do dia anterior** em São Paulo, sob a mesma versão de pontuação. Não é uma comparação com o fechamento do dia ou com as últimas 24 horas.
+
+| Situação | Exibição |
+| --- | --- |
+| Posição anterior maior que a atual | `↑ N` |
+| Posição anterior menor que a atual | `↓ N` |
+| Mesma posição | `—` |
+| Ontem foi registrado, mas a conta não estava entre os participantes | `Nova entrada` |
+| Sem registro de ontem sob a mesma versão | `Sem base de ontem` |
+
+`positionChange = posição de ontem - posição global atual`: positivo indica subida e negativo indica queda. O perfil público também mostra essa variação geral. Na modalidade semanal, a posição exibida é a semanal e uma indicação separada preserva a posição geral, sem aplicar setas globais à posição semanal.
+
+A tabela `trainer_ranking_recorded_days` marca os dias efetivamente coletados, inclusive dias com zero participantes. Isso permite distinguir uma nova entrada de uma falha/ausência de coleta. A V257 importa marcadores somente para os dias já presentes no histórico da V256. Não usa um dia mais antigo como se fosse ontem e não compara versões diferentes.
+
+## Persistência temporal e consistência
+
+A migration **V257__trainer_weekly_progress_and_daily_movement.sql** acrescenta:
+
+- Função de versão da pontuação compartilhada pela coleta e pelas comparações.
+- Metadados de semana, base, data de comparação e disponibilidade na linha de estado.
+- Campos publicados de ganho/posição semanal, base individual e variação diária nas entradas.
+- `trainer_ranking_recorded_days`, `trainer_ranking_weeks` e `trainer_ranking_week_baselines`.
+- Índice da posição semanal para paginação.
+
+A renovação do total, o histórico diário, a abertura de bases e a publicação das comparações usam o mesmo lock e a mesma transação `REPEATABLE_READ`. O instante de referência é `trainer_ranking_state.updated_at`, gerado pelo banco, para não misturar relógios/fusos entre processos. Uma falha reverte todas essas mudanças; leitores continuam vendo a versão anterior completa.
+
+Os endpoints permanecem somente de leitura e usam a mesma versão para página e posição pessoal. A busca funciona nas duas modalidades sem renumerar posições. Cada entrada mantém `position` global e adiciona `weeklyPosition`, `weeklyGain`, `weeklyBaselineAt`, `weeklyBaselineKind`, `movement` e `positionChange`.
+
+Não há expurgo automático do histórico e das bases nesta etapa. O volume depende de participantes × dias/semanas × versões. Definir retenção antes de ampliar a frequência de observações.
+
+## Testes de tempo e homologação
+
+Os testes em `scripts/trainer-ranking.test.cjs` publicam as consultas SQL reais com datas simuladas, sem alterar o relógio do servidor ou esperar o dia seguinte. Cobrem a fronteira de segunda-feira às **03:00 UTC / 00:00 São Paulo**, ganho idempotente, primeira semana parcial, novas contas, retorno de conta excluída, mudança de pesos, falta de ontem, todas as variações, ordenação semanal, busca, rollback e interface.
+
+Testes Java cobrem o roteamento entre modalidades, paginação, espera da primeira base, validação de parâmetros e execução transacional do publicador. A compilação e a regressão da classificação de Poder também devem ser mantidas na validação.
+
+Ainda é necessária homologação com PostgreSQL real e múltiplas instâncias, além da avaliação de pesos/desempenho. As quatro funcionalidades previstas estão implementadas: busca, perfil público, classificação semanal e variação diária.
 
 ## Catálogo inicial de pontuação das conquistas
 

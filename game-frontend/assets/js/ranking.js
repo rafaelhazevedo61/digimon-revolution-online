@@ -9,6 +9,7 @@ let rankSearchTimeout = null;
 let rankArenaMode = "current";
 let rankArenaStatistics = null;
 let rankTrainerData = null;
+let rankTrainerMode = "overall";
 const RANK_PAGE_SIZE = 10;
 
 async function renderRankingPage(params = {}) {
@@ -17,6 +18,7 @@ async function renderRankingPage(params = {}) {
   rankLoading = false;
   clearTimeout(rankSearchTimeout);
   rankTrainerData = null;
+  rankTrainerMode = "overall";
   showBottomNav("more");
 
   const validTabs = ["players", "power", "rebirth", "arena", "clans"];
@@ -45,6 +47,10 @@ async function renderRankingPage(params = {}) {
         <button class="tab-btn text-xs ${rankArenaMode === "season" ? "active" : ""}" data-arena-mode="season" onclick="rankSwitchArenaMode('season')">Temporada</button>
       </div>
 
+      <div id="rank-trainer-toggle" class="${rankTab === "players" ? "flex" : "hidden"} gap-2 mb-4" aria-label="Modalidade de classificação">
+        <button class="tab-btn active" data-trainer-mode="overall" onclick="rankSwitchTrainerMode('overall')">Geral</button>
+        <button class="tab-btn" data-trainer-mode="weekly" onclick="rankSwitchTrainerMode('weekly')">Progresso semanal</button>
+      </div>
       <div class="mb-4" id="rank-search-wrap">
         <input
           id="rank-search"
@@ -71,6 +77,7 @@ async function renderRankingPage(params = {}) {
 function rankSwitchTab(tab) {
   clearTimeout(rankSearchTimeout);
   rankTrainerData = null;
+  rankTrainerMode = "overall";
   rankTab = tab;
   rankPage = 0;
   rankSearch = "";
@@ -94,6 +101,12 @@ function rankSwitchTab(tab) {
     btn.classList.toggle("active", btn.dataset.arenaMode === rankArenaMode);
   });
 
+  const trainerToggle = document.getElementById("rank-trainer-toggle");
+  if (trainerToggle) {
+    trainerToggle.classList.toggle("hidden", tab !== "players");
+    trainerToggle.classList.toggle("flex", tab === "players");
+    trainerToggle.querySelectorAll("button").forEach(button => button.classList.toggle("active", button.dataset.trainerMode === rankTrainerMode));
+  }
   const searchInput = document.getElementById("rank-search");
   if (searchInput) {
     searchInput.value = "";
@@ -102,6 +115,19 @@ function rankSwitchTab(tab) {
     searchInput.placeholder = tab === "players" ? "Buscar jogador por nome..." : tab === "power" ? "Buscar jogador ou Digimon..." : "Busca disponível em Poder e Jogadores";
   }
 
+  rankLoadPage();
+}
+
+function rankSwitchTrainerMode(mode) {
+  if (rankTab !== "players" || !["overall", "weekly"].includes(mode)) return;
+  clearTimeout(rankSearchTimeout);
+  rankTrainerMode = mode;
+  rankPage = 0;
+  rankTrainerData = null;
+  rankSearch = (document.getElementById("rank-search")?.value || rankSearch).trim();
+  rankGeneration++;
+  rankLoading = false;
+  document.querySelectorAll("[data-trainer-mode]").forEach(button => button.classList.toggle("active", button.dataset.trainerMode === mode));
   rankLoadPage();
 }
 
@@ -156,6 +182,7 @@ async function rankLoadPage() {
   }
 
   const params = { page: rankPage, size: RANK_PAGE_SIZE };
+  if (tab === "players") params.mode = rankTrainerMode;
   if (["power", "players"].includes(rankTab) && rankSearch) {
     params.search = rankSearch;
   }

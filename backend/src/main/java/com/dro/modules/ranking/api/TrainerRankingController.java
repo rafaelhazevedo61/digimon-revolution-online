@@ -16,8 +16,9 @@ public class TrainerRankingController {
     public Page page(@RequestHeader("Authorization") String token,
                      @RequestParam(defaultValue = "0") int page,
                      @RequestParam(defaultValue = "10") int size,
-                     @RequestParam(required = false) String search) {
-        return service.page(TokenExtractor.extractPlayerId(token), page, size, search);
+                     @RequestParam(required = false) String search,
+                     @RequestParam(defaultValue = "overall") String mode) {
+        return service.page(TokenExtractor.extractPlayerId(token), page, size, search, mode);
     }
     @GetMapping("/{playerId}")
     public Profile profile(@RequestHeader("Authorization") String token, @PathVariable UUID playerId) {
