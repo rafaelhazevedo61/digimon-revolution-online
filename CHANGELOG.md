@@ -9,6 +9,8 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Adicionado
 
+- **Guia do Treinador**: tutorial inicial com orientações atualizadas e 12 conteúdos opcionais apresentados após os primeiros marcos, incluindo coleção, conquistas, times, torre e classificação. Leituras salvas por conta, sem refazer etapas concluídas ou conceder recompensas por leitura.
+
 - **Progresso semanal e variação diária dos treinadores**: modalidade semanal com bases por conta/regra e calendário de São Paulo, além de subida/queda/estabilidade/nova entrada no geral. Trata ausência de histórico, novas contas e rebalanceamento, com testes de datas simuladas.
 
 - **Busca e perfil público de treinadores**: busca parcial com posições globais preservadas, modal com resumo de coleção/conquistas/torre/clã e histórico diário por versão de regra em São Paulo, preparando comparações futuras.

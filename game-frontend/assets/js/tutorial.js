@@ -4,7 +4,7 @@
 
 const TUTORIAL_STEP_ROUTE = {
   SELECT_DIGITAMA: "starter",
-  HATCH_DIGIMON: "incubation",
+  HATCH_DIGIMON: "starter",
   COMPLETE_MISSION: "missions",
   BUY_SHOP: "shop",
   EQUIP_ITEM: "inventory",
@@ -87,6 +87,7 @@ function renderTutorialCard(data) {
           ${rows}
         </div>
         ${finishSection}
+        <div class="mt-3 pt-3 border-t border-slate-700"><p class="text-xs text-slate-400 mb-2">Conheça coleção, conquistas, times e outros desafios no seu ritmo.</p><button type="button" class="btn-secondary w-full" onclick="navigateTo('trainer-guide')">Abrir Guia do Treinador</button></div>
       </div>
     </div>
   `;
@@ -141,7 +142,7 @@ function renderTutorialStep(step, isNext) {
     : completed && !claimed
       ? "border border-yellow-700/60 bg-slate-800/70"
       : "bg-slate-900/40";
-  const titleClass = claimed
+  const titleClass = completed && claimed
     ? "text-slate-500 line-through"
     : completed
       ? "text-yellow-100"
