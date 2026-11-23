@@ -14,5 +14,5 @@ public final class TowerDtos {
                          Reward reward, List<MemberHealth> members) {
         public Result { members = List.copyOf(members); }
     }
-    public record Page(long highestFloor, long attempts, Instant serverTime, Instant availableAt, Floor nextFloor, Result lastResult) {}
+    public record Page(long highestFloor, long attempts, Instant serverTime, Instant availableAt, Floor nextFloor, Result lastResult, boolean cooldownEnabled) {}
 }

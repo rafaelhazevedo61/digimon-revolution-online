@@ -58,3 +58,9 @@ Testes Java: `TowerRulesTest`, `TowerServiceTest`, `DigimonPowerServiceTest`; re
 Testes de DOM e SQL real da migration/upsert: `scripts/tower.test.cjs`. Instale `jsdom` e `@electric-sql/pglite` fora do repositório e execute conforme o cabeçalho do script.
 
 Os testes de SQL usam PostgreSQL embarcado (PGlite). Não substituem homologação com PostgreSQL do servidor, várias instâncias e contas reais. Rever curva de dificuldade e economia após jogar o protótipo.
+
+## Testes locais sem cooldown
+
+A flag `dro.gameplay.tower-cooldown-enabled` tem padrão **true** em `GameplayConfig`. No perfil `local`, `application-local.yml` define `tower-cooldown-enabled: ${DRO_TOWER_COOLDOWN_ENABLED:false}`, desativando o intervalo por padrão. Reinicie o backend com o perfil local ativo para aplicar.
+
+Para reativar os 30 segundos localmente, defina `DRO_TOWER_COOLDOWN_ENABLED=true`. Quando desativado, timestamps futuros de combates anteriores são ignorados e a API informa disponibilidade imediata à interface. A flag é independente do cooldown dos outros chefes. Pedidos repetidos e versões antigas continuam protegidos.

@@ -17,6 +17,7 @@ import com.dro.modules.mission.infra.*;
 import com.dro.modules.player.domain.Player;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.audit.TransactionAuditPublisher;
+import com.dro.shared.config.GameplayConfig;
 import com.dro.shared.exception.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,11 +40,13 @@ class TowerServiceTest {
     @Mock AddItemUseCase grant;
     @Mock TransactionAuditPublisher audit;
     TowerService service;
+    GameplayConfig config;
     UUID playerId = UUID.randomUUID(), teamId = UUID.randomUUID(), digimonId = UUID.randomUUID();
     Player player;
     Challenge request;
     @BeforeEach void setup() {
-        service = new TowerService(repository, players, teams, digimons, missions, power, items, grant, audit);
+        config = new GameplayConfig();
+        service = new TowerService(repository, players, teams, digimons, missions, power, items, grant, audit, config);
         player = Player.builder().id(playerId).bits(20).build();
         request = new Challenge(teamId, UUID.randomUUID(), 0);
         lenient().when(players.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
@@ -96,6 +99,28 @@ class TowerServiceTest {
     @Test void cooldownAlsoAppliesAfterDefeat() {
         when(repository.state(playerId)).thenReturn(new State(0, 0, Instant.now().plusSeconds(20), null));
         assertThrows(ConflictException.class, () -> service.challenge(playerId, request)); verifyNoInteractions(teams, grant);
+    }
+    @Test void disabledCooldownAllowsCombatDespiteExistingFutureTimestamp() {
+        config.setTowerCooldownEnabled(false);
+        when(repository.state(playerId)).thenReturn(new State(0, 0, Instant.now().plusSeconds(30), null));
+        team();
+        when(power.effectiveStats(any(), any())).thenReturn(new CombatStats(1, 1, 0));
+        Page result = service.challenge(playerId, request);
+        assertEquals(1, result.attempts());
+        assertFalse(result.cooldownEnabled());
+        assertEquals(result.serverTime(), result.availableAt());
+        verify(repository).save(eq(playerId), argThat(s -> s.availableAt().equals(result.serverTime())));
+    }
+    @Test void disabledCooldownHidesPreviouslyPersistedWaitFromClient() {
+        config.setTowerCooldownEnabled(false);
+        when(players.existsById(playerId)).thenReturn(true);
+        when(repository.state(playerId)).thenReturn(new State(0, 0, Instant.now().plusSeconds(30), null));
+        Page result = service.page(playerId);
+        assertFalse(result.cooldownEnabled());
+        assertEquals(result.serverTime(), result.availableAt());
+    }
+    @Test void cooldownIsEnabledByDefault() {
+        assertTrue(config.isTowerCooldownEnabled());
     }
     @Test void foreignTeamRejected() {
         assertThrows(NotFoundException.class, () -> service.challenge(playerId, request)); verifyNoInteractions(digimons, grant);

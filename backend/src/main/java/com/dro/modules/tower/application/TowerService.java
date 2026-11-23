@@ -16,6 +16,7 @@ import com.dro.modules.mission.domain.MissionStatus;
 import com.dro.modules.player.infra.PlayerRepository;
 import com.dro.shared.exception.*;
 import com.dro.shared.audit.TransactionAuditPublisher;
+import com.dro.shared.config.GameplayConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
@@ -32,12 +33,13 @@ public class TowerService {
     private final ItemDefinitionRepository items;
     private final AddItemUseCase grant;
     private final TransactionAuditPublisher audit;
+    private final GameplayConfig config;
 
     public TowerService(TowerRepository repository, PlayerRepository players, MissionTeamRepository teams,
                         DigimonRepository digimons, MissionInstanceRepository missions, DigimonPowerService power,
-                        ItemDefinitionRepository items, AddItemUseCase grant, TransactionAuditPublisher audit) {
+                        ItemDefinitionRepository items, AddItemUseCase grant, TransactionAuditPublisher audit, GameplayConfig config) {
         this.repository = repository; this.players = players; this.teams = teams; this.digimons = digimons;
-        this.missions = missions; this.power = power; this.items = items; this.grant = grant; this.audit = audit;
+        this.missions = missions; this.power = power; this.items = items; this.grant = grant; this.audit = audit; this.config = config;
     }
 
     @Transactional(readOnly = true)
@@ -47,8 +49,8 @@ public class TowerService {
     }
 
     private Page page(State state, Instant now) {
-        return new Page(state.highestFloor(), state.attempts(), now, state.availableAt(),
-                TowerRules.floor(Math.addExact(state.highestFloor(), 1)), state.lastResult());
+        return new Page(state.highestFloor(), state.attempts(), now, config.isTowerCooldownEnabled() ? state.availableAt() : now,
+                TowerRules.floor(Math.addExact(state.highestFloor(), 1)), state.lastResult(), config.isTowerCooldownEnabled());
     }
 
     @Transactional
@@ -58,7 +60,7 @@ public class TowerService {
         Instant now = Instant.now();
         if (state.lastResult() != null && state.lastResult().requestId().equals(request.requestId())) return page(state, now);
         if (request.expectedAttempts() != state.attempts()) throw new ConflictException("A torre foi atualizada. Atualize a página antes de desafiar novamente.");
-        if (state.availableAt() != null && now.isBefore(state.availableAt())) throw new ConflictException("Aguarde os 30 segundos entre combates.");
+        if (config.isTowerCooldownEnabled() && state.availableAt() != null && now.isBefore(state.availableAt())) throw new ConflictException("Aguarde os 30 segundos entre combates.");
         if (state.highestFloor() >= Long.MAX_VALUE - 1 || state.attempts() == Long.MAX_VALUE)
             throw new ConflictException("Limite técnico de representação da torre atingido.");
         var team = teams.findByIdAndPlayerIdForUpdate(request.teamId(), playerId)
@@ -95,7 +97,7 @@ public class TowerService {
         Result result = new Result(request.requestId(), floor.number(), combat.won(), combat.rounds(),
                 team.getName(), floor.enemyName(), reward, health);
         State updated = new State(combat.won() ? floor.number() : state.highestFloor(), Math.addExact(state.attempts(), 1),
-                now.plusSeconds(TowerRules.COOLDOWN_SECONDS), result);
+                config.isTowerCooldownEnabled() ? now.plusSeconds(TowerRules.COOLDOWN_SECONDS) : now, result);
         repository.save(playerId, updated);
         audit.success("tower:" + playerId + ":" + result.requestId(), "TOWER_CHALLENGED", "Player", playerId.toString(),
                 Map.of("floor", result.floor(), "won", result.won(), "rounds", result.rounds(),

@@ -14,6 +14,7 @@ dro:
       keep-cost-bits: ${DRO_RARITY_REROLL_KEEP_COST_BITS:5000}
     auto-boss-respawn-after-defeat-enabled: false
     boss-cooldown-enabled: ${DRO_BOSS_COOLDOWN_ENABLED:false}
+    tower-cooldown-enabled: ${DRO_TOWER_COOLDOWN_ENABLED:false}
 
     clan-raid:
       cooldown-enabled: ${DRO_CLAN_RAID_COOLDOWN_ENABLED:false}
