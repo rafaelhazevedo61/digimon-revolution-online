@@ -41,9 +41,6 @@ public class CollectionUseCase {
     public CollectionDtos.SummaryResponse summary(String token) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
 
-        // Compatibilidade para jogadores que já possuíam Digimons antes do registro automático.
-        registrationService.syncOwnedDigimons(playerId);
-
         List<CollectionDtos.EntryResponse> entries = collectionRepository
                 .findByPlayerIdOrderByDiscoveredAtDesc(playerId)
                 .stream()
