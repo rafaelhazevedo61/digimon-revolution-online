@@ -35,7 +35,7 @@ public class AcceptClanMissionUseCase {
     @Transactional
     public PlayerClanMissionResponse execute(String token, UUID missionId) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+        Player player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         if (player.getClanId() == null) {
             throw new BadRequestException("You must be in a clan to accept a clan mission");
         }

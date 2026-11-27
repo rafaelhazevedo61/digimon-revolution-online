@@ -9,6 +9,8 @@ e o projeto segue versionamento incremental por entregas (PRs).
 
 ### Adicionado
 
+- **Baú de Contribuição**: recompensa pessoal ao resgatar missões de clã, preservando XP e HM do clã; pool de sete itens, apresentação separada das recompensas e resgate transacional com bloqueios contra duplicação. Regras em `BAU-DE-CONTRIBUICAO.md`.
+
 - **Treinador bem informado**: nova conquista por ler os 12 conteúdos do Guia do Treinador, com 500 Bits, 1 Carga de Energia Total e 25 pontos de treinador. Leituras anteriores contam e a conclusão segue o processamento agendado.
 
 - **Guia do Treinador**: tutorial inicial com orientações atualizadas e 12 conteúdos opcionais apresentados após os primeiros marcos, incluindo coleção, conquistas, times, torre e classificação. Leituras salvas por conta, sem refazer etapas concluídas.

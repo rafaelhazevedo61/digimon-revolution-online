@@ -17,6 +17,9 @@ public record ClanMissionResponse(
         int minHonorMarksReward,
         int maxHonorMarksReward,
         int clanXpReward,
+        String personalRewardItemCode,
+        String personalRewardItemName,
+        int personalRewardQuantity,
         int minClanLevel,
         boolean alreadyAccepted
 ) {

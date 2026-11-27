@@ -1023,7 +1023,8 @@ async function clanLoadMissions() {
           </div>
           <div class="clan-mission-specs">
             <div class="clan-mission-spec"><span>Objetivo</span><strong>${formatObjective(m.objectiveType)} ${Number(m.targetValue).toLocaleString("pt-BR")}</strong></div>
-            <div class="clan-mission-spec"><span>Recompensa</span><strong>${Number(m.minHonorMarksReward).toLocaleString("pt-BR")}-${Number(m.maxHonorMarksReward).toLocaleString("pt-BR")} HM</strong><small>+${Number(m.clanXpReward).toLocaleString("pt-BR")} XP de clã</small></div>
+            <div class="clan-mission-spec"><span>Para o clã</span><strong>${Number(m.minHonorMarksReward).toLocaleString("pt-BR")}-${Number(m.maxHonorMarksReward).toLocaleString("pt-BR")} HM</strong><small>+${Number(m.clanXpReward).toLocaleString("pt-BR")} XP de clã</small></div>
+            ${renderClanPersonalReward(m)}
           </div>
           <div class="clan-mission-card-footer">
             <span class="clan-mission-availability">${locked ? `Nível atual: ${clan.level}` : active ? "Uma missão por vez" : "Contribua com sua equipe"}</span>
@@ -1042,15 +1043,21 @@ async function clanLoadMissions() {
   }
 }
 
+function renderClanPersonalReward(m) {
+  if (!m.personalRewardItemCode || !(m.personalRewardQuantity > 0)) return "";
+  return `<div class="clan-mission-spec" style="grid-column:1 / -1"><span>Para você</span><strong>${Number(m.personalRewardQuantity).toLocaleString("pt-BR")} × ${escapeHtml(m.personalRewardItemName || m.personalRewardItemCode)}</strong><small>Entregue no inventário ao resgatar a missão.</small></div>`;
+}
+
 function renderPlayerMission(m) {
   const complete = m.progress >= m.targetValue;
   const percent = Math.min(100, Math.round((m.progress / m.targetValue) * 100));
   return `
     <article class="clan-current-mission-card">
       <div class="clan-current-mission-heading"><div><p class="clan-eyebrow clan-eyebrow-cyan">Sua missão atual</p><h3 class="clan-current-mission-title">${escapeHtml(m.title)}</h3></div><span class="clan-current-mission-progress">${percent}%</span></div>
-      <div class="clan-current-mission-meta"><span>${formatObjective(m.objectiveType)} ${Number(m.progress).toLocaleString("pt-BR")}/${Number(m.targetValue).toLocaleString("pt-BR")}</span><span>${Number(m.honorMarksReward).toLocaleString("pt-BR")} HM · ${Number(m.clanXpReward).toLocaleString("pt-BR")} XP</span></div>
+      <div class="clan-current-mission-meta"><span>${formatObjective(m.objectiveType)} ${Number(m.progress).toLocaleString("pt-BR")}/${Number(m.targetValue).toLocaleString("pt-BR")}</span><span>${Number(m.honorMarksReward).toLocaleString("pt-BR")} HM · ${Number(m.clanXpReward).toLocaleString("pt-BR")} XP para o clã</span></div>
+      ${renderClanPersonalReward(m)}
       <div class="clan-current-mission-track"><span style="width:${percent}%"></span></div>
-      <div class="clan-current-mission-footer">${m.status === "COMPLETED" || complete ? `<button class="btn-primary clan-mission-action" onclick="clanClaimMission('${m.id}')">Resgatar recompensa</button>` : `<span class="clan-mission-status clan-status-cyan">${formatMissionStatus(m.status)}</span>`}<span class="clan-mission-availability">Progresso compartilhado</span></div>
+      <div class="clan-current-mission-footer">${m.status === "COMPLETED" || complete ? `<button class="btn-primary clan-mission-action" onclick="clanClaimMission('${m.id}')">Resgatar recompensa</button>` : `<span class="clan-mission-status clan-status-cyan">${formatMissionStatus(m.status)}</span>`}<span class="clan-mission-availability">Seu progresso nesta missão</span></div>
     </article>
   `;
 }
@@ -1115,8 +1122,10 @@ async function clanAcceptMission(missionId) {
 
 async function clanClaimMission(playerMissionId) {
   try {
-    await apiPost(`/clan-missions/${playerMissionId}/claim`);
-    showToast("Recompensa resgatada!", "success");
+    const result = await apiPost(`/clan-missions/${playerMissionId}/claim`);
+    const personal = result.personalRewardQuantity > 0
+      ? ` Você recebeu ${result.personalRewardQuantity} × ${result.personalRewardItemName || result.personalRewardItemCode} no inventário.` : "";
+    showToast(`Recompensas do clã creditadas!${personal}`, "success");
     const clan = await apiGet(`/clans/${currentClan.id}`);
     renderClanDetail(clan);
     clanShowTab("missions");

@@ -21,6 +21,9 @@ public record PlayerClanMissionResponse(
         PlayerClanMissionStatus status,
         int honorMarksReward,
         int clanXpReward,
+        String personalRewardItemCode,
+        String personalRewardItemName,
+        int personalRewardQuantity,
         LocalDateTime acceptedAt,
         LocalDateTime completedAt
 ) {
