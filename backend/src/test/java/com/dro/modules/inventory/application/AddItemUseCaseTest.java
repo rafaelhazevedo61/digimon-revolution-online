@@ -94,9 +94,10 @@ class AddItemUseCaseTest {
         when(itemDefinitionRepository.findByCode("TRAINING_STONE")).thenReturn(Optional.of(definition));
         when(repository.findByPlayerIdAndItemDefinitionIdForUpdate(playerId, 203L)).thenReturn(Optional.of(existing));
 
-        assertThrows(com.dro.shared.exception.UnprocessableException.class,
+        var failure = assertThrows(com.dro.shared.automation.AutomationFailureException.class,
                 () -> addItemUseCase.execute(playerId, ItemType.TRAINING_STONE, 5));
 
+        assertEquals(com.dro.shared.automation.AutomationFailureCode.INVENTORY_STACK_FULL, failure.getFailureCode());
         assertEquals(8, existing.getQuantity());
         verify(repository, never()).save(any());
     }

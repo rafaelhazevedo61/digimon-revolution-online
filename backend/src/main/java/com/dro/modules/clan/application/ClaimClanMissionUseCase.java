@@ -16,7 +16,8 @@ import com.dro.shared.util.TokenExtractor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
-import java.util.List;
+import com.dro.modules.inventory.application.AddItemUseCase;
+import com.dro.modules.inventory.infra.ItemDefinitionRepository;
 import java.util.UUID;
 
 /**
@@ -30,23 +31,34 @@ public class ClaimClanMissionUseCase {
     private final PlayerClanMissionRepository playerClanMissionRepository;
     private final ClanBonusService clanBonusService;
     private final ClanMissionResponseMapper mapper;
+    private final AddItemUseCase addItemUseCase;
+    private final ItemDefinitionRepository itemDefinitionRepository;
 
     @Transactional
     public PlayerClanMissionResponse execute(String token, UUID playerMissionId) {
         UUID playerId = TokenExtractor.extractPlayerId(token);
-        Player player = playerRepository.findById(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
+        Player player = playerRepository.findByIdForUpdate(playerId).orElseThrow(() -> new NotFoundException("Player not found"));
         if (player.getClanId() == null) {
             throw new BadRequestException("You must be in a clan to claim a clan mission");
         }
-        PlayerClanMission active = playerClanMissionRepository.findByPlayerIdAndStatusIn(playerId, List.of(PlayerClanMissionStatus.IN_PROGRESS, PlayerClanMissionStatus.COMPLETED)).orElseThrow(() -> new BadRequestException("You have no active clan mission"));
-        if (!active.getId().equals(playerMissionId)) {
-            throw new BadRequestException("Mission ID does not match your active mission");
+        // Serializa o resgate por conta e por missão, inclusive em múltiplas instâncias.
+        PlayerClanMission active = playerClanMissionRepository.findOwnedByIdForUpdate(playerMissionId, playerId)
+                .orElseThrow(() -> new NotFoundException("Clan mission not found"));
+        if (!player.getClanId().equals(active.getClanId())) {
+            throw new BadRequestException("This mission belongs to another clan");
+        }
+        if (active.getStatus() != PlayerClanMissionStatus.IN_PROGRESS && active.getStatus() != PlayerClanMissionStatus.COMPLETED) {
+            throw new BadRequestException("This clan mission cannot be claimed");
         }
         ClanMission mission = clanMissionRepository.findById(active.getClanMissionId()).orElseThrow(() -> new NotFoundException("Clan mission not found"));
         if (active.getProgress() < mission.getTargetValue()) {
             throw new BadRequestException("Mission not completed yet");
         }
-        Clan clan = clanRepository.findById(player.getClanId()).orElseThrow(() -> new NotFoundException("Clan not found"));
+        Clan clan = clanRepository.findByIdForUpdate(player.getClanId()).orElseThrow(() -> new NotFoundException("Clan not found"));
+        var chest = itemDefinitionRepository.findByCode(ClanMissionResponseMapper.CONTRIBUTION_CHEST_CODE)
+                .orElseThrow(() -> new NotFoundException("Contribution chest is not configured"));
+        // Se o estoque estiver cheio, toda a transação falha e o resgate permanece pendente.
+        addItemUseCase.addMaterialToPlayer(playerId, chest, 1);
         double honorMarksMultiplier = 1.0 + clanBonusService.getHonorMarksBonusPercent(clan.getId());
         int finalHonorMarks = (int) Math.floor(active.getHonorMarksReward() * honorMarksMultiplier);
         clan.setHonorMarks(clan.getHonorMarks() + finalHonorMarks);
@@ -58,12 +70,14 @@ public class ClaimClanMissionUseCase {
         return mapper.toPlayerMission(active, mission);
     }
 
-    public ClaimClanMissionUseCase(final PlayerRepository playerRepository, final ClanRepository clanRepository, final ClanMissionRepository clanMissionRepository, final PlayerClanMissionRepository playerClanMissionRepository, final ClanBonusService clanBonusService, final ClanMissionResponseMapper mapper) {
+    public ClaimClanMissionUseCase(final PlayerRepository playerRepository, final ClanRepository clanRepository, final ClanMissionRepository clanMissionRepository, final PlayerClanMissionRepository playerClanMissionRepository, final ClanBonusService clanBonusService, final ClanMissionResponseMapper mapper, final AddItemUseCase addItemUseCase, final ItemDefinitionRepository itemDefinitionRepository) {
         this.playerRepository = playerRepository;
         this.clanRepository = clanRepository;
         this.clanMissionRepository = clanMissionRepository;
         this.playerClanMissionRepository = playerClanMissionRepository;
         this.clanBonusService = clanBonusService;
         this.mapper = mapper;
+        this.addItemUseCase = addItemUseCase;
+        this.itemDefinitionRepository = itemDefinitionRepository;
     }
 }

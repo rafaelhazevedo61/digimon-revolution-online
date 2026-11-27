@@ -84,7 +84,7 @@ class AcceptClanMissionUseCaseTest {
                 .minClanLevel(2)
                 .build();
 
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
         when(playerClanMissionRepository.findByPlayerIdAndStatusIn(eq(playerId), anyCollection()))
                 .thenReturn(Optional.empty());
         when(playerClanMissionRepository.existsByPlayerIdAndClanMissionIdAndAcceptedAtGreaterThanEqual(any(), any(), any()))
@@ -124,7 +124,7 @@ class AcceptClanMissionUseCaseTest {
                 .acceptedAt(LocalDateTime.now())
                 .build();
 
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
         when(playerClanMissionRepository.findByPlayerIdAndStatusIn(eq(playerId), anyCollection()))
                 .thenReturn(Optional.of(active));
 
@@ -144,7 +144,7 @@ class AcceptClanMissionUseCaseTest {
                 .clanId(clanId)
                 .build();
 
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
         when(playerClanMissionRepository.findByPlayerIdAndStatusIn(eq(playerId), anyCollection()))
                 .thenReturn(Optional.empty());
         when(playerClanMissionRepository.existsByPlayerIdAndClanMissionIdAndAcceptedAtGreaterThanEqual(any(), any(), any()))
@@ -164,7 +164,7 @@ class AcceptClanMissionUseCaseTest {
                 .username("player")
                 .build();
 
-        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(playerRepository.findByIdForUpdate(playerId)).thenReturn(Optional.of(player));
 
         assertThrows(BadRequestException.class, () -> useCase.execute(token, missionId));
     }

@@ -13,6 +13,8 @@ import java.util.UUID;
  */
 @Component
 public class ClanMissionResponseMapper {
+    public static final String CONTRIBUTION_CHEST_CODE = "CHEST_CLAN_CONTRIBUTION";
+    public static final String CONTRIBUTION_CHEST_NAME = "Baú de Contribuição";
 
     public ClanMissionResponse toCatalog(ClanMission mission, boolean alreadyAccepted) {
         return new ClanMissionResponse(
@@ -25,6 +27,9 @@ public class ClanMissionResponseMapper {
                 mission.getMinHonorMarksReward(),
                 mission.getMaxHonorMarksReward(),
                 mission.getClanXpReward(),
+                CONTRIBUTION_CHEST_CODE,
+                CONTRIBUTION_CHEST_NAME,
+                1,
                 mission.getMinClanLevel(),
                 alreadyAccepted
         );
@@ -43,6 +48,9 @@ public class ClanMissionResponseMapper {
                 playerMission.getStatus(),
                 playerMission.getHonorMarksReward(),
                 mission.getClanXpReward(),
+                CONTRIBUTION_CHEST_CODE,
+                CONTRIBUTION_CHEST_NAME,
+                1,
                 playerMission.getAcceptedAt(),
                 playerMission.getCompletedAt()
         );

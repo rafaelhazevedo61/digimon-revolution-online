@@ -3,6 +3,8 @@ package com.dro.modules.clan.infra;
 import com.dro.modules.clan.domain.PlayerClanMission;
 import com.dro.modules.clan.domain.enums.PlayerClanMissionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,6 +22,11 @@ public interface PlayerClanMissionRepository extends JpaRepository<PlayerClanMis
 
     List<PlayerClanMission> findByPlayerId(UUID playerId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT m FROM PlayerClanMission m WHERE m.id = :id AND m.playerId = :playerId")
+    Optional<PlayerClanMission> findOwnedByIdForUpdate(@Param("id") UUID id, @Param("playerId") UUID playerId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<PlayerClanMission> findByPlayerIdAndStatus(
             UUID playerId,
             PlayerClanMissionStatus status
@@ -51,6 +58,7 @@ public interface PlayerClanMissionRepository extends JpaRepository<PlayerClanMis
             PlayerClanMissionStatus status
     );
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<PlayerClanMission> findByStatus(PlayerClanMissionStatus status);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
